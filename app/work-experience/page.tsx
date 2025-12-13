@@ -11,6 +11,7 @@ import {
 	HiTrendingUp,
 } from "react-icons/hi";
 import { FaChartLine, FaCode, FaRocket, FaTrophy } from "react-icons/fa";
+import { EXPERIENCE_YEAR } from "@/lib/constants";
 
 /* ---------------------------------- */
 /* Types                              */
@@ -145,20 +146,13 @@ const WorkExperience = () => {
 				{/* Header */}
 				<Fade triggerOnce>
 					<div className="text-center space-y-6">
-						<div className="flex items-center justify-center gap-3">
-							<HiBriefcase className="w-7 h-7 text-blue-500" />
-							<span className="uppercase tracking-wider text-sm text-slate-500">
-								Professional Journey
-							</span>
-							<HiSparkles className="w-7 h-7 text-purple-500" />
-						</div>
-
 						<h1 className="text-4xl sm:text-5xl font-bold text-slate-900">
 							Work Experience
 						</h1>
 
 						<p className="max-w-2xl mx-auto text-lg text-slate-600">
-							7+ years building fintech platforms and leading engineering teams
+							{EXPERIENCE_YEAR}+ years building fintech platforms and leading
+							engineering teams
 						</p>
 					</div>
 				</Fade>
@@ -250,7 +244,7 @@ const WorkExperience = () => {
 				<Fade triggerOnce>
 					<div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 border-t border-slate-200">
 						{[
-							["7+", "Years Experience", <HiBriefcase />],
+							[`${EXPERIENCE_YEAR}+`, "Years Experience", <HiBriefcase />],
 							["4", "Companies", <HiLocationMarker />],
 							["3", "Awards", <FaTrophy />],
 							["5M+", "Users Impacted", <FaCode />],

@@ -26,7 +26,7 @@ export function createMetadata({
 }: MetadataProps = {}): Metadata {
   const fullTitle = title ? `${title} · ${SITE.name}` : SITE.name;
   const url = `${SITE.url}${path}`;
-  const ogImage = image || `${SITE.url}/profile.jpg`; // Default OG image
+  const ogImage = image || `/profile.jpg`; // Default OG image
 
   return {
     title: fullTitle,
@@ -107,7 +107,7 @@ export function createBlogMetadata({
 }): Metadata {
   const fullTitle = `${title} · ${SITE.name}`;
   const url = `${SITE.url}/blog/${slug}`;
-  const ogImage = image || `${SITE.url}/profile.jpg`;
+  const ogImage = image || `/profile.jpg`;
 
   return {
     title: fullTitle,
@@ -173,7 +173,7 @@ export function generateBlogPostJsonLd({
     "@type": "BlogPosting",
     headline: title,
     description,
-    image: image || `${SITE.url}/profile.jpg`,
+    image: image || `/profile.jpg`,
     datePublished: publishedTime,
     dateModified: modifiedTime || publishedTime,
     author: {

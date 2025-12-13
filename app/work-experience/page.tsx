@@ -7,7 +7,6 @@ import {
 	HiBriefcase,
 	HiCalendar,
 	HiLocationMarker,
-	HiSparkles,
 	HiTrendingUp,
 } from "react-icons/hi";
 import { FaChartLine, FaCode, FaRocket, FaTrophy } from "react-icons/fa";

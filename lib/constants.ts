@@ -10,6 +10,8 @@ export const SITE = {
     "Software engineer with 7+ years of experience in fintech, building reliable systems and running 1000KM+ per year.",
   url: "https://polmatambunan.com", // update when live
   locale: "en_US",
+  author: "Polma Tambunan",
+  twitter: "https://x.com/LFC"
 };
 
 export const AUTHOR = {

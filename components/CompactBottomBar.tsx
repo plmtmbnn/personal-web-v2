@@ -130,18 +130,6 @@ export default function EnhancedNavbar() {
                 >
                   {label}
                 </span>
-
-                {/* Tooltip for mobile */}
-                <div className={`
-                  absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5
-                  glass-strong rounded-lg text-xs font-medium whitespace-nowrap
-                  transition-all duration-200
-                  ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
-                  sm:hidden
-                `}>
-                  {label}
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white/10 rotate-45"></div>
-                </div>
               </Link>
             );
           })}

@@ -27,17 +27,9 @@ export default function BlogPage() {
 				<div
 					className={`text-center space-y-6 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
 				>
-					<div className="flex items-center justify-center gap-3 mb-6">
-						<div className="w-12 h-px bg-gradient-to-r from-transparent via-indigo-400 to-transparent"></div>
-						<span className="text-indigo-600 text-sm font-medium tracking-wider uppercase">
-							Insights & Stories
-						</span>
-						<div className="w-12 h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
-					</div>
 					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
 						Blog
 					</h1>
-					<div className="w-24 h-1 bg-gradient-to-r from-indigo-400 via-blue-400 to-cyan-400 rounded-full mx-auto mb-6"></div>
 					<p className="max-w-2xl mx-auto text-muted-foreground text-lg leading-relaxed">
 						Writing about software engineering, fintech, running, and lessons
 						learned along the way.

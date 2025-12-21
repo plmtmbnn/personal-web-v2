@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { EXPERIENCE_YEAR } from "@/lib/constants";
+import { useEffect, useState } from "react";
 
 interface Experience {
 	company: string;
@@ -17,8 +18,6 @@ interface Position {
 	responsibilities: string[];
 	highlights?: string[];
 }
-
-const EXPERIENCE_YEAR = new Date().getFullYear() - 2018;
 
 const experiences: Experience[] = [
 	{
@@ -174,131 +173,100 @@ const experiences: Experience[] = [
 ];
 
 export default function WorkExperience() {
-	const [isVisible, setIsVisible] = useState(false);
+	const [visible, setVisible] = useState(false);
 
-	useEffect(() => {
-		setIsVisible(true);
-	}, []);
+	useEffect(() => setVisible(true), []);
 
 	return (
-		<section className="min-h-screen bg-background px-4 sm:px-6 py-16 lg:py-24 relative overflow-hidden">
-			{/* Subtle Background */}
+		<section className="relative py-16 lg:py-20 px-4 sm:px-6 bg-background overflow-hidden">
+			{/* Ambient background */}
 			<div className="absolute inset-0">
-				<div className="absolute top-20 right-20 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-40 animate-float"></div>
-				<div
-					className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-purple-50 rounded-full blur-3xl opacity-40 animate-float"
-					style={{ animationDelay: "1s", animationDuration: "5s" }}
-				></div>
+				<div className="absolute top-24 right-24 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-40" />
+				<div className="absolute bottom-24 left-24 w-[420px] h-[420px] bg-purple-50 rounded-full blur-3xl opacity-40" />
 			</div>
 
-			<div className="max-w-6xl mx-auto space-y-20 relative z-10">
+			<div className="relative max-w-6xl mx-auto space-y-16">
 				{/* Header */}
 				<div
-					className={`text-center space-y-6 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+					className={`text-center transition-all duration-700 ${
+						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+					}`}
 				>
-					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground">
+					<h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
 						Work Experience
 					</h1>
-					<p className="max-w-2xl mx-auto text-lg text-muted-foreground leading-relaxed">
+					<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
 						{EXPERIENCE_YEAR}+ years building fintech platforms and leading
 						engineering teams
 					</p>
 				</div>
 
 				{/* Timeline */}
-				<div className="relative space-y-16">
+				<div className="relative space-y-12">
 					<div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-px bg-slate-200 sm:-translate-x-1/2" />
 
 					{experiences.map((exp, idx) => (
 						<div
 							key={String(idx)}
-							className={`relative sm:w-[calc(50%-2rem)] transition-all duration-700 delay-${(idx + 1) * 100} ${
-								isVisible
+							className={`relative sm:w-[calc(50%-2rem)] transition-all duration-700 ${
+								visible
 									? "opacity-100 translate-x-0"
-									: `opacity-0 ${idx % 2 === 0 ? "-translate-x-10" : "translate-x-10"}`
+									: idx % 2 === 0
+										? "opacity-0 -translate-x-6"
+										: "opacity-0 translate-x-6"
 							} ${idx % 2 === 0 ? "sm:ml-0" : "sm:ml-auto"}`}
 						>
-							{/* Dot */}
+							{/* Timeline Dot */}
 							<div
 								className={`absolute left-4 sm:left-auto ${
-									idx % 2 === 0 ? "sm:-right-8" : "sm:-left-8"
-								} top-2 w-8 h-8 rounded-full bg-gradient-to-br ${exp.color} flex items-center justify-center text-white shadow-md`}
+									idx % 2 === 0 ? "sm:-right-7" : "sm:-left-7"
+								} top-3 w-7 h-7 rounded-full bg-gradient-to-br ${
+									exp.color
+								} flex items-center justify-center text-white shadow`}
 							>
-								<div className="w-5 h-5">{exp.icon}</div>
+								<div className="w-4 h-4">{exp.icon}</div>
 							</div>
 
 							{/* Card */}
-							<div className="ml-16 sm:ml-0 bg-white border border-slate-200 rounded-2xl p-6 lg:p-8 shadow-md hover:shadow-xl transition-all duration-300">
-								<h3 className="text-2xl font-bold text-foreground">
+							<div className="ml-14 sm:ml-0 bg-white border border-slate-200 rounded-2xl p-5 lg:p-6 shadow-sm hover:shadow-lg transition-all">
+								<h3 className="text-xl font-semibold text-foreground">
 									{exp.company}
 								</h3>
 
 								<div
-									className={`w-16 h-1 bg-gradient-to-r ${exp.color} rounded-full mt-2 mb-3`}
-								></div>
+									className={`w-12 h-1 bg-gradient-to-r ${exp.color} rounded-full my-2`}
+								/>
 
-								<p className="text-sm text-muted-foreground mb-2 inline-block px-3 py-1 bg-slate-50 rounded-full border border-slate-200">
-									{exp.description}
-								</p>
-
-								<div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
-									<svg
-										className="w-4 h-4"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-										/>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-										/>
-									</svg>
-									{exp.location}
+								<div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+									<span className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-full">
+										{exp.description}
+									</span>
+									<span className="flex items-center gap-1">
+										📍 {exp.location}
+									</span>
 								</div>
 
-								<div className="mt-6 space-y-8">
+								{/* Positions */}
+								<div className="mt-6 space-y-6">
 									{exp.positions.map((pos, pIdx) => (
 										<div
 											key={String(pIdx)}
-											className={
-												pIdx > 0 ? "pt-6 border-t border-slate-200" : ""
-											}
+											className={pIdx ? "pt-5 border-t border-slate-200" : ""}
 										>
-											<div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-												<h4 className="text-lg font-bold text-foreground">
+											<div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+												<h4 className="font-semibold text-foreground">
 													{pos.title}
 												</h4>
-												<div className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-1 bg-slate-50 rounded-full border border-slate-200">
-													<svg
-														className="w-4 h-4"
-														fill="none"
-														viewBox="0 0 24 24"
-														stroke="currentColor"
-													>
-														<path
-															strokeLinecap="round"
-															strokeLinejoin="round"
-															strokeWidth={2}
-															d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-														/>
-													</svg>
+												<span className="text-xs text-muted-foreground px-3 py-1 bg-slate-50 border border-slate-200 rounded-full">
 													{pos.period}
-												</div>
+												</span>
 											</div>
 
-											<ul className="space-y-3 text-muted-foreground text-sm">
+											<ul className="space-y-2 text-sm text-muted-foreground">
 												{pos.responsibilities.map((item, i) => (
-													<li key={String(i)} className="flex gap-3">
+													<li key={String(i)} className="flex gap-2">
 														<span
-															className={`mt-1.5 w-1.5 h-1.5 rounded-full bg-gradient-to-r ${exp.color} flex-shrink-0`}
+															className={`mt-2 w-1.5 h-1.5 rounded-full bg-gradient-to-r ${exp.color}`}
 														/>
 														<span>{item}</span>
 													</li>
@@ -306,29 +274,13 @@ export default function WorkExperience() {
 											</ul>
 
 											{pos.highlights && (
-												<div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
-													<div className="flex items-center gap-2 mb-3 text-foreground font-semibold text-sm">
-														<svg
-															className="w-4 h-4 text-blue-600"
-															fill="none"
-															viewBox="0 0 24 24"
-															stroke="currentColor"
-														>
-															<path
-																strokeLinecap="round"
-																strokeLinejoin="round"
-																strokeWidth={2}
-																d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-															/>
-														</svg>
+												<div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+													<p className="text-sm font-semibold mb-2">
 														Key Achievements
-													</div>
-													<ul className="space-y-2 text-sm text-muted-foreground">
+													</p>
+													<ul className="space-y-1 text-sm text-muted-foreground">
 														{pos.highlights.map((h, i) => (
-															<li key={String(i)} className="flex gap-2">
-																<span>•</span>
-																<span>{h}</span>
-															</li>
+															<li key={String(i)}>• {h}</li>
 														))}
 													</ul>
 												</div>
@@ -343,99 +295,24 @@ export default function WorkExperience() {
 
 				{/* Stats */}
 				<div
-					className={`transition-all duration-700 delay-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+					className={`grid grid-cols-2 md:grid-cols-4 gap-4 pt-10 border-t border-slate-200 transition-all duration-700 ${
+						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+					}`}
 				>
-					<div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 border-t border-slate-200">
-						{[
-							{
-								num: `${EXPERIENCE_YEAR}+`,
-								label: "Years Experience",
-								icon: (
-									<svg
-										className="w-6 h-6"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-										/>
-									</svg>
-								),
-								color: "text-blue-600",
-							},
-							{
-								num: "4",
-								label: "Companies",
-								icon: (
-									<svg
-										className="w-6 h-6"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-										/>
-									</svg>
-								),
-								color: "text-purple-600",
-							},
-							{
-								num: "3",
-								label: "Awards",
-								icon: (
-									<svg
-										className="w-6 h-6"
-										fill="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path d="M12 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 2.18l7 3.82v8c0 4.52-2.98 8.69-7 9.93-4.02-1.24-7-5.41-7-9.93V8l7-3.82z" />
-									</svg>
-								),
-								color: "text-amber-600",
-							},
-							{
-								num: "5M+",
-								label: "Users Impacted",
-								icon: (
-									<svg
-										className="w-6 h-6"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-										/>
-									</svg>
-								),
-								color: "text-emerald-600",
-							},
-						].map((stat, i) => (
-							<div
-								key={String(i)}
-								className="p-6 text-center bg-white border border-slate-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-							>
-								<div className={`flex justify-center mb-3 ${stat.color}`}>
-									{stat.icon}
-								</div>
-								<p className={`text-3xl font-bold ${stat.color}`}>{stat.num}</p>
-								<p className="text-sm text-muted-foreground mt-1">
-									{stat.label}
-								</p>
-							</div>
-						))}
-					</div>
+					{[
+						{ num: `${EXPERIENCE_YEAR}+`, label: "Years Experience" },
+						{ num: "4", label: "Companies" },
+						{ num: "3", label: "Awards" },
+						{ num: "5M+", label: "Users Impacted" },
+					].map((s, i) => (
+						<div
+							key={String(i)}
+							className="text-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm"
+						>
+							<p className="text-2xl font-bold text-foreground">{s.num}</p>
+							<p className="text-sm text-muted-foreground">{s.label}</p>
+						</div>
+					))}
 				</div>
 			</div>
 		</section>

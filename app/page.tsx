@@ -101,15 +101,12 @@ export default function Home() {
 					>
 						<div className="flex items-center gap-3 text-muted-foreground text-sm lg:text-base font-medium tracking-wider uppercase">
 							<div className="w-12 lg:w-16 h-px bg-gradient-to-r from-accent to-transparent"></div>
-							<span className="glow-text">Software Engineer</span>
 						</div>
 
 						<h1 className="text-3xl sm:text-4xl lg:text-6xl xl:text-5xl font-bold text-foreground leading-tight">
 							Hi 🌏, I'm{" "}
 							<span className="gradient-text glow-text">Polma Tambunan</span>.
 						</h1>
-
-						<div className="w-24 lg:w-32 h-1.5 bg-gradient-to-r from-accent via-purple-500 to-cyan-500 rounded-full shadow-lg glow"></div>
 					</div>
 
 					<p
@@ -125,8 +122,8 @@ export default function Home() {
 						</span>
 						, I've been building secure, scalable, and impactful
 						software—primarily in the{" "}
-						<span className="text-purple-400 font-semibold">fintech space</span>
-						. From lending platforms to digital identity systems, I bring
+						<span className="text-black-400 font-semibold">fintech space</span>.
+						From lending platforms to digital identity systems, I bring
 						engineering focus to critical business needs.
 					</p>
 

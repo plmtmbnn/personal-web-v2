@@ -3,11 +3,13 @@
  * Keep all site-wide values here
  */
 
+export const EXPERIENCE_YEAR = new Date().getFullYear() - 2018;
+
 export const SITE = {
   name: "Polma Tambunan",
   tagline: "Thoughtful Engineering. Intentional Running.",
   description:
-    "Software engineer with 7+ years of experience in fintech, building reliable systems and running 1000KM+ per year.",
+    `Software engineer with ${EXPERIENCE_YEAR}+ years of experience in fintech, building reliable systems and running 1000KM+ per year.`,
   url: "https://polmatambunan.com", // update when live
   locale: "en_US",
   author: "Polma Tambunan",
@@ -42,4 +44,3 @@ export const NAVIGATION = [
   { href: "/contact", label: "Contact" },
 ] as const;
 
-export const EXPERIENCE_YEAR = new Date().getFullYear() - 2018;

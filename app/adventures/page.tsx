@@ -130,16 +130,6 @@ export default function Adventure() {
 									/>
 								</div>
 							</div>
-
-							{/* Footer */}
-							<div className="px-5 pb-5">
-								<div className="flex items-center gap-2 text-xs text-muted-foreground">
-									<span
-										className={`w-2 h-2 rounded-full bg-gradient-to-r ${item.accent}`}
-									/>
-									<span>Updated directly from source</span>
-								</div>
-							</div>
 						</div>
 					))}
 				</div>

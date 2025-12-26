@@ -31,10 +31,18 @@ const passedPeriod = (startWeek: number, currentDay: number) => {
 	return "🔒";
 };
 
-export const BlogList = [
+export interface BlogI {
+	title: string;
+	slug: string;
+	description: string;
+	date: string;
+	content: string;
+}
+
+export const BlogList: BlogI[] = [
 	{
 		title: "🏃‍♂️ 21‑Week Marathon Training Plan",
-		slug: "1",
+		slug: "21-week-marathon-training-plan",
 		description:
 			"🎯 Each week has one Rest day, easy runs (EZ), key workouts, long runs (LR), strength 🏋️‍♂️ and cross‑training 🚴.",
 		date: "June 7, 2025",
@@ -354,7 +362,7 @@ export const BlogList = [
 	},
 	{
 		title: "💪 Strength & 🤸 Mobility Routine",
-		slug: "2",
+		slug: "strength-mobility-routine",
 		description:
 			"Plug these into your Wednesday (Strength) and Thursday (Mobility) slots.",
 		date: "June 6, 2025",

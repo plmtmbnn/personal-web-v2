@@ -79,16 +79,16 @@ export default function Adventure() {
 						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
 					}`}
 				>
-					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
+					<h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
 						Adventures
-					</h1>
+					</h2>
 					<p className="max-w-2xl mx-auto text-muted-foreground text-lg leading-relaxed">
 						Running journeys and visual stories I collect along the way
 					</p>
 				</div>
 
 				{/* Cards */}
-				<div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4">
+				<div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
 					{adventures.map((item, i) => (
 						<div
 							key={item.title}

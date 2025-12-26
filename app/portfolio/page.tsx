@@ -94,7 +94,7 @@ export default function Portfolio() {
 				</div>
 
 				{/* Content Grid */}
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 					{/* Pie Chart */}
 					<div
 						className={`transition-all duration-700 delay-200 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"}`}
@@ -181,9 +181,9 @@ export default function Portfolio() {
 								</div>
 
 								{/* Legend */}
-								<div className="flex flex-col gap-3 w-full max-w-xs">
+								<div className="flex flex-col w-full max-w-xs">
 									<div
-										className="flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-50 transition-all duration-300 border border-transparent hover:border-blue-200"
+										className="flex items-center gap-2 py-2 rounded-lg cursor-pointer hover:bg-blue-50 transition-all duration-300 border border-transparent hover:border-blue-200"
 										onClick={() => handleSliceClick(0)}
 									>
 										<div className="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></div>
@@ -192,7 +192,7 @@ export default function Portfolio() {
 										</span>
 									</div>
 									<div
-										className="flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer hover:bg-purple-50 transition-all duration-300 border border-transparent hover:border-purple-200"
+										className="flex items-center gap-2 py-2 rounded-lg cursor-pointer hover:bg-purple-50 transition-all duration-300 border border-transparent hover:border-purple-200"
 										onClick={() => handleSliceClick(1)}
 									>
 										<div className="w-4 h-4 rounded-full bg-purple-500 flex-shrink-0"></div>

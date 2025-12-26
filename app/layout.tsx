@@ -3,7 +3,7 @@ import { Varela_Round, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CompactBottomBar from "@/components/CompactBottomBar";
 import { createMetadata } from "@/lib/metadata";
-
+import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = createMetadata();
 
 // Primary font - Varela Round
@@ -28,6 +28,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
+			<SpeedInsights />
 			<body
 				className={`${varela.variable} ${jetbrainsMono.variable} antialiased`}
 			>

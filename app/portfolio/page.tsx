@@ -73,28 +73,28 @@ export default function Portfolio() {
 		>
 			{/* Subtle Background */}
 			<div className="absolute inset-0">
-				<div className="absolute top-20 right-20 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-40 animate-float"></div>
+				<div className="absolute top-20 right-20 w-96 h-96 bg-indigo-50 rounded-full blur-3xl opacity-40 animate-float"></div>
 				<div
-					className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-purple-50 rounded-full blur-3xl opacity-40 animate-float"
+					className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-blue-50 rounded-full blur-3xl opacity-40 animate-float"
 					style={{ animationDelay: "1s", animationDuration: "5s" }}
 				></div>
 			</div>
 
-			<div className="max-w-7xl mx-auto space-y-16 relative z-10">
+			<div className="max-w-6xl mx-auto space-y-16 relative z-10">
 				{/* Header */}
 				<div
-					className={`text-center space-y-6 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+					className={`text-center space-y-6 transition-all duration-700 opacity-100 translate-y-0"}`}
 				>
-					<h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground">
+					<h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
 						Portfolio
 					</h2>
-					<p className="max-w-2xl mx-auto text-lg text-muted-foreground leading-relaxed">
+					<p className="max-w-2xl mx-auto text-muted-foreground text-lg leading-relaxed">
 						Systems and products I've built across fintech and platforms
 					</p>
 				</div>
 
 				{/* Content Grid */}
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 					{/* Pie Chart */}
 					<div
 						className={`transition-all duration-700 delay-200 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"}`}

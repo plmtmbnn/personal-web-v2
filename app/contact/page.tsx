@@ -56,30 +56,31 @@ export default function Contact() {
 	}, []);
 
 	return (
-		<section className="min-h-screen flex items-center justify-center px-4 py-20 relative">
-			{/* Background blur */}
+		<section className="min-h-screen bg-background px-4 sm:px-6 py-20 relative overflow-hidden">
+			{/* Subtle Background */}
 			<div className="absolute inset-0">
-				<div className="absolute top-24 right-24 w-72 h-72 bg-blue-100 rounded-full blur-3xl opacity-40" />
-				<div className="absolute bottom-24 left-24 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-40" />
+				<div className="absolute top-20 right-20 w-96 h-96 bg-indigo-50 rounded-full blur-3xl opacity-40 animate-float"></div>
+				<div
+					className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-blue-50 rounded-full blur-3xl opacity-40 animate-float"
+					style={{ animationDelay: "1s", animationDuration: "5s" }}
+				></div>
 			</div>
 
-			<div className="max-w-3xl w-full text-center relative z-10">
+			<div className="max-w-6xl mx-auto space-y-16 relative z-10">
 				{/* Header */}
 				<div
-					className={`mb-12 transition-all duration-700 ${
-						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-					}`}
+					className={`text-center space-y-6 transition-all duration-700 opacity-100 translate-y-0`}
 				>
-					<h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+					<h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
 						Let’s Connect
 					</h2>
-					<p className="text-muted-foreground text-lg">
+					<p className="max-w-2xl mx-auto text-muted-foreground text-lg leading-relaxed">
 						Open to conversations about engineering, fintech, and collaboration.
 					</p>
 				</div>
 
 				{/* Compact contact list */}
-				<div className="space-y-3">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
 					{contactLinks.map(({ href, label, value, icon, accent }, i) => (
 						<a
 							key={label}

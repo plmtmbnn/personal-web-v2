@@ -192,9 +192,9 @@ export default function WorkExperience() {
 						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
 					}`}
 				>
-					<h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+					<h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
 						Work Experience
-					</h1>
+					</h2>
 					<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
 						{EXPERIENCE_YEAR}+ years building fintech platforms and leading
 						engineering teams

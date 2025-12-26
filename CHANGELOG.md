@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.3](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.2...v0.1.3) (2025-12-26)
+
+
+### Features
+
+* integrate supabase for blog list ([e5888a2](https://github.com/plmtmbnn/personal-web-v2/commit/e5888a214bde0efbd835a058dbf23ff70e8be258))
+
 ### [0.1.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.1...v0.1.2) (2025-12-26)
 
 ### 0.1.1 (2025-12-21)

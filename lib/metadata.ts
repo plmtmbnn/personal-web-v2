@@ -26,12 +26,15 @@ export function createMetadata({
 }: MetadataProps = {}): Metadata {
   const fullTitle = title ? `${title} · ${SITE.name}` : SITE.name;
   const url = `${SITE.url}${path}`;
-  const ogImage = image || `/public/profile.jpg`; // Default OG image
+  const ogImage = image || `/profile.jpg`; // Fixed default image path
 
   return {
-    title: fullTitle,
+    title: {
+      template: SEO.titleTemplate,
+      default: SITE.name,
+    },
     description,
-    keywords: keywords?.join(", "),
+    keywords: keywords?.join(", ") || "software engineer, fintech, running, polma tambunan",
     authors: author ? [{ name: author }] : [{ name: SITE.author }],
 
     metadataBase: new URL(SITE.url),
@@ -82,6 +85,14 @@ export function createMetadata({
       images: [ogImage],
       creator: SITE.twitter,
     },
+
+    icons: {
+      icon: "/favicon.ico",
+      shortcut: "/favicon-16x16.png",
+      apple: "/apple-touch-icon.png",
+    },
+
+    manifest: "/site.webmanifest",
   };
 }
 

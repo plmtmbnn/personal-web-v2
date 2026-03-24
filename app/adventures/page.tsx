@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
-const adventures = [
+const categories = [
 	{
-		title: "Running Milestone",
+		title: "Running",
+		slug: "running",
 		description: "Miles logged, progress made. Every step is a victory.",
-		embedUrl:
-			"https://www.strava.com/athletes/38682026/activity-summary/84e311c34f606bea25b477bc6aa3e24b84c55e33",
-		iframeHeight: "180px",
 		accent: "from-emerald-500 to-teal-500",
 		icon: (
 			<svg
-				className="w-5 h-5"
+				className="w-6 h-6"
 				fill="none"
 				viewBox="0 0 24 24"
 				stroke="currentColor"
@@ -27,14 +26,13 @@ const adventures = [
 		),
 	},
 	{
-		title: "Photography",
+		title: "Travel",
+		slug: "travel",
 		description: "Capturing moments, telling stories through the lens.",
-		embedUrl: "https://www.instagram.com/p/DBqBiMYzd4D/embed",
-		iframeHeight: "420px",
 		accent: "from-purple-500 to-pink-500",
 		icon: (
 			<svg
-				className="w-5 h-5"
+				className="w-6 h-6"
 				fill="none"
 				viewBox="0 0 24 24"
 				stroke="currentColor"
@@ -56,9 +54,8 @@ const adventures = [
 	},
 ];
 
-export default function Adventure() {
+export default function AdventuresLanding() {
 	const [visible, setVisible] = useState(false);
-
 	useEffect(() => setVisible(true), []);
 
 	return (
@@ -75,7 +72,7 @@ export default function Adventure() {
 			<div className="max-w-6xl mx-auto space-y-16 relative z-10">
 				{/* Header */}
 				<div
-					className={`text-center mb-12 transition-all duration-700 ${
+					className={`text-center transition-all duration-700 ${
 						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
 					}`}
 				>
@@ -83,57 +80,62 @@ export default function Adventure() {
 						Adventures
 					</h2>
 					<p className="max-w-2xl mx-auto text-muted-foreground text-lg leading-relaxed">
-						Running journeys and visual stories I collect along the way
+						Running journeys and visual stories I collect along the way. Select
+						a category to explore further.
 					</p>
 				</div>
 
-				{/* Cards */}
-				<div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
-					{adventures.map((item, i) => (
-						<div
-							key={item.title}
-							style={{ transitionDelay: `${i * 120}ms` }}
-							className={`rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all duration-500 ${
+				{/* Selection Grid */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+					{categories.map((cat, i) => (
+						<Link
+							key={cat.slug}
+							href={`/adventures/${cat.slug}`}
+							style={{ transitionDelay: `${i * 150}ms` }}
+							className={`group relative p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden ${
 								visible
 									? "opacity-100 translate-y-0"
 									: "opacity-0 translate-y-6"
 							}`}
 						>
-							{/* Header */}
-							<div className="p-5 border-b border-slate-100">
-								<div className="flex items-center gap-4 mb-3">
-									<div
-										className={`w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-br ${item.accent} text-white shadow-sm`}
-									>
-										{item.icon}
-									</div>
+							{/* Background Decoration */}
+							<div
+								className={`absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-gradient-to-br ${cat.accent} opacity-5 group-hover:opacity-10 transition-opacity duration-500`}
+							></div>
 
-									<h3 className="text-xl font-semibold text-foreground">
-										{item.title}
-									</h3>
+							<div className="relative z-10 flex flex-col h-full">
+								<div
+									className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br ${cat.accent} text-white shadow-lg mb-6 group-hover:scale-110 transition-transform duration-500`}
+								>
+									{cat.icon}
 								</div>
 
-								<p className="text-sm text-muted-foreground leading-relaxed">
-									{item.description}
+								<h3 className="text-2xl font-bold text-foreground mb-3">
+									{cat.title}
+								</h3>
+
+								<p className="text-muted-foreground leading-relaxed mb-8 flex-1">
+									{cat.description}
 								</p>
-							</div>
 
-							{/* Embed */}
-							<div className="p-4">
-								<div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
-									<iframe
-										title={item.title}
-										src={item.embedUrl}
-										height={item.iframeHeight}
-										className="w-full"
-										frameBorder="0"
-										scrolling="no"
-										loading="lazy"
-										allowFullScreen
-									/>
+								<div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest transition-colors">
+									<span>Explore</span>
+									<svg
+										className="w-5 h-5 group-hover:translate-x-2 transition-transform"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M17 8l4 4m0 0l-4 4m4-4H3"
+										/>
+									</svg>
 								</div>
 							</div>
-						</div>
+						</Link>
 					))}
 				</div>
 			</div>

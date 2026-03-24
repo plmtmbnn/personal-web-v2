@@ -3,7 +3,8 @@ import { SupabaseConn } from "@/utils/supabase";
 
 /* List blogs */
 export async function getBlogs(): Promise<BlogI[]> {
-  const { data, error } = await SupabaseConn
+  try {
+    const { data, error } = await SupabaseConn
     .from("blogs")
     .select("*")
     .eq("published", true)
@@ -15,6 +16,11 @@ export async function getBlogs(): Promise<BlogI[]> {
   }
     
   return data as BlogI[];
+  } catch (error) {
+        console.log(error);    
+return [] as BlogI[];
+  }
+  
 }
 
 /* Single blog by slug */

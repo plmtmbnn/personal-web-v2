@@ -5,15 +5,78 @@
 ========================= */
 :root {
 	--background: #ffffff;
+	--background-secondary: #f8fafc;
 	--foreground: #0f172a;
 
 	--muted: #475569;
+	--muted-foreground: #64748b;
 	--border: #e5e7eb;
 
 	--accent: #0f172a;
 
 	--selection-bg: #0f172a;
 	--selection-text: #ffffff;
+}
+
+@theme {
+	--color-accent: var(--accent);
+	--color-background-secondary: var(--background-secondary);
+	--color-muted-foreground: var(--muted-foreground);
+
+	--animate-float: float 6s ease-in-out infinite;
+	--animate-fade-in: fadeIn 0.5s ease-out forwards;
+
+	@keyframes float {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-10px);
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+}
+
+/* =========================
+   Custom Utilities
+========================= */
+@utility glass {
+	@apply bg-white/40 backdrop-blur-sm border border-white/10 shadow-lg;
+}
+
+@utility glass-card {
+	@apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl p-6;
+}
+
+@utility glass-strong {
+	@apply bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl;
+}
+
+@utility gradient-text {
+	@apply bg-clip-text text-transparent bg-gradient-to-r from-accent via-purple-600 to-cyan-500;
+}
+
+@utility glow-text {
+	@apply drop-shadow-[0_0_15px_rgba(0,0,0,0.1)];
+}
+
+@utility glow {
+	@apply shadow-[0_0_20px_rgba(15,23,42,0.15)];
+}
+
+@utility btn-primary {
+	@apply bg-accent text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300;
 }
 
 /* =========================
@@ -28,8 +91,8 @@ body {
 	color: var(--foreground);
 
 	font-family:
-		var(--font-varela), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-		sans-serif;
+		var(--font-varela), system-ui, -apple-system, BlinkMacSystemFont,
+		"Segoe UI", sans-serif;
 
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;

@@ -1,0 +1,44 @@
+# --- Dependencies ---
+node_modules/
+
+# --- Next.js Build & Cache ---
+.next/
+out/
+build/
+.turbo/
+
+# --- Environment & Secrets ---
+.env*
+*.local
+.vercel/
+.capoo/
+
+# --- Logs & Debugging ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- Static Assets & Media ---
+# Ignore large folders that don't help with code logic
+public/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.pdf
+
+# --- Documentation & Metadata ---
+.git/
+.github/
+README.md
+CHANGELOG.md
+
+# --- Testing Artifacts ---
+coverage/
+cypress/videos/
+cypress/screenshots/
+.nyc_output/

@@ -134,7 +134,7 @@ export default function EnhancedNavbar() {
                   title={label}
                   onMouseEnter={() => setHoveredItem(href)}
                   onMouseLeave={() => setHoveredItem(null)}
-                  onClick={(e) => toggleSubMenu(e, href, hasSubItems)}
+                  onClick={(e) => toggleSubMenu(e, href, hasSubItems ?? false)}
                   className={`
                     group relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-full
                     transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]

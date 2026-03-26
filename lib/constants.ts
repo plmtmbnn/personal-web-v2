@@ -13,26 +13,27 @@ export const SITE = {
   url: "https://polmatambunan.com", // update when live
   locale: "en_US",
   author: "Polma Tambunan",
-  twitter: "https://x.com/LFC"
+  twitter: "https://x.com/LFC",
+  version: "0.1.6"
 };
 
 export const AUTHOR = {
   name: "Polma Tambunan",
   role: "Software Engineer",
-  email: "hello@polmatambunan.com",
+  email: "plmtmbnn@gmail.com",
 };
 
 export const SEO = {
   defaultTitle: SITE.name,
   titleTemplate: "%s · Polma Tambunan",
   defaultDescription: SITE.tagline,
-  twitterHandle: "@polmatambunan", // optional
+  twitterHandle: "@plmtmbnn", // optional
 };
 
 export const SOCIAL_LINKS = {
-  github: "https://github.com/yourusername",
-  linkedin: "https://linkedin.com/in/yourusername",
-  twitter: "https://twitter.com/yourusername",
+  github: "https://github.com/plmtmbnn",
+  linkedin: "https://linkedin.com/in/polma-tambunan",
+  twitter: "https://x.com/LFC",
 };
 
 export const NAVIGATION = [

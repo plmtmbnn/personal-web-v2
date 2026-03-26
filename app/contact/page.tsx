@@ -1,50 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AUTHOR, SITE, SOCIAL_LINKS } from "@/lib/constants";
+import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope } from "react-icons/fa";
 
 const contactLinks = [
 	{
-		href: "mailto:plmtmbnn@gmail.com",
+		href: `mailto:${AUTHOR.email}`,
 		label: "Email",
-		value: "plmtmbnn@gmail.com",
+		value: AUTHOR.email,
 		accent: "from-red-400 to-orange-400",
-		icon: (
-			<svg
-				className="w-5 h-5"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-				/>
-			</svg>
-		),
+		icon: <FaEnvelope className="w-5 h-5" />,
 	},
 	{
-		href: "https://www.linkedin.com/in/polma-tambunan/",
+		href: SOCIAL_LINKS.linkedin,
 		label: "LinkedIn",
 		value: "polma-tambunan",
 		accent: "from-blue-400 to-cyan-400",
-		icon: (
-			<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-				<path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5z" />
-			</svg>
-		),
+		icon: <FaLinkedin className="w-5 h-5" />,
 	},
 	{
-		href: "https://github.com/plmtmbnn",
+		href: SOCIAL_LINKS.github,
 		label: "GitHub",
 		value: "@plmtmbnn",
 		accent: "from-gray-400 to-gray-600",
-		icon: (
-			<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-				<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387" />
-			</svg>
-		),
+		icon: <FaGithub className="w-5 h-5" />,
+	},
+	{
+		href: SOCIAL_LINKS.twitter,
+		label: "X (Twitter)",
+		value: "@plmtmbnn",
+		accent: "from-blue-500 to-indigo-500",
+		icon: <FaTwitter className="w-5 h-5" />,
 	},
 ];
 
@@ -56,61 +43,68 @@ export default function Contact() {
 	}, []);
 
 	return (
-		<section className="min-h-screen bg-background px-4 sm:px-6 py-20 relative overflow-hidden">
+		<section className="min-h-screen bg-background px-4 sm:px-6 py-20 relative overflow-hidden flex flex-col">
 			{/* Subtle Background */}
-			<div className="absolute inset-0">
-				<div className="absolute top-20 right-20 w-96 h-96 bg-indigo-50 rounded-full blur-3xl opacity-40 animate-float"></div>
+			<div className="absolute inset-0 pointer-events-none">
+				<div className="absolute top-20 right-20 w-96 h-96 bg-indigo-50 rounded-full blur-3xl opacity-40 animate-float" />
 				<div
 					className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-blue-50 rounded-full blur-3xl opacity-40 animate-float"
 					style={{ animationDelay: "1s", animationDuration: "5s" }}
-				></div>
+				/>
 			</div>
 
-			<div className="max-w-6xl mx-auto space-y-16 relative z-10">
+			<div className="max-w-6xl mx-auto space-y-16 relative z-10 flex-grow">
 				{/* Header */}
 				<div
-					className={`text-center space-y-6 transition-all duration-700 opacity-100 translate-y-0`}
+					className={`text-center space-y-6 transition-all duration-1000 ${
+						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+					}`}
 				>
 					<h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
 						Let’s Connect
 					</h2>
 					<p className="max-w-2xl mx-auto text-muted-foreground text-lg leading-relaxed">
 						Open to conversations about engineering, fintech, and collaboration.
+						Feel free to reach out on any of these platforms.
 					</p>
 				</div>
 
 				{/* Compact contact list */}
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
 					{contactLinks.map(({ href, label, value, icon, accent }, i) => (
 						<a
 							key={label}
 							href={href}
 							target="_blank"
 							rel="noopener noreferrer"
-							className={`group flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${
+							className={`group flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm px-6 py-5 shadow-sm transition-all duration-500 hover:shadow-lg hover:-translate-y-1 ${
 								visible
 									? "opacity-100 translate-y-0"
-									: "opacity-0 translate-y-4"
+									: "opacity-0 translate-y-8"
 							}`}
-							style={{ transitionDelay: `${i * 100}ms` }}
+							style={{ transitionDelay: `${i * 150}ms` }}
 						>
 							{/* Left */}
-							<div className="flex items-center gap-4">
+							<div className="flex items-center gap-5">
 								<div
-									className={`flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br ${accent} text-white`}
+									className={`flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${accent} text-white shadow-sm group-hover:scale-110 transition-transform`}
 								>
 									{icon}
 								</div>
 
 								<div className="text-left">
-									<p className="font-medium text-foreground">{label}</p>
-									<p className="text-sm text-muted-foreground">{value}</p>
+									<p className="font-semibold text-foreground text-lg">
+										{label}
+									</p>
+									<p className="text-sm text-muted-foreground font-mono">
+										{value}
+									</p>
 								</div>
 							</div>
 
 							{/* Arrow */}
 							<svg
-								className="w-4 h-4 text-slate-400 group-hover:text-slate-600 group-hover:translate-x-1 transition-all"
+								className="w-5 h-5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all"
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
@@ -124,6 +118,18 @@ export default function Contact() {
 							</svg>
 						</a>
 					))}
+				</div>
+			</div>
+
+			{/* Project Version Info */}
+			<div
+				className={`mt-20 text-center transition-all duration-1000 delay-1000 ${
+					visible ? "opacity-100" : "opacity-0"
+				}`}
+			>
+				<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-mono">
+					<span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+					<span>v{SITE.version}</span>
 				</div>
 			</div>
 		</section>

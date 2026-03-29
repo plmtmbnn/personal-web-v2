@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.10](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.9...v0.1.10) (2026-03-29)
+
+
+### Features
+
+* implement daily tasks with dnd, investment hub, and zod env validation ([471f6bb](https://github.com/plmtmbnn/personal-web-v2/commit/471f6bbe5b9c11adc9753e34e0466c7109fe6cdc))
+* implement daily tasks with dnd, investment hub, and zod env validation ([0d1dcd5](https://github.com/plmtmbnn/personal-web-v2/commit/0d1dcd5037d1b6a4f48fcb15603db62cfa939bfd))
+* implement daily tasks with dnd, investment hub, and zod env validation ([8d53059](https://github.com/plmtmbnn/personal-web-v2/commit/8d53059ba12c83dde901ecd4f654e1fed6748a98))
+
 ### [0.1.9](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.8...v0.1.9) (2026-03-29)
 
 ### [0.1.8](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.7...v0.1.8) (2026-03-29)

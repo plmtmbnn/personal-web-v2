@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.8](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.7...v0.1.8) (2026-03-29)
+
+
+### Features
+
+* implement daily tasks with dnd, investment hub, and zod env validation ([9c7005b](https://github.com/plmtmbnn/personal-web-v2/commit/9c7005bc39d6139267b04ed48c98da82cbe2e10f))
+
 ### [0.1.7](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.6...v0.1.7) (2026-03-26)
 
 

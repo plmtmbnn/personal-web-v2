@@ -6,7 +6,7 @@ import TaskProgress from "@/components/tasks/TaskProgress";
 import TaskNotificationHandler from "@/components/tasks/TaskNotificationHandler";
 import { getTasks } from "@/lib/actions/tasks";
 import { LayoutList } from "lucide-react";
-import { TaskPriority } from "@/lib/types/tasks";
+import type { TaskPriority } from "@/lib/types/tasks";
 
 export const metadata = {
 	title: "Daily Tasks | Personal Hub",

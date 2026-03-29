@@ -3,6 +3,7 @@ import TaskForm from "@/components/tasks/TaskForm";
 import TaskList from "@/components/tasks/TaskList";
 import TaskFilters from "@/components/tasks/TaskFilters";
 import TaskProgress from "@/components/tasks/TaskProgress";
+import TaskNotificationHandler from "@/components/tasks/TaskNotificationHandler";
 import { getTasks } from "@/lib/actions/tasks";
 import { LayoutList } from "lucide-react";
 import { TaskPriority } from "@/lib/types/tasks";
@@ -30,7 +31,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
 	// Parse filters from URL
 	const date = params.date;
 	const priority = params.priority as TaskPriority | undefined;
-	const showCompleted = params.completed === "true";
+	// const showCompleted: boolean = params.completed === "true";
 
 	// Fetch filtered tasks
 	const tasks = await getTasks({
@@ -60,6 +61,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
 						</p>
 					</header>
 					{/* Visualization & Filters */}
+					<TaskNotificationHandler tasks={tasks} />
 					<TaskProgress tasks={tasks} />
 					<TaskFilters />
 					{/* Task Management Section */}

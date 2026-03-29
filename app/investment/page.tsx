@@ -68,7 +68,7 @@ export default function InvestmentPage() {
 							},
 						].map((stat, i) => (
 							<div
-								key={i}
+								key={Number(i)}
 								className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow"
 							>
 								<div className="flex justify-between items-start mb-4">

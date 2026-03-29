@@ -1,15 +1,11 @@
 import Link from "next/link";
 import type { BlogI } from "./blog-list";
 import { getBlogs } from "@/lib/data/blog";
-import StockTicker from "@/components/StockTicker";
-
 export default async function BlogPage() {
 	const blogList: BlogI[] = await getBlogs();
 
 	return (
 		<section className="min-h-screen bg-background relative overflow-hidden">
-			<StockTicker />
-
 			<div className="relative px-4 sm:px-6 py-20">
 				{/* Subtle Background */}
 				<div className="absolute inset-0 -z-10">

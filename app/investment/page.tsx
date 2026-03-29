@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import StockTicker from "@/components/StockTicker";
 import {
 	TrendingUp,

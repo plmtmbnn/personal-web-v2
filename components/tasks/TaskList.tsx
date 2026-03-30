@@ -149,10 +149,10 @@ export default function TaskList({ initialTasks }: TaskListProps) {
 												<GripVertical className="w-5 h-5" />
 											</div>
 
-											<div className="flex items-center gap-4 flex-1 overflow-hidden">
+											<div className="flex items-start gap-4 flex-1 min-w-0">
 												<button
 													onClick={() => handleToggle(task.id, task.is_completed)}
-													className={`transition-all duration-300 transform hover:scale-110 active:scale-90 ${
+													className={`mt-1 flex-shrink-0 transition-all duration-300 transform hover:scale-110 active:scale-90 ${
 														task.is_completed ? 'text-green-500' : 'text-muted-foreground hover:text-accent'
 													}`}
 												>
@@ -162,9 +162,9 @@ export default function TaskList({ initialTasks }: TaskListProps) {
 														<Circle className="w-7 h-7" />
 													)}
 												</button>
-												<div className="flex-1 min-w-0">
+												<div className="flex-1 min-w-0 break-words">
 													<h4
-														className={`font-semibold text-lg truncate transition-all duration-300 ${
+														className={`font-semibold text-lg transition-all duration-300 ${
 															task.is_completed ? 'line-through text-muted-foreground decoration-2' : ''
 														}`}
 													>

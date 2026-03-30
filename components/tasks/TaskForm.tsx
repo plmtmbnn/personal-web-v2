@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PlusCircle, Calendar, Tag, AlertTriangle } from 'lucide-react';
 import { TaskPriority } from '@/lib/types/tasks';
 import { addTask } from '@/lib/actions/tasks';
@@ -8,6 +8,21 @@ import { addTask } from '@/lib/actions/tasks';
 export default function TaskForm() {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+	const adjustHeight = () => {
+		const textarea = textareaRef.current;
+		if (textarea) {
+			textarea.style.height = 'auto';
+			textarea.style.height = `${textarea.scrollHeight}px`;
+		}
+	};
+
+	useEffect(() => {
+		if (isOpen) {
+			adjustHeight();
+		}
+	}, [isOpen]);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -49,11 +64,14 @@ export default function TaskForm() {
 	return (
 		<div className="glass-card animate-fade-in mb-8">
 			<form onSubmit={handleSubmit} className="space-y-4">
-				<input
+				<textarea
+					ref={textareaRef}
 					autoFocus
 					name="title"
 					placeholder="What needs to be done?"
-					className="w-full text-xl font-semibold bg-transparent border-none focus:outline-none focus:ring-0 placeholder:text-muted-foreground/40"
+					className="w-full text-xl font-semibold bg-transparent border-none focus:outline-none focus:ring-0 placeholder:text-muted-foreground/40 resize-none overflow-hidden"
+					rows={1}
+					onInput={adjustHeight}
 					required
 				/>
 

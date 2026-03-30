@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.11](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.10...v0.1.11) (2026-03-30)
+
+
+### Bug Fixes
+
+* **tasks:** prevent horizontal card expansion and implement auto-resizing textarea ([7922e5b](https://github.com/plmtmbnn/personal-web-v2/commit/7922e5b0b9f5bf49e68e063f89f93667d062f461))
+
 ### [0.1.10](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.9...v0.1.10) (2026-03-29)
 
 

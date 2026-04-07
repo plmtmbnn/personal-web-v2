@@ -7,6 +7,7 @@ import { z } from "zod";
 const clientSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
   NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: z.string().default("true"),
   NEXT_PUBLIC_ENABLE_PINGUARD: z.string().default("true"),
 });
@@ -27,6 +28,7 @@ const validateEnv = () => {
   const clientResult = clientSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH,
     NEXT_PUBLIC_ENABLE_PINGUARD: process.env.NEXT_PUBLIC_ENABLE_PINGUARD,
   });

@@ -1,11 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 import { ENV_GLOBAL } from "@/lib/env";
 
-const supabaseUrl: string = String(ENV_GLOBAL?.NEXT_PUBLIC_SUPABASE_URL || '-');
-const supabaseKey: string = String(ENV_GLOBAL?.NEXT_PUBLIC_SUPABASE_ANON_KEY || '-');
-
-export const SupabaseConn = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-    },
-  });
+/**
+ * Supabase Client for Client-Side Components.
+ * Uses @supabase/ssr for better integration with PKCE and cookies.
+ */
+export const SupabaseConn = createBrowserClient(
+  ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_URL!,
+  ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);

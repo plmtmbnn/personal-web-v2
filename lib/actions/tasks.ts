@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { SupabaseConn } from '@/utils/supabase';
+import { invalidateStatsCache } from '@/utils/redis';
 import { Task, TaskPriority } from '@/lib/types/tasks';
 
 /**
@@ -66,6 +67,7 @@ export async function addTask(payload: {
   }
 
   revalidatePath('/tasks');
+  await invalidateStatsCache();
   return data as Task;
 }
 
@@ -90,6 +92,7 @@ export async function toggleTask(taskId: string, isCurrentlyCompleted: boolean) 
   }
 
   revalidatePath('/tasks');
+  await invalidateStatsCache();
 }
 
 /**
@@ -116,6 +119,9 @@ export async function reorderTasks(taskIds: string[]) {
   }
 
   revalidatePath('/tasks');
+  // Reordering doesn't usually change counts, but we'll invalidate to be safe 
+  // in case analytics ever use sequence data.
+  await invalidateStatsCache();
 }
 
 /**
@@ -133,6 +139,7 @@ export async function deleteTask(taskId: string) {
   }
 
   revalidatePath('/tasks');
+  await invalidateStatsCache();
 }
 
 /**
@@ -176,6 +183,7 @@ export async function cleanupOldTasks() {
   }
 
   revalidatePath('/tasks');
+  await invalidateStatsCache();
 }
 
 /**
@@ -193,6 +201,7 @@ export async function rescheduleStaleTasks(taskIds: string[], newDate: string) {
   }
 
   revalidatePath('/tasks');
+  await invalidateStatsCache();
 }
 
 /**
@@ -210,4 +219,5 @@ export async function updateTask(taskId: string, updates: Partial<Task>) {
   }
 
   revalidatePath('/tasks');
+  await invalidateStatsCache();
 }

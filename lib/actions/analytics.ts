@@ -1,6 +1,7 @@
 'use server';
 
 import { SupabaseConn } from '@/utils/supabase';
+import { redis, CACHE_KEYS } from '@/utils/redis';
 import { Task, TaskPriority } from '@/lib/types/tasks';
 import { 
   startOfToday, 
@@ -24,8 +25,20 @@ export interface AnalyticsStats {
 
 /**
  * Fetch and calculate task analytics for a given period.
+ * Optimization: Uses Redis Cache-Aside strategy.
  */
 export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<AnalyticsStats> {
+  const cacheKey = CACHE_KEYS.STATS(period);
+
+  // 1. Try to fetch from Redis Cache
+  try {
+    const cachedData = await redis.get<AnalyticsStats>(cacheKey);
+    if (cachedData) return cachedData;
+  } catch (err) {
+    console.error('Redis Fetch Error (Falling back to DB):', err);
+  }
+
+  // 2. Cache Miss: Fetch from Supabase
   const today = startOfToday();
   let days: number;
   let startDate: Date;
@@ -46,7 +59,6 @@ export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<
   
   // Previous period for comparison
   const prevStartDate = subDays(startDate, days);
-  const prevEndDate = subDays(startDate, 1);
 
   // Fetch current period tasks
   const { data: currentTasks, error: currentError } = await SupabaseConn
@@ -61,7 +73,7 @@ export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<
   }
 
   // Fetch previous period completed tasks for comparison
-  const { count: prevCompletedCount, error: prevError } = await SupabaseConn
+  const { count: prevCompletedCount } = await SupabaseConn
     .from('tasks')
     .select('*', { count: 'exact', head: true })
     .eq('is_completed', true)
@@ -134,7 +146,7 @@ export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<
     }
   }
 
-  return {
+  const stats = {
     totalTasks,
     completedTasks,
     completionRate,
@@ -145,4 +157,13 @@ export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<
     comparison,
     taskVelocity
   };
+
+  // 3. Store in Redis with 30 minute TTL (1800 seconds)
+  try {
+    await redis.set(cacheKey, stats, { ex: 1800 });
+  } catch (err) {
+    console.error('Redis Store Error:', err);
+  }
+
+  return stats;
 }

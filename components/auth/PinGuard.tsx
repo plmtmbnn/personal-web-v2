@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ENV_GLOBAL } from '@/lib/env';
 
 interface PinGuardProps {
 	children: React.ReactNode;
@@ -11,13 +10,13 @@ const PIN_SESSION_KEY = 'auth_pin_session';
 const SESSION_DURATION = 3600000; // 1 hour in ms
 
 /**
- * PinGuard is a wrapper component that protects its children with a 6-digit PIN.
- * It manages session state in LocalStorage with a 1-hour expiration.
+ * PinGuard: Protecs content with a 6-digit PIN.
+ * Integrated with server-side API and Rate Limiting.
  */
 export default function PinGuard({ children }: PinGuardProps) {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 	const [pin, setPin] = useState('');
-	const [error, setError] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 
 	const checkSession = () => {
@@ -27,7 +26,6 @@ export default function PinGuard({ children }: PinGuardProps) {
 		try {
 			const { timestamp, authenticated } = JSON.parse(session);
 			const currentTime = Date.now();
-			// Check if authenticated and session hasn't expired
 			if (authenticated && currentTime - timestamp < SESSION_DURATION) {
 				return true;
 			}
@@ -38,22 +36,26 @@ export default function PinGuard({ children }: PinGuardProps) {
 	};
 
 	useEffect(() => {
-		// Small delay to ensure LocalStorage is checked after mount (SSR hydration)
 		setIsAuthenticated(checkSession());
 	}, []);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (pin.length !== 6) return;
 
 		setIsLoading(true);
-		setError(false);
+		setError(null);
 
-		// Simulate a small delay for a smoother UI experience
-		setTimeout(() => {
-			const requiredPin = ENV_GLOBAL.NEXT_PUBLIC_PAGE_PIN;
+		try {
+			const response = await fetch('/api/verify-pin', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ pin }),
+			});
 
-			if (pin === requiredPin) {
+			const data = await response.json();
+
+			if (response.ok && data.authenticated) {
 				const session = {
 					timestamp: Date.now(),
 					authenticated: true,
@@ -61,16 +63,18 @@ export default function PinGuard({ children }: PinGuardProps) {
 				localStorage.setItem(PIN_SESSION_KEY, JSON.stringify(session));
 				setIsAuthenticated(true);
 			} else {
-				setError(true);
+				// Handle 429 Too Many Requests and other errors
+				setError(data.error || 'Incorrect PIN');
 				setPin('');
-				// Auto-reset error after shake animation
-				setTimeout(() => setError(false), 500);
+				setTimeout(() => setError(null), 3000);
 			}
+		} catch (err) {
+			setError('Network error, please try again.');
+		} finally {
 			setIsLoading(false);
-		}, 600);
+		}
 	};
 
-	// Loading state to prevent layout shift during session check
 	if (isAuthenticated === null) {
 		return (
 			<div className="fixed inset-0 bg-background flex items-center justify-center">
@@ -79,12 +83,10 @@ export default function PinGuard({ children }: PinGuardProps) {
 		);
 	}
 
-	// Render children if authenticated
 	if (isAuthenticated) {
 		return <>{children}</>;
 	}
 
-	// Render PIN entry screen if not authenticated
 	return (
 		<div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-xl p-4">
 			<div className="glass-card w-full max-w-md animate-fade-in">
@@ -128,7 +130,11 @@ export default function PinGuard({ children }: PinGuardProps) {
 							autoFocus
 							disabled={isLoading}
 						/>
-						<div className="absolute inset-0 rounded-2xl pointer-events-none group-focus-within:ring-2 ring-accent/20 transition-all" />
+						{error && (
+							<p className="absolute -bottom-6 left-0 right-0 text-center text-xs text-red-500 font-bold animate-fade-in">
+								{error}
+							</p>
+						)}
 					</div>
 
 					<button

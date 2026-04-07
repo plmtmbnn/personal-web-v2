@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.15](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.14...v0.1.15) (2026-04-07)
+
+
+### Bug Fixes
+
+* **auth:** correct PKCE flow, implement robust callback logging, and handle profile verification gate ([2a07fc4](https://github.com/plmtmbnn/personal-web-v2/commit/2a07fc408cc0ff34f575639d3bdfceca1f0ad1e2))
+
 ### [0.1.14](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.13...v0.1.14) (2026-04-07)
 
 

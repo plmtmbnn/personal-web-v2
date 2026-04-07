@@ -1,14 +1,13 @@
 'use server';
 
 import { SupabaseConn } from '@/utils/supabase';
-import { Task } from '@/lib/types/tasks';
+import { Task, TaskPriority } from '@/lib/types/tasks';
 import { 
   startOfToday, 
   subDays, 
   format, 
   parseISO, 
-  isSameDay,
-  differenceInDays
+  isSameDay
 } from 'date-fns';
 
 export interface AnalyticsStats {
@@ -17,29 +16,44 @@ export interface AnalyticsStats {
   completionRate: number;
   mostProductiveDay: string;
   categoryDistribution: { category: string; count: number }[];
+  priorityDistribution: { priority: TaskPriority; count: number }[];
   streak: number;
   comparison: number; // percentage change vs previous period
+  taskVelocity: number; // avg tasks per day
 }
 
 /**
  * Fetch and calculate task analytics for a given period.
  */
-export async function getTaskStats(period: 'week' | 'month'): Promise<AnalyticsStats> {
-  const days = period === 'week' ? 7 : 30;
+export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<AnalyticsStats> {
   const today = startOfToday();
-  const startDate = subDays(today, days - 1);
+  let days: number;
+  let startDate: Date;
+
+  if (period === 'today') {
+    days = 1;
+    startDate = today;
+  } else if (period === 'week') {
+    days = 7;
+    startDate = subDays(today, 6);
+  } else {
+    days = 30;
+    startDate = subDays(today, 29);
+  }
+
   const startDateStr = format(startDate, 'yyyy-MM-dd');
+  const endDateStr = format(today, 'yyyy-MM-dd');
   
   // Previous period for comparison
   const prevStartDate = subDays(startDate, days);
-  const prevStartDateStr = format(prevStartDate, 'yyyy-MM-dd');
+  const prevEndDate = subDays(startDate, 1);
 
-  // Fetch current period tasks (based on due_date)
+  // Fetch current period tasks
   const { data: currentTasks, error: currentError } = await SupabaseConn
     .from('tasks')
     .select('*')
     .gte('due_date', startDateStr)
-    .lte('due_date', format(today, 'yyyy-MM-dd'));
+    .lte('due_date', endDateStr);
 
   if (currentError) {
     console.error('Error fetching current tasks for analytics:', currentError);
@@ -54,19 +68,15 @@ export async function getTaskStats(period: 'week' | 'month'): Promise<AnalyticsS
     .gte('completed_at', prevStartDate.toISOString())
     .lt('completed_at', startDate.toISOString());
 
-  if (prevError) {
-    console.error('Error fetching previous tasks for comparison:', prevError);
-  }
-
   const tasks = (currentTasks || []) as Task[];
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.is_completed).length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const taskVelocity = parseFloat((completedTasks / days).toFixed(1));
 
-  // Most Productive Day (based on completed_at)
-  const completedInPeriod = tasks.filter(t => t.is_completed && t.completed_at);
+  // Most Productive Day
   const dayCounts: Record<string, number> = {};
-  completedInPeriod.forEach(t => {
+  tasks.filter(t => t.is_completed && t.completed_at).forEach(t => {
     const day = format(parseISO(t.completed_at!), 'EEEE');
     dayCounts[day] = (dayCounts[day] || 0) + 1;
   });
@@ -80,27 +90,29 @@ export async function getTaskStats(period: 'week' | 'month'): Promise<AnalyticsS
     }
   });
 
-  // Category Distribution
+  // Category & Priority Distribution
   const categoryMap: Record<string, number> = {};
+  const priorityMap: Record<TaskPriority, number> = { LOW: 0, MEDIUM: 0, HIGH: 0 };
+
   tasks.forEach(t => {
     const cat = t.category || 'General';
     categoryMap[cat] = (categoryMap[cat] || 0) + 1;
+    priorityMap[t.priority] = (priorityMap[t.priority] || 0) + 1;
   });
+
   const categoryDistribution = Object.entries(categoryMap)
     .map(([category, count]) => ({ category, count }))
     .sort((a, b) => b.count - a.count);
 
-  // Comparison logic
-  const prevCount = prevCompletedCount || 0;
-  let comparison = 0;
-  if (prevCount === 0) {
-    comparison = completedTasks > 0 ? 100 : 0;
-  } else {
-    comparison = Math.round(((completedTasks - prevCount) / prevCount) * 100);
-  }
+  const priorityDistribution = (Object.entries(priorityMap) as [TaskPriority, number][])
+    .map(([priority, count]) => ({ priority, count }));
 
-  // Weekly Streak (Check last 30 days of completed tasks to find current streak)
-  const { data: allCompleted, error: streakError } = await SupabaseConn
+  // Comparison
+  const prevCount = prevCompletedCount || 0;
+  const comparison = prevCount === 0 ? (completedTasks > 0 ? 100 : 0) : Math.round(((completedTasks - prevCount) / prevCount) * 100);
+
+  // Streak
+  const { data: allCompleted } = await SupabaseConn
     .from('tasks')
     .select('completed_at')
     .eq('is_completed', true)
@@ -109,17 +121,13 @@ export async function getTaskStats(period: 'week' | 'month'): Promise<AnalyticsS
     .limit(100);
 
   let streak = 0;
-  if (!streakError && allCompleted && allCompleted.length > 0) {
+  if (allCompleted && allCompleted.length > 0) {
     const completionDates = Array.from(new Set(
       allCompleted.map(t => format(parseISO(t.completed_at), 'yyyy-MM-dd'))
     )).map(d => parseISO(d));
 
     let checkDate = today;
-    // If nothing completed today, check if streak ended yesterday
-    if (!completionDates.some(d => isSameDay(d, today))) {
-      checkDate = subDays(today, 1);
-    }
-
+    if (!completionDates.some(d => isSameDay(d, today))) checkDate = subDays(today, 1);
     while (completionDates.some(d => isSameDay(d, checkDate))) {
       streak++;
       checkDate = subDays(checkDate, 1);
@@ -132,7 +140,9 @@ export async function getTaskStats(period: 'week' | 'month'): Promise<AnalyticsS
     completionRate,
     mostProductiveDay,
     categoryDistribution,
+    priorityDistribution,
     streak,
-    comparison
+    comparison,
+    taskVelocity
   };
 }

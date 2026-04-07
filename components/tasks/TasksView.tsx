@@ -1,15 +1,14 @@
 "use client";
 
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import dynamic from "next/dynamic";
 import ComponentLoader from "@/components/tasks/ComponentLoader";
+import QuickNav from "@/components/tasks/QuickNav";
 import { LayoutList } from "lucide-react";
 import type { Task } from "@/lib/types/tasks";
 
 /**
  * Optimization: Lazy load heavy interactive/visual components.
- * Moving these to a Client Component allows 'ssr: false' which is
- * required for components using browser APIs or complex DnD logic.
  */
 const DynamicHealthCheck = dynamic(() => import("@/components/tasks/HealthCheck"), {
 	loading: () => <ComponentLoader height="120px" />,
@@ -17,7 +16,7 @@ const DynamicHealthCheck = dynamic(() => import("@/components/tasks/HealthCheck"
 });
 
 const DynamicGeneralReport = dynamic(() => import("@/components/tasks/GeneralReport"), {
-	loading: () => <ComponentLoader height="300px" />,
+	loading: () => <ComponentLoader height="150px" />,
 	ssr: false
 });
 
@@ -57,9 +56,13 @@ interface TasksViewProps {
 
 export default function TasksView({ tasks }: TasksViewProps) {
 	return (
-		<div className="min-h-screen bg-background p-6 md:p-12 lg:p-20 animate-fade-in">
-			<div className="max-w-3xl mx-auto">
-				<header className="mb-12">
+		<div className="min-h-screen bg-background pt-20 md:pt-12 lg:pt-20 p-4 md:p-12 lg:p-20 animate-fade-in relative">
+			{/* Navigation Overlay - Fixed at Top for Mobile, Sidebar for Desktop */}
+			<QuickNav />
+
+			<div className="max-w-3xl mx-auto space-y-12">
+				{/* Header Section */}
+				<header id="tasks-overview" className="scroll-mt-32">
 					<div className="flex items-center gap-3 mb-2">
 						<div className="p-2 bg-accent/10 rounded-xl text-accent">
 							<LayoutList className="w-6 h-6" />
@@ -75,25 +78,33 @@ export default function TasksView({ tasks }: TasksViewProps) {
 					<DynamicHealthCheck />
 				</Suspense>
 
-				<section className="mb-12">
-					<Suspense fallback={<ComponentLoader height="300px" />}>
+				{/* Analytics Section */}
+				<section id="analytics-overview" className="scroll-mt-32">
+					<Suspense fallback={<ComponentLoader height="150px" />}>
 						<DynamicGeneralReport />
 					</Suspense>
 				</section>
 
-				<Suspense fallback={null}>
-					<DynamicTaskNotificationHandler tasks={tasks} />
-				</Suspense>
-				
-				<Suspense fallback={<ComponentLoader height="100px" />}>
-					<DynamicTaskProgress tasks={tasks} />
-				</Suspense>
+				{/* Visualization & Filters */}
+				<div className="space-y-6">
+					<Suspense fallback={null}>
+						<DynamicTaskNotificationHandler tasks={tasks} />
+					</Suspense>
+					
+					<Suspense fallback={<ComponentLoader height="100px" />}>
+						<DynamicTaskProgress tasks={tasks} />
+					</Suspense>
 
-				<Suspense fallback={<div className="h-12 bg-background-secondary rounded-2xl animate-pulse mb-8" />}>
-					<DynamicTaskFilters />
-				</Suspense>
+					<Suspense fallback={<div className="h-12 bg-background-secondary rounded-2xl animate-pulse" />}>
+						<DynamicTaskFilters />
+					</Suspense>
+				</div>
 
-				<main className="space-y-10">
+				{/* Task Management Section (THE STAR) */}
+				<main 
+					id="agenda-section" 
+					className="scroll-mt-32 space-y-10 p-6 md:p-10 bg-background-secondary/30 rounded-[3rem] border border-border/50 shadow-inner"
+				>
 					<section>
 						<Suspense fallback={<ComponentLoader height="150px" />}>
 							<DynamicTaskForm />
@@ -101,11 +112,11 @@ export default function TasksView({ tasks }: TasksViewProps) {
 					</section>
 
 					<section>
-						<div className="flex items-center justify-between mb-6">
-							<h2 className="text-xl font-bold flex items-center gap-2">
-								Agenda
-								<span className="text-sm font-normal text-muted-foreground bg-background-secondary px-2 py-0.5 rounded-full">
-									{tasks.length}
+						<div className="flex items-center justify-between mb-8">
+							<h2 className="text-2xl font-black flex items-center gap-3">
+								Today&apos;s Agenda
+								<span className="text-sm font-bold text-accent bg-accent/10 px-3 py-1 rounded-full">
+									{tasks.length} tasks
 								</span>
 							</h2>
 						</div>

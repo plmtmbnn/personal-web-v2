@@ -29,7 +29,9 @@ export async function getTasks(options?: {
     query = query.eq('priority', options.priority);
   }
 
-  const { data, error } = await query.order('position', { ascending: true });
+  const { data, error } = await query
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching tasks:', error);
@@ -188,6 +190,23 @@ export async function rescheduleStaleTasks(taskIds: string[], newDate: string) {
   if (error) {
     console.error('Error rescheduling tasks:', error);
     throw new Error('Failed to reschedule tasks');
+  }
+
+  revalidatePath('/tasks');
+}
+
+/**
+ * Update task details (title, priority, etc.)
+ */
+export async function updateTask(taskId: string, updates: Partial<Task>) {
+  const { error } = await SupabaseConn
+    .from('tasks')
+    .update(updates)
+    .eq('id', taskId);
+
+  if (error) {
+    console.error('Error updating task:', error);
+    throw new Error('Failed to update task');
   }
 
   revalidatePath('/tasks');

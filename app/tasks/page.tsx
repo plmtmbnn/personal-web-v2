@@ -5,6 +5,7 @@ import TaskFilters from "@/components/tasks/TaskFilters";
 import TaskProgress from "@/components/tasks/TaskProgress";
 import TaskNotificationHandler from "@/components/tasks/TaskNotificationHandler";
 import HealthCheck from "@/components/tasks/HealthCheck";
+import GeneralReport from "@/components/tasks/GeneralReport";
 import { getTasks } from "@/lib/actions/tasks";
 import { LayoutList } from "lucide-react";
 import type { TaskPriority } from "@/lib/types/tasks";
@@ -63,6 +64,10 @@ export default async function TasksPage({ searchParams }: PageProps) {
 					</header>
 
 					<HealthCheck />
+
+					<section className="mb-12">
+						<GeneralReport />
+					</section>
 
 					{/* Visualization & Filters */}
 					<TaskNotificationHandler tasks={tasks} />

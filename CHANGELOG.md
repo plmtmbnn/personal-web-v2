@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.12](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.11...v0.1.12) (2026-04-07)
+
+
+### Features
+
+* **tasks:** enhance analytics with tabs/velocity, overhaul Focus Mode with full-screen overlay, and refactor QuickNav to a minimalist pill ([9d19fb1](https://github.com/plmtmbnn/personal-web-v2/commit/9d19fb19eb2d3b1f17f6606a548a22962407c96b))
+* **tasks:** implement analytics report and productivity stats ([ce00c65](https://github.com/plmtmbnn/personal-web-v2/commit/ce00c65109bdfde91d99f118c4dc5ce36c3b306c))
+* **tasks:** implement data maintenance and HealthCheck for stale tasks ([6bedd2b](https://github.com/plmtmbnn/personal-web-v2/commit/6bedd2baa8d1ac40f1f9732d873639d851f0b393))
+
 ### [0.1.11](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.10...v0.1.11) (2026-03-30)
 
 

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.13](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.12...v0.1.13) (2026-04-07)
+
+
+### Features
+
+* **auth/analytics:** implement rate limiting for PinGuard and Redis caching for task analytics ([124f618](https://github.com/plmtmbnn/personal-web-v2/commit/124f6184ddb7db677d7ac6e355c14818b9cc92c9))
+
 ### [0.1.12](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.11...v0.1.12) (2026-04-07)
 
 

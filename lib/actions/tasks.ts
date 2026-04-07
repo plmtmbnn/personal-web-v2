@@ -132,3 +132,63 @@ export async function deleteTask(taskId: string) {
 
   revalidatePath('/tasks');
 }
+
+/**
+ * Fetch tasks that are not completed and past their due date.
+ */
+export async function getStaleTasks(): Promise<Task[]> {
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data, error } = await SupabaseConn
+    .from('tasks')
+    .select('*')
+    .eq('is_completed', false)
+    .lt('due_date', today)
+    .order('due_date', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching stale tasks:', error);
+    return [];
+  }
+
+  return data as Task[];
+}
+
+/**
+ * Permanently delete completed tasks older than 6 months.
+ */
+export async function cleanupOldTasks() {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const dateStr = sixMonthsAgo.toISOString();
+
+  const { error } = await SupabaseConn
+    .from('tasks')
+    .delete()
+    .eq('is_completed', true)
+    .lt('completed_at', dateStr);
+
+  if (error) {
+    console.error('Error cleaning up old tasks:', error);
+    throw new Error('Failed to cleanup old tasks');
+  }
+
+  revalidatePath('/tasks');
+}
+
+/**
+ * Bulk update due_date for a set of tasks.
+ */
+export async function rescheduleStaleTasks(taskIds: string[], newDate: string) {
+  const { error } = await SupabaseConn
+    .from('tasks')
+    .update({ due_date: newDate })
+    .in('id', taskIds);
+
+  if (error) {
+    console.error('Error rescheduling tasks:', error);
+    throw new Error('Failed to reschedule tasks');
+  }
+
+  revalidatePath('/tasks');
+}

@@ -4,6 +4,7 @@ import TaskList from "@/components/tasks/TaskList";
 import TaskFilters from "@/components/tasks/TaskFilters";
 import TaskProgress from "@/components/tasks/TaskProgress";
 import TaskNotificationHandler from "@/components/tasks/TaskNotificationHandler";
+import HealthCheck from "@/components/tasks/HealthCheck";
 import { getTasks } from "@/lib/actions/tasks";
 import { LayoutList } from "lucide-react";
 import type { TaskPriority } from "@/lib/types/tasks";
@@ -60,6 +61,9 @@ export default async function TasksPage({ searchParams }: PageProps) {
 							Focus on what matters today.
 						</p>
 					</header>
+
+					<HealthCheck />
+
 					{/* Visualization & Filters */}
 					<TaskNotificationHandler tasks={tasks} />
 					<TaskProgress tasks={tasks} />
@@ -82,13 +86,6 @@ export default async function TasksPage({ searchParams }: PageProps) {
 							<TaskList initialTasks={tasks} />
 						</section>
 					</main>
-					...
-					{/* Footer Info */}
-					<footer className="mt-20 pt-10 border-t border-border text-center">
-						<p className="text-sm text-muted-foreground">
-							Tasks are automatically archived at the end of each day.
-						</p>
-					</footer>
 				</div>
 			</div>
 		</PinGuard>

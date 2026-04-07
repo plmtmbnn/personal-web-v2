@@ -8,6 +8,9 @@ dependencies:
   '@hello-pangea/dnd':
     specifier: ^18.0.1
     version: 18.0.1(@types/react@19.2.14)(react-dom@19.2.4)(react@19.2.4)
+  '@supabase/ssr':
+    specifier: ^0.10.0
+    version: 0.10.0(@supabase/supabase-js@2.100.0)
   '@supabase/supabase-js':
     specifier: ^2.100.0
     version: 2.100.0
@@ -1281,6 +1284,15 @@ packages:
       - utf-8-validate
     dev: false
 
+  /@supabase/ssr@0.10.0(@supabase/supabase-js@2.100.0):
+    resolution: {integrity: sha512-36jIu+DuKzg5EgA3fnH+zHvwASvpKcL4zPgmHoZaULroS5Q4mzeHcM69zJ0sXUHddO5IcHjQNZJ9Vyhl/DdbRw==}
+    peerDependencies:
+      '@supabase/supabase-js': ^2.100.1
+    dependencies:
+      '@supabase/supabase-js': 2.100.0
+      cookie: 1.1.1
+    dev: false
+
   /@supabase/storage-js@2.100.0:
     resolution: {integrity: sha512-d4EeuK6RNIgYNA2MU9kj8lQrLm5AzZ+WwpWjGkii6SADQNIGTC/uiaTRu02XJ5AmFALQfo8fLl9xuCkO6Xw+iQ==}
     engines: {node: '>=20.0.0'}
@@ -2167,6 +2179,11 @@ packages:
 
   /convert-source-map@1.9.0:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
+    dev: false
+
+  /cookie@1.1.1:
+    resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
+    engines: {node: '>=18'}
     dev: false
 
   /core-util-is@1.0.3:

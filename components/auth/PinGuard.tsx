@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ENV_GLOBAL } from '@/lib/env';
 
 interface PinGuardProps {
 	children: React.ReactNode;
@@ -11,13 +12,18 @@ const SESSION_DURATION = 3600000; // 1 hour in ms
 
 /**
  * PinGuard: Protecs content with a 6-digit PIN.
- * Integrated with server-side API and Rate Limiting.
+ * Integrated with server-side API, Rate Limiting, and Feature Toggles.
  */
 export default function PinGuard({ children }: PinGuardProps) {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 	const [pin, setPin] = useState('');
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
+
+  // Feature Toggle: Bypass PinGuard if disabled
+  if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false") {
+    return <>{children}</>;
+  }
 
 	const checkSession = () => {
 		const session = localStorage.getItem(PIN_SESSION_KEY);
@@ -63,7 +69,6 @@ export default function PinGuard({ children }: PinGuardProps) {
 				localStorage.setItem(PIN_SESSION_KEY, JSON.stringify(session));
 				setIsAuthenticated(true);
 			} else {
-				// Handle 429 Too Many Requests and other errors
 				setError(data.error || 'Incorrect PIN');
 				setPin('');
 				setTimeout(() => setError(null), 3000);
@@ -91,9 +96,9 @@ export default function PinGuard({ children }: PinGuardProps) {
 		<div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-xl p-4">
 			<div className="glass-card w-full max-w-md animate-fade-in">
 				<div className="text-center mb-10">
-					<div className="w-20 h-20 bg-accent/5 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+					<div className="w-20 h-20 bg-accent/5 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner text-accent">
 						<svg
-							className="w-10 h-10 text-accent"
+							className="w-10 h-10"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -107,8 +112,8 @@ export default function PinGuard({ children }: PinGuardProps) {
 							/>
 						</svg>
 					</div>
-					<h2 className="gradient-text mb-3">Protected Content</h2>
-					<p className="text-muted-foreground text-sm max-w-[240px] mx-auto">
+					<h2 className="gradient-text mb-3 tracking-tighter font-black">Protected Content</h2>
+					<p className="text-muted-foreground text-sm max-w-[240px] mx-auto leading-relaxed">
 						This page is restricted. Please enter the access PIN.
 					</p>
 				</div>

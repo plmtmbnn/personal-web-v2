@@ -1,5 +1,4 @@
 "use client";
-console.log(process.env);
 
 import { EXPERIENCE_YEAR } from "@/lib/constants";
 import Image from "next/image";

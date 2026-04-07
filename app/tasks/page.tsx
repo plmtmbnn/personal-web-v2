@@ -1,6 +1,10 @@
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import PinGuard from "@/components/auth/PinGuard";
 import TasksView from "@/components/tasks/TasksView";
 import { getTasks } from "@/lib/actions/tasks";
+import { ENV_GLOBAL } from "@/lib/env";
+import { redis } from "@/utils/redis";
 import type { TaskPriority } from "@/lib/types/tasks";
 
 export const metadata = {
@@ -18,14 +22,32 @@ interface PageProps {
 
 /**
  * TasksPage (Server Component)
- * Handles data fetching and wraps the client-side view in PinGuard.
+ * Handles data fetching and session protection.
  */
 export default async function TasksPage({ searchParams }: PageProps) {
+	// 1. Session Protection (Moving from middleware to resolve routing issues)
+	if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH !== "false") {
+		const cookieStore = await cookies();
+		const sessionId = cookieStore.get("app_session")?.value;
+
+		if (!sessionId) {
+			redirect("/login");
+		}
+
+		// Verify session in Redis
+		const userId = await redis.get(`session:${sessionId}`);
+		if (!userId) {
+			// In a Server Component we can't delete the cookie directly via headers easily during render,
+			// but redirecting to /login is the primary security requirement.
+			redirect("/login");
+		}
+	}
+
 	const params = await searchParams;
 	const date = params.date;
 	const priority = params.priority as TaskPriority | undefined;
 
-	// Server-side data fetch
+	// 2. Data Fetching
 	const tasks = await getTasks({
 		date,
 		priority,

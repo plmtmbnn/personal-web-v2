@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.14](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.13...v0.1.14) (2026-04-07)
+
+
+### Features
+
+* **auth:** implement Google OAuth, Redis sessions, and architectural ENV refactor with feature toggles ([bfe31e9](https://github.com/plmtmbnn/personal-web-v2/commit/bfe31e98ab09ef110f0af8752e50a0cee204c2fc))
+
 ### [0.1.13](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.12...v0.1.13) (2026-04-07)
 
 

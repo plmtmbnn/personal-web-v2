@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Task } from "@/lib/types/tasks";
+import { renderTextWithLinks } from "@/lib/utils/tasks";
 
 interface TaskItemProps {
 	task: Task;
@@ -131,7 +132,7 @@ export default function TaskItem({
 							task.is_completed ? "line-through text-muted-foreground decoration-2" : ""
 						} ${isFocus ? "text-2xl md:text-3xl lg:text-4xl" : "text-lg"}`}
 					>
-						{task.title}
+						{renderTextWithLinks(task.title)}
 					</h4>
 				)}
 				<div className="flex flex-wrap items-center gap-3 mt-2">

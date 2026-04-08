@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.18](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.17...v0.1.18) (2026-04-08)
+
+
+### Features
+
+* task link clickable and refactor blog list and blog reader ([bc133ec](https://github.com/plmtmbnn/personal-web-v2/commit/bc133ecd54a63979ddfaa7cea2a95f5d9387b819))
+
 ### [0.1.17](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.16...v0.1.17) (2026-04-07)
 
 ### [0.1.16](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.15...v0.1.16) (2026-04-07)

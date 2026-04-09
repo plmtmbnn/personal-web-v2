@@ -172,7 +172,7 @@ export default function CompactBottomBar() {
   const visibleItems = NAV_ITEMS.filter(item => {
     if (item.toggle && ENV_GLOBAL[item.toggle] === "false") return false;
     if (item.adminOnly && !isAdmin) return false;
-    if (item.authOnly && !isLoggedIn) return false;
+    if (item.authOnly && !isLoggedIn) return true;
     return true;
   });
 

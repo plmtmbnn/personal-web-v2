@@ -56,3 +56,48 @@ export async function getBlogBySlug(slug: string): Promise<Blog | null> {
     return null;
   }
 }
+
+/**
+ * Fetch all blogs (published and drafts) for admin.
+ */
+export async function getAdminBlogs(): Promise<Blog[]> {
+  try {
+    const { data, error } = await SupabaseConn
+      .from("blogs")
+      .select("*")
+      .order("date", { ascending: false });
+
+    if (error) {
+      console.error("Supabase error fetching admin blogs:", error);
+      return [];
+    }
+    
+    return data as Blog[];
+  } catch (error) {
+    console.error("Unexpected error fetching admin blogs:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch a single blog by ID (for editing).
+ */
+export async function getBlogById(id: string): Promise<Blog | null> {
+  try {
+    const { data, error } = await SupabaseConn
+      .from("blogs")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching blog by ID ${id}:`, error.message);
+      return null;
+    }
+
+    return data as Blog;
+  } catch (error) {
+    console.error(`Unexpected error fetching blog by ID: ${id}`, error);
+    return null;
+  }
+}

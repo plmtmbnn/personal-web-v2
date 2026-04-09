@@ -100,38 +100,7 @@ export default async function BlogDetailPage({ params }: Props) {
 					<article className="flex-1 min-w-0">
 						<BlogContent content={post.content} />
 					</article>
-
-					{/* Sidebar / Actions */}
-					<aside className="lg:w-16 flex lg:flex-col gap-4 sticky top-32 h-fit">
-						<button
-							className="p-3 rounded-2xl bg-background-secondary border border-border/50 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
-							title="Share Article"
-						>
-							<Share2 className="w-5 h-5" />
-						</button>
-					</aside>
 				</div>
-
-				<footer className="mt-24 pt-12 border-t border-border/50">
-					<div className="glass-card p-8 sm:p-12 text-center bg-indigo-600 !text-white border-none overflow-hidden relative">
-						<div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
-						<div className="relative z-10">
-							<h3 className="text-2xl sm:text-3xl font-black mb-4 italic">
-								Enjoyed the read?
-							</h3>
-							<p className="text-indigo-100 mb-8 max-w-xl mx-auto">
-								I share updates on new articles, engineering insights, and
-								projects via my social channels.
-							</p>
-							<Link
-								href="/"
-								className="inline-flex px-8 py-4 bg-white text-indigo-600 rounded-2xl font-black hover:bg-indigo-50 transition-all shadow-xl shadow-indigo-900/20 active:scale-95"
-							>
-								View Portfolio
-							</Link>
-						</div>
-					</div>
-				</footer>
 			</main>
 		</div>
 	);

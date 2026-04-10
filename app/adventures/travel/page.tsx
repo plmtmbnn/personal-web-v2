@@ -135,7 +135,9 @@ export default function TravelPage() {
 									<Image
 										src={post.image}
 										alt={post.location}
-										className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[20%] group-hover:grayscale-0"
+										fill
+										sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+										className="object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[20%] group-hover:grayscale-0"
 									/>
 
 									{/* Overlay on Hover */}

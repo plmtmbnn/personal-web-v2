@@ -1,16 +1,12 @@
-import React from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase-server";
 import { redirect } from "next/navigation";
 import {
-	LayoutDashboard,
 	BookOpen,
 	CheckSquare,
 	LogOut,
 	ShieldCheck,
 	ArrowRight,
-	Settings,
-	Users,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 

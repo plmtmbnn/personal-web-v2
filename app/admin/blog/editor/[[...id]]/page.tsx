@@ -1,4 +1,3 @@
-import React from "react";
 import BlogForm from "@/components/blog/BlogForm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";

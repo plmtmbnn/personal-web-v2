@@ -1,7 +1,6 @@
-import React from "react";
 import Link from "next/link";
 import { getBlogsAdmin } from "@/lib/actions/blog";
-import { Plus, LayoutGrid, ChevronRight, BookOpen } from "lucide-react";
+import { Plus, ChevronRight, BookOpen } from "lucide-react";
 import AdminBlogList from "@/components/blog/AdminBlogList";
 import { createClient } from "@/utils/supabase-server";
 import { redirect } from "next/navigation";

@@ -9,7 +9,6 @@ import {
 	Brain,
 	Activity,
 	ArrowLeft,
-	ChevronRight,
 	Route,
 	Flame,
 	Milestone,

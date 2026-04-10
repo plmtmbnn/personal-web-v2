@@ -2,7 +2,7 @@
 
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getBlogBySlug, Blog } from "@/lib/data/blog";
+import { getBlogBySlug, type Blog } from "@/lib/data/blog";
 import BlogContent from "@/components/blog/BlogContent";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import Link from "next/link";

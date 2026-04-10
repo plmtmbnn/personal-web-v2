@@ -8,6 +8,7 @@ import {
 	FaCompass,
 	FaExternalLinkAlt,
 } from "react-icons/fa";
+import Image from "next/image";
 
 /**
  * Travel Post Data - Curated from Instagram
@@ -131,7 +132,7 @@ export default function TravelPage() {
 							<div className="relative overflow-hidden rounded-[2.5rem] bg-white/5 border-2 border-white/5 shadow-2xl transition-all duration-500 group-hover:border-accent/30 group-hover:-translate-y-2 backdrop-blur-xl">
 								{/* Image Container */}
 								<div className="aspect-[4/5] overflow-hidden relative">
-									<img
+									<Image
 										src={post.image}
 										alt={post.location}
 										className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[20%] group-hover:grayscale-0"

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.20](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.19...v0.1.20) (2026-04-10)
+
+
+### Features
+
+* **contact:** enhance ui and integrate automated versioning from package.json ([7693d7d](https://github.com/plmtmbnn/personal-web-v2/commit/7693d7d3dcd3c4e011f3d63369ac35947b544a96))
+
 ### [0.1.19](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.18...v0.1.19) (2026-04-09)
 
 

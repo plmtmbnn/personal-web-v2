@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.21](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.20...v0.1.21) (2026-04-10)
+
+
+### Features
+
+* enhance UI ([0511244](https://github.com/plmtmbnn/personal-web-v2/commit/05112449e7637840955607ccc4f45c1a67084d22))
+* enhance UI ([09bd675](https://github.com/plmtmbnn/personal-web-v2/commit/09bd67573b732b407bbed838af204573645e8174))
+* **travel:** enhance UI ([fdd8697](https://github.com/plmtmbnn/personal-web-v2/commit/fdd8697930e1d5e9bc94b6ce97e9a27ea89ed58e))
+
 ### [0.1.20](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.19...v0.1.20) (2026-04-10)
 
 

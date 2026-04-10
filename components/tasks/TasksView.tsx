@@ -86,7 +86,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
               <div className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center">
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-0.5">Completion</p>
                 <p className="text-sm font-black text-slate-900">
-                  {tasks.filter(t => t.completed).length}/{tasks.length}
+                  {tasks.filter(t => t.is_completed).length}/{tasks.length}
                 </p>
               </div>
             </div>

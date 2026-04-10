@@ -1,17 +1,10 @@
 "use client";
 
-import { notFound, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getBlogBySlug, Blog } from "@/lib/data/blog";
 import BlogContent from "@/components/blog/BlogContent";
-import {
-	ArrowLeft,
-	Calendar,
-	Clock,
-	Share2,
-	ArrowRight,
-	Bookmark,
-} from "lucide-react";
+import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
 import { motion, useScroll, useSpring } from "framer-motion";
 

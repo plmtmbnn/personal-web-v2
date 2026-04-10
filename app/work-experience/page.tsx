@@ -2,7 +2,7 @@
 
 import { EXPERIENCE_YEAR } from "@/lib/constants";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
 	Briefcase,
 	MapPin,

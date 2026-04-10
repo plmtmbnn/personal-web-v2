@@ -3,15 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getBlogs, Blog } from "@/lib/data/blog";
-import {
-	ArrowRight,
-	Calendar,
-	Newspaper,
-	Clock,
-	Search,
-	BookOpen,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Calendar, Newspaper, Clock, BookOpen } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function BlogPage() {
 	const [blogs, setBlogs] = useState<Blog[]>([]);

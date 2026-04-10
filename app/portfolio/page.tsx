@@ -7,9 +7,7 @@ import {
 	Briefcase,
 	Rocket,
 	ShieldCheck,
-	Search,
 	UserPlus,
-	BarChart3,
 	PenTool,
 	CircleDollarSign,
 	Inbox,
@@ -287,7 +285,7 @@ export default function PortfolioPage() {
 												compliance and automated decisioning.
 											</p>
 											<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-												{losModules.map((mod, idx) => (
+												{losModules.map((mod) => (
 													<div
 														key={mod.title}
 														className="p-5 bg-white/5 border border-white/5 rounded-2xl group/item hover:border-blue-500/30 transition-all duration-300"

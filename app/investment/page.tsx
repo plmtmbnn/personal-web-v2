@@ -8,7 +8,6 @@ import {
 	DollarSign,
 	ArrowUpRight,
 	ArrowDownLeft,
-	LayoutDashboard,
 	Wallet,
 	BarChart3,
 } from "lucide-react";

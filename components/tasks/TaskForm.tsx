@@ -1,132 +1,91 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { PlusCircle, Calendar, Tag, AlertTriangle } from 'lucide-react';
-import { TaskPriority } from '@/lib/types/tasks';
-import { addTask } from '@/lib/actions/tasks';
+import React, { useState } from "react";
+import { Plus, Loader2, Calendar, Flag, Type } from "lucide-react";
+import { addTask } from "@/lib/actions/tasks";
+import { useRouter } from "next/navigation";
+import type { TaskPriority } from "@/lib/types/tasks";
 
 export default function TaskForm() {
-	const [isOpen, setIsOpen] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const [title, setTitle] = useState("");
+	const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const router = useRouter();
 
-	const adjustHeight = () => {
-		const textarea = textareaRef.current;
-		if (textarea) {
-			textarea.style.height = 'auto';
-			textarea.style.height = `${textarea.scrollHeight}px`;
-		}
-	};
-
-	useEffect(() => {
-		if (isOpen) {
-			adjustHeight();
-		}
-	}, [isOpen]);
-
-	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		const formData = new FormData(e.currentTarget);
-		
-		const payload = {
-			title: formData.get('title') as string,
-			priority: formData.get('priority') as TaskPriority,
-			category: formData.get('category') as string,
-			due_date: formData.get('due_date') as string,
-		};
+		if (!title.trim() || isSubmitting) return;
 
-		if (!payload.title) return;
-
-		setIsLoading(true);
+		setIsSubmitting(true);
 		try {
-			await addTask(payload);
-			(e.target as HTMLFormElement).reset();
-			setIsOpen(false);
+			await addTask({
+				title: title.trim(),
+				priority,
+				category: "General",
+				due_date: new Date().toISOString().split("T")[0],
+			});
+
+			setTitle("");
+			setPriority("MEDIUM");
+			router.refresh();
 		} catch (error) {
-			console.error(error);
+			console.error("Task creation failed:", error);
 		} finally {
-			setIsLoading(false);
+			setIsSubmitting(false);
 		}
 	};
-
-	if (!isOpen) {
-		return (
-			<button
-				onClick={() => setIsOpen(true)}
-				className="w-full py-4 border-2 border-dashed border-border rounded-2xl text-muted-foreground hover:border-accent hover:text-accent transition-all duration-300 flex items-center justify-center gap-2 group"
-			>
-				<PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-				<span className="font-medium">Add New Daily Task</span>
-			</button>
-		);
-	}
 
 	return (
-		<div className="glass-card animate-fade-in mb-8">
-			<form onSubmit={handleSubmit} className="space-y-4">
-				<textarea
-					ref={textareaRef}
-					autoFocus
-					name="title"
-					placeholder="What needs to be done?"
-					className="w-full text-xl font-semibold bg-transparent border-none focus:outline-none focus:ring-0 placeholder:text-muted-foreground/40 resize-none overflow-hidden"
-					rows={1}
-					onInput={adjustHeight}
-					required
-				/>
+		<form onSubmit={handleSubmit} className="space-y-5">
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2 ml-1">
+          <Type className="w-3 h-3" /> New Task
+        </label>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            placeholder="What needs to be accomplished?"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isSubmitting}
+            className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all placeholder:text-slate-300 shadow-sm"
+          />
+          
+          <div className="flex gap-2">
+            <div className="relative group">
+              <Flag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                disabled={isSubmitting}
+                className="bg-white border border-slate-200 rounded-xl pl-9 pr-8 py-3 text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer shadow-sm min-w-[120px]"
+              >
+                <option value="LOW">Low Priority</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High Priority</option>
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
 
-				<div className="flex flex-wrap gap-3 pt-4 border-t border-border">
-					<div className="flex items-center gap-2 px-3 py-1.5 bg-background-secondary rounded-lg border border-border">
-						<AlertTriangle className="w-4 h-4 text-muted-foreground" />
-						<select 
-							name="priority" 
-							className="bg-transparent text-sm focus:outline-none cursor-pointer"
-							defaultValue="MEDIUM"
-						>
-							<option value="LOW">Low</option>
-							<option value="MEDIUM">Medium</option>
-							<option value="HIGH">High</option>
-						</select>
-					</div>
-
-					<div className="flex items-center gap-2 px-3 py-1.5 bg-background-secondary rounded-lg border border-border">
-						<Tag className="w-4 h-4 text-muted-foreground" />
-						<input
-							name="category"
-							placeholder="Category"
-							className="bg-transparent text-sm focus:outline-none w-24"
-							defaultValue="Work"
-						/>
-					</div>
-
-					<div className="flex items-center gap-2 px-3 py-1.5 bg-background-secondary rounded-lg border border-border">
-						<Calendar className="w-4 h-4 text-muted-foreground" />
-						<input
-							type="date"
-							name="due_date"
-							className="bg-transparent text-sm focus:outline-none"
-							defaultValue={new Date().toISOString().split('T')[0]}
-						/>
-					</div>
-				</div>
-
-				<div className="flex justify-end gap-3 pt-4">
-					<button
-						type="button"
-						onClick={() => setIsOpen(false)}
-						className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-					>
-						Cancel
-					</button>
-					<button
-						type="submit"
-						disabled={isLoading}
-						className="btn-primary py-2 px-6 text-sm"
-					>
-						{isLoading ? 'Creating...' : 'Create Task'}
-					</button>
-				</div>
-			</form>
-		</div>
+            <button
+              type="submit"
+              disabled={isSubmitting || !title.trim()}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-xs hover:bg-emerald-700 transition-all shadow-md shadow-emerald-100 disabled:opacity-50 disabled:grayscale active:scale-95"
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4 text-white" />
+              )}
+              <span className="hidden sm:inline">Add Task</span>
+            </button>
+          </div>
+        </div>
+      </div>
+		</form>
 	);
 }

@@ -45,51 +45,41 @@ export default function HealthCheck() {
 		});
 	};
 
-	const handleIgnore = () => {
-		setIsVisible(false);
-	};
+	const handleIgnore = () => setIsVisible(false);
 
 	if (!isVisible || staleTasks.length === 0) return null;
 
 	return (
-		<div className="mb-8 p-5 bg-amber-50 border border-amber-200 rounded-[2rem] animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm">
-			<div className="flex items-start gap-4">
-				<div className="p-3 bg-amber-100 text-amber-600 rounded-2xl">
+		<div className="p-6 bg-amber-50 border border-amber-200 rounded-3xl shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+			<div className="flex items-start gap-5">
+				<div className="p-3.5 bg-amber-100 text-amber-600 rounded-2xl border border-amber-200">
 					<AlertTriangle className="w-6 h-6" />
 				</div>
-				<div className="flex-1">
+				<div className="flex-1 min-w-0">
 					<div className="flex items-center justify-between mb-1">
-						<h3 className="font-bold text-amber-900 text-lg flex items-center gap-2">
-							Attention: {staleTasks.length} Lapsed {staleTasks.length === 1 ? 'Task' : 'Tasks'}
+						<h3 className="font-black text-amber-900 text-lg">
+							Operational Alert: {staleTasks.length} Lapsed {staleTasks.length === 1 ? 'Task' : 'Tasks'}
 						</h3>
-						<button
-							onClick={handleIgnore}
-							className="p-1 text-amber-400 hover:text-amber-600 transition-colors rounded-lg hover:bg-amber-100"
-							aria-label="Close"
-						>
+						<button onClick={handleIgnore} className="p-1.5 text-amber-400 hover:text-amber-600 hover:bg-amber-100 rounded-lg transition-all">
 							<X className="w-5 h-5" />
 						</button>
 					</div>
-					<p className="text-amber-700 text-sm mb-5 leading-relaxed">
-						You have tasks from previous days that were never completed. Keep your schedule clean by moving them to today or ignoring them.
+					<p className="text-amber-700 text-sm font-medium mb-6 leading-relaxed">
+						System detected incomplete objectives from previous cycles. Reschedule to current date to maintain tracking integrity.
 					</p>
 
-					{/* Task Visualization with Badges */}
-					<div className="flex flex-wrap gap-2 mb-6">
+					<div className="flex flex-wrap gap-2 mb-8">
 						{staleTasks.slice(0, 3).map((task) => (
-							<div
-								key={task.id}
-								className="flex items-center gap-2 px-3 py-1.5 bg-white border border-amber-200 rounded-xl text-xs text-amber-800 shadow-sm"
-							>
-								<span className="flex items-center gap-1 font-black px-2 py-0.5 bg-amber-200 text-amber-900 rounded-lg text-[9px] uppercase tracking-wider">
+							<div key={task.id} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-amber-200 rounded-xl text-xs text-amber-800 shadow-sm">
+								<span className="flex items-center gap-1 font-black px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md text-[9px] uppercase tracking-tighter border border-amber-200">
 									<Clock className="w-3 h-3" />
-									Lapsed
+									Pending
 								</span>
-								<span className="truncate max-w-[150px] font-medium">{task.title}</span>
+								<span className="truncate max-w-[120px] font-bold">{task.title}</span>
 							</div>
 						))}
 						{staleTasks.length > 3 && (
-							<div className="flex items-center px-3 py-1.5 bg-amber-100/50 border border-dashed border-amber-300 rounded-xl text-xs text-amber-600 font-bold">
+							<div className="px-3 py-1.5 bg-white/50 border border-dashed border-amber-300 rounded-xl text-[10px] text-amber-600 font-black uppercase">
 								+{staleTasks.length - 3} more
 							</div>
 						)}
@@ -99,16 +89,13 @@ export default function HealthCheck() {
 						<button
 							onClick={handleRescheduleAll}
 							disabled={isPending}
-							className="px-5 py-2.5 bg-amber-600 text-white rounded-2xl text-sm font-bold hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 flex items-center gap-2 active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
+							className="px-6 py-2.5 bg-amber-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-md shadow-amber-200 flex items-center gap-2 active:scale-95 disabled:opacity-50"
 						>
 							<CalendarRange className="w-4 h-4" />
-							{isPending ? 'Rescheduling...' : 'Reschedule All to Today'}
+							{isPending ? 'Syncing...' : 'Reschedule All'}
 						</button>
-						<button
-							onClick={handleIgnore}
-							className="px-5 py-2.5 bg-white text-amber-700 border border-amber-200 rounded-2xl text-sm font-bold hover:bg-amber-50 hover:border-amber-300 transition-all active:scale-95"
-						>
-							Ignore
+						<button onClick={handleIgnore} className="px-6 py-2.5 bg-white text-amber-700 border border-amber-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-amber-100 transition-all active:scale-95">
+							Dismiss
 						</button>
 					</div>
 				</div>

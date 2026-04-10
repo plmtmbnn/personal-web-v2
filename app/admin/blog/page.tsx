@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { getBlogsAdmin } from "@/lib/actions/blog";
-import { Plus, LayoutGrid, Search } from "lucide-react";
+import { Plus, LayoutGrid, ChevronRight, BookOpen } from "lucide-react";
 import AdminBlogList from "@/components/blog/AdminBlogList";
 import { createClient } from "@/utils/supabase-server";
 import { redirect } from "next/navigation";
@@ -40,29 +40,57 @@ export default async function AdminBlogPage() {
 	const blogs = await getBlogsAdmin();
 
 	return (
-		<div className="max-w-6xl mx-auto p-6 sm:p-10 space-y-10 min-h-screen">
-			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-				<div>
-					<h1 className="text-4xl font-black tracking-tighter text-foreground">
-						Blog Management
-					</h1>
-					<p className="text-muted-foreground font-black uppercase text-[10px] tracking-[0.3em] mt-2 flex items-center gap-2">
-						<LayoutGrid className="w-3 h-3" /> Dashboard • Content Control
-					</p>
+		<main className="min-h-screen bg-slate-50/50 pb-24">
+			{/* Structural Header */}
+			<div className="bg-white border-b border-slate-200 mb-10">
+				<div className="max-w-6xl mx-auto px-6 py-10">
+					<div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+						<div className="space-y-2">
+							<div className="flex items-center gap-2 text-blue-600 font-bold text-[10px] uppercase tracking-[0.2em]">
+								<BookOpen className="w-3.5 h-3.5" />
+								Knowledge Base Management
+							</div>
+							<h1 className="text-4xl font-black text-slate-900 tracking-tight">
+								Blog Articles
+							</h1>
+							<div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+								<Link
+									href="/admin"
+									className="hover:text-blue-600 transition-colors"
+								>
+									Admin Dashboard
+								</Link>
+								<ChevronRight className="w-3 h-3 opacity-50" />
+								<span className="text-slate-900">Manage Blog</span>
+							</div>
+						</div>
+
+						<Link
+							href="/admin/blog/editor"
+							className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white !no-underline rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+						>
+							<Plus className="w-4 h-4 text-white" />
+							<span className="text-white">Create New Post</span>
+						</Link>
+					</div>
+				</div>
+			</div>
+
+			{/* Main Content Container - Solid Boundaries */}
+			<div className="max-w-6xl mx-auto px-6">
+				<div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+					<div className="p-1 bg-slate-50/50">
+						<AdminBlogList initialBlogs={blogs} />
+					</div>
 				</div>
 
-				<Link
-					href="/admin/blog/editor"
-					className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-2xl font-semibold shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
-				>
-					<Plus className="w-5 h-5" />
-					Create New Post
-				</Link>
+				{/* Helper Footer */}
+				<div className="mt-8 flex items-center justify-center gap-6">
+					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+						Portal v2.4 • Secure Content Layer
+					</p>
+				</div>
 			</div>
-
-			<div className="glass-card rounded-[2.5rem] border-2 border-white/5 shadow-2xl overflow-hidden bg-background-secondary/10 backdrop-blur-md">
-				<AdminBlogList initialBlogs={blogs} />
-			</div>
-		</div>
+		</main>
 	);
 }

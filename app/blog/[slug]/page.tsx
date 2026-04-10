@@ -1,34 +1,19 @@
-import { notFound } from "next/navigation";
-import { getBlogBySlug, getBlogs } from "@/lib/data/blog";
+"use client";
+
+import { notFound, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getBlogBySlug, Blog } from "@/lib/data/blog";
 import BlogContent from "@/components/blog/BlogContent";
-import { ArrowLeft, Calendar, Clock, Share2 } from "lucide-react";
+import {
+	ArrowLeft,
+	Calendar,
+	Clock,
+	Share2,
+	ArrowRight,
+	Bookmark,
+} from "lucide-react";
 import Link from "next/link";
-import { Metadata } from "next";
-
-type Props = {
-	params: Promise<{ slug: string }>;
-};
-
-/**
- * SEO: Dynamic Metadata Generation
- */
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-	const { slug } = await params;
-	const post = await getBlogBySlug(slug);
-
-	if (!post) return { title: "Post Not Found" };
-
-	return {
-		title: `${post.title} | Blog`,
-		description: post.description,
-		openGraph: {
-			title: post.title,
-			description: post.description,
-			type: "article",
-			publishedTime: post.date,
-		},
-	};
-}
+import { motion, useScroll, useSpring } from "framer-motion";
 
 /**
  * Helper: Calculate reading time
@@ -38,80 +23,137 @@ const calculateReadingTime = (content: string): number => {
 	return Math.ceil(wordCount / 200);
 };
 
-export default async function BlogDetailPage({ params }: Props) {
-	const { slug } = await params;
-	const post = await getBlogBySlug(slug);
+export default function BlogDetailPage({
+	params,
+}: {
+	params: Promise<{ slug: string }>;
+}) {
+	const [post, setPost] = useState<Blog | null>(null);
+	const [mounted, setMounted] = useState(false);
+	const { scrollYProgress } = useScroll();
+	const scaleX = useSpring(scrollYProgress, {
+		stiffness: 100,
+		damping: 30,
+		restDelta: 0.001,
+	});
 
-	if (!post) {
-		notFound();
-	}
+	useEffect(() => {
+		const fetchPost = async () => {
+			const { slug } = await params;
+			const data = await getBlogBySlug(slug);
+			if (!data) return notFound();
+			setPost(data);
+			setMounted(true);
+		};
+		fetchPost();
+	}, [params]);
+
+	if (!mounted || !post) return null;
 
 	const readingTime = calculateReadingTime(post.content);
 
 	return (
-		<div className="min-h-screen bg-background pb-20">
-			{/* Progress Bar / Scroll Indicator placeholder could go here */}
+		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
+			{/* Progress Bar */}
+			<motion.div
+				className="fixed top-0 left-0 right-0 h-1 bg-accent z-50 origin-left"
+				style={{ scaleX }}
+			/>
 
-			<header className="relative py-20 lg:py-32 overflow-hidden border-b border-border/50 bg-background-secondary/30">
-				<div className="absolute inset-0 -z-10">
-					<div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--color-indigo-500)_0%,_transparent_70%)] opacity-[0.03]" />
-				</div>
+			{/* Background Ambience */}
+			<div className="absolute inset-0 pointer-events-none -z-10">
+				<div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/5 rounded-full blur-[120px]" />
+				<div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[120px]" />
+			</div>
 
-				<div className="max-w-4xl mx-auto px-6">
+			<div className="max-w-4xl mx-auto px-6 pt-24 sm:pt-32">
+				{/* Navigation */}
+				<motion.div
+					initial={{ opacity: 0, x: -10 }}
+					animate={{ opacity: 1, x: 0 }}
+					className="mb-12"
+				>
 					<Link
 						href="/blog"
-						className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-indigo-600 transition-colors mb-12 group"
+						className="inline-flex items-center text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-accent transition-colors gap-2 group !no-underline"
 					>
 						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
 						Back to Library
 					</Link>
+				</motion.div>
 
-					<div className="space-y-6 animate-fade-in">
-						<div className="flex flex-wrap items-center gap-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
-							<div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl">
+				{/* Post Header */}
+				<header className="space-y-10 mb-20">
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="space-y-6"
+					>
+						<div className="flex flex-wrap items-center gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+							<div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-accent">
 								<Calendar className="w-3.5 h-3.5" />
 								{new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(
 									new Date(post.date),
 								)}
 							</div>
-							<div className="flex items-center gap-2 px-3 py-1.5 bg-background-secondary rounded-xl border border-border/50">
+							<div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full">
 								<Clock className="w-3.5 h-3.5" />
 								{readingTime} min read
 							</div>
 						</div>
 
-						<h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground leading-[1.1] tracking-tight italic">
+						<h1 className="text-4xl sm:text-6xl xl:text-7xl font-black text-foreground leading-[1] tracking-tighter">
 							{post.title}
 						</h1>
 
-						<p className="text-xl text-muted-foreground leading-relaxed max-w-3xl">
+						<p className="text-xl text-muted-foreground leading-relaxed max-w-3xl font-medium">
 							{post.description}
 						</p>
-					</div>
-				</div>
-			</header>
+					</motion.div>
 
-			<main
-				className="max-w-4xl mx-auto px-6 py-16 animate-fade-in"
-				style={{ animationDelay: "0.2s" }}
-			>
-				<div className="flex flex-col lg:flex-row gap-12">
-					{/* Content */}
-					<article className="flex-1 min-w-0">
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ delay: 0.4 }}
+						className="flex items-center gap-4 pt-10 border-t border-white/5"
+					>
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white font-black text-xs">
+								PT
+							</div>
+							<div>
+								<p className="text-xs font-black text-foreground uppercase tracking-widest">
+									Polma Tambunan
+								</p>
+								<p className="text-[10px] font-bold text-muted-foreground/60 uppercase">
+									Author • Fintech Engineer
+								</p>
+							</div>
+						</div>
+					</motion.div>
+				</header>
+
+				{/* Main Content Area */}
+				<motion.article
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.2 }}
+					className="relative"
+				>
+					<div className="glass-card p-8 sm:p-12 rounded-[2.5rem] border-2 border-white/5 bg-white/5 backdrop-blur-xl shadow-2xl relative z-10">
 						<BlogContent content={post.content} />
-					</article>
-				</div>
-			</main>
-		</div>
-	);
-}
+					</div>
 
-/**
- * Generate Static Params for build-time rendering
- */
-export async function generateStaticParams() {
-	const blogs = await getBlogs();
-	return blogs.map((post) => ({
-		slug: post.slug,
-	}));
+					{/* Decorative Side Badge */}
+					<div className="absolute top-20 -right-24 hidden xl:flex flex-col gap-4 items-center">
+						<div className="w-px h-20 bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+						<div className="p-3 bg-white/5 rounded-2xl border border-white/10 rotate-90 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/20">
+							Engineering Journal
+						</div>
+						<div className="w-px h-20 bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+					</div>
+				</motion.article>
+			</div>
+		</main>
+	);
 }

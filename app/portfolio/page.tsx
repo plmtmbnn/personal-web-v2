@@ -1,370 +1,392 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+	PieChart as PieIcon,
+	Briefcase,
+	Rocket,
+	ShieldCheck,
+	Search,
+	UserPlus,
+	BarChart3,
+	PenTool,
+	CircleDollarSign,
+	Inbox,
+	BookText,
+	ChevronDown,
+	ChevronUp,
+	Cpu,
+	Fingerprint,
+	TrendingUp,
+	LayoutDashboard,
+} from "lucide-react";
 
-interface ToggleIndicatorProps {
-	isCollapsed: boolean;
-	onClick: () => void;
-}
+/**
+ * Project Data
+ */
+const losModules = [
+	{
+		icon: UserPlus,
+		title: "Borrower Onboarding",
+		desc: "Registration & verification",
+	},
+	{
+		icon: Fingerprint,
+		title: "eKYC System",
+		desc: "Automated identity validation",
+	},
+	{
+		icon: ShieldCheck,
+		title: "Underwriting",
+		desc: "Risk assessment workflow",
+	},
+	{ icon: PenTool, title: "Digital Signing", desc: "Secure document approval" },
+	{
+		icon: CircleDollarSign,
+		title: "Disbursement",
+		desc: "Automated fund release",
+	},
+	{ icon: Inbox, title: "Collections", desc: "Repayment tracking" },
+	{ icon: BookText, title: "Accounting", desc: "Reports & compliance" },
+];
 
-const ToggleIndicator = ({ isCollapsed, onClick }: ToggleIndicatorProps) => (
-	<button
-		type="button"
-		onClick={onClick}
-		className="ml-auto text-slate-400 hover:text-slate-700 transition-colors duration-300"
-		aria-label="Toggle section"
-	>
-		{isCollapsed ? (
-			<svg
-				className="w-6 h-6"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M19 9l-7 7-7-7"
-				/>
-			</svg>
-		) : (
-			<svg
-				className="w-6 h-6"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M5 15l7-7 7 7"
-				/>
-			</svg>
-		)}
-	</button>
-);
+const otherProjects = [
+	{
+		icon: ShieldCheck,
+		title: "Insurance Core System",
+		desc: "Policy & underwriting platform",
+	},
+	{
+		icon: Cpu,
+		title: "Standalone Tools",
+		desc: "OCR & bank statement extractor",
+	},
+	{
+		icon: LayoutDashboard,
+		title: "Organization App",
+		desc: "Membership & digital ID system",
+	},
+	{
+		icon: TrendingUp,
+		title: "Investment App",
+		desc: "Market data & portfolio insights",
+	},
+];
 
-export default function Portfolio() {
-	const [isCollapsedLOS, setIsCollapsedLOS] = useState(true);
-	const [isCollapsedOther, setIsCollapsedOther] = useState(true);
+export default function PortfolioPage() {
 	const [activeSlice, setActiveSlice] = useState<number | null>(null);
-	const [isVisible, setIsVisible] = useState(false);
+	const [expandedSection, setExpandedSection] = useState<string | null>("los");
+	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
-		setIsVisible(true);
+		setMounted(true);
 	}, []);
 
-	const toggleCollapse = (
-		setter: React.Dispatch<React.SetStateAction<boolean>>,
-	) => setter((prev) => !prev);
-
-	const handleSliceClick = (index: number) => {
-		setActiveSlice(index);
-		setIsCollapsedLOS(index !== 0);
-		setIsCollapsedOther(index !== 1);
-	};
+	if (!mounted) return null;
 
 	return (
-		<section
-			id="portfolio"
-			className="min-h-screen bg-background px-4 sm:px-6 py-16 lg:py-24 relative overflow-hidden"
-		>
-			{/* Subtle Background */}
-			<div className="absolute inset-0">
-				<div className="absolute top-20 right-20 w-96 h-96 bg-indigo-50 rounded-full blur-3xl opacity-40 animate-float"></div>
-				<div
-					className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-blue-50 rounded-full blur-3xl opacity-40 animate-float"
-					style={{ animationDelay: "1s", animationDuration: "5s" }}
-				></div>
+		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
+			{/* Background Ambience */}
+			<div className="absolute inset-0 pointer-events-none -z-10">
+				<div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px]" />
+				<div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[120px]" />
 			</div>
 
-			<div className="max-w-6xl mx-auto space-y-16 relative z-10">
-				{/* Header */}
-				<div
-					className={`text-center space-y-6 transition-all duration-700 opacity-100 translate-y-0"}`}
+			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
+				{/* Header Section */}
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.6 }}
+					className="text-center space-y-6 mb-20"
 				>
-					<h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-						Portfolio
-					</h2>
-					<p className="max-w-2xl mx-auto text-muted-foreground text-lg leading-relaxed">
-						Systems and products I've built across fintech and platforms
+					<div className="flex items-center justify-center gap-3 text-accent mb-4">
+						<PieIcon className="w-6 h-6" />
+						<span className="text-[10px] font-black uppercase tracking-[0.4em]">
+							Work Distribution
+						</span>
+					</div>
+					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground">
+						Project <span className="gradient-text">Portfolio</span>
+					</h1>
+					<p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium leading-relaxed">
+						A comprehensive look at the high-impact systems I've architected,
+						focused on fintech core operations and scalable platforms.
 					</p>
-				</div>
+				</motion.div>
 
 				{/* Content Grid */}
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-					{/* Pie Chart */}
-					<div
-						className={`transition-all duration-700 delay-200 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"}`}
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+					{/* Analytics Visualizer (LHS) */}
+					<motion.div
+						initial={{ opacity: 0, x: -20 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ duration: 0.8, delay: 0.2 }}
+						className="lg:col-span-5"
 					>
-						<div className="bg-white border border-slate-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 lg:p-8">
-							<div className="flex items-center gap-2 mb-6">
-								<div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-								<h3 className="text-lg font-semibold text-foreground">
-									Project Distribution
+						<div className="glass-card p-10 rounded-[2.5rem] border-2 border-white/5 shadow-2xl relative overflow-hidden h-full">
+							<div className="flex items-center gap-3 mb-10">
+								<div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+								<h3 className="text-sm font-black uppercase tracking-widest text-foreground">
+									Expertise Ratio
 								</h3>
 							</div>
 
-							{/* Custom SVG Pie Chart */}
-							<div className="h-80 flex flex-col justify-center items-center gap-8">
-								<div className="relative w-64 h-64">
+							<div className="flex flex-col items-center">
+								{/* Visual SVG Chart */}
+								<div className="relative w-64 h-64 sm:w-72 sm:h-72 mb-12">
 									<svg
 										viewBox="0 0 200 200"
 										className="w-full h-full transform -rotate-90"
 									>
 										{/* LOS & LMS (80%) */}
-										<circle
+										<motion.circle
 											cx="100"
 											cy="100"
 											r="80"
 											fill="none"
-											stroke="#3b82f6"
-											strokeWidth="40"
-											className="cursor-pointer transition-all duration-300 hover:stroke-[#2563eb]"
-											onClick={() => handleSliceClick(0)}
+											stroke="currentColor"
+											strokeWidth="32"
+											className="text-blue-500/80 cursor-pointer"
+											strokeDasharray="402 502"
+											animate={{
+												strokeWidth: activeSlice === 0 ? 40 : 32,
+												opacity:
+													activeSlice === null || activeSlice === 0 ? 1 : 0.3,
+											}}
+											onClick={() => {
+												setActiveSlice(0);
+												setExpandedSection("los");
+											}}
 											onMouseEnter={() => setActiveSlice(0)}
 											onMouseLeave={() => setActiveSlice(null)}
-											style={{
-												strokeDasharray: "402 502",
-												filter:
-													activeSlice === 0
-														? "drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))"
-														: "none",
-												opacity:
-													activeSlice === null || activeSlice === 0 ? 1 : 0.4,
-											}}
 										/>
-										{/* Other Projects (20%) */}
-										<circle
+										{/* Other (20%) */}
+										<motion.circle
 											cx="100"
 											cy="100"
 											r="80"
 											fill="none"
-											stroke="#a855f7"
-											strokeWidth="40"
-											className="cursor-pointer transition-all duration-300 hover:stroke-[#9333ea]"
-											onClick={() => handleSliceClick(1)}
+											stroke="currentColor"
+											strokeWidth="32"
+											className="text-purple-500/80 cursor-pointer"
+											strokeDasharray="100 502"
+											strokeDashoffset="-402"
+											animate={{
+												strokeWidth: activeSlice === 1 ? 40 : 32,
+												opacity:
+													activeSlice === null || activeSlice === 1 ? 1 : 0.3,
+											}}
+											onClick={() => {
+												setActiveSlice(1);
+												setExpandedSection("other");
+											}}
 											onMouseEnter={() => setActiveSlice(1)}
 											onMouseLeave={() => setActiveSlice(null)}
-											style={{
-												strokeDasharray: "100 502",
-												strokeDashoffset: "-402",
-												filter:
-													activeSlice === 1
-														? "drop-shadow(0 0 8px rgba(168, 85, 247, 0.6))"
-														: "none",
-												opacity:
-													activeSlice === null || activeSlice === 1 ? 1 : 0.4,
-											}}
 										/>
 									</svg>
 
-									{/* Center Text */}
-									<div className="absolute inset-0 flex flex-col items-center justify-center">
-										<p className="text-4xl font-bold text-foreground">
+									{/* Center Content */}
+									<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+										<span className="text-5xl font-black text-foreground tracking-tighter">
 											{activeSlice === 0
 												? "80%"
 												: activeSlice === 1
 													? "20%"
 													: "100%"}
-										</p>
-										<p className="text-sm text-muted-foreground mt-1">
+										</span>
+										<span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">
 											{activeSlice === 0
-												? "Core Systems"
+												? "Fintech"
 												: activeSlice === 1
-													? "Other Projects"
-													: "Total Work"}
-										</p>
+													? "Platform"
+													: "Core Focus"}
+										</span>
 									</div>
 								</div>
 
 								{/* Legend */}
-								<div className="flex flex-col w-full max-w-xs">
-									<div
-										className="flex items-center gap-2 py-2 rounded-lg cursor-pointer hover:bg-blue-50 transition-all duration-300 border border-transparent hover:border-blue-200"
-										onClick={() => handleSliceClick(0)}
+								<div className="w-full space-y-3">
+									<button
+										onClick={() => setExpandedSection("los")}
+										className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${expandedSection === "los" ? "bg-blue-500/10 border-blue-500/20 text-blue-500" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"}`}
 									>
-										<div className="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></div>
-										<span className="text-sm text-foreground font-medium">
-											LOS & LMS Core Systems (80%)
-										</span>
-									</div>
-									<div
-										className="flex items-center gap-2 py-2 rounded-lg cursor-pointer hover:bg-purple-50 transition-all duration-300 border border-transparent hover:border-purple-200"
-										onClick={() => handleSliceClick(1)}
-									>
-										<div className="w-4 h-4 rounded-full bg-purple-500 flex-shrink-0"></div>
-										<span className="text-sm text-foreground font-medium">
-											Other Projects (20%)
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					{/* Descriptions */}
-					<div
-						className={`space-y-8 transition-all duration-700 delay-400 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-10"}`}
-					>
-						{/* LOS & LMS */}
-						<div
-							className={`bg-white border border-slate-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 lg:p-8 ${
-								activeSlice === 0 ? "ring-2 ring-blue-400/40 shadow-lg" : ""
-							}`}
-						>
-							<h3
-								className="flex items-center gap-3 text-xl font-bold text-foreground cursor-pointer hover:text-blue-600 transition-colors duration-300"
-								onClick={() => toggleCollapse(setIsCollapsedLOS)}
-							>
-								<span className="text-2xl">💼</span>
-								<span className="flex-1">LOS & LMS Core Systems</span>
-								<ToggleIndicator
-									isCollapsed={isCollapsedLOS}
-									onClick={() => toggleCollapse(setIsCollapsedLOS)}
-								/>
-							</h3>
-
-							<div
-								className={`transition-all duration-500 overflow-hidden ${
-									isCollapsedLOS ? "max-h-0" : "max-h-[1000px]"
-								}`}
-							>
-								<div className="mt-6 space-y-6">
-									<div className="w-20 h-1 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"></div>
-									<p className="text-muted-foreground leading-relaxed">
-										End-to-end Loan Origination and Loan Management systems used
-										by multiple fintech companies, processing millions in
-										transactions.
-									</p>
-
-									<div className="grid sm:grid-cols-2 gap-4">
-										{[
-											{
-												icon: "👤",
-												title: "Borrower Onboarding",
-												desc: "Registration & verification",
-											},
-											{
-												icon: "🔍",
-												title: "eKYC System",
-												desc: "Automated identity validation",
-											},
-											{
-												icon: "📊",
-												title: "Underwriting",
-												desc: "Risk assessment workflow",
-											},
-											{
-												icon: "✍️",
-												title: "Digital Signing",
-												desc: "Secure document approval",
-											},
-											{
-												icon: "💸",
-												title: "Disbursement",
-												desc: "Automated fund release",
-											},
-											{
-												icon: "📥",
-												title: "Collections",
-												desc: "Repayment tracking",
-											},
-											{
-												icon: "📚",
-												title: "Accounting",
-												desc: "Reports & compliance",
-											},
-										].map(({ icon, title, desc }) => (
-											<div
-												key={title}
-												className="p-4 border border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 hover:shadow-md transition-all duration-300 group"
-											>
-												<p className="font-semibold text-foreground flex items-center gap-2 mb-1">
-													<span className="text-lg">{icon}</span>
-													<span className="group-hover:text-blue-600 transition-colors duration-300">
-														{title}
-													</span>
-												</p>
-												<p className="text-sm text-muted-foreground">{desc}</p>
-											</div>
-										))}
-									</div>
-								</div>
-							</div>
-						</div>
-
-						{/* Other Projects */}
-						<div
-							className={`bg-white border border-slate-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 lg:p-8 ${
-								activeSlice === 1 ? "ring-2 ring-purple-400/40 shadow-lg" : ""
-							}`}
-						>
-							<h3
-								className="flex items-center gap-3 text-xl font-bold text-foreground cursor-pointer hover:text-purple-600 transition-colors duration-300"
-								onClick={() => toggleCollapse(setIsCollapsedOther)}
-							>
-								<span className="text-2xl">🚀</span>
-								<span className="flex-1">Other Notable Projects</span>
-								<ToggleIndicator
-									isCollapsed={isCollapsedOther}
-									onClick={() => toggleCollapse(setIsCollapsedOther)}
-								/>
-							</h3>
-
-							<div
-								className={`transition-all duration-500 overflow-hidden ${
-									isCollapsedOther ? "max-h-0" : "max-h-[1000px]"
-								}`}
-							>
-								<div className="mt-6 space-y-4">
-									<div className="w-20 h-1 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
-
-									{[
-										{
-											icon: "🛡️",
-											title: "Insurance Core System",
-											desc: "Policy & underwriting platform",
-										},
-										{
-											icon: "🧰",
-											title: "Standalone Tools",
-											desc: "OCR & bank statement extractor",
-										},
-										{
-											icon: "🏛️",
-											title: "Organization App",
-											desc: "Membership & digital ID system",
-										},
-										{
-											icon: "📈",
-											title: "Investment App",
-											desc: "Market data & portfolio insights",
-										},
-									].map(({ icon, title, desc }) => (
-										<div
-											key={title}
-											className="p-5 border border-slate-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 hover:shadow-md transition-all duration-300 group"
-										>
-											<p className="font-semibold text-foreground flex items-center gap-2 mb-1 text-lg">
-												<span className="text-xl">{icon}</span>
-												<span className="group-hover:text-purple-600 transition-colors duration-300">
-													{title}
-												</span>
-											</p>
-											<p className="text-muted-foreground leading-relaxed">
-												{desc}
-											</p>
+										<div className="flex items-center gap-3">
+											<div className="w-3 h-3 rounded-full bg-blue-500" />
+											<span className="text-xs font-black uppercase tracking-widest">
+												LOS & LMS Systems
+											</span>
 										</div>
-									))}
+										<span className="text-xs font-bold">80%</span>
+									</button>
+									<button
+										onClick={() => setExpandedSection("other")}
+										className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${expandedSection === "other" ? "bg-purple-500/10 border-purple-500/20 text-purple-500" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"}`}
+									>
+										<div className="flex items-center gap-3">
+											<div className="w-3 h-3 rounded-full bg-purple-500" />
+											<span className="text-xs font-black uppercase tracking-widest">
+												Notable Platforms
+											</span>
+										</div>
+										<span className="text-xs font-bold">20%</span>
+									</button>
 								</div>
 							</div>
 						</div>
+					</motion.div>
+
+					{/* Detailed Lists (RHS) */}
+					<div className="lg:col-span-7 space-y-6">
+						{/* LOS SECTION */}
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.6, delay: 0.4 }}
+							className={`group glass-card rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${expandedSection === "los" ? "border-blue-500/30 ring-1 ring-blue-500/20" : "border-white/5"}`}
+						>
+							<button
+								onClick={() =>
+									setExpandedSection(expandedSection === "los" ? null : "los")
+								}
+								className="w-full p-8 sm:p-10 flex items-center justify-between"
+							>
+								<div className="flex items-center gap-6">
+									<div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
+										<Briefcase className="w-7 h-7" />
+									</div>
+									<div className="text-left">
+										<h3 className="text-2xl font-black text-foreground tracking-tight">
+											Fintech Core Systems
+										</h3>
+										<p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+											LOS & LMS Architectures
+										</p>
+									</div>
+								</div>
+								{expandedSection === "los" ? (
+									<ChevronUp className="w-6 h-6 text-muted-foreground" />
+								) : (
+									<ChevronDown className="w-6 h-6 text-muted-foreground" />
+								)}
+							</button>
+
+							<AnimatePresence>
+								{expandedSection === "los" && (
+									<motion.div
+										initial={{ height: 0, opacity: 0 }}
+										animate={{ height: "auto", opacity: 1 }}
+										exit={{ height: 0, opacity: 0 }}
+										transition={{ duration: 0.4, ease: "easeInOut" }}
+									>
+										<div className="px-8 sm:px-10 pb-10 space-y-8">
+											<p className="text-muted-foreground font-medium leading-relaxed">
+												Scalable Loan Origination and Management engines capable
+												of handling high-volume transactions with integrated
+												compliance and automated decisioning.
+											</p>
+											<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+												{losModules.map((mod, idx) => (
+													<div
+														key={mod.title}
+														className="p-5 bg-white/5 border border-white/5 rounded-2xl group/item hover:border-blue-500/30 transition-all duration-300"
+													>
+														<div className="flex items-center gap-4 mb-2">
+															<mod.icon className="w-5 h-5 text-blue-400 group-hover/item:scale-110 transition-transform" />
+															<span className="font-bold text-foreground text-sm">
+																{mod.title}
+															</span>
+														</div>
+														<p className="text-xs text-muted-foreground font-medium pl-9">
+															{mod.desc}
+														</p>
+													</div>
+												))}
+											</div>
+										</div>
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</motion.div>
+
+						{/* OTHER SECTION */}
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.6, delay: 0.5 }}
+							className={`group glass-card rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${expandedSection === "other" ? "border-purple-500/30 ring-1 ring-purple-500/20" : "border-white/5"}`}
+						>
+							<button
+								onClick={() =>
+									setExpandedSection(
+										expandedSection === "other" ? null : "other",
+									)
+								}
+								className="w-full p-8 sm:p-10 flex items-center justify-between"
+							>
+								<div className="flex items-center gap-6">
+									<div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500">
+										<Rocket className="w-7 h-7" />
+									</div>
+									<div className="text-left">
+										<h3 className="text-2xl font-black text-foreground tracking-tight">
+											Notable Platforms
+										</h3>
+										<p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+											Specialized Ecosystems
+										</p>
+									</div>
+								</div>
+								{expandedSection === "other" ? (
+									<ChevronUp className="w-6 h-6 text-muted-foreground" />
+								) : (
+									<ChevronDown className="w-6 h-6 text-muted-foreground" />
+								)}
+							</button>
+
+							<AnimatePresence>
+								{expandedSection === "other" && (
+									<motion.div
+										initial={{ height: 0, opacity: 0 }}
+										animate={{ height: "auto", opacity: 1 }}
+										exit={{ height: 0, opacity: 0 }}
+										transition={{ duration: 0.4, ease: "easeInOut" }}
+									>
+										<div className="px-8 sm:px-10 pb-10 space-y-8">
+											<p className="text-muted-foreground font-medium leading-relaxed">
+												Highly specialized digital products including InsurTech
+												cores, automated identity extraction tools, and
+												institutional membership portals.
+											</p>
+											<div className="space-y-4">
+												{otherProjects.map((mod) => (
+													<div
+														key={mod.title}
+														className="p-6 bg-white/5 border border-white/5 rounded-3xl group/item hover:border-purple-500/30 transition-all duration-300 flex items-center gap-6"
+													>
+														<div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 group-hover/item:scale-110 transition-transform flex-shrink-0">
+															<mod.icon className="w-6 h-6" />
+														</div>
+														<div>
+															<h4 className="font-bold text-foreground mb-1">
+																{mod.title}
+															</h4>
+															<p className="text-sm text-muted-foreground font-medium">
+																{mod.desc}
+															</p>
+														</div>
+													</div>
+												))}
+											</div>
+										</div>
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</motion.div>
 					</div>
 				</div>
 			</div>
-		</section>
+		</main>
 	);
 }

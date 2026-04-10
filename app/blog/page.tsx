@@ -1,106 +1,158 @@
+"use client";
+
 import Link from "next/link";
-import { getBlogs } from "@/lib/data/blog";
-import { ArrowRight, Calendar, Newspaper } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getBlogs, Blog } from "@/lib/data/blog";
+import {
+	ArrowRight,
+	Calendar,
+	Newspaper,
+	Clock,
+	Search,
+	BookOpen,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-export const metadata = {
-	title: "Blog | Polma Tambunan",
-	description:
-		"Articles on software engineering, systems, fintech, and lessons learned.",
-};
+export default function BlogPage() {
+	const [blogs, setBlogs] = useState<Blog[]>([]);
+	const [mounted, setMounted] = useState(false);
 
-export default async function BlogPage() {
-	const blogList = await getBlogs();
+	useEffect(() => {
+		const fetchBlogs = async () => {
+			const data = await getBlogs();
+			setBlogs(data);
+			setMounted(true);
+		};
+		fetchBlogs();
+	}, []);
+
+	if (!mounted) return null;
 
 	return (
-		<section className="min-h-screen bg-background relative overflow-hidden">
-			{/* Aesthetic Background */}
-			<div className="absolute inset-0 -z-10 overflow-hidden">
-				<div className="absolute top-20 right-20 w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[120px] opacity-60 animate-float" />
+		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
+			{/* Aesthetic Background Ambience */}
+			<div className="absolute inset-0 pointer-events-none -z-10">
+				<div className="absolute top-[-5%] right-[-5%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse" />
 				<div
-					className="absolute bottom-20 left-20 w-[600px] h-[600px] bg-blue-50 rounded-full blur-[150px] opacity-60 animate-float"
+					className="absolute bottom-[-5%] left-[-5%] w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[120px] animate-pulse"
 					style={{ animationDelay: "2s" }}
 				/>
 			</div>
 
-			<div className="max-w-6xl mx-auto px-6 py-24 sm:py-32 relative z-10">
-				{/* Header */}
-				<header className="max-w-3xl mb-20 animate-fade-in">
-					<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-widest mb-6">
-						<Newspaper className="w-3 h-3" />
-						Knowledge Base
-					</div>
-					<h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-8 tracking-tight italic">
-						Blog
-					</h1>
-					<p className="text-xl text-muted-foreground leading-relaxed">
-						Writing about software engineering, fintech, systems, and lessons
-						learned along the way.
-					</p>
-				</header>
+			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
+				{/* Header Section */}
+				<div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20 border-b border-white/5 pb-16">
+					<motion.div
+						initial={{ opacity: 0, x: -20 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ duration: 0.8 }}
+						className="space-y-6"
+					>
+						<div className="flex items-center gap-3 text-accent mb-2">
+							<BookOpen className="w-6 h-6" />
+							<span className="text-[10px] font-black uppercase tracking-[0.4em]">
+								Digital Library
+							</span>
+						</div>
+						<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground">
+							Curated <span className="gradient-text">Insights</span>
+						</h1>
+						<p className="text-muted-foreground text-lg max-w-xl font-medium leading-relaxed">
+							Thoughtful articles on software architecture, fintech ecosystems,
+							and engineering leadership.
+						</p>
+					</motion.div>
+
+					<motion.div
+						initial={{ opacity: 0, scale: 0.9 }}
+						animate={{ opacity: 1, scale: 1 }}
+						className="flex items-center gap-4 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md"
+					>
+						<div className="text-right">
+							<p className="text-xl font-black text-foreground">
+								{blogs.length}
+							</p>
+							<p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+								Articles
+							</p>
+						</div>
+						<div className="w-px h-8 bg-white/10" />
+						<Newspaper className="w-5 h-5 text-accent" />
+					</motion.div>
+				</div>
 
 				{/* Blog Grid */}
-				{blogList.length === 0 ? (
-					<div
-						className="max-w-xl animate-fade-in"
-						style={{ animationDelay: "0.2s" }}
+				{blogs.length === 0 ? (
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="max-w-2xl mx-auto text-center py-20"
 					>
-						<div className="glass p-12 text-center rounded-[2.5rem] border-2 border-dashed border-border/50">
-							<div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner ring-1 ring-indigo-100">
-								<Calendar className="w-10 h-10 text-indigo-600 opacity-40" />
-							</div>
-							<h3 className="text-2xl font-bold text-foreground mb-4 italic">
-								Coming Soon
-							</h3>
-							<p className="text-muted-foreground text-lg leading-relaxed mb-8">
-								I'm preparing thoughtful articles on engineering, systems, and
-								endurance. Check back soon.
-							</p>
-							<div className="flex items-center justify-center gap-3 text-sm font-bold text-indigo-600 bg-indigo-50/50 py-3 rounded-2xl w-fit mx-auto px-6 ring-1 ring-indigo-100">
-								<div className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-								Writing in progress
-							</div>
+						<div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-white/10 shadow-2xl">
+							<Clock className="w-10 h-10 text-muted-foreground/20" />
 						</div>
-					</div>
+						<h3 className="text-2xl font-black text-foreground mb-4">
+							Preparation in Progress
+						</h3>
+						<p className="text-muted-foreground font-medium">
+							I'm currently architecting some deep-dives into engineering. Check
+							back soon for the first release.
+						</p>
+					</motion.div>
 				) : (
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-						{blogList.map(({ title, description, slug, date }, index) => (
-							<article
-								key={slug}
-								className="animate-fade-in"
-								style={{ animationDelay: `${(index + 1) * 0.1}s` }}
+						{blogs.map((post, index) => (
+							<motion.div
+								key={post.slug}
+								initial={{ opacity: 0, y: 30 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ delay: index * 0.1, duration: 0.6 }}
+								className="group relative h-full"
 							>
-								<Link href={`/blog/${slug}`} className="group block h-full">
-									<div className="h-full glass-card border-white/40 shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 flex flex-col group-hover:border-indigo-200">
-										<div className="mb-6 flex justify-between items-start">
-											<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-background-secondary px-3 py-1.5 rounded-xl border border-border/50">
-												<Calendar className="w-3 h-3 text-indigo-500" />
-												{new Intl.DateTimeFormat("en-US", {
-													dateStyle: "medium",
-												}).format(new Date(date))}
+								<Link
+									href={`/blog/${post.slug}`}
+									className="block h-full !no-underline"
+								>
+									{/* Interactive Card */}
+									<div className="h-full relative overflow-hidden rounded-[2.5rem] bg-white/5 border-2 border-white/5 shadow-2xl transition-all duration-500 group-hover:border-accent/30 group-hover:-translate-y-2 backdrop-blur-xl p-8 sm:p-10 flex flex-col justify-between">
+										<div className="space-y-6">
+											{/* Meta Info */}
+											<div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+												<div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-accent">
+													<Calendar className="w-3 h-3" />
+													{new Intl.DateTimeFormat("en-US", {
+														dateStyle: "medium",
+													}).format(new Date(post.date))}
+												</div>
+											</div>
+
+											{/* Title & Description */}
+											<div className="space-y-4">
+												<h3 className="text-2xl font-black text-foreground tracking-tight group-hover:text-accent transition-colors leading-[1.1]">
+													{post.title}
+												</h3>
+												<p className="text-sm text-muted-foreground font-medium leading-relaxed line-clamp-3">
+													{post.description}
+												</p>
 											</div>
 										</div>
 
-										<div className="flex-1">
-											<h3 className="text-2xl font-black text-foreground mb-4 group-hover:text-indigo-600 transition-colors duration-300 leading-tight italic">
-												{title}
-											</h3>
-											<p className="text-muted-foreground line-clamp-3 leading-relaxed text-sm">
-												{description}
-											</p>
-										</div>
-
-										<div className="mt-8 pt-6 border-t border-border/50 flex justify-between items-center text-xs font-black uppercase tracking-widest">
-											<span className="text-indigo-600 group-hover:gap-2 flex items-center gap-1 transition-all duration-300">
-												Read Full Article <ArrowRight className="w-4 h-4" />
+										{/* Footer Link */}
+										<div className="mt-10 pt-8 border-t border-white/5 flex items-center justify-between">
+											<span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">
+												Read Article
 											</span>
+											<div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all duration-500 group-hover:rotate-[-45deg]">
+												<ArrowRight className="w-5 h-5" />
+											</div>
 										</div>
 									</div>
 								</Link>
-							</article>
+							</motion.div>
 						))}
 					</div>
 				)}
 			</div>
-		</section>
+		</main>
 	);
 }

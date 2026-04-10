@@ -2,6 +2,19 @@
 
 import { EXPERIENCE_YEAR } from "@/lib/constants";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+	Briefcase,
+	MapPin,
+	Calendar,
+	Award,
+	Zap,
+	ShieldCheck,
+	Users,
+	Cpu,
+	CheckCircle2,
+	LayoutDashboard,
+} from "lucide-react";
 
 interface Experience {
 	company: string;
@@ -9,7 +22,7 @@ interface Experience {
 	positions: Position[];
 	description: string;
 	color: string;
-	icon: React.ReactNode;
+	icon: any;
 }
 
 interface Position {
@@ -25,21 +38,7 @@ const experiences: Experience[] = [
 		location: "Indonesia – Remote",
 		description: "Technology Solution Company",
 		color: "from-blue-500 to-cyan-500",
-		icon: (
-			<svg
-				className="w-full h-full"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M13 10V3L4 14h7v7l9-11h-7z"
-				/>
-			</svg>
-		),
+		icon: Cpu,
 		positions: [
 			{
 				title: "Head of Engineering",
@@ -61,11 +60,7 @@ const experiences: Experience[] = [
 		location: "Indonesia – Remote",
 		description: "Technology Solution Company",
 		color: "from-purple-500 to-pink-500",
-		icon: (
-			<svg className="w-full h-full" fill="currentColor" viewBox="0 0 24 24">
-				<path d="M12 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 2.18l7 3.82v8c0 4.52-2.98 8.69-7 9.93-4.02-1.24-7-5.41-7-9.93V8l7-3.82z" />
-			</svg>
-		),
+		icon: ShieldCheck,
 		positions: [
 			{
 				title: "Chief Technology Officer",
@@ -87,27 +82,7 @@ const experiences: Experience[] = [
 		location: "Remote",
 		description: "EdTech Startup",
 		color: "from-orange-500 to-red-500",
-		icon: (
-			<svg
-				className="w-full h-full"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M12 14l9-5-9-5-9 5 9 5z"
-				/>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
-				/>
-			</svg>
-		),
+		icon: Zap,
 		positions: [
 			{
 				title: "Co-founder & CEO / Lead Instructor",
@@ -125,21 +100,7 @@ const experiences: Experience[] = [
 		location: "Indonesia – Remote",
 		description: "Fintech Company",
 		color: "from-emerald-500 to-teal-500",
-		icon: (
-			<svg
-				className="w-full h-full"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-				/>
-			</svg>
-		),
+		icon: LayoutDashboard,
 		positions: [
 			{
 				title: "Software Engineering Manager",
@@ -173,148 +134,232 @@ const experiences: Experience[] = [
 ];
 
 export default function WorkExperience() {
-	const [visible, setVisible] = useState(false);
+	const [mounted, setMounted] = useState(false);
 
-	useEffect(() => setVisible(true), []);
+	useEffect(() => setMounted(true), []);
+
+	if (!mounted) return null;
 
 	return (
-		<section className="relative py-16 lg:py-20 px-4 sm:px-6 bg-background overflow-hidden">
-			{/* Ambient background */}
-			<div className="absolute inset-0">
-				<div className="absolute top-24 right-24 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-40" />
-				<div className="absolute bottom-24 left-24 w-[420px] h-[420px] bg-purple-50 rounded-full blur-3xl opacity-40" />
+		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
+			{/* Dynamic Background Ambience */}
+			<div className="absolute top-0 left-0 w-full h-full pointer-events-none -z-10">
+				<div className="absolute top-[-5%] right-[-5%] w-[60%] h-[60%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
+				<div
+					className="absolute bottom-[-5%] left-[-5%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse"
+					style={{ animationDelay: "2s" }}
+				/>
 			</div>
 
-			<div className="relative max-w-6xl mx-auto space-y-16">
-				{/* Header */}
-				<div
-					className={`text-center transition-all duration-700 ${
-						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-					}`}
+			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
+				{/* Header Section */}
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.8 }}
+					className="text-center space-y-6 mb-24"
 				>
-					<h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
-						Work Experience
-					</h2>
-					<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-						{EXPERIENCE_YEAR}+ years building fintech platforms and leading
-						engineering teams
+					<div className="flex items-center justify-center gap-3 text-accent mb-4">
+						<Briefcase className="w-6 h-6" />
+						<span className="text-[10px] font-black uppercase tracking-[0.4em]">
+							Career Milestones
+						</span>
+					</div>
+					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground">
+						Professional <span className="gradient-text">Experience</span>
+					</h1>
+					<p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium leading-relaxed">
+						{EXPERIENCE_YEAR}+ years architecting secure fintech ecosystems and
+						leading high-performance engineering cultures.
 					</p>
-				</div>
+				</motion.div>
 
-				{/* Timeline */}
-				<div className="relative space-y-12">
-					<div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-px bg-slate-200 sm:-translate-x-1/2" />
+				{/* Enhanced Timeline */}
+				<div className="relative">
+					{/* Central Line */}
+					<div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-accent/50 via-indigo-500/20 to-transparent md:-translate-x-1/2" />
 
-					{experiences.map((exp, idx) => (
-						<div
-							key={String(idx)}
-							className={`relative sm:w-[calc(50%-2rem)] transition-all duration-700 ${
-								visible
-									? "opacity-100 translate-x-0"
-									: idx % 2 === 0
-										? "opacity-0 -translate-x-6"
-										: "opacity-0 translate-x-6"
-							} ${idx % 2 === 0 ? "sm:ml-0" : "sm:ml-auto"}`}
-						>
-							{/* Timeline Dot */}
-							<div
-								className={`absolute left-4 sm:left-auto ${
-									idx % 2 === 0 ? "sm:-right-7" : "sm:-left-7"
-								} top-3 w-7 h-7 rounded-full bg-gradient-to-br ${
-									exp.color
-								} flex items-center justify-center text-white shadow`}
-							>
-								<div className="w-4 h-4">{exp.icon}</div>
-							</div>
+					<div className="space-y-24">
+						{experiences.map((exp, idx) => {
+							const Icon = exp.icon;
+							return (
+								<motion.div
+									key={exp.company}
+									initial={{ opacity: 0, y: 40 }}
+									whileInView={{ opacity: 1, y: 0 }}
+									viewport={{ once: true, margin: "-100px" }}
+									transition={{ duration: 0.7, delay: idx * 0.1 }}
+									className={`relative flex flex-col md:flex-row items-center ${idx % 2 === 0 ? "md:flex-row-reverse" : ""}`}
+								>
+									{/* Timeline Node */}
+									<div className="absolute left-4 md:left-1/2 top-0 md:top-8 w-8 h-8 rounded-full bg-background border-4 border-accent shadow-[0_0_20px_rgba(15,23,42,0.3)] z-20 md:-translate-x-1/2 flex items-center justify-center">
+										<div className="w-2 h-2 rounded-full bg-accent animate-ping" />
+									</div>
 
-							{/* Card */}
-							<div className="ml-14 sm:ml-0 bg-white border border-slate-200 rounded-2xl p-5 lg:p-6 shadow-sm hover:shadow-lg transition-all">
-								<h3 className="text-xl font-semibold text-foreground">
-									{exp.company}
-								</h3>
+									{/* Card Side */}
+									<div
+										className={`w-full md:w-1/2 pl-12 md:pl-0 ${idx % 2 === 0 ? "md:pl-16" : "md:pr-16"}`}
+									>
+										<div className="group relative">
+											{/* Hover Gradient Glow */}
+											<div
+												className={`absolute -inset-0.5 bg-gradient-to-r ${exp.color} rounded-[2.5rem] opacity-0 group-hover:opacity-20 transition duration-500 blur-xl`}
+											/>
 
-								<div
-									className={`w-12 h-1 bg-gradient-to-r ${exp.color} rounded-full my-2`}
-								/>
-
-								<div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-									<span className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-full">
-										{exp.description}
-									</span>
-									<span className="flex items-center gap-1">
-										📍 {exp.location}
-									</span>
-								</div>
-
-								{/* Positions */}
-								<div className="mt-6 space-y-6">
-									{exp.positions.map((pos, pIdx) => (
-										<div
-											key={String(pIdx)}
-											className={pIdx ? "pt-5 border-t border-slate-200" : ""}
-										>
-											<div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-												<h4 className="font-semibold text-foreground">
-													{pos.title}
-												</h4>
-												<span className="text-xs text-muted-foreground px-3 py-1 bg-slate-50 border border-slate-200 rounded-full">
-													{pos.period}
-												</span>
-											</div>
-
-											<ul className="space-y-2 text-sm text-muted-foreground">
-												{pos.responsibilities.map((item, i) => (
-													<li key={String(i)} className="flex gap-2">
-														<span
-															className={`mt-2 w-1.5 h-1.5 rounded-full bg-gradient-to-r ${exp.color}`}
-														/>
-														<span>{item}</span>
-													</li>
-												))}
-											</ul>
-
-											{pos.highlights && (
-												<div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-													<p className="text-sm font-semibold mb-2">
-														Key Achievements
-													</p>
-													<ul className="space-y-1 text-sm text-muted-foreground">
-														{pos.highlights.map((h, i) => (
-															<li key={String(i)}>• {h}</li>
-														))}
-													</ul>
+											<div className="relative glass-card p-8 sm:p-10 rounded-[2.5rem] border-2 border-white/5 bg-white/5 backdrop-blur-xl hover:border-accent/30 transition-all duration-500 shadow-2xl">
+												{/* Company Header */}
+												<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+													<div className="space-y-1">
+														<div className="flex items-center gap-3">
+															<div
+																className={`p-2 rounded-lg bg-gradient-to-br ${exp.color} text-white shadow-lg`}
+															>
+																<Icon className="w-5 h-5" />
+															</div>
+															<h3 className="text-2xl font-black text-foreground tracking-tight group-hover:text-accent transition-colors">
+																{exp.company}
+															</h3>
+														</div>
+														<p className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-10">
+															{exp.description}
+														</p>
+													</div>
+													<div className="flex flex-col items-start sm:items-end gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+														<div className="flex items-center gap-2">
+															<MapPin className="w-3 h-3" />
+															<span>{exp.location}</span>
+														</div>
+													</div>
 												</div>
-											)}
+
+												{/* Positions Sub-Timeline */}
+												<div className="space-y-10 relative">
+													{exp.positions.map((pos) => (
+														<div
+															key={pos.title}
+															className="relative pl-6 border-l border-white/10 last:border-transparent"
+														>
+															{/* Position Indicator */}
+															<div className="absolute -left-[5px] top-2 w-[9px] h-[9px] rounded-full bg-white/20 border border-white/40" />
+
+															<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+																<h4 className="text-lg font-bold text-foreground">
+																	{pos.title}
+																</h4>
+																<span className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-accent">
+																	<Calendar className="w-3 h-3" />
+																	{pos.period}
+																</span>
+															</div>
+
+															<ul className="space-y-3 mb-6">
+																{pos.responsibilities.map((resp, rIdx) => (
+																	<li
+																		key={String(rIdx)}
+																		className="flex gap-3 text-sm text-muted-foreground leading-relaxed font-medium"
+																	>
+																		<CheckCircle2 className="w-4 h-4 mt-0.5 text-accent/40 flex-shrink-0" />
+																		<span>{resp}</span>
+																	</li>
+																))}
+															</ul>
+
+															{pos.highlights && (
+																<div className="p-5 bg-accent/5 border border-accent/10 rounded-2xl space-y-3">
+																	<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-accent">
+																		<Award className="w-3 h-3" />
+																		<span>Key Achievements</span>
+																	</div>
+																	<ul className="space-y-2">
+																		{pos.highlights.map((h, hIdx) => (
+																			<li
+																				key={String(hIdx)}
+																				className="text-xs font-bold text-foreground/80 leading-relaxed italic"
+																			>
+																				• {h}
+																			</li>
+																		))}
+																	</ul>
+																</div>
+															)}
+														</div>
+													))}
+												</div>
+											</div>
 										</div>
-									))}
-								</div>
-							</div>
-						</div>
-					))}
+									</div>
+
+									{/* Empty Side for MD+ screens to maintain timeline look */}
+									<div className="hidden md:block md:w-1/2" />
+								</motion.div>
+							);
+						})}
+					</div>
 				</div>
 
-				{/* Stats */}
-				<div
-					className={`grid grid-cols-2 md:grid-cols-4 gap-4 pt-10 border-t border-slate-200 transition-all duration-700 ${
-						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-					}`}
+				{/* Impact Stats */}
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
+					className="mt-32 grid grid-cols-2 md:grid-cols-4 gap-6"
 				>
 					{[
-						{ num: `${EXPERIENCE_YEAR}+`, label: "Years Experience" },
-						{ num: "4", label: "Companies" },
-						{ num: "3", label: "Awards" },
-						{ num: "5M+", label: "Users Impacted" },
-					].map((s, i) => (
-						<div
-							key={String(i)}
-							className="text-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm"
-						>
-							<p className="text-2xl font-bold text-foreground">{s.num}</p>
-							<p className="text-sm text-muted-foreground">{s.label}</p>
-						</div>
-					))}
-				</div>
+						{
+							num: `${EXPERIENCE_YEAR}+`,
+							label: "Years Experience",
+							icon: Briefcase,
+						},
+						{ num: "4", label: "Companies", icon: Building2 }, // Building2 is part of lucide
+						{ num: "3", label: "Awards", icon: Award },
+						{ num: "5M+", label: "Users Impacted", icon: Users },
+					].map((s) => {
+						const SIcon = s.icon === Building2 ? LayoutDashboard : s.icon; // Fail-safe for icon naming
+						return (
+							<div
+								key={s.label}
+								className="group p-6 glass-card border-2 border-white/5 rounded-3xl bg-white/5 backdrop-blur-md text-center hover:border-accent/30 transition-all duration-500"
+							>
+								<div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-accent mx-auto mb-4 group-hover:scale-110 transition-transform">
+									<SIcon className="w-5 h-5" />
+								</div>
+								<p className="text-3xl font-black text-foreground tracking-tighter">
+									{s.num}
+								</p>
+								<p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">
+									{s.label}
+								</p>
+							</div>
+						);
+					})}
+				</motion.div>
 			</div>
-		</section>
+		</main>
+	);
+}
+
+// Fail-safe for building icon
+function Building2(props: any) {
+	return (
+		<svg
+			{...props}
+			xmlns="http://www.w3.org/2000/svg"
+			width="24"
+			height="24"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		>
+			<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+			<path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+			<path d="M18 9h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2" />
+			<path d="M10 6h4" />
+			<path d="M10 10h4" />
+			<path d="M10 14h4" />
+			<path d="M10 18h4" />
+		</svg>
 	);
 }

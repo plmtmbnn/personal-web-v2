@@ -12,9 +12,13 @@ import {
   CheckCircle2, 
   Circle,
   Search,
-  Loader2
+  Loader2,
+  FileText,
+  Eye,
+  Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AdminBlogListProps {
   initialBlogs: Blog[];
@@ -39,101 +43,101 @@ export default function AdminBlogList({ initialBlogs }: AdminBlogListProps) {
       if (result.success) {
         setBlogs(prev => prev.filter(b => b.id !== id));
       } else {
-        alert('Error deleting blog: ' + result.message);
+        alert('Error: ' + result.message);
       }
     } catch (err) {
-      alert('An unexpected error occurred during deletion.');
+      alert('Deletion failed.');
     } finally {
       setIsDeleting(null);
     }
   };
 
   return (
-    <div className="flex flex-col">
-      {/* Table Header with Search */}
-      <div className="p-6 border-b border-border bg-background-secondary/30 flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+    <div className="flex flex-col bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      {/* Search & Actions Bar - Now Solid & High Contrast */}
+      <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center gap-4">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by title or slug..."
+            placeholder="Search entries..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-background border border-border/50 rounded-xl pl-11 pr-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all"
+            className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
           />
+        </div>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tight whitespace-nowrap bg-slate-100 px-3 py-1.5 rounded-lg">
+            {filteredBlogs.length} Articles
+          </span>
         </div>
       </div>
 
-      {/* Table Body */}
+      {/* Table - Optimized for focus and utility */}
       <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead>
-            <tr className="bg-background-secondary/50 text-xs font-black uppercase tracking-widest text-muted-foreground">
-              <th className="px-8 py-4">Status</th>
-              <th className="px-8 py-4">Blog Post</th>
-              <th className="px-8 py-4">Publication Date</th>
-              <th className="px-8 py-4 text-right">Actions</th>
+          <thead className="bg-slate-50 border-b border-slate-100">
+            <tr className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <th className="px-6 py-4">Title / Slug</th>
+              <th className="px-6 py-4">Date</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y divide-slate-100">
             {filteredBlogs.length > 0 ? (
               filteredBlogs.map((blog) => (
-                <tr key={blog.id} className="hover:bg-background-secondary/20 transition-all group">
-                  <td className="px-8 py-6">
-                    {blog.published ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[10px] font-black uppercase">
-                        <CheckCircle2 className="w-3 h-3" /> Published
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-500 rounded-full text-[10px] font-black uppercase">
-                        <Circle className="w-3 h-3" /> Draft
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-black text-foreground line-clamp-1 group-hover:text-accent transition-colors">
+                <tr key={blog.id} className="hover:bg-blue-50/30 transition-colors group">
+                  <td className="px-6 py-5">
+                    <div className="flex flex-col max-w-md">
+                      <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                         {blog.title}
                       </span>
-                      <span className="text-[10px] font-mono text-muted-foreground mt-1">
+                      <span className="text-[11px] font-mono text-slate-400 mt-0.5">
                         /{blog.slug}
                       </span>
                     </div>
                   </td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                      <Calendar className="w-3.5 h-3.5" />
+                  <td className="px-6 py-5">
+                    <span className="text-xs font-medium text-slate-600 whitespace-nowrap">
                       {format(new Date(blog.date), 'MMM d, yyyy')}
-                    </div>
+                    </span>
                   </td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-6 py-5">
+                    {blog.published ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-bold border border-emerald-100">
+                        <CheckCircle2 className="w-3 h-3" /> Published
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold border border-slate-200">
+                        <Circle className="w-3 h-3" /> Draft
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center justify-end gap-1">
                       <Link
                         href={`/blog/${blog.slug}`}
                         target="_blank"
-                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-background-secondary rounded-xl transition-all"
-                        title="View Live"
+                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                        title="View"
                       >
-                        <ExternalLink className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </Link>
                       <Link
                         href={`/admin/blog/editor/${blog.id}`}
-                        className="p-2 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl transition-all"
-                        title="Edit Post"
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </Link>
                       <button
                         onClick={() => handleDelete(blog.id)}
                         disabled={isDeleting === blog.id}
-                        className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all disabled:opacity-50"
-                        title="Delete Post"
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                        title="Delete"
                       >
-                        {isDeleting === blog.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
+                        {isDeleting === blog.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                       </button>
                     </div>
                   </td>
@@ -141,36 +145,13 @@ export default function AdminBlogList({ initialBlogs }: AdminBlogListProps) {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-8 py-20 text-center">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 bg-background-secondary rounded-3xl flex items-center justify-center">
-                      <Search className="w-8 h-8 text-muted-foreground/30" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-foreground">No blogs found</h3>
-                      <p className="text-sm text-muted-foreground font-medium">
-                        Try a different search or create your first post.
-                      </p>
-                    </div>
-                  </div>
+                <td colSpan={4} className="px-6 py-20 text-center text-slate-400 font-medium text-sm">
+                  No articles found matching your search.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-      </div>
-      
-      {/* Summary Footer */}
-      <div className="p-6 bg-background-secondary/30 border-t border-border flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-        <span>Total Posts: {blogs.length}</span>
-        <div className="flex gap-4">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3 h-3 text-emerald-500" /> {blogs.filter(b => b.published).length} Published
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Circle className="w-3 h-3 text-amber-500" /> {blogs.filter(b => !b.published).length} Drafts
-          </span>
-        </div>
       </div>
     </div>
   );

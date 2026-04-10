@@ -52,7 +52,6 @@ export default function TaskList({ initialTasks }: TaskListProps) {
 		}
 	);
 
-	// Filter tasks based on URL param
 	const displayTasks = showCompleted 
 		? optimisticTasks 
 		: optimisticTasks.filter(t => !t.is_completed);
@@ -80,7 +79,7 @@ export default function TaskList({ initialTasks }: TaskListProps) {
 	};
 
 	const handleDelete = async (taskId: string) => {
-		if (!confirm('Are you sure you want to delete this task?')) return;
+		if (!confirm('Purge this task from the system?')) return;
 		
 		startTransition(async () => {
 			addOptimisticAction({ action: 'delete', payload: { taskId } });
@@ -94,7 +93,6 @@ export default function TaskList({ initialTasks }: TaskListProps) {
 
 	const onDragEnd = (result: DropResult) => {
 		const { destination, source } = result;
-
 		if (!destination || destination.index === source.index) return;
 
 		const newTasks = Array.from(optimisticTasks);
@@ -113,13 +111,13 @@ export default function TaskList({ initialTasks }: TaskListProps) {
 
 	if (displayTasks.length === 0) {
 		return (
-			<div className="text-center py-20 glass shadow-sm rounded-3xl border-2 border-dashed border-border/50 animate-fade-in">
-				<div className="w-16 h-16 bg-background-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 text-muted-foreground/30">
-					<Inbox className="w-8 h-8" />
+			<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-2xl border-dashed">
+				<div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-4 text-slate-300">
+					<Inbox className="w-6 h-6" />
 				</div>
-				<h3 className="text-xl font-bold mb-2">Clean Slate!</h3>
-				<p className="text-muted-foreground max-w-xs mx-auto">
-					No tasks found matching your filters. Take a break or adjust your view.
+				<h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-1">Queue Clear</h3>
+				<p className="text-xs text-slate-400 font-medium">
+					No active objectives detected in this sector.
 				</p>
 			</div>
 		);
@@ -132,26 +130,24 @@ export default function TaskList({ initialTasks }: TaskListProps) {
 					<div 
 						{...provided.droppableProps} 
 						ref={provided.innerRef}
-						className="space-y-10"
+						className="space-y-3"
 					>
-						<div className="grid gap-4">
-							{displayTasks.map((task, index) => (
-								<Draggable key={task.id} draggableId={task.id} index={index}>
-									{(provided, snapshot) => (
-										<TaskItem 
-											task={task}
-											index={index}
-											provided={provided}
-											snapshot={snapshot}
-											onToggle={handleToggle}
-											onUpdate={handleUpdate}
-											onDelete={handleDelete}
-										/>
-									)}
-								</Draggable>
-							))}
-							{provided.placeholder}
-						</div>
+						{displayTasks.map((task, index) => (
+							<Draggable key={task.id} draggableId={task.id} index={index}>
+								{(provided, snapshot) => (
+									<TaskItem 
+										task={task}
+										index={index}
+										provided={provided}
+										snapshot={snapshot}
+										onToggle={handleToggle}
+										onUpdate={handleUpdate}
+										onDelete={handleDelete}
+									/>
+								)}
+							</Draggable>
+						))}
+						{provided.placeholder}
 					</div>
 				)}
 			</Droppable>

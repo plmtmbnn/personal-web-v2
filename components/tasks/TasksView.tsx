@@ -154,7 +154,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
                 </div>
                 <div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
                   <span className="text-[10px] font-bold uppercase tracking-tight">
-                    Systems Ready
+                    Be wise
                   </span>
                 </div>
               </div>
@@ -170,13 +170,6 @@ export default function TasksView({ tasks }: TasksViewProps) {
             </div>
           </div>
 				</section>
-
-        {/* System Footer */}
-        <div className="pt-8 text-center">
-          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em]">
-            Operational Layer • v2.4.0
-          </p>
-        </div>
 			</div>
 		</main>
 	);

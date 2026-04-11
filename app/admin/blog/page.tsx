@@ -40,7 +40,7 @@ export default async function AdminBlogPage() {
 
 	return (
 		<main className="min-h-screen bg-slate-50/50 pb-24">
-			{/* Structural Header */}
+			{/* Structural Header - Solid & High Contrast */}
 			<div className="bg-white border-b border-slate-200 mb-10">
 				<div className="max-w-6xl mx-auto px-6 py-10">
 					<div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -81,13 +81,6 @@ export default async function AdminBlogPage() {
 					<div className="p-1 bg-slate-50/50">
 						<AdminBlogList initialBlogs={blogs} />
 					</div>
-				</div>
-
-				{/* Helper Footer */}
-				<div className="mt-8 flex items-center justify-center gap-6">
-					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-						Portal v2.4 • Secure Content Layer
-					</p>
 				</div>
 			</div>
 		</main>

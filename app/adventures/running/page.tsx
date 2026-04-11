@@ -12,33 +12,41 @@ import {
 	Route,
 	Flame,
 	Milestone,
+	Gauge,
 } from "lucide-react";
 import Link from "next/link";
 
 /**
- * Personal Bests Data
+ * Personal Bests Data - Updated with user performance
  */
 const personalBests = [
 	{
 		distance: "5K",
-		time: "22:45",
-		date: "2023",
+		time: "25:45",
+		pace: "5:09/km",
 		icon: Flame,
 		color: "text-orange-400",
 	},
 	{
 		distance: "10K",
-		time: "48:12",
-		date: "2023",
+		time: "54:42",
+		pace: "5:28/km",
 		icon: Zap,
 		color: "text-yellow-400",
 	},
 	{
 		distance: "Half Marathon",
-		time: "1:52:30",
-		date: "2024",
+		time: "2:05:37",
+		pace: "5:57/km",
 		icon: Milestone,
 		color: "text-emerald-400",
+	},
+	{
+		distance: "Marathon",
+		time: "4:30:29",
+		pace: "6:24/km",
+		icon: Trophy,
+		color: "text-blue-400",
 	},
 ];
 
@@ -60,7 +68,7 @@ export default function RunningPage() {
 			</div>
 
 			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
-				{/* Breadcrumb & Navigation */}
+				{/* Breadcrumb */}
 				<motion.div
 					initial={{ opacity: 0, x: -10 }}
 					animate={{ opacity: 1, x: 0 }}
@@ -89,12 +97,13 @@ export default function RunningPage() {
 								Performance Hub
 							</span>
 						</div>
-						<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground">
+						<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground leading-[0.9]">
 							Endurance <span className="gradient-text">Journey</span>
 						</h1>
 						<p className="text-muted-foreground text-lg max-w-xl font-medium leading-relaxed">
-							Miles logged, boundaries pushed. For me, running is the ultimate
-							feedback loop for discipline, consistency, and mental clarity.
+							Tracking physical limits and mental discipline. For me, running is
+							the ultimate feedback loop for consistency and resilience in
+							engineering and life.
 						</p>
 					</motion.div>
 
@@ -108,17 +117,65 @@ export default function RunningPage() {
 						<div className="text-center">
 							<p className="text-2xl font-black text-foreground">1000+</p>
 							<p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-								KM / Year
+								Total Runs
 							</p>
 						</div>
 						<div className="w-px h-10 bg-white/10 self-center" />
 						<div className="text-center">
-							<p className="text-2xl font-black text-foreground">450+</p>
+							<p className="text-2xl font-black text-foreground">1000+</p>
 							<p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-								Activities
+								KM / Year
 							</p>
 						</div>
 					</motion.div>
+				</div>
+
+				{/* Personal Bests Grid */}
+				<div className="space-y-8 mb-20">
+					<h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground/60 ml-4 flex items-center gap-3">
+						<Trophy className="w-4 h-4" /> Personal Milestones
+					</h3>
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+						{personalBests.map((pb, idx) => (
+							<motion.div
+								key={pb.distance}
+								initial={{ opacity: 0, y: 20 }}
+								whileInView={{ opacity: 1, y: 0 }}
+								viewport={{ once: true }}
+								transition={{ delay: 0.1 * idx }}
+								className="p-8 glass-card border-2 border-white/5 rounded-[2.5rem] bg-white/5 hover:border-emerald-500/20 transition-all group flex flex-col justify-between h-full"
+							>
+								<div>
+									<div className="flex justify-between items-start mb-6">
+										<pb.icon
+											className={`w-6 h-6 ${pb.color} group-hover:scale-110 transition-transform`}
+										/>
+										<span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">
+											PB Entry
+										</span>
+									</div>
+									<p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">
+										{pb.distance}
+									</p>
+									<p className="text-3xl font-black text-foreground tracking-tighter">
+										{pb.time}
+									</p>
+								</div>
+
+								<div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+									<div className="flex items-center gap-2">
+										<Gauge className="w-3.5 h-3.5 text-emerald-500/60" />
+										<span className="text-xs font-bold text-foreground/80">
+											{pb.pace}
+										</span>
+									</div>
+									<span className="text-[9px] font-black uppercase text-muted-foreground/30">
+										Avg Pace
+									</span>
+								</div>
+							</motion.div>
+						))}
+					</div>
 				</div>
 
 				{/* Strava Live Integration Card */}
@@ -126,7 +183,7 @@ export default function RunningPage() {
 					initial={{ opacity: 0, y: 30 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.3, duration: 0.7 }}
-					className="group relative mb-12"
+					className="group relative mb-20"
 				>
 					<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-[2.5rem] blur-xl opacity-50 group-hover:opacity-100 transition duration-500" />
 					<div className="relative glass-card p-8 sm:p-10 rounded-[2.5rem] border-2 border-white/5 bg-white/5 backdrop-blur-xl hover:border-emerald-500/30 transition-all duration-500 shadow-2xl">
@@ -140,14 +197,14 @@ export default function RunningPage() {
 										Weekly Summary
 									</h2>
 									<p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-										Real-time Activity Stream
+										Strava Activity Stream
 									</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20">
 								<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
 								<span className="text-[10px] font-black uppercase tracking-widest">
-									Strava Live
+									Live Sync
 								</span>
 							</div>
 						</div>
@@ -166,100 +223,60 @@ export default function RunningPage() {
 					</div>
 				</motion.div>
 
-				{/* Grid: Personal Bests & Philosophy */}
-				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-					{/* Personal Bests (LHS) */}
-					<div className="lg:col-span-7 space-y-8">
-						<h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground/60 ml-4 flex items-center gap-3">
-							<Trophy className="w-4 h-4" /> Personal Milestones
-						</h3>
-						<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-							{personalBests.map((pb, idx) => (
-								<motion.div
-									key={pb.distance}
-									initial={{ opacity: 0, x: -20 }}
-									whileInView={{ opacity: 1, x: 0 }}
-									viewport={{ once: true }}
-									transition={{ delay: 0.4 + idx * 0.1 }}
-									className="p-6 glass-card border-2 border-white/5 rounded-3xl bg-white/5 hover:border-emerald-500/20 transition-all group"
-								>
-									<pb.icon
-										className={`w-5 h-5 ${pb.color} mb-4 group-hover:scale-110 transition-transform`}
-									/>
-									<p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">
-										{pb.distance}
-									</p>
-									<p className="text-2xl font-black text-foreground tracking-tighter">
-										{pb.time}
-									</p>
-									<p className="text-[10px] font-bold text-muted-foreground/40 mt-3">
-										{pb.date} Season
-									</p>
-								</motion.div>
-							))}
+				{/* Philosophy Grid */}
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+					<motion.div
+						initial={{ opacity: 0, x: -20 }}
+						whileInView={{ opacity: 1, x: 0 }}
+						viewport={{ once: true }}
+						className="p-10 glass-card border-2 border-white/5 rounded-[3rem] bg-white/5 flex flex-col gap-6 hover:border-emerald-500/30 transition-all"
+					>
+						<div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500">
+							<Brain className="w-7 h-7" />
 						</div>
-					</div>
-
-					{/* Philosophy (RHS) */}
-					<div className="lg:col-span-5 space-y-8">
-						<h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground/60 ml-4 flex items-center gap-3">
-							<Brain className="w-4 h-4" /> Running Mindset
-						</h3>
-						<div className="space-y-4">
-							<motion.div
-								initial={{ opacity: 0, scale: 0.95 }}
-								whileInView={{ opacity: 1, scale: 1 }}
-								viewport={{ once: true }}
-								transition={{ delay: 0.6 }}
-								className="p-6 glass-card border-2 border-white/5 rounded-3xl bg-white/5 flex items-start gap-5 hover:border-accent/30 transition-all"
-							>
-								<div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 flex-shrink-0">
-									<Timer className="w-5 h-5" />
-								</div>
-								<div>
-									<h4 className="font-bold text-foreground mb-1">
-										Unwavering Consistency
-									</h4>
-									<p className="text-xs text-muted-foreground leading-relaxed font-medium">
-										Since 2020, I've maintained a baseline of 1000KM+ yearly.
-										Discipline in the morning predicts success in the afternoon.
-									</p>
-								</div>
-							</motion.div>
-
-							<motion.div
-								initial={{ opacity: 0, scale: 0.95 }}
-								whileInView={{ opacity: 1, scale: 1 }}
-								viewport={{ once: true }}
-								transition={{ delay: 0.7 }}
-								className="p-6 glass-card border-2 border-white/5 rounded-3xl bg-white/5 flex items-start gap-5 hover:border-accent/30 transition-all"
-							>
-								<div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 flex-shrink-0">
-									<Brain className="w-5 h-5" />
-								</div>
-								<div>
-									<h4 className="font-bold text-foreground mb-1">
-										Problem Solving Zone
-									</h4>
-									<p className="text-xs text-muted-foreground leading-relaxed font-medium">
-										Running is my moving meditation. It's where I solve my
-										toughest architectural challenges and debug complex systems.
-									</p>
-								</div>
-							</motion.div>
+						<div>
+							<h4 className="text-2xl font-black text-foreground mb-3">
+								Moving Meditation
+							</h4>
+							<p className="text-muted-foreground leading-relaxed font-medium">
+								Running is where I solve my toughest architectural challenges.
+								The rhythm of the pace creates a unique cognitive space for
+								system design and debugging.
+							</p>
 						</div>
-					</div>
+					</motion.div>
+
+					<motion.div
+						initial={{ opacity: 0, x: 20 }}
+						whileInView={{ opacity: 1, x: 0 }}
+						viewport={{ once: true }}
+						className="p-10 glass-card border-2 border-white/5 rounded-[3rem] bg-white/5 flex flex-col gap-6 hover:border-emerald-500/30 transition-all"
+					>
+						<div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400">
+							<Timer className="w-7 h-7" />
+						</div>
+						<div>
+							<h4 className="text-2xl font-black text-foreground mb-3">
+								Absolute Consistency
+							</h4>
+							<p className="text-muted-foreground leading-relaxed font-medium">
+								Maintaining a high activity baseline regardless of external
+								factors. Disciplined training translates directly into
+								high-fidelity engineering execution.
+							</p>
+						</div>
+					</motion.div>
 				</div>
 
-				{/* Closing CTA / Final Quote */}
+				{/* Closing CTA */}
 				<motion.div
 					initial={{ opacity: 0 }}
 					whileInView={{ opacity: 1 }}
-					transition={{ delay: 0.8 }}
+					transition={{ delay: 0.5 }}
 					className="mt-32 text-center"
 				>
-					<div className="inline-block p-1 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm px-6 py-3">
-						<span className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500/60">
+					<div className="inline-block p-1 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm px-8 py-4">
+						<span className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500">
 							Fuelled by Endorphins • Optimized by Code
 						</span>
 					</div>

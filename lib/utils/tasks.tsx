@@ -18,6 +18,12 @@ export function renderTextWithLinks(text: string) {
     if (part.match(URL_REGEX)) {
       const href = part.startsWith('www.') ? `https://${part}` : part;
       
+      // Enhancement: Shorten visual URL but keep full href
+      let displayUrl = part.replace(/^https?:\/\//, '').replace(/^www\./, '');
+      if (displayUrl.length > 30) {
+        displayUrl = displayUrl.substring(0, 27) + '...';
+      }
+
       return (
         <a
           key={i}
@@ -26,10 +32,11 @@ export function renderTextWithLinks(text: string) {
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           onDoubleClick={(e) => e.stopPropagation()}
-          className="text-accent underline hover:text-accent/80 break-all inline-flex items-center gap-1 group/link"
+          className="text-blue-600 hover:text-blue-700 underline underline-offset-4 font-bold break-all inline-flex items-center gap-1 group/link bg-blue-50 px-1.5 rounded-md transition-colors"
+          title={part} // Full URL on hover
         >
-          {part}
-          <ExternalLink className="w-3 h-3 opacity-50 group-hover/link:opacity-100 transition-opacity" />
+          {displayUrl}
+          <ExternalLink className="w-3 h-3 opacity-40 group-hover/link:opacity-100 transition-opacity" />
         </a>
       );
     }

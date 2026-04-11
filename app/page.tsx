@@ -218,19 +218,6 @@ export default function Home() {
 					</motion.div>
 				</div>
 			</div>
-
-			{/* Scroll Hint */}
-			<motion.div
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				transition={{ delay: 1, duration: 1 }}
-				className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3"
-			>
-				<span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40">
-					Scroll
-				</span>
-				<div className="w-[1px] h-12 bg-gradient-to-b from-accent to-transparent" />
-			</motion.div>
 		</main>
 	);
 }

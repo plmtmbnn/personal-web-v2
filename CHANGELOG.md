@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.3.0...v0.4.0) (2026-04-12)
+
+
+### Features
+
+* enhance login and PinGuard with auto-verification and improved UX ([551fd93](https://github.com/plmtmbnn/personal-web-v2/commit/551fd9331f39f180a7de3705982972459df16616))
+
 # [0.3.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.2.0...v0.3.0) (2026-04-12)
 
 

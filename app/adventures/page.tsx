@@ -2,143 +2,117 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { Camera, ChevronRight, Activity, Compass } from "lucide-react";
 
 const categories = [
 	{
 		title: "Running",
 		slug: "running",
-		description: "Miles logged, progress made. Every step is a victory.",
+		description:
+			"Tracking consistency, endurance, and mental clarity through miles logged.",
 		accent: "from-emerald-500 to-teal-500",
-		icon: (
-			<svg
-				className="w-6 h-6"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M13 10V3L4 14h7v7l9-11h-7z"
-				/>
-			</svg>
-		),
+		color: "text-emerald-500",
+		bg: "bg-emerald-500/5",
+		icon: Activity,
 	},
 	{
 		title: "Travel",
 		slug: "travel",
-		description: "Capturing moments, telling stories through the lens.",
+		description:
+			"Visual stories and cultural insights captured across the globe.",
 		accent: "from-purple-500 to-pink-500",
-		icon: (
-			<svg
-				className="w-6 h-6"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-			>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-				/>
-				<path
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth={2}
-					d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-				/>
-			</svg>
-		),
+		color: "text-purple-500",
+		bg: "bg-purple-500/5",
+		icon: Camera,
 	},
 ];
 
 export default function AdventuresLanding() {
-	const [visible, setVisible] = useState(false);
-	useEffect(() => setVisible(true), []);
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+
+	if (!mounted) return null;
 
 	return (
-		<section className="min-h-screen bg-background px-4 sm:px-6 py-20 relative overflow-hidden">
-			{/* Subtle Background */}
-			<div className="absolute inset-0">
-				<div className="absolute top-20 right-20 w-96 h-96 bg-indigo-50 rounded-full blur-3xl opacity-40 animate-float"></div>
+		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
+			{/* Aesthetic Background Elements */}
+			<div className="absolute inset-0 pointer-events-none -z-10">
+				<div className="absolute top-[-5%] right-[-10%] w-[60%] h-[60%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
 				<div
-					className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-blue-50 rounded-full blur-3xl opacity-40 animate-float"
-					style={{ animationDelay: "1s", animationDuration: "5s" }}
-				></div>
+					className="absolute bottom-[-10%] left-[-5%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse"
+					style={{ animationDelay: "2s" }}
+				/>
 			</div>
 
-			<div className="max-w-6xl mx-auto space-y-16 relative z-10">
-				{/* Header */}
-				<div
-					className={`text-center transition-all duration-700 ${
-						visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-					}`}
+			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
+				{/* Header Section */}
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.8 }}
+					className="text-center space-y-6 mb-20"
 				>
-					<h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-						Adventures
-					</h2>
-					<p className="max-w-2xl mx-auto text-muted-foreground text-lg leading-relaxed">
-						Running journeys and visual stories I collect along the way. Select
-						a category to explore further.
+					<div className="flex items-center justify-center gap-3 text-accent mb-4">
+						<Compass className="w-6 h-6" />
+						<span className="text-[10px] font-black uppercase tracking-[0.4em]">
+							Life in Motion
+						</span>
+					</div>
+					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground leading-[0.9]">
+						Personal <span className="gradient-text">Adventures</span>
+					</h1>
+					<p className="text-muted-foreground text-lg max-w-xl mx-auto font-medium leading-relaxed">
+						Exploring the intersection of endurance and aesthetics. A collection
+						of physical journeys and visual stories.
 					</p>
-				</div>
+				</motion.div>
 
-				{/* Selection Grid */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+				{/* Selection Grid - Optimized for Mobile */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
 					{categories.map((cat, i) => (
-						<Link
+						<motion.div
 							key={cat.slug}
-							href={`/adventures/${cat.slug}`}
-							style={{ transitionDelay: `${i * 150}ms` }}
-							className={`group relative p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden ${
-								visible
-									? "opacity-100 translate-y-0"
-									: "opacity-0 translate-y-6"
-							}`}
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ delay: i * 0.1, duration: 0.6 }}
 						>
-							{/* Background Decoration */}
-							<div
-								className={`absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-gradient-to-br ${cat.accent} opacity-5 group-hover:opacity-10 transition-opacity duration-500`}
-							></div>
-
-							<div className="relative z-10 flex flex-col h-full">
+							<Link
+								href={`/adventures/${cat.slug}`}
+								className="group block relative p-10 rounded-[2.5rem] bg-white/5 border-2 border-white/5 backdrop-blur-xl hover:border-accent/30 transition-all duration-500 shadow-2xl overflow-hidden !no-underline"
+							>
+								{/* Dynamic Inner Glow */}
 								<div
-									className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br ${cat.accent} text-white shadow-lg mb-6 group-hover:scale-110 transition-transform duration-500`}
-								>
-									{cat.icon}
-								</div>
+									className={`absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-gradient-to-br ${cat.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl`}
+								></div>
 
-								<h3 className="text-2xl font-bold text-foreground mb-3">
-									{cat.title}
-								</h3>
-
-								<p className="text-muted-foreground leading-relaxed mb-8 flex-1">
-									{cat.description}
-								</p>
-
-								<div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest transition-colors">
-									<span>Explore</span>
-									<svg
-										className="w-5 h-5 group-hover:translate-x-2 transition-transform"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
+								<div className="relative z-10 flex flex-col h-full">
+									<div
+										className={`w-16 h-16 flex items-center justify-center rounded-2xl ${cat.bg} ${cat.color} shadow-lg mb-8 group-hover:scale-110 transition-transform duration-500 border border-white/5`}
 									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M17 8l4 4m0 0l-4 4m4-4H3"
-										/>
-									</svg>
+										<cat.icon className="w-8 h-8" />
+									</div>
+
+									<h3 className="text-3xl font-black text-foreground mb-4 tracking-tight">
+										{cat.title}
+									</h3>
+
+									<p className="text-muted-foreground font-medium leading-relaxed mb-10 flex-1">
+										{cat.description}
+									</p>
+
+									<div
+										className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] ${cat.color} transition-all`}
+									>
+										<span>Begin Exploration</span>
+										<ChevronRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+									</div>
 								</div>
-							</div>
-						</Link>
+							</Link>
+						</motion.div>
 					))}
 				</div>
 			</div>
-		</section>
+		</main>
 	);
 }

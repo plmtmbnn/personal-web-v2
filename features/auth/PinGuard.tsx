@@ -82,8 +82,19 @@ export default function PinGuard({ children }: PinGuardProps) {
 
 	if (isAuthenticated === null) {
 		return (
-			<div className="fixed inset-0 bg-background flex items-center justify-center">
-				<div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+			<div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-6 sm:p-12">
+				<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
+				<div className="glass-card w-full max-w-md space-y-10 relative overflow-hidden">
+					<div className="space-y-6 flex flex-col items-center">
+						<div className="w-20 h-20 bg-white/5 rounded-3xl animate-pulse" />
+						<div className="space-y-3 flex flex-col items-center w-full">
+							<div className="w-48 h-6 bg-white/5 rounded-full animate-pulse" />
+							<div className="w-32 h-3 bg-white/5 rounded-full animate-pulse" />
+						</div>
+					</div>
+					<div className="w-full h-16 bg-white/5 rounded-2xl animate-pulse" />
+					<div className="w-full h-12 bg-white/5 rounded-2xl animate-pulse" />
+				</div>
 			</div>
 		);
 	}

@@ -12,6 +12,7 @@ import {
   LayoutDashboard, 
   CheckSquare, 
   LogOut,
+  LogIn,
   ChevronUp,
   TrendingUp,
   Mail,
@@ -39,7 +40,7 @@ type NavItem = {
   icon: React.ElementType;
   subItems?: SubNavItem[];
   adminOnly?: boolean;
-  authOnly?: boolean;
+  hideIfLoggedIn?: boolean;
   toggle?: keyof typeof ENV_GLOBAL;
 };
 
@@ -85,6 +86,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Contact",
     href: "/contact",
     icon: Mail
+  },
+  {
+    label: "Login",
+    href: "/login",
+    icon: LogIn,
+    hideIfLoggedIn: true
   },
   { 
     label: "Admin", 
@@ -133,6 +140,9 @@ export default function CompactBottomBar() {
         setIsLoggedIn(true);
         const { data: profile } = await SupabaseConn.from('profiles').select('is_admin').eq('id', user.id).single();
         if (profile?.is_admin) setIsAdmin(true);
+      } else {
+        setIsLoggedIn(false);
+        setIsAdmin(false);
       }
     };
     checkUser();
@@ -158,6 +168,7 @@ export default function CompactBottomBar() {
   const visibleItems = NAV_ITEMS.filter(item => {
     if (item.toggle && ENV_GLOBAL[item.toggle] === "false") return false;
     if (item.adminOnly && !isAdmin) return false;
+    if (item.hideIfLoggedIn && isLoggedIn) return false;
     return true;
   });
 

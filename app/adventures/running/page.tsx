@@ -267,20 +267,6 @@ export default function RunningPage() {
 						</div>
 					</motion.div>
 				</div>
-
-				{/* Closing CTA */}
-				<motion.div
-					initial={{ opacity: 0 }}
-					whileInView={{ opacity: 1 }}
-					transition={{ delay: 0.5 }}
-					className="mt-32 text-center"
-				>
-					<div className="inline-block p-1 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm px-8 py-4">
-						<span className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500">
-							Fuelled by Endorphins • Optimized by Code
-						</span>
-					</div>
-				</motion.div>
 			</div>
 		</main>
 	);

@@ -46,7 +46,7 @@ export default function BlogDetailPage({
 	const readingTime = calculateReadingTime(post.content);
 
 	return (
-		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
+		<main className="min-h-screen bg-background relative overflow-x-hidden pb-32">
 			{/* Progress Bar */}
 			<motion.div
 				className="fixed top-0 left-0 right-0 h-1 bg-accent z-50 origin-left"
@@ -55,51 +55,54 @@ export default function BlogDetailPage({
 
 			{/* Background Ambience */}
 			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/5 rounded-full blur-[120px]" />
-				<div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[120px]" />
+				<div className="absolute top-[-5%] right-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
+				<div
+					className="absolute bottom-[-5%] left-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[120px] animate-pulse"
+					style={{ animationDelay: "2s" }}
+				/>
 			</div>
 
-			<div className="max-w-4xl mx-auto px-6 pt-24 sm:pt-32">
+			<div className="max-w-4xl mx-auto px-6 pt-20 sm:pt-32">
 				{/* Navigation */}
 				<motion.div
 					initial={{ opacity: 0, x: -10 }}
 					animate={{ opacity: 1, x: 0 }}
-					className="mb-12"
+					className="mb-8 sm:mb-12"
 				>
 					<Link
 						href="/blog"
-						className="inline-flex items-center text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-accent transition-colors gap-2 group !no-underline"
+						className="inline-flex items-center text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-accent transition-colors gap-2 group !no-underline py-2"
 					>
 						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
 						Back to Library
 					</Link>
 				</motion.div>
 
-				{/* Post Header */}
-				<header className="space-y-10 mb-20">
+				{/* Post Header - Mobile Optimized */}
+				<header className="space-y-8 sm:space-y-10 mb-12 sm:mb-20">
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
-						className="space-y-6"
+						className="space-y-4 sm:space-y-6"
 					>
-						<div className="flex flex-wrap items-center gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-							<div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-accent">
-								<Calendar className="w-3.5 h-3.5" />
+						<div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+							<div className="flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-white/5 border border-white/10 rounded-full text-accent">
+								<Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
 								{new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(
 									new Date(post.date),
 								)}
 							</div>
-							<div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full">
-								<Clock className="w-3.5 h-3.5" />
+							<div className="flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-white/5 border border-white/10 rounded-full">
+								<Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
 								{readingTime} min read
 							</div>
 						</div>
 
-						<h1 className="text-4xl sm:text-6xl xl:text-7xl font-black text-foreground leading-[1] tracking-tighter">
+						<h1 className="text-3xl sm:text-6xl xl:text-7xl font-black text-foreground leading-[1.1] sm:leading-[1] tracking-tighter">
 							{post.title}
 						</h1>
 
-						<p className="text-xl text-muted-foreground leading-relaxed max-w-3xl font-medium">
+						<p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-3xl font-medium">
 							{post.description}
 						</p>
 					</motion.div>
@@ -108,17 +111,17 @@ export default function BlogDetailPage({
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						transition={{ delay: 0.4 }}
-						className="flex items-center gap-4 pt-10 border-t border-white/5"
+						className="flex items-center gap-4 pt-8 sm:pt-10 border-t border-white/5"
 					>
 						<div className="flex items-center gap-3">
-							<div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white font-black text-xs">
+							<div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-accent flex items-center justify-center text-white font-black text-[10px] sm:text-xs">
 								PT
 							</div>
 							<div>
-								<p className="text-xs font-black text-foreground uppercase tracking-widest">
+								<p className="text-[10px] sm:text-xs font-black text-foreground uppercase tracking-widest leading-none">
 									Polma Tambunan
 								</p>
-								<p className="text-[10px] font-bold text-muted-foreground/60 uppercase">
+								<p className="text-[8px] sm:text-[10px] font-bold text-muted-foreground/60 uppercase mt-1">
 									Author • Fintech Engineer
 								</p>
 							</div>
@@ -126,18 +129,18 @@ export default function BlogDetailPage({
 					</motion.div>
 				</header>
 
-				{/* Main Content Area */}
+				{/* Main Content Area - Responsive Spacing */}
 				<motion.article
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.2 }}
 					className="relative"
 				>
-					<div className="glass-card p-8 sm:p-12 rounded-[2.5rem] border-2 border-white/5 bg-white/5 backdrop-blur-xl shadow-2xl relative z-10">
+					<div className="glass-card p-6 sm:p-12 rounded-[2rem] sm:rounded-[2.5rem] border-2 border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl relative z-10">
 						<BlogContent content={post.content} />
 					</div>
 
-					{/* Decorative Side Badge */}
+					{/* Decorative Side Badge - Hidden on mobile for focus */}
 					<div className="absolute top-20 -right-24 hidden xl:flex flex-col gap-4 items-center">
 						<div className="w-px h-20 bg-gradient-to-b from-transparent via-white/10 to-transparent" />
 						<div className="p-3 bg-white/5 rounded-2xl border border-white/10 rotate-90 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/20">

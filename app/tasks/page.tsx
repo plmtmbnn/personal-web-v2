@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import PinGuard from "@/components/auth/PinGuard";
+import PinGuard from "@/features/auth/PinGuard";
 import TasksView from "@/components/tasks/TasksView";
 import { getTasks } from "@/lib/actions/tasks";
 import { ENV_GLOBAL } from "@/lib/core/env";

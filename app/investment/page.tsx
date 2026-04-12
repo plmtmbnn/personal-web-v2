@@ -12,7 +12,7 @@ import {
 	BarChart3,
 	ChevronRight,
 } from "lucide-react";
-import PinGuard from "@/components/auth/PinGuard";
+import PinGuard from "@/features/auth/PinGuard";
 import { motion } from "framer-motion";
 import Link from "next/link";
 

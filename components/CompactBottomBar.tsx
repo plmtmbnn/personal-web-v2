@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { SupabaseConn } from "@/lib/core/supabase";
-import { logout } from "@/lib/actions/auth";
+import { logout } from "@/features/auth/actions";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import { 
   Home, 

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { SupabaseConn } from '@/lib/core/supabase';
-import { logout } from '@/lib/actions/auth';
+import { logout } from '@/features/auth/actions';
 import { LogIn, LogOut, Loader2 } from 'lucide-react';
 
 interface LoginButtonProps {

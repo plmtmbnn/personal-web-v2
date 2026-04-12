@@ -9,7 +9,7 @@ import {
 	ArrowRight,
 	ChevronRight,
 } from "lucide-react";
-import { logout } from "@/lib/actions/auth";
+import { logout } from "@/features/auth/actions";
 
 export const metadata = {
 	title: "Admin Dashboard | Personal Hub",

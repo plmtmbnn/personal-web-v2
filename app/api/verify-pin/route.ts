@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
-import { ENV_GLOBAL } from '@/lib/env';
+import { ENV_GLOBAL } from '@/lib/core/env';
 
 /**
  * Redis & Ratelimit Configuration

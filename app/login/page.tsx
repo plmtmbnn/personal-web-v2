@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { LogIn, ShieldAlert, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import LoginButton from "@/components/auth/LoginButton";
-import { ENV_GLOBAL } from "@/lib/env";
+import { ENV_GLOBAL } from "@/lib/core/env";
 
 /**
  * Login Page Content

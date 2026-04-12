@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { ENV_GLOBAL } from "@/lib/env";
+import { ENV_GLOBAL } from "@/lib/core/env";
 
 /**
  * Centralized Redis client using Upstash.

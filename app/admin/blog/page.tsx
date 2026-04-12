@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getBlogsAdmin } from "@/lib/actions/blog";
 import { Plus, ChevronRight, BookOpen } from "lucide-react";
 import AdminBlogList from "@/components/blog/AdminBlogList";
-import { createClient } from "@/utils/supabase-server";
+import { createClient } from "@/lib/core/supabase-server";
 import { redirect } from "next/navigation";
 
 export const metadata = {

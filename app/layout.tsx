@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Varela_Round, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CompactBottomBar from "@/components/CompactBottomBar";
-import { createMetadata } from "@/lib/metadata";
+import { createMetadata } from "@/lib/shared/metadata";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = createMetadata();
 

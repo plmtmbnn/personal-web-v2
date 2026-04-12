@@ -1,8 +1,8 @@
+import { createClient } from '@/lib/core/supabase-server';
+import { createSession } from '@/lib/core/redis';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase-server';
-import { createSession } from '@/utils/redis';
 import { cookies } from 'next/headers';
-import { ENV_GLOBAL } from '@/lib/env';
+import { ENV_GLOBAL } from '@/lib/core/env';
 
 /**
  * Auth Callback Route

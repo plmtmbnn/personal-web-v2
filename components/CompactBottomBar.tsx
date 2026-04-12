@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { SupabaseConn } from "@/utils/supabase";
+import { SupabaseConn } from "@/lib/core/supabase";
 import { logout } from "@/lib/actions/auth";
-import { ENV_GLOBAL } from "@/lib/env";
+import { ENV_GLOBAL } from "@/lib/core/env";
 import { 
   Home, 
   BookOpen, 

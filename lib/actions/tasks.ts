@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { SupabaseConn } from '@/utils/supabase';
-import { invalidateStatsCache } from '@/utils/redis';
+import { SupabaseConn } from '@/lib/core/supabase';
+import { invalidateStatsCache } from '@/lib/core/redis';
 import { Task, TaskPriority } from '@/lib/types/tasks';
 
 /**

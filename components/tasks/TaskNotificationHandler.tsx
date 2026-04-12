@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useNotification } from '@/hooks/useNotification';
+import { useNotification } from '@/lib/hooks/useNotification';
 import { Task } from '@/lib/types/tasks';
 import { calculateProgress } from '@/lib/utils/tasks';
 import { Bell, BellOff, BellRing } from 'lucide-react';

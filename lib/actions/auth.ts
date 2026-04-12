@@ -2,8 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { deleteSession } from '@/utils/redis';
-import { createClient } from '@/utils/supabase-server';
+import { deleteSession } from '@/lib/core/redis';
+import { createClient } from '@/lib/core/supabase-server';
 
 /**
  * Logout Action

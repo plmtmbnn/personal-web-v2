@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AUTHOR, SOCIAL_LINKS } from "@/lib/constants";
+import { AUTHOR, SOCIAL_LINKS } from "@/lib/shared/constants";
 import {
 	FaEnvelope,
 	FaLinkedin,

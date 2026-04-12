@@ -1,4 +1,4 @@
-import { SupabaseConn } from "@/utils/supabase";
+import { SupabaseConn } from "@/lib/core/supabase";
 
 export interface Blog {
   id: string;

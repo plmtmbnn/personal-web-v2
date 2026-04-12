@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SupabaseConn } from '@/utils/supabase';
+import { SupabaseConn } from '@/lib/core/supabase';
 import { logout } from '@/lib/actions/auth';
 import { LogIn, LogOut, Loader2 } from 'lucide-react';
 

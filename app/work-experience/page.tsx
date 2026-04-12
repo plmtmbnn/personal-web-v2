@@ -1,6 +1,6 @@
 "use client";
 
-import { EXPERIENCE_YEAR } from "@/lib/constants";
+import { EXPERIENCE_YEAR } from "@/lib/shared/constants";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {

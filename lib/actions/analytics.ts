@@ -1,7 +1,7 @@
 'use server';
 
-import { SupabaseConn } from '@/utils/supabase';
-import { redis, CACHE_KEYS } from '@/utils/redis';
+import { SupabaseConn } from '@/lib/core/supabase';
+import { redis, CACHE_KEYS } from '@/lib/core/redis';
 import { Task, TaskPriority } from '@/lib/types/tasks';
 import { 
   startOfToday, 

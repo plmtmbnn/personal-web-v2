@@ -1,6 +1,6 @@
 "use client";
 
-import { EXPERIENCE_YEAR, AUTHOR } from "@/lib/constants";
+import { EXPERIENCE_YEAR, AUTHOR } from "@/lib/shared/constants";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";

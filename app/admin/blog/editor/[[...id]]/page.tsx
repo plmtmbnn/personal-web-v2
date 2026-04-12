@@ -2,7 +2,7 @@ import BlogForm from "@/components/blog/BlogForm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, Edit3, Plus, ChevronRight } from "lucide-react";
-import { createClient } from "@/utils/supabase-server";
+import { createClient } from "@/lib/core/supabase-server";
 
 interface EditorPageProps {
 	params: Promise<{

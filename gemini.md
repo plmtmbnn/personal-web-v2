@@ -13,7 +13,7 @@ This document provides foundational context for the Gemini CLI agent to ensure a
 - **Workflow:** Semantic Release + Commitlint + Husky
 
 ## 🔑 Security & Authorization
-- **Environment Variables:** Always use `ENV_GLOBAL` from `@/lib/env`.
+- **Environment Variables:** Always use `ENV_GLOBAL` from `@/lib/core/env`.
 - **Authorization:** 
   - Admin access is strictly gated by `profiles.is_admin = true`.
   - Sensitive data mutations (Server Actions) must perform server-side admin verification using `checkAdmin()`.

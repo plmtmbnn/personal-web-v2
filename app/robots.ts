@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { SITE } from '@/lib/constants'
+import { SITE } from '@/lib/shared/constants'
 
 export default function robots(): MetadataRoute.Robots {
   return {

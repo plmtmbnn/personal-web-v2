@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 import PinGuard from "@/components/auth/PinGuard";
 import TasksView from "@/components/tasks/TasksView";
 import { getTasks } from "@/lib/actions/tasks";
-import { ENV_GLOBAL } from "@/lib/env";
-import { redis } from "@/utils/redis";
+import { ENV_GLOBAL } from "@/lib/core/env";
+import { redis } from "@/lib/core/redis";
 import type { TaskPriority } from "@/lib/types/tasks";
 
 export const metadata = {

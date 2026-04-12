@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ENV_GLOBAL } from '@/lib/env';
+import { ENV_GLOBAL } from '@/lib/core/env';
 
 interface PinGuardProps {
 	children: React.ReactNode;

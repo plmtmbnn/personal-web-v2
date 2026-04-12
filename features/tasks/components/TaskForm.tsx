@@ -12,7 +12,7 @@ import {
   X,
   Target
 } from "lucide-react";
-import { addTask } from "@/features/tasks/actions";
+import { addTask } from "@/features/tasks/actions/tasks";
 import { useRouter } from "next/navigation";
 import type { TaskPriority } from "@/features/tasks/types";
 import { format } from "date-fns";

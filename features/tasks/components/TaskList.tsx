@@ -12,7 +12,7 @@ import {
 	DropResult 
 } from '@hello-pangea/dnd';
 import { Task } from '@/features/tasks/types';
-import { toggleTask, deleteTask, reorderTasks, updateTask } from '@/features/tasks/actions';
+import { toggleTask, deleteTask, reorderTasks, updateTask } from '@/features/tasks/actions/tasks';
 import TaskItem from './TaskItem';
 
 interface TaskListProps {

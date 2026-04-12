@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { SupabaseConn } from '@/lib/core/supabase';
 import { invalidateStatsCache } from '@/lib/core/redis';
-import { Task, TaskPriority } from './types';
+import { Task, TaskPriority } from '../types';
 
 /**
  * Fetch tasks with optional filters.

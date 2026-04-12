@@ -1,6 +1,6 @@
 "use client";
 
-import StockTicker from "@/components/StockTicker";
+import StockTicker from "@/features/shared/components/StockTicker";
 import {
 	TrendingUp,
 	PieChart,

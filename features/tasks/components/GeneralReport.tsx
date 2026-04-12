@@ -17,7 +17,7 @@ import {
   Trophy
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getTaskStats, AnalyticsStats } from "@/lib/actions/analytics";
+import { getTaskStats, AnalyticsStats } from "@/features/tasks/actions/analytics";
 
 const ANALYTICS_EXPAND_KEY = "analytics_expanded_state";
 

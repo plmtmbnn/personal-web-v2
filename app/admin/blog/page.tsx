@@ -29,14 +29,38 @@ async function checkAdmin() {
 	return !!profile?.is_admin;
 }
 
-export default async function AdminBlogPage() {
+interface AdminBlogPageProps {
+	searchParams: Promise<{
+		page?: string;
+		search?: string;
+		status?: string;
+		sort?: string;
+	}>;
+}
+
+export default async function AdminBlogPage({
+	searchParams,
+}: AdminBlogPageProps) {
 	const isAdmin = await checkAdmin();
 
 	if (!isAdmin) {
 		redirect("/unauthorized");
 	}
 
-	const blogs = await getBlogsAdmin();
+	const params = await searchParams;
+	const currentPage = Number(params.page) || 1;
+	const currentSearch = params.search || "";
+	const currentStatus =
+		(params.status as "all" | "published" | "draft") || "all";
+	const currentSort = (params.sort as "newest" | "oldest") || "newest";
+
+	const { blogs, totalCount } = await getBlogsAdmin({
+		page: currentPage,
+		search: currentSearch,
+		status: currentStatus,
+		sort: currentSort,
+		limit: 5,
+	});
 
 	return (
 		<main className="min-h-screen bg-slate-50/50 pb-24">
@@ -79,7 +103,14 @@ export default async function AdminBlogPage() {
 			<div className="max-w-6xl mx-auto px-6">
 				<div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 					<div className="p-1 bg-slate-50/50">
-						<AdminBlogList initialBlogs={blogs} />
+						<AdminBlogList
+							initialBlogs={blogs}
+							totalCount={totalCount}
+							currentPage={currentPage}
+							currentSearch={currentSearch}
+							currentStatus={currentStatus}
+							currentSort={currentSort}
+						/>
 					</div>
 				</div>
 			</div>

@@ -50,26 +50,96 @@ function slugify(text: string): string {
 }
 
 /**
- * Fetch all blogs for admin (ordered by date DESC).
+ * Fetch blogs for admin with filtering, sorting, and pagination.
  */
-export async function getBlogsAdmin(): Promise<Blog[]> {
+export async function getBlogsAdmin(params: {
+  search?: string;
+  status?: 'all' | 'published' | 'draft';
+  sort?: 'newest' | 'oldest';
+  page?: number;
+  limit?: number;
+} = {}): Promise<{ blogs: Blog[]; totalCount: number }> {
   const isAdmin = await checkAdmin();
   if (!isAdmin) {
     throw new Error('Unauthorized');
   }
 
+  const { 
+    search = '', 
+    status = 'all', 
+    sort = 'newest', 
+    page = 1, 
+    limit = 5 
+  } = params;
+
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('blogs')
-    .select('*')
-    .order('date', { ascending: false });
+    .select('*', { count: 'exact' });
+
+  // Filtering by search
+  if (search) {
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+  }
+
+  // Filtering by status
+  if (status === 'published') {
+    query = query.eq('published', true);
+  } else if (status === 'draft') {
+    query = query.eq('published', false);
+  }
+
+  // Sorting
+  query = query.order('date', { ascending: sort === 'oldest' });
+
+  // Pagination
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error('Error fetching admin blogs:', error);
-    return [];
+    return { blogs: [], totalCount: 0 };
   }
 
-  return data as Blog[];
+  return { 
+    blogs: data as Blog[], 
+    totalCount: count || 0 
+  };
+}
+
+/**
+ * Toggle the published status of a blog post.
+ */
+export async function toggleBlogStatus(id: string, currentStatus: boolean): Promise<ActionResponse> {
+  const isAdmin = await checkAdmin();
+  if (!isAdmin) {
+    return { success: false, message: 'Unauthorized' };
+  }
+
+  const supabase = await createClient();
+
+  try {
+    const { error } = await supabase
+      .from('blogs')
+      .update({ published: !currentStatus })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Supabase error toggling blog status:', error);
+      return { success: false, message: error.message, error };
+    }
+
+    revalidatePath('/blog');
+    revalidatePath('/admin/blog');
+
+    return { success: true, message: 'Blog status updated successfully' };
+  } catch (error: any) {
+    console.error('Unexpected error toggling blog status:', error);
+    return { success: false, message: error.message || 'An unexpected error occurred' };
+  }
 }
 
 /**

@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { getBlogsAdmin } from "@/lib/actions/blog";
+import { getBlogsAdmin } from "@/features/blog/actions";
 import { Plus, ChevronRight, BookOpen } from "lucide-react";
-import AdminBlogList from "@/components/blog/AdminBlogList";
+import AdminBlogList from "@/features/blog/components/AdminBlogList";
 import { createClient } from "@/lib/core/supabase-server";
 import { redirect } from "next/navigation";
 

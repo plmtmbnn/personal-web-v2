@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/core/supabase-server';
 import { revalidatePath } from 'next/cache';
-import { Blog } from '@/lib/data/blog';
+import { Blog } from '@/features/blog/data';
 import { redirect } from 'next/navigation';
 
 export type ActionResponse<T = any> = {

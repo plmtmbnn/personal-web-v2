@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getBlogs, type Blog } from "@/lib/data/blog";
+import { getBlogs, type Blog } from "@/features/blog/data";
 import { ArrowRight, Calendar, Newspaper, Clock, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 

@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Blog } from '@/lib/data/blog';
-import { deleteBlog } from '@/lib/actions/blog';
+import { Blog } from '@/features/blog/data';
+import { deleteBlog } from '@/features/blog/actions';
 import { 
   Edit, 
   Trash2, 

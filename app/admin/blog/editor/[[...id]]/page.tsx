@@ -1,4 +1,4 @@
-import BlogForm from "@/components/blog/BlogForm";
+import BlogForm from "@/features/blog/components/BlogForm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, Edit3, Plus, ChevronRight } from "lucide-react";

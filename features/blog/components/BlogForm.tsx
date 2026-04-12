@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Blog } from '@/lib/data/blog';
-import { saveBlog } from '@/lib/actions/blog';
+import { Blog } from '@/features/blog/data';
+import { saveBlog } from '@/features/blog/actions';
 import { useRouter } from 'next/navigation';
 import { 
   Loader2, 

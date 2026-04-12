@@ -1,3 +1,10 @@
+# [0.3.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.2.0...v0.3.0) (2026-04-12)
+
+
+### Features
+
+* enhance mobile UX and implement aesthetic loading skeletons ([2d426b6](https://github.com/plmtmbnn/personal-web-v2/commit/2d426b6390ed3a4e8249739c2f994516219f6068))
+
 # [0.2.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.22...v0.2.0) (2026-04-12)
 
 

@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import PinGuard from "@/features/auth/PinGuard";
-import TasksView from "@/components/tasks/TasksView";
-import { getTasks } from "@/lib/actions/tasks";
+import TasksView from "@/features/tasks/components/TasksView";
+import { getTasks } from "@/features/tasks/actions";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import { redis } from "@/lib/core/redis";
-import type { TaskPriority } from "@/lib/types/tasks";
+import type { TaskPriority } from "@/features/tasks/types";
 
 export const metadata = {
 	title: "Daily Tasks | Personal Hub",

@@ -10,10 +10,10 @@ import {
   Tag,
   Edit2
 } from "lucide-react";
-import type { Task } from "@/lib/types/tasks";
+import type { Task } from "@/features/tasks/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
-import { renderTextWithLinks } from "@/lib/utils/tasks";
+import { renderTextWithLinks } from "@/features/tasks/utils";
 
 interface TaskItemProps {
 	task: Task;

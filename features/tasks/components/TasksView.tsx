@@ -2,45 +2,45 @@
 
 import React, { Suspense, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import ComponentLoader from "@/components/tasks/ComponentLoader";
-import QuickNav from "@/components/tasks/QuickNav";
+import ComponentLoader from "@/features/tasks/components/ComponentLoader";
+import QuickNav from "@/features/tasks/components/QuickNav";
 import { LayoutList, Zap, LayoutDashboard, Target, CheckCircle2 } from "lucide-react";
-import type { Task } from "@/lib/types/tasks";
+import type { Task } from "@/features/tasks/types";
 import { motion } from "framer-motion";
 
 /**
  * Optimization: Lazy load heavy interactive/visual components.
  */
-const DynamicHealthCheck = dynamic(() => import("@/components/tasks/HealthCheck"), {
+const DynamicHealthCheck = dynamic(() => import("@/features/tasks/components/HealthCheck"), {
 	loading: () => <ComponentLoader height="100px" />,
 	ssr: false
 });
 
-const DynamicGeneralReport = dynamic(() => import("@/components/tasks/GeneralReport"), {
+const DynamicGeneralReport = dynamic(() => import("@/features/tasks/components/GeneralReport"), {
 	loading: () => <ComponentLoader height="120px" />,
 	ssr: false
 });
 
-const DynamicTaskNotificationHandler = dynamic(() => import("@/components/tasks/TaskNotificationHandler"), {
+const DynamicTaskNotificationHandler = dynamic(() => import("@/features/tasks/components/TaskNotificationHandler"), {
 	ssr: false
 });
 
-const DynamicTaskProgress = dynamic(() => import("@/components/tasks/TaskProgress"), {
+const DynamicTaskProgress = dynamic(() => import("@/features/tasks/components/TaskProgress"), {
 	loading: () => <ComponentLoader height="80px" />,
 	ssr: false
 });
 
-const DynamicTaskFilters = dynamic(() => import("@/components/tasks/TaskFilters"), {
+const DynamicTaskFilters = dynamic(() => import("@/features/tasks/components/TaskFilters"), {
 	loading: () => <div className="h-10 bg-slate-100 rounded-xl animate-pulse mb-6" />,
 	ssr: false
 });
 
-const DynamicTaskForm = dynamic(() => import("@/components/tasks/TaskForm"), {
+const DynamicTaskForm = dynamic(() => import("@/features/tasks/components/TaskForm"), {
 	loading: () => <ComponentLoader height="120px" />,
 	ssr: false
 });
 
-const DynamicTaskList = dynamic(() => import("@/components/tasks/TaskList"), {
+const DynamicTaskList = dynamic(() => import("@/features/tasks/components/TaskList"), {
 	loading: () => (
 		<div className="space-y-3">
 			<ComponentLoader height="60px" />

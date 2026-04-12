@@ -11,8 +11,8 @@ import {
 	Draggable, 
 	DropResult 
 } from '@hello-pangea/dnd';
-import { Task } from '@/lib/types/tasks';
-import { toggleTask, deleteTask, reorderTasks, updateTask } from '@/lib/actions/tasks';
+import { Task } from '@/features/tasks/types';
+import { toggleTask, deleteTask, reorderTasks, updateTask } from '@/features/tasks/actions';
 import TaskItem from './TaskItem';
 
 interface TaskListProps {

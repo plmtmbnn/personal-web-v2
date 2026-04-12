@@ -2,8 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useNotification } from '@/lib/hooks/useNotification';
-import { Task } from '@/lib/types/tasks';
-import { calculateProgress } from '@/lib/utils/tasks';
+import { Task } from '@/features/tasks/types';
+import { calculateProgress } from '@/features/tasks/utils';
 import { Bell, BellOff, BellRing } from 'lucide-react';
 
 interface TaskNotificationHandlerProps {

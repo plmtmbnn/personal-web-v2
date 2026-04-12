@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useTransition } from 'react';
 import { AlertTriangle, CalendarRange, X, Clock } from 'lucide-react';
-import { getStaleTasks, rescheduleStaleTasks } from '@/lib/actions/tasks';
-import { Task } from '@/lib/types/tasks';
+import { getStaleTasks, rescheduleStaleTasks } from '@/features/tasks/actions';
+import { Task } from '@/features/tasks/types';
 import { format } from 'date-fns';
 
 /**

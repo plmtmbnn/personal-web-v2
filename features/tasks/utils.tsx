@@ -1,5 +1,5 @@
 import { ExternalLink } from "lucide-react";
-import { Task } from "@/lib/types/tasks";
+import { Task } from "./types";
 
 /**
  * Regex to detect URLs starting with http://, https://, or www.

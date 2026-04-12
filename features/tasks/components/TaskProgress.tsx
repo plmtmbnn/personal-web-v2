@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { Trophy, CheckCircle2, Circle } from 'lucide-react';
-import { calculateProgress } from '@/lib/utils/tasks';
-import { Task } from '@/lib/types/tasks';
+import { calculateProgress } from '@/features/tasks/utils';
+import { Task } from '@/features/tasks/types';
 
 interface TaskProgressProps {
 	tasks: Task[];

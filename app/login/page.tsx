@@ -2,10 +2,17 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { LogIn, ShieldAlert, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+	ShieldAlert,
+	Loader2,
+	ShieldCheck,
+	ArrowLeft,
+	Lock,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import LoginButton from "@/features/auth/components/LoginButton";
 import { ENV_GLOBAL } from "@/lib/core/env";
+import Link from "next/link";
 
 /**
  * Login Page Content
@@ -15,17 +22,32 @@ function LoginContent() {
 	const error = searchParams.get("error");
 	const message = searchParams.get("message");
 
-	// Feature Toggle Check: If Google Auth is disabled, inform the user or redirect
+	// Feature Toggle Check
 	if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false") {
 		return (
-			<div className="min-h-screen bg-background flex items-center justify-center p-6 text-center">
-				<div className="max-w-md">
-					<ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-					<h1 className="text-2xl font-bold mb-2">Auth Disabled</h1>
-					<p className="text-muted-foreground">
-						Google Authentication is currently disabled via feature toggle.
+			<div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
+				<motion.div
+					initial={{ opacity: 0, scale: 0.95 }}
+					animate={{ opacity: 1, scale: 1 }}
+					className="max-w-md bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-xl"
+				>
+					<ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-6" />
+					<h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">
+						Auth Disabled
+					</h1>
+					<p className="text-slate-500 font-medium leading-relaxed">
+						Google Authentication is currently disabled via administrative
+						feature toggle.
 					</p>
-				</div>
+					<div className="mt-8">
+						<Link
+							href="/"
+							className="text-sm font-bold text-blue-600 hover:underline"
+						>
+							Return to Home
+						</Link>
+					</div>
+				</motion.div>
 			</div>
 		);
 	}
@@ -41,73 +63,108 @@ function LoginContent() {
 	const errorMsg = getErrorMessage();
 
 	return (
-		<div className="min-h-screen bg-background relative flex items-center justify-center p-6 overflow-hidden">
-			{/* Aesthetic Background Elements */}
-			<div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-[120px]" />
-			<div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-[120px]" />
+		<div className="min-h-screen bg-slate-50/50 relative flex items-center justify-center p-6 overflow-hidden">
+			{/* Aesthetic Ambient Glows */}
+			<div className="absolute top-[-5%] right-[-5%] w-[60%] h-[60%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
+			<div
+				className="absolute bottom-[-5%] left-[-5%] w-[60%] h-[60%] bg-purple-500/5 rounded-full blur-[120px] animate-pulse"
+				style={{ animationDelay: "2s" }}
+			/>
 
-			<motion.div
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.5 }}
-				className="w-full max-w-md z-10"
-			>
+			<div className="w-full max-w-md z-10 space-y-10">
 				{/* Branding / Header */}
-				<div className="text-center mb-10">
-					<div className="w-20 h-20 bg-accent/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner ring-1 ring-accent/20">
-						<LogIn className="w-10 h-10 text-accent" />
+				<motion.div
+					initial={{ opacity: 0, y: -20 }}
+					animate={{ opacity: 1, y: 0 }}
+					className="text-center"
+				>
+					<div className="w-20 h-20 bg-white border border-slate-200 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-sm group hover:scale-105 transition-transform duration-500">
+						<Lock className="w-10 h-10 text-slate-900 group-hover:text-accent transition-colors" />
 					</div>
-					<h1 className="text-3xl font-black tracking-tight mb-2">
+					<div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-full mb-4 shadow-sm">
+						<ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+						<span className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+							Secure Gateway
+						</span>
+					</div>
+					<h1 className="text-4xl font-black tracking-tighter text-slate-900">
 						Personal Portal
 					</h1>
-					<p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.3em]">
-						Secure Access
-					</p>
-				</div>
+				</motion.div>
 
-				{/* Login Card */}
-				<div className="glass-card p-10 border-2 border-white/5 shadow-2xl relative overflow-hidden bg-white/5 backdrop-blur-xl rounded-[2.5rem]">
+				{/* Login Card - Solid Productivity Pattern */}
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.1 }}
+					className="bg-white p-10 sm:p-12 border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[3rem] relative overflow-hidden"
+				>
 					<div className="relative z-10">
-						<div className="text-center mb-8">
-							<h2 className="text-xl font-bold mb-2">Welcome Back</h2>
-							<p className="text-sm text-muted-foreground">
-								Sign in to access your dashboard.
+						<div className="text-center mb-10">
+							<h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
+								Welcome Back
+							</h2>
+							<p className="text-sm text-slate-400 font-medium">
+								Identify yourself to access the command center.
 							</p>
 						</div>
 
 						{/* Error Display */}
-						{errorMsg && (
-							<motion.div
-								initial={{ opacity: 0, scale: 0.95 }}
-								animate={{ opacity: 1, scale: 1 }}
-								className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3"
-							>
-								<ShieldAlert className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-								<p className="text-xs text-red-600 font-bold leading-relaxed">
-									{errorMsg}
-								</p>
-							</motion.div>
-						)}
+						<AnimatePresence>
+							{errorMsg && (
+								<motion.div
+									initial={{ opacity: 0, height: 0 }}
+									animate={{ opacity: 1, height: "auto" }}
+									exit={{ opacity: 0, height: 0 }}
+									className="mb-8 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3 overflow-hidden"
+								>
+									<ShieldAlert className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+									<p className="text-xs text-rose-700 font-bold leading-relaxed">
+										{errorMsg}
+									</p>
+								</motion.div>
+							)}
+						</AnimatePresence>
 
-						<div className="flex justify-center">
+						<div className="flex justify-center mb-10">
 							<LoginButton />
 						</div>
 
-						<p className="mt-8 text-center text-[10px] text-muted-foreground/60 uppercase tracking-widest font-medium">
-							Secure Auth • Custom Redis Session
-						</p>
+						<div className="pt-8 border-t border-slate-50 flex flex-col items-center gap-4">
+							<div className="flex items-center gap-4">
+								<div className="flex items-center gap-1.5">
+									<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+									<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+										Redis Active
+									</span>
+								</div>
+								<div className="w-px h-3 bg-slate-200" />
+								<div className="flex items-center gap-1.5">
+									<div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+									<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+										Supabase Verified
+									</span>
+								</div>
+							</div>
+						</div>
 					</div>
-				</div>
+				</motion.div>
 
-				<div className="mt-12 text-center">
-					<a
+				<motion.div
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					transition={{ delay: 0.3 }}
+					className="text-center"
+				>
+					<Link
 						href="/"
-						className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors underline decoration-border underline-offset-4"
+						className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400 hover:text-accent transition-all group !no-underline"
 					>
-						Return to Home
-					</a>
-				</div>
-			</motion.div>
+						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+						Return to Portal
+					</Link>
+				</motion.div>
+			</div>
 		</div>
 	);
 }
@@ -116,7 +173,7 @@ export default function LoginPage() {
 	return (
 		<Suspense
 			fallback={
-				<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="min-h-screen bg-slate-50 flex items-center justify-center">
 					<Loader2 className="w-10 h-10 text-accent animate-spin" />
 				</div>
 			}

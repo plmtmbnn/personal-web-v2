@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.4.0...v0.5.0) (2026-04-12)
+
+
+### Features
+
+* refine aesthetic loading states and improve PinGuard UX ([242d968](https://github.com/plmtmbnn/personal-web-v2/commit/242d96889e0678bd8e67611b7b918ebcf45cd3d6))
+
 # [0.4.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.3.0...v0.4.0) (2026-04-12)
 
 

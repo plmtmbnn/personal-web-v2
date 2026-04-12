@@ -1,3 +1,10 @@
+# [0.6.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.5.0...v0.6.0) (2026-04-12)
+
+
+### Features
+
+* **admin:** add filtering, pagination and inline status toggle to blog management ([585ee9b](https://github.com/plmtmbnn/personal-web-v2/commit/585ee9b0c92de5939977d72252c3de92b86990e5))
+
 # [0.5.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.4.0...v0.5.0) (2026-04-12)
 
 

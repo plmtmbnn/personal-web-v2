@@ -1,3 +1,10 @@
+# [0.2.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.1.22...v0.2.0) (2026-04-12)
+
+
+### Features
+
+* refactor management and investment modules to solid productivity UI pattern ([e7a8092](https://github.com/plmtmbnn/personal-web-v2/commit/e7a80927837b2e8195120f39d3f2a5cb6b689039))
+
 # Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.

@@ -3,6 +3,7 @@
 import React, { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import { startOfDay, isSameDay, isAfter, parseISO } from "date-fns";
 import ComponentLoader from "@/features/tasks/components/ComponentLoader";
 import QuickNav from "@/features/tasks/components/QuickNav";
 import { LayoutList, Zap, LayoutDashboard, Target, CheckCircle2 } from "lucide-react";
@@ -71,8 +72,6 @@ export default function TasksView({ tasks }: TasksViewProps) {
     setMounted(true);
   }, []);
 
-  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
-
   const { todayTasks, upcomingTasks, todayStats } = useMemo(() => {
     let filtered = tasks;
     if (selectedCategory) {
@@ -82,8 +81,9 @@ export default function TasksView({ tasks }: TasksViewProps) {
       filtered = filtered.filter((t) => t.priority === selectedPriority);
     }
 
-    const todayList = filtered.filter((t) => t.due_date === today);
-    const upcomingList = filtered.filter((t) => t.due_date > today);
+    const todayRef = startOfDay(new Date());
+    const todayList = filtered.filter((t) => isSameDay(parseISO(t.due_date), todayRef));
+    const upcomingList = filtered.filter((t) => isAfter(parseISO(t.due_date), todayRef));
 
     return {
       todayTasks: showCompleted ? todayList : todayList.filter((t) => !t.is_completed),
@@ -93,7 +93,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
         total: todayList.length
       }
     };
-  }, [tasks, selectedCategory, selectedPriority, today, showCompleted]);
+  }, [tasks, selectedCategory, selectedPriority, showCompleted]);
 
   if (!mounted) return null;
 

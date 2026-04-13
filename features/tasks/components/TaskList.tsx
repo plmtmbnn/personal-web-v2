@@ -14,6 +14,7 @@ import {
 	Draggable, 
 	DropResult 
 } from '@hello-pangea/dnd';
+import { format, startOfDay, addDays } from 'date-fns';
 import { Task } from '@/features/tasks/types';
 import { toggleTask, deleteTask, reorderTasks, updateTask } from '@/features/tasks/actions/tasks';
 import TaskItem from './TaskItem';
@@ -148,8 +149,9 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 			// Inter-section move
 			const [movedTask] = sourceList.splice(source.index, 1);
 			
-			const todayStr = new Date().toISOString().split('T')[0];
-			const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+			const todayRef = startOfDay(new Date());
+			const todayStr = format(todayRef, 'yyyy-MM-dd');
+			const tomorrowStr = format(addDays(todayRef, 1), 'yyyy-MM-dd');
 			const newDueDate = destination.droppableId === 'today-list' ? todayStr : tomorrowStr;
 			
 			const updatedTask = { ...movedTask, due_date: newDueDate };

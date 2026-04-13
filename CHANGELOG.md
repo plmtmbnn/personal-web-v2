@@ -1,3 +1,12 @@
+# [0.7.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.6.0...v0.7.0) (2026-04-13)
+
+
+### Features
+
+* **tasks:** add dynamic category and completion filters ([d0eab24](https://github.com/plmtmbnn/personal-web-v2/commit/d0eab24b0cb170188bc8cff6ff709413fa82646d))
+* **tasks:** implement dual-zone drag and drop logic ([a25f7bf](https://github.com/plmtmbnn/personal-web-v2/commit/a25f7bf5053cd914f7238e7376fddccd64ef4c5a))
+* **tasks:** update getTasks action for range support ([6cd1653](https://github.com/plmtmbnn/personal-web-v2/commit/6cd1653fbaa73b59c36b26d3be6bbe9022ed1248))
+
 # [0.6.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.5.0...v0.6.0) (2026-04-12)
 
 

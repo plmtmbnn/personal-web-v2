@@ -1,6 +1,7 @@
 "use client";
 
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import ComponentLoader from "@/features/tasks/components/ComponentLoader";
 import QuickNav from "@/features/tasks/components/QuickNav";
@@ -55,11 +56,39 @@ interface TasksViewProps {
 }
 
 export default function TasksView({ tasks }: TasksViewProps) {
+  const searchParams = useSearchParams();
+  const completedParam = searchParams.get("completed");
+  const categoryParam = searchParams.get("category");
+
+  const showCompleted = completedParam === "true";
+  const selectedCategory = categoryParam || null;
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  const { todayTasks, upcomingTasks, todayStats } = useMemo(() => {
+    let filtered = tasks;
+    if (selectedCategory) {
+      filtered = filtered.filter((t) => t.category === selectedCategory);
+    }
+
+    const todayList = filtered.filter((t) => t.due_date === today);
+    const upcomingList = filtered.filter((t) => t.due_date > today);
+
+    return {
+      todayTasks: showCompleted ? todayList : todayList.filter((t) => !t.is_completed),
+      upcomingTasks: showCompleted ? upcomingList : upcomingList.filter((t) => !t.is_completed),
+      todayStats: {
+        completed: todayList.filter(t => t.is_completed).length,
+        total: todayList.length
+      }
+    };
+  }, [tasks, selectedCategory, today, showCompleted]);
 
   if (!mounted) return null;
 
@@ -86,7 +115,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
               <div className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center shadow-sm">
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-0.5">Completion</p>
                 <p className="text-sm font-black text-slate-900">
-                  {tasks.filter(t => t.is_completed).length}/{tasks.length}
+                  {todayStats.completed}/{todayStats.total}
                 </p>
               </div>
             </div>

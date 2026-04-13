@@ -41,47 +41,57 @@ export default function TaskFilters({ tasks }: TaskFiltersProps) {
 	return (
 		<div className="flex flex-col gap-4">
 			{/* Priority Filters */}
-			<div className="flex flex-wrap items-center gap-2">
-				<div className="flex items-center gap-2 mr-2">
+			<div className="flex items-center gap-2 group">
+				<div className="flex items-center gap-2 mr-2 flex-shrink-0">
 					<Filter className="w-3.5 h-3.5 text-slate-400" />
 					<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Priority:</span>
 				</div>
 
-				{priorities.map((p) => (
-					<button
-						key={p.value}
-						onClick={() => setFilter("priority", p.value)}
-						className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
-							currentPriority === p.value
-								? "bg-slate-900 text-white border-slate-900 shadow-sm"
-								: "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-						}`}
-					>
-						{p.label}
-					</button>
-				))}
+				<div className="relative flex-1 overflow-hidden">
+					<div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-nowrap pb-1">
+						{priorities.map((p) => (
+							<button
+								key={p.value}
+								onClick={() => setFilter("priority", p.value)}
+								className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border flex-shrink-0 ${
+									currentPriority === p.value
+										? "bg-slate-900 text-white border-slate-900 shadow-sm"
+										: "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+								}`}
+							>
+								{p.label}
+							</button>
+						))}
+					</div>
+					<div className="absolute top-0 right-0 h-full w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
+				</div>
 			</div>
 
 			{/* Category Filters */}
-			<div className="flex flex-wrap items-center gap-2">
-				<div className="flex items-center gap-2 mr-2">
+			<div className="flex items-center gap-2 group">
+				<div className="flex items-center gap-2 mr-2 flex-shrink-0">
 					<Filter className="w-3.5 h-3.5 text-slate-400" />
 					<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Category:</span>
 				</div>
 
-				{categories.map((cat) => (
-					<button
-						key={cat}
-						onClick={() => setFilter("category", cat)}
-						className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
-							currentCategory === cat
-								? "bg-slate-900 text-white border-slate-900 shadow-sm"
-								: "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-						}`}
-					>
-						{cat === "all" ? "All" : cat}
-					</button>
-				))}
+				<div className="relative flex-1 overflow-hidden">
+					<div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-nowrap pb-1">
+						{categories.map((cat) => (
+							<button
+								key={cat}
+								onClick={() => setFilter("category", cat)}
+								className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border flex-shrink-0 ${
+									currentCategory === cat
+										? "bg-slate-900 text-white border-slate-900 shadow-sm"
+										: "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+								}`}
+							>
+								{cat === "all" ? "All" : cat}
+							</button>
+						))}
+					</div>
+					<div className="absolute top-0 right-0 h-full w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
+				</div>
 			</div>
 
 			{/* Status Toggles */}

@@ -10,24 +10,39 @@ import { Task, TaskPriority } from '../types';
  * Default: Today, is_completed: false
  */
 export async function getTasks(options?: {
-  date?: string;
+  startDate?: string;
+  endDate?: string;
   priority?: TaskPriority;
-  showCompleted?: boolean;
+  category?: string;
+  showCompletedToday?: boolean;
 }): Promise<Task[]> {
-  const dateStr = options?.date || new Date().toISOString().split('T')[0];
-  const showCompleted = options?.showCompleted ?? false;
+  const today = new Date().toISOString().split('T')[0];
+  const startDate = options?.startDate || today;
+  const endDate = options?.endDate || today;
+  const showCompletedToday = options?.showCompletedToday ?? false;
 
-  let query = SupabaseConn
-    .from('tasks')
-    .select('*')
-    .eq('due_date', dateStr);
+  let query = SupabaseConn.from('tasks').select('*');
 
-  if (!showCompleted) {
+  // Handle Date Range
+  query = query.gte('due_date', startDate).lte('due_date', endDate);
+
+  // Handle Completion Filtering
+  if (showCompletedToday) {
+    // Show all uncompleted in range PLUS those completed today
+    query = query.or(`is_completed.eq.false,and(is_completed.eq.true,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`);
+  } else {
+    // Only show uncompleted tasks
     query = query.eq('is_completed', false);
   }
 
+  // Handle Priority Filter
   if (options?.priority) {
     query = query.eq('priority', options.priority);
+  }
+
+  // Handle Category Filter
+  if (options?.category) {
+    query = query.eq('category', options.category);
   }
 
   const { data, error } = await query

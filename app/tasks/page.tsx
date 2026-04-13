@@ -49,9 +49,10 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
 	// 2. Data Fetching
 	const tasks = await getTasks({
-		date,
+		startDate: date,
+		endDate: date,
 		priority,
-		showCompleted: true,
+		showCompletedToday: true,
 	});
 
 	return (

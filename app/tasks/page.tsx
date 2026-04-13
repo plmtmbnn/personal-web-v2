@@ -48,9 +48,16 @@ export default async function TasksPage({ searchParams }: PageProps) {
 	const priority = params.priority as TaskPriority | undefined;
 
 	// 2. Data Fetching
+	const today = new Date();
+	const nextWeek = new Date();
+	nextWeek.setDate(today.getDate() + 7);
+
+	const startDate = date || today.toISOString().split("T")[0];
+	const endDate = date || nextWeek.toISOString().split("T")[0];
+
 	const tasks = await getTasks({
-		startDate: date,
-		endDate: date,
+		startDate,
+		endDate,
 		priority,
 		showCompletedToday: true,
 	});

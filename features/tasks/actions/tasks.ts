@@ -23,16 +23,13 @@ export async function getTasks(options?: {
 
   let query = SupabaseConn.from('tasks').select('*');
 
-  // Handle Date Range
-  query = query.gte('due_date', startDate).lte('due_date', endDate);
-
-  // Handle Completion Filtering
+  // Handle Completion and Date Filtering
   if (showCompletedToday) {
-    // Show all uncompleted in range PLUS those completed today
-    query = query.or(`is_completed.eq.false,and(is_completed.eq.true,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`);
+    // Show: (Due in range AND NOT completed) OR (Completed today)
+    query = query.or(`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`);
   } else {
-    // Only show uncompleted tasks
-    query = query.eq('is_completed', false);
+    // Standard filtered view: Due in range AND NOT completed
+    query = query.eq('is_completed', false).gte('due_date', startDate).lte('due_date', endDate);
   }
 
   // Handle Priority Filter

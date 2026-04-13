@@ -180,7 +180,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 			<div className="space-y-12">
 				{/* Today Section */}
 				<section>
-					<div className="flex items-center gap-2 mb-4">
+					<div className="flex items-center gap-2 mb-4 sticky top-0 z-20 bg-slate-50/80 backdrop-blur-md py-4">
 						<div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
 							<Flame className="w-4 h-4 fill-orange-600" />
 						</div>
@@ -225,7 +225,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 
 				{/* Upcoming Section */}
 				<section>
-					<div className="flex items-center gap-2 mb-4">
+					<div className="flex items-center gap-2 mb-4 sticky top-0 z-20 bg-slate-50/80 backdrop-blur-md py-4">
 						<div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
 							<Calendar className="w-4 h-4" />
 						</div>

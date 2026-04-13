@@ -56,12 +56,16 @@ Strictly for routing and page definitions. Pages compose components from `featur
 - **Table:** `public.blogs`.
 - **Location:** Logic and components live in `features/blog/`.
 - **Editor:** Optional catch-all route at `app/admin/blog/editor/[[...id]]/page.tsx`.
+- **Admin Management**: 
+  - **Advanced Filtering**: Server-side title/description search and status filtering (Live/Draft).
+  - **Pagination**: Server-side pagination (5 per page) driven by URL parameters.
+  - **Status Toggle**: Inline "Live" switch with Optimistic UI updates.
 
 ### Task System
 - **Table:** `public.tasks`.
 - **Location:** Logic and components live in `features/tasks/`.
 - **Focus View**: Automatically separates tasks into "🔥 Focus (Today)" and "📅 Upcoming Awareness" (Next 7 days).
-- **Interactions**: Double-click to edit, auto-expanding textareas, and smart URL detection.
+- **Interactions**: Double-click to edit in-line, auto-expanding textareas, and smart URL detection.
 - **Temporal Logic**: Uses `date-fns` `startOfDay` normalization for all date-gated filtering.
 - **Dynamic Filters**: Category pills are dynamically extracted from current active tasks.
 

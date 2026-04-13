@@ -192,7 +192,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
                   <ComponentLoader height="60px" />
                 </div>
               }>
-                <DynamicTaskList initialTasks={tasks} />
+                <DynamicTaskList todayTasks={todayTasks} upcomingTasks={upcomingTasks} />
               </Suspense>
             </div>
           </div>

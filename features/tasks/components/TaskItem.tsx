@@ -38,11 +38,12 @@ export default function TaskItem({
   const [editValue, setEditValue] = useState(task.title);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-	const priorityColors = {
-		HIGH: "bg-rose-50 text-rose-700 border-rose-100",
-		MEDIUM: "bg-amber-50 text-amber-700 border-amber-100",
-		LOW: "bg-emerald-50 text-emerald-700 border-emerald-100",
-	};
+
+  const PRIORITY_CONFIG = {
+  HIGH:   { label: "High",   emoji: "🔴", color: "bg-rose-50   text-rose-700   border-rose-100"   },
+  MEDIUM: { label: "Medium", emoji: "🟡", color: "bg-amber-50  text-amber-700  border-amber-100"  },
+  LOW:    { label: "Low",    emoji: "🟢", color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+} satisfies Record<"HIGH" | "MEDIUM" | "LOW", { label: string; emoji: string; color: string }>;
 
   // Auto-expand and focus logic
   useEffect(() => {
@@ -72,16 +73,68 @@ export default function TaskItem({
     }
   };
 
-  const timeLeft = useMemo(() => {
-    if (!task.due_date || task.is_completed) return null;
-    const today = startOfDay(new Date());
-    const dueDate = startOfDay(parseISO(task.due_date));
-    const diff = differenceInDays(dueDate, today);
-    if (diff <= 0) return null;
-    if (diff === 1) return { text: "1 day more", emoji: "⏳", color: "text-orange-600 bg-orange-50 border-orange-100" };
-    if (diff <= 3) return { text: `${diff} days more`, emoji: "📅", color: "text-blue-600 bg-blue-50 border-blue-100" };
-    return { text: `${diff} days more`, emoji: "🗓️", color: "text-slate-500 bg-slate-100 border-slate-200" };
-  }, [task.due_date, task.is_completed]);
+const timeLeft = useMemo(() => {
+  if (!task.due_date || task.is_completed) return null;
+
+  const today = startOfDay(new Date());
+  const dueDate = startOfDay(parseISO(task.due_date));
+  const diff = differenceInDays(dueDate, today);
+
+  if (diff < 0) {
+    const overdue = Math.abs(diff);
+    return {
+      text: overdue === 1 ? "1 day overdue" : `${overdue} days overdue`,
+      emoji: "🚨",
+      color: "text-red-700 bg-red-50 border-red-200",
+      urgency: "overdue",
+    };
+  }
+
+  if (diff === 0) {
+    return {
+      text: "Due today",
+      emoji: "🔥",
+      color: "text-red-600 bg-red-50 border-red-100",
+      urgency: "critical",
+    };
+  }
+
+  if (diff === 1) {
+    return {
+      text: "Due tomorrow",
+      emoji: "⏳",
+      color: "text-orange-600 bg-orange-50 border-orange-100",
+      urgency: "high",
+    };
+  }
+
+  if (diff <= 3) {
+    return {
+      text: `${diff} days left`,
+      emoji: "📅",
+      color: "text-amber-600 bg-amber-50 border-amber-100",
+      urgency: "medium",
+    };
+  }
+
+  if (diff <= 7) {
+    return {
+      text: `${diff} days left`,
+      emoji: "🗓️",
+      color: "text-blue-600 bg-blue-50 border-blue-100",
+      urgency: "low",
+    };
+  }
+
+  return {
+    text: `${diff} days left`,
+    emoji: "📆",
+    color: "text-slate-500 bg-slate-100 border-slate-200",
+    urgency: "none",
+  };
+}, [task.due_date, task.is_completed]);
+
+const { label, emoji, color } = PRIORITY_CONFIG[task.priority];
 
 	return (
 		<div
@@ -99,12 +152,6 @@ export default function TaskItem({
         >
           <GripVertical className="w-4 h-4" />
         </div>
-
-        {/* Visual Indicator Line (Responsive positioning) */}
-        <div className={`absolute left-9 sm:left-10 top-4 bottom-4 w-1 rounded-full transition-all ${
-          task.is_completed ? "bg-slate-200" : task.priority === 'HIGH' ? "bg-rose-500" : task.priority === 'MEDIUM' ? "bg-amber-500" : "bg-emerald-500"
-        }`} />
-
         <button
           onClick={() => onToggle(task.id, task.is_completed)}
           className={`flex-shrink-0 transition-all duration-300 p-2 sm:p-1.5 rounded-xl ml-1 sm:ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center ${
@@ -146,9 +193,9 @@ export default function TaskItem({
         
         {/* Metadata Badges (Visible on both, but Desktop only layout) */}
         <div className="hidden sm:flex flex-wrap items-center gap-2 mt-2">
-          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${priorityColors[task.priority]}`}>
-            {task.priority}
-          </span>
+<span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${color}`}>
+  {emoji} {label}
+</span>
           {task.category && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
               <Tag className="w-2.5 h-2.5" />

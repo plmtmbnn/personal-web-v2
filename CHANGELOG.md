@@ -1,3 +1,10 @@
+## [0.8.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.8.0...v0.8.1) (2026-04-13)
+
+
+### Bug Fixes
+
+* **tasks:** ensure upcoming tasks are fetched and correctly filtered ([4d7aeea](https://github.com/plmtmbnn/personal-web-v2/commit/4d7aeea867bc1a6fbaf140a52374bf897447c12a))
+
 # [0.8.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.7.0...v0.8.0) (2026-04-13)
 
 

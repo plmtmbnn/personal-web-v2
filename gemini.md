@@ -42,6 +42,10 @@ Strictly for routing and page definitions. Pages compose components from `featur
 ## 🎨 UI/UX Patterns
 - **Solid Productivity Pattern**: For admin and operational pages (Admin, Tasks, Investment), use solid white containers, `slate-50` backgrounds, and defined borders.
 - **Glassmorphism**: Reserved for public aesthetic pages (Home, Blog, Travel, Running) using `bg-white/5` and `backdrop-blur-xl`.
+- **Mobile-First UX**:
+  - **Bottom Sheets**: Used for task creation (`TaskForm`) to ensure thumb-reach accessibility.
+  - **Swipe Actions**: `TaskItem` supports swipe gestures (Left: Delete, Right: Edit).
+  - **Sticky Headers**: Section headers pin to the top of the scroll area for context.
 
 ## 🗺 Navigation (`features/shared/components/CompactBottomBar.tsx`)
 - **Data-Driven:** Navigation is driven by the `NAV_ITEMS` constant. **Do not hardcode JSX links.**
@@ -56,7 +60,10 @@ Strictly for routing and page definitions. Pages compose components from `featur
 ### Task System
 - **Table:** `public.tasks`.
 - **Location:** Logic and components live in `features/tasks/`.
-- **Interactions**: Double-click to edit in-line, auto-expanding textareas, and smart URL detection.
+- **Focus View**: Automatically separates tasks into "🔥 Focus (Today)" and "📅 Upcoming Awareness" (Next 7 days).
+- **Interactions**: Double-click to edit, auto-expanding textareas, and smart URL detection.
+- **Temporal Logic**: Uses `date-fns` `startOfDay` normalization for all date-gated filtering.
+- **Dynamic Filters**: Category pills are dynamically extracted from current active tasks.
 
 ## 📏 Engineering Standards
 - **Component Design:** Prefer clean abstractions. Use `use client` only when necessary.

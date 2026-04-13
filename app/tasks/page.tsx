@@ -49,11 +49,11 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
 	// 2. Data Fetching
 	const today = new Date();
-	const nextWeek = new Date();
-	nextWeek.setDate(today.getDate() + 7);
+	const nextMonth = new Date();
+	nextMonth.setDate(today.getDate() + 30); // Fetch 30 days to support "This Month" filter
 
 	const startDate = date || today.toISOString().split("T")[0];
-	const endDate = date || nextWeek.toISOString().split("T")[0];
+	const endDate = date || nextMonth.toISOString().split("T")[0];
 
 	const tasks = await getTasks({
 		startDate,

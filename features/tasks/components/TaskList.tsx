@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useOptimistic, useTransition } from 'react';
+import React, { useOptimistic, useTransition, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
 	Inbox, 
@@ -14,10 +14,11 @@ import {
 	Draggable, 
 	DropResult 
 } from '@hello-pangea/dnd';
-import { format, startOfDay, addDays } from 'date-fns';
 import { Task } from '@/features/tasks/types';
 import { toggleTask, deleteTask, reorderTasks, updateTask } from '@/features/tasks/actions/tasks';
 import TaskItem from './TaskItem';
+import TaskFilters from './TaskFilters';
+import { format, addDays, isBefore, startOfDay, parseISO } from 'date-fns';
 
 interface TaskListProps {
 	todayTasks: Task[];
@@ -27,7 +28,17 @@ interface TaskListProps {
 export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	const [isPending, startTransition] = useTransition();
 	const searchParams = useSearchParams();
-	const showCompleted = searchParams.get('completed') === 'true';
+
+	// Section-specific filter extraction
+  const getFilters = (prefix: string) => ({
+    priority: searchParams.get(`${prefix}_priority`) || "all",
+    category: searchParams.get(`${prefix}_category`) || "all",
+    showCompleted: searchParams.get(`${prefix}_completed`) === "true",
+    range: searchParams.get(`${prefix}_range`) || "week"
+  });
+
+  const todayFilters = getFilters("today");
+  const upcomingFilters = getFilters("upcoming");
 
 	// Optimistic state for the task lists
 	const [optimisticState, addOptimisticAction] = useOptimistic(
@@ -75,16 +86,47 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 		}
 	);
 
-	// Display lists are derived from optimistic state. 
-	// Note: In TaskFocusView, the TasksView already filters by completion if showCompleted is false,
-	// but we re-filter here to handle the immediate optimistic toggle disappearing if needed.
-	const displayTodayTasks = showCompleted
-		? optimisticState.todayTasks
-		: optimisticState.todayTasks.filter((t: Task) => !t.is_completed);
+  /**
+   * Helper to apply local filters to a list
+   */
+  const applyFilters = (list: Task[], filters: any, isUpcoming = false) => {
+    let result = list;
+    
+    // 1. Priority
+    if (filters.priority !== "all") {
+      result = result.filter(t => t.priority === filters.priority);
+    }
+    
+    // 2. Category
+    if (filters.category !== "all") {
+      result = result.filter(t => t.category === filters.category);
+    }
+    
+    // 3. Completion
+    if (!filters.showCompleted) {
+      result = result.filter(t => !t.is_completed);
+    }
 
-	const displayUpcomingTasks = showCompleted
-		? optimisticState.upcomingTasks
-		: optimisticState.upcomingTasks.filter((t: Task) => !t.is_completed);
+    // 4. Date Range (Only for Upcoming)
+    if (isUpcoming && filters.range === "week") {
+      const nextWeek = addDays(startOfDay(new Date()), 8); // 7 days from today
+      result = result.filter(t => isBefore(parseISO(t.due_date), nextWeek));
+    }
+
+    return result;
+  };
+
+	// Derived display lists
+	const displayTodayTasks = useMemo(() => 
+    applyFilters(optimisticState.todayTasks, todayFilters), 
+    [optimisticState.todayTasks, todayFilters]
+  );
+
+	const displayUpcomingTasks = useMemo(() => 
+    applyFilters(optimisticState.upcomingTasks, upcomingFilters, true), 
+    [optimisticState.upcomingTasks, upcomingFilters]
+  );
+
 	const handleToggle = async (taskId: string, currentStatus: boolean) => {
 		startTransition(async () => {
 			addOptimisticAction({ action: 'toggle', payload: { taskId } });
@@ -125,12 +167,10 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 		if (!destination) return;
 		if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-		// We work with the display lists because the index corresponds to them
 		const sourceList: Task[] = source.droppableId === 'today-list' ? Array.from(displayTodayTasks) : Array.from(displayUpcomingTasks);
 		const destList: Task[] = destination.droppableId === 'today-list' ? Array.from(displayTodayTasks) : Array.from(displayUpcomingTasks);
 
 		if (source.droppableId === destination.droppableId) {
-			// Reorder within same list
 			const [movedTask] = sourceList.splice(source.index, 1);
 			sourceList.splice(destination.index, 0, movedTask);
 			
@@ -146,12 +186,10 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 				}
 			});
 		} else {
-			// Inter-section move
 			const [movedTask] = sourceList.splice(source.index, 1);
 			
-			const todayRef = startOfDay(new Date());
-			const todayStr = format(todayRef, 'yyyy-MM-dd');
-			const tomorrowStr = format(addDays(todayRef, 1), 'yyyy-MM-dd');
+			const todayStr = format(new Date(), 'yyyy-MM-dd');
+			const tomorrowStr = format(addDays(new Date(), 1), 'yyyy-MM-dd');
 			const newDueDate = destination.droppableId === 'today-list' ? todayStr : tomorrowStr;
 			
 			const updatedTask = { ...movedTask, due_date: newDueDate };
@@ -177,15 +215,23 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 
 	return (
 		<DragDropContext onDragEnd={onDragEnd}>
-			<div className="space-y-12">
+			<div className="space-y-16">
 				{/* Today Section */}
 				<section>
-					<div className="flex items-center gap-2 mb-4 sticky top-0 z-20 bg-slate-50/80 backdrop-blur-md py-4">
-						<div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
-							<Flame className="w-4 h-4 fill-orange-600" />
-						</div>
-						<h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">🔥 Focus (Today)</h3>
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-200/50">
+                <Flame className="w-5 h-5 fill-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">Focus (Today)</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">High-priority execution</p>
+              </div>
+            </div>
+            {/* Today Filters */}
+            <TaskFilters tasks={todayTasks} paramPrefix="today" />
 					</div>
+
 					<Droppable droppableId="today-list">
 						{(provided) => (
 							<div 
@@ -210,9 +256,9 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 										</Draggable>
 									))
 								) : (
-									<div className="text-center py-12 bg-emerald-50/50 border border-emerald-100 rounded-2xl border-dashed">
-										<CheckCircle2 className="w-8 h-8 text-emerald-300 mx-auto mb-2" />
-										<p className="text-xs text-emerald-600 font-bold uppercase tracking-widest">
+									<div className="text-center py-16 bg-emerald-50/50 border border-emerald-100 rounded-[2.5rem] border-dashed">
+										<CheckCircle2 className="w-10 h-10 text-emerald-300 mx-auto mb-3 opacity-40" />
+										<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
 											All caught up for today!
 										</p>
 									</div>
@@ -225,12 +271,20 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 
 				{/* Upcoming Section */}
 				<section>
-					<div className="flex items-center gap-2 mb-4 sticky top-0 z-20 bg-slate-50/80 backdrop-blur-md py-4">
-						<div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-							<Calendar className="w-4 h-4" />
-						</div>
-						<h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">📅 Upcoming Awareness</h3>
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200/50">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">Upcoming Awareness</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Strategic foresight</p>
+              </div>
+            </div>
+            {/* Upcoming Filters with Range Toggle */}
+            <TaskFilters tasks={upcomingTasks} paramPrefix="upcoming" showRangeFilter={true} />
 					</div>
+
 					<Droppable droppableId="upcoming-list">
 						{(provided) => (
 							<div 
@@ -255,9 +309,9 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 										</Draggable>
 									))
 								) : (
-									<div className="text-center py-10 bg-slate-50 border border-slate-200 rounded-2xl border-dashed">
-										<Inbox className="w-6 h-6 text-slate-300 mx-auto mb-2" />
-										<p className="text-xs text-slate-400 font-medium italic">
+									<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
+										<Inbox className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
+										<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
 											No upcoming objectives detected.
 										</p>
 									</div>

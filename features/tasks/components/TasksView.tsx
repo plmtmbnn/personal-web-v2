@@ -170,10 +170,6 @@ export default function TasksView({ tasks }: TasksViewProps) {
               <DynamicTaskProgress tasks={tasks} />
             </Suspense>
           </div>
-
-					<Suspense fallback={<div className="h-10 bg-slate-100 rounded-xl animate-pulse" />}>
-						<DynamicTaskFilters tasks={tasks} />
-					</Suspense>
 				</div>
 
 				{/* Execution Engine (Task Management) */}
@@ -213,13 +209,6 @@ export default function TasksView({ tasks }: TasksViewProps) {
             </div>
           </div>
 				</section>
-
-        {/* System Footer */}
-        <div className="pt-8 pb-12 text-center">
-          <p className="text-[9px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em]">
-            Operational Layer • v2.4.5
-          </p>
-        </div>
 			</div>
 
       {/* Mobile-Only FAB */}

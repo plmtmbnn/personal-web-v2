@@ -6,9 +6,9 @@ import dynamic from "next/dynamic";
 import { startOfDay, isSameDay, isAfter, parseISO } from "date-fns";
 import ComponentLoader from "@/features/tasks/components/ComponentLoader";
 import QuickNav from "@/features/tasks/components/QuickNav";
-import { LayoutList, Zap, LayoutDashboard, Target, CheckCircle2 } from "lucide-react";
+import { LayoutList, Zap, LayoutDashboard, Target, CheckCircle2, Plus } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Optimization: Lazy load heavy interactive/visual components.
@@ -67,6 +67,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
   const selectedPriority = priorityParam || null;
 
   const [mounted, setMounted] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -98,7 +99,17 @@ export default function TasksView({ tasks }: TasksViewProps) {
   if (!mounted) return null;
 
 	return (
-		<main className="min-h-screen bg-slate-50/50 pb-32">
+		<main className="min-h-screen bg-slate-50/50 pb-32 relative">
+      {/* Mobile-Only Drawer */}
+      <Suspense fallback={null}>
+        <div className="lg:hidden">
+          <DynamicTaskForm 
+            isOpen={isFormOpen} 
+            onClose={() => setIsFormOpen(false)} 
+          />
+        </div>
+      </Suspense>
+
       {/* Structural Header - Optimized for Mobile Scaling */}
       <div className="bg-white border-b border-slate-200 mb-6 sm:mb-8 pt-12">
         <div className="max-w-4xl mx-auto px-6 py-8 sm:py-10">
@@ -168,8 +179,8 @@ export default function TasksView({ tasks }: TasksViewProps) {
 				{/* Execution Engine (Task Management) */}
 				<section id="agenda-section" className="scroll-mt-32">
           <div className="bg-white rounded-[2rem] sm:rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">
-            {/* Input Form Area */}
-            <div className="p-6 sm:p-8 bg-slate-50/50 border-b border-slate-100">
+            {/* Input Form Area - Hidden on Mobile (moved to Drawer) */}
+            <div className="p-6 sm:p-8 bg-slate-50/50 border-b border-slate-100 hidden lg:block">
               <Suspense fallback={<ComponentLoader height="120px" />}>
                 <DynamicTaskForm />
               </Suspense>
@@ -204,12 +215,20 @@ export default function TasksView({ tasks }: TasksViewProps) {
 				</section>
 
         {/* System Footer */}
-        <div className="pt-8 text-center">
+        <div className="pt-8 pb-12 text-center">
           <p className="text-[9px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em]">
             Operational Layer • v2.4.5
           </p>
         </div>
 			</div>
+
+      {/* Mobile-Only FAB */}
+      <button
+        onClick={() => setIsFormOpen(true)}
+        className="fixed bottom-24 right-6 sm:right-8 z-40 w-16 h-16 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-2xl lg:hidden active:scale-90 transition-transform"
+      >
+        <Plus className="w-8 h-8" />
+      </button>
 		</main>
 	);
 }

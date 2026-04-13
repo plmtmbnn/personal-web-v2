@@ -35,26 +35,26 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 			switch (action) {
 				case 'toggle':
 					return {
-						todayTasks: state.todayTasks.map((t) =>
+						todayTasks: state.todayTasks.map((t: Task) =>
 							t.id === payload.taskId ? { ...t, is_completed: !t.is_completed } : t
 						),
-						upcomingTasks: state.upcomingTasks.map((t) =>
+						upcomingTasks: state.upcomingTasks.map((t: Task) =>
 							t.id === payload.taskId ? { ...t, is_completed: !t.is_completed } : t
 						),
 					};
 				case 'update':
 					return {
-						todayTasks: state.todayTasks.map((t) =>
+						todayTasks: state.todayTasks.map((t: Task) =>
 							t.id === payload.taskId ? { ...t, ...payload.updates } : t
 						),
-						upcomingTasks: state.upcomingTasks.map((t) =>
+						upcomingTasks: state.upcomingTasks.map((t: Task) =>
 							t.id === payload.taskId ? { ...t, ...payload.updates } : t
 						),
 					};
 				case 'delete':
 					return {
-						todayTasks: state.todayTasks.filter((t) => t.id !== payload.taskId),
-						upcomingTasks: state.upcomingTasks.filter((t) => t.id !== payload.taskId),
+						todayTasks: state.todayTasks.filter((t: Task) => t.id !== payload.taskId),
+						upcomingTasks: state.upcomingTasks.filter((t: Task) => t.id !== payload.taskId),
 					};
 				case 'reorder': {
 					const listKey = payload.droppableId === 'today-list' ? 'todayTasks' : 'upcomingTasks';
@@ -77,14 +77,13 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	// Display lists are derived from optimistic state. 
 	// Note: In TaskFocusView, the TasksView already filters by completion if showCompleted is false,
 	// but we re-filter here to handle the immediate optimistic toggle disappearing if needed.
-	const displayTodayTasks = showCompleted 
-		? optimisticState.todayTasks 
-		: optimisticState.todayTasks.filter(t => !t.is_completed);
+	const displayTodayTasks = showCompleted
+		? optimisticState.todayTasks
+		: optimisticState.todayTasks.filter((t: Task) => !t.is_completed);
 
-	const displayUpcomingTasks = showCompleted 
-		? optimisticState.upcomingTasks 
-		: optimisticState.upcomingTasks.filter(t => !t.is_completed);
-
+	const displayUpcomingTasks = showCompleted
+		? optimisticState.upcomingTasks
+		: optimisticState.upcomingTasks.filter((t: Task) => !t.is_completed);
 	const handleToggle = async (taskId: string, currentStatus: boolean) => {
 		startTransition(async () => {
 			addOptimisticAction({ action: 'toggle', payload: { taskId } });
@@ -126,8 +125,8 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 		if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
 		// We work with the display lists because the index corresponds to them
-		const sourceList = source.droppableId === 'today-list' ? Array.from(displayTodayTasks) : Array.from(displayUpcomingTasks);
-		const destList = destination.droppableId === 'today-list' ? Array.from(displayTodayTasks) : Array.from(displayUpcomingTasks);
+		const sourceList: Task[] = source.droppableId === 'today-list' ? Array.from(displayTodayTasks) : Array.from(displayUpcomingTasks);
+		const destList: Task[] = destination.droppableId === 'today-list' ? Array.from(displayTodayTasks) : Array.from(displayUpcomingTasks);
 
 		if (source.droppableId === destination.droppableId) {
 			// Reorder within same list
@@ -140,7 +139,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 					payload: { droppableId: source.droppableId, newTasks: sourceList } 
 				});
 				try {
-					await reorderTasks(sourceList.map(t => t.id));
+					await reorderTasks(sourceList.map((t: Task) => t.id));
 				} catch (error) {
 					console.error('Failed to reorder:', error);
 				}
@@ -156,11 +155,6 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 			const updatedTask = { ...movedTask, due_date: newDueDate };
 			destList.splice(destination.index, 0, updatedTask);
 
-			const newTodayTasks = destination.droppableId === 'today-list' ? destList : sourceList;
-			const newUpcomingTasks = destination.droppableId === 'upcoming-list' ? destList : sourceList;
-
-			// Logic check for cross-update: 
-			// If source was today, destination is upcoming. If source was upcoming, destination is today.
 			const finalToday = destination.droppableId === 'today-list' ? destList : sourceList;
 			const finalUpcoming = destination.droppableId === 'upcoming-list' ? destList : sourceList;
 
@@ -171,7 +165,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 				});
 				try {
 					await updateTask(draggableId, { due_date: newDueDate });
-					await reorderTasks(destList.map(t => t.id));
+					await reorderTasks(destList.map((t: Task) => t.id));
 				} catch (error) {
 					console.error('Failed to move task:', error);
 				}
@@ -198,7 +192,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 								className="space-y-3 min-h-[100px]"
 							>
 								{displayTodayTasks.length > 0 ? (
-									displayTodayTasks.map((task, index) => (
+									displayTodayTasks.map((task: Task, index: number) => (
 										<Draggable key={task.id} draggableId={task.id} index={index}>
 											{(provided, snapshot) => (
 												<TaskItem 
@@ -243,7 +237,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 								className="space-y-3 min-h-[100px]"
 							>
 								{displayUpcomingTasks.length > 0 ? (
-									displayUpcomingTasks.map((task, index) => (
+									displayUpcomingTasks.map((task: Task, index: number) => (
 										<Draggable key={task.id} draggableId={task.id} index={index}>
 											{(provided, snapshot) => (
 												<TaskItem 

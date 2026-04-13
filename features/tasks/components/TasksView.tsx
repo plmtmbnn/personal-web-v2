@@ -59,9 +59,11 @@ export default function TasksView({ tasks }: TasksViewProps) {
   const searchParams = useSearchParams();
   const completedParam = searchParams.get("completed");
   const categoryParam = searchParams.get("category");
+  const priorityParam = searchParams.get("priority");
 
   const showCompleted = completedParam === "true";
   const selectedCategory = categoryParam || null;
+  const selectedPriority = priorityParam || null;
 
   const [mounted, setMounted] = useState(false);
 
@@ -76,6 +78,9 @@ export default function TasksView({ tasks }: TasksViewProps) {
     if (selectedCategory) {
       filtered = filtered.filter((t) => t.category === selectedCategory);
     }
+    if (selectedPriority) {
+      filtered = filtered.filter((t) => t.priority === selectedPriority);
+    }
 
     const todayList = filtered.filter((t) => t.due_date === today);
     const upcomingList = filtered.filter((t) => t.due_date > today);
@@ -88,7 +93,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
         total: todayList.length
       }
     };
-  }, [tasks, selectedCategory, today, showCompleted]);
+  }, [tasks, selectedCategory, selectedPriority, today, showCompleted]);
 
   if (!mounted) return null;
 
@@ -156,7 +161,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
           </div>
 
 					<Suspense fallback={<div className="h-10 bg-slate-100 rounded-xl animate-pulse" />}>
-						<DynamicTaskFilters />
+						<DynamicTaskFilters tasks={tasks} />
 					</Suspense>
 				</div>
 

@@ -1,3 +1,17 @@
+# [0.8.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.7.0...v0.8.0) (2026-04-13)
+
+
+### Bug Fixes
+
+* **tasks:** normalize date comparisons using startOfDay ([2c683bc](https://github.com/plmtmbnn/personal-web-v2/commit/2c683bcfa2c940bd3616ccc351cdb96f827f96cb))
+
+
+### Features
+
+* **tasks:** add sticky headers and swipe-to-action gestures ([4f94146](https://github.com/plmtmbnn/personal-web-v2/commit/4f941465b858f9e2c5fc67fad63200c49f59f66d))
+* **tasks:** implement mobile bottom-sheet form and FAB ([00f8a9b](https://github.com/plmtmbnn/personal-web-v2/commit/00f8a9b6a600d6f462943d598b59e13bb7cca5eb))
+* **tasks:** optimize category filters for mobile horizontal scroll ([00d0220](https://github.com/plmtmbnn/personal-web-v2/commit/00d02201e679a3726caf05bd1a4cb3b16a9f05a2))
+
 # [0.7.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.6.0...v0.7.0) (2026-04-13)
 
 

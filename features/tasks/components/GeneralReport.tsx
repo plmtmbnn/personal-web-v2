@@ -95,7 +95,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
       if (rc === 2) return 50;
       return 0;
     });
-    const executionScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    const executionScore = Math.round(scores.reduce<number>((a, b) => a + b, 0) / scores.length);
 
     // 3. Average Lead Time
     const leadTimes = completed.map(t => {
@@ -103,7 +103,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
       const end = parseISO(t.completed_at!);
       return Math.max(0, differenceInDays(end, start));
     });
-    const avgLeadTime = parseFloat((leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length).toFixed(1));
+    const avgLeadTime = parseFloat((leadTimes.reduce<number>((a, b) => a + b, 0) / leadTimes.length).toFixed(1));
 
     return { punctualityRate, executionScore, avgLeadTime };
   }, [tasks, period]);

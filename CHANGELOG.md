@@ -1,3 +1,10 @@
+# [0.9.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.8.3...v0.9.0) (2026-04-16)
+
+
+### Features
+
+* **tasks:** implement advanced analytics, operational intel, and zero-truncation reporting ([8d8745c](https://github.com/plmtmbnn/personal-web-v2/commit/8d8745ced27d2779c83a9ea452ffb15b433f9412))
+
 ## [0.8.3](https://github.com/plmtmbnn/personal-web-v2/compare/v0.8.2...v0.8.3) (2026-04-13)
 
 ## [0.8.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.8.1...v0.8.2) (2026-04-13)

@@ -1,3 +1,10 @@
+## [0.10.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.10.0...v0.10.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* **tasks:** resolve typescript reduce type mismatch in analytics dashboard ([fc69c03](https://github.com/plmtmbnn/personal-web-v2/commit/fc69c039b6417898333e267f391979e6e206b9a3))
+
 # [0.10.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.9.0...v0.10.0) (2026-04-16)
 
 

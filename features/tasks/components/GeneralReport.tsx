@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   BarChart3, 
   CheckCircle2, 
@@ -16,14 +16,23 @@ import {
   AlertTriangle,
   Flame,
   Target,
-  Trophy
+  Trophy,
+  Info,
+  Clock,
+  ShieldCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTaskStats, AnalyticsStats } from "@/features/tasks/actions/analytics";
+import type { Task } from "@/features/tasks/types";
+import { parseISO, isSameDay, isAfter, subDays, differenceInDays } from "date-fns";
 
-const ANALYTICS_EXPAND_KEY = "analytics_expanded_state_v5";
+const ANALYTICS_EXPAND_KEY = "analytics_expanded_state_v6";
 
-export default function GeneralReport() {
+interface GeneralReportProps {
+  tasks?: Task[];
+}
+
+export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 	const [period, setPeriod] = useState<"today" | "week" | "month">("week");
 	const [stats, setStats] = useState<AnalyticsStats | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -54,6 +63,50 @@ export default function GeneralReport() {
 		};
 		fetchStats();
 	}, [period]);
+
+  /**
+   * Advanced Metrics Engine
+   * Calculates Reliability and Lead Time based on the passed tasks prop and selected period.
+   */
+  const reliabilityMetrics = useMemo(() => {
+    if (!tasks || tasks.length === 0) return { punctualityRate: 0, executionScore: 0, avgLeadTime: 0 };
+
+    const now = new Date();
+    const periodFiltered = tasks.filter(t => {
+      const dueDate = parseISO(t.due_date);
+      if (period === 'today') return isSameDay(dueDate, now);
+      if (period === 'week') return isAfter(dueDate, subDays(now, 8));
+      if (period === 'month') return isAfter(dueDate, subDays(now, 31));
+      return true;
+    });
+
+    const completed = periodFiltered.filter(t => t.is_completed && t.completed_at);
+    if (completed.length === 0) return { punctualityRate: 0, executionScore: 0, avgLeadTime: 0 };
+
+    // 1. Punctuality Rate
+    const punctualCount = completed.filter(t => (t.reschedule_count || 0) === 0).length;
+    const punctualityRate = Math.round((punctualCount / completed.length) * 100);
+
+    // 2. Execution Score (Weighted average)
+    const scores = completed.map(t => {
+      const rc = t.reschedule_count || 0;
+      if (rc === 0) return 100;
+      if (rc === 1) return 80;
+      if (rc === 2) return 50;
+      return 0;
+    });
+    const executionScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+
+    // 3. Average Lead Time
+    const leadTimes = completed.map(t => {
+      const start = parseISO(t.created_at);
+      const end = parseISO(t.completed_at!);
+      return Math.max(0, differenceInDays(end, start));
+    });
+    const avgLeadTime = parseFloat((leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length).toFixed(1));
+
+    return { punctualityRate, executionScore, avgLeadTime };
+  }, [tasks, period]);
 
 	const StatCard = ({ title, value, icon: Icon, colorClass, subtext, description }: any) => (
 		<div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl shadow-sm transition-all duration-300 hover:border-slate-300 group flex flex-col min-w-0">
@@ -119,8 +172,9 @@ export default function GeneralReport() {
 				{isExpanded && (
 					<motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden space-y-10 px-4 pb-10">
 						
-            {/* Row 1: High-Visibility Efficiency & Stats */}
+            {/* Row 1: Execution & Reliability Command */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Efficiency Card */}
               <div className="bg-slate-900 p-8 sm:p-10 rounded-[2.5rem] flex flex-col sm:flex-row items-center gap-10 group shadow-2xl shadow-black/20 transition-transform hover:-translate-y-1 min-w-0">
                 <div className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -140,24 +194,70 @@ export default function GeneralReport() {
                   </div>
                 </div>
                 <div className="text-center sm:text-left min-w-0">
-                  <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Neutralization Rate</p>
+                  <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Completion Rate</p>
                   <h4 className="text-3xl font-black text-white tracking-tight leading-none mb-3">Efficiency</h4>
-                  <p className="text-xs text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1.5 rounded-lg inline-block">{stats.completedTasks} Objectives Completed</p>
+                  <p className="text-xs text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1.5 rounded-lg inline-block !text-white">{stats.completedTasks} Objectives Neutralized</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <StatCard title="Total Scope" value={stats.totalTasks} icon={ClipboardList} colorClass="bg-blue-50 text-blue-600" description="Targets identified" />
-                <StatCard title="Active Streak" value={`${stats.streak}d`} icon={Flame} colorClass="bg-orange-50 text-orange-600" description="Operational momentum" />
+              {/* Reliability Card - NEW */}
+              <div className={`p-8 sm:p-10 rounded-[2.5rem] flex flex-col sm:flex-row items-center gap-10 group shadow-2xl transition-all hover:-translate-y-1 border-2 ${
+                reliabilityMetrics.punctualityRate > 80 
+                  ? "bg-white border-emerald-500/20 text-emerald-600" 
+                  : reliabilityMetrics.punctualityRate > 50
+                  ? "bg-white border-amber-500/20 text-amber-600"
+                  : "bg-white border-rose-500/20 text-rose-600"
+              }`}>
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="rgba(0,0,0,0.05)" strokeWidth="10" />
+                    <motion.circle 
+                      cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="10" 
+                      strokeDasharray="251.2"
+                      initial={{ strokeDashoffset: 251.2 }}
+                      animate={{ strokeDashoffset: 251.2 - (251.2 * reliabilityMetrics.punctualityRate) / 100 }}
+                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center text-xl sm:text-2xl font-black text-slate-900">
+                    {reliabilityMetrics.punctualityRate}%
+                  </div>
+                </div>
+                <div className="text-center sm:text-left min-w-0">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Punctuality Rate</p>
+                    <div className="group/info relative cursor-help">
+                      <Info className="w-3 h-3 text-slate-300" />
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-900 text-white text-[9px] font-bold rounded-lg opacity-0 group-hover/info:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                        Completing tasks without ever rescheduling them.
+                      </div>
+                    </div>
+                  </div>
+                  <h4 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-3">Reliability</h4>
+                  <p className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border flex items-center gap-2 justify-center sm:justify-start ${
+                    reliabilityMetrics.punctualityRate > 80 ? "bg-emerald-50 border-emerald-100" : reliabilityMetrics.punctualityRate > 50 ? "bg-amber-50 border-amber-100" : "bg-rose-50 border-rose-100"
+                  }`}>
+                    {reliabilityMetrics.punctualityRate > 80 ? <ShieldCheck className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
+                    {reliabilityMetrics.punctualityRate > 80 ? "Elite Execution" : reliabilityMetrics.punctualityRate > 50 ? "Stable Performance" : "Needs Discipline"}
+                  </p>
+                </div>
               </div>
 						</div>
 
-            {/* Row 2: Tactical Breakdown */}
+            {/* Row 2: Supporting Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatCard title="Total Scope" value={stats.totalTasks} icon={ClipboardList} colorClass="bg-blue-50 text-blue-600" description="Objectives in cycle" />
+              <StatCard title="Active Streak" value={`${stats.streak}d`} icon={Flame} colorClass="bg-orange-50 text-orange-600" description="Operational momentum" />
+              <StatCard title="Execution Score" value={`${reliabilityMetrics.executionScore}/100`} icon={Zap} colorClass="bg-yellow-50 text-yellow-600" description="Weighted reliability grade" />
+              <StatCard title="Lead Time" value={`${reliabilityMetrics.avgLeadTime}d`} icon={Clock} colorClass="bg-purple-50 text-purple-600" description="Avg cycle duration" />
+            </div>
+
+            {/* Row 3: Tactical Breakdown */}
             <div className="grid grid-cols-1 gap-8">
               
               {/* Distribution & Categories Dual Column */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Distribution Dashboard */}
                 <div className="bg-white border border-slate-200 p-8 sm:p-10 rounded-[3rem] shadow-sm space-y-10 min-w-0">
                   <div className="flex items-center gap-5">
                     <div className="p-4 bg-indigo-50 text-indigo-600 rounded-[1.2rem] border border-indigo-100 flex-shrink-0">
@@ -192,7 +292,6 @@ export default function GeneralReport() {
                   </div>
                 </div>
 
-                {/* Segment Analysis */}
                 <div className="bg-white border border-slate-200 p-8 sm:p-10 rounded-[3rem] shadow-sm space-y-10 min-w-0">
                   <div className="flex items-center gap-5">
                     <div className="p-4 bg-cyan-50 text-cyan-600 rounded-[1.2rem] border border-cyan-100 flex-shrink-0">
@@ -223,7 +322,7 @@ export default function GeneralReport() {
                 </div>
               </div>
 
-              {/* Reschedule Intelligence - Wide Format */}
+              {/* Reschedule Intelligence */}
               <div className="bg-white border border-slate-200 p-8 sm:p-10 rounded-[3rem] shadow-sm min-w-0">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-8">
                   <div className="flex items-center gap-5">
@@ -268,7 +367,7 @@ export default function GeneralReport() {
               </div>
             </div>
 
-            {/* Bottom Row: Insights */}
+            {/* Bottom Row: High-Level Insights */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
               <div className="bg-emerald-50 border border-emerald-100 p-8 rounded-[2.5rem] flex items-center gap-6 shadow-sm transition-all hover:bg-emerald-100/50 min-w-0">
                 <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20 flex-shrink-0">

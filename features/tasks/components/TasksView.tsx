@@ -153,7 +153,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
           <section id="analytics-overview" className="scroll-mt-32">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1">
               <Suspense fallback={<ComponentLoader height="120px" />}>
-                <DynamicGeneralReport />
+                <DynamicGeneralReport tasks={tasks} />
               </Suspense>
             </div>
           </section>

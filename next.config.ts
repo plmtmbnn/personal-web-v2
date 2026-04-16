@@ -3,7 +3,6 @@ import path from "node:path";
 
 const nextConfig: NextConfig = {
 	productionBrowserSourceMaps: false,
-	turbopack: { root: path.join(__dirname, "..") },
 	images: {
 		remotePatterns: [
 			{

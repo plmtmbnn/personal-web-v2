@@ -9,6 +9,7 @@ export interface Task {
   is_completed: boolean;
   due_date: string;
   position: number;
+  reschedule_count: number;
   created_at: string;
   completed_at: string | null;
 }

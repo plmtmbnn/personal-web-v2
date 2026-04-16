@@ -21,6 +21,15 @@ export interface AnalyticsStats {
   streak: number;
   comparison: number; // percentage change vs previous period
   taskVelocity: number; // avg tasks per day
+  // New metrics
+  totalReschedules: number;
+  averageReschedule: number;
+  mostRescheduledTask: { title: string; count: number } | null;
+  distribution: {
+    today: number;
+    upcoming: number;
+    overdue: number;
+  };
 }
 
 /**
@@ -72,6 +81,16 @@ export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<
     throw new Error('Failed to fetch analytics data');
   }
 
+  // Fetch all uncompleted tasks for global distribution and reschedules
+  const { data: globalTasks, error: globalError } = await SupabaseConn
+    .from('tasks')
+    .select('title, due_date, is_completed, reschedule_count')
+    .eq('is_completed', false);
+
+  if (globalError) {
+    console.error('Error fetching global tasks for distribution:', globalError);
+  }
+
   // Fetch previous period completed tasks for comparison
   const { count: prevCompletedCount } = await SupabaseConn
     .from('tasks')
@@ -85,6 +104,41 @@ export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<
   const completedTasks = tasks.filter(t => t.is_completed).length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const taskVelocity = parseFloat((completedTasks / days).toFixed(1));
+
+  // Reschedule Analytics
+  const { data: rescheduleData } = await SupabaseConn
+    .from('tasks')
+    .select('title, reschedule_count')
+    .gt('reschedule_count', 0)
+    .order('reschedule_count', { ascending: false });
+
+  let totalReschedules = 0;
+  let mostRescheduledTask = null;
+  
+  if (rescheduleData && rescheduleData.length > 0) {
+    totalReschedules = rescheduleData.reduce((acc, curr) => acc + (curr.reschedule_count || 0), 0);
+    mostRescheduledTask = {
+      title: rescheduleData[0].title,
+      count: rescheduleData[0].reschedule_count
+    };
+  }
+
+  const { count: totalTaskCount } = await SupabaseConn
+    .from('tasks')
+    .select('*', { count: 'exact', head: true });
+    
+  const averageReschedule = totalTaskCount && totalTaskCount > 0 
+    ? parseFloat((totalReschedules / totalTaskCount).toFixed(2)) 
+    : 0;
+
+  // Distribution
+  const todayStr = format(today, 'yyyy-MM-dd');
+  const gTasks = (globalTasks || []) as Task[];
+  const distribution = {
+    today: gTasks.filter(t => t.due_date === todayStr).length,
+    upcoming: gTasks.filter(t => t.due_date > todayStr).length,
+    overdue: gTasks.filter(t => t.due_date < todayStr).length,
+  };
 
   // Most Productive Day
   const dayCounts: Record<string, number> = {};
@@ -155,7 +209,11 @@ export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<
     priorityDistribution,
     streak,
     comparison,
-    taskVelocity
+    taskVelocity,
+    totalReschedules,
+    averageReschedule,
+    mostRescheduledTask,
+    distribution
   };
 
   // 3. Store in Redis with 30 minute TTL (1800 seconds)

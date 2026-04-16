@@ -217,6 +217,54 @@ export async function rescheduleStaleTasks(taskIds: string[], newDate: string) {
 }
 
 /**
+ * Reschedule all overdue tasks by adding a specific number of days.
+ * Increments the reschedule_count for each task.
+ */
+export async function rescheduleOverdueTasks(daysToAdd: number) {
+  const today = new Date().toISOString().split('T')[0];
+  const newDate = new Date();
+  newDate.setDate(newDate.getDate() + daysToAdd);
+  const newDateStr = newDate.toISOString().split('T')[0];
+
+  // 1. Fetch overdue tasks
+  const { data: overdueTasks, error: fetchError } = await SupabaseConn
+    .from('tasks')
+    .select('id, reschedule_count')
+    .eq('is_completed', false)
+    .lt('due_date', today);
+
+  if (fetchError || !overdueTasks) {
+    console.error('Error fetching overdue tasks for rescheduling:', fetchError);
+    return { success: false, message: 'Failed to fetch overdue tasks' };
+  }
+
+  if (overdueTasks.length === 0) return { success: true, message: 'No overdue tasks to reschedule' };
+
+  // 2. Perform updates (Due Date + Increment Counter)
+  const promises = overdueTasks.map((t) => 
+    SupabaseConn
+      .from('tasks')
+      .update({ 
+        due_date: newDateStr,
+        reschedule_count: (t.reschedule_count || 0) + 1 
+      })
+      .eq('id', t.id)
+  );
+
+  const results = await Promise.all(promises);
+  const firstError = results.find(r => r.error)?.error;
+
+  if (firstError) {
+    console.error('Error during bulk reschedule:', firstError);
+    return { success: false, message: firstError.message };
+  }
+
+  revalidatePath('/tasks');
+  await invalidateStatsCache();
+  return { success: true, message: `Successfully rescheduled ${overdueTasks.length} tasks` };
+}
+
+/**
  * Update task details (title, priority, etc.)
  */
 export async function updateTask(taskId: string, updates: Partial<Task>) {

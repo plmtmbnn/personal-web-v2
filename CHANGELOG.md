@@ -1,3 +1,10 @@
+# [0.10.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.9.0...v0.10.0) (2026-04-16)
+
+
+### Features
+
+* **tasks:** implement punctuality and execution reliability analytics ([9e967d6](https://github.com/plmtmbnn/personal-web-v2/commit/9e967d689fc3806c950336f03795766a70465f32))
+
 # [0.9.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.8.3...v0.9.0) (2026-04-16)
 
 

@@ -1,3 +1,10 @@
+# [0.12.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.11.0...v0.12.0) (2026-04-18)
+
+
+### Features
+
+* **investment/tasks:** implement integrated fear & greed hub and batch task initialization ([978674c](https://github.com/plmtmbnn/personal-web-v2/commit/978674ce04783f40121f7df8018fc4ab371f3733))
+
 # [0.11.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.10.3...v0.11.0) (2026-04-18)
 
 

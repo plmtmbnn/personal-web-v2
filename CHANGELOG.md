@@ -1,3 +1,10 @@
+## [0.10.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.10.1...v0.10.2) (2026-04-18)
+
+
+### Performance Improvements
+
+* **blog:** optimize scrolling performance and implement SSG ([0c03199](https://github.com/plmtmbnn/personal-web-v2/commit/0c0319909cf63f85633d5aa076498463d0b24bd6))
+
 ## [0.10.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.10.0...v0.10.1) (2026-04-16)
 
 

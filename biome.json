@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
 	"assist": {
 		"actions": {
 			"source": {
@@ -15,7 +15,6 @@
 				"noNonNullAssertion": "off"
 			},
 			"correctness": {
-				"useExhaustiveDependencies": "off",
 				"useJsxKeyInIterable": "off"
 			},
 			"a11y": {
@@ -42,14 +41,15 @@
 			"package.json",
 			"biome.json",
 			"next.config.ts",
-			"components",
+			"features",
 			"lib"
 		]
 	},
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab",
-		"formatWithErrors": true
+		"formatWithErrors": true,
+		"lineEnding": "lf"
 	},
 	"javascript": {
 		"formatter": {

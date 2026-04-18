@@ -1,12 +1,21 @@
-"use client";
-
 import { notFound } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getBlogBySlug, type Blog } from "@/features/blog/data";
+import { getBlogBySlugStatic, getBlogsStatic } from "@/features/blog/data";
 import BlogContent from "@/features/blog/components/BlogContent";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
-import { motion, useScroll, useSpring } from "framer-motion";
+import * as motion from "framer-motion/client";
+import { ScrollProgress } from "@/features/blog/components/ScrollProgress";
+
+/**
+ * Generate static params for all published blogs
+ * Uses getBlogsStatic to avoid cookie() usage during build
+ */
+export async function generateStaticParams() {
+	const blogs = await getBlogsStatic();
+	return blogs.map((blog) => ({
+		slug: blog.slug,
+	}));
+}
 
 /**
  * Helper: Calculate reading time
@@ -16,50 +25,27 @@ const calculateReadingTime = (content: string): number => {
 	return Math.ceil(wordCount / 200);
 };
 
-export default function BlogDetailPage({
+export default async function BlogDetailPage({
 	params,
 }: {
 	params: Promise<{ slug: string }>;
 }) {
-	const [post, setPost] = useState<Blog | null>(null);
-	const [mounted, setMounted] = useState(false);
-	const { scrollYProgress } = useScroll();
-	const scaleX = useSpring(scrollYProgress, {
-		stiffness: 100,
-		damping: 30,
-		restDelta: 0.001,
-	});
+	const { slug } = await params;
+	const post = await getBlogBySlugStatic(slug);
 
-	useEffect(() => {
-		const fetchPost = async () => {
-			const { slug } = await params;
-			const data = await getBlogBySlug(slug);
-			if (!data) return notFound();
-			setPost(data);
-			setMounted(true);
-		};
-		fetchPost();
-	}, [params]);
-
-	if (!mounted || !post) return null;
+	if (!post) return notFound();
 
 	const readingTime = calculateReadingTime(post.content);
 
 	return (
 		<main className="min-h-screen bg-background relative overflow-x-hidden pb-32">
-			{/* Progress Bar */}
-			<motion.div
-				className="fixed top-0 left-0 right-0 h-1 bg-accent z-50 origin-left"
-				style={{ scaleX }}
-			/>
+			{/* Progress Bar - Moved to a separate client component for isolation */}
+			<ScrollProgress />
 
-			{/* Background Ambience */}
+			{/* Background Ambience - Optimized */}
 			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-5%] right-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
-				<div
-					className="absolute bottom-[-5%] left-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[120px] animate-pulse"
-					style={{ animationDelay: "2s" }}
-				/>
+				<div className="absolute top-[-5%] right-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-accent/5 rounded-full blur-[80px]" />
+				<div className="absolute bottom-[-5%] left-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[80px]" />
 			</div>
 
 			<div className="max-w-4xl mx-auto px-6 pt-20 sm:pt-32">
@@ -110,7 +96,7 @@ export default function BlogDetailPage({
 					<motion.div
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
-						transition={{ delay: 0.4 }}
+						transition={{ delay: 0.2 }}
 						className="flex items-center gap-4 pt-8 sm:pt-10 border-t border-white/5"
 					>
 						<div className="flex items-center gap-3">
@@ -133,7 +119,7 @@ export default function BlogDetailPage({
 				<motion.article
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.2 }}
+					transition={{ delay: 0.1 }}
 					className="relative"
 				>
 					<div className="glass-card p-6 sm:p-12 rounded-[2rem] sm:rounded-[2.5rem] border-2 border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl relative z-10">

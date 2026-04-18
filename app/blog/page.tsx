@@ -1,35 +1,17 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getBlogs, type Blog } from "@/features/blog/data";
+import { getBlogsStatic } from "@/features/blog/data";
 import { ArrowRight, Calendar, Newspaper, Clock, BookOpen } from "lucide-react";
-import { motion } from "framer-motion";
+import * as motion from "framer-motion/client";
 
-export default function BlogPage() {
-	const [blogs, setBlogs] = useState<Blog[]>([]);
-	const [mounted, setMounted] = useState(false);
-
-	useEffect(() => {
-		const fetchBlogs = async () => {
-			const data = await getBlogs();
-			setBlogs(data);
-			setMounted(true);
-		};
-		fetchBlogs();
-	}, []);
-
-	if (!mounted) return null;
+export default async function BlogPage() {
+	const blogs = await getBlogsStatic();
 
 	return (
 		<main className="min-h-screen bg-background relative overflow-x-hidden pb-32">
-			{/* Aesthetic Background Ambience */}
+			{/* Aesthetic Background Ambience - Optimized for performance */}
 			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-5%] right-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse" />
-				<div
-					className="absolute bottom-[-5%] left-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[120px] animate-pulse"
-					style={{ animationDelay: "2s" }}
-				/>
+				<div className="absolute top-[-5%] right-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[80px]" />
+				<div className="absolute bottom-[-5%] left-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[80px]" />
 			</div>
 
 			<div className="max-w-6xl mx-auto px-6 pt-20 sm:pt-32">
@@ -99,7 +81,10 @@ export default function BlogPage() {
 								key={post.slug}
 								initial={{ opacity: 0, y: 30 }}
 								animate={{ opacity: 1, y: 0 }}
-								transition={{ delay: index * 0.1, duration: 0.6 }}
+								transition={{
+									delay: Math.min(index * 0.05, 0.3),
+									duration: 0.4,
+								}}
 								className="group relative h-full"
 							>
 								<Link

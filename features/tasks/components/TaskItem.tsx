@@ -3,8 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { 
   Trash2, 
-  CheckCircle2, 
-  Circle, 
+  Check, 
   Clock, 
   GripVertical,
   Tag,
@@ -126,37 +125,46 @@ export default function TaskItem({
         dragElastic={0.4}
         onDragEnd={handleDragEnd}
         style={{ x }}
-        className={`group flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-4 bg-white border border-slate-200 transition-all duration-300 ${
+        className={`group flex items-start gap-3 sm:gap-4 p-4 bg-white border border-slate-200 transition-all duration-300 ${
           snapshot.isDragging ? "shadow-2xl border-emerald-500 ring-2 ring-emerald-500/10 z-50" : "hover:border-slate-300 shadow-sm"
         } ${task.is_completed ? "bg-slate-50/50 opacity-75" : ""}`}
       >
-        {/* Drag Handle & Checkbox Header Group */}
-        <div className="flex items-center w-full sm:w-auto gap-1 sm:gap-0">
-          <div 
-            {...provided.dragHandleProps}
-            className="text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing p-1 -ml-1 sm:ml-0"
-          >
-            <GripVertical className="w-4 h-4" />
-          </div>
-
-          {/* Visual Indicator Line */}
-          <div className={`absolute left-9 sm:left-10 top-4 bottom-4 w-1 rounded-full transition-all ${
-            task.is_completed ? "bg-slate-200" : task.priority === 'HIGH' ? "bg-rose-500" : task.priority === 'MEDIUM' ? "bg-amber-500" : "bg-emerald-500"
-          }`} />
-
-          <button
-            onClick={() => onToggle(task.id, task.is_completed)}
-            className={`flex-shrink-0 transition-all duration-300 p-2 sm:p-1.5 rounded-xl ml-1 sm:ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center ${
-              task.is_completed 
-                ? "bg-emerald-100 text-emerald-600" 
-                : "text-slate-300 hover:bg-slate-100 hover:text-slate-400"
-            }`}
-          >
-            {task.is_completed ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
-          </button>
+        {/* Drag Handle */}
+        <div 
+          {...provided.dragHandleProps}
+          className="text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing py-1"
+        >
+          <GripVertical className="w-4 h-4" />
         </div>
 
-        <div className="flex-1 w-full min-w-0 sm:py-1">
+        {/* Visual Indicator Line - Integrated into flex layout to avoid mobile overlap */}
+        <div className={`w-1 self-stretch rounded-full transition-all min-h-[1.5rem] ${
+          task.is_completed ? "bg-slate-200" : task.priority === 'HIGH' ? "bg-rose-500" : task.priority === 'MEDIUM' ? "bg-amber-500" : "bg-emerald-500"
+        }`} />
+
+        {/* Checkbox Trigger */}
+        <button
+          onClick={() => onToggle(task.id, task.is_completed)}
+          className={`flex-shrink-0 transition-all duration-200 w-5 h-5 sm:w-6 sm:h-6 rounded border-2 flex items-center justify-center mt-1 sm:mt-0.5 ${
+            task.is_completed 
+              ? "bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-200" 
+              : "bg-white border-slate-300 hover:border-emerald-500"
+          }`}
+        >
+          <AnimatePresence mode="wait">
+            {task.is_completed && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+              >
+                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[4]" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </button>
+
+        <div className="flex-1 min-w-0">
           {isEditing ? (
             <textarea
               ref={textareaRef}
@@ -183,32 +191,32 @@ export default function TaskItem({
             </div>
           )}
           
-          {/* Metadata Badges */}
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${priorityColors[task.priority]}`}>
+          {/* Metadata Badges - Enhanced for Mobile View (Line 188) */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
+            <span className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest border ${priorityColors[task.priority]}`}>
               {task.priority}
             </span>
             {task.category && (
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
-                <Tag className="w-2.5 h-2.5" />
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
+                <Tag className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                 {task.category}
               </span>
             )}
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 ml-1">
-              <Clock className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-400 ml-0.5 sm:ml-1">
+              <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               <span>{task.due_date}</span>
             </div>
 
-            {/* Delay Indicator (Reschedule Count) */}
+            {/* Delay Indicator */}
             {task.reschedule_count > 0 && !task.is_completed && (
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100 text-[9px] font-black" title={`Delayed ${task.reschedule_count} times`}>
-                <RefreshCw className="w-2.5 h-2.5" />
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100 text-[8px] sm:text-[9px] font-black" title={`Delayed ${task.reschedule_count} times`}>
+                <RefreshCw className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                 {task.reschedule_count}
               </div>
             )}
 
             {timeLeft && (
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tight border ${timeLeft.color}`}>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-tight border ${timeLeft.color}`}>
                 <span>{timeLeft.emoji}</span>
                 {timeLeft.text}
               </span>
@@ -216,7 +224,7 @@ export default function TaskItem({
           </div>
         </div>
 
-        {/* Desktop Only Actions - Hidden on mobile */}
+        {/* Desktop Only Actions */}
         <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
           <button
             onClick={() => setIsEditing(true)}

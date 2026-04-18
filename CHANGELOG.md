@@ -1,3 +1,10 @@
+# [0.11.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.10.3...v0.11.0) (2026-04-18)
+
+
+### Features
+
+* **tasks:** enhance TaskItem mobile layout and change completion trigger to checkbox ([f1852fb](https://github.com/plmtmbnn/personal-web-v2/commit/f1852fb5ea1e6701b96ea810e501add9a4d70e0d))
+
 ## [0.10.3](https://github.com/plmtmbnn/personal-web-v2/compare/v0.10.2...v0.10.3) (2026-04-18)
 
 

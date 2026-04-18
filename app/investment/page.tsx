@@ -1,22 +1,75 @@
 "use client";
 
+import React, { useCallback, useEffect, useState } from "react";
 import StockTicker from "@/features/shared/components/StockTicker";
 import {
 	TrendingUp,
-	PieChart,
-	Activity,
-	DollarSign,
-	ArrowUpRight,
-	ArrowDownLeft,
-	Wallet,
-	BarChart3,
 	ChevronRight,
+	Loader2,
+	RefreshCw,
+	Layers,
+	Zap,
 } from "lucide-react";
 import PinGuard from "@/features/auth/PinGuard";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { getFearAndGreedData } from "@/features/investment/actions";
+import type { FearAndGreedData } from "@/features/investment/types";
+import FearAndGreedGauge from "@/features/investment/components/FearAndGreedGauge";
+import SentimentCard from "@/features/investment/components/SentimentCard";
 
 export default function InvestmentPage() {
+	const [marketData, setMarketData] = useState<FearAndGreedData | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	const fetchData = useCallback(async () => {
+		setIsLoading(true);
+		setError(null);
+		try {
+			const data = await getFearAndGreedData();
+			if (data) {
+				setMarketData(data);
+			} else {
+				setError("Failed to synchronize market data");
+			}
+		} catch (_err) {
+			setError("Operational connection failure");
+		} finally {
+			setIsLoading(false);
+		}
+	}, []);
+
+	useEffect(() => {
+		fetchData();
+	}, [fetchData]);
+
+	// Map sub-indices for visualization
+	const subIndices = marketData
+		? [
+				{
+					title: "Market Momentum (S&P 500)",
+					data: marketData.market_momentum_sp500,
+				},
+				{
+					title: "Market Momentum (S&P 125)",
+					data: marketData.market_momentum_sp125,
+				},
+				{
+					title: "Stock Price Strength",
+					data: marketData.stock_price_strength,
+				},
+				{ title: "Stock Price Breadth", data: marketData.stock_price_breadth },
+				{ title: "Put and Call Options", data: marketData.put_call_options },
+				{
+					title: "Market Volatility (VIX)",
+					data: marketData.market_volatility_vix,
+				},
+				{ title: "Junk Bond Demand", data: marketData.junk_bond_demand },
+				{ title: "Safe Haven Demand", data: marketData.safe_haven_demand },
+			]
+		: [];
+
 	return (
 		<PinGuard>
 			<main className="min-h-screen bg-slate-50/50 pb-24">
@@ -27,10 +80,10 @@ export default function InvestmentPage() {
 							<div className="space-y-2">
 								<div className="flex items-center gap-2 text-indigo-600 font-bold text-[10px] uppercase tracking-[0.2em]">
 									<TrendingUp className="w-3.5 h-3.5" />
-									Portfolio Orchestration
+									Market Intelligence
 								</div>
 								<h1 className="text-4xl font-black text-slate-900 tracking-tight">
-									Investment Hub
+									Fear & Greed Index
 								</h1>
 								<div className="flex items-center gap-2 text-xs font-medium text-slate-400">
 									<Link
@@ -40,22 +93,33 @@ export default function InvestmentPage() {
 										Home
 									</Link>
 									<ChevronRight className="w-3 h-3 opacity-50" />
-									<span className="text-slate-900">Capital Management</span>
+									<span className="text-slate-900">Sentiment Engine</span>
 								</div>
 							</div>
 
 							<div className="flex gap-4 p-1.5 bg-slate-50 border border-slate-200 rounded-xl">
 								<div className="px-4 py-2 text-center border-r border-slate-200 last:border-0">
 									<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-0.5">
-										Market Status
+										System Status
 									</p>
 									<div className="flex items-center justify-center gap-2">
-										<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+										<div
+											className={`w-1.5 h-1.5 rounded-full ${isLoading ? "bg-slate-300" : "bg-emerald-500 animate-pulse"}`}
+										/>
 										<span className="text-xs font-black text-slate-900 uppercase">
-											Live
+											{isLoading ? "Syncing" : "Connected"}
 										</span>
 									</div>
 								</div>
+								<button
+									onClick={fetchData}
+									disabled={isLoading}
+									className="p-2 text-slate-400 hover:text-indigo-600 transition-colors disabled:opacity-30"
+								>
+									<RefreshCw
+										className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+									/>
+								</button>
 							</div>
 						</div>
 					</div>
@@ -64,114 +128,91 @@ export default function InvestmentPage() {
 				<StockTicker />
 
 				<div className="max-w-7xl mx-auto px-6 py-8">
-					{/* Dashboard Stats Grid - Now Solid Cards */}
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-						{[
-							{
-								label: "Portfolio Value",
-								value: "$124,500.00",
-								change: "+12.5%",
-								isPositive: true,
-								icon: Wallet,
-								color: "text-blue-600",
-								bg: "bg-blue-50",
-							},
-							{
-								label: "Monthly Returns",
-								value: "$4,230.15",
-								change: "+2.3%",
-								isPositive: true,
-								icon: BarChart3,
-								color: "text-indigo-600",
-								bg: "bg-indigo-50",
-							},
-							{
-								label: "Total Profit",
-								value: "$32,100.40",
-								change: "-1.2%",
-								isPositive: false,
-								icon: DollarSign,
-								color: "text-emerald-600",
-								bg: "bg-emerald-50",
-							},
-						].map((stat, i) => (
-							<motion.div
-								key={stat.label}
-								initial={{ opacity: 0, y: 10 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ delay: i * 0.1 }}
-								className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-md group"
-							>
-								<div className="flex justify-between items-start mb-8">
-									<div
-										className={`p-4 ${stat.bg} rounded-2xl border border-transparent group-hover:border-white/50 transition-all shadow-sm`}
-									>
-										<stat.icon className={`w-6 h-6 ${stat.color}`} />
-									</div>
-									<div
-										className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${
-											stat.isPositive
-												? "bg-emerald-50 text-emerald-700 border-emerald-100"
-												: "bg-rose-50 text-rose-700 border-rose-100"
-										}`}
-									>
-										{stat.isPositive ? (
-											<ArrowUpRight className="w-3.5 h-3.5" />
-										) : (
-											<ArrowDownLeft className="w-3.5 h-3.5" />
-										)}
-										{stat.change}
-									</div>
+					{/* Primary Visualization - Enhanced Master Gauge */}
+					<div className="bg-white p-10 lg:p-12 rounded-[3rem] border border-slate-200 shadow-sm mb-12">
+						<h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-10 flex items-center gap-3">
+							<Zap className="w-4 h-4 text-amber-500" />
+							Strategic Sentiment Analysis
+						</h3>
+
+						<div className="min-h-[360px] flex items-center justify-center">
+							{isLoading ? (
+								<div className="flex flex-col items-center gap-4">
+									<Loader2 className="w-10 h-10 text-slate-200 animate-spin" />
+									<p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
+										Calibrating Pulse...
+									</p>
 								</div>
-								<p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1.5">
-									{stat.label}
-								</p>
-								<h3 className="text-3xl font-black text-slate-900 tracking-tighter">
-									{stat.value}
-								</h3>
-							</motion.div>
-						))}
+							) : error ? (
+								<div className="text-center p-8 bg-rose-50 rounded-[2rem] border border-rose-100 max-w-md">
+									<p className="text-sm font-bold text-rose-600 uppercase tracking-widest">
+										{error}
+									</p>
+									<button
+										onClick={fetchData}
+										className="mt-6 text-[10px] font-black uppercase text-rose-700 underline underline-offset-4"
+									>
+										Force Re-Synchronization
+									</button>
+								</div>
+							) : (
+								marketData && (
+									<motion.div
+										initial={{ opacity: 0, scale: 0.98 }}
+										animate={{ opacity: 1, scale: 1 }}
+										className="w-full"
+									>
+										<FearAndGreedGauge
+											score={marketData.fear_and_greed.score}
+											rating={marketData.fear_and_greed.rating}
+											previousClose={marketData.fear_and_greed.previous_close}
+											previous1Week={marketData.fear_and_greed.previous_1_week}
+											previous1Month={
+												marketData.fear_and_greed.previous_1_month
+											}
+											previous1Year={marketData.fear_and_greed.previous_1_year}
+											historicalData={marketData.fear_and_greed_historical.data}
+										/>
+									</motion.div>
+								)
+							)}
+						</div>
 					</div>
 
-					{/* Specialized Analysis Sections - High Contrast */}
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-						<div className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm">
-							<h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-10 flex items-center gap-3">
-								<Activity className="w-4 h-4 text-blue-600" />
-								Market Sentiment
-							</h3>
-							<div className="h-64 flex flex-col items-center justify-center border border-slate-100 rounded-3xl bg-slate-50/50 relative overflow-hidden group">
-								<div className="absolute inset-0 flex items-end justify-around px-10 pb-10 opacity-30 group-hover:opacity-50 transition-opacity">
-									{[40, 70, 45, 90, 65, 80, 30].map((h, i) => (
-										<motion.div
-											key={String(i)}
-											initial={{ height: 0 }}
-											animate={{ height: `${h}%` }}
-											transition={{ delay: 0.5 + i * 0.1, duration: 1 }}
-											className="w-4 bg-blue-600/20 rounded-full"
-										/>
-									))}
-								</div>
-								<p className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] text-slate-300 text-center px-10 leading-loose">
-									Dynamic Visualization Engine <br /> Synchronizing...
-								</p>
-							</div>
+					{/* Componentized Factor Breakdown - High Density */}
+					<div className="space-y-8">
+						<div className="flex items-center gap-6">
+							<div className="h-px flex-1 bg-slate-200" />
+							<h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400 flex items-center gap-3">
+								<Layers className="w-4 h-4" />
+								Factor Analysis Matrix
+							</h2>
+							<div className="h-px flex-1 bg-slate-200" />
 						</div>
 
-						<div className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm">
-							<h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-10 flex items-center gap-3">
-								<PieChart className="w-4 h-4 text-indigo-600" />
-								Asset Allocation
-							</h3>
-							<div className="h-64 flex items-center justify-center border border-slate-100 rounded-3xl bg-slate-50/50 relative overflow-hidden group">
-								<div className="absolute w-40 h-40 rounded-full border-[12px] border-indigo-600/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
-									<div className="w-32 h-32 rounded-full border-[12px] border-indigo-600/10" />
-								</div>
-								<p className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] text-slate-300 text-center px-10 leading-loose">
-									Portfolio Distribution Logic <br /> Processing...
-								</p>
+						{isLoading ? (
+							<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+								{[...Array(8)].map((_, i) => (
+									<div
+										key={String(i)}
+										className="h-32 bg-white rounded-2xl border border-slate-100 animate-pulse"
+									/>
+								))}
 							</div>
-						</div>
+						) : (
+							<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+								{subIndices.map((index, i) => (
+									<SentimentCard
+										key={index.title}
+										title={index.title}
+										score={index.data.score}
+										rating={index.data.rating}
+										data={index.data.data}
+										delay={i * 0.03}
+									/>
+								))}
+							</div>
+						)}
 					</div>
 				</div>
 			</main>

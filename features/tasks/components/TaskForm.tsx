@@ -11,9 +11,12 @@ import {
   Sparkles,
   X,
   Target,
-  ChevronDown
+  ChevronDown,
+  Layers,
+  Zap,
+  ZapOff
 } from "lucide-react";
-import { addTask } from "@/features/tasks/actions/tasks";
+import { addTask, addBatchTasks } from "@/features/tasks/actions/tasks";
 import { useRouter } from "next/navigation";
 import type { TaskPriority } from "@/features/tasks/types";
 import { format, addDays } from "date-fns";
@@ -31,9 +34,15 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
 	const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [isBatchEnabled, setIsBatchEnabled] = useState(true);
 	
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
+
+  // Parse titles to check if multiple tasks are being added
+  const taskTitles = title.split("\n").filter(t => t.trim() !== "");
+  const hasMultipleLines = taskTitles.length > 1;
+  const finalBatchActive = hasMultipleLines && isBatchEnabled;
 
   // Auto-expand textarea logic
   useEffect(() => {
@@ -53,12 +62,23 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 		setIsSubmitting(true);
 		try {
-			await addTask({
-				title: title.trim(),
-				priority,
-				category: category.trim() || "General",
-				due_date: dueDate,
-			});
+      const metadata = {
+        priority,
+        category: category.trim() || "General",
+        due_date: dueDate,
+      };
+
+      if (finalBatchActive) {
+        await addBatchTasks(taskTitles.map(t => ({
+          title: t.trim(),
+          ...metadata
+        })));
+      } else {
+        await addTask({
+          title: title.trim(),
+          ...metadata
+        });
+      }
 
 			setTitle("");
       setCategory("");
@@ -122,15 +142,30 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
                 {/* Header Label */}
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
-                    <Target className="w-3 h-3 text-emerald-500" />
-                    New Objective
+                    {finalBatchActive ? <Layers className="w-3 h-3 text-blue-500" /> : <Target className="w-3 h-3 text-emerald-500" />}
+                    {finalBatchActive ? `Batch Initialization (${taskTitles.length} Tasks)` : "New Objective"}
                   </label>
                   <div className="flex items-center gap-2">
+                    {hasMultipleLines && (
+                      <button
+                        type="button"
+                        onClick={() => setIsBatchEnabled(!isBatchEnabled)}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
+                          isBatchEnabled 
+                            ? "bg-blue-50 border-blue-100 text-blue-600" 
+                            : "bg-slate-50 border-slate-100 text-slate-400"
+                        }`}
+                        title={isBatchEnabled ? "Batch Mode Active" : "Single Task Mode"}
+                      >
+                        {isBatchEnabled ? <Zap className="w-3 h-3 fill-current" /> : <ZapOff className="w-3 h-3" />}
+                        <span className="text-[8px] font-black uppercase tracking-wider">Batch Protocol</span>
+                      </button>
+                    )}
                     {title && (
                       <button 
                         type="button" 
                         onClick={() => setTitle("")}
-                        className="text-slate-300 hover:text-rose-500 transition-colors"
+                        className="text-slate-300 hover:text-rose-500 transition-colors ml-1"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -148,17 +183,29 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
                 </div>
 
                 {/* Dynamic Title Input */}
-                <textarea
-                  ref={textareaRef}
-                  placeholder="What is the next milestone?"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => !title && setIsFocused(false)}
-                  rows={1}
-                  disabled={isSubmitting}
-                  className="w-full bg-transparent text-xl md:text-2xl font-black text-slate-900 placeholder:text-slate-200 focus:outline-none resize-none leading-tight text-base"
-                />
+                <div className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    placeholder="Enter task titles (one per line for multiple)..."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => !title && setIsFocused(false)}
+                    rows={1}
+                    disabled={isSubmitting}
+                    className="w-full bg-transparent text-xl md:text-2xl font-black text-slate-900 placeholder:text-slate-200 focus:outline-none resize-none leading-tight"
+                  />
+                  {hasMultipleLines && isBatchEnabled && (
+                    <div className="absolute -bottom-4 right-0 text-[8px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                      Auto-Detection Active
+                    </div>
+                  )}
+                  {hasMultipleLines && !isBatchEnabled && (
+                    <div className="absolute -bottom-4 right-0 text-[8px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                      Single Entry Mode
+                    </div>
+                  )}
+                </div>
 
                 {/* Metadata Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-50">
@@ -244,20 +291,24 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
               <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between pb-10 lg:pb-4">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">Strategic initialization.</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">
+                    {finalBatchActive ? "Collective execution." : "Strategic initialization."}
+                  </span>
                 </div>
                 
                 <button
                   type="submit"
                   disabled={isSubmitting || !title.trim()}
-                  className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-slate-900/10 disabled:opacity-30 active:scale-95"
+                  className={`flex items-center gap-2 px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg disabled:opacity-30 active:scale-95 ${
+                    finalBatchActive ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-900 hover:bg-emerald-600 text-white'
+                  }`}
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Plus className="w-4 h-4" />
                   )}
-                  Initialize
+                  {finalBatchActive ? `Initialize ${taskTitles.length} Tasks` : "Initialize"}
                 </button>
               </div>
             </form>

@@ -84,6 +84,34 @@ export async function addTask(payload: {
 }
 
 /**
+ * Add multiple tasks to Supabase at once
+ */
+export async function addBatchTasks(payloads: {
+  title: string;
+  priority: TaskPriority;
+  category: string;
+  due_date: string;
+}[]) {
+  const { data, error } = await SupabaseConn
+    .from('tasks')
+    .insert(payloads.map(p => ({
+      ...p,
+      is_completed: false,
+      position: 0
+    })))
+    .select();
+
+  if (error) {
+    console.error('Error adding batch tasks:', error);
+    throw new Error('Failed to add batch tasks');
+  }
+
+  revalidatePath('/tasks');
+  await invalidateStatsCache();
+  return data as Task[];
+}
+
+/**
  * Toggle task completion status and handle completed_at timestamp
  */
 export async function toggleTask(taskId: string, isCurrentlyCompleted: boolean) {

@@ -11,8 +11,30 @@ import {
 } from "lucide-react";
 import * as motion from "framer-motion/client";
 
-const PLACEHOLDER_IMAGE =
-	"https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop";
+/**
+ * Enhanced Dynamic Placeholder System
+ */
+const PLACEHOLDERS = [
+	"https://plus.unsplash.com/premium_photo-1664301432574-9b4e85c2b2d3?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?q=80&w=2072&auto=format&fit=crop", // Tech Blue
+	"https://images.unsplash.com/photo-1512455011254-e2db8db4ef22?q=80&w=1195&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?q=80&w=2070&auto=format&fit=crop", // Circuit
+	"https://images.unsplash.com/photo-1522199755839-a2bacb67c546?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?q=80&w=2070&auto=format&fit=crop", // Cyber Security
+	"https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop", // Minimal Workspace
+];
+
+/**
+ * Deterministic Placeholder Picker
+ * Returns a consistent image for a specific blog ID/slug to prevent flickering,
+ * but varies across different posts without images.
+ */
+const getBlogImage = (imageUrl: string | null, seed: string) => {
+	if (imageUrl && imageUrl.trim() !== "") return imageUrl;
+
+	// Use sum of char codes as simple deterministic index
+	const charSum = seed
+		.split("")
+		.reduce((acc, char) => acc + char.charCodeAt(0), 0);
+	return PLACEHOLDERS[charSum % PLACEHOLDERS.length];
+};
 
 /**
  * Category Style Utility - Professional Palette
@@ -49,7 +71,7 @@ export default async function BlogPage() {
 			</div>
 
 			<div className="max-w-7xl mx-auto px-6 pt-20 sm:pt-32">
-				{/* Refined Header */}
+				{/* Header Section */}
 				<div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-16 sm:mb-24 border-b border-slate-100 pb-12 sm:pb-16">
 					<motion.div
 						initial={{ opacity: 0, x: -20 }}
@@ -91,7 +113,7 @@ export default async function BlogPage() {
 					</motion.div>
 				</div>
 
-				{/* SECTION 1: The Primary Hero with Improved Contrast */}
+				{/* SECTION 1: The Primary Hero */}
 				{primaryHero && (
 					<section className="mb-20">
 						<Link
@@ -100,7 +122,7 @@ export default async function BlogPage() {
 						>
 							<div className="relative h-[500px] sm:h-[650px] w-full overflow-hidden rounded-[3rem] sm:rounded-[4rem] border border-slate-200 shadow-2xl transition-all duration-500">
 								<Image
-									src={primaryHero.image_url || PLACEHOLDER_IMAGE}
+									src={getBlogImage(primaryHero.image_url, primaryHero.id)}
 									alt={primaryHero.title}
 									fill
 									priority
@@ -110,7 +132,7 @@ export default async function BlogPage() {
 								{/* Bottom-weighted gradient for overall depth */}
 								<div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/20 to-transparent" />
 
-								{/* Text Background Content Area - Ensuring perfect contrast */}
+								{/* Text Background Content Area */}
 								<div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 lg:p-20">
 									<motion.div
 										className="bg-slate-950/60 backdrop-blur-xl border border-white/10 p-8 sm:p-12 rounded-[2.5rem] space-y-6 max-w-5xl"
@@ -129,6 +151,9 @@ export default async function BlogPage() {
 										<h2 className="text-3xl sm:text-6xl lg:text-7xl font-black text-white tracking-tighter leading-[1] group-hover:text-blue-200 transition-colors duration-500">
 											{primaryHero.title}
 										</h2>
+										<p className="text-slate-300 text-base sm:text-xl font-medium line-clamp-2 opacity-90">
+											{primaryHero.description}
+										</p>
 										<div className="pt-4 flex items-center gap-6 text-white/40 text-[11px] font-black uppercase tracking-[0.3em]">
 											<span className="flex items-center gap-2">
 												<Calendar className="w-4 h-4" />{" "}
@@ -147,7 +172,7 @@ export default async function BlogPage() {
 					</section>
 				)}
 
-				{/* SECTION 2: Secondary Headlines with Contained Text */}
+				{/* SECTION 2: Secondary Headlines */}
 				{secondaryHeadlines.length > 0 && (
 					<section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-32">
 						{secondaryHeadlines.map((post) => (
@@ -158,7 +183,7 @@ export default async function BlogPage() {
 							>
 								<div className="relative h-[450px] w-full overflow-hidden rounded-[2.5rem] border border-slate-200 shadow-xl transition-all duration-500">
 									<Image
-										src={post.image_url || PLACEHOLDER_IMAGE}
+										src={getBlogImage(post.image_url, post.id)}
 										alt={post.title}
 										fill
 										className="object-cover"
@@ -211,7 +236,7 @@ export default async function BlogPage() {
 									<div className="flex flex-col h-full bg-white border border-slate-200 hover:border-slate-300 rounded-[2.5rem] p-4 transition-all duration-500 hover:shadow-2xl">
 										<div className="relative h-60 w-full mb-6 overflow-hidden rounded-[2rem] border border-slate-100">
 											<Image
-												src={post.image_url || PLACEHOLDER_IMAGE}
+												src={getBlogImage(post.image_url, post.id)}
 												alt={post.title}
 												fill
 												className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -240,7 +265,7 @@ export default async function BlogPage() {
 											</p>
 
 											<div className="pt-4 flex items-center gap-2 text-slate-900 font-black text-[10px] uppercase tracking-[0.2em] group-hover:gap-4 transition-all">
-												Read <ArrowRight className="w-3.5 h-3.5" />
+												Explore Logic <ArrowRight className="w-3.5 h-3.5" />
 											</div>
 										</div>
 									</div>

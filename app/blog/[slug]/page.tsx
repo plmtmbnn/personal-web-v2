@@ -55,7 +55,7 @@ const getReadTime = (content: string) => {
 };
 
 /**
- * Category Style Utility - Professional Palette
+ * Category Style Utility - Consistent with Professional Palette
  */
 const getCategoryStyles = (category: string) => {
 	const c = (category || "General").toLowerCase();
@@ -66,6 +66,24 @@ const getCategoryStyles = (category: string) => {
 	if (c.includes("lead") || c.includes("manage"))
 		return "bg-purple-50 text-purple-700 border-purple-100";
 	return "bg-slate-50 text-slate-700 border-slate-100";
+};
+
+/**
+ * Deterministic Placeholder Picker (Sync with List Page)
+ */
+const PLACEHOLDERS = [
+	"https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop",
+	"https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop",
+	"https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop",
+	"https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop",
+];
+
+const getBlogImage = (imageUrl: string | null, seed: string) => {
+	if (imageUrl && imageUrl.trim() !== "") return imageUrl;
+	const charSum = seed
+		.split("")
+		.reduce((acc, char) => acc + char.charCodeAt(0), 0);
+	return PLACEHOLDERS[charSum % PLACEHOLDERS.length];
 };
 
 export default async function BlogDetailPage({
@@ -86,22 +104,18 @@ export default async function BlogDetailPage({
 		<main className="min-h-screen bg-white relative overflow-x-hidden pb-32">
 			<ScrollProgress />
 
-			{/* Hero Section with High-Contrast Header */}
+			{/* Hero Section with High-Contrast Content Anchor */}
 			<section className="relative w-full">
-				{post.image_url ? (
-					<div className="relative w-full h-[50vh] min-h-[400px]">
-						<Image
-							src={post.image_url}
-							alt={post.title}
-							fill
-							priority
-							className="object-cover"
-						/>
-						<div className="absolute inset-0 bg-slate-950/20" />
-					</div>
-				) : (
-					<div className="h-32 bg-slate-50 border-b border-slate-100" />
-				)}
+				<div className="relative w-full h-[50vh] min-h-[400px]">
+					<Image
+						src={getBlogImage(post.image_url, post.id)}
+						alt={post.title}
+						fill
+						priority
+						className="object-cover"
+					/>
+					<div className="absolute inset-0 bg-slate-950/20" />
+				</div>
 
 				<div className="max-w-5xl mx-auto px-6 relative z-20 -mt-24 sm:-mt-40">
 					<motion.div

@@ -19,7 +19,8 @@ import {
   Tag,
   Sparkles,
   ImageIcon,
-  ChevronDown
+  ChevronDown,
+  MoreHorizontal
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -77,7 +78,10 @@ export default function AdminBlogList({
         params.set(key, value);
       }
     });
-    router.push(`${pathname}?${params.toString()}`);
+    
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   const handleToggleStatus = async (id: string, currentPublished: boolean) => {
@@ -113,6 +117,27 @@ export default function AdminBlogList({
   };
 
   const totalPages = Math.ceil(totalCount / 5);
+
+  /**
+   * Helper to generate page numbers
+   */
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
 
   /**
    * Category Color Utility
@@ -186,11 +211,23 @@ export default function AdminBlogList({
 
       {/* Table Container */}
       <div className="overflow-x-auto custom-scrollbar relative">
-        {(isPending || updatingMetadataId) && (
-          <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px] z-10 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          </div>
-        )}
+        {/* Loading Overlay for active data transitions */}
+        <AnimatePresence>
+          {isPending && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center gap-4"
+            >
+              <div className="w-12 h-12 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-xl">
+                <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Synchronizing...</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <table className="w-full text-left min-w-[1000px]">
           <thead className="bg-slate-50 border-b border-slate-100">
             <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
@@ -241,9 +278,10 @@ export default function AdminBlogList({
                   <td className="px-6 py-5">
                     <div className="relative inline-block group/select">
                       <select
+                        disabled={!!updatingMetadataId}
                         value={blog.category || 'General'}
                         onChange={(e) => handleUpdateMetadata(blog.id, { category: e.target.value })}
-                        className={`appearance-none px-3 py-1.5 pr-8 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)}`}
+                        className={`appearance-none px-3 py-1.5 pr-8 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)} disabled:opacity-50`}
                       >
                         <option value="General">General</option>
                         {categories.map(cat => (
@@ -251,6 +289,11 @@ export default function AdminBlogList({
                         ))}
                       </select>
                       <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-40" />
+                      {updatingMetadataId === blog.id && (
+                        <div className="absolute -right-6 top-1/2 -translate-y-1/2">
+                          <Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-5">
@@ -340,30 +383,60 @@ export default function AdminBlogList({
         </table>
       </div>
 
-      {/* Modern Pagination Footer */}
-      <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* Enhanced Numeric Pagination Footer */}
+      <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-          Page <span className="text-slate-900">{currentPage}</span> of <span className="text-slate-900">{totalPages || 1}</span>
+          Showing <span className="text-slate-900">{(currentPage - 1) * 5 + 1}</span> to <span className="text-slate-900">{Math.min(currentPage * 5, totalCount)}</span>
           <span className="mx-2 opacity-30">•</span>
           <span className="text-slate-900">{totalCount}</span> Total Results
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {/* Previous Button */}
           <button
             onClick={() => updateParams({ page: String(currentPage - 1) })}
             disabled={currentPage <= 1 || isPending}
-            className="flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-30 disabled:pointer-events-none"
+            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all disabled:opacity-20 disabled:pointer-events-none shadow-sm mr-2"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            Previous
+            <ChevronLeft className="w-4 h-4" />
           </button>
+
+          {/* Numeric Pages */}
+          <div className="flex items-center gap-1">
+            {getPageNumbers().map((page, idx) => {
+              if (page === '...') {
+                return (
+                  <div key={`dots-${idx}`} className="w-10 h-10 flex items-center justify-center text-slate-300">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </div>
+                );
+              }
+
+              const isActive = page === currentPage;
+              return (
+                <button
+                  key={`page-${page}`}
+                  onClick={() => updateParams({ page: String(page) })}
+                  disabled={isPending}
+                  className={`w-10 h-10 rounded-xl text-[10px] font-black transition-all shadow-sm ${
+                    isActive 
+                      ? 'bg-blue-600 text-white shadow-blue-200' 
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Next Button */}
           <button
             onClick={() => updateParams({ page: String(currentPage + 1) })}
             disabled={currentPage >= totalPages || isPending}
-            className="flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-30 disabled:pointer-events-none"
+            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all disabled:opacity-20 disabled:pointer-events-none shadow-sm ml-2"
           >
-            Next
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

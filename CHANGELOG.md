@@ -1,3 +1,10 @@
+# [0.15.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.14.0...v0.15.0) (2026-04-19)
+
+
+### Features
+
+* **blog:** refine UIUX with high-contrast text backing and share feature ([3575f35](https://github.com/plmtmbnn/personal-web-v2/commit/3575f35b7c806c3fd1ecbced1938e52dfc5ee98e)), closes [hi#contrast](https://github.com/hi/issues/contrast) [hi#contrast](https://github.com/hi/issues/contrast)
+
 # [0.14.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.13.0...v0.14.0) (2026-04-19)
 
 

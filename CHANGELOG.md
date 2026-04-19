@@ -1,3 +1,10 @@
+# [0.16.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.15.0...v0.16.0) (2026-04-19)
+
+
+### Features
+
+* **blog/tasks:** finalize high-fidelity content orchestration and administrative systems ([184216c](https://github.com/plmtmbnn/personal-web-v2/commit/184216cef8eaa76579ac3be9ae869dd6086cc509)), closes [hi#fidelity](https://github.com/hi/issues/fidelity) [hi#contrast](https://github.com/hi/issues/contrast)
+
 # [0.15.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.14.0...v0.15.0) (2026-04-19)
 
 

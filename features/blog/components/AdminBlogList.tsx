@@ -57,7 +57,8 @@ export default function AdminBlogList({
   // Local state for immediate UI feedback (Search)
   const [searchQuery, setSearchQuery] = useState(currentSearch);
 
-  const categories = ["Fintech", "Architecture", "Leadership", "Technology", "Personal", "Engineering"];
+  // Categories aligned with DB Check Constraint
+  const categories = ["Tech", "Running", "Finance", "Investment", "General"];
 
   // Debounced search update
   useEffect(() => {
@@ -140,13 +141,13 @@ export default function AdminBlogList({
   };
 
   /**
-   * Category Color Utility
+   * Category Color Utility - Optimized for DB specific values
    */
   const getCategoryStyles = (category: string) => {
-    const c = (category || "General").toLowerCase();
-    if (c.includes('fintech') || c.includes('finance')) return "bg-emerald-50 text-emerald-700 border-emerald-100";
-    if (c.includes('arch') || c.includes('tech')) return "bg-blue-50 text-blue-700 border-blue-100";
-    if (c.includes('lead') || c.includes('manage')) return "bg-purple-50 text-purple-700 border-purple-100";
+    const c = category;
+    if (c === 'Finance' || c === 'Investment') return "bg-emerald-50 text-emerald-700 border-emerald-100";
+    if (c === 'Tech') return "bg-blue-50 text-blue-700 border-blue-100";
+    if (c === 'Running') return "bg-rose-50 text-rose-700 border-rose-100";
     return "bg-slate-50 text-slate-700 border-slate-100";
   };
 
@@ -283,7 +284,6 @@ export default function AdminBlogList({
                         onChange={(e) => handleUpdateMetadata(blog.id, { category: e.target.value })}
                         className={`appearance-none px-3 py-1.5 pr-8 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)} disabled:opacity-50`}
                       >
-                        <option value="General">General</option>
                         {categories.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}

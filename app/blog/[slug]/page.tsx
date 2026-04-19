@@ -55,16 +55,14 @@ const getReadTime = (content: string) => {
 };
 
 /**
- * Category Style Utility - Consistent with Professional Palette
+ * Category Style Utility - Professional Palette
  */
 const getCategoryStyles = (category: string) => {
-	const c = (category || "General").toLowerCase();
-	if (c.includes("fintech") || c.includes("finance"))
+	const c = category;
+	if (c === "Finance" || c === "Investment")
 		return "bg-emerald-50 text-emerald-700 border-emerald-100";
-	if (c.includes("arch") || c.includes("tech"))
-		return "bg-blue-50 text-blue-700 border-blue-100";
-	if (c.includes("lead") || c.includes("manage"))
-		return "bg-purple-50 text-purple-700 border-purple-100";
+	if (c === "Tech") return "bg-blue-50 text-blue-700 border-blue-100";
+	if (c === "Running") return "bg-rose-50 text-rose-700 border-rose-100";
 	return "bg-slate-50 text-slate-700 border-slate-100";
 };
 
@@ -72,9 +70,9 @@ const getCategoryStyles = (category: string) => {
  * Deterministic Placeholder Picker (Sync with List Page)
  */
 const PLACEHOLDERS = [
-	"https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop",
-	"https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop",
-	"https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop",
+	"https://plus.unsplash.com/premium_photo-1664301432574-9b4e85c2b2d3?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?q=80&w=2072&auto=format&fit=crop",
+	"https://images.unsplash.com/photo-1512455011254-e2db8db4ef22?q=80&w=1195&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?q=80&w=2070&auto=format&fit=crop",
+	"https://images.unsplash.com/photo-1522199755839-a2bacb67c546?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?q=80&w=2070&auto=format&fit=crop",
 	"https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop",
 ];
 
@@ -104,7 +102,7 @@ export default async function BlogDetailPage({
 		<main className="min-h-screen bg-white relative overflow-x-hidden pb-32">
 			<ScrollProgress />
 
-			{/* Hero Section with High-Contrast Content Anchor */}
+			{/* Hero Section with High-Contrast Header */}
 			<section className="relative w-full">
 				<div className="relative w-full h-[50vh] min-h-[400px]">
 					<Image

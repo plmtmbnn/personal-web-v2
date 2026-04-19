@@ -23,8 +23,6 @@ const PLACEHOLDERS = [
 
 /**
  * Deterministic Placeholder Picker
- * Returns a consistent image for a specific blog ID/slug to prevent flickering,
- * but varies across different posts without images.
  */
 const getBlogImage = (imageUrl: string | null, seed: string) => {
 	if (imageUrl && imageUrl.trim() !== "") return imageUrl;
@@ -37,16 +35,14 @@ const getBlogImage = (imageUrl: string | null, seed: string) => {
 };
 
 /**
- * Category Style Utility - Professional Palette
+ * Category Style Utility - Optimized for DB specific values
  */
 const getCategoryStyles = (category: string) => {
-	const c = (category || "General").toLowerCase();
-	if (c.includes("fintech") || c.includes("finance"))
+	const c = category;
+	if (c === "Finance" || c === "Investment")
 		return "bg-emerald-50 text-emerald-700 border-emerald-100";
-	if (c.includes("arch") || c.includes("tech"))
-		return "bg-blue-50 text-blue-700 border-blue-100";
-	if (c.includes("lead") || c.includes("manage"))
-		return "bg-purple-50 text-purple-700 border-purple-100";
+	if (c === "Tech") return "bg-blue-50 text-blue-700 border-blue-100";
+	if (c === "Running") return "bg-rose-50 text-rose-700 border-rose-100";
 	return "bg-slate-50 text-slate-700 border-slate-100";
 };
 
@@ -130,7 +126,7 @@ export default async function BlogPage() {
 								/>
 
 								{/* Bottom-weighted gradient for overall depth */}
-								<div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/20 to-transparent" />
+								<div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
 
 								{/* Text Background Content Area */}
 								<div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 lg:p-20">
@@ -143,7 +139,7 @@ export default async function BlogPage() {
 												Headline Story
 											</span>
 											<span
-												className={`px-5 py-2 border text-[10px] font-black uppercase tracking-widest rounded-full ${getCategoryStyles(primaryHero.category)}`}
+												className={`px-5 py-2 border text-[10px] font-black uppercase tracking-widest rounded-full backdrop-blur-xl ${getCategoryStyles(primaryHero.category)}`}
 											>
 												{primaryHero.category}
 											</span>
@@ -151,7 +147,7 @@ export default async function BlogPage() {
 										<h2 className="text-3xl sm:text-6xl lg:text-7xl font-black text-white tracking-tighter leading-[1] group-hover:text-blue-200 transition-colors duration-500">
 											{primaryHero.title}
 										</h2>
-										<p className="text-slate-300 text-base sm:text-xl font-medium line-clamp-2 opacity-90">
+										<p className="text-slate-300 text-base sm:text-xl font-medium line-clamp-2 opacity-90 !text-white">
 											{primaryHero.description}
 										</p>
 										<div className="pt-4 flex items-center gap-6 text-white/40 text-[11px] font-black uppercase tracking-[0.3em]">
@@ -192,7 +188,7 @@ export default async function BlogPage() {
 
 									<div className="absolute bottom-6 left-6 right-6 p-8 bg-white/95 backdrop-blur-md rounded-3xl border border-white shadow-2xl transition-all duration-500 group-hover:translate-y-[-5px]">
 										<span
-											className={`inline-block px-3 py-1 border text-[8px] font-black uppercase tracking-widest rounded-full mb-4 ${getCategoryStyles(post.category)}`}
+											className={`inline-block px-3 py-1 border text-[8px] font-black uppercase tracking-widest rounded-full mb-4 backdrop-blur-xl ${getCategoryStyles(post.category)}`}
 										>
 											{post.category}
 										</span>

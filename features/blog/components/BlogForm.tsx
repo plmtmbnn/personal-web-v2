@@ -75,7 +75,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
     }
   };
 
-  const categories = ["Fintech", "Architecture", "Leadership", "Technology", "Personal", "Engineering"];
+  const categories = ["Tech", "Running", "Finance", "Investment", "General"];
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-24">

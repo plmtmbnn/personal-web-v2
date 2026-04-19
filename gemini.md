@@ -43,7 +43,11 @@ Strictly for routing and page definitions. Pages compose components from `featur
 ## 🎨 UI/UX Patterns
 - **Solid Productivity Pattern**: For admin and operational pages (Admin, Tasks, Investment), use solid white containers, `slate-50` backgrounds, and defined borders.
 - **Glassmorphism**: Reserved for public aesthetic pages (Home, Blog, Travel, Running) using `bg-white/5` and `backdrop-blur-xl`.
-- **Custom Modal System**: Use `features/shared/components/CustomModal.tsx` for alerts and action confirmations (Purge/Delete) to maintain pattern consistency.
+- **Contrast Mastery**: 
+  - **Headlines**: Use dark-themed solid backing cards (`bg-slate-950/60 backdrop-blur-xl`) behind white headline text to ensure legibility over any image.
+  - **Details**: Article metadata and titles must be anchored in a high-contrast white card that overlaps the hero banner.
+- **Custom Modal System**: Use `features/shared/components/CustomModal.tsx` for alerts and action confirmations (Purge/Delete).
+- **Interactive Feedback**: All server transitions must provide high-fidelity feedback (e.g., **Synchronization Overlays**, loading buttons).
 - **Mobile-First UX**:
   - **Bottom Sheets**: Used for task creation (`TaskForm`) on mobile.
   - **Floating Nav Switcher**: Used in `/tasks` to toggle between **Agenda** and **Analytics** views.
@@ -56,13 +60,17 @@ Strictly for routing and page definitions. Pages compose components from `featur
 ## 📝 Content Systems
 ### Blog System
 - **Table:** `public.blogs`.
-- **Editor:** Catch-all route at `app/admin/blog/editor/[[...id]]/page.tsx`.
-- **Optimization**: Blog public routes (`/blog` and `/blog/[slug]`) use **Static Site Generation (SSG)** with cookie-free data fetching for instant performance.
+- **Schema Constraints**: The `category` column is restricted by `blogs_category_check` to: `Tech`, `Running`, `Finance`, `Investment`, `General`.
+- **Metadata Support**: Comprehensive support for **Categories**, **Cover Image URLs**, and **Headline Flags**.
+- **Dynamic Visuals**: Deterministic **4-Image Placeholder System** ensures visual variety for posts without cover images.
+- **Admin Orchestration**: Supports inline **Category Selection** and **Headline Toggling** with **Numeric Pagination** and **Loading Overlays**.
+- **Interactive Tools**: Built-in `ShareButton` leveraging native Web Share API with clipboard fallbacks.
+- **Optimization**: Blog public routes use **Static Site Generation (SSG)**.
 
 ### Task System
 - **Table:** `public.tasks`.
-- **Batch Initialization**: `TaskForm` supports multi-line pasting to initialize multiple tasks at once via "Batch Protocol".
-- **Tabbed Architecture**: Separates the **Active Agenda** from **Intelligence/Analytics** to maintain focus.
+- **Batch Initialization**: `TaskForm` supports multi-line pasting to initialize multiple tasks at once via "Batch Protocol" with auto-detection.
+- **Tabbed Architecture**: Separates the **Active Agenda** from **Intelligence/Analytics** via a floating `QuickNav` tab-switcher.
 - **Temporal Logic**: Uses `date-fns` `startOfDay` normalization for all date-gated filtering.
 
 ### Investment System (Fear & Greed Hub)
@@ -71,5 +79,6 @@ Strictly for routing and page definitions. Pages compose components from `featur
 
 ## 📏 Engineering Standards
 - **Component Design:** Prefer clean abstractions. Use `use client` only when necessary.
-- **Git Workflow**: Follow **Conventional Commits**. Commits are validated by `commitlint` via Husky.
+- **Image Management**: Use Next.js `Image` component with optimized `remotePatterns` (wildcard support for major CDNs: Unsplash, Cloudinary, Pexels, GitHub, Google).
+- **Git Workflow**: Follow **Conventional Commits**.
 - **Package Manager**: Use `pnpm`.

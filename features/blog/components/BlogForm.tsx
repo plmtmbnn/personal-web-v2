@@ -16,7 +16,10 @@ import {
   Globe,
   FileText,
   Type,
-  Layout
+  Layout,
+  Tag,
+  Image as ImageIcon,
+  Sparkles
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,6 +47,9 @@ export default function BlogForm({ initialData }: BlogFormProps) {
       content: '',
       date: new Date().toISOString().split('T')[0],
       published: false,
+      category: 'General',
+      image_url: '',
+      is_headline: false,
     },
   });
 
@@ -69,11 +75,13 @@ export default function BlogForm({ initialData }: BlogFormProps) {
     }
   };
 
+  const categories = ["Fintech", "Architecture", "Leadership", "Technology", "Personal", "Engineering"];
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-24">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         
-        {/* Header - Now Solid & Integrated */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-6 border-b border-slate-200">
           <div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
@@ -190,7 +198,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
             </AnimatePresence>
           </div>
 
-          {/* Sidebar - Now Defined Cards */}
+          {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-6 shadow-sm">
               <div className="flex items-center gap-2 text-slate-900 mb-2">
@@ -198,8 +206,39 @@ export default function BlogForm({ initialData }: BlogFormProps) {
                 <h3 className="text-[11px] font-bold uppercase tracking-widest">Post Settings</h3>
               </div>
 
+              {/* Category Input */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">Publish Date</label>
+                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1 flex items-center gap-2">
+                  <Tag className="w-3 h-3" /> Category
+                </label>
+                <input
+                  list="category-options"
+                  {...register('category')}
+                  placeholder="e.g. Fintech"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 font-bold text-xs text-slate-700 focus:outline-none focus:border-blue-500 transition-all"
+                />
+                <datalist id="category-options">
+                  {categories.map(cat => <option key={cat} value={cat} />)}
+                </datalist>
+              </div>
+
+              {/* Image URL Input */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1 flex items-center gap-2">
+                  <ImageIcon className="w-3 h-3" /> Cover Image URL
+                </label>
+                <input
+                  {...register('image_url')}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 font-mono text-[10px] text-slate-700 focus:outline-none focus:border-blue-500 transition-all"
+                />
+              </div>
+
+              {/* Date Input */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1 flex items-center gap-2">
+                  <Calendar className="w-3 h-3" /> Publish Date
+                </label>
                 <input
                   type="date"
                   {...register('date')}
@@ -207,7 +246,22 @@ export default function BlogForm({ initialData }: BlogFormProps) {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl group hover:border-blue-200 transition-colors">
+              {/* Headline Toggle */}
+              <div className="flex items-center justify-between p-4 bg-blue-50/50 border border-blue-100 rounded-xl group hover:border-blue-200 transition-colors">
+                <div className="space-y-0.5">
+                  <label className="text-[10px] font-black uppercase text-blue-900 block tracking-tight flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" /> Featured Story
+                  </label>
+                  <span className="text-[9px] text-blue-400 uppercase font-bold text-[7px]">Mark as headline</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer scale-90">
+                  <input type="checkbox" {...register('is_headline')} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                </label>
+              </div>
+
+              {/* Visibility Toggle */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl group hover:border-emerald-200 transition-colors">
                 <div className="space-y-0.5">
                   <label className="text-[10px] font-black uppercase text-slate-900 block tracking-tight">Public Visibility</label>
                   <span className="text-[9px] text-slate-400 uppercase font-bold">Staged for production</span>
@@ -219,12 +273,12 @@ export default function BlogForm({ initialData }: BlogFormProps) {
               </div>
             </div>
 
-            <div className="p-6 bg-blue-50 border border-blue-100 rounded-2xl">
+            <div className="p-6 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm">
               <h3 className="text-[10px] font-black uppercase text-blue-700 flex items-center gap-2 mb-3">
-                <AlertCircle className="w-3.5 h-3.5" /> Pro Tip
+                <AlertCircle className="w-3.5 h-3.5" /> Editor Insight
               </h3>
               <p className="text-[11px] text-blue-600/80 font-medium leading-relaxed italic">
-                Use H2 and H3 tags to structure your long-form content. Don't forget to add meaningful ALT text to your images for SEO.
+                Headlines are prioritized at the top of the blog index. Ensure you provide a high-resolution cover image for better visual impact.
               </p>
             </div>
           </div>

@@ -88,9 +88,9 @@ export async function getBlogsAdmin(params: {
 }
 
 /**
- * Toggle the published status of a blog post.
+ * Update specific blog metadata fields (category, is_headline, etc.)
  */
-export async function toggleBlogStatus(id: string, currentStatus: boolean): Promise<ActionResponse> {
+export async function updateBlogMetadata(id: string, updates: Partial<Blog>): Promise<ActionResponse> {
   const isAdmin = await checkAdmin();
   if (!isAdmin) {
     return { success: false, message: 'Unauthorized' };
@@ -101,22 +101,28 @@ export async function toggleBlogStatus(id: string, currentStatus: boolean): Prom
   try {
     const { error } = await supabase
       .from('blogs')
-      .update({ published: !currentStatus })
+      .update(updates)
       .eq('id', id);
 
     if (error) {
-      console.error('Supabase error toggling blog status:', error);
-      return { success: false, message: error.message, error };
+      console.error('Supabase error updating blog metadata:', error);
+      return { success: false, message: error.message };
     }
 
     revalidatePath('/blog');
     revalidatePath('/admin/blog');
-
-    return { success: true, message: 'Blog status updated successfully' };
+    
+    return { success: true, message: 'Updated successfully' };
   } catch (error: any) {
-    console.error('Unexpected error toggling blog status:', error);
-    return { success: false, message: error.message || 'An unexpected error occurred' };
+    return { success: false, message: error.message || 'An error occurred' };
   }
+}
+
+/**
+ * Toggle the published status of a blog post.
+ */
+export async function toggleBlogStatus(id: string, currentStatus: boolean): Promise<ActionResponse> {
+  return updateBlogMetadata(id, { published: !currentStatus });
 }
 
 /**
@@ -140,6 +146,9 @@ export async function saveBlog(formData: Partial<Blog>): Promise<ActionResponse<
     content: formData.content || '',
     date: formData.date || new Date().toISOString().split('T')[0],
     published: formData.published ?? false,
+    category: formData.category || 'General',
+    image_url: formData.image_url || null,
+    is_headline: formData.is_headline ?? false,
   };
 
   try {

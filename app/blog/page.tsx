@@ -1,127 +1,246 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getBlogsStatic } from "@/features/blog/data";
-import { ArrowRight, Calendar, Newspaper, Clock, BookOpen } from "lucide-react";
+import {
+	ArrowRight,
+	Calendar,
+	BookOpen,
+	Clock,
+	Tag,
+	Sparkles,
+} from "lucide-react";
 import * as motion from "framer-motion/client";
 
+const PLACEHOLDER_IMAGE =
+	"https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop";
+
+/**
+ * Category Style Utility - Professional Palette
+ */
+const getCategoryStyles = (category: string) => {
+	const c = (category || "General").toLowerCase();
+	if (c.includes("fintech") || c.includes("finance"))
+		return "bg-emerald-50 text-emerald-700 border-emerald-100";
+	if (c.includes("arch") || c.includes("tech"))
+		return "bg-blue-50 text-blue-700 border-blue-100";
+	if (c.includes("lead") || c.includes("manage"))
+		return "bg-purple-50 text-purple-700 border-purple-100";
+	return "bg-slate-50 text-slate-700 border-slate-100";
+};
+
 export default async function BlogPage() {
-	const blogs = await getBlogsStatic();
+	const allBlogs = await getBlogsStatic();
+
+	const headlines = allBlogs.filter((blog) => blog.is_headline);
+	const primaryHero = headlines[0];
+	const secondaryHeadlines = headlines.slice(1, 3);
+
+	const featuredIds = headlines.slice(0, 3).map((b) => b.id);
+	const regularPosts = allBlogs.filter(
+		(blog) => !featuredIds.includes(blog.id),
+	);
 
 	return (
-		<main className="min-h-screen bg-background relative overflow-x-hidden pb-32">
-			{/* Aesthetic Background Ambience - Optimized for performance */}
+		<main className="min-h-screen bg-white relative overflow-x-hidden pb-32">
+			{/* Aesthetic Background Ambient */}
 			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-5%] right-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[80px]" />
-				<div className="absolute bottom-[-5%] left-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[80px]" />
+				<div className="absolute top-[-5%] right-[-10%] w-[80%] lg:w-[60%] h-[60%] bg-slate-100/50 rounded-full blur-[120px]" />
+				<div className="absolute bottom-[-5%] left-[-10%] w-[80%] lg:w-[60%] h-[60%] bg-blue-50/30 rounded-full blur-[120px]" />
 			</div>
 
-			<div className="max-w-6xl mx-auto px-6 pt-20 sm:pt-32">
-				{/* Header Section - Responsive Scaling */}
-				<div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 sm:mb-20 border-b border-white/5 pb-12 sm:pb-16">
+			<div className="max-w-7xl mx-auto px-6 pt-20 sm:pt-32">
+				{/* Refined Header */}
+				<div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-16 sm:mb-24 border-b border-slate-100 pb-12 sm:pb-16">
 					<motion.div
 						initial={{ opacity: 0, x: -20 }}
 						animate={{ opacity: 1, x: 0 }}
-						transition={{ duration: 0.8 }}
-						className="space-y-4 sm:space-y-6 text-center sm:text-left"
+						className="space-y-6 max-w-3xl"
 					>
-						<div className="flex items-center justify-center sm:justify-start gap-3 text-accent mb-2">
+						<div className="flex items-center gap-3 text-slate-900">
 							<BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
-							<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.4em]">
-								Digital Library
+							<span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400">
+								Engineering Journal
 							</span>
 						</div>
-						<h1 className="text-4xl sm:text-7xl font-black tracking-tighter text-foreground leading-[0.95] sm:leading-[0.9]">
-							Curated <span className="gradient-text">Insights</span>
+						<h1 className="text-5xl sm:text-8xl font-black tracking-tighter text-slate-950 leading-[0.9]">
+							The <span className="gradient-text">Pulse</span>
 						</h1>
-						<p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto sm:mx-0 font-medium leading-relaxed">
-							Thoughtful articles on software architecture, fintech ecosystems,
-							and engineering leadership.
+						<p className="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed">
+							High-fidelity insights on fintech architecture, distributed
+							systems, and modern engineering culture.
 						</p>
 					</motion.div>
 
 					<motion.div
 						initial={{ opacity: 0, scale: 0.9 }}
 						animate={{ opacity: 1, scale: 1 }}
-						className="flex items-center self-center sm:self-auto gap-4 px-5 py-2.5 sm:px-6 sm:py-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md"
+						className="flex items-center gap-5 px-8 py-4 bg-white border border-slate-200 rounded-[2rem] shadow-xl"
 					>
 						<div className="text-right">
-							<p className="text-lg sm:text-xl font-black text-foreground">
-								{blogs.length}
+							<p className="text-2xl font-black text-slate-900">
+								{allBlogs.length}
 							</p>
-							<p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-								Articles
+							<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								Archive Size
 							</p>
 						</div>
-						<div className="w-px h-6 sm:h-8 bg-white/10" />
-						<Newspaper className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+						<div className="w-px h-10 bg-slate-100" />
+						<div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100">
+							<Sparkles className="w-6 h-6 text-slate-900" />
+						</div>
 					</motion.div>
 				</div>
 
-				{/* Blog Grid - Optimized Whitespace */}
-				{blogs.length === 0 ? (
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="max-w-2xl mx-auto text-center py-20"
-					>
-						<div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center mx-auto mb-6 sm:mb-8 border border-white/10 shadow-2xl">
-							<Clock className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground/20" />
-						</div>
-						<h3 className="text-xl sm:text-2xl font-black text-foreground mb-3 sm:mb-4">
-							Preparation in Progress
-						</h3>
-						<p className="text-sm sm:text-muted-foreground font-medium px-4">
-							I&apos;m currently architecting some deep-dives into engineering.
-							Check back soon for the first release.
-						</p>
-					</motion.div>
-				) : (
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-						{blogs.map((post, index) => (
+				{/* SECTION 1: The Primary Hero with Improved Contrast */}
+				{primaryHero && (
+					<section className="mb-20">
+						<Link
+							href={`/blog/${primaryHero.slug}`}
+							className="group block relative !no-underline"
+						>
+							<div className="relative h-[500px] sm:h-[650px] w-full overflow-hidden rounded-[3rem] sm:rounded-[4rem] border border-slate-200 shadow-2xl transition-all duration-500">
+								<Image
+									src={primaryHero.image_url || PLACEHOLDER_IMAGE}
+									alt={primaryHero.title}
+									fill
+									priority
+									className="object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+								/>
+
+								{/* Bottom-weighted gradient for overall depth */}
+								<div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/20 to-transparent" />
+
+								{/* Text Background Content Area - Ensuring perfect contrast */}
+								<div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 lg:p-20">
+									<motion.div
+										className="bg-slate-950/60 backdrop-blur-xl border border-white/10 p-8 sm:p-12 rounded-[2.5rem] space-y-6 max-w-5xl"
+										whileHover={{ backgroundColor: "rgba(2, 6, 23, 0.75)" }}
+									>
+										<div className="flex items-center gap-4">
+											<span className="px-5 py-2 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl">
+												Headline Story
+											</span>
+											<span
+												className={`px-5 py-2 border text-[10px] font-black uppercase tracking-widest rounded-full ${getCategoryStyles(primaryHero.category)}`}
+											>
+												{primaryHero.category}
+											</span>
+										</div>
+										<h2 className="text-3xl sm:text-6xl lg:text-7xl font-black text-white tracking-tighter leading-[1] group-hover:text-blue-200 transition-colors duration-500">
+											{primaryHero.title}
+										</h2>
+										<div className="pt-4 flex items-center gap-6 text-white/40 text-[11px] font-black uppercase tracking-[0.3em]">
+											<span className="flex items-center gap-2">
+												<Calendar className="w-4 h-4" />{" "}
+												{new Intl.DateTimeFormat("en-US", {
+													dateStyle: "long",
+												}).format(new Date(primaryHero.date))}
+											</span>
+											<span className="flex items-center gap-2">
+												<Clock className="w-4 h-4" /> 8 MIN READ
+											</span>
+										</div>
+									</motion.div>
+								</div>
+							</div>
+						</Link>
+					</section>
+				)}
+
+				{/* SECTION 2: Secondary Headlines with Contained Text */}
+				{secondaryHeadlines.length > 0 && (
+					<section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-32">
+						{secondaryHeadlines.map((post) => (
+							<Link
+								key={post.id}
+								href={`/blog/${post.slug}`}
+								className="group block relative !no-underline"
+							>
+								<div className="relative h-[450px] w-full overflow-hidden rounded-[2.5rem] border border-slate-200 shadow-xl transition-all duration-500">
+									<Image
+										src={post.image_url || PLACEHOLDER_IMAGE}
+										alt={post.title}
+										fill
+										className="object-cover"
+									/>
+									<div className="absolute inset-0 bg-slate-950/40" />
+
+									<div className="absolute bottom-6 left-6 right-6 p-8 bg-white/95 backdrop-blur-md rounded-3xl border border-white shadow-2xl transition-all duration-500 group-hover:translate-y-[-5px]">
+										<span
+											className={`inline-block px-3 py-1 border text-[8px] font-black uppercase tracking-widest rounded-full mb-4 ${getCategoryStyles(post.category)}`}
+										>
+											{post.category}
+										</span>
+										<h3 className="text-2xl font-black text-slate-950 tracking-tighter leading-tight mb-4 group-hover:text-blue-600 transition-colors">
+											{post.title}
+										</h3>
+										<div className="flex items-center gap-4 text-slate-400 text-[9px] font-black uppercase tracking-widest">
+											<Calendar className="w-3.5 h-3.5" />
+											{new Intl.DateTimeFormat("en-US", {
+												dateStyle: "medium",
+											}).format(new Date(post.date))}
+										</div>
+									</div>
+								</div>
+							</Link>
+						))}
+					</section>
+				)}
+
+				{/* SECTION 3: Regular Grid */}
+				<section className="space-y-12">
+					<div className="flex items-center gap-6">
+						<h2 className="text-xs font-black uppercase tracking-[0.6em] text-slate-400 whitespace-nowrap">
+							The Pulse Grid
+						</h2>
+						<div className="h-px w-full bg-slate-100" />
+					</div>
+
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+						{regularPosts.map((post, index) => (
 							<motion.div
 								key={post.slug}
 								initial={{ opacity: 0, y: 30 }}
 								animate={{ opacity: 1, y: 0 }}
-								transition={{
-									delay: Math.min(index * 0.05, 0.3),
-									duration: 0.4,
-								}}
-								className="group relative h-full"
+								transition={{ delay: index * 0.05 }}
 							>
 								<Link
 									href={`/blog/${post.slug}`}
-									className="block h-full !no-underline"
+									className="group block !no-underline h-full"
 								>
-									{/* Interactive Card - Defined Boundaries */}
-									<div className="h-full relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-white/5 border-2 border-white/10 shadow-2xl transition-all duration-500 group-hover:border-accent/30 group-hover:-translate-y-2 backdrop-blur-xl p-6 sm:p-10 flex flex-col justify-between">
-										<div className="space-y-4 sm:space-y-6">
-											{/* Meta Info */}
-											<div className="flex items-center gap-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-												<div className="flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-white/5 border border-white/10 rounded-full text-accent">
-													<Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-													{new Intl.DateTimeFormat("en-US", {
-														dateStyle: "medium",
-													}).format(new Date(post.date))}
-												</div>
-											</div>
-
-											{/* Title & Description */}
-											<div className="space-y-3 sm:space-y-4">
-												<h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight group-hover:text-accent transition-colors leading-[1.15] sm:leading-[1.1]">
-													{post.title}
-												</h3>
-												<p className="text-xs sm:text-sm text-muted-foreground font-medium leading-relaxed line-clamp-3">
-													{post.description}
-												</p>
+									<div className="flex flex-col h-full bg-white border border-slate-200 hover:border-slate-300 rounded-[2.5rem] p-4 transition-all duration-500 hover:shadow-2xl">
+										<div className="relative h-60 w-full mb-6 overflow-hidden rounded-[2rem] border border-slate-100">
+											<Image
+												src={post.image_url || PLACEHOLDER_IMAGE}
+												alt={post.title}
+												fill
+												className="object-cover transition-transform duration-700 group-hover:scale-110"
+											/>
+											<div className="absolute top-4 left-4">
+												<span
+													className={`px-3 py-1 border text-[8px] font-black uppercase tracking-widest rounded-full backdrop-blur-md shadow-lg ${getCategoryStyles(post.category)}`}
+												>
+													{post.category}
+												</span>
 											</div>
 										</div>
 
-										{/* Footer Link */}
-										<div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-white/5 flex items-center justify-between">
-											<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-accent">
-												Read Article
-											</span>
-											<div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all duration-500 group-hover:rotate-[-45deg]">
-												<ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+										<div className="flex-1 space-y-4 px-4 pb-4">
+											<div className="flex items-center gap-3 text-slate-400 text-[9px] font-black uppercase tracking-widest">
+												<Calendar className="w-3 h-3" />
+												{new Intl.DateTimeFormat("en-US", {
+													dateStyle: "medium",
+												}).format(new Date(post.date))}
+											</div>
+											<h3 className="text-2xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">
+												{post.title}
+											</h3>
+											<p className="text-sm text-slate-500 font-medium leading-relaxed line-clamp-3">
+												{post.description}
+											</p>
+
+											<div className="pt-4 flex items-center gap-2 text-slate-900 font-black text-[10px] uppercase tracking-[0.2em] group-hover:gap-4 transition-all">
+												Read <ArrowRight className="w-3.5 h-3.5" />
 											</div>
 										</div>
 									</div>
@@ -129,7 +248,7 @@ export default async function BlogPage() {
 							</motion.div>
 						))}
 					</div>
-				)}
+				</section>
 			</div>
 		</main>
 	);

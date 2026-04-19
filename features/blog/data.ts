@@ -10,6 +10,9 @@ export interface Blog {
 	content: string;
 	date: string;
 	published: boolean;
+	category: string;
+	image_url: string | null;
+	is_headline: boolean;
 }
 
 /**

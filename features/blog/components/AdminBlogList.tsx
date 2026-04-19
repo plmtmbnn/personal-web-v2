@@ -4,22 +4,22 @@ import React, { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Blog } from '@/features/blog/data';
-import { deleteBlog, toggleBlogStatus } from '@/features/blog/actions';
+import { deleteBlog, toggleBlogStatus, updateBlogMetadata } from '@/features/blog/actions';
 import { 
   Edit, 
   Trash2, 
   Calendar, 
-  CheckCircle2, 
-  Circle,
   Search,
   Loader2,
   Eye,
-  Plus,
   Inbox,
   ChevronLeft,
   ChevronRight,
-  Filter,
-  ArrowUpDown
+  ArrowUpDown,
+  Tag,
+  Sparkles,
+  ImageIcon,
+  ChevronDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,12 +48,15 @@ export default function AdminBlogList({
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [updatingMetadataId, setUpdatingMetadataId] = useState<string | null>(null);
   
   // Modal state
   const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
 
   // Local state for immediate UI feedback (Search)
   const [searchQuery, setSearchQuery] = useState(currentSearch);
+
+  const categories = ["Fintech", "Architecture", "Leadership", "Technology", "Personal", "Engineering"];
 
   // Debounced search update
   useEffect(() => {
@@ -82,11 +85,19 @@ export default function AdminBlogList({
     startTransition(async () => {
       const result = await toggleBlogStatus(id, currentPublished);
       if (!result.success) {
-        // Fallback to alert if something goes wrong, but ideally use another modal
         alert('Error: ' + result.message);
       }
       setTogglingId(null);
     });
+  };
+
+  const handleUpdateMetadata = async (id: string, updates: Partial<Blog>) => {
+    setUpdatingMetadataId(id);
+    const result = await updateBlogMetadata(id, updates);
+    if (!result.success) {
+      alert('Error: ' + result.message);
+    }
+    setUpdatingMetadataId(null);
   };
 
   const confirmDelete = async () => {
@@ -103,8 +114,19 @@ export default function AdminBlogList({
 
   const totalPages = Math.ceil(totalCount / 5);
 
+  /**
+   * Category Color Utility
+   */
+  const getCategoryStyles = (category: string) => {
+    const c = (category || "General").toLowerCase();
+    if (c.includes('fintech') || c.includes('finance')) return "bg-emerald-50 text-emerald-700 border-emerald-100";
+    if (c.includes('arch') || c.includes('tech')) return "bg-blue-50 text-blue-700 border-blue-100";
+    if (c.includes('lead') || c.includes('manage')) return "bg-purple-50 text-purple-700 border-purple-100";
+    return "bg-slate-50 text-slate-700 border-slate-100";
+  };
+
   return (
-    <div className="flex flex-col bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
+    <div className="flex flex-col bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden text-slate-900">
       {/* Delete Confirmation Modal */}
       <CustomModal
         isOpen={!!deleteModalId}
@@ -164,17 +186,19 @@ export default function AdminBlogList({
 
       {/* Table Container */}
       <div className="overflow-x-auto custom-scrollbar relative">
-        {isPending && (
-          <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
+        {(isPending || updatingMetadataId) && (
+          <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px] z-10 flex items-center justify-center">
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
           </div>
         )}
-        <table className="w-full text-left min-w-[700px]">
+        <table className="w-full text-left min-w-[1000px]">
           <thead className="bg-slate-50 border-b border-slate-100">
             <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
               <th className="px-8 py-4 text-center w-20">#</th>
               <th className="px-6 py-4">Knowledge Entry</th>
-              <th className="px-6 py-4">Status Toggle</th>
+              <th className="px-6 py-4">Category</th>
+              <th className="px-6 py-4 text-center">Headline</th>
+              <th className="px-6 py-4 text-center">Status</th>
               <th className="px-6 py-4">Publication</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
@@ -187,20 +211,65 @@ export default function AdminBlogList({
                     {(currentPage - 1) * 5 + idx + 1}
                   </td>
                   <td className="px-6 py-5">
-                    <div className="flex flex-col max-w-[250px] sm:max-w-md">
-                      <Link 
-                        href={`/admin/blog/editor/${blog.id}`}
-                        className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors truncate"
-                      >
-                        {blog.title}
-                      </Link>
-                      <span className="text-[10px] font-mono text-slate-400 mt-0.5 truncate lowercase opacity-60">
-                        /{blog.slug}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      {/* Image Thumbnail */}
+                      <div className="relative w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0">
+                        {blog.image_url ? (
+                          <img src={blog.image_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-300">
+                            <ImageIcon className="w-5 h-5" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Link 
+                            href={`/admin/blog/editor/${blog.id}`}
+                            className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors truncate"
+                          >
+                            {blog.title}
+                          </Link>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-400 mt-0.5 truncate lowercase opacity-60">
+                          /{blog.slug}
+                        </span>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
+                    <div className="relative inline-block group/select">
+                      <select
+                        value={blog.category || 'General'}
+                        onChange={(e) => handleUpdateMetadata(blog.id, { category: e.target.value })}
+                        className={`appearance-none px-3 py-1.5 pr-8 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)}`}
+                      >
+                        <option value="General">General</option>
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-40" />
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex justify-center">
+                      <button
+                        onClick={() => handleUpdateMetadata(blog.id, { is_headline: !blog.is_headline })}
+                        className={`p-2 rounded-xl border transition-all duration-300 ${
+                          blog.is_headline 
+                            ? 'bg-blue-50 border-blue-100 text-blue-600 shadow-sm' 
+                            : 'bg-white border-slate-100 text-slate-300 hover:text-blue-400 hover:bg-slate-50'
+                        }`}
+                        title={blog.is_headline ? "Headline Active" : "Set as Headline"}
+                      >
+                        <Sparkles className={`w-4 h-4 ${blog.is_headline ? 'fill-blue-600' : ''}`} />
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center justify-center gap-3">
                       <button
                         onClick={() => handleToggleStatus(blog.id, blog.published)}
                         disabled={togglingId === blog.id}
@@ -219,9 +288,6 @@ export default function AdminBlogList({
                           </div>
                         )}
                       </button>
-                      <span className={`text-[10px] font-black uppercase tracking-tighter ${blog.published ? 'text-emerald-600' : 'text-slate-400'}`}>
-                        {blog.published ? 'Live' : 'Draft'}
-                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
@@ -260,20 +326,12 @@ export default function AdminBlogList({
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-24 text-center">
+                <td colSpan={7} className="px-6 py-24 text-center">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200">
                       <Inbox className="w-6 h-6" />
                     </div>
                     <p className="text-slate-400 font-bold text-sm">No entries found for this configuration.</p>
-                    {currentSearch && (
-                      <button 
-                        onClick={() => setSearchQuery('')}
-                        className="text-xs font-black uppercase text-blue-600 hover:underline"
-                      >
-                        Clear Search
-                      </button>
-                    )}
                   </div>
                 </td>
               </tr>

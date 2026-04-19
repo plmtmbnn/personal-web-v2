@@ -1,3 +1,10 @@
+# [0.14.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.13.0...v0.14.0) (2026-04-19)
+
+
+### Features
+
+* **blog:** enhance UIUX with high-contrast layouts and interactive features ([471c2ca](https://github.com/plmtmbnn/personal-web-v2/commit/471c2ca3cb3a8732399c439553f040c7a56c63a8)), closes [hi#contrast](https://github.com/hi/issues/contrast) [hi#contrast](https://github.com/hi/issues/contrast)
+
 # [0.13.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.12.0...v0.13.0) (2026-04-19)
 
 

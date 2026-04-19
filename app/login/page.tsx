@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
 	ShieldAlert,
 	Loader2,
@@ -13,41 +13,39 @@ import { motion, AnimatePresence } from "framer-motion";
 import LoginButton from "@/features/auth/components/LoginButton";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import Link from "next/link";
+import { useEffect } from "react";
 
 /**
  * Login Page Content
  */
 function LoginContent() {
 	const searchParams = useSearchParams();
+	const router = useRouter();
 	const error = searchParams.get("error");
 	const message = searchParams.get("message");
 
-	// Feature Toggle Check
-	if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false") {
+	// Feature Toggle Check: If either is disabled, mark as logined and redirect
+	useEffect(() => {
+		if (
+			ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false" ||
+			ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false"
+		) {
+			router.push("/admin");
+		}
+	}, [router]);
+
+	if (
+		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false" ||
+		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false"
+	) {
 		return (
 			<div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
-				<motion.div
-					initial={{ opacity: 0, scale: 0.95 }}
-					animate={{ opacity: 1, scale: 1 }}
-					className="max-w-md bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-xl"
-				>
-					<ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-6" />
-					<h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">
-						Auth Disabled
-					</h1>
-					<p className="text-slate-500 font-medium leading-relaxed">
-						Google Authentication is currently disabled via administrative
-						feature toggle.
+				<div className="flex flex-col items-center gap-4">
+					<Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+					<p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+						Authentication Bypassed • Redirecting...
 					</p>
-					<div className="mt-8">
-						<Link
-							href="/"
-							className="text-sm font-bold text-blue-600 hover:underline"
-						>
-							Return to Home
-						</Link>
-					</div>
-				</motion.div>
+				</div>
 			</div>
 		);
 	}

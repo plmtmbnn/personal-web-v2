@@ -21,7 +21,8 @@ Contains all business logic, components, and types for specific features.
 - `features/auth/`: Actions, `PinGuard.tsx`, and auth-specific components.
 - `features/blog/`: Actions, data fetching, and all blog UI components.
 - `features/tasks/`: Actions, analytics, types, utils, and all task UI components.
-- `features/shared/`: Global UI components (e.g., `CompactBottomBar.tsx`, `StockTicker.tsx`).
+- `features/investment/`: Actions, types, and Fear & Greed visualization components.
+- `features/shared/`: Global UI components (e.g., `CustomModal.tsx`, `StockTicker.tsx`).
 
 ### 2. `lib/` (Global Layer)
 Reserved for feature-agnostic, shared logic.
@@ -35,44 +36,40 @@ Strictly for routing and page definitions. Pages compose components from `featur
 ## 🔑 Security & Authorization
 - **Environment Variables:** Always use `ENV_GLOBAL` from `@/lib/core/env`.
 - **Authorization:** 
-  - Admin access is restricted by `profiles.is_admin = true`.
-  - Server Actions must perform server-side admin verification using `checkAdmin()`.
-- **PIN Protection:** `PinGuard.tsx` is used for specific restricted sections.
+  - Centralized verification via `checkAdmin()` in `features/auth/actions.ts`.
+  - **Feature Toggle Bypass**: If `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` or `NEXT_PUBLIC_ENABLE_PINGUARD` is `"false"`, `checkAdmin()` automatically returns `true` to facilitate restricted-environment access.
+- **PIN Protection:** `PinGuard.tsx` protects restricted sections and respects environment bypass flags.
 
 ## 🎨 UI/UX Patterns
 - **Solid Productivity Pattern**: For admin and operational pages (Admin, Tasks, Investment), use solid white containers, `slate-50` backgrounds, and defined borders.
 - **Glassmorphism**: Reserved for public aesthetic pages (Home, Blog, Travel, Running) using `bg-white/5` and `backdrop-blur-xl`.
+- **Custom Modal System**: Use `features/shared/components/CustomModal.tsx` for alerts and action confirmations (Purge/Delete) to maintain pattern consistency.
 - **Mobile-First UX**:
-  - **Bottom Sheets**: Used for task creation (`TaskForm`) to ensure thumb-reach accessibility.
+  - **Bottom Sheets**: Used for task creation (`TaskForm`) on mobile.
+  - **Floating Nav Switcher**: Used in `/tasks` to toggle between **Agenda** and **Analytics** views.
   - **Swipe Actions**: `TaskItem` supports swipe gestures (Left: Delete, Right: Edit).
-  - **Sticky Headers**: Section headers pin to the top of the scroll area for context.
 
-## 🗺 Navigation (`features/shared/components/CompactBottomBar.tsx`)
-- **Data-Driven:** Navigation is driven by the `NAV_ITEMS` constant. **Do not hardcode JSX links.**
-- **Mobile Optimized**: Labels are hidden on mobile to maintain a clean icon-only bar.
+## 🗺 Navigation
+- **Data-Driven:** Navigation is driven by the `NAV_ITEMS` constant in `CompactBottomBar.tsx`.
+- **Quick Navigation**: `features/tasks/components/QuickNav.tsx` acts as a floating context switcher for complex operational pages.
 
 ## 📝 Content Systems
 ### Blog System
 - **Table:** `public.blogs`.
-- **Location:** Logic and components live in `features/blog/`.
-- **Editor:** Optional catch-all route at `app/admin/blog/editor/[[...id]]/page.tsx`.
-- **Admin Management**: 
-  - **Advanced Filtering**: Server-side title/description search and status filtering (Live/Draft).
-  - **Pagination**: Server-side pagination (5 per page) driven by URL parameters.
-  - **Status Toggle**: Inline "Live" switch with Optimistic UI updates.
+- **Editor:** Catch-all route at `app/admin/blog/editor/[[...id]]/page.tsx`.
+- **Optimization**: Blog public routes (`/blog` and `/blog/[slug]`) use **Static Site Generation (SSG)** with cookie-free data fetching for instant performance.
 
 ### Task System
 - **Table:** `public.tasks`.
-- **Location:** Logic and components live in `features/tasks/`.
-- **Focus View**: Automatically separates tasks into "🔥 Focus (Today)" and "📅 Upcoming Awareness" (Next 7 days).
-- **Interactions**: Double-click to edit in-line, auto-expanding textareas, and smart URL detection.
+- **Batch Initialization**: `TaskForm` supports multi-line pasting to initialize multiple tasks at once via "Batch Protocol".
+- **Tabbed Architecture**: Separates the **Active Agenda** from **Intelligence/Analytics** to maintain focus.
 - **Temporal Logic**: Uses `date-fns` `startOfDay` normalization for all date-gated filtering.
-- **Dynamic Filters**: Category pills are dynamically extracted from current active tasks.
+
+### Investment System (Fear & Greed Hub)
+- **API**: Integrated with live CNN Market Sentiment data.
+- **Visuals**: Unified Gauge visualization combined with a high-density "Factor Analysis Matrix" for multi-dimensional market intelligence.
 
 ## 📏 Engineering Standards
 - **Component Design:** Prefer clean abstractions. Use `use client` only when necessary.
-- **Git Workflow**: 
-  - Follow **Conventional Commits** (e.g., `feat:`, `fix:`, `chore:`, `refactor:`).
-  - Commits are validated by `commitlint` via Husky.
-  - Releases are automated via GitHub Actions (`.github/workflows/release.yml`) using `semantic-release`.
+- **Git Workflow**: Follow **Conventional Commits**. Commits are validated by `commitlint` via Husky.
 - **Package Manager**: Use `pnpm`.

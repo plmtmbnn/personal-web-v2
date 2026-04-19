@@ -44,7 +44,7 @@ export default function TaskItem({
   const background = useTransform(
     x,
     [-100, 0, 100],
-    ["#fef2f2", "transparent", "#eff6ff"] // Red for delete, blue for edit
+    ["#fef2f2", "rgba(255, 255, 255, 0)", "#eff6ff"] // Red for delete, blue for edit
   );
 
 	const priorityColors = {

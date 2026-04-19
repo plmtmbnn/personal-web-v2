@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { createClient } from "@/lib/core/supabase-server";
 import { redirect } from "next/navigation";
 import {
 	BookOpen,
@@ -9,32 +8,12 @@ import {
 	ArrowRight,
 	ChevronRight,
 } from "lucide-react";
-import { logout } from "@/features/auth/actions";
+import { logout, checkAdmin } from "@/features/auth/actions";
 
 export const metadata = {
 	title: "Admin Dashboard | Personal Hub",
 	description: "Manage your personal portal content and tasks.",
 };
-
-/**
- * Authorization Helper
- */
-async function checkAdmin() {
-	const supabase = await createClient();
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-
-	if (!user) return false;
-
-	const { data: profile } = await supabase
-		.from("profiles")
-		.select("is_admin")
-		.eq("id", user.id)
-		.single();
-
-	return !!profile?.is_admin;
-}
 
 export default async function AdminDashboardPage() {
 	const isAdmin = await checkAdmin();

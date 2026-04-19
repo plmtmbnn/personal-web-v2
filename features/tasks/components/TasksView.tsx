@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { startOfDay, isSameDay, isAfter, parseISO } from "date-fns";
 import ComponentLoader from "@/features/tasks/components/ComponentLoader";
-import QuickNav from "@/features/tasks/components/QuickNav";
-import { LayoutList, Zap, LayoutDashboard, Target, CheckCircle2, Plus } from "lucide-react";
+import QuickNav, { type TaskViewTab } from "@/features/tasks/components/QuickNav";
+import { LayoutList, Target, Plus } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -29,11 +29,6 @@ const DynamicTaskNotificationHandler = dynamic(() => import("@/features/tasks/co
 
 const DynamicTaskProgress = dynamic(() => import("@/features/tasks/components/TaskProgress"), {
 	loading: () => <ComponentLoader height="80px" />,
-	ssr: false
-});
-
-const DynamicTaskFilters = dynamic(() => import("@/features/tasks/components/TaskFilters"), {
-	loading: () => <div className="h-10 bg-slate-100 rounded-xl animate-pulse mb-6" />,
 	ssr: false
 });
 
@@ -68,6 +63,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 
   const [mounted, setMounted] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TaskViewTab>("agenda");
 
   useEffect(() => {
     setMounted(true);
@@ -110,6 +106,9 @@ export default function TasksView({ tasks }: TasksViewProps) {
         </div>
       </Suspense>
 
+      {/* Floating Navigation Switcher */}
+      <QuickNav activeTab={activeTab} onTabChange={setActiveTab} />
+
       {/* Structural Header - Optimized for Mobile Scaling */}
       <div className="bg-white border-b border-slate-200 mb-6 sm:mb-8 pt-12">
         <div className="max-w-4xl mx-auto px-6 py-8 sm:py-10">
@@ -140,75 +139,91 @@ export default function TasksView({ tasks }: TasksViewProps) {
       </div>
 
 			<div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 relative z-10">
-				<QuickNav />
-
-				{/* Analytics & Status Grid */}
-				<section className="space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1">
-            <Suspense fallback={<ComponentLoader height="100px" />}>
-              <DynamicHealthCheck />
-            </Suspense>
-          </div>
-
-          <section id="analytics-overview" className="scroll-mt-32">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1">
-              <Suspense fallback={<ComponentLoader height="120px" />}>
-                <DynamicGeneralReport tasks={tasks} />
-              </Suspense>
-            </div>
-          </section>
-				</section>
-
-				{/* Controls Section */}
-				<div className="space-y-4">
-					<Suspense fallback={null}>
-						<DynamicTaskNotificationHandler tasks={tasks} />
-					</Suspense>
-					
-					<div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
-            <Suspense fallback={<ComponentLoader height="80px" />}>
-              <DynamicTaskProgress tasks={tasks} />
-            </Suspense>
-          </div>
-				</div>
-
-				{/* Execution Engine (Task Management) */}
-				<section id="agenda-section" className="scroll-mt-32">
-          <div className="bg-white rounded-[2rem] sm:rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">
-            {/* Input Form Area - Hidden on Mobile (moved to Drawer) */}
-            <div className="p-6 sm:p-8 bg-slate-50/50 border-b border-slate-100 hidden lg:block">
-              <Suspense fallback={<ComponentLoader height="120px" />}>
-                <DynamicTaskForm />
-              </Suspense>
-            </div>
-
-            {/* List Area */}
-            <div className="p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-6 sm:mb-8 border-b border-slate-50 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-lg sm:rounded-xl flex items-center justify-center text-emerald-600">
-                    <LayoutList className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-black text-slate-900">Active Agenda</h2>
+				<AnimatePresence mode="wait">
+          {activeTab === "analytics" ? (
+            <motion.div
+              key="analytics"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6 sm:space-y-8"
+            >
+              {/* Analytics & Status Grid */}
+              <section className="space-y-6">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1">
+                  <Suspense fallback={<ComponentLoader height="100px" />}>
+                    <DynamicHealthCheck />
+                  </Suspense>
                 </div>
-                <div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
-                  <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-tight">
-                    Ready
-                  </span>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1">
+                  <Suspense fallback={<ComponentLoader height="120px" />}>
+                    <DynamicGeneralReport tasks={tasks} />
+                  </Suspense>
+                </div>
+              </section>
+
+              {/* Progress Section */}
+              <div className="space-y-4">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                  <Suspense fallback={<ComponentLoader height="80px" />}>
+                    <DynamicTaskProgress tasks={tasks} />
+                  </Suspense>
                 </div>
               </div>
-              
-              <Suspense fallback={
-                <div className="space-y-3">
-                  <ComponentLoader height="60px" />
-                  <ComponentLoader height="60px" />
-                </div>
-              }>
-                <DynamicTaskList todayTasks={todayTasks} upcomingTasks={upcomingTasks} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="agenda"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6 sm:space-y-8"
+            >
+              <Suspense fallback={null}>
+                <DynamicTaskNotificationHandler tasks={tasks} />
               </Suspense>
-            </div>
-          </div>
-				</section>
+
+              {/* Execution Engine (Task Management) */}
+              <section id="agenda-section">
+                <div className="bg-white rounded-[2rem] sm:rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">
+                  {/* Input Form Area - Hidden on Mobile (moved to Drawer) */}
+                  <div className="p-6 sm:p-8 bg-slate-50/50 border-b border-slate-100 hidden lg:block">
+                    <Suspense fallback={<ComponentLoader height="120px" />}>
+                      <DynamicTaskForm />
+                    </Suspense>
+                  </div>
+
+                  {/* List Area */}
+                  <div className="p-6 sm:p-8">
+                    <div className="flex items-center justify-between mb-6 sm:mb-8 border-b border-slate-50 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-lg sm:rounded-xl flex items-center justify-center text-emerald-600">
+                          <LayoutList className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </div>
+                        <h2 className="text-lg sm:text-xl font-black text-slate-900">Active Agenda</h2>
+                      </div>
+                      <div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
+                        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-tight">
+                          Ready
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <Suspense fallback={
+                      <div className="space-y-3">
+                        <ComponentLoader height="60px" />
+                        <ComponentLoader height="60px" />
+                      </div>
+                    }>
+                      <DynamicTaskList todayTasks={todayTasks} upcomingTasks={upcomingTasks} />
+                    </Suspense>
+                  </div>
+                </div>
+              </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
 			</div>
 
       {/* Mobile-Only FAB */}

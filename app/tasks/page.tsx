@@ -26,7 +26,10 @@ interface PageProps {
  */
 export default async function TasksPage({ searchParams }: PageProps) {
 	// 1. Session Protection (Moving from middleware to resolve routing issues)
-	if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH !== "false") {
+	if (
+		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH !== "false" &&
+		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD !== "false"
+	) {
 		const cookieStore = await cookies();
 		const sessionId = cookieStore.get("app_session")?.value;
 

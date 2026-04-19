@@ -4,6 +4,7 @@ import { createClient } from '@/lib/core/supabase-server';
 import { revalidatePath } from 'next/cache';
 import { Blog } from '@/features/blog/data';
 import { redirect } from 'next/navigation';
+import { checkAdmin } from '@/features/auth/actions';
 
 export type ActionResponse<T = any> = {
   success: boolean;
@@ -11,30 +12,6 @@ export type ActionResponse<T = any> = {
   data?: T;
   error?: any;
 };
-
-/**
- * Authorization Helper: Checks if the current user is an admin.
- */
-async function checkAdmin() {
-  const supabase = await createClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return false;
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    return false;
-  }
-
-  return !!profile.is_admin;
-}
 
 /**
  * Utility to generate a URL-friendly slug.

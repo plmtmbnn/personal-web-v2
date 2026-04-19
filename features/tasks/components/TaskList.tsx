@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useOptimistic, useTransition, useMemo } from 'react';
+import React, { useOptimistic, useTransition, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
 	Inbox, 
@@ -19,6 +19,7 @@ import { toggleTask, deleteTask, reorderTasks, updateTask } from '@/features/tas
 import TaskItem from './TaskItem';
 import TaskFilters from './TaskFilters';
 import { format, addDays, isBefore, startOfDay, parseISO } from 'date-fns';
+import CustomModal from '@/features/shared/components/CustomModal';
 
 interface TaskListProps {
 	todayTasks: Task[];
@@ -28,6 +29,10 @@ interface TaskListProps {
 export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	const [isPending, startTransition] = useTransition();
 	const searchParams = useSearchParams();
+
+	// Modal State
+	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	// Section-specific filter extraction
   const getFilters = (prefix: string) => ({
@@ -149,15 +154,23 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 		});
 	};
 
-	const handleDelete = async (taskId: string) => {
-		if (!confirm('Purge this task from the system?')) return;
+	const handleDeleteRequest = (taskId: string) => {
+		setDeleteTaskId(taskId);
+	};
+
+	const confirmDelete = async () => {
+		if (!deleteTaskId) return;
 		
+		setIsDeleting(true);
 		startTransition(async () => {
-			addOptimisticAction({ action: 'delete', payload: { taskId } });
+			addOptimisticAction({ action: 'delete', payload: { taskId: deleteTaskId } });
 			try {
-				await deleteTask(taskId);
+				await deleteTask(deleteTaskId);
 			} catch (error) {
 				console.error(error);
+			} finally {
+				setIsDeleting(false);
+				setDeleteTaskId(null);
 			}
 		});
 	};
@@ -216,6 +229,18 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	return (
 		<DragDropContext onDragEnd={onDragEnd}>
 			<div className="space-y-16">
+				{/* Delete Confirmation Modal */}
+				<CustomModal
+					isOpen={!!deleteTaskId}
+					onClose={() => setDeleteTaskId(null)}
+					onConfirm={confirmDelete}
+					title="Purge Task Objective"
+					description="Are you sure you want to permanently remove this objective from your agenda? This action cannot be undone."
+					variant="danger"
+					confirmText="Confirm Purge"
+					isLoading={isDeleting}
+				/>
+
 				{/* Today Section */}
 				<section>
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
@@ -250,7 +275,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 													snapshot={snapshot}
 													onToggle={handleToggle}
 													onUpdate={handleUpdate}
-													onDelete={handleDelete}
+													onDelete={handleDeleteRequest}
 												/>
 											)}
 										</Draggable>
@@ -303,7 +328,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 													snapshot={snapshot}
 													onToggle={handleToggle}
 													onUpdate={handleUpdate}
-													onDelete={handleDelete}
+													onDelete={handleDeleteRequest}
 												/>
 											)}
 										</Draggable>

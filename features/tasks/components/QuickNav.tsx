@@ -1,76 +1,48 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { LayoutDashboard, BarChart3, ListTodo } from "lucide-react";
+import React from "react";
+import { BarChart3, ListTodo } from "lucide-react";
 import { motion } from "framer-motion";
 
+export type TaskViewTab = "agenda" | "analytics";
+
+interface QuickNavProps {
+	activeTab: TaskViewTab;
+	onTabChange: (tab: TaskViewTab) => void;
+}
+
 const navItems = [
-	{ id: "tasks-overview", label: "Overview", icon: LayoutDashboard },
-	{ id: "analytics-overview", label: "Analytics", icon: BarChart3 },
-	{ id: "agenda-section", label: "Agenda", icon: ListTodo },
+	{ id: "agenda", label: "Agenda", icon: ListTodo },
+	{ id: "analytics", label: "Analytics", icon: BarChart3 },
 ];
 
-export default function QuickNav() {
-	const [activeSection, setActiveSection] = useState("");
-
-	useEffect(() => {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				for (const entry of entries) {
-					if (entry.isIntersecting) {
-						setActiveSection(entry.target.id);
-					}
-				}
-			},
-			{ threshold: 0.3, rootMargin: "-100px 0px -50% 0px" }
-		);
-
-		for (const item of navItems) {
-			const el = document.getElementById(item.id);
-			if (el) observer.observe(el);
-		}
-
-		return () => observer.disconnect();
-	}, []);
-
-	const scrollTo = (id: string) => {
-		const el = document.getElementById(id);
-		if (el) {
-			const offset = 100;
-			const bodyRect = document.body.getBoundingClientRect().top;
-			const elementRect = el.getBoundingClientRect().top;
-			const elementPosition = elementRect - bodyRect;
-			const offsetPosition = elementPosition - offset;
-
-			window.scrollTo({
-				top: offsetPosition,
-				behavior: "smooth"
-			});
-		}
-	};
-
+export default function QuickNav({ activeTab, onTabChange }: QuickNavProps) {
 	return (
 		<div className="fixed top-6 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none">
-			<nav className="pointer-events-auto flex items-center gap-1 p-1.5 bg-background/60 backdrop-blur-xl border border-border/40 rounded-full shadow-2xl">
+			<nav className="pointer-events-auto flex items-center gap-1 p-1.5 bg-white/80 backdrop-blur-xl border border-slate-200 rounded-full shadow-2xl">
 				{navItems.map((item) => {
-					const isActive = activeSection === item.id;
+					const isActive = activeTab === item.id;
 					return (
 						<button
 							key={item.id}
-							onClick={() => scrollTo(item.id)}
-							className={`relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 group ${
-								isActive ? "text-accent" : "text-muted-foreground hover:text-foreground"
+							onClick={() => onTabChange(item.id as TaskViewTab)}
+							className={`relative flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-500 group ${
+								isActive 
+                  ? item.id === 'agenda' ? "text-emerald-600" : "text-blue-600"
+                  : "text-slate-400 hover:text-slate-900"
 							}`}
 						>
-							<item.icon className={`w-4 h-4 transition-transform ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
+							<item.icon className={`w-4 h-4 transition-transform duration-500 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
 							<span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">
 								{item.label}
 							</span>
 							
 							{isActive && (
 								<motion.div 
-									layoutId="nav-underline"
-									className="absolute bottom-1 left-4 right-4 h-0.5 bg-accent rounded-full"
+									layoutId="nav-pill"
+									className={`absolute inset-0 rounded-full -z-10 ${
+                    item.id === 'agenda' ? "bg-emerald-50" : "bg-blue-50"
+                  }`}
 									transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
 								/>
 							)}

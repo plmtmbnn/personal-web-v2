@@ -2,32 +2,12 @@ import Link from "next/link";
 import { getBlogsAdmin } from "@/features/blog/actions";
 import { Plus, ChevronRight, BookOpen } from "lucide-react";
 import AdminBlogList from "@/features/blog/components/AdminBlogList";
-import { createClient } from "@/lib/core/supabase-server";
 import { redirect } from "next/navigation";
+import { checkAdmin } from "@/features/auth/actions";
 
 export const metadata = {
 	title: "Blog Management | Admin Portal",
 };
-
-/**
- * Server-side Admin check for the page.
- */
-async function checkAdmin() {
-	const supabase = await createClient();
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-
-	if (!user) return false;
-
-	const { data: profile } = await supabase
-		.from("profiles")
-		.select("is_admin")
-		.eq("id", user.id)
-		.single();
-
-	return !!profile?.is_admin;
-}
 
 interface AdminBlogPageProps {
 	searchParams: Promise<{

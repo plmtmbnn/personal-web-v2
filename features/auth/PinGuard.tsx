@@ -23,7 +23,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 	const [isLoading, setIsLoading] = useState(false);
 
   // Feature Toggle: Bypass PinGuard if disabled
-  if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false") {
+  if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false" || ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false") {
     return <>{children}</>;
   }
 

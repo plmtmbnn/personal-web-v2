@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import CustomModal from '@/features/shared/components/CustomModal';
 
 interface AdminBlogListProps {
   initialBlogs: Blog[];
@@ -48,6 +49,9 @@ export default function AdminBlogList({
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   
+  // Modal state
+  const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
+
   // Local state for immediate UI feedback (Search)
   const [searchQuery, setSearchQuery] = useState(currentSearch);
 
@@ -78,20 +82,22 @@ export default function AdminBlogList({
     startTransition(async () => {
       const result = await toggleBlogStatus(id, currentPublished);
       if (!result.success) {
+        // Fallback to alert if something goes wrong, but ideally use another modal
         alert('Error: ' + result.message);
       }
       setTogglingId(null);
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Purge this entry from the knowledge base?')) return;
+  const confirmDelete = async () => {
+    if (!deleteModalId) return;
     
-    setIsDeleting(id);
-    const result = await deleteBlog(id);
+    setIsDeleting(deleteModalId);
+    const result = await deleteBlog(deleteModalId);
     if (!result.success) {
       alert('Error: ' + result.message);
     }
+    setDeleteModalId(null);
     setIsDeleting(null);
   };
 
@@ -99,6 +105,18 @@ export default function AdminBlogList({
 
   return (
     <div className="flex flex-col bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
+      {/* Delete Confirmation Modal */}
+      <CustomModal
+        isOpen={!!deleteModalId}
+        onClose={() => setDeleteModalId(null)}
+        onConfirm={confirmDelete}
+        title="Purge Knowledge Entry"
+        description="This action is irreversible. The entry will be permanently removed from the knowledge base and public view."
+        variant="danger"
+        confirmText="Confirm Purge"
+        isLoading={!!isDeleting}
+      />
+
       {/* Enhanced Filtering Bar */}
       <div className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50 space-y-4">
         <div className="flex flex-col lg:flex-row items-center gap-4">
@@ -170,9 +188,12 @@ export default function AdminBlogList({
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex flex-col max-w-[250px] sm:max-w-md">
-                      <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                      <Link 
+                        href={`/admin/blog/editor/${blog.id}`}
+                        className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors truncate"
+                      >
                         {blog.title}
-                      </span>
+                      </Link>
                       <span className="text-[10px] font-mono text-slate-400 mt-0.5 truncate lowercase opacity-60">
                         /{blog.slug}
                       </span>
@@ -227,12 +248,11 @@ export default function AdminBlogList({
                         <Edit className="w-4 h-4" />
                       </Link>
                       <button
-                        onClick={() => handleDelete(blog.id)}
-                        disabled={isDeleting === blog.id}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                        onClick={() => setDeleteModalId(blog.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                         title="Purge"
                       >
-                        {isDeleting === blog.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

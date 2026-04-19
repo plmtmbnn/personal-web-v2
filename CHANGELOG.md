@@ -1,3 +1,10 @@
+# [0.13.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.12.0...v0.13.0) (2026-04-19)
+
+
+### Features
+
+* **investment/tasks:** implement integrated hub, batch tasks, and security protocols ([83ac8db](https://github.com/plmtmbnn/personal-web-v2/commit/83ac8dbc590a611ae0f07a02f34afac7ad33e25b))
+
 # [0.12.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.11.0...v0.12.0) (2026-04-18)
 
 

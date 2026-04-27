@@ -15,6 +15,7 @@ interface AdminBlogPageProps {
 		search?: string;
 		status?: string;
 		sort?: string;
+		headline?: string;
 	}>;
 }
 
@@ -33,12 +34,14 @@ export default async function AdminBlogPage({
 	const currentStatus =
 		(params.status as "all" | "published" | "draft") || "all";
 	const currentSort = (params.sort as "newest" | "oldest") || "newest";
+	const currentHeadline = params.headline === "true";
 
 	const { blogs, totalCount } = await getBlogsAdmin({
 		page: currentPage,
 		search: currentSearch,
 		status: currentStatus,
 		sort: currentSort,
+		is_headline: currentHeadline || undefined,
 		limit: 5,
 	});
 
@@ -90,6 +93,7 @@ export default async function AdminBlogPage({
 							currentSearch={currentSearch}
 							currentStatus={currentStatus}
 							currentSort={currentSort}
+							currentHeadline={currentHeadline}
 						/>
 					</div>
 				</div>

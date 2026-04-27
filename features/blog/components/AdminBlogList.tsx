@@ -33,6 +33,7 @@ interface AdminBlogListProps {
   currentSearch: string;
   currentStatus: 'all' | 'published' | 'draft';
   currentSort: 'newest' | 'oldest';
+  currentHeadline: boolean;
 }
 
 export default function AdminBlogList({ 
@@ -41,7 +42,8 @@ export default function AdminBlogList({
   currentPage,
   currentSearch,
   currentStatus,
-  currentSort
+  currentSort,
+  currentHeadline
 }: AdminBlogListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -181,6 +183,19 @@ export default function AdminBlogList({
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            {/* Headline Filter */}
+            <button
+              onClick={() => updateParams({ headline: !currentHeadline ? 'true' : null, page: '1' })}
+              className={`flex items-center gap-2 px-4 py-2 bg-white border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
+                currentHeadline 
+                  ? 'border-blue-500 text-blue-600 ring-4 ring-blue-500/10' 
+                  : 'border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${currentHeadline ? 'fill-blue-600' : ''}`} />
+              Headlines
+            </button>
+
             {/* Status Filter */}
             <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
               {(['all', 'published', 'draft'] as const).map((s) => (

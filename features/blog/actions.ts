@@ -32,6 +32,7 @@ function slugify(text: string): string {
 export async function getBlogsAdmin(params: {
   search?: string;
   status?: 'all' | 'published' | 'draft';
+  is_headline?: boolean;
   sort?: 'newest' | 'oldest';
   page?: number;
   limit?: number;
@@ -44,6 +45,7 @@ export async function getBlogsAdmin(params: {
   const { 
     search = '', 
     status = 'all', 
+    is_headline,
     sort = 'newest', 
     page = 1, 
     limit = 5 
@@ -65,9 +67,14 @@ export async function getBlogsAdmin(params: {
   } else if (status === 'draft') {
     query = query.eq('published', false);
   }
+  
+  // Filtering by headline
+  if (is_headline !== undefined) {
+    query = query.eq('is_headline', is_headline);
+  }
 
   // Sorting
-  query = query.order('date', { ascending: sort === 'oldest' });
+  query = query.order('created_at', { ascending: sort === 'oldest' });
 
   // Pagination
   const from = (page - 1) * limit;
@@ -80,7 +87,7 @@ export async function getBlogsAdmin(params: {
     console.error('Error fetching admin blogs:', error);
     return { blogs: [], totalCount: 0 };
   }
-
+  
   return { 
     blogs: data as Blog[], 
     totalCount: count || 0 

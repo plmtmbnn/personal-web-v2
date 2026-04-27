@@ -1,3 +1,10 @@
+# [0.17.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.16.0...v0.17.0) (2026-04-27)
+
+
+### Features
+
+* **blog:** add headline filter and default sort by created_at ([2f38f51](https://github.com/plmtmbnn/personal-web-v2/commit/2f38f51062e7b8aa381e95bcba102f2f06adf751))
+
 # [0.16.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.15.0...v0.16.0) (2026-04-19)
 
 

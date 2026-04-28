@@ -1,3 +1,18 @@
+# [0.18.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.17.0...v0.18.0) (2026-04-28)
+
+
+### Bug Fixes
+
+* **tasks:** ensure getTasks fetches all completed tasks in range for heatmap ([08f1895](https://github.com/plmtmbnn/personal-web-v2/commit/08f1895c183131d549a5c7367ee5c8ee668b3324))
+
+
+### Features
+
+* **tasks:** add heatmap data aggregation utility and tests ([e1a1696](https://github.com/plmtmbnn/personal-web-v2/commit/e1a16966ea2a938caffa119ceb19fa06b2540ff4))
+* **tasks:** create TaskHeatmap component ([f9891d6](https://github.com/plmtmbnn/personal-web-v2/commit/f9891d6520f8f457f9455f4941585b07b21442cb))
+* **tasks:** expand data fetching to full current month ([0cf558d](https://github.com/plmtmbnn/personal-web-v2/commit/0cf558d08ed6c5040951346460cb150e6fa91992))
+* **tasks:** integrate TaskHeatmap into TasksView ([e057013](https://github.com/plmtmbnn/personal-web-v2/commit/e05701395e3837f41425cbed91bd44a7195cea93))
+
 # [0.17.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.16.0...v0.17.0) (2026-04-27)
 
 

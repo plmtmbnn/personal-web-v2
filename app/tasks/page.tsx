@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 import PinGuard from "@/features/auth/PinGuard";
 import TasksView from "@/features/tasks/components/TasksView";
 import { getTasks } from "@/features/tasks/actions/tasks";
@@ -52,11 +53,11 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
 	// 2. Data Fetching
 	const today = new Date();
-	const nextMonth = new Date();
-	nextMonth.setDate(today.getDate() + 30); // Fetch 30 days to support "This Month" filter
+	const monthStart = startOfMonth(today);
+	const monthEnd = endOfMonth(today);
 
-	const startDate = date || today.toISOString().split("T")[0];
-	const endDate = date || nextMonth.toISOString().split("T")[0];
+	const startDate = date || format(monthStart, "yyyy-MM-dd");
+	const endDate = date || format(monthEnd, "yyyy-MM-dd");
 
 	const tasks = await getTasks({
 		startDate,

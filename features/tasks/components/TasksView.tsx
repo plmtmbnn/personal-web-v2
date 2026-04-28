@@ -32,6 +32,11 @@ const DynamicTaskProgress = dynamic(() => import("@/features/tasks/components/Ta
 	ssr: false
 });
 
+const DynamicTaskHeatmap = dynamic(() => import("@/features/tasks/components/TaskHeatmap"), {
+	loading: () => <ComponentLoader height="150px" />,
+	ssr: false
+});
+
 const DynamicTaskForm = dynamic(() => import("@/features/tasks/components/TaskForm"), {
 	loading: () => <ComponentLoader height="120px" />,
 	ssr: false
@@ -170,6 +175,10 @@ export default function TasksView({ tasks }: TasksViewProps) {
                     <DynamicTaskProgress tasks={tasks} />
                   </Suspense>
                 </div>
+
+                <Suspense fallback={<ComponentLoader height="150px" />}>
+                  <DynamicTaskHeatmap tasks={tasks} />
+                </Suspense>
               </div>
             </motion.div>
           ) : (

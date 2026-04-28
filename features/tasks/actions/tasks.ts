@@ -15,16 +15,20 @@ export async function getTasks(options?: {
   priority?: TaskPriority;
   category?: string;
   showCompletedToday?: boolean;
+  includeCompleted?: boolean;
 }): Promise<Task[]> {
   const today = new Date().toISOString().split('T')[0];
   const startDate = options?.startDate || today;
   const endDate = options?.endDate || today;
   const showCompletedToday = options?.showCompletedToday ?? false;
+  const includeCompleted = options?.includeCompleted ?? false;
 
   let query = SupabaseConn.from('tasks').select('*');
 
   // Handle Completion and Date Filtering
-  if (showCompletedToday) {
+  if (includeCompleted) {
+    query = query.or(`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`);
+  } else if (showCompletedToday) {
     // Show: (Due in range AND NOT completed) OR (Completed today)
     query = query.or(`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`);
   } else {

@@ -63,7 +63,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
 		startDate,
 		endDate,
 		priority,
-		showCompletedToday: true,
+		includeCompleted: true,
 	});
 
 	return (

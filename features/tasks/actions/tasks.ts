@@ -27,7 +27,7 @@ export async function getTasks(options?: {
 
   // Handle Completion and Date Filtering
   if (includeCompleted) {
-    query = query.or(`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`);
+    query = query.or(`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59),and(created_at.gte.${startDate}T00:00:00,created_at.lte.${endDate}T23:59:59)`);
   } else if (showCompletedToday) {
     // Show: (Due in range AND NOT completed) OR (Completed today)
     query = query.or(`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`);

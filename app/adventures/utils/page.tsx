@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Timer, ChevronRight, ArrowLeft, Wrench } from "lucide-react";
+import {
+	Timer,
+	ChevronRight,
+	ArrowLeft,
+	Wrench,
+	Calculator,
+} from "lucide-react";
 
 const utilities = [
 	{
@@ -15,6 +21,16 @@ const utilities = [
 		color: "text-rose-500",
 		bg: "bg-rose-500/5",
 		icon: Timer,
+	},
+	{
+		title: "Asset Averaging",
+		slug: "stock-crypto-calculator",
+		description:
+			"Strategic calculator for weighted average cost analysis and goal-based purchase planning.",
+		accent: "from-blue-500 to-indigo-500",
+		color: "text-blue-500",
+		bg: "bg-blue-500/5",
+		icon: Calculator,
 	},
 ];
 

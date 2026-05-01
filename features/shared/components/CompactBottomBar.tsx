@@ -20,7 +20,8 @@ import {
   Mountain,
   Map,
   Layers,
-  Sparkles
+  Sparkles,
+  Toolbox
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -79,7 +80,9 @@ const NAV_ITEMS: NavItem[] = [
     subItems: [
       { label: "Explore", href: "/adventures", icon: Map },
       { label: "Running", href: "/adventures/running", icon: Mountain },
-      { label: "Travel", href: "/adventures/travel", icon: Map }
+      { label: "Travel", href: "/adventures/travel", icon: Map },
+      { label: "Utils", href: "/adventures/utils", icon: Toolbox }
+      
     ]
   },
   {

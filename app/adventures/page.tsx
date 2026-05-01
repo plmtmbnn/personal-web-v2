@@ -26,6 +26,16 @@ const categories = [
 		bg: "bg-purple-500/5",
 		icon: Camera,
 	},
+	{
+		title: "Utilities",
+		slug: "utils",
+		description:
+			"Specialized high-precision tools for training, logistics, and performance tracking.",
+		accent: "from-blue-500 to-indigo-500",
+		color: "text-blue-500",
+		bg: "bg-blue-500/5",
+		icon: Activity,
+	},
 ];
 
 export default function AdventuresLanding() {

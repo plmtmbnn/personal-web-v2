@@ -10,7 +10,7 @@ interface PinGuardProps {
 }
 
 const PIN_SESSION_KEY = 'auth_pin_session';
-const SESSION_DURATION = 3600000 * 6; // 6 hour in ms
+const SESSION_DURATION = 3600000 * 12; // 12 hour in ms
 
 /**
  * PinGuard: Protects content with a 6-digit PIN.

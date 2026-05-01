@@ -130,6 +130,41 @@ export default function RunningPage() {
 					</motion.div>
 				</div>
 
+				{/* Training Tools - New Section */}
+				<motion.div
+					initial={{ opacity: 0, y: 30 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
+					className="mb-20"
+				>
+					<Link
+						href="/adventures/utils/timer"
+						className="group relative block p-8 sm:p-10 rounded-[2.5rem] bg-gradient-to-br from-rose-500/10 to-orange-500/10 border-2 border-white/5 hover:border-rose-500/30 transition-all duration-500 shadow-2xl overflow-hidden !no-underline"
+					>
+						<div className="absolute -right-20 -top-20 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-700" />
+
+						<div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+							<div className="flex items-center gap-6">
+								<div className="w-16 h-16 bg-rose-500 text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
+									<Timer className="w-8 h-8" />
+								</div>
+								<div>
+									<h2 className="text-3xl font-black text-foreground tracking-tight">
+										Interval Timer
+									</h2>
+									<p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">
+										High-Precision Training Utility
+									</p>
+								</div>
+							</div>
+							<div className="flex items-center gap-2 text-rose-400 font-black uppercase text-[10px] tracking-widest">
+								Launch Tool{" "}
+								<ArrowLeft className="w-4 h-4 rotate-180 group-hover:translate-x-2 transition-transform" />
+							</div>
+						</div>
+					</Link>
+				</motion.div>
+
 				{/* Personal Bests Grid */}
 				<div className="space-y-8 mb-20">
 					<h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground/60 ml-4 flex items-center gap-3">

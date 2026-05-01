@@ -184,7 +184,7 @@ function PhaseTimeline({
 					);
 				})}
 			</div>
-			<div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-widest opacity-40">
+			<div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-widest opacity-40 text-white">
 				<span>Start</span>
 				<span>{queue.length} phases</span>
 				<span>Finish</span>
@@ -202,7 +202,7 @@ function NextPhasePreview({ phase }: { phase: Phase }) {
 		<motion.div
 			initial={{ opacity: 0, y: 6 }}
 			animate={{ opacity: 1, y: 0 }}
-			className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-xl ${theme.pill} text-xs font-black uppercase tracking-widest`}
+			className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-xl ${theme.pill} text-xs text-white uppercase tracking-widest`}
 		>
 			<span className="opacity-50">Next →</span>
 			<Icon className="w-3.5 h-3.5" />
@@ -228,9 +228,11 @@ function LapLog({ laps }: { laps: LapEntry[] }) {
 					>
 						<div className="flex items-center gap-2.5">
 							<CheckCircle2 className={`w-3.5 h-3.5 ${theme.text}`} />
-							<span className="text-xs font-bold opacity-70">{lap.label}</span>
+							<span className="text-xs font-bold opacity-70 text-white">
+								{lap.label}
+							</span>
 						</div>
-						<span className="text-xs font-black tabular-nums opacity-50">
+						<span className="text-xs text-white tabular-nums opacity-50">
 							{formatTime(lap.duration)}
 						</span>
 					</motion.div>
@@ -340,7 +342,7 @@ function SetupCard({
 				<div className={`p-3.5 rounded-2xl bg-white/10 ${color}`}>
 					<Icon className="w-7 h-7" />
 				</div>
-				<span className="font-black uppercase text-sm tracking-widest">
+				<span className="font-bold uppercase text-sm tracking-widest text-white">
 					{label}
 				</span>
 			</div>
@@ -354,9 +356,9 @@ function SetupCard({
 						onChange={(e) =>
 							onMinChange(Math.max(0, parseInt(e.target.value, 10) || 0))
 						}
-						className="w-12 bg-transparent text-center font-black text-xl focus:outline-none tabular-nums"
+						className="w-12 bg-transparent text-center text-white text-xl focus:outline-none tabular-nums"
 					/>
-					<span className="text-[10px] font-black opacity-40">m</span>
+					<span className="text-[10px] text-white opacity-40">m</span>
 					<div className="w-px h-8 bg-white/15 mx-1" />
 					<input
 						type="number"
@@ -369,9 +371,9 @@ function SetupCard({
 								Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0)),
 							)
 						}
-						className="w-12 bg-transparent text-center font-black text-xl focus:outline-none tabular-nums"
+						className="w-12 bg-transparent text-center text-white text-xl focus:outline-none tabular-nums"
 					/>
-					<span className="text-[10px] font-black opacity-40">s</span>
+					<span className="text-[10px] text-white opacity-40">s</span>
 				</div>
 			</div>
 		</div>
@@ -697,7 +699,7 @@ export default function RunningTimerPage() {
 
 					{!isActive && !isComplete && (
 						<div className="text-center">
-							<h1 className="text-xl font-black tracking-tighter text-white">
+							<h1 className="text-xl text-white tracking-tighter text-white">
 								Interval Timer
 							</h1>
 							{queue.length > 0 && (
@@ -751,7 +753,7 @@ export default function RunningTimerPage() {
 							</motion.div>
 
 							<div>
-								<h2 className="text-5xl font-black tracking-tighter text-white">
+								<h2 className="text-5xl text-white tracking-tighter text-white">
 									Session Done!
 								</h2>
 								<p className="text-white/50 text-xs font-bold uppercase tracking-[0.4em] mt-2">
@@ -761,24 +763,24 @@ export default function RunningTimerPage() {
 
 							<div className="w-full p-8 bg-black/20 backdrop-blur-xl rounded-3xl border border-white/10 space-y-5">
 								<div className="flex justify-between items-center text-white">
-									<span className="text-xs font-black uppercase tracking-widest opacity-50">
+									<span className="text-xs text-white uppercase tracking-widest opacity-50">
 										Total Time
 									</span>
-									<span className="text-3xl font-black tabular-nums">
+									<span className="text-3xl text-white tabular-nums">
 										{formatTime(totalSessionSeconds)}
 									</span>
 								</div>
 								<div className="flex justify-between items-center text-white">
-									<span className="text-xs font-black uppercase tracking-widest opacity-50">
+									<span className="text-xs text-white uppercase tracking-widest opacity-50">
 										Intervals
 									</span>
-									<span className="text-3xl font-black">{reps}×</span>
+									<span className="text-3xl text-white">{reps}×</span>
 								</div>
 								<div className="flex justify-between items-center text-white">
-									<span className="text-xs font-black uppercase tracking-widest opacity-50">
+									<span className="text-xs text-white uppercase tracking-widest opacity-50">
 										Phases Done
 									</span>
-									<span className="text-3xl font-black">{laps.length}</span>
+									<span className="text-3xl text-white">{laps.length}</span>
 								</div>
 							</div>
 
@@ -799,7 +801,7 @@ export default function RunningTimerPage() {
 														{lap.label}
 													</span>
 												</div>
-												<span className="text-sm font-black tabular-nums opacity-50">
+												<span className="text-sm text-white tabular-nums opacity-50">
 													{formatTime(lap.duration)}
 												</span>
 											</div>
@@ -810,7 +812,7 @@ export default function RunningTimerPage() {
 
 							<button
 								onClick={resetTimer}
-								className="px-12 py-5 bg-white text-emerald-900 rounded-[2rem] font-black text-lg tracking-tight hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-3"
+								className="px-12 py-5 bg-white text-emerald-900 rounded-[2rem] text-white text-lg tracking-tight hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-3"
 							>
 								<RotateCcw className="w-5 h-5" /> New Session
 							</button>
@@ -861,23 +863,23 @@ export default function RunningTimerPage() {
 									<div className="p-3.5 rounded-2xl bg-white/10 text-blue-400">
 										<Dumbbell className="w-7 h-7" />
 									</div>
-									<span className="font-black uppercase text-sm tracking-widest text-white">
+									<span className="text-white uppercase text-sm tracking-widest text-white">
 										Repetitions
 									</span>
 								</div>
 								<div className="flex items-center gap-2">
 									<button
 										onClick={() => setReps((r) => Math.max(1, r - 1))}
-										className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white font-black text-lg hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center"
+										className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white text-white text-lg hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center"
 									>
 										−
 									</button>
-									<span className="w-10 text-center font-black text-2xl text-white tabular-nums">
+									<span className="w-10 text-center text-white text-2xl text-white tabular-nums">
 										{reps}
 									</span>
 									<button
 										onClick={() => setReps((r) => r + 1)}
-										className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white font-black text-lg hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center"
+										className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white text-white text-lg hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center"
 									>
 										+
 									</button>
@@ -898,7 +900,7 @@ export default function RunningTimerPage() {
 							{queue.length > 0 && (
 								<div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
 									<PhaseTimeline queue={queue} currentIndex={-1} />
-									<p className="text-center text-xs text-white/30 font-bold mt-3">
+									<p className="text-center text-xs text-white/30 font-bold mt-3 !text-white">
 										{queue.length} phases · {formatTime(totalSessionSeconds)}{" "}
 										total
 									</p>
@@ -908,7 +910,7 @@ export default function RunningTimerPage() {
 							<button
 								onClick={startTimer}
 								disabled={queue.length === 0}
-								className="w-full py-7 bg-white text-black rounded-[2.5rem] font-black text-xl tracking-tighter hover:scale-[1.02] active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3 disabled:opacity-40"
+								className="w-full py-7 bg-white text-black rounded-[2.5rem] text-xl tracking-tighter hover:scale-[1.02] active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3 disabled:opacity-40"
 							>
 								<Play className="w-7 h-7 fill-current" /> Start Session
 							</button>
@@ -928,7 +930,7 @@ export default function RunningTimerPage() {
 							{/* Phase label + step */}
 							<div className="space-y-2">
 								<span
-									className={`inline-block px-5 py-1.5 rounded-full border text-xs font-black uppercase tracking-[0.3em] backdrop-blur-xl ${
+									className={`inline-block px-5 py-1.5 rounded-full border text-xs text-white uppercase tracking-[0.3em] backdrop-blur-xl ${
 										theme.pill
 									}`}
 								>
@@ -938,7 +940,7 @@ export default function RunningTimerPage() {
 									key={currentPhase.label}
 									initial={{ opacity: 0, y: 8 }}
 									animate={{ opacity: 1, y: 0 }}
-									className="text-4xl font-black tracking-tighter text-white"
+									className="text-4xl text-white tracking-tighter text-white"
 								>
 									{currentPhase.label}
 								</motion.h2>
@@ -956,12 +958,12 @@ export default function RunningTimerPage() {
 										key={timeLeft}
 										initial={{ scale: 0.92, opacity: 0.5 }}
 										animate={{ scale: 1, opacity: 1 }}
-										className="text-7xl font-black tabular-nums text-white drop-shadow-xl"
+										className="text-7xl text-white tabular-nums text-white drop-shadow-xl"
 									>
 										{formatTime(timeLeft)}
 									</motion.span>
 									<span
-										className={`text-xs font-black uppercase tracking-widest mt-1 ${theme.text}`}
+										className={`text-xs text-white uppercase tracking-widest mt-1 ${theme.text}`}
 									>
 										{isPaused ? "Paused" : currentPhase.type}
 									</span>
@@ -988,7 +990,7 @@ export default function RunningTimerPage() {
 										transition={{ duration: 1 }}
 									/>
 								</div>
-								<div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+								<div className="flex justify-between text-[10px] text-white uppercase tracking-widest text-white/40 px-1">
 									<span>{formatTime(totalElapsed)} elapsed</span>
 									<span>
 										{formatTime(totalSessionSeconds - totalElapsed)} left

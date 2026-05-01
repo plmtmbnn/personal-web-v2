@@ -136,10 +136,10 @@ export default function TaskProgress() {
 					))}
 					{/* Total Pending Card (High Contrast) */}
 					<div className="rounded-xl px-4 py-3 bg-slate-900 border border-slate-800 shadow-lg shadow-slate-900/10 ring-1 ring-white/10">
-						<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5">
+						<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 !text-white">
 							Total Pending
 						</p>
-						<p className="text-xl font-black text-white">
+						<p className="text-xl font-black text-white !text-white">
 							{metrics.allTime}
 						</p>
 					</div>

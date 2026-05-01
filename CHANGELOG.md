@@ -1,3 +1,10 @@
+# [0.22.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.21.0...v0.22.0) (2026-05-01)
+
+
+### Features
+
+* **adventures:** add Stock & Crypto Average Calculator utility ([5c0d25a](https://github.com/plmtmbnn/personal-web-v2/commit/5c0d25a7ce355aba46205ab4e0ec2977f4e06962))
+
 # [0.21.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.20.1...v0.21.0) (2026-05-01)
 
 

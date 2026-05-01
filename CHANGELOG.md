@@ -1,3 +1,10 @@
+# [0.20.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.19.0...v0.20.0) (2026-05-01)
+
+
+### Features
+
+* **tasks:** enhance heatmap, progress tracking, and operational layout ([779e4e7](https://github.com/plmtmbnn/personal-web-v2/commit/779e4e712756ae967d9e591c073ec5ea4cf04eab))
+
 # [0.19.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.18.0...v0.19.0) (2026-05-01)
 
 

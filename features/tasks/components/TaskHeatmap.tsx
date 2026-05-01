@@ -13,8 +13,16 @@ export default function TaskHeatmap({ tasks }: { tasks: Task[] }) {
   const data = aggregateHeatmapData(tasks, start, end);
   const days = Object.entries(data);
 
-  const getIntensity = (count: number) => {
-    if (count === 0) return 'bg-slate-100';
+  const getCreatedIntensity = (count: number) => {
+    if (count === 0) return 'bg-transparent';
+    if (count >= 1 && count <= 2) return 'bg-blue-100';
+    if (count >= 3 && count <= 5) return 'bg-blue-300';
+    if (count >= 6 && count <= 9) return 'bg-blue-500';
+    return 'bg-blue-700';
+  };
+
+  const getDoneIntensity = (count: number) => {
+    if (count === 0) return 'bg-transparent';
     if (count >= 1 && count <= 2) return 'bg-emerald-100';
     if (count >= 3 && count <= 5) return 'bg-emerald-300';
     if (count >= 6 && count <= 9) return 'bg-emerald-500';
@@ -42,10 +50,31 @@ export default function TaskHeatmap({ tasks }: { tasks: Task[] }) {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.01 }}
-            title={`${date}: ${count} Tasks`}
-            className={`aspect-square rounded-sm sm:rounded ${getIntensity(count)} transition-colors cursor-help`}
-          />
+            title={`${date}: ${count.created} Created, ${count.completed} Done`}
+            className="relative aspect-square rounded-sm sm:rounded bg-slate-100 overflow-hidden cursor-help"
+          >
+            <div 
+              className={`absolute inset-0 ${getCreatedIntensity(count.created)} transition-colors`}
+              style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
+            />
+            <div 
+              className={`absolute inset-0 ${getDoneIntensity(count.completed)} transition-colors`}
+              style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
+            />
+          </motion.div>
         ))}
+      </div>
+      
+      {/* Legend */}
+      <div className="mt-4 flex items-center justify-end gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 bg-blue-500 rounded-full" />
+          <span>Created</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+          <span>Completed</span>
+        </div>
       </div>
     </div>
   );

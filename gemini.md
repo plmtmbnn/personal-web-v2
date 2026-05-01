@@ -90,3 +90,4 @@ Strictly for routing and page definitions. Pages compose components from `featur
 - **Git Workflow**: Follow **Conventional Commits**.
 - **Linter**: **Biome** for formatting and linting.
 - **Package Manager**: Use `pnpm`.
+- **Commit/Push Policy**: **NEVER** stage, commit, or push changes unless explicitly requested by the user for each occurrence.

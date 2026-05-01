@@ -59,11 +59,11 @@ export default function UtilsLanding() {
 					className="mb-12"
 				>
 					<Link
-						href="/adventures"
+						href="/"
 						className="inline-flex items-center text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-blue-500 transition-colors gap-2 group"
 					>
 						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Adventures
+						Back to Home
 					</Link>
 				</motion.div>
 
@@ -99,7 +99,7 @@ export default function UtilsLanding() {
 							transition={{ delay: i * 0.1, duration: 0.6 }}
 						>
 							<Link
-								href={`/adventures/utils/${util.slug}`}
+								href={`/utils/${util.slug}`}
 								className="group block relative p-10 rounded-[2.5rem] bg-white/5 border-2 border-white/5 backdrop-blur-xl hover:border-blue-500/30 transition-all duration-500 shadow-2xl overflow-hidden !no-underline"
 							>
 								<div

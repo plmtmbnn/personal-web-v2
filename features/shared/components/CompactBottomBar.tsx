@@ -70,7 +70,8 @@ const NAV_ITEMS: NavItem[] = [
     icon: BookOpen,
     subItems: [
       { label: "Blog Posts", href: "/blog", icon: BookOpen },
-      { label: "Investments", href: "/investment", icon: TrendingUp }
+      { label: "Investments", href: "/investment", icon: TrendingUp },
+      { label: "Utils", href: "/utils", icon: Toolbox }
     ]
   },
   { 
@@ -80,9 +81,7 @@ const NAV_ITEMS: NavItem[] = [
     subItems: [
       { label: "Explore", href: "/adventures", icon: Map },
       { label: "Running", href: "/adventures/running", icon: Mountain },
-      { label: "Travel", href: "/adventures/travel", icon: Map },
-      { label: "Utils", href: "/adventures/utils", icon: Toolbox }
-      
+      { label: "Travel", href: "/adventures/travel", icon: Map }
     ]
   },
   {

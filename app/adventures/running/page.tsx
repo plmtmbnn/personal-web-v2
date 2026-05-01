@@ -138,7 +138,7 @@ export default function RunningPage() {
 					className="mb-20"
 				>
 					<Link
-						href="/adventures/utils/timer"
+						href="/utils/timer"
 						className="group relative block p-8 sm:p-10 rounded-[2.5rem] bg-gradient-to-br from-rose-500/10 to-orange-500/10 border-2 border-white/5 hover:border-rose-500/30 transition-all duration-500 shadow-2xl overflow-hidden !no-underline"
 					>
 						<div className="absolute -right-20 -top-20 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-700" />

@@ -691,7 +691,7 @@ export default function RunningTimerPage() {
 				{/* Header */}
 				<div className="flex items-center justify-between mb-8">
 					<Link
-						href="/adventures/utils"
+						href="/utils"
 						className="p-3.5 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 hover:bg-white/20 transition-all active:scale-90 text-white"
 					>
 						<ArrowLeft className="w-5 h-5" />

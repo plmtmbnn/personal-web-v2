@@ -1,3 +1,10 @@
+# [0.23.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.22.2...v0.23.0) (2026-05-01)
+
+
+### Features
+
+* **seo:** enhance metadata, social previews, and structured data ([8117d92](https://github.com/plmtmbnn/personal-web-v2/commit/8117d9252e5f2814aa4f1eb9cb37303e6f1794cd))
+
 ## [0.22.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.22.1...v0.22.2) (2026-05-01)
 
 ## [0.22.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.22.0...v0.22.1) (2026-05-01)

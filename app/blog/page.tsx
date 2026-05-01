@@ -39,6 +39,23 @@ const getCategoryStyles = (category: string) => {
 	return "bg-slate-50 text-slate-700 border-slate-100";
 };
 
+import { createMetadata } from "@/lib/shared/metadata";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = createMetadata({
+	title: "The Pulse | Engineering Journal",
+	description:
+		"High-fidelity insights on fintech architecture, distributed systems, and modern engineering culture.",
+	path: "/blog",
+	keywords: [
+		"Engineering Blog",
+		"Fintech Insights",
+		"Software Architecture",
+		"Jakarta Tech",
+		"Distributed Systems",
+	],
+});
+
 export default async function BlogPage() {
 	const allBlogs = await getBlogsStatic();
 

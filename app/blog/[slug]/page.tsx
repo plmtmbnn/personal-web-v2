@@ -9,6 +9,8 @@ import { ScrollProgress } from "@/features/blog/components/ScrollProgress";
 import ShareButton from "@/features/blog/components/ShareButton";
 import type { Metadata } from "next";
 
+import { createBlogMetadata } from "@/lib/shared/metadata";
+
 /**
  * SEO Metadata Generation
  */
@@ -22,17 +24,14 @@ export async function generateMetadata({
 
 	if (!post) return { title: "Entry Not Found" };
 
-	return {
-		title: `${post.title} | Engineering Journal`,
+	return createBlogMetadata({
+		title: post.title,
 		description: post.description,
-		openGraph: {
-			title: post.title,
-			description: post.description,
-			type: "article",
-			publishedTime: post.date,
-			images: post.image_url ? [{ url: post.image_url }] : [],
-		},
-	};
+		slug: post.slug,
+		image: post.image_url || undefined,
+		publishedTime: post.date,
+		tags: [post.category, "engineering", "journal"],
+	});
 }
 
 /**

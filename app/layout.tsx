@@ -21,17 +21,37 @@ const jetbrainsMono = JetBrains_Mono({
 	display: "swap",
 });
 
+import { SITE } from "@/lib/shared/constants";
+
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	const jsonLd = {
+		"@context": "https://schema.org",
+		"@type": "Person",
+		name: SITE.name,
+		url: SITE.url,
+		jobTitle: "Software Engineer",
+		description: SITE.description,
+		sameAs: [
+			"https://github.com/plmtmbnn",
+			"https://linkedin.com/in/polma-tambunan",
+			"https://x.com/LFC",
+		],
+	};
+
 	return (
 		<html lang="en">
 			<SpeedInsights />
 			<body
 				className={`${varela.variable} ${jetbrainsMono.variable} antialiased`}
 			>
+				<script
+					type="application/ld+json"
+					dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+				/>
 				{children}
 				<CompactBottomBar />
 			</body>

@@ -11,11 +11,16 @@ type MetadataProps = {
   author?: string;
   publishedTime?: string;
   modifiedTime?: string;
+  type?: "website" | "article";
 };
 
+/**
+ * Enhanced Metadata Generator for Next.js 16
+ * Optimizes for SEO, OpenGraph, and Twitter previews.
+ */
 export function createMetadata({
   title,
-  description = SEO.defaultDescription,
+  description = SITE.description,
   path = "",
   image,
   noIndex = false,
@@ -23,21 +28,37 @@ export function createMetadata({
   author,
   publishedTime,
   modifiedTime,
+  type = "website",
 }: MetadataProps = {}): Metadata {
-  const fullTitle = title ? `${title} · ${SITE.name}` : SITE.name;
   const url = `${SITE.url}${path}`;
-  const ogImage = image || `/profile.jpg`; // Fixed default image path
+  
+  // Ensure we have an absolute URL for the image
+  const ogImage = image 
+    ? image.startsWith("http") ? image : `${SITE.url}${image}`
+    : `${SITE.url}/profile.jpg`;
+
+  const finalKeywords = [
+    ...(keywords || []),
+    "software engineer",
+    "fintech",
+    "jakarta",
+    "typescript",
+    "next.js",
+    "polma tambunan",
+    "intentional running"
+  ].join(", ");
 
   return {
+    metadataBase: new URL(SITE.url),
     title: {
       template: SEO.titleTemplate,
       default: SITE.name,
     },
     description,
-    keywords: keywords?.join(", ") || "software engineer, fintech, running, polma tambunan",
-    authors: author ? [{ name: author }] : [{ name: SITE.author }],
-
-    metadataBase: new URL(SITE.url),
+    keywords: finalKeywords,
+    authors: [{ name: author || SITE.author }],
+    creator: SITE.author,
+    
     alternates: {
       canonical: url,
     },
@@ -60,18 +81,18 @@ export function createMetadata({
         },
 
     openGraph: {
-      title: fullTitle,
+      title: title ? `${title} | ${SITE.name}` : SITE.name,
       description,
       url,
       siteName: SITE.name,
       locale: SITE.locale,
-      type: "website",
+      type,
       images: [
         {
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: fullTitle,
+          alt: title || SITE.name,
         },
       ],
       ...(publishedTime && { publishedTime }),
@@ -80,10 +101,11 @@ export function createMetadata({
 
     twitter: {
       card: "summary_large_image",
-      title: fullTitle,
+      title: title ? `${title} | ${SITE.name}` : SITE.name,
       description,
       images: [ogImage],
-      creator: SITE.twitter,
+      creator: SEO.twitterHandle,
+      site: SEO.twitterHandle,
     },
 
     icons: {
@@ -93,10 +115,18 @@ export function createMetadata({
     },
 
     manifest: "/site.webmanifest",
+    
+    // Additional SEO tags
+    category: "technology",
+    other: {
+      "facebook-domain-verification": "optional-code",
+    }
   };
 }
 
-// Helper for blog posts with article-specific metadata
+/**
+ * Specific helper for Blog Posts
+ */
 export function createBlogMetadata({
   title,
   description,
@@ -116,52 +146,22 @@ export function createBlogMetadata({
   author?: string;
   tags?: string[];
 }): Metadata {
-  const fullTitle = `${title} · ${SITE.name}`;
-  const url = `${SITE.url}/blog/${slug}`;
-  const ogImage = image || `/public/profile.jpg`;
-
-  return {
-    title: fullTitle,
+  return createMetadata({
+    title,
     description,
-    keywords: tags?.join(", "),
-    authors: author ? [{ name: author }] : [{ name: SITE.author }],
-
-    metadataBase: new URL(SITE.url),
-    alternates: {
-      canonical: url,
-    },
-
-    openGraph: {
-      title: fullTitle,
-      description,
-      url,
-      siteName: SITE.name,
-      locale: SITE.locale,
-      type: "article",
-      publishedTime,
-      modifiedTime: modifiedTime || publishedTime,
-      authors: [author || SITE.author],
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
-    },
-
-    twitter: {
-      card: "summary_large_image",
-      title: fullTitle,
-      description,
-      images: [ogImage],
-      creator: SITE.twitter,
-    },
-  };
+    path: `/blog/${slug}`,
+    image,
+    publishedTime,
+    modifiedTime,
+    author,
+    keywords: tags,
+    type: "article",
+  });
 }
 
-// Helper for generating JSON-LD structured data
+/**
+ * Generate JSON-LD for Search Engine Rich Snippets
+ */
 export function generateBlogPostJsonLd({
   title,
   description,
@@ -184,7 +184,7 @@ export function generateBlogPostJsonLd({
     "@type": "BlogPosting",
     headline: title,
     description,
-    image: image || `/public/profile.jpg`,
+    image: image || `${SITE.url}/profile.jpg`,
     datePublished: publishedTime,
     dateModified: modifiedTime || publishedTime,
     author: {
@@ -193,9 +193,12 @@ export function generateBlogPostJsonLd({
       url: SITE.url,
     },
     publisher: {
-      "@type": "Person",
-      name: SITE.author,
-      url: SITE.url,
+      "@type": "Organization",
+      name: SITE.name,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE.url}/profile.jpg`,
+      },
     },
     mainEntityOfPage: {
       "@type": "WebPage",

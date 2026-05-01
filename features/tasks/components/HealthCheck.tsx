@@ -13,6 +13,7 @@ import { Task } from '@/features/tasks/types';
 export default function HealthCheck() {
 	const [staleTasks, setStaleTasks] = useState<Task[]>([]);
 	const [isVisible, setIsVisible] = useState(false);
+	const [isExpanded, setIsExpanded] = useState(false);
 	const [isPending, startTransition] = useTransition();
   const [rescheduleType, setRescheduleType] = useState<number | null>(null);
 
@@ -50,12 +51,48 @@ export default function HealthCheck() {
 		});
 	};
 
-	const handleIgnore = () => setIsVisible(false);
+	const handleIgnore = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		setIsVisible(false);
+	};
 
 	if (!isVisible || staleTasks.length === 0) return null;
 
+	if (!isExpanded) {
+		return (
+			<div 
+				onClick={() => setIsExpanded(true)}
+				className="p-4 sm:p-5 bg-amber-50/80 border-2 border-amber-200 rounded-2xl sm:rounded-[2rem] shadow-md shadow-amber-900/5 animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden backdrop-blur-sm cursor-pointer group hover:bg-amber-100/80 transition-all"
+			>
+				<div className="absolute top-0 left-0 w-full h-1 bg-amber-400" />
+				<div className="flex items-center justify-between gap-4">
+					<div className="flex items-center gap-4">
+						<div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-lg shadow-amber-500/20 flex-shrink-0 group-hover:scale-110 transition-transform">
+							<AlertTriangle className="w-5 h-5" />
+						</div>
+						<div>
+							<h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">
+								{staleTasks.length} Lapsed Objectives Detected
+							</h3>
+							<p className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest mt-0.5">
+								Click to review and reschedule
+							</p>
+						</div>
+					</div>
+					<button 
+						onClick={handleIgnore} 
+						className="p-2 text-amber-400 hover:text-amber-600 hover:bg-amber-200/50 rounded-xl transition-all"
+						aria-label="Dismiss alert"
+					>
+						<X className="w-4 h-4" />
+					</button>
+				</div>
+			</div>
+		);
+	}
+
 	return (
-		<div className="p-6 bg-amber-50/80 border-2 border-amber-200 rounded-[2rem] shadow-lg shadow-amber-900/5 animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden backdrop-blur-sm">
+		<div className="p-6 bg-amber-50/80 border-2 border-amber-200 rounded-[2rem] shadow-lg shadow-amber-900/5 animate-in fade-in zoom-in-95 duration-500 relative overflow-hidden backdrop-blur-sm">
       {/* Structural Accent */}
       <div className="absolute top-0 left-0 w-full h-1 bg-amber-400" />
 
@@ -69,13 +106,21 @@ export default function HealthCheck() {
 						<h3 className="font-black text-slate-900 text-xl tracking-tight">
 							Attention: {staleTasks.length} Lapsed Objectives
 						</h3>
-						<button 
-              onClick={handleIgnore} 
-              className="p-2 text-amber-400 hover:text-amber-600 hover:bg-amber-100 rounded-xl transition-all"
-              aria-label="Dismiss alert"
-            >
-							<X className="w-5 h-5" />
-						</button>
+						<div className="flex items-center gap-2">
+							<button 
+								onClick={() => setIsExpanded(false)} 
+								className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-600 hover:bg-amber-100 rounded-lg transition-all"
+							>
+								Collapse
+							</button>
+							<button 
+								onClick={handleIgnore} 
+								className="p-2 text-amber-400 hover:text-amber-600 hover:bg-amber-100 rounded-xl transition-all"
+								aria-label="Dismiss alert"
+							>
+								<X className="w-5 h-5" />
+							</button>
+						</div>
 					</div>
           
 					<p className="text-slate-600 text-sm font-medium mb-8 leading-relaxed max-w-2xl">

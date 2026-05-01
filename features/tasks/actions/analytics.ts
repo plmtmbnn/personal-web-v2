@@ -225,3 +225,54 @@ export async function getTaskStats(period: 'today' | 'week' | 'month'): Promise<
 
   return stats;
 }
+
+/**
+ * Fetch granular pending metrics for TaskProgress component.
+ */
+export async function getTaskProgressMetrics() {
+  const today = startOfToday();
+  const todayStr = format(today, 'yyyy-MM-dd');
+  
+  // Start of week (Sunday)
+  const weekStart = subDays(today, today.getDay());
+  const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+
+  // Start of month
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthStartStr = format(monthStart, 'yyyy-MM-dd');
+
+  const { data: pendingTasks, error } = await SupabaseConn
+    .from('tasks')
+    .select('due_date, is_completed')
+    .eq('is_completed', false);
+
+  if (error) {
+    console.error('Error fetching progress metrics:', error);
+    return { today: 0, week: 0, month: 0, allTime: 0, verified: 0, progress: 0 };
+  }
+
+  // Also need today's completed for progress calculation
+  const { count: todayCompleted } = await SupabaseConn
+    .from('tasks')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_completed', true)
+    .gte('completed_at', `${todayStr}T00:00:00`)
+    .lte('completed_at', `${todayStr}T23:59:59`);
+
+  const pendingToday = pendingTasks.filter(t => t.due_date === todayStr).length;
+  const pendingWeek = pendingTasks.filter(t => t.due_date >= weekStartStr).length;
+  const pendingMonth = pendingTasks.filter(t => t.due_date >= monthStartStr).length;
+  const allTimePending = pendingTasks.length;
+
+  const totalToday = pendingToday + (todayCompleted || 0);
+  const progress = totalToday > 0 ? Math.round(((todayCompleted || 0) / totalToday) * 100) : 0;
+
+  return {
+    today: pendingToday,
+    week: pendingWeek,
+    month: pendingMonth,
+    allTime: allTimePending,
+    verified: todayCompleted || 0,
+    progress
+  };
+}

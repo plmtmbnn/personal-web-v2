@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getBlogBySlugStatic, getBlogsStatic } from "@/features/blog/data";
 import BlogContent from "@/features/blog/components/BlogContent";
-import { ArrowLeft, Calendar, Tag, User, BookOpen } from "lucide-react";
+import { ArrowLeft, User, BookOpen } from "lucide-react";
 import Link from "next/link";
 import * as motion from "framer-motion/client";
 import { ScrollProgress } from "@/features/blog/components/ScrollProgress";

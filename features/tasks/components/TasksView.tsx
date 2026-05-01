@@ -156,30 +156,16 @@ export default function TasksView({ tasks }: TasksViewProps) {
               {/* Analytics & Status Grid */}
               <section className="space-y-6">
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1">
-                  <Suspense fallback={<ComponentLoader height="100px" />}>
-                    <DynamicHealthCheck />
-                  </Suspense>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1">
                   <Suspense fallback={<ComponentLoader height="120px" />}>
                     <DynamicGeneralReport tasks={tasks} />
                   </Suspense>
                 </div>
               </section>
 
-              {/* Progress Section */}
-              <div className="space-y-4">
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
-                  <Suspense fallback={<ComponentLoader height="80px" />}>
-                    <DynamicTaskProgress tasks={tasks} />
-                  </Suspense>
-                </div>
-
-                <Suspense fallback={<ComponentLoader height="150px" />}>
-                  <DynamicTaskHeatmap tasks={tasks} />
-                </Suspense>
-              </div>
+              {/* Heatmap Section */}
+              <Suspense fallback={<ComponentLoader height="150px" />}>
+                <DynamicTaskHeatmap tasks={tasks} />
+              </Suspense>
             </motion.div>
           ) : (
             <motion.div
@@ -189,6 +175,14 @@ export default function TasksView({ tasks }: TasksViewProps) {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-6 sm:space-y-8"
             >
+              <Suspense fallback={<ComponentLoader height="80px" />}>
+                <DynamicTaskProgress />
+              </Suspense>
+
+              <Suspense fallback={<ComponentLoader height="100px" />}>
+                <DynamicHealthCheck />
+              </Suspense>
+
               <Suspense fallback={null}>
                 <DynamicTaskNotificationHandler tasks={tasks} />
               </Suspense>

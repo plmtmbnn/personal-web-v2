@@ -1,14 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getBlogsStatic } from "@/features/blog/data";
-import {
-	ArrowRight,
-	Calendar,
-	BookOpen,
-	Clock,
-	Tag,
-	Sparkles,
-} from "lucide-react";
+import { ArrowRight, Calendar, BookOpen, Clock, Sparkles } from "lucide-react";
 import * as motion from "framer-motion/client";
 
 /**

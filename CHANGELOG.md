@@ -1,3 +1,10 @@
+# [0.21.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.20.1...v0.21.0) (2026-05-01)
+
+
+### Features
+
+* **adventures:** reorganize utilities, enhance timer, and optimize auth sessions ([97a35f4](https://github.com/plmtmbnn/personal-web-v2/commit/97a35f418d31456ac33fc0da09e05a25b2a97755))
+
 ## [0.20.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.20.0...v0.20.1) (2026-05-01)
 
 # [0.20.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.19.0...v0.20.0) (2026-05-01)

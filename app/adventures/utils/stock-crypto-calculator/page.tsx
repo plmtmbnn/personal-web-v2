@@ -34,7 +34,7 @@ const formatNumber = (value: number) => {
 // ─── Components ─────────────────────────────────────────────────────────────
 
 /**
- * Custom Styled Numeric Input
+ * Custom Styled Numeric Input - Optimized for Light Theme
  */
 function NumericInput({
 	label,
@@ -51,17 +51,23 @@ function NumericInput({
 	icon: any;
 	suffix?: string;
 }) {
+	const id = useMemo(
+		() => `input-${label.toLowerCase().replace(/\s+/g, "-")}`,
+		[label],
+	);
+
 	return (
-		<div className="space-y-2">
-			<label className="block">
-				<span className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1 mb-2 block">
+		<div className="space-y-1.5">
+			<label htmlFor={id} className="block">
+				<span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-1.5 block">
 					{label}
 				</span>
 				<div className="relative group">
-					<div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-400 transition-colors">
+					<div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors">
 						<Icon className="w-5 h-5" />
 					</div>
 					<input
+						id={id}
 						type="text"
 						inputMode="decimal"
 						value={value}
@@ -72,10 +78,10 @@ function NumericInput({
 							}
 						}}
 						placeholder={placeholder}
-						className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-white font-black placeholder:text-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white/10 transition-all tabular-nums"
+						className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 pl-12 pr-12 text-slate-900 font-black placeholder:text-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all tabular-nums text-lg shadow-sm"
 					/>
 					{suffix && (
-						<div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest text-white/20">
+						<div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest text-slate-300 pointer-events-none">
 							{suffix}
 						</div>
 					)}
@@ -86,7 +92,7 @@ function NumericInput({
 }
 
 /**
- * Main Calculator Page
+ * Enhanced Calculator Page - Solid Productivity Pattern (Light)
  */
 export default function StockCryptoCalculator() {
 	// ─── State ────────────────────────────────────────────────────────────────
@@ -111,7 +117,7 @@ export default function StockCryptoCalculator() {
 		const totalInvest = initialInvest + additionalInvest;
 		const totalQty = oq + nq;
 
-		const newAvg = totalQty > 0 ? totalInvest / totalQty : 0;
+		const currentAvg = totalQty > 0 ? totalInvest / totalQty : 0;
 
 		// Initial vs Additional Weight
 		const initialWeight =
@@ -125,25 +131,36 @@ export default function StockCryptoCalculator() {
 		const plPercent = totalInvest > 0 ? (unrealizedPL / totalInvest) * 100 : 0;
 
 		// Goal Planning: How much to buy at MarketPrice to reach TargetAvg?
-		// Formula: x = (TargetAvg * CurrentTotalQty - CurrentTotalInvest) / (MarketPrice - TargetAvg)
+		// Derivation: (CurrentTotalInvest + (x * MarketPrice)) / (CurrentTotalQty + x) = TargetAvg
+		// => x = (CurrentTotalInvest - TargetAvg * CurrentTotalQty) / (TargetAvg - MarketPrice)
 		let requiredQty = 0;
 		let requiredCapital = 0;
 		let goalPossible = false;
 		let goalNote = "";
 
 		if (ta > 0 && mp > 0 && totalQty > 0) {
-			const denominator = mp - ta;
+			const numerator = totalInvest - ta * totalQty;
+			const denominator = ta - mp;
+
 			if (denominator !== 0) {
-				const x = (ta * totalQty - totalInvest) / denominator;
+				const x = numerator / denominator;
+
 				if (x > 0) {
 					requiredQty = x;
 					requiredCapital = x * mp;
 					goalPossible = true;
 				} else {
-					goalNote =
-						ta < newAvg
-							? "Target already reached or market price is too high to lower average."
-							: "Target already exceeded.";
+					// Logic check for why goal isn't possible
+					if (ta < currentAvg && mp >= ta) {
+						goalNote =
+							"Target average is below current average, but market price is higher than target. Cannot reach target by buying.";
+					} else if (ta > currentAvg && mp <= ta) {
+						goalNote =
+							"Target average is above current average, but market price is lower than target. Cannot reach target by buying.";
+					} else {
+						goalNote =
+							"Target average already achieved or exceeded with current market conditions.";
+					}
 				}
 			} else {
 				goalNote = "Target price cannot equal market price.";
@@ -155,7 +172,7 @@ export default function StockCryptoCalculator() {
 			additionalInvest,
 			totalInvest,
 			totalQty,
-			newAvg,
+			newAvg: currentAvg,
 			initialWeight,
 			additionalWeight,
 			unrealizedPL,
@@ -180,41 +197,28 @@ export default function StockCryptoCalculator() {
 	// ─── Render ───────────────────────────────────────────────────────────────
 
 	return (
-		<main className="min-h-screen bg-slate-950 relative overflow-hidden font-sans selection:bg-blue-500/30">
-			{/* Aesthetic Background */}
-			<div className="absolute inset-0 pointer-events-none">
-				<div className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 rounded-full blur-[150px]" />
-				<div className="absolute bottom-[-10%] left-[-10%] w-[70%] h-[70%] bg-indigo-600/10 rounded-full blur-[150px]" />
-				<div
-					className="absolute inset-0 opacity-[0.03]"
-					style={{
-						backgroundImage:
-							"repeating-linear-gradient(0deg, #fff 0px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, #fff 0px, transparent 1px, transparent 40px)",
-					}}
-				/>
-			</div>
-
-			<div className="max-w-6xl mx-auto px-6 pt-12 pb-24 relative z-10">
+		<main className="min-h-screen bg-slate-50 font-sans selection:bg-blue-100 text-slate-900 pb-20">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 relative z-10">
 				{/* Header */}
-				<div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-					<div className="space-y-4">
+				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 sm:mb-14">
+					<div className="space-y-6">
 						<Link
 							href="/adventures/utils"
-							className="inline-flex items-center text-[10px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-blue-400 transition-colors gap-2 group"
+							className="inline-flex items-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-blue-600 transition-colors gap-2 group"
 						>
 							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
+							Operational Utilities
 						</Link>
-						<div className="flex items-center gap-4">
-							<div className="p-4 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-900/20">
-								<Calculator className="w-8 h-8" />
+						<div className="flex items-center gap-5">
+							<div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20 active:scale-90 transition-transform">
+								<Calculator className="w-7 h-7 sm:w-8 sm:h-8" />
 							</div>
 							<div>
-								<h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-white leading-none">
-									Asset <span className="gradient-text">Averaging</span>
+								<h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-slate-900 leading-none">
+									Asset <span className="text-blue-600">Averaging</span>
 								</h1>
-								<p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">
-									Strategic Investment Optimization
+								<p className="text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] mt-3">
+									Position Strategy & Optimization
 								</p>
 							</div>
 						</div>
@@ -222,33 +226,35 @@ export default function StockCryptoCalculator() {
 
 					<button
 						onClick={reset}
-						className="self-start md:self-center flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-95"
+						className="self-start flex items-center gap-2.5 px-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95 shadow-sm"
 					>
-						<RotateCcw className="w-4 h-4" /> Reset Calculator
+						<RotateCcw className="w-4 h-4" /> Reset Data
 					</button>
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
 					{/* ─── Column 1: Inputs ─── */}
-					<div className="lg:col-span-5 space-y-8">
-						<section className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] space-y-8">
+					<div className="lg:col-span-5 space-y-6 sm:space-y-8">
+						<section className="p-6 sm:p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm space-y-8">
 							<div className="space-y-6">
 								<div className="flex items-center gap-3">
-									<Wallet className="w-5 h-5 text-blue-400" />
-									<h2 className="text-lg font-black uppercase tracking-tighter text-white">
+									<div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+										<Wallet className="w-4 h-4" />
+									</div>
+									<h2 className="text-sm font-black uppercase tracking-widest text-slate-800">
 										Current Position
 									</h2>
 								</div>
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 									<NumericInput
-										label="Old Avg Price"
+										label="Average Price"
 										value={oldPrice}
 										onChange={setOldPrice}
 										icon={Coins}
 										suffix="IDR"
 									/>
 									<NumericInput
-										label="Old Quantity"
+										label="Quantity"
 										value={oldQty}
 										onChange={setOldQty}
 										icon={ArrowRightLeft}
@@ -256,25 +262,27 @@ export default function StockCryptoCalculator() {
 								</div>
 							</div>
 
-							<div className="h-px bg-white/10" />
+							<div className="h-px bg-slate-100" />
 
 							<div className="space-y-6">
 								<div className="flex items-center gap-3">
-									<TrendingUp className="w-5 h-5 text-emerald-400" />
-									<h2 className="text-lg font-black uppercase tracking-tighter text-white">
-										Additional Buy
+									<div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+										<TrendingUp className="w-4 h-4" />
+									</div>
+									<h2 className="text-sm font-black uppercase tracking-widest text-slate-800">
+										Planned Acquisition
 									</h2>
 								</div>
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 									<NumericInput
-										label="New Buy Price"
+										label="Buy Price"
 										value={newPrice}
 										onChange={setNewPrice}
 										icon={Coins}
 										suffix="IDR"
 									/>
 									<NumericInput
-										label="New Quantity"
+										label="Buy Quantity"
 										value={newQty}
 										onChange={setNewQty}
 										icon={ArrowRightLeft}
@@ -283,14 +291,16 @@ export default function StockCryptoCalculator() {
 							</div>
 						</section>
 
-						<section className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] space-y-6">
-							<div className="flex items-center gap-3">
-								<Target className="w-5 h-5 text-rose-400" />
-								<h2 className="text-lg font-black uppercase tracking-tighter text-white">
-									Goal Planning
+						<section className="p-6 sm:p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm space-y-6">
+							<div className="flex items-center gap-3 text-rose-600">
+								<div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+									<Target className="w-4 h-4" />
+								</div>
+								<h2 className="text-sm font-black uppercase tracking-widest">
+									Goal Strategy
 								</h2>
 							</div>
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 								<NumericInput
 									label="Market Price"
 									value={marketPrice}
@@ -306,77 +316,80 @@ export default function StockCryptoCalculator() {
 									suffix="IDR"
 								/>
 							</div>
-							<p className="text-[9px] font-medium text-white/30 uppercase tracking-widest leading-relaxed">
-								Calculates the required purchase quantity at current market
-								price to hit your target average.
-							</p>
+							<div className="px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+								<p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+									Logic: Determines the volume required at Market Price to
+									adjust your overall cost to the Target Average.
+								</p>
+							</div>
 						</section>
 					</div>
 
-					{/* ─── Column 2: Results & Visualization ─── */}
-					<div className="lg:col-span-7 space-y-8">
-						{/* Main Result Card */}
-						<div className="p-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[3rem] shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
-							<div className="absolute top-0 right-0 p-12 opacity-10 group-hover:rotate-12 transition-transform duration-700">
-								<Calculator className="w-48 h-48 text-white" />
+					{/* ─── Column 2: Results ─── */}
+					<div className="lg:col-span-7 space-y-6 sm:space-y-8">
+						{/* Main Metrics Card */}
+						<div className="p-8 sm:p-12 bg-slate-900 rounded-[3rem] shadow-2xl shadow-slate-900/30 relative overflow-hidden group">
+							<div className="absolute -top-10 -right-10 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
+								<Calculator className="w-64 h-64 text-white" />
 							</div>
-							<div className="relative z-10 space-y-10">
-								<div className="space-y-2">
-									<p className="text-white/60 text-xs font-black uppercase tracking-[0.4em]">
-										New Weighted Average
+
+							<div className="relative z-10 space-y-10 sm:space-y-14">
+								<div className="space-y-3 text-center sm:text-left">
+									<p className="text-blue-400 text-[11px] font-black uppercase tracking-[0.5em]">
+										Consolidated Average
 									</p>
-									<h3 className="text-6xl sm:text-7xl font-black text-white tracking-tighter tabular-nums truncate">
+									<h3 className="text-5xl sm:text-7xl lg:text-8xl font-black text-white tracking-tighter tabular-nums truncate leading-none py-2">
 										{formatIDR(stats.newAvg)}
 									</h3>
 								</div>
 
-								<div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
-									<div className="space-y-1">
-										<p className="text-white/40 text-[9px] font-black uppercase tracking-widest">
+								<div className="grid grid-cols-2 sm:grid-cols-3 gap-y-10 gap-x-8">
+									<div className="space-y-1.5">
+										<p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
 											Total Investment
 										</p>
-										<p className="text-xl font-black text-white tabular-nums">
+										<p className="text-2xl font-black text-white tabular-nums leading-none">
 											{formatIDR(stats.totalInvest)}
 										</p>
 									</div>
-									<div className="space-y-1">
-										<p className="text-white/40 text-[9px] font-black uppercase tracking-widest">
+									<div className="space-y-1.5">
+										<p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
 											Total Quantity
 										</p>
-										<p className="text-xl font-black text-white tabular-nums">
+										<p className="text-2xl font-black text-white tabular-nums leading-none">
 											{formatNumber(stats.totalQty)}
 										</p>
 									</div>
-									<div className="space-y-1">
-										<p className="text-white/40 text-[9px] font-black uppercase tracking-widest">
-											Initial Capital
+									<div className="space-y-1.5 col-span-2 sm:col-span-1">
+										<p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
+											Capital Base
 										</p>
-										<p className="text-xl font-black text-white tabular-nums">
+										<p className="text-2xl font-black text-white tabular-nums leading-none">
 											{formatIDR(stats.initialInvest)}
 										</p>
 									</div>
 								</div>
 
-								{/* weight visualization */}
-								<div className="space-y-3">
-									<div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-										<span className="text-blue-200">
-											Initial {stats.initialWeight.toFixed(1)}%
+								{/* Distribution visualization */}
+								<div className="space-y-4">
+									<div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest">
+										<span className="text-blue-400">
+											Position {stats.initialWeight.toFixed(1)}%
 										</span>
-										<span className="text-emerald-200">
-											Additional {stats.additionalWeight.toFixed(1)}%
+										<span className="text-emerald-400">
+											Add-on {stats.additionalWeight.toFixed(1)}%
 										</span>
 									</div>
-									<div className="h-4 bg-black/20 rounded-full overflow-hidden border border-white/10 p-1">
-										<div className="flex h-full gap-1">
+									<div className="h-5 bg-white/5 rounded-full overflow-hidden border border-white/5 p-1.5">
+										<div className="flex h-full gap-1.5">
 											<motion.div
-												className="bg-blue-400 rounded-l-full shadow-[0_0_15px_rgba(96,165,250,0.5)]"
+												className="bg-blue-500 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)]"
 												initial={{ width: 0 }}
 												animate={{ width: `${stats.initialWeight}%` }}
-												transition={{ duration: 1, ease: "easeOut" }}
+												transition={{ duration: 1.2, ease: "easeOut" }}
 											/>
 											<motion.div
-												className="bg-emerald-400 rounded-r-full shadow-[0_0_15px_rgba(52,211,153,0.5)] flex-1"
+												className="bg-emerald-500 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.5)] flex-1"
 												initial={{ opacity: 0 }}
 												animate={{
 													opacity: stats.additionalWeight > 0 ? 1 : 0,
@@ -388,27 +401,29 @@ export default function StockCryptoCalculator() {
 							</div>
 						</div>
 
-						{/* Secondary Result Cards */}
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-							{/* Market Position Card */}
+						{/* Operational Cards */}
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+							{/* Performance Card */}
 							<motion.div
 								initial={{ opacity: 0, y: 20 }}
 								animate={{ opacity: 1, y: 0 }}
-								className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] space-y-6"
+								className="p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm space-y-6 flex flex-col justify-between"
 							>
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-3">
-										<TrendingUp className="w-5 h-5 text-indigo-400" />
-										<h2 className="text-sm font-black uppercase tracking-widest text-white">
-											Market P/L
+										<div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+											<BarChart3 className="w-4 h-4" />
+										</div>
+										<h2 className="text-[11px] font-black uppercase tracking-widest text-slate-800">
+											Unrealized P/L
 										</h2>
 									</div>
 									{stats.unrealizedPL !== 0 && (
 										<div
-											className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
+											className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase ${
 												stats.unrealizedPL > 0
-													? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-													: "bg-rose-500/10 border-rose-500/20 text-rose-400"
+													? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+													: "bg-rose-50 text-rose-600 border border-rose-100"
 											}`}
 										>
 											{stats.unrealizedPL > 0 ? (
@@ -420,85 +435,89 @@ export default function StockCryptoCalculator() {
 										</div>
 									)}
 								</div>
-								<div className="space-y-1">
-									<p className="text-3xl font-black text-white tabular-nums">
+								<div className="py-2">
+									<p
+										className={`text-4xl font-black tabular-nums leading-none tracking-tight ${stats.unrealizedPL >= 0 ? "text-slate-900" : "text-rose-600"}`}
+									>
 										{stats.unrealizedPL >= 0 ? "" : "-"}
 										{formatIDR(Math.abs(stats.unrealizedPL))}
 									</p>
-									<p className="text-[10px] font-bold uppercase tracking-widest text-white/20">
-										Unrealized Performance
+									<p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">
+										Market Valuation Δ
 									</p>
 								</div>
-								<div className="pt-4 border-t border-white/10 flex justify-between items-center">
-									<span className="text-[10px] font-black uppercase tracking-widest text-white/30">
+								<div className="pt-5 border-t border-slate-100 flex justify-between items-center text-slate-500">
+									<span className="text-[10px] font-black uppercase tracking-widest">
 										Total Value
 									</span>
-									<span className="text-sm font-black text-white tabular-nums">
+									<span className="text-base font-black text-slate-900 tabular-nums">
 										{formatIDR(stats.marketValue)}
 									</span>
 								</div>
 							</motion.div>
 
-							{/* Goal Result Card */}
+							{/* Action Plan Card */}
 							<motion.div
 								initial={{ opacity: 0, y: 20 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: 0.1 }}
-								className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] space-y-6 relative overflow-hidden"
+								className="p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm space-y-6 flex flex-col justify-between"
 							>
-								<div className="flex items-center gap-3">
-									<Target className="w-5 h-5 text-rose-400" />
-									<h2 className="text-sm font-black uppercase tracking-widest text-white">
+								<div className="flex items-center gap-3 text-rose-600">
+									<div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+										<Zap className="w-4 h-4" />
+									</div>
+									<h2 className="text-[11px] font-black uppercase tracking-widest">
 										Action Plan
 									</h2>
 								</div>
 
-								<AnimatePresence mode="wait">
-									{stats.goalPossible ? (
-										<motion.div
-											key="possible"
-											initial={{ opacity: 0 }}
-											animate={{ opacity: 1 }}
-											exit={{ opacity: 0 }}
-											className="space-y-6"
-										>
-											<div className="space-y-1">
-												<p className="text-3xl font-black text-white tabular-nums">
-													{formatNumber(stats.requiredQty)}
-												</p>
-												<p className="text-[10px] font-bold uppercase tracking-widest text-white/20">
-													Required Quantity to Buy
-												</p>
-											</div>
-											<div className="pt-4 border-t border-white/10 flex flex-col gap-2">
-												<div className="flex justify-between items-center">
-													<span className="text-[10px] font-black uppercase tracking-widest text-white/30">
-														Estimated Cost
+								<div className="flex-1 min-h-[100px] flex flex-col justify-center">
+									<AnimatePresence mode="wait">
+										{stats.goalPossible ? (
+											<motion.div
+												key="possible"
+												initial={{ opacity: 0, x: 10 }}
+												animate={{ opacity: 1, x: 0 }}
+												exit={{ opacity: 0, x: -10 }}
+												className="space-y-6"
+											>
+												<div>
+													<p className="text-4xl font-black text-slate-900 tabular-nums leading-none tracking-tight">
+														{formatNumber(stats.requiredQty)}
+													</p>
+													<p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">
+														Required Quantity to Buy
+													</p>
+												</div>
+												<div className="pt-5 border-t border-slate-100 flex justify-between items-center">
+													<span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+														Capital Needed
 													</span>
-													<span className="text-sm font-black text-emerald-400 tabular-nums">
+													<span className="text-base font-black text-emerald-600 tabular-nums">
 														{formatIDR(stats.requiredCapital)}
 													</span>
 												</div>
-											</div>
-										</motion.div>
-									) : (
-										<motion.div
-											key="not-possible"
-											initial={{ opacity: 0 }}
-											animate={{ opacity: 1 }}
-											exit={{ opacity: 0 }}
-											className="h-full flex flex-col justify-center gap-3"
-										>
-											<div className="flex items-center gap-3 text-rose-400/50">
-												<AlertCircle className="w-8 h-8 flex-shrink-0" />
-												<p className="text-[10px] font-bold uppercase tracking-[0.2em] leading-relaxed">
-													{stats.goalNote ||
-														"Enter Target & Market Price to calculate plan."}
-												</p>
-											</div>
-										</motion.div>
-									)}
-								</AnimatePresence>
+											</motion.div>
+										) : (
+											<motion.div
+												key="not-possible"
+												initial={{ opacity: 0 }}
+												animate={{ opacity: 1 }}
+												exit={{ opacity: 0 }}
+												className="space-y-3"
+											>
+												<div className="flex items-start gap-3 text-slate-300">
+													<AlertCircle className="w-6 h-6 flex-shrink-0 mt-0.5" />
+													<p className="text-[10px] font-bold uppercase tracking-widest leading-loose">
+														{stats.goalNote ||
+															"Enter Target & Market Price to generate plan."}
+													</p>
+												</div>
+											</motion.div>
+										)}
+									</AnimatePresence>
+								</div>
 							</motion.div>
 						</div>
 					</div>
@@ -507,3 +526,6 @@ export default function StockCryptoCalculator() {
 		</main>
 	);
 }
+
+// ─── Add extra icons to import list above if needed ─────────────────────────
+import { BarChart3, Zap } from "lucide-react";

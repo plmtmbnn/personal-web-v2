@@ -1,3 +1,12 @@
+# [0.19.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.18.0...v0.19.0) (2026-05-01)
+
+
+### Features
+
+* **tasks:** include created_at in getTasks heatmap query ([de74216](https://github.com/plmtmbnn/personal-web-v2/commit/de74216d0a3f9640b1f0ef7546164ac699aca29f))
+* **tasks:** refactor heatmap utility for multi-metric support ([b291f60](https://github.com/plmtmbnn/personal-web-v2/commit/b291f60fe70979b3cd87834b2beef426c2a68299))
+* **tasks:** update TaskHeatmap UI to split-diagonal dual metric ([3ea95bd](https://github.com/plmtmbnn/personal-web-v2/commit/3ea95bdecda980d9fc6c7bfad83ee910f0c62639))
+
 # [0.18.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.17.0...v0.18.0) (2026-04-28)
 
 

@@ -9,6 +9,10 @@ import {
 	ArrowLeft,
 	Wrench,
 	Calculator,
+	Braces,
+	ArrowRightLeft,
+	FileSpreadsheet,
+	Database,
 } from "lucide-react";
 
 const utilities = [
@@ -31,6 +35,46 @@ const utilities = [
 		color: "text-blue-500",
 		bg: "bg-blue-500/5",
 		icon: Calculator,
+	},
+	{
+		title: "JSON Formatter",
+		slug: "json-formatter",
+		description:
+			"Developer-centric tool to beautify, minify, and validate JSON strings with syntax highlighting.",
+		accent: "from-indigo-500 to-purple-500",
+		color: "text-indigo-500",
+		bg: "bg-indigo-500/5",
+		icon: Braces,
+	},
+	{
+		title: "Case Converter",
+		slug: "case-converter",
+		description:
+			"Universal recursive converter for variable names and JSON keys (Camel, Pascal, Snake, Kebab).",
+		accent: "from-blue-600 to-cyan-500",
+		color: "text-blue-600",
+		bg: "bg-blue-600/5",
+		icon: ArrowRightLeft,
+	},
+	{
+		title: "CSV to JSON",
+		slug: "csv-to-json",
+		description:
+			"Advanced CSV parser with support for nested objects, custom delimiters, and file uploads.",
+		accent: "from-emerald-600 to-teal-500",
+		color: "text-emerald-600",
+		bg: "bg-emerald-600/5",
+		icon: FileSpreadsheet,
+	},
+	{
+		title: "SQL Formatter",
+		slug: "sql-formatter",
+		description:
+			"Advanced SQL beautifier and syntax validator supporting PostgreSQL, MySQL, and T-SQL.",
+		accent: "from-blue-500 to-indigo-500",
+		color: "text-blue-500",
+		bg: "bg-blue-500/5",
+		icon: Database,
 	},
 ];
 

@@ -1,3 +1,10 @@
+# [0.24.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.23.0...v0.24.0) (2026-05-03)
+
+
+### Features
+
+* **utils:** implement developer utility suite with advanced formatters ([1544f46](https://github.com/plmtmbnn/personal-web-v2/commit/1544f46a359f70aa33d28624a27e05accfb18af9))
+
 # [0.23.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.22.2...v0.23.0) (2026-05-01)
 
 

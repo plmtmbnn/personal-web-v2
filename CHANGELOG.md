@@ -1,3 +1,10 @@
+# [0.25.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.24.0...v0.25.0) (2026-05-03)
+
+
+### Features
+
+* **notifications:** implement modular notification system with telegram and firebase remote config ([47e8a80](https://github.com/plmtmbnn/personal-web-v2/commit/47e8a80d357869986f0df520ec356bce87994742))
+
 # [0.24.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.23.0...v0.24.0) (2026-05-03)
 
 

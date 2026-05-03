@@ -187,7 +187,7 @@ export default function CaseConverterView() {
 				</div>
 
 				{/* Editor Layout */}
-				<div className="grid grid-cols-1 xl:grid-cols-[1fr_120px_1fr] gap-4 sm:gap-8 items-stretch">
+				<div className="grid grid-cols-1 xl:grid-cols-[1fr_180px_1fr] gap-4 sm:gap-8 items-stretch">
 					{/* Input Pane */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -205,26 +205,34 @@ export default function CaseConverterView() {
 					</div>
 
 					{/* Center Controls */}
-					<div className="grid grid-cols-2 sm:grid-cols-4 xl:flex xl:flex-col justify-center gap-2 sm:gap-3 py-6 xl:py-12">
-						{[
-							{ label: "camelCase", type: "camel" },
-							{ label: "PascalCase", type: "pascal" },
-							{ label: "snake_case", type: "snake" },
-							{ label: "kebab-case", type: "kebab" },
-							{ label: "UPPER CASE", type: "upper" },
-							{ label: "lower case", type: "lower" },
-							{ label: "Capitalize", type: "capitalize" },
-						].map((btn) => (
-							<motion.button
-								key={btn.type}
-								whileHover={{ scale: 1.05, x: 5 }}
-								whileTap={{ scale: 0.95 }}
-								onClick={() => convert(btn.type as CaseType)}
-								className="py-3.5 px-4 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-900/10 hover:bg-blue-600 transition-colors"
+					<div className="flex flex-col justify-center py-4 xl:py-12">
+						<div className="grid grid-cols-2 sm:grid-cols-3 xl:flex xl:flex-col gap-2 sm:gap-3">
+							{[
+								{ label: "camelCase", type: "camel" },
+								{ label: "PascalCase", type: "pascal" },
+								{ label: "snake_case", type: "snake" },
+								{ label: "kebab-case", type: "kebab" },
+								{ label: "UPPER CASE", type: "upper" },
+								{ label: "lower case", type: "lower" },
+								{ label: "Capitalize", type: "capitalize" },
+							].map((btn) => (
+								<motion.button
+									key={btn.type}
+									whileHover={{ scale: 1.02, x: 5 }}
+									whileTap={{ scale: 0.98 }}
+									onClick={() => convert(btn.type as CaseType)}
+									className="w-full py-3 px-3 bg-slate-900 text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-900/10 hover:bg-blue-600 transition-all flex items-center justify-center text-center min-h-[44px]"
+								>
+									{btn.label}
+								</motion.button>
+							))}
+							<button
+								onClick={handleReset}
+								className="xl:hidden py-3 px-3 bg-white border border-slate-200 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:text-rose-600 transition-all min-h-[44px]"
 							>
-								{btn.label}
-							</motion.button>
-						))}
+								Reset
+							</button>
+						</div>
 					</div>
 
 					{/* Output Pane */}

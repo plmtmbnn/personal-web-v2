@@ -10,6 +10,13 @@ const clientSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
   NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: z.string().default("true"),
   NEXT_PUBLIC_ENABLE_PINGUARD: z.string().default("true"),
+  // Firebase Client Config
+  NEXT_PUBLIC_FIREBASE_API_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1).optional(),
 });
 
 /**
@@ -21,6 +28,9 @@ const serverSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
   NEXT_PUBLIC_PAGE_PIN: z.string().length(6),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  CRON_SECRET: z.string().min(1).optional(),
+  TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
+  TELEGRAM_CHAT_ID: z.string().min(1).optional(),
 });
 
 const validateEnv = () => {
@@ -32,6 +42,12 @@ const validateEnv = () => {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH,
     NEXT_PUBLIC_ENABLE_PINGUARD: process.env.NEXT_PUBLIC_ENABLE_PINGUARD,
+    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   });
 
   if (!clientResult.success) {
@@ -46,6 +62,9 @@ const validateEnv = () => {
       UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
       NEXT_PUBLIC_PAGE_PIN: process.env.NEXT_PUBLIC_PAGE_PIN,
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      CRON_SECRET: process.env.CRON_SECRET,
+      TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+      TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
     });
 
     if (!serverResult.success) {

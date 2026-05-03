@@ -5,23 +5,36 @@ import { useNotification } from '@/lib/hooks/useNotification';
 import { Task } from '@/features/tasks/types';
 import { calculateProgress } from '@/features/tasks/utils';
 import { Bell, BellOff, BellRing } from 'lucide-react';
+import { notificationDispatcher } from '@/services/notifications/dispatcher';
+import { BrowserChannel } from '@/services/notifications/channels/browser';
+import { remoteConfigService } from '@/services/config/remote-config';
 
 interface TaskNotificationHandlerProps {
   tasks: Task[];
 }
 
 export default function TaskNotificationHandler({ tasks }: TaskNotificationHandlerProps) {
-  const { permission, requestPermission, sendNotification, isSupported } = useNotification();
+  const { permission, requestPermission, isSupported } = useNotification();
   const [isMuted, setIsMuted] = useState(false);
   const notifiedTasksRef = useRef<{ [key: string]: string[] }>({}); // date-time -> [taskIds]
   const goalReachedRef = useRef<boolean>(false);
 
-  // Load mute state from localStorage
+  // Load mute state and Register Browser Channel
   useEffect(() => {
     const storedMute = localStorage.getItem('tasks-notifications-muted');
     if (storedMute === 'true') {
       setIsMuted(true);
     }
+    
+    // Pluggable Architecture: Register Browser Channel if enabled in Cloud
+    const initChannels = async () => {
+      const isBrowserEnabled = await remoteConfigService.getConfigValue('enable_browser_notifications');
+      if (isBrowserEnabled) {
+        notificationDispatcher.registerChannel(new BrowserChannel());
+      }
+    };
+    
+    initChannels();
   }, []);
 
   const toggleMute = () => {
@@ -45,8 +58,10 @@ export default function TaskNotificationHandler({ tasks }: TaskNotificationHandl
         
         highPriorityTasks.forEach(task => {
           if (!notifiedTasksRef.current[key]?.includes(task.id)) {
-            sendNotification('Heads up!', {
+            notificationDispatcher.dispatch({
+              title: 'Heads up!',
               body: `You have a high-priority task: ${task.title}`,
+              data: { taskId: task.id }
             });
 
             if (!notifiedTasksRef.current[key]) {
@@ -60,7 +75,8 @@ export default function TaskNotificationHandler({ tasks }: TaskNotificationHandl
       // Progress check for "Goal Reached!"
       const progress = calculateProgress(tasks);
       if (progress === 100 && tasks.length > 0 && !goalReachedRef.current) {
-        sendNotification('Goal Reached!', {
+        notificationDispatcher.dispatch({
+          title: 'Goal Reached!',
           body: "All tasks completed! You've crushed it. 🎉",
         });
         goalReachedRef.current = true;
@@ -73,7 +89,7 @@ export default function TaskNotificationHandler({ tasks }: TaskNotificationHandl
     checkReminders(); // Initial check
 
     return () => clearInterval(interval);
-  }, [tasks, permission, sendNotification, isMuted]);
+  }, [tasks, permission, isMuted]);
 
   if (!isSupported) return null;
 

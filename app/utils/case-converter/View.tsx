@@ -205,7 +205,7 @@ export default function CaseConverterView() {
 					</div>
 
 					{/* Center Controls */}
-					<div className="flex xl:flex-col justify-center gap-2 py-4 xl:py-12">
+					<div className="grid grid-cols-2 sm:grid-cols-4 xl:flex xl:flex-col justify-center gap-2 sm:gap-3 py-6 xl:py-12">
 						{[
 							{ label: "camelCase", type: "camel" },
 							{ label: "PascalCase", type: "pascal" },
@@ -220,7 +220,7 @@ export default function CaseConverterView() {
 								whileHover={{ scale: 1.05, x: 5 }}
 								whileTap={{ scale: 0.95 }}
 								onClick={() => convert(btn.type as CaseType)}
-								className="flex-1 xl:flex-none py-3 px-4 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-slate-900/10 hover:bg-blue-600 transition-colors"
+								className="py-3.5 px-4 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-900/10 hover:bg-blue-600 transition-colors"
 							>
 								{btn.label}
 							</motion.button>

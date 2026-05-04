@@ -755,7 +755,7 @@ export default function TimerView() {
 								<h2 className="text-5xl text-white tracking-tighter text-white">
 									Session Done!
 								</h2>
-								<p className="text-white/50 text-xs font-bold uppercase tracking-[0.4em] mt-2">
+								<p className="text-xs font-bold uppercase tracking-[0.4em] mt-2 !text-white">
 									All intervals completed
 								</p>
 							</div>
@@ -811,7 +811,7 @@ export default function TimerView() {
 
 							<button
 								onClick={resetTimer}
-								className="px-12 py-5 bg-white text-emerald-900 rounded-[2rem] text-white text-lg tracking-tight hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-3"
+								className="px-12 py-5 bg-white text-emerald-900 rounded-[2rem] text-black text-lg tracking-tight hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-3"
 							>
 								<RotateCcw className="w-5 h-5" /> New Session
 							</button>

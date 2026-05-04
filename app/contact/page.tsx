@@ -121,16 +121,6 @@ export default function ContactPage() {
 							transition={{ duration: 0.6 }}
 							className="space-y-4 sm:space-y-6"
 						>
-							<div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-sm">
-								<span className="relative flex h-2 w-2">
-									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-									<span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-								</span>
-								<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-500">
-									Available for collaboration
-								</span>
-							</div>
-
 							<h1 className="text-4xl sm:text-7xl font-black tracking-tighter text-foreground leading-[0.95] sm:leading-[0.9]">
 								Let's <span className="gradient-text">Connect.</span>
 							</h1>
@@ -155,7 +145,7 @@ export default function ContactPage() {
 										Location
 									</p>
 									<p className="text-xs sm:text-base font-bold text-foreground">
-										Jakarta, ID
+										Toba
 									</p>
 								</div>
 							</div>
@@ -249,7 +239,7 @@ export default function ContactPage() {
 					<div className="inline-flex items-center gap-3 px-4 sm:px-5 py-2 sm:2.5 rounded-full bg-white/5 border border-white/10 shadow-sm backdrop-blur-md">
 						<div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
 						<span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 whitespace-nowrap">
-							Project Hash: <span className="text-accent">v{version}</span>
+							Version <span className="text-accent">v{version}</span>
 						</span>
 					</div>
 				</motion.div>

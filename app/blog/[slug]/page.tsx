@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { getBlogBySlugStatic, getBlogsStatic } from "@/features/blog/data";
+import {
+	getBlogBySlug,
+	getBlogBySlugStatic,
+	getBlogsStatic,
+} from "@/features/blog/data";
 import BlogContent from "@/features/blog/components/BlogContent";
 import { ArrowLeft, User, BookOpen } from "lucide-react";
 import Link from "next/link";
@@ -19,7 +23,8 @@ export async function generateMetadata({
 }: {
 	params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-	const { slug } = await params;
+	const resolvedParams = await params;
+	const slug = decodeURIComponent(resolvedParams.slug);
 	const post = await getBlogBySlugStatic(slug);
 
 	if (!post) return { title: "Entry Not Found" };
@@ -88,8 +93,9 @@ export default async function BlogDetailPage({
 }: {
 	params: Promise<{ slug: string }>;
 }) {
-	const { slug } = await params;
-	const post = await getBlogBySlugStatic(slug);
+	const resolvedParams = await params;
+	const slug = decodeURIComponent(resolvedParams.slug);
+	const post = await getBlogBySlug(slug);
 
 	if (!post) return notFound();
 

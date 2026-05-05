@@ -1,3 +1,10 @@
+## [0.25.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.25.1...v0.25.2) (2026-05-05)
+
+
+### Bug Fixes
+
+* **blog:** decode slug and use dynamic fetch for detail page ([8050928](https://github.com/plmtmbnn/personal-web-v2/commit/80509286c1a13775c96a79d00ba49aa6e50e74d3))
+
 ## [0.25.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.25.0...v0.25.1) (2026-05-03)
 
 # [0.25.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.24.0...v0.25.0) (2026-05-03)

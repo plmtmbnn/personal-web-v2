@@ -1,3 +1,10 @@
+# [0.27.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.26.0...v0.27.0) (2026-05-06)
+
+
+### Features
+
+* **utils:** add Schema Forge JSON converter, optimize timer sync, and remove stock explorer ([7918983](https://github.com/plmtmbnn/personal-web-v2/commit/7918983fb26c8e54cf1f3a6723168a3805056788))
+
 # [0.26.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.25.2...v0.26.0) (2026-05-06)
 
 

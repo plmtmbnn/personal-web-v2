@@ -17,7 +17,6 @@ import { getFearAndGreedData } from "@/features/investment/actions";
 import type { FearAndGreedData } from "@/features/investment/types";
 import FearAndGreedGauge from "@/features/investment/components/FearAndGreedGauge";
 import SentimentCard from "@/features/investment/components/SentimentCard";
-import StockExplorer from "@/features/investment/components/StockExplorer";
 
 export default function InvestmentPage() {
 	const [marketData, setMarketData] = useState<FearAndGreedData | null>(null);
@@ -215,8 +214,6 @@ export default function InvestmentPage() {
 							</div>
 						)}
 					</div>
-
-					<StockExplorer />
 				</div>
 			</main>
 		</PinGuard>

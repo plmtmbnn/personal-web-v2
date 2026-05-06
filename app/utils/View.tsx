@@ -76,6 +76,17 @@ const utilities = [
 		bg: "bg-blue-500/5",
 		icon: Database,
 	},
+	{
+		title: "Schema Forge",
+		slug: "json-converter-advanced",
+		path: "/utils/json-converter-advanced",
+		description:
+			"Advanced JSON to Multi-Target converter (TS, Go, Zod, Mongoose, Joi) with recursive parsing.",
+		accent: "from-blue-600 to-indigo-600",
+		color: "text-blue-600",
+		bg: "bg-blue-600/5",
+		icon: Braces,
+	},
 ];
 
 export default function UtilsLanding() {
@@ -143,7 +154,7 @@ export default function UtilsLanding() {
 							transition={{ delay: i * 0.1, duration: 0.6 }}
 						>
 							<Link
-								href={`/utils/${util.slug}`}
+								href={util.path || `/utils/${util.slug}`}
 								className="group block relative p-10 rounded-[2.5rem] bg-white/5 border-2 border-white/5 backdrop-blur-xl hover:border-blue-500/30 transition-all duration-500 shadow-2xl overflow-hidden !no-underline"
 							>
 								<div

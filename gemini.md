@@ -82,7 +82,9 @@ Strictly for routing and page definitions.
 
 ### Adventure Utilities
 - **System Integrity**: Uses **Wake Lock API** and **Web Audio API** beeps.
-- **Structure**: Individual utilities (Timer, Case, SQL, CSV) implemented as Server/View component pairs for SEO. `page.tsx` (Server) handles metadata/SEO, while `View.tsx` (Client) contains business logic.
+- **Advanced Tools**: 
+  - **Schema Forge**: Advanced JSON to Multi-Target converter supporting TypeScript, Go Structs (with JSON tags), Mongoose Schemas, Zod, and Joi validations.
+- **Structure**: Individual utilities (Timer, Case, SQL, CSV, Schema Forge) implemented as Server/View component pairs for SEO. `page.tsx` (Server) handles metadata/SEO, while `View.tsx` (Client) contains business logic.
 
 ## 📏 Engineering Standards
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.

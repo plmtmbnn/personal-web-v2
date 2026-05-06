@@ -404,11 +404,16 @@ export default function TimerView() {
 	const [wakeLockActive, setWakeLockActive] = useState(false);
 	const [isComplete, setIsComplete] = useState(false);
 	const [laps, setLaps] = useState<LapEntry[]>([]);
-	const [_phaseStartElapsed, setPhaseStartElapsed] = useState(0);
 
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
 	const wakeLockRef = useRef<any>(null);
 	const audioCtxRef = useRef<AudioContext | null>(null);
+
+	// Background persistence refs
+	const phaseStartTimeRef = useRef<number>(0);
+	const sessionStartTimeRef = useRef<number>(0);
+	const pausedTimeLeftRef = useRef<number>(0);
+	const pausedTotalElapsedRef = useRef<number>(0);
 
 	// ── Queue ────────────────────────────────────────────────────────────────
 
@@ -516,6 +521,7 @@ export default function TimerView() {
 
 	const startTimer = () => {
 		if (queue.length === 0) return;
+		const now = Date.now();
 		setIsActive(true);
 		setIsPaused(false);
 		setIsComplete(false);
@@ -523,17 +529,25 @@ export default function TimerView() {
 		setTimeLeft(queue[0].duration);
 		setCurrentPhaseIndex(0);
 		setTotalElapsed(0);
-		setPhaseStartElapsed(0);
+		phaseStartTimeRef.current = now;
+		sessionStartTimeRef.current = now;
 		requestWakeLock();
 		playPhaseStart(queue[0].type);
 	};
 
 	const pauseTimer = () => {
 		setIsPaused(true);
+		pausedTimeLeftRef.current = timeLeft;
+		pausedTotalElapsedRef.current = totalElapsed;
 		releaseWakeLock();
 	};
 
 	const resumeTimer = () => {
+		const now = Date.now();
+		phaseStartTimeRef.current =
+			now -
+			(queue[currentPhaseIndex].duration - pausedTimeLeftRef.current) * 1000;
+		sessionStartTimeRef.current = now - pausedTotalElapsedRef.current * 1000;
 		setIsPaused(false);
 		requestWakeLock();
 	};
@@ -552,6 +566,7 @@ export default function TimerView() {
 
 	const skipPhase = () => {
 		if (currentPhaseIndex < queue.length - 1) {
+			const now = Date.now();
 			// Log skipped phase
 			const current = queue[currentPhaseIndex];
 			setLaps((prev) => [
@@ -565,8 +580,10 @@ export default function TimerView() {
 			]);
 			const nextIdx = currentPhaseIndex + 1;
 			setCurrentPhaseIndex(nextIdx);
-			setTimeLeft(queue[nextIdx].duration);
-			setPhaseStartElapsed(totalElapsed);
+			const nextDuration = queue[nextIdx].duration;
+			setTimeLeft(nextDuration);
+			phaseStartTimeRef.current = now;
+			// sessionStartTime adjustment happens in next tick calculation
 			playPhaseStart(queue[nextIdx].type);
 		} else {
 			handleComplete();
@@ -583,58 +600,84 @@ export default function TimerView() {
 		});
 	}, [releaseWakeLock, playBeep]);
 
+	// ── Sync Logic ───────────────────────────────────────────────────────────
+
+	const syncTimer = useCallback(() => {
+		if (!isActive || isPaused || isComplete) return;
+
+		const now = Date.now();
+		const currentPhase = queue[currentPhaseIndex];
+		const elapsedInPhase = Math.floor((now - phaseStartTimeRef.current) / 1000);
+		const newTimeLeft = Math.max(0, currentPhase.duration - elapsedInPhase);
+		const newTotalElapsed = Math.floor(
+			(now - sessionStartTimeRef.current) / 1000,
+		);
+
+		if (newTimeLeft === 0) {
+			// Phase finished while in background or during tick
+			setLaps((lapsPrev) => [
+				...lapsPrev,
+				{
+					label: queue[currentPhaseIndex].label,
+					type: queue[currentPhaseIndex].type,
+					duration: queue[currentPhaseIndex].duration,
+					completedAt: newTotalElapsed,
+				},
+			]);
+
+			if (currentPhaseIndex < queue.length - 1) {
+				const nextIdx = currentPhaseIndex + 1;
+				setCurrentPhaseIndex(nextIdx);
+				phaseStartTimeRef.current = now;
+				setTimeLeft(queue[nextIdx].duration);
+				setTimeout(() => playPhaseStart(queue[nextIdx].type), 50);
+			} else {
+				handleComplete();
+			}
+		} else {
+			setTimeLeft(newTimeLeft);
+			setTotalElapsed(newTotalElapsed);
+
+			// Sound alerts
+			if (newTimeLeft === 3 || newTimeLeft === 2) playBeep(440, 0.07);
+			if (newTimeLeft === 1) playBeep(880, 0.2, "square");
+		}
+	}, [
+		isActive,
+		isPaused,
+		isComplete,
+		currentPhaseIndex,
+		queue,
+		handleComplete,
+		playPhaseStart,
+		playBeep,
+	]);
+
 	// ── Tick ─────────────────────────────────────────────────────────────────
 
 	useEffect(() => {
 		if (isActive && !isPaused) {
-			timerRef.current = setInterval(() => {
-				setTimeLeft((prev) => {
-					if (prev === 3 || prev === 2) playBeep(440, 0.07);
-					if (prev === 1) playBeep(880, 0.2, "square");
-
-					if (prev <= 1) {
-						// Log completed phase
-						setLaps((lapsPrev) => [
-							...lapsPrev,
-							{
-								label: queue[currentPhaseIndex].label,
-								type: queue[currentPhaseIndex].type,
-								duration: queue[currentPhaseIndex].duration,
-								completedAt: totalElapsed + 1,
-							},
-						]);
-
-						if (currentPhaseIndex < queue.length - 1) {
-							const nextIdx = currentPhaseIndex + 1;
-							setCurrentPhaseIndex(nextIdx);
-							setPhaseStartElapsed((e) => e);
-							setTimeout(() => playPhaseStart(queue[nextIdx].type), 50);
-							return queue[nextIdx].duration;
-						} else {
-							setTimeout(handleComplete, 100);
-							return 0;
-						}
-					}
-					return prev - 1;
-				});
-				setTotalElapsed((e) => e + 1);
-			}, 1000);
+			timerRef.current = setInterval(syncTimer, 1000);
 		} else {
 			if (timerRef.current) clearInterval(timerRef.current);
 		}
 		return () => {
 			if (timerRef.current) clearInterval(timerRef.current);
 		};
-	}, [
-		isActive,
-		isPaused,
-		currentPhaseIndex,
-		queue,
-		totalElapsed,
-		playPhaseStart,
-		playBeep,
-		handleComplete,
-	]);
+	}, [isActive, isPaused, syncTimer]);
+
+	// ── Visibility Change ────────────────────────────────────────────────────
+
+	useEffect(() => {
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "visible") {
+				syncTimer();
+			}
+		};
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () =>
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+	}, [syncTimer]);
 
 	// ── Derived ───────────────────────────────────────────────────────────────
 

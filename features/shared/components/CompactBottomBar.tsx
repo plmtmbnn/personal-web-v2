@@ -61,7 +61,8 @@ const NAV_ITEMS: NavItem[] = [
     icon: Briefcase,
     subItems: [
       { label: "Portfolio", href: "/portfolio", icon: Sparkles },
-      { label: "Experience", href: "/work-experience", icon: Layers }
+      { label: "Experience", href: "/work-experience", icon: Layers },
+      { label: "Contact", href: "/contact", icon: Mail }
     ]
   },
   { 
@@ -83,11 +84,6 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Running", href: "/adventures/running", icon: Mountain },
       { label: "Travel", href: "/adventures/travel", icon: Map }
     ]
-  },
-  {
-    label: "Contact",
-    href: "/contact",
-    icon: Mail
   },
   {
     label: "Login",

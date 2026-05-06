@@ -1,3 +1,10 @@
+# [0.26.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.25.2...v0.26.0) (2026-05-06)
+
+
+### Features
+
+* **investment:** add StockExplorer with IDX proxy and reorganize nav ([43d824b](https://github.com/plmtmbnn/personal-web-v2/commit/43d824b210b47ee0dc2831f6001bd5f782222334))
+
 ## [0.25.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.25.1...v0.25.2) (2026-05-05)
 
 

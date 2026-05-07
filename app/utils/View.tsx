@@ -13,6 +13,7 @@ import {
 	ArrowRightLeft,
 	FileSpreadsheet,
 	Database,
+	Files,
 } from "lucide-react";
 
 const utilities = [

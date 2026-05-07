@@ -25,21 +25,20 @@ export class TelegramChannel implements NotificationChannel {
     
     // Formatting: HTML tags for bold and code blocks
     const message = `
-<b>${payload.title}</b>
+🔔 <b>${payload.title}</b>
+
 ${payload.body}
 
-${payload.data?.taskId ? `<code>Task ID: ${payload.data.taskId}</code>` : ''}
-${payload.data?.dueDate ? `📅 <b>Due:</b> ${payload.data.dueDate}` : ''}
-${payload.data?.rescheduleCount !== undefined ? `🔄 <b>Rescheduled:</b> ${payload.data.rescheduleCount} times` : ''}
+${payload.data?.dueDate ? `📅 <b>Due:</b> ${payload.data.dueDate}` : ""}
     `.trim();
 
     const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: this.chatId,
         text: message,
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
       }),
     });
 

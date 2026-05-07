@@ -10,7 +10,6 @@ import { remoteConfigService } from '@/services/config/remote-config';
  */
 export async function runTaskReminders() {
   console.log('[Cron] Starting task reminders...');
-  console.log('remoteConfigService', remoteConfigService);
   
   // 1. Fetch Remote Config
   const enableTelegram = await remoteConfigService.getConfigValue('enable_telegram_notifications');
@@ -49,23 +48,26 @@ export async function runTaskReminders() {
     return;
   }
 
-  console.log(`[Cron] Found ${tasks.length} tasks. Dispatching...`);
+  console.log(`[Cron] Found ${tasks.length} tasks. Aggregating...`);
 
-  // 4. Process each task and notify
-  for (const task of tasks) {
-    const payload = {
-      title: 'Task Reminder',
-      body: `Objective pending: ${task.title}`,
-      data: {
-        taskId: task.id,
-        dueDate: task.due_date,
-        rescheduleCount: task.reschedule_count || 0,
-        priority: task.priority,
-      },
-    };
+  // 4. Aggregate tasks into a single summary
+  const taskList = tasks
+    .map((task) => {
+      const rescheduleText =
+        task.reschedule_count > 0 ? ` (🔄 ${task.reschedule_count})` : "";
+      return `• ${task.title}${rescheduleText}`;
+    })
+    .join("\n");
 
-    await notificationDispatcher.dispatch(payload);
-  }
+  const payload = {
+    title: "Daily Task Reminders",
+    body: `You have ${tasks.length} objectives pending for today:\n\n${taskList}`,
+    data: {
+      dueDate: todayStr,
+    },
+  };
 
-  console.log('[Cron] Task reminders complete.');
+  await notificationDispatcher.dispatch(payload);
+
+  console.log("[Cron] Task reminders complete.");
 }

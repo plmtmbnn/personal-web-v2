@@ -15,6 +15,7 @@ import { RemoteConfigSchema, DefaultConfig } from "./types";
 class RemoteConfigService {
   private remoteConfig: RemoteConfig | null = null;
   private initialized = false;
+  private serverCache: Record<string, any> | null = null;
 
   constructor() {
     this.init();
@@ -53,12 +54,76 @@ class RemoteConfigService {
   }
 
   /**
+   * Internal helper to fetch config via REST API on the server.
+   */
+  private async fetchFromServer() {
+    if (this.serverCache) return this.serverCache;
+
+    const { 
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: projectId, 
+      NEXT_PUBLIC_FIREBASE_API_KEY: apiKey, 
+      NEXT_PUBLIC_FIREBASE_APP_ID: appId 
+    } = ENV_GLOBAL;
+
+    if (!projectId || !apiKey || !appId) {
+      return DefaultConfig;
+    }
+
+    const url = `https://firebaseremoteconfig.googleapis.com/v1/projects/${projectId}/namespaces/firebase:fetch`;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": apiKey,
+        },
+        body: JSON.stringify({
+          appId: appId,
+          appInstanceId: "server-side-instance",
+        }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+      const entries = data.entries || {};
+      
+      // Map entries to schema types
+      const parsedConfig: any = { ...DefaultConfig };
+      for (const [key, value] of Object.entries(entries)) {
+        if (key in DefaultConfig) {
+          const defaultValue = DefaultConfig[key as keyof RemoteConfigSchema];
+          if (typeof defaultValue === "boolean") {
+            parsedConfig[key] = value === "true";
+          } else if (typeof defaultValue === "number") {
+            parsedConfig[key] = Number(value);
+          } else {
+            parsedConfig[key] = value;
+          }
+        }
+      }
+
+      this.serverCache = parsedConfig;
+      return parsedConfig;
+    } catch (error) {
+      console.error("[RemoteConfig] Server-side fetch failed:", error);
+      return DefaultConfig;
+    }
+  }
+
+  /**
    * Fetches latest values from cloud and returns a specific config value.
    * Gracefully falls back to local DefaultConfig if offline or error.
    */
   async getConfigValue<K extends keyof RemoteConfigSchema>(key: K): Promise<RemoteConfigSchema[K]> {
+    // Server-side environment
+    if (typeof window === "undefined") {
+      const config = await this.fetchFromServer();
+      return config[key];
+    }
+
     if (!this.initialized || !this.remoteConfig) {
-      // console.log(`[RemoteConfig] Using Fallback for "${key}":`, DefaultConfig[key]);
       return DefaultConfig[key];
     }
 

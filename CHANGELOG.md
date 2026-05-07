@@ -1,3 +1,10 @@
+## [0.28.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.28.0...v0.28.1) (2026-05-07)
+
+
+### Bug Fixes
+
+* firebase config and cron task reminder ([7a89233](https://github.com/plmtmbnn/personal-web-v2/commit/7a89233a812c00f90814ad40def5753d37342cc9))
+
 # [0.28.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.27.0...v0.28.0) (2026-05-07)
 
 

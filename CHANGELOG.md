@@ -1,3 +1,10 @@
+# [0.28.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.27.0...v0.28.0) (2026-05-07)
+
+
+### Features
+
+* **utils:** add Kebab-Case File Renamer utility ([69ce64f](https://github.com/plmtmbnn/personal-web-v2/commit/69ce64fb6608b10fa02b33e85fe24fe4418cac1f))
+
 # [0.27.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.26.0...v0.27.0) (2026-05-06)
 
 

@@ -84,7 +84,8 @@ Strictly for routing and page definitions.
 - **System Integrity**: Uses **Wake Lock API** and **Web Audio API** beeps.
 - **Advanced Tools**: 
   - **Schema Forge**: Advanced JSON to Multi-Target converter supporting TypeScript, Go Structs (with JSON tags), Mongoose Schemas, Zod, and Joi validations.
-- **Structure**: Individual utilities (Timer, Case, SQL, CSV, Schema Forge) implemented as Server/View component pairs for SEO. `page.tsx` (Server) handles metadata/SEO, while `View.tsx` (Client) contains business logic.
+  - **File Renamer**: Batch kebab-case normalization tool for SEO-friendly filenames with extension preservation.
+- **Structure**: Individual utilities (Timer, Case, SQL, CSV, Schema Forge, File Renamer) implemented as Server/View component pairs for SEO. `page.tsx` (Server) handles metadata/SEO, while `View.tsx` (Client) contains business logic.
 
 ## 📏 Engineering Standards
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.

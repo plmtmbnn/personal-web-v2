@@ -10,7 +10,8 @@ import { remoteConfigService } from '@/services/config/remote-config';
  */
 export async function runTaskReminders() {
   console.log('[Cron] Starting task reminders...');
-
+  console.log('remoteConfigService', remoteConfigService);
+  
   // 1. Fetch Remote Config
   const enableTelegram = await remoteConfigService.getConfigValue('enable_telegram_notifications');
   const enableBrowser = await remoteConfigService.getConfigValue('enable_browser_notifications');

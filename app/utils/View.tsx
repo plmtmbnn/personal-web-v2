@@ -87,6 +87,16 @@ const utilities = [
 		bg: "bg-blue-600/5",
 		icon: Braces,
 	},
+	{
+		title: "File Renamer",
+		slug: "file-renamer",
+		description:
+			"Batch rename files into clean, SEO-friendly kebab-case while preserving extensions.",
+		accent: "from-slate-600 to-slate-800",
+		color: "text-slate-700",
+		bg: "bg-slate-700/5",
+		icon: Files,
+	},
 ];
 
 export default function UtilsLanding() {

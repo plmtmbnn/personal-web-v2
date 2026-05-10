@@ -21,7 +21,8 @@ import {
   Map,
   Layers,
   Sparkles,
-  Toolbox
+  Toolbox,
+  Database
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -100,6 +101,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
       { label: "Manage Blog", href: "/admin/blog", icon: BookOpen },
       { label: "Manage Tasks", href: "/tasks", icon: CheckSquare },
+      { label: "Manage Stocks", href: "/utils/stock-explorer/admin", icon: Database },
       { label: "Logout", icon: LogOut, onClick: () => logout() },
     ]
   },

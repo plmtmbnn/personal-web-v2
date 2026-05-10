@@ -83,9 +83,16 @@ Strictly for routing and page definitions.
 ### Adventure Utilities
 - **System Integrity**: Uses **Wake Lock API** and **Web Audio API** beeps.
 - **Advanced Tools**: 
+  - **Stock Explorer**: High-performance interactive IDX stock table with Redis persistence. Features universal sorting, multi-metric filtering (Price/Change), and visual flags for High Volume and Foreign Net Buy/Sell.
   - **Schema Forge**: Advanced JSON to Multi-Target converter supporting TypeScript, Go Structs (with JSON tags), Mongoose Schemas, Zod, and Joi validations.
   - **File Renamer**: Batch kebab-case normalization tool for SEO-friendly filenames with extension preservation.
-- **Structure**: Individual utilities (Timer, Case, SQL, CSV, Schema Forge, File Renamer) implemented as Server/View component pairs for SEO. `page.tsx` (Server) handles metadata/SEO, while `View.tsx` (Client) contains business logic.
+- **Architecture**: Redis-backed with an **Admin Import Portal** (`/utils/stock-explorer/admin`) for manual JSON synchronization, bypassing external API constraints.
+- **Structure**: Individual utilities (Timer, Case, SQL, CSV, Schema Forge, File Renamer, Stock Explorer) implemented as Server/View component pairs for SEO. `page.tsx` (Server) handles metadata/SEO, while `View.tsx` (Client) contains business logic.
+
+### Administrative Ecosystem
+- **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, and Stock Registry.
+- **Stock Manager**: Manual JSON import protocol with validation to persist IDX market statistics to Redis.
+- **Navigation**: "Manage Stocks" integrated into `CompactBottomBar.tsx` Admin sub-menu.
 
 ## 📏 Engineering Standards
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.

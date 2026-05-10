@@ -14,6 +14,7 @@ import {
 	FileSpreadsheet,
 	Database,
 	Files,
+	Table as TableIcon,
 } from "lucide-react";
 
 const utilities = [
@@ -97,6 +98,16 @@ const utilities = [
 		color: "text-slate-700",
 		bg: "bg-slate-700/5",
 		icon: Files,
+	},
+	{
+		title: "Stock Explorer",
+		slug: "stock-explorer",
+		description:
+			"Interactive IDX stock summary explorer with foreign flow tracking and performance analysis.",
+		accent: "from-indigo-600 to-blue-500",
+		color: "text-indigo-600",
+		bg: "bg-indigo-600/5",
+		icon: TableIcon,
 	},
 ];
 

@@ -7,6 +7,7 @@ import {
 	ShieldCheck,
 	ArrowRight,
 	ChevronRight,
+	Database,
 } from "lucide-react";
 import { logout, checkAdmin } from "@/features/auth/actions";
 
@@ -42,6 +43,16 @@ export default async function AdminDashboardPage() {
 			color: "text-emerald-600",
 			bg: "bg-emerald-50",
 			border: "hover:border-emerald-200",
+		},
+		{
+			title: "Stock Explorer Manager",
+			description:
+				"Synchronize IDX market data with the local Redis registry for real-time analysis.",
+			href: "/utils/stock-explorer/admin",
+			icon: Database,
+			color: "text-indigo-600",
+			bg: "bg-indigo-50",
+			border: "hover:border-indigo-200",
 		},
 	];
 

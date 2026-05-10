@@ -9,6 +9,7 @@ import {
 	RefreshCw,
 	Layers,
 	Zap,
+	Table as TableIcon,
 } from "lucide-react";
 import PinGuard from "@/features/auth/PinGuard";
 import { motion } from "framer-motion";
@@ -97,7 +98,14 @@ export default function InvestmentPage() {
 								</div>
 							</div>
 
-							<div className="flex gap-4 p-1.5 bg-slate-50 border border-slate-200 rounded-xl">
+							<div className="flex flex-wrap gap-4 p-1.5 bg-slate-50 border border-slate-200 rounded-xl items-center">
+								<Link
+									href="/utils/stock-explorer"
+									className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20"
+								>
+									<TableIcon className="w-3.5 h-3.5" />
+									Stock Explorer
+								</Link>
 								<div className="px-4 py-2 text-center border-r border-slate-200 last:border-0">
 									<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-0.5">
 										System Status

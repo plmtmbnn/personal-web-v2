@@ -15,7 +15,38 @@ export const redis = new Redis({
 export const CACHE_KEYS = {
   STATS: (period: string) => `tasks:analytics:${period}`,
   SESSION: (sessionId: string) => `session:${sessionId}`,
+  STOCK_SUMMARY: "idx:stock-summary",
 };
+
+/**
+ * Save stock data to Redis (Persistent).
+ */
+export async function saveStockData(data: any[]) {
+  try {
+    const key = CACHE_KEYS.STOCK_SUMMARY;
+    const value = JSON.stringify(data);
+    await redis.set(key, value);
+    return true;
+  } catch (error) {
+    console.error("Redis Save Stock Error:", error);
+    return false;
+  }
+}
+
+/**
+ * Retrieve stock data from Redis.
+ */
+export async function getStockData(): Promise<any[] | null> {
+  try {
+    const key = CACHE_KEYS.STOCK_SUMMARY;
+    const data = await redis.get<string>(key);
+    if (!data) return null;
+    return typeof data === "string" ? JSON.parse(data) : data;
+  } catch (error) {
+    console.error("Redis Get Stock Error:", error);
+    return null;
+  }
+}
 
 /**
  * Invalidate all analytics cache keys.

@@ -1,3 +1,10 @@
+# [0.30.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.29.0...v0.30.0) (2026-05-10)
+
+
+### Features
+
+* **stock-explorer:** enhance UIUX with filter chips and sync overlay ([b881a60](https://github.com/plmtmbnn/personal-web-v2/commit/b881a6011b902be2f9cedb751464618d04eba26b))
+
 # [0.29.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.28.1...v0.29.0) (2026-05-10)
 
 

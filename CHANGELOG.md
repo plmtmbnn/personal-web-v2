@@ -1,3 +1,10 @@
+# [0.29.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.28.1...v0.29.0) (2026-05-10)
+
+
+### Features
+
+* **investment:** add Redis-backed IDX Stock Explorer with admin import ([779fc43](https://github.com/plmtmbnn/personal-web-v2/commit/779fc43bcccdd77181decc7ba10442a81d28f947))
+
 ## [0.28.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.28.0...v0.28.1) (2026-05-07)
 
 

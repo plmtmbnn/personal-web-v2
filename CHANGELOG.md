@@ -1,3 +1,10 @@
+# [0.31.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.30.0...v0.31.0) (2026-05-15)
+
+
+### Features
+
+* **mock-api:** add dynamic mock api engine with redis persistence ([fd7c945](https://github.com/plmtmbnn/personal-web-v2/commit/fd7c9457d51ba3d7aa5900ba441a76b6741a5cb8))
+
 # [0.30.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.29.0...v0.30.0) (2026-05-10)
 
 

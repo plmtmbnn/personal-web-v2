@@ -12,6 +12,8 @@ export const metadata: Metadata = createMetadata({
 		"Investment Calculator",
 		"Operational Tools",
 		"Performance Optimization",
+		"Mock API",
+		"Developer Tools",
 	],
 });
 

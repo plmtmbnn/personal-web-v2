@@ -109,6 +109,16 @@ const utilities = [
 		bg: "bg-indigo-600/5",
 		icon: TableIcon,
 	},
+	{
+		title: "Mock API Engine",
+		slug: "mock-api",
+		description:
+			"Dynamic API mocking tool to create temporary endpoints with custom JSON responses and status codes.",
+		accent: "from-blue-400 to-cyan-400",
+		color: "text-cyan-500",
+		bg: "bg-cyan-500/5",
+		icon: Braces,
+	},
 ];
 
 export default function UtilsLanding() {

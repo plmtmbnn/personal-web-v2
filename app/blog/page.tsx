@@ -271,7 +271,7 @@ export default async function BlogPage() {
 											</p>
 
 											<div className="pt-4 flex items-center gap-2 text-slate-900 font-black text-[10px] uppercase tracking-[0.2em] group-hover:gap-4 transition-all">
-												Explore Logic <ArrowRight className="w-3.5 h-3.5" />
+												Read here <ArrowRight className="w-3.5 h-3.5" />
 											</div>
 										</div>
 									</div>

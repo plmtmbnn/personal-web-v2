@@ -6,6 +6,6 @@ import { ENV_GLOBAL } from "@/lib/core/env";
  * Uses @supabase/ssr for better integration with PKCE and cookies.
  */
 export const SupabaseConn = createBrowserClient(
-  ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_URL!,
-  ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+	ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_URL!,
+	ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );

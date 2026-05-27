@@ -18,10 +18,11 @@ export interface Blog {
 /**
  * Direct Supabase client for build-time (static) fetching where cookies are not available.
  */
-const getStaticClient = () => createSupabaseClient(
-	ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_URL!,
-	ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const getStaticClient = () =>
+	createSupabaseClient(
+		ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_URL!,
+		ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+	);
 
 /**
  * Fetch all published blogs for static generation.
@@ -67,7 +68,10 @@ export async function getBlogBySlugStatic(slug: string): Promise<Blog | null> {
 
 		return data as Blog;
 	} catch (error) {
-		console.error(`Unexpected error fetching blog by slug static: ${slug}`, error);
+		console.error(
+			`Unexpected error fetching blog by slug static: ${slug}`,
+			error,
+		);
 		return null;
 	}
 }

@@ -41,8 +41,8 @@
 			"package.json",
 			"biome.json",
 			"next.config.ts",
-			"features",
-			"lib"
+			"features/**/*",
+			"lib/**/*"
 		]
 	},
 	"formatter": {

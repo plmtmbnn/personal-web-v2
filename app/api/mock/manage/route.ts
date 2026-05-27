@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { redis } from "@/lib/core/redis";
 
-const TTL = 604800; // 7 Days in seconds
+const TTL = 2592000; // 30 Days in seconds
 
 export async function GET() {
   try {

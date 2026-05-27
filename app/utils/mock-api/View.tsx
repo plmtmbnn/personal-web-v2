@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Link, Play, Copy, Check, Info } from "lucide-react";
+import CustomModal from "@/features/shared/components/CustomModal";
 
 interface MockDefinition {
 	key: string;
@@ -21,6 +22,7 @@ export default function MockApiView() {
 	const [loading, setLoading] = useState(false);
 	const [copiedKey, setCopiedKey] = useState<string | null>(null);
 	const [lastCreatedUrl, setLastCreatedUrl] = useState<string | null>(null);
+	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const fetchMocks = useCallback(async () => {
 		try {
@@ -43,7 +45,9 @@ export default function MockApiView() {
 			try {
 				parsedBody = JSON.parse(body);
 			} catch (_e) {
-				parsedBody = body; // Fallback to raw string if not valid JSON
+				setIsModalOpen(true);
+				setLoading(false);
+				return;
 			}
 
 			const res = await fetch("/api/mock/manage", {
@@ -56,8 +60,11 @@ export default function MockApiView() {
 			if (data.success) {
 				setLastCreatedUrl(`${window.location.origin}${data.url}`);
 				fetchMocks();
+				// Clear form on success
 				setPath("");
-				// Keep body as is for quick reuse
+				setMethod("GET");
+				setStatus(200);
+				setBody('{\n  "message": "Hello World"\n}');
 			}
 		} catch (err) {
 			console.error("Save Mock Error:", err);
@@ -106,7 +113,7 @@ export default function MockApiView() {
 					</div>
 					<div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-100">
 						<Info className="w-4 h-4" />
-						<span>Mocks expire after 7 days of inactivity.</span>
+						<span>Mocks expire after 1 month of inactivity.</span>
 					</div>
 				</div>
 
@@ -357,6 +364,15 @@ export default function MockApiView() {
 					</div>
 				</div>
 			</div>
+
+			<CustomModal
+				isOpen={isModalOpen}
+				onClose={() => setIsModalOpen(false)}
+				variant="danger"
+				title="Invalid JSON Body"
+				description="The response body must be a valid JSON string. Please check your syntax and try again."
+				cancelText="Close"
+			/>
 		</div>
 	);
 }

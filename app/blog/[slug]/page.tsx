@@ -6,7 +6,7 @@ import {
 	getBlogsStatic,
 } from "@/features/blog/data";
 import BlogContent from "@/features/blog/components/BlogContent";
-import { ArrowLeft, User, BookOpen } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 import Link from "next/link";
 import * as motion from "framer-motion/client";
 import { ScrollProgress } from "@/features/blog/components/ScrollProgress";
@@ -185,46 +185,34 @@ export default async function BlogDetailPage({
 
 			{/* Main Article Content */}
 			<section className="max-w-5xl mx-auto px-6 relative mt-16 sm:mt-24">
-				<div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-16">
+				<div className="flex flex-col gap-16">
 					<motion.article
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						transition={{ delay: 0.4 }}
-						className="prose prose-slate prose-lg sm:prose-xl max-w-none 
-							prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-950
-							prose-p:text-slate-600 prose-p:leading-relaxed prose-p:font-medium
-							prose-strong:text-slate-900 prose-strong:font-black
-							prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-							prose-code:text-indigo-600 prose-code:bg-slate-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-lg prose-code:before:content-none prose-code:after:content-none
-							prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-[2rem]
-							prose-img:rounded-[2.5rem] prose-img:border-4 prose-img:border-slate-50 shadow-2xl shadow-slate-100"
+						className="max-w-none shadow-2xl shadow-slate-100"
 					>
 						<BlogContent content={post.content} />
 					</motion.article>
 
-					{/* Side Utility Bar */}
-					<aside className="hidden lg:block w-64 pt-8">
-						<div className="sticky top-32 space-y-12">
-							<div className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] space-y-6">
+					{/* Post Actions & Utility Bar - Enhanced Bottom Layout */}
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						className="w-full max-w-4xl mx-auto"
+					>
+						<div className="bg-slate-50 border border-slate-100 rounded-[3rem] p-8 sm:p-12 flex flex-col items-center justify-center space-y-6 text-center">
+							<div className="space-y-4">
 								<p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-									Actions
+									Share this Story
 								</p>
-								<ShareButton title={post.title} />
-							</div>
-
-							<div className="px-8 space-y-4">
-								<p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-									Topic Area
-								</p>
-								<div className="flex items-center gap-3 text-slate-900 font-bold">
-									<BookOpen className="w-5 h-5 text-slate-950" />
-									<span className="text-sm tracking-tight">
-										{post.category}
-									</span>
+								<div className="bg-white border border-slate-100 p-3 rounded-[2rem] shadow-sm w-fit mx-auto">
+									<ShareButton title={post.title} />
 								</div>
 							</div>
 						</div>
-					</aside>
+					</motion.div>
 				</div>
 
 				{/* Simple Return Anchor */}

@@ -1,8 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useTransition } from 'react';
-import { CheckCircle2, Circle, Calendar, Clock, BarChart3, Loader2 } from 'lucide-react';
-import { getTaskProgressMetrics } from '@/features/tasks/actions/analytics';
+import { useEffect, useState, useTransition } from "react";
+import {
+	CheckCircle2,
+	Circle,
+	Calendar,
+	Clock,
+	BarChart3,
+	Loader2,
+} from "lucide-react";
+import { getTaskProgressMetrics } from "@/features/tasks/actions/analytics";
 
 interface Metrics {
 	today: number;
@@ -13,16 +20,21 @@ interface Metrics {
 	progress: number;
 }
 
-function getStatusText(progress: number, verified: number, today: number): string {
-	if (progress === 100 && (verified > 0 || today > 0)) return 'All tasks complete — great work!';
-	if (progress >= 50) return 'Past halfway — finish strong.';
-	if (verified === 0 && today === 0) return 'No tasks started yet.';
-	return 'Getting started, keep going.';
+function getStatusText(
+	progress: number,
+	verified: number,
+	today: number,
+): string {
+	if (progress === 100 && (verified > 0 || today > 0))
+		return "All tasks complete — great work!";
+	if (progress >= 50) return "Past halfway — finish strong.";
+	if (verified === 0 && today === 0) return "No tasks started yet.";
+	return "Getting started, keep going.";
 }
 
 export default function TaskProgress() {
 	const [metrics, setMetrics] = useState<Metrics | null>(null);
-	const [isPending, startTransition] = useTransition();
+	const [_isPending, startTransition] = useTransition();
 
 	useEffect(() => {
 		startTransition(async () => {
@@ -39,22 +51,27 @@ export default function TaskProgress() {
 		);
 	}
 
-	const isComplete = metrics.progress === 100 && (metrics.verified > 0 || metrics.today > 0);
+	const isComplete =
+		metrics.progress === 100 && (metrics.verified > 0 || metrics.today > 0);
 
 	const radius = 30;
 	const circumference = 2 * Math.PI * radius;
 	const offset = circumference - (metrics.progress / 100) * circumference;
 
-	const statusText = getStatusText(metrics.progress, metrics.verified, metrics.today);
+	const statusText = getStatusText(
+		metrics.progress,
+		metrics.verified,
+		metrics.today,
+	);
 
 	return (
 		<div
 			className={[
-				'p-5 bg-white border rounded-2xl transition-all duration-500',
+				"p-5 bg-white border rounded-2xl transition-all duration-500",
 				isComplete
-					? 'border-emerald-200 bg-emerald-50/30 ring-2 ring-emerald-500/10'
-					: 'border-slate-200 shadow-sm',
-			].join(' ')}
+					? "border-emerald-200 bg-emerald-50/30 ring-2 ring-emerald-500/10"
+					: "border-slate-200 shadow-sm",
+			].join(" ")}
 		>
 			<div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
 				{/* Progress ring + status */}
@@ -63,21 +80,26 @@ export default function TaskProgress() {
 					<div className="relative w-20 h-20 flex-shrink-0">
 						<svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
 							<circle
-								cx="40" cy="40" r={radius}
+								cx="40"
+								cy="40"
+								r={radius}
 								fill="transparent"
 								stroke="currentColor"
 								strokeWidth="7"
 								className="text-slate-100"
 							/>
 							<circle
-								cx="40" cy="40" r={radius}
+								cx="40"
+								cy="40"
+								r={radius}
 								fill="transparent"
-								stroke={isComplete ? '#10b981' : '#3b82f6'}
+								stroke={isComplete ? "#10b981" : "#3b82f6"}
 								strokeWidth="7"
 								strokeDasharray={circumference}
 								style={{
 									strokeDashoffset: offset,
-									transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)',
+									transition:
+										"stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
 								}}
 								strokeLinecap="round"
 							/>
@@ -92,10 +114,12 @@ export default function TaskProgress() {
 						<p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
 							Mission Progress
 						</p>
-						<p className={[
-							'text-lg font-black tracking-tight leading-tight mb-3',
-							isComplete ? 'text-emerald-700' : 'text-slate-900',
-						].join(' ')}>
+						<p
+							className={[
+								"text-lg font-black tracking-tight leading-tight mb-3",
+								isComplete ? "text-emerald-700" : "text-slate-900",
+							].join(" ")}
+						>
 							{statusText}
 						</p>
 						<div className="flex items-center gap-2">
@@ -117,9 +141,21 @@ export default function TaskProgress() {
 				{/* Metric cards */}
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 w-full">
 					{[
-						{ label: 'Today', value: metrics.today, icon: <Clock className="w-3 h-3" /> },
-						{ label: 'This week', value: metrics.week, icon: <Calendar className="w-3 h-3" /> },
-						{ label: 'This month', value: metrics.month, icon: <BarChart3 className="w-3 h-3" /> },
+						{
+							label: "Today",
+							value: metrics.today,
+							icon: <Clock className="w-3 h-3" />,
+						},
+						{
+							label: "This week",
+							value: metrics.week,
+							icon: <Calendar className="w-3 h-3" />,
+						},
+						{
+							label: "This month",
+							value: metrics.month,
+							icon: <BarChart3 className="w-3 h-3" />,
+						},
 					].map(({ label, value, icon }) => (
 						<div
 							key={label}
@@ -129,9 +165,7 @@ export default function TaskProgress() {
 								{icon}
 								{label}
 							</p>
-							<p className="text-xl font-black text-slate-900">
-								{value}
-							</p>
+							<p className="text-xl font-black text-slate-900">{value}</p>
 						</div>
 					))}
 					{/* Total Pending Card (High Contrast) */}

@@ -40,8 +40,15 @@ Reserved for feature-agnostic, shared logic.
 
 ### 4. `app/` (Routing Layer)
 Strictly for routing and page definitions.
-- `app/utils/`: High-fidelity developer utilities (JSON, SQL, CSV, Case Converters).
+- `app/admin/`: Centralized management dashboard.
+- `app/adventures/`: Aesthetic content pages for Running and Travel logs.
+- `app/blog/`: SSG-optimized blog system with dynamic routes.
+- `app/investment/`: Market sentiment and Fear & Greed visualizations.
+- `app/portfolio/` & `app/work-experience/`: Professional showcase and career timeline.
+- `app/tasks/`: Personal task management and analytics agenda.
+- `app/utils/`: High-fidelity developer utilities index.
 - `app/api/tasks/cron/`: Secure API endpoint for scheduled task reminders.
+- `app/api/mock/`: Dynamic path-based mocking engine endpoints.
 
 ## 🔑 Security & Authorization
 - **Environment Variables:** Always use `ENV_GLOBAL` from `@/lib/core/env`.
@@ -49,7 +56,7 @@ Strictly for routing and page definitions.
   - Centralized verification via `checkAdmin()` in `features/auth/actions.ts`.
   - **Cron Security**: API routes for crons must check for `CRON_SECRET` via headers or params.
 - **PIN Protection:** 
-  - `PinGuard.tsx` protects restricted sections.
+  - `PinGuard.tsx` protects restricted sections (Admin, Tasks, Investment).
   - **Session Duration**: 12 hours.
 - **Auth Cookies**: Long-lived sessions (30 weeks).
 
@@ -59,7 +66,7 @@ Strictly for routing and page definitions.
 - **Contrast Mastery**: 
   - **Headlines**: Use dark-themed solid backing cards behind white headline text.
   - **Details**: Metadata and titles anchored in high-contrast white cards overlapping hero banners.
-- **Custom Modal System**: Use `features/shared/components/CustomModal.tsx`.
+- **Custom Modal System**: Use `features/shared/components/CustomModal.tsx` for high-fidelity alerts and confirmations.
 - **Interactive Feedback**: All server transitions must provide high-fidelity feedback (e.g., **Synchronization Overlays**, loading spinners).
 - **Mobile-First UX**:
   - **Strategic Grids**: Utilities transition from 1-column mobile to multi-column desktop/tablet.
@@ -80,14 +87,23 @@ Strictly for routing and page definitions.
   - **Analytics**: Multi-Metric Heatmap (Created vs Done) with diagonal visualization.
 - **Notifier System**: Pluggable dispatcher delivering alerts via Telegram Bot and Browser API.
 
+### Adventures & Professional Showcase
+- **Adventures**: High-fidelity logs for Running and Travel missions, utilizing Glassmorphism and rich typography.
+- **Professional Showcase**: Career milestones and project portfolio featuring interactive timelines and impact statistics.
+
 ### Adventure Utilities
 - **System Integrity**: Uses **Wake Lock API** and **Web Audio API** beeps.
 - **Advanced Tools**: 
-  - **Stock Explorer**: High-performance interactive IDX stock table with Redis persistence. Features universal sorting, multi-metric filtering (Price/Change), and visual flags for High Volume and Foreign Net Buy/Sell.
-  - **Schema Forge**: Advanced JSON to Multi-Target converter supporting TypeScript, Go Structs (with JSON tags), Mongoose Schemas, Zod, and Joi validations.
-  - **File Renamer**: Batch kebab-case normalization tool for SEO-friendly filenames with extension preservation.
-- **Architecture**: Redis-backed with an **Admin Import Portal** (`/utils/stock-explorer/admin`) for manual JSON synchronization, bypassing external API constraints.
-- **Structure**: Individual utilities (Timer, Case, SQL, CSV, Schema Forge, File Renamer, Stock Explorer) implemented as Server/View component pairs for SEO. `page.tsx` (Server) handles metadata/SEO, while `View.tsx` (Client) contains business logic.
+  - **Stock Explorer**: Interactive IDX stock table with foreign net flow tracking and multi-metric filtering.
+  - **Mock API Engine**: Path-based dynamic mocking (`/api/mock/*`) with Redis persistence and 1-month TTL. Supports JSON validation with `CustomModal` feedback.
+  - **Schema Forge**: Advanced JSON to Multi-Target converter (TS, Go, Zod, Mongoose, Joi).
+  - **Asset Averaging**: Weighted average cost analysis for stock and crypto investments.
+  - **Formatters**: Developer-centric SQL and JSON beautifiers with syntax validation.
+  - **Converters**: Universal Case and CSV-to-JSON recursive parsers.
+  - **File Renamer**: SEO-friendly kebab-case normalization for batch file operations.
+  - **Running Timer**: High-precision interval timer with automated transitions and wake-lock.
+- **Architecture**: Redis-backed with an **Admin Import Portal** (`/utils/stock-explorer/admin`) for manual synchronization.
+- **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity.
 
 ### Administrative Ecosystem
 - **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, and Stock Registry.

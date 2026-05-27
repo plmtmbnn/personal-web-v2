@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import React, { useOptimistic, useTransition, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { 
-	Inbox, 
-	Flame,
-	Calendar,
-	CheckCircle2
-} from 'lucide-react';
-import { 
-	DragDropContext, 
-	Droppable, 
-	Draggable, 
-	DropResult 
-} from '@hello-pangea/dnd';
-import { Task } from '@/features/tasks/types';
-import { toggleTask, deleteTask, reorderTasks, updateTask } from '@/features/tasks/actions/tasks';
-import TaskItem from './TaskItem';
-import TaskFilters from './TaskFilters';
-import { format, addDays, isBefore, startOfDay, parseISO } from 'date-fns';
-import CustomModal from '@/features/shared/components/CustomModal';
+import { useOptimistic, useTransition, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Inbox, Flame, Calendar, CheckCircle2 } from "lucide-react";
+import {
+	DragDropContext,
+	Droppable,
+	Draggable,
+	type DropResult,
+} from "@hello-pangea/dnd";
+import type { Task } from "@/features/tasks/types";
+import {
+	toggleTask,
+	deleteTask,
+	reorderTasks,
+	updateTask,
+} from "@/features/tasks/actions/tasks";
+import TaskItem from "./TaskItem";
+import TaskFilters from "./TaskFilters";
+import { format, addDays, isBefore, startOfDay, parseISO } from "date-fns";
+import CustomModal from "@/features/shared/components/CustomModal";
 
 interface TaskListProps {
 	todayTasks: Task[];
@@ -27,7 +27,7 @@ interface TaskListProps {
 }
 
 export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
-	const [isPending, startTransition] = useTransition();
+	const [_isPending, startTransition] = useTransition();
 	const searchParams = useSearchParams();
 
 	// Modal State
@@ -35,52 +35,63 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	const [isDeleting, setIsDeleting] = useState(false);
 
 	// Section-specific filter extraction
-  const getFilters = (prefix: string) => ({
-    priority: searchParams.get(`${prefix}_priority`) || "all",
-    category: searchParams.get(`${prefix}_category`) || "all",
-    showCompleted: searchParams.get(`${prefix}_completed`) === "true",
-    range: searchParams.get(`${prefix}_range`) || "week"
-  });
+	const getFilters = (prefix: string) => ({
+		priority: searchParams.get(`${prefix}_priority`) || "all",
+		category: searchParams.get(`${prefix}_category`) || "all",
+		showCompleted: searchParams.get(`${prefix}_completed`) === "true",
+		range: searchParams.get(`${prefix}_range`) || "week",
+	});
 
-  const todayFilters = getFilters("today");
-  const upcomingFilters = getFilters("upcoming");
+	const todayFilters = getFilters("today");
+	const upcomingFilters = getFilters("upcoming");
 
 	// Optimistic state for the task lists
 	const [optimisticState, addOptimisticAction] = useOptimistic(
 		{ todayTasks, upcomingTasks },
 		(state, { action, payload }: { action: string; payload: any }) => {
 			switch (action) {
-				case 'toggle':
+				case "toggle":
 					return {
 						todayTasks: state.todayTasks.map((t: Task) =>
-							t.id === payload.taskId ? { ...t, is_completed: !t.is_completed } : t
+							t.id === payload.taskId
+								? { ...t, is_completed: !t.is_completed }
+								: t,
 						),
 						upcomingTasks: state.upcomingTasks.map((t: Task) =>
-							t.id === payload.taskId ? { ...t, is_completed: !t.is_completed } : t
+							t.id === payload.taskId
+								? { ...t, is_completed: !t.is_completed }
+								: t,
 						),
 					};
-				case 'update':
+				case "update":
 					return {
 						todayTasks: state.todayTasks.map((t: Task) =>
-							t.id === payload.taskId ? { ...t, ...payload.updates } : t
+							t.id === payload.taskId ? { ...t, ...payload.updates } : t,
 						),
 						upcomingTasks: state.upcomingTasks.map((t: Task) =>
-							t.id === payload.taskId ? { ...t, ...payload.updates } : t
+							t.id === payload.taskId ? { ...t, ...payload.updates } : t,
 						),
 					};
-				case 'delete':
+				case "delete":
 					return {
-						todayTasks: state.todayTasks.filter((t: Task) => t.id !== payload.taskId),
-						upcomingTasks: state.upcomingTasks.filter((t: Task) => t.id !== payload.taskId),
+						todayTasks: state.todayTasks.filter(
+							(t: Task) => t.id !== payload.taskId,
+						),
+						upcomingTasks: state.upcomingTasks.filter(
+							(t: Task) => t.id !== payload.taskId,
+						),
 					};
-				case 'reorder': {
-					const listKey = payload.droppableId === 'today-list' ? 'todayTasks' : 'upcomingTasks';
+				case "reorder": {
+					const listKey =
+						payload.droppableId === "today-list"
+							? "todayTasks"
+							: "upcomingTasks";
 					return {
 						...state,
 						[listKey]: payload.newTasks,
 					};
 				}
-				case 'move':
+				case "move":
 					return {
 						todayTasks: payload.newTodayTasks,
 						upcomingTasks: payload.newUpcomingTasks,
@@ -88,53 +99,53 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 				default:
 					return state;
 			}
-		}
+		},
 	);
 
-  /**
-   * Helper to apply local filters to a list
-   */
-  const applyFilters = (list: Task[], filters: any, isUpcoming = false) => {
-    let result = list;
-    
-    // 1. Priority
-    if (filters.priority !== "all") {
-      result = result.filter(t => t.priority === filters.priority);
-    }
-    
-    // 2. Category
-    if (filters.category !== "all") {
-      result = result.filter(t => t.category === filters.category);
-    }
-    
-    // 3. Completion
-    if (!filters.showCompleted) {
-      result = result.filter(t => !t.is_completed);
-    }
+	/**
+	 * Helper to apply local filters to a list
+	 */
+	const applyFilters = (list: Task[], filters: any, isUpcoming = false) => {
+		let result = list;
 
-    // 4. Date Range (Only for Upcoming)
-    if (isUpcoming && filters.range === "week") {
-      const nextWeek = addDays(startOfDay(new Date()), 8); // 7 days from today
-      result = result.filter(t => isBefore(parseISO(t.due_date), nextWeek));
-    }
+		// 1. Priority
+		if (filters.priority !== "all") {
+			result = result.filter((t) => t.priority === filters.priority);
+		}
 
-    return result;
-  };
+		// 2. Category
+		if (filters.category !== "all") {
+			result = result.filter((t) => t.category === filters.category);
+		}
+
+		// 3. Completion
+		if (!filters.showCompleted) {
+			result = result.filter((t) => !t.is_completed);
+		}
+
+		// 4. Date Range (Only for Upcoming)
+		if (isUpcoming && filters.range === "week") {
+			const nextWeek = addDays(startOfDay(new Date()), 8); // 7 days from today
+			result = result.filter((t) => isBefore(parseISO(t.due_date), nextWeek));
+		}
+
+		return result;
+	};
 
 	// Derived display lists
-	const displayTodayTasks = useMemo(() => 
-    applyFilters(optimisticState.todayTasks, todayFilters), 
-    [optimisticState.todayTasks, todayFilters]
-  );
+	const displayTodayTasks = useMemo(
+		() => applyFilters(optimisticState.todayTasks, todayFilters),
+		[optimisticState.todayTasks, todayFilters, applyFilters],
+	);
 
-	const displayUpcomingTasks = useMemo(() => 
-    applyFilters(optimisticState.upcomingTasks, upcomingFilters, true), 
-    [optimisticState.upcomingTasks, upcomingFilters]
-  );
+	const displayUpcomingTasks = useMemo(
+		() => applyFilters(optimisticState.upcomingTasks, upcomingFilters, true),
+		[optimisticState.upcomingTasks, upcomingFilters, applyFilters],
+	);
 
 	const handleToggle = async (taskId: string, currentStatus: boolean) => {
 		startTransition(async () => {
-			addOptimisticAction({ action: 'toggle', payload: { taskId } });
+			addOptimisticAction({ action: "toggle", payload: { taskId } });
 			try {
 				await toggleTask(taskId, currentStatus);
 			} catch (error) {
@@ -145,7 +156,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 
 	const handleUpdate = async (taskId: string, updates: Partial<Task>) => {
 		startTransition(async () => {
-			addOptimisticAction({ action: 'update', payload: { taskId, updates } });
+			addOptimisticAction({ action: "update", payload: { taskId, updates } });
 			try {
 				await updateTask(taskId, updates);
 			} catch (error) {
@@ -160,10 +171,13 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 
 	const confirmDelete = async () => {
 		if (!deleteTaskId) return;
-		
+
 		setIsDeleting(true);
 		startTransition(async () => {
-			addOptimisticAction({ action: 'delete', payload: { taskId: deleteTaskId } });
+			addOptimisticAction({
+				action: "delete",
+				payload: { taskId: deleteTaskId },
+			});
 			try {
 				await deleteTask(deleteTaskId);
 			} catch (error) {
@@ -178,49 +192,65 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	const onDragEnd = (result: DropResult) => {
 		const { destination, source, draggableId } = result;
 		if (!destination) return;
-		if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+		if (
+			destination.droppableId === source.droppableId &&
+			destination.index === source.index
+		)
+			return;
 
-		const sourceList: Task[] = source.droppableId === 'today-list' ? Array.from(displayTodayTasks) : Array.from(displayUpcomingTasks);
-		const destList: Task[] = destination.droppableId === 'today-list' ? Array.from(displayTodayTasks) : Array.from(displayUpcomingTasks);
+		const sourceList: Task[] =
+			source.droppableId === "today-list"
+				? Array.from(displayTodayTasks)
+				: Array.from(displayUpcomingTasks);
+		const destList: Task[] =
+			destination.droppableId === "today-list"
+				? Array.from(displayTodayTasks)
+				: Array.from(displayUpcomingTasks);
 
 		if (source.droppableId === destination.droppableId) {
 			const [movedTask] = sourceList.splice(source.index, 1);
 			sourceList.splice(destination.index, 0, movedTask);
-			
+
 			startTransition(async () => {
-				addOptimisticAction({ 
-					action: 'reorder', 
-					payload: { droppableId: source.droppableId, newTasks: sourceList } 
+				addOptimisticAction({
+					action: "reorder",
+					payload: { droppableId: source.droppableId, newTasks: sourceList },
 				});
 				try {
 					await reorderTasks(sourceList.map((t: Task) => t.id));
 				} catch (error) {
-					console.error('Failed to reorder:', error);
+					console.error("Failed to reorder:", error);
 				}
 			});
 		} else {
 			const [movedTask] = sourceList.splice(source.index, 1);
-			
-			const todayStr = format(new Date(), 'yyyy-MM-dd');
-			const tomorrowStr = format(addDays(new Date(), 1), 'yyyy-MM-dd');
-			const newDueDate = destination.droppableId === 'today-list' ? todayStr : tomorrowStr;
-			
+
+			const todayStr = format(new Date(), "yyyy-MM-dd");
+			const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
+			const newDueDate =
+				destination.droppableId === "today-list" ? todayStr : tomorrowStr;
+
 			const updatedTask = { ...movedTask, due_date: newDueDate };
 			destList.splice(destination.index, 0, updatedTask);
 
-			const finalToday = destination.droppableId === 'today-list' ? destList : sourceList;
-			const finalUpcoming = destination.droppableId === 'upcoming-list' ? destList : sourceList;
+			const finalToday =
+				destination.droppableId === "today-list" ? destList : sourceList;
+			const finalUpcoming =
+				destination.droppableId === "upcoming-list" ? destList : sourceList;
 
 			startTransition(async () => {
-				addOptimisticAction({ 
-					action: 'move', 
-					payload: { newTodayTasks: finalToday, newUpcomingTasks: finalUpcoming } 
+				addOptimisticAction({
+					action: "move",
+					payload: {
+						newTodayTasks: finalToday,
+						newUpcomingTasks: finalUpcoming,
+					},
 				});
 				try {
 					await updateTask(draggableId, { due_date: newDueDate });
 					await reorderTasks(destList.map((t: Task) => t.id));
 				} catch (error) {
-					console.error('Failed to move task:', error);
+					console.error("Failed to move task:", error);
 				}
 			});
 		}
@@ -244,31 +274,39 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 				{/* Today Section */}
 				<section>
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-200/50">
-                <Flame className="w-5 h-5 fill-orange-600" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">Focus (Today)</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">High-priority execution</p>
-              </div>
-            </div>
-            {/* Today Filters */}
-            <TaskFilters tasks={todayTasks} paramPrefix="today" />
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-200/50">
+								<Flame className="w-5 h-5 fill-orange-600" />
+							</div>
+							<div>
+								<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
+									Focus (Today)
+								</h3>
+								<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+									High-priority execution
+								</p>
+							</div>
+						</div>
+						{/* Today Filters */}
+						<TaskFilters tasks={todayTasks} paramPrefix="today" />
 					</div>
 
 					<Droppable droppableId="today-list">
 						{(provided) => (
-							<div 
-								{...provided.droppableProps} 
+							<div
+								{...provided.droppableProps}
 								ref={provided.innerRef}
 								className="space-y-3 min-h-[100px]"
 							>
 								{displayTodayTasks.length > 0 ? (
 									displayTodayTasks.map((task: Task, index: number) => (
-										<Draggable key={task.id} draggableId={task.id} index={index}>
+										<Draggable
+											key={task.id}
+											draggableId={task.id}
+											index={index}
+										>
 											{(provided, snapshot) => (
-												<TaskItem 
+												<TaskItem
 													task={task}
 													index={index}
 													provided={provided}
@@ -297,31 +335,43 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 				{/* Upcoming Section */}
 				<section>
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200/50">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">Upcoming Awareness</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Strategic foresight</p>
-              </div>
-            </div>
-            {/* Upcoming Filters with Range Toggle */}
-            <TaskFilters tasks={upcomingTasks} paramPrefix="upcoming" showRangeFilter={true} />
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200/50">
+								<Calendar className="w-5 h-5" />
+							</div>
+							<div>
+								<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
+									Upcoming Awareness
+								</h3>
+								<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+									Strategic foresight
+								</p>
+							</div>
+						</div>
+						{/* Upcoming Filters with Range Toggle */}
+						<TaskFilters
+							tasks={upcomingTasks}
+							paramPrefix="upcoming"
+							showRangeFilter={true}
+						/>
 					</div>
 
 					<Droppable droppableId="upcoming-list">
 						{(provided) => (
-							<div 
-								{...provided.droppableProps} 
+							<div
+								{...provided.droppableProps}
 								ref={provided.innerRef}
 								className="space-y-3 min-h-[100px]"
 							>
 								{displayUpcomingTasks.length > 0 ? (
 									displayUpcomingTasks.map((task: Task, index: number) => (
-										<Draggable key={task.id} draggableId={task.id} index={index}>
+										<Draggable
+											key={task.id}
+											draggableId={task.id}
+											index={index}
+										>
 											{(provided, snapshot) => (
-												<TaskItem 
+												<TaskItem
 													task={task}
 													index={index}
 													provided={provided}

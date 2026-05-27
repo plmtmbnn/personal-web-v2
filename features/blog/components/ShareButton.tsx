@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Share2, Check, Copy } from "lucide-react";
+import { useState } from "react";
+import { Share2, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ShareButtonProps {
@@ -14,7 +14,7 @@ export default function ShareButton({ title, url }: ShareButtonProps) {
 
 	const handleShare = async () => {
 		const shareUrl = url || window.location.href;
-		
+
 		if (navigator.share) {
 			try {
 				await navigator.share({
@@ -60,7 +60,7 @@ export default function ShareButton({ title, url }: ShareButtonProps) {
 						exit={{ y: -20, opacity: 0 }}
 						className="flex items-center gap-3 w-full"
 					>
-						<Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> 
+						<Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
 						Share Insights
 					</motion.div>
 				)}

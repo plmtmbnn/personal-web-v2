@@ -1,12 +1,27 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, Activity, History, Clock } from "lucide-react";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import {
+	Chart as ChartJS,
+	CategoryScale,
+	LinearScale,
+	PointElement,
+	LineElement,
+	Filler,
+	Tooltip,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
+ChartJS.register(
+	CategoryScale,
+	LinearScale,
+	PointElement,
+	LineElement,
+	Filler,
+	Tooltip,
+);
 
 interface FearAndGreedGaugeProps {
 	score: number;
@@ -34,22 +49,27 @@ export default function FearAndGreedGauge({
 
 	const getRatingColor = (r: string) => {
 		const lower = r.toLowerCase();
-		if (lower.includes("extreme fear")) return "text-rose-600 bg-rose-50 border-rose-100";
-		if (lower.includes("fear")) return "text-orange-600 bg-orange-50 border-orange-100";
-		if (lower.includes("neutral")) return "text-amber-600 bg-amber-50 border-amber-100";
-		if (lower.includes("extreme greed")) return "text-emerald-600 bg-emerald-50 border-emerald-100";
-		if (lower.includes("greed")) return "text-green-600 bg-green-50 border-green-100";
+		if (lower.includes("extreme fear"))
+			return "text-rose-600 bg-rose-50 border-rose-100";
+		if (lower.includes("fear"))
+			return "text-orange-600 bg-orange-50 border-orange-100";
+		if (lower.includes("neutral"))
+			return "text-amber-600 bg-amber-50 border-amber-100";
+		if (lower.includes("extreme greed"))
+			return "text-emerald-600 bg-emerald-50 border-emerald-100";
+		if (lower.includes("greed"))
+			return "text-green-600 bg-green-50 border-green-100";
 		return "text-slate-600 bg-slate-50 border-slate-100";
 	};
 
 	const chartData = {
-		labels: sortedData.map(d => ""),
+		labels: sortedData.map((_d) => ""),
 		datasets: [
 			{
-				data: sortedData.map(d => d.y),
+				data: sortedData.map((d) => d.y),
 				fill: true,
-				borderColor: 'rgb(79, 70, 229)',
-				backgroundColor: 'rgba(79, 70, 229, 0.05)',
+				borderColor: "rgb(79, 70, 229)",
+				backgroundColor: "rgba(79, 70, 229, 0.05)",
 				tension: 0.4,
 				pointRadius: 0,
 				borderWidth: 2,
@@ -82,7 +102,12 @@ export default function FearAndGreedGauge({
 					<motion.div
 						initial={{ rotate: -90 }}
 						animate={{ rotate: (score / 100) * 180 - 90 }}
-						transition={{ type: "spring", stiffness: 50, damping: 20, delay: 0.5 }}
+						transition={{
+							type: "spring",
+							stiffness: 50,
+							damping: 20,
+							delay: 0.5,
+						}}
 						className="absolute bottom-0 left-1/2 w-2 h-32 origin-bottom -translate-x-1/2 z-20"
 					>
 						<div className="w-full h-full bg-slate-900 rounded-full shadow-2xl relative">
@@ -98,7 +123,9 @@ export default function FearAndGreedGauge({
 						<span className="text-7xl font-black text-slate-900 tracking-tighter">
 							{Math.round(score)}
 						</span>
-						<div className={`px-5 py-2.5 rounded-2xl border font-black text-[11px] uppercase tracking-[0.2em] shadow-sm ${getRatingColor(rating)}`}>
+						<div
+							className={`px-5 py-2.5 rounded-2xl border font-black text-[11px] uppercase tracking-[0.2em] shadow-sm ${getRatingColor(rating)}`}
+						>
 							{rating}
 						</div>
 					</div>
@@ -113,29 +140,43 @@ export default function FearAndGreedGauge({
 				<div className="space-y-4">
 					<div className="flex items-center gap-3 text-slate-400">
 						<History className="w-4 h-4" />
-						<h4 className="text-[10px] font-black uppercase tracking-[0.3em]">Sentiment Timeline</h4>
+						<h4 className="text-[10px] font-black uppercase tracking-[0.3em]">
+							Sentiment Timeline
+						</h4>
 					</div>
-					
+
 					<div className="grid grid-cols-2 gap-4">
 						<div className="p-5 bg-slate-50 border border-slate-100 rounded-3xl group hover:border-indigo-100 transition-colors">
 							<p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
 								<Clock className="w-2.5 h-2.5" /> Previous Close
 							</p>
-							<p className="text-xl font-black text-slate-700">{Math.round(previousClose)}</p>
+							<p className="text-xl font-black text-slate-700">
+								{Math.round(previousClose)}
+							</p>
 						</div>
 						<div className="p-5 bg-slate-50 border border-slate-100 rounded-3xl group hover:border-emerald-100 transition-colors">
 							<p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
 								<TrendingUp className="w-2.5 h-2.5" /> 1 Week Ago
 							</p>
-							<p className="text-xl font-black text-slate-700">{Math.round(previous1Week)}</p>
+							<p className="text-xl font-black text-slate-700">
+								{Math.round(previous1Week)}
+							</p>
 						</div>
 						<div className="p-5 bg-slate-50 border border-slate-100 rounded-3xl">
-							<p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">1 Month Ago</p>
-							<p className="text-xl font-black text-slate-700">{Math.round(previous1Month)}</p>
+							<p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+								1 Month Ago
+							</p>
+							<p className="text-xl font-black text-slate-700">
+								{Math.round(previous1Month)}
+							</p>
 						</div>
 						<div className="p-5 bg-slate-50 border border-slate-100 rounded-3xl">
-							<p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">1 Year Ago</p>
-							<p className="text-xl font-black text-slate-700">{Math.round(previous1Year)}</p>
+							<p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+								1 Year Ago
+							</p>
+							<p className="text-xl font-black text-slate-700">
+								{Math.round(previous1Year)}
+							</p>
 						</div>
 					</div>
 				</div>
@@ -144,9 +185,13 @@ export default function FearAndGreedGauge({
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3 text-slate-400">
 							<Activity className="w-4 h-4" />
-							<h4 className="text-[10px] font-black uppercase tracking-[0.3em]">Trend Velocity</h4>
+							<h4 className="text-[10px] font-black uppercase tracking-[0.3em]">
+								Trend Velocity
+							</h4>
 						</div>
-						<span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">7D Window</span>
+						<span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
+							7D Window
+						</span>
 					</div>
 					<div className="h-24 w-full bg-slate-50/50 rounded-3xl border border-slate-100 p-4">
 						<Line data={chartData} options={chartOptions} />

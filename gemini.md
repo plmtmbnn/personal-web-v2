@@ -80,6 +80,16 @@ Strictly for routing and page definitions.
 ### Blog System
 - **Optimization**: Public routes use **Static Site Generation (SSG)** with absolute OG/Twitter metadata.
 - **Interactive Tools**: Built-in `ShareButton` leveraging native Web Share API.
+- **Syntax Highlighting**: 
+  - Use **One Dark** Prism style for high-contrast and vibrant technical snippets.
+  - Implement in both `BlogContent` (public) and `BlogForm` (editor preview) for WYSIWYG consistency.
+- **Code Block Responsiveness**:
+  - **Scrolling**: Mandate `overflow-auto` for both horizontal and vertical scrolling.
+  - **Formatting**: Use `white-space: pre` to prevent line wrapping, preserving original code structure.
+  - **Height Constraints**: Set `max-h-[32rem]` to keep extremely long snippets manageable.
+- **Post-Article UX**: 
+  - Centered "Post Actions" footer replacing the legacy sidebar.
+  - High-fidelity layout combining Share actions and interactive motion feedback.
 
 ### Task System
 - **Tabbed Architecture**:

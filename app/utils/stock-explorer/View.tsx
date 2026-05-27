@@ -1115,7 +1115,7 @@ function StockTable({
 									<div className="w-4 h-4 bg-stone-100 rounded mx-auto" />
 								</td>
 							</tr>
-						))}{" "}
+						))}
 				</tbody>
 			</table>
 		</div>

@@ -12,6 +12,8 @@ import {
 	AlertCircle,
 	AlignLeft,
 	Zap,
+	Minimize2,
+	Maximize2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -97,6 +99,8 @@ export default function CaseConverterView() {
 	const [output, setOutput] = useState("");
 	const [isCopied, setIsCopied] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [isInputCollapsed, setIsInputCollapsed] = useState(false);
+	const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
 
 	const convert = useCallback(
 		(target: CaseType) => {
@@ -187,26 +191,63 @@ export default function CaseConverterView() {
 				</div>
 
 				{/* Editor Layout */}
-				<div className="grid grid-cols-1 xl:grid-cols-[1fr_180px_1fr] gap-4 sm:gap-8 items-stretch">
+				<div className="flex flex-col xl:flex-row gap-4 sm:gap-8 items-stretch min-h-[500px] xl:min-h-[600px]">
 					{/* Input Pane */}
-					<div className="space-y-4">
-						<div className="flex items-center gap-2 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-							<AlignLeft className="w-3.5 h-3.5" /> Source Code / JSON
+					<motion.div
+						layout
+						className={`flex flex-col space-y-4 transition-all duration-300 ${
+							isInputCollapsed
+								? "w-full xl:w-20"
+								: isOutputCollapsed
+									? "flex-1"
+									: "flex-[1.5]"
+						}`}
+					>
+						<div className="flex items-center gap-2 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap overflow-hidden">
+							<button
+								onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+								className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-600"
+							>
+								{isInputCollapsed ? (
+									<Maximize2 className="w-3.5 h-3.5" />
+								) : (
+									<Minimize2 className="w-3.5 h-3.5" />
+								)}
+							</button>
+							{!isInputCollapsed && (
+								<>
+									<AlignLeft className="w-3.5 h-3.5 flex-shrink-0" />
+									<span>Source Code / JSON</span>
+								</>
+							)}
 						</div>
-						<div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm h-full min-h-[400px] sm:min-h-[500px] overflow-hidden focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:border-blue-500 transition-all">
-							<textarea
-								value={input}
-								onChange={(e) => setInput(e.target.value)}
-								placeholder='paste_variable_names or {"json_keys": "data"}'
-								className="w-full h-full p-8 bg-transparent text-slate-900 font-mono text-sm leading-relaxed focus:outline-none resize-none placeholder:text-slate-200"
-								spellCheck={false}
-							/>
+						<div
+							className={`flex-1 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:border-blue-500 transition-all ${
+								isInputCollapsed ? "opacity-40" : "opacity-100"
+							}`}
+						>
+							{!isInputCollapsed ? (
+								<textarea
+									value={input}
+									onChange={(e) => setInput(e.target.value)}
+									placeholder='paste_variable_names or {"json_keys": "data"}'
+									className="w-full h-full p-8 bg-transparent text-slate-900 font-mono text-sm leading-relaxed focus:outline-none resize-none placeholder:text-slate-200 scrollbar-hide"
+									spellCheck={false}
+								/>
+							) : (
+								<div
+									className="w-full h-full flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors py-10"
+									onClick={() => setIsInputCollapsed(false)}
+								>
+									<AlignLeft className="w-6 h-6 text-slate-300" />
+								</div>
+							)}
 						</div>
-					</div>
+					</motion.div>
 
 					{/* Center Controls */}
-					<div className="flex flex-col justify-center py-4 xl:py-12">
-						<div className="grid grid-cols-2 sm:grid-cols-3 xl:flex xl:flex-col gap-2 sm:gap-3">
+					<div className="flex flex-col justify-center py-4 xl:py-12 flex-shrink-0 w-full xl:w-[180px]">
+						<div className="grid grid-cols-2 sm:grid-cols-4 xl:flex xl:flex-col gap-2 sm:gap-3">
 							{[
 								{ label: "camelCase", type: "camel" },
 								{ label: "PascalCase", type: "pascal" },
@@ -236,12 +277,36 @@ export default function CaseConverterView() {
 					</div>
 
 					{/* Output Pane */}
-					<div className="space-y-4">
-						<div className="flex items-center justify-between px-3">
-							<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-								<Code2 className="w-3.5 h-3.5" /> Resulting Case
+					<motion.div
+						layout
+						className={`flex flex-col space-y-4 transition-all duration-300 ${
+							isOutputCollapsed
+								? "w-full xl:w-20"
+								: isInputCollapsed
+									? "flex-1"
+									: "flex-[1.5]"
+						}`}
+					>
+						<div className="flex items-center justify-between px-3 h-8">
+							<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap overflow-hidden">
+								<button
+									onClick={() => setIsOutputCollapsed(!isOutputCollapsed)}
+									className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-600"
+								>
+									{isOutputCollapsed ? (
+										<Maximize2 className="w-3.5 h-3.5" />
+									) : (
+										<Minimize2 className="w-3.5 h-3.5" />
+									)}
+								</button>
+								{!isOutputCollapsed && (
+									<>
+										<Code2 className="w-3.5 h-3.5 flex-shrink-0" />
+										<span>Resulting Case</span>
+									</>
+								)}
 							</div>
-							{output && (
+							{!isOutputCollapsed && output && (
 								<button
 									onClick={handleCopy}
 									className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
@@ -259,54 +324,67 @@ export default function CaseConverterView() {
 								</button>
 							)}
 						</div>
-						<div className="relative bg-white border border-slate-200 rounded-[2.5rem] shadow-sm h-full min-h-[400px] sm:min-h-[500px] overflow-hidden group">
-							<AnimatePresence mode="wait">
-								{error ? (
-									<motion.div
-										key="error"
-										initial={{ opacity: 0 }}
-										animate={{ opacity: 1 }}
-										exit={{ opacity: 0 }}
-										className="absolute inset-0 flex items-center justify-center p-12 text-center"
-									>
-										<div className="space-y-4">
-											<div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-amber-500">
-												<AlertCircle className="w-8 h-8" />
+						<div
+							className={`flex-1 relative bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden group ${
+								isOutputCollapsed ? "opacity-40" : "opacity-100"
+							}`}
+						>
+							{!isOutputCollapsed ? (
+								<AnimatePresence mode="wait">
+									{error ? (
+										<motion.div
+											key="error"
+											initial={{ opacity: 0 }}
+											animate={{ opacity: 1 }}
+											exit={{ opacity: 0 }}
+											className="absolute inset-0 flex items-center justify-center p-12 text-center"
+										>
+											<div className="space-y-4">
+												<div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-amber-500">
+													<AlertCircle className="w-8 h-8" />
+												</div>
+												<div className="space-y-1">
+													<p className="text-slate-900 font-black uppercase tracking-widest text-xs">
+														Input Warning
+													</p>
+													<p className="text-slate-500 text-[10px] font-medium leading-relaxed">
+														{error}. Lines processed individually.
+													</p>
+												</div>
 											</div>
-											<div className="space-y-1">
-												<p className="text-slate-900 font-black uppercase tracking-widest text-xs">
-													Input Warning
-												</p>
-												<p className="text-slate-500 text-[10px] font-medium leading-relaxed">
-													{error}. Lines processed individually.
+										</motion.div>
+									) : output ? (
+										<motion.div
+											key="output"
+											initial={{ opacity: 0 }}
+											animate={{ opacity: 1 }}
+											className="h-full"
+										>
+											<pre className="w-full h-full p-8 font-mono text-sm leading-relaxed text-blue-600 overflow-auto scrollbar-hide select-all">
+												{output}
+											</pre>
+										</motion.div>
+									) : (
+										<div className="h-full flex items-center justify-center pointer-events-none">
+											<div className="text-center space-y-4 opacity-[0.03]">
+												<Zap className="w-32 h-32 mx-auto" />
+												<p className="font-black uppercase tracking-[1em] text-sm">
+													Ready to Convert
 												</p>
 											</div>
 										</div>
-									</motion.div>
-								) : output ? (
-									<motion.div
-										key="output"
-										initial={{ opacity: 0 }}
-										animate={{ opacity: 1 }}
-										className="h-full"
-									>
-										<pre className="w-full h-full p-8 font-mono text-sm leading-relaxed text-blue-600 overflow-auto scrollbar-hide select-all">
-											{output}
-										</pre>
-									</motion.div>
-								) : (
-									<div className="h-full flex items-center justify-center pointer-events-none">
-										<div className="text-center space-y-4 opacity-[0.03]">
-											<Zap className="w-32 h-32 mx-auto" />
-											<p className="font-black uppercase tracking-[1em] text-sm">
-												Ready to Convert
-											</p>
-										</div>
-									</div>
-								)}
-							</AnimatePresence>
+									)}
+								</AnimatePresence>
+							) : (
+								<div
+									className="w-full h-full flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors py-10"
+									onClick={() => setIsOutputCollapsed(false)}
+								>
+									<Code2 className="w-6 h-6 text-slate-300" />
+								</div>
+							)}
 						</div>
-					</div>
+					</motion.div>
 				</div>
 			</div>
 		</main>

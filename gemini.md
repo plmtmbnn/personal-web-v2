@@ -68,6 +68,7 @@ Strictly for routing and page definitions.
   - **Details**: Metadata and titles anchored in high-contrast white cards overlapping hero banners.
 - **Custom Modal System**: Use `features/shared/components/CustomModal.tsx` for high-fidelity alerts and confirmations.
 - **Interactive Feedback**: All server transitions must provide high-fidelity feedback (e.g., **Synchronization Overlays**, loading spinners).
+- **Module Focus Pattern**: For side-by-side utility modules (e.g., Input/Output), provide `Minimize2` / `Maximize2` buttons to collapse/expand modules, allowing users to focus on specific panes. Use `framer-motion` for smooth layout transitions.
 - **Mobile-First UX**:
   - **Strategic Grids**: Utilities transition from 1-column mobile to multi-column desktop/tablet.
   - **Touch Targets**: Enhanced padding and `active:scale-90` feedback for handheld training tools.
@@ -99,6 +100,11 @@ Strictly for routing and page definitions.
 
 ### Adventures & Professional Showcase
 - **Adventures**: High-fidelity logs for Running and Travel missions, utilizing Glassmorphism and rich typography.
+- **Travel Bucket List Tracker**: 
+  - **Architecture**: Domain-driven logic in `features/travel/`.
+  - **Logic**: Dynamic `useMemo` filtering for "Completed Journeys" (sorted by date) vs. "Future Adventures".
+  - **Components**: High-fidelity `StatsCard` for progress visualization and `DestinationCard` with status badges.
+  - **Aesthetics**: Solid Productivity Pattern (`bg-slate-50`) with Emerald accents.
 - **Professional Showcase**: Career milestones and project portfolio featuring interactive timelines and impact statistics.
 
 ### Adventure Utilities
@@ -112,6 +118,7 @@ Strictly for routing and page definitions.
   - **Converters**: Universal Case and CSV-to-JSON recursive parsers.
   - **File Renamer**: SEO-friendly kebab-case normalization for batch file operations.
   - **Running Timer**: High-precision interval timer with automated transitions and wake-lock.
+- **JSON Tree View**: Standardized `JsonValue` component for interactive exploration of parsed data, supporting nested expansion, item counts, and value-level copying.
 - **Architecture**: Redis-backed with an **Admin Import Portal** (`/utils/stock-explorer/admin`) for manual synchronization.
 - **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity.
 

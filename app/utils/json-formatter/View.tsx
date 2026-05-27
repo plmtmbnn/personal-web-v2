@@ -184,6 +184,8 @@ export default function JsonFormatterView() {
 	const [isAutoFormat, setIsAutoFormat] = useState(true);
 	const [isMinified, setIsMinified] = useState(false);
 	const [isCopied, setIsCopied] = useState(false);
+	const [isInputCollapsed, setIsInputCollapsed] = useState(false);
+	const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
 	const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
 	const processJson = useCallback((raw: string) => {
@@ -293,129 +295,207 @@ export default function JsonFormatterView() {
 				</div>
 
 				{/* Editor Workspace */}
-				<div className="grid grid-cols-1 xl:grid-cols-2 gap-8 flex-1 min-h-[700px]">
+				<div className="flex flex-col xl:flex-row gap-8 flex-1 min-h-[700px] items-stretch">
 					{/* Input Module */}
-					<div className="flex flex-col space-y-4">
-						<div className="flex items-center justify-between px-3">
-							<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-								<Type className="w-3.5 h-3.5" /> Source Input
-							</div>
-							<div className="flex items-center gap-2">
-								{status !== "empty" && (
-									<div
-										className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
-											status === "valid"
-												? "bg-emerald-50 border-emerald-200 text-emerald-600"
-												: status === "auto-fixed"
-													? "bg-amber-50 border-amber-200 text-amber-600"
-													: "bg-rose-50 border-rose-200 text-rose-600"
-										}`}
-									>
-										{status.replace("-", " ")}
-									</div>
+					<motion.div
+						layout
+						className={`flex flex-col space-y-4 transition-all duration-300 ${
+							isInputCollapsed
+								? "w-full xl:w-20"
+								: isOutputCollapsed
+									? "flex-1"
+									: "flex-1"
+						}`}
+					>
+						<div className="flex items-center justify-between px-3 h-8">
+							<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap overflow-hidden">
+								<button
+									onClick={() => setIsInputCollapsed(!isInputCollapsed)}
+									className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-600"
+								>
+									{isInputCollapsed ? (
+										<Maximize2 className="w-3.5 h-3.5" />
+									) : (
+										<Minimize2 className="w-3.5 h-3.5" />
+									)}
+								</button>
+								{!isInputCollapsed && (
+									<>
+										<Type className="w-3.5 h-3.5 flex-shrink-0" />
+										<span>Source Input</span>
+									</>
 								)}
 							</div>
+							{!isInputCollapsed && (
+								<div className="flex items-center gap-2">
+									{status !== "empty" && (
+										<div
+											className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
+												status === "valid"
+													? "bg-emerald-50 border-emerald-200 text-emerald-600"
+													: status === "auto-fixed"
+														? "bg-amber-50 border-amber-200 text-amber-600"
+														: "bg-rose-50 border-rose-200 text-rose-600"
+											}`}
+										>
+											{status.replace("-", " ")}
+										</div>
+									)}
+								</div>
+							)}
 						</div>
-						<div className="flex-1 relative group bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:border-blue-500 transition-all">
-							<textarea
-								value={input}
-								onChange={(e) => setInput(e.target.value)}
-								placeholder="Paste raw data here... unquoted keys and single quotes are fine."
-								className="w-full h-full min-h-[500px] p-8 bg-transparent text-slate-900 font-mono text-sm leading-relaxed focus:outline-none resize-none placeholder:text-slate-200 scrollbar-hide"
-								spellCheck={false}
-							/>
+						<div
+							className={`flex-1 relative group bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:border-blue-500 transition-all ${
+								isInputCollapsed ? "opacity-40" : "opacity-100"
+							}`}
+						>
+							{!isInputCollapsed ? (
+								<textarea
+									value={input}
+									onChange={(e) => setInput(e.target.value)}
+									placeholder="Paste raw data here... unquoted keys and single quotes are fine."
+									className="w-full h-full min-h-[500px] p-8 bg-transparent text-slate-900 font-mono text-sm leading-relaxed focus:outline-none resize-none placeholder:text-slate-200 scrollbar-hide"
+									spellCheck={false}
+								/>
+							) : (
+								<div
+									className="w-full h-full min-h-[500px] flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+									onClick={() => setIsInputCollapsed(false)}
+								>
+									<Type className="w-6 h-6 text-slate-300" />
+								</div>
+							)}
 						</div>
-					</div>
+					</motion.div>
 
 					{/* Output Module */}
-					<div className="flex flex-col space-y-4">
-						<div className="flex items-center justify-between px-3">
-							<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-								<Code2 className="w-3.5 h-3.5" /> Logical Preview
-							</div>
-							<div className="flex items-center gap-3">
-								{!isAutoFormat && (
-									<button
-										onClick={() => processJson(input)}
-										className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors"
-									>
-										Run Manually
-									</button>
-								)}
-								{parsedData && (
-									<button
-										onClick={handleCopy}
-										className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-											isCopied
-												? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
-												: "bg-slate-900 text-white hover:bg-slate-800"
-										}`}
-									>
-										{isCopied ? (
-											<Check className="w-3 h-3" />
-										) : (
-											<Copy className="w-3 h-3" />
-										)}
-										{isCopied ? "Copied" : "Copy JSON"}
-									</button>
+					<motion.div
+						layout
+						className={`flex flex-col space-y-4 transition-all duration-300 ${
+							isOutputCollapsed
+								? "w-full xl:w-20"
+								: isInputCollapsed
+									? "flex-1"
+									: "flex-1"
+						}`}
+					>
+						<div className="flex items-center justify-between px-3 h-8">
+							<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap overflow-hidden">
+								<button
+									onClick={() => setIsOutputCollapsed(!isOutputCollapsed)}
+									className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-slate-600"
+								>
+									{isOutputCollapsed ? (
+										<Maximize2 className="w-3.5 h-3.5" />
+									) : (
+										<Minimize2 className="w-3.5 h-3.5" />
+									)}
+								</button>
+								{!isOutputCollapsed && (
+									<>
+										<Code2 className="w-3.5 h-3.5 flex-shrink-0" />
+										<span>Logical Preview</span>
+									</>
 								)}
 							</div>
+							{!isOutputCollapsed && (
+								<div className="flex items-center gap-3">
+									{!isAutoFormat && (
+										<button
+											onClick={() => processJson(input)}
+											className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors"
+										>
+											Run Manually
+										</button>
+									)}
+									{parsedData && (
+										<button
+											onClick={handleCopy}
+											className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+												isCopied
+													? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
+													: "bg-slate-900 text-white hover:bg-slate-800"
+											}`}
+										>
+											{isCopied ? (
+												<Check className="w-3 h-3" />
+											) : (
+												<Copy className="w-3 h-3" />
+											)}
+											{isCopied ? "Copied" : "Copy JSON"}
+										</button>
+									)}
+								</div>
+							)}
 						</div>
 
-						<div className="flex-1 relative bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
-							<AnimatePresence mode="wait">
-								{error ? (
-									<motion.div
-										key="error"
-										initial={{ opacity: 0, scale: 0.98 }}
-										animate={{ opacity: 1, scale: 1 }}
-										exit={{ opacity: 0, scale: 0.98 }}
-										className="absolute inset-0 z-20 flex items-center justify-center p-12 text-center"
-									>
-										<div className="space-y-6 max-w-md">
-											<div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto text-rose-500">
-												<AlertCircle className="w-10 h-10" />
+						<div
+							className={`flex-1 relative bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col ${
+								isOutputCollapsed ? "opacity-40" : "opacity-100"
+							}`}
+						>
+							{!isOutputCollapsed ? (
+								<AnimatePresence mode="wait">
+									{error ? (
+										<motion.div
+											key="error"
+											initial={{ opacity: 0, scale: 0.98 }}
+											animate={{ opacity: 1, scale: 1 }}
+											exit={{ opacity: 0, scale: 0.98 }}
+											className="absolute inset-0 z-20 flex items-center justify-center p-12 text-center"
+										>
+											<div className="space-y-6 max-w-md">
+												<div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto text-rose-500">
+													<AlertCircle className="w-10 h-10" />
+												</div>
+												<div className="space-y-2">
+													<h3 className="text-slate-900 font-black uppercase tracking-[0.2em] text-sm">
+														System Error
+													</h3>
+													<p className="text-slate-500 font-mono text-xs leading-loose break-words bg-slate-50 p-6 rounded-2xl border border-slate-100">
+														{error}
+													</p>
+												</div>
 											</div>
-											<div className="space-y-2">
-												<h3 className="text-slate-900 font-black uppercase tracking-[0.2em] text-sm">
-													System Error
-												</h3>
-												<p className="text-slate-500 font-mono text-xs leading-loose break-words bg-slate-50 p-6 rounded-2xl border border-slate-100">
-													{error}
+										</motion.div>
+									) : parsedData ? (
+										<motion.div
+											key="output"
+											initial={{ opacity: 0 }}
+											animate={{ opacity: 1 }}
+											className="h-full p-8 overflow-auto scrollbar-hide"
+										>
+											{isMinified ? (
+												<div className="font-mono text-sm break-all text-slate-600 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+													{JSON.stringify(parsedData)}
+												</div>
+											) : (
+												<div className="pb-10">
+													<JsonValue value={parsedData} />
+												</div>
+											)}
+										</motion.div>
+									) : (
+										<div className="h-full flex items-center justify-center">
+											<div className="text-center space-y-4 opacity-10">
+												<Braces className="w-24 h-24 mx-auto" />
+												<p className="font-black uppercase tracking-[0.5em] text-xs">
+													Waiting for Data
 												</p>
 											</div>
 										</div>
-									</motion.div>
-								) : parsedData ? (
-									<motion.div
-										key="output"
-										initial={{ opacity: 0 }}
-										animate={{ opacity: 1 }}
-										className="h-full p-8 overflow-auto scrollbar-hide"
-									>
-										{isMinified ? (
-											<div className="font-mono text-sm break-all text-slate-600 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-												{JSON.stringify(parsedData)}
-											</div>
-										) : (
-											<div className="pb-10">
-												<JsonValue value={parsedData} />
-											</div>
-										)}
-									</motion.div>
-								) : (
-									<div className="h-full flex items-center justify-center">
-										<div className="text-center space-y-4 opacity-10">
-											<Braces className="w-24 h-24 mx-auto" />
-											<p className="font-black uppercase tracking-[0.5em] text-xs">
-												Waiting for Data
-											</p>
-										</div>
-									</div>
-								)}
-							</AnimatePresence>
+									)}
+								</AnimatePresence>
+							) : (
+								<div
+									className="w-full h-full min-h-[500px] flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+									onClick={() => setIsOutputCollapsed(false)}
+								>
+									<Code2 className="w-6 h-6 text-slate-300" />
+								</div>
+							)}
 						</div>
-					</div>
+					</motion.div>
 				</div>
 			</div>
 		</main>

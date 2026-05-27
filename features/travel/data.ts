@@ -8,9 +8,9 @@ export const destinations: Destination[] = [
 		country: "Indonesia",
 		type: "domestic",
 		isVisited: true,
-		visitedDate: "2024-03",
+		visitedDate: "2005-03",
 		imageUrl:
-			"https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?q=80&w=2072&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1625024017825-1a1dfc2f4ad7?q=80&w=2072&auto=format&fit=crop",
 		description:
 			"The largest volcanic lake in the world paired with the culinary heritage of Medan.",
 	},
@@ -21,9 +21,9 @@ export const destinations: Destination[] = [
 		country: "Indonesia",
 		type: "domestic",
 		isVisited: true,
-		visitedDate: "2023-12",
+		visitedDate: "2019-12",
 		imageUrl:
-			"https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2070&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1555400038-63f5ba517a47?q=80&w=2070&auto=format&fit=crop",
 		description:
 			"The Island of Gods. From the beaches of Canggu to the spiritual heart of Ubud.",
 	},
@@ -34,9 +34,9 @@ export const destinations: Destination[] = [
 		country: "Indonesia",
 		type: "domestic",
 		isVisited: true,
-		visitedDate: "2023-08",
+		visitedDate: "2017-03",
 		imageUrl:
-			"https://images.unsplash.com/photo-1584810359583-96fc3448beaa?q=80&w=1974&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1631002164896-004e2058d6e4?q=80&w=1974&auto=format&fit=crop",
 		description:
 			"The cultural soul of Java, home to Borobudur and the artistic Malioboro street.",
 	},
@@ -47,9 +47,9 @@ export const destinations: Destination[] = [
 		country: "Indonesia",
 		type: "domestic",
 		isVisited: true,
-		visitedDate: "2023-05",
+		visitedDate: "2017-07",
 		imageUrl:
-			"https://images.unsplash.com/photo-1555899434-94d1368aa7af?q=80&w=2070&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1590476355683-96c1859f4658?q=80&w=2070&auto=format&fit=crop",
 		description:
 			"The Paris of Java. Cool mountain air, volcanic craters, and amazing street food.",
 	},
@@ -60,9 +60,9 @@ export const destinations: Destination[] = [
 		country: "Indonesia",
 		type: "domestic",
 		isVisited: true,
-		visitedDate: "2022-10",
+		visitedDate: "2017-08",
 		imageUrl:
-			"https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?q=80&w=1974&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1561371451-7411d78e95d6?q=80&w=1974&auto=format&fit=crop",
 		description:
 			"Jakarta's tropical escape. Crystal clear waters just a boat ride away from the city.",
 	},
@@ -73,9 +73,9 @@ export const destinations: Destination[] = [
 		country: "Thailand",
 		type: "international",
 		isVisited: true,
-		visitedDate: "2023-11",
+		visitedDate: "2025-11",
 		imageUrl:
-			"https://images.unsplash.com/photo-1508009603885-50cf7c579367?q=80&w=1974&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1759605752396-82d091a27069?q=80&w=1974&auto=format&fit=crop",
 		description:
 			"Vibrant street life, ornate shrines, and the architectural masterpiece of Wat Arun.",
 	},
@@ -87,7 +87,7 @@ export const destinations: Destination[] = [
 		type: "international",
 		isVisited: false,
 		imageUrl:
-			"https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=2070&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1602646993776-5dd8e166e6fd?q=80&w=2070&auto=format&fit=crop",
 		description:
 			"Dreaming of emerald waters, limestone islands, and the history of the Old Quarter.",
 	},
@@ -99,7 +99,7 @@ export const destinations: Destination[] = [
 		type: "international",
 		isVisited: false,
 		imageUrl:
-			"https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2070&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=2070&auto=format&fit=crop",
 		description:
 			"The perfect blend of neon-lit futurism and timeless Zen traditions.",
 	},
@@ -111,7 +111,7 @@ export const destinations: Destination[] = [
 		type: "international",
 		isVisited: false,
 		imageUrl:
-			"https://images.unsplash.com/photo-1555527237-7090875e5429?q=80&w=2070&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1770631071130-3bb15995963a?q=80&w=2070&auto=format&fit=crop",
 		description:
 			"A pilgrimage to the home of The Beatles and the historic Royal Albert Dock.",
 	},
@@ -138,5 +138,42 @@ export const destinations: Destination[] = [
 			"https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=2059&auto=format&fit=crop",
 		description:
 			"The land of fire and ice. Northern lights, glaciers, and volcanic landscapes.",
+	},
+	{
+		id: "12",
+		name: "Jakarta",
+		location: "DKI Jakarta",
+		country: "Indonesia",
+		type: "domestic",
+		isVisited: true,
+		visitedDate: "2017-05",
+		imageUrl:
+			"https://images.unsplash.com/photo-1555899434-94d1368aa7af?q=80&w=2070&auto=format&fit=crop",
+		description:
+			"The bustling capital. A mix of modern skyscrapers and historical heritage in Kota Tua.",
+	},
+	{
+		id: "13",
+		name: "Labuan Bajo",
+		location: "East Nusa Tenggara",
+		country: "Indonesia",
+		type: "domestic",
+		isVisited: false,
+		imageUrl:
+			"https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=2070&auto=format&fit=crop",
+		description:
+			"Gate to Komodo National Park, featuring pink beaches and prehistoric lizards.",
+	},
+	{
+		id: "14",
+		name: "China",
+		location: "Beijing & Shanghai",
+		country: "China",
+		type: "international",
+		isVisited: false,
+		imageUrl:
+			"https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=2070&auto=format&fit=crop",
+		description:
+			"Exploring the Great Wall, the Forbidden City, and the futuristic skyline of the Bund.",
 	},
 ];

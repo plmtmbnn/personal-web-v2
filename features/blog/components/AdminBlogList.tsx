@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { Blog } from "@/features/blog/data";
@@ -67,6 +67,28 @@ export default function AdminBlogList({
 	// Categories aligned with DB Check Constraint
 	const categories = ["Tech", "Running", "Finance", "Investment", "General"];
 
+	const updateParams = useCallback(
+		(updates: Record<string, string | null>) => {
+			const params = new URLSearchParams(searchParams.toString());
+			Object.entries(updates).forEach(([key, value]) => {
+				if (
+					value === null ||
+					value === "all" ||
+					(key === "page" && value === "1")
+				) {
+					params.delete(key);
+				} else {
+					params.set(key, value);
+				}
+			});
+
+			startTransition(() => {
+				router.push(`${pathname}?${params.toString()}`);
+			});
+		},
+		[searchParams, router, pathname],
+	);
+
 	// Debounced search update
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -76,25 +98,6 @@ export default function AdminBlogList({
 		}, 500);
 		return () => clearTimeout(timer);
 	}, [searchQuery, updateParams, currentSearch]);
-
-	const updateParams = (updates: Record<string, string | null>) => {
-		const params = new URLSearchParams(searchParams.toString());
-		Object.entries(updates).forEach(([key, value]) => {
-			if (
-				value === null ||
-				value === "all" ||
-				(key === "page" && value === "1")
-			) {
-				params.delete(key);
-			} else {
-				params.set(key, value);
-			}
-		});
-
-		startTransition(() => {
-			router.push(`${pathname}?${params.toString()}`);
-		});
-	};
 
 	const handleToggleStatus = async (id: string, currentPublished: boolean) => {
 		setTogglingId(id);

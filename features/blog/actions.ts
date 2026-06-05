@@ -163,7 +163,7 @@ export async function saveBlog(
 	};
 
 	try {
-		let result;
+		let result = null;
 
 		if (formData.id) {
 			// Update existing

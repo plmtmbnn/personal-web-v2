@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,15 +29,11 @@ export default function PinGuard({ children }: PinGuardProps) {
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 
-	// Feature Toggle: Bypass PinGuard if disabled
-	if (
+	const isPinGuardDisabled =
 		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false" ||
-		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false"
-	) {
-		return <>{children}</>;
-	}
+		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false";
 
-	const checkSession = () => {
+	const checkSession = useCallback(() => {
 		const session = localStorage.getItem(PIN_SESSION_KEY);
 		if (!session) return false;
 
@@ -51,52 +47,62 @@ export default function PinGuard({ children }: PinGuardProps) {
 			console.error("Failed to parse session", e);
 		}
 		return false;
-	};
+	}, []);
+
+	const handleSubmit = useCallback(
+		async (e?: React.FormEvent) => {
+			e?.preventDefault();
+			if (pin.length !== 6 || isLoading) return;
+
+			setIsLoading(true);
+			setError(null);
+
+			try {
+				const response = await fetch("/api/verify-pin", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ pin }),
+				});
+
+				const data = await response.json();
+
+				if (response.ok && data.authenticated) {
+					const session = {
+						timestamp: Date.now(),
+						authenticated: true,
+					};
+					localStorage.setItem(PIN_SESSION_KEY, JSON.stringify(session));
+					setIsAuthenticated(true);
+				} else {
+					setError(data.error || "Incorrect PIN");
+					setPin(""); // Clear form on mismatch
+				}
+			} catch (_err) {
+				setError("Network error, please try again.");
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[pin, isLoading],
+	);
 
 	useEffect(() => {
+		if (isPinGuardDisabled) return;
 		setIsAuthenticated(checkSession());
-	}, [checkSession]);
-
-	const handleSubmit = async (e?: React.FormEvent) => {
-		e?.preventDefault();
-		if (pin.length !== 6 || isLoading) return;
-
-		setIsLoading(true);
-		setError(null);
-
-		try {
-			const response = await fetch("/api/verify-pin", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ pin }),
-			});
-
-			const data = await response.json();
-
-			if (response.ok && data.authenticated) {
-				const session = {
-					timestamp: Date.now(),
-					authenticated: true,
-				};
-				localStorage.setItem(PIN_SESSION_KEY, JSON.stringify(session));
-				setIsAuthenticated(true);
-			} else {
-				setError(data.error || "Incorrect PIN");
-				setPin(""); // Clear form on mismatch
-			}
-		} catch (_err) {
-			setError("Network error, please try again.");
-		} finally {
-			setIsLoading(false);
-		}
-	};
+	}, [checkSession, isPinGuardDisabled]);
 
 	// Auto-verify when 6 digits are entered
 	useEffect(() => {
+		if (isPinGuardDisabled) return;
 		if (pin.length === 6 && !isLoading) {
 			handleSubmit();
 		}
-	}, [pin, isLoading, handleSubmit]);
+	}, [pin, isLoading, handleSubmit, isPinGuardDisabled]);
+
+	// Feature Toggle: Bypass PinGuard if disabled
+	if (isPinGuardDisabled) {
+		return <>{children}</>;
+	}
 
 	if (isAuthenticated === null) {
 		return (

@@ -71,7 +71,7 @@ export default function TravelPage() {
 							</h2>
 							<div className="h-px flex-1 bg-slate-200" />
 						</div>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 							{visitedDestinations.map((dest, i) => (
 								<DestinationCard key={dest.id} destination={dest} index={i} />
 							))}
@@ -85,7 +85,7 @@ export default function TravelPage() {
 							</h2>
 							<div className="h-px flex-1 bg-slate-200" />
 						</div>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 							{wishlistDestinations.map((dest, i) => (
 								<DestinationCard key={dest.id} destination={dest} index={i} />
 							))}

@@ -1,6 +1,12 @@
 "use client";
 
-import { useOptimistic, useTransition, useMemo, useState } from "react";
+import {
+	useOptimistic,
+	useTransition,
+	useMemo,
+	useState,
+	useCallback,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import { Inbox, Flame, Calendar, CheckCircle2 } from "lucide-react";
 import {
@@ -105,32 +111,35 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	/**
 	 * Helper to apply local filters to a list
 	 */
-	const applyFilters = (list: Task[], filters: any, isUpcoming = false) => {
-		let result = list;
+	const applyFilters = useCallback(
+		(list: Task[], filters: any, isUpcoming = false) => {
+			let result = list;
 
-		// 1. Priority
-		if (filters.priority !== "all") {
-			result = result.filter((t) => t.priority === filters.priority);
-		}
+			// 1. Priority
+			if (filters.priority !== "all") {
+				result = result.filter((t) => t.priority === filters.priority);
+			}
 
-		// 2. Category
-		if (filters.category !== "all") {
-			result = result.filter((t) => t.category === filters.category);
-		}
+			// 2. Category
+			if (filters.category !== "all") {
+				result = result.filter((t) => t.category === filters.category);
+			}
 
-		// 3. Completion
-		if (!filters.showCompleted) {
-			result = result.filter((t) => !t.is_completed);
-		}
+			// 3. Completion
+			if (!filters.showCompleted) {
+				result = result.filter((t) => !t.is_completed);
+			}
 
-		// 4. Date Range (Only for Upcoming)
-		if (isUpcoming && filters.range === "week") {
-			const nextWeek = addDays(startOfDay(new Date()), 8); // 7 days from today
-			result = result.filter((t) => isBefore(parseISO(t.due_date), nextWeek));
-		}
+			// 4. Date Range (Only for Upcoming)
+			if (isUpcoming && filters.range === "week") {
+				const nextWeek = addDays(startOfDay(new Date()), 8); // 7 days from today
+				result = result.filter((t) => isBefore(parseISO(t.due_date), nextWeek));
+			}
 
-		return result;
-	};
+			return result;
+		},
+		[],
+	);
 
 	// Derived display lists
 	const displayTodayTasks = useMemo(

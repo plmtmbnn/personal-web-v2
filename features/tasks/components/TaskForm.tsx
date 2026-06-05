@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
 	Plus,
 	Loader2,
@@ -47,54 +47,69 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	// Auto-expand textarea logic
 	useEffect(() => {
 		if (textareaRef.current) {
+			// Trigger on title change
+			const _ = title;
 			textareaRef.current.style.height = "auto";
 			textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
 		}
+	}, [title]);
+
+	const setQuickDate = useCallback((days: number) => {
+		setDueDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
 	}, []);
 
-	const setQuickDate = (days: number) => {
-		setDueDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
-	};
+	const handleSubmit = useCallback(
+		async (e: React.FormEvent) => {
+			e.preventDefault();
+			if (!title.trim() || isSubmitting) return;
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!title.trim() || isSubmitting) return;
+			setIsSubmitting(true);
+			try {
+				const metadata = {
+					priority,
+					category: category.trim() || "General",
+					due_date: dueDate,
+				};
 
-		setIsSubmitting(true);
-		try {
-			const metadata = {
-				priority,
-				category: category.trim() || "General",
-				due_date: dueDate,
-			};
-
-			if (finalBatchActive) {
-				await addBatchTasks(
-					taskTitles.map((t) => ({
-						title: t.trim(),
+				if (finalBatchActive) {
+					await addBatchTasks(
+						taskTitles.map((t) => ({
+							title: t.trim(),
+							...metadata,
+						})),
+					);
+				} else {
+					await addTask({
+						title: title.trim(),
 						...metadata,
-					})),
-				);
-			} else {
-				await addTask({
-					title: title.trim(),
-					...metadata,
-				});
-			}
+					});
+				}
 
-			setTitle("");
-			setCategory("");
-			setPriority("MEDIUM");
-			setDueDate(format(new Date(), "yyyy-MM-dd"));
-			router.refresh();
-			setIsFocused(false);
-			onClose?.();
-		} catch (error) {
-			console.error("Task creation failed:", error);
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
+				setTitle("");
+				setCategory("");
+				setPriority("MEDIUM");
+				setDueDate(format(new Date(), "yyyy-MM-dd"));
+				router.refresh();
+				setIsFocused(false);
+				onClose?.();
+			} catch (error) {
+				console.error("Task creation failed:", error);
+			} finally {
+				setIsSubmitting(false);
+			}
+		},
+		[
+			title,
+			isSubmitting,
+			priority,
+			category,
+			dueDate,
+			finalBatchActive,
+			taskTitles,
+			router,
+			onClose,
+		],
+	);
 
 	const categories = [
 		"Work",
@@ -155,7 +170,10 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 							<div className="p-6 md:p-8 space-y-6">
 								{/* Header Label */}
 								<div className="flex items-center justify-between mb-2">
-									<label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
+									<label
+										htmlFor="task-title"
+										className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2"
+									>
 										{finalBatchActive ? (
 											<Layers className="w-3 h-3 text-blue-500" />
 										) : (
@@ -215,6 +233,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 								{/* Dynamic Title Input */}
 								<div className="relative">
 									<textarea
+										id="task-title"
 										ref={textareaRef}
 										placeholder="Enter task titles (one per line for multiple)..."
 										value={title}
@@ -223,7 +242,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										onBlur={() => !title && setIsFocused(false)}
 										rows={1}
 										disabled={isSubmitting}
-										className="w-full bg-transparent text-xl md:text-2xl font-black text-slate-900 placeholder:text-slate-200 focus:outline-none resize-none leading-tight"
+										className="w-full bg-transparent text-xl md:text-2xl font-black text-slate-900 placeholder:text-slate-200 focus:outline-none resize-none leading-tight overflow-hidden"
 									/>
 									{hasMultipleLines && isBatchEnabled && (
 										<div className="absolute -bottom-4 right-0 text-[8px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
@@ -241,11 +260,15 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 								<div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-50">
 									{/* Category with Suggestions */}
 									<div className="space-y-2">
-										<label className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
+										<label
+											htmlFor="task-category"
+											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1"
+										>
 											<Tag className="w-3 h-3" /> Category
 										</label>
 										<div className="relative group">
 											<input
+												id="task-category"
 												list="category-suggestions"
 												type="text"
 												placeholder="e.g. Work"
@@ -263,7 +286,10 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 									{/* Due Date Picker with Quick Chips */}
 									<div className="space-y-3">
-										<label className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
+										<label
+											htmlFor="task-due-date"
+											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1"
+										>
 											<Calendar className="w-3 h-3" /> Due Date
 										</label>
 
@@ -285,6 +311,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										</div>
 
 										<input
+											id="task-due-date"
 											type="date"
 											value={dueDate}
 											onChange={(e) => setDueDate(e.target.value)}
@@ -294,10 +321,16 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 									{/* Visual Priority Selector */}
 									<div className="space-y-2">
-										<label className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
+										<label
+											htmlFor="task-priority"
+											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1"
+										>
 											<Flag className="w-3 h-3" /> Priority Level
 										</label>
-										<div className="flex p-1 bg-slate-50 border border-slate-100 rounded-xl">
+										<div
+											id="task-priority"
+											className="flex p-1 bg-slate-50 border border-slate-100 rounded-xl"
+										>
 											{(["LOW", "MEDIUM", "HIGH"] as TaskPriority[]).map(
 												(p) => (
 													<button

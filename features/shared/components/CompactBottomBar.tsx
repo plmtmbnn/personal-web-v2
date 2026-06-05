@@ -18,7 +18,7 @@ import {
 	Mail,
 	Briefcase,
 	Mountain,
-	Map,
+	Map as MapIcon,
 	Layers,
 	Sparkles,
 	Toolbox,
@@ -81,9 +81,9 @@ const NAV_ITEMS: NavItem[] = [
 		href: "/adventures",
 		icon: Mountain,
 		subItems: [
-			{ label: "Explore", href: "/adventures", icon: Map },
+			{ label: "Explore", href: "/adventures", icon: MapIcon },
 			{ label: "Running", href: "/adventures/running", icon: Mountain },
-			{ label: "Travel", href: "/adventures/travel", icon: Map },
+			{ label: "Travel", href: "/adventures/travel", icon: MapIcon },
 		],
 	},
 	{

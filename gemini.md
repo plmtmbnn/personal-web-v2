@@ -96,6 +96,7 @@ Strictly for routing and page definitions.
 - **Tabbed Architecture**:
   - **Agenda**: Prominent `TaskProgress` (independent fetch) and collapsible `HealthCheck`.
   - **Analytics**: Multi-Metric Heatmap (Created vs Done) with diagonal visualization.
+- **Dynamic Initialization**: `TaskForm` utilizes an auto-expanding `textarea` triggered by content changes to support multi-line batch entry without layout shifting.
 - **Notifier System**: Pluggable dispatcher delivering alerts via Telegram Bot and Browser API.
 
 ### Adventures & Professional Showcase
@@ -129,6 +130,7 @@ Strictly for routing and page definitions.
 
 ## 📏 Engineering Standards
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.
+- **Defensive Data Handling**: Always implement safety fallbacks and type-casting (e.g., `String(val || "")`) when processing external API data to prevent runtime `TypeError` on missing fields.
 - **SEO & Metadata**: Every route must implement `generateMetadata` using `createMetadata` helper in `lib/shared/metadata.ts`.
 - **Git Workflow**: Follow **Conventional Commits**.
 - **Linter**: **Biome** for formatting and linting.

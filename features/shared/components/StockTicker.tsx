@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface StockData {
 	symbol: string;
@@ -15,7 +15,7 @@ export default function StockTicker() {
 	const [stocks, setStocks] = useState<StockData[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	const fetchStocks = async () => {
+	const fetchStocks = useCallback(async () => {
 		try {
 			const response = await fetch(
 				"https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=.HSI%7C.NSEI%7C.NZ50%7C.KLSE%7C.TWII%7C.N225%7C.AXJO%7C.SSEC%7C.SZI%7C.KS11%7C.SETI%7C.STI%7C.IECNCGP%7CSGD%3D%7CCNY%3D%7CAUD%3D%7CINR%3D%7CNZD%3D%7CJPY%3D%7CHKD%3D%7CEURJPY%3D%7C%40LCO.1%7C%40CL.1%7C%40NG.1%7C%40HG.1&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json&events=1",
@@ -29,7 +29,7 @@ export default function StockTicker() {
 		} catch (error) {
 			console.error("Failed to fetch stock data:", error);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		fetchStocks();
@@ -54,10 +54,12 @@ export default function StockTicker() {
 			<div className="flex whitespace-nowrap animate-scroll hover:pause-scroll py-3">
 				{/* Render twice for seamless loop */}
 				{[...stocks, ...stocks].map((stock, idx) => {
-					const isPositive = !stock.change.startsWith("-");
+					const change = String(stock.change || "0");
+					const isPositive = !change.startsWith("-");
+					const uniqueKey = `${stock.symbol}-${idx >= stocks.length ? "copy" : "orig"}-${idx}`;
 					return (
 						<div
-							key={`${stock.symbol}-${idx}`}
+							key={uniqueKey}
 							className="inline-flex items-center gap-3 px-6 border-r border-slate-100 last:border-0"
 						>
 							<div className="flex flex-col">
@@ -73,12 +75,12 @@ export default function StockTicker() {
 									className={`text-sm font-bold ${isPositive ? "text-emerald-600" : "text-rose-600"}`}
 								>
 									{isPositive ? "+" : ""}
-									{stock.change}
+									{change}
 								</span>
 								<span
 									className={`text-[10px] font-semibold px-1 rounded ${isPositive ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}
 								>
-									{stock.change_pct}
+									{stock.change_pct || "0.00%"}
 								</span>
 							</div>
 						</div>

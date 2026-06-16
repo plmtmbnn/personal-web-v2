@@ -34,12 +34,3 @@ export const SOCIAL_LINKS = {
 	linkedin: "https://linkedin.com/in/polma-tambunan",
 	twitter: "https://x.com/LFC",
 };
-
-export const NAVIGATION = [
-	{ href: "/", label: "Home" },
-	{ href: "/work-experience", label: "Experience" },
-	{ href: "/portfolio", label: "Portfolio" },
-	{ href: "/adventures", label: "Adventures" },
-	{ href: "/blog", label: "Blog" },
-	{ href: "/contact", label: "Contact" },
-] as const;

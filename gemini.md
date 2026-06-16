@@ -101,6 +101,7 @@ Strictly for routing and page definitions.
 
 ### Adventures & Professional Showcase
 - **Adventures**: High-fidelity logs for Running and Travel missions, utilizing Glassmorphism and rich typography.
+  - **Running Performance**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Supports dynamic grid scaling (up to 5 columns) for high-density performance visualization.
 - **Travel Bucket List Tracker**: 
   - **Architecture**: Domain-driven logic in `features/travel/`.
   - **Logic**: Dynamic `useMemo` filtering for "Completed Journeys" (sorted by date) vs. "Future Adventures".

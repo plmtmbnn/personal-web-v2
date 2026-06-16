@@ -13,6 +13,7 @@ import {
 	Flame,
 	Milestone,
 	Gauge,
+	Mountain,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -47,6 +48,14 @@ const personalBests = [
 		pace: "6:24/km",
 		icon: Trophy,
 		color: "text-blue-400",
+	},
+	{
+		distance: "Ultra Trail (65.9k)",
+		time: "19:40:28",
+		pace: "17:55/km",
+		elevation: "2,982 m",
+		icon: Mountain,
+		color: "text-purple-400",
 	},
 ];
 
@@ -135,7 +144,7 @@ export default function RunningPage() {
 					<h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground/60 ml-4 flex items-center gap-3">
 						<Trophy className="w-4 h-4" /> Personal Milestones
 					</h3>
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
 						{personalBests.map((pb, idx) => (
 							<motion.div
 								key={pb.distance}
@@ -162,16 +171,31 @@ export default function RunningPage() {
 									</p>
 								</div>
 
-								<div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-									<div className="flex items-center gap-2">
-										<Gauge className="w-3.5 h-3.5 text-emerald-500/60" />
-										<span className="text-xs font-bold text-foreground/80">
-											{pb.pace}
+								<div className="mt-8 pt-6 border-t border-white/5 space-y-3">
+									<div className="flex items-center justify-between">
+										<div className="flex items-center gap-2">
+											<Gauge className="w-3.5 h-3.5 text-emerald-500/60" />
+											<span className="text-xs font-bold text-foreground/80">
+												{pb.pace}
+											</span>
+										</div>
+										<span className="text-[9px] font-black uppercase text-muted-foreground/30">
+											Avg Pace
 										</span>
 									</div>
-									<span className="text-[9px] font-black uppercase text-muted-foreground/30">
-										Avg Pace
-									</span>
+									{(pb as any).elevation && (
+										<div className="flex items-center justify-between">
+											<div className="flex items-center gap-2">
+												<Route className="w-3.5 h-3.5 text-emerald-500/60" />
+												<span className="text-xs font-bold text-foreground/80">
+													{(pb as any).elevation}
+												</span>
+											</div>
+											<span className="text-[9px] font-black uppercase text-muted-foreground/30">
+												Gain
+											</span>
+										</div>
+									)}
 								</div>
 							</motion.div>
 						))}

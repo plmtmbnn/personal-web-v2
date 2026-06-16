@@ -1,3 +1,21 @@
+# [0.32.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.31.0...v0.32.0) (2026-06-16)
+
+
+### Bug Fixes
+
+* **blog:** fix 'used before declaration' build error in AdminBlogList ([4269e00](https://github.com/plmtmbnn/personal-web-v2/commit/4269e00baf73f675b9af3d48a1b83a308bdaaaea))
+
+
+### Features
+
+* **adventures:** add Ultra Trail (65.9k) running record ([4f927ae](https://github.com/plmtmbnn/personal-web-v2/commit/4f927aeae6d8f9c17696544213c8d50447137974))
+* **blog:** enhance syntax highlighting, responsiveness, and footer UX ([00f8cae](https://github.com/plmtmbnn/personal-web-v2/commit/00f8cae772d9ff1a253fe3f99c6cc4883d98237e)), closes [hi#contrast](https://github.com/hi/issues/contrast)
+* **tasks,shared:** implement dynamic textarea and robust stock data handling ([9a98197](https://github.com/plmtmbnn/personal-web-v2/commit/9a9819724a3122415b5fa149fffacb7a19a37ca9))
+* **travel:** append new destinations to travel tracker ([6ca3241](https://github.com/plmtmbnn/personal-web-v2/commit/6ca3241594e9a0bee49fc53b2a30c82ed4ce2a18))
+* **travel:** implement interactive travel bucket list tracker ([6c76610](https://github.com/plmtmbnn/personal-web-v2/commit/6c766101bfc3c1567f5853cd38ed2f8c181b36d0))
+* **travel:** update destination data with real locations ([8313fbf](https://github.com/plmtmbnn/personal-web-v2/commit/8313fbfdc2b7b20d2c4182f40f716d9d620d1e2a))
+* **utils:** implement module focus pattern and json tree view across utilities ([a5670c0](https://github.com/plmtmbnn/personal-web-v2/commit/a5670c03fcd86445cdc1d60c4b4c1d4512273fec))
+
 # [0.31.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.30.0...v0.31.0) (2026-05-15)
 
 

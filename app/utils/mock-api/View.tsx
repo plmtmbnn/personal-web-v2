@@ -2,7 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Link, Play, Copy, Check, Info } from "lucide-react";
+import {
+	Plus,
+	Trash2,
+	Link,
+	Play,
+	Copy,
+	Check,
+	Info,
+	Shield,
+} from "lucide-react";
 import CustomModal from "@/features/shared/components/CustomModal";
 
 interface MockDefinition {
@@ -11,6 +20,7 @@ interface MockDefinition {
 	path: string;
 	status: number;
 	body: any;
+	enableRateLimit?: boolean;
 }
 
 export default function MockApiView() {
@@ -19,6 +29,7 @@ export default function MockApiView() {
 	const [status, setStatus] = useState(200);
 	const [body, setBody] = useState('{\n  "message": "Hello World"\n}');
 	const [mocks, setMocks] = useState<MockDefinition[]>([]);
+	const [enableRateLimit, setEnableRateLimit] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [copiedKey, setCopiedKey] = useState<string | null>(null);
 	const [lastCreatedUrl, setLastCreatedUrl] = useState<string | null>(null);
@@ -53,7 +64,13 @@ export default function MockApiView() {
 			const res = await fetch("/api/mock/manage", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ method, path, status, body: parsedBody }),
+				body: JSON.stringify({
+					method,
+					path,
+					status,
+					body: parsedBody,
+					enableRateLimit,
+				}),
 			});
 
 			const data = await res.json();
@@ -65,6 +82,7 @@ export default function MockApiView() {
 				setMethod("GET");
 				setStatus(200);
 				setBody('{\n  "message": "Hello World"\n}');
+				setEnableRateLimit(false);
 			}
 		} catch (err) {
 			console.error("Save Mock Error:", err);
@@ -203,6 +221,31 @@ export default function MockApiView() {
 									/>
 								</div>
 
+								<div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
+									<input
+										id="enable-rate-limit"
+										type="checkbox"
+										checked={enableRateLimit}
+										onChange={(e) => setEnableRateLimit(e.target.checked)}
+										className="mt-1 w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+									/>
+									<div
+										className="flex flex-col cursor-pointer"
+										onClick={() => setEnableRateLimit(!enableRateLimit)}
+									>
+										<label
+											htmlFor="enable-rate-limit"
+											className="text-sm font-semibold text-slate-800 cursor-pointer select-none"
+										>
+											Enable Rate Limiter
+										</label>
+										<span className="text-xs text-slate-500 select-none">
+											Limit requests to 10 requests per 10 seconds per IP
+											address to prevent abuse.
+										</span>
+									</div>
+								</div>
+
 								<button
 									onClick={handleSave}
 									disabled={loading || !path}
@@ -313,6 +356,12 @@ export default function MockApiView() {
 														<span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
 															{mock.status}
 														</span>
+														{mock.enableRateLimit && (
+															<span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+																<Shield className="w-3 h-3 text-amber-500" />
+																Rate Limited
+															</span>
+														)}
 														<span className="text-xs font-mono text-slate-600 truncate">
 															/api/mock{mock.path}
 														</span>

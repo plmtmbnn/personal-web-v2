@@ -24,6 +24,7 @@ export async function GET() {
           path,
           status: data?.status || 200,
           body: data?.body || {},
+          enableRateLimit: !!data?.enableRateLimit,
         };
       })
     );
@@ -37,7 +38,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { method, path, status, body } = await req.json();
+    const { method, path, status, body, enableRateLimit } = await req.json();
 
     if (!method || !path || !status) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     const formattedPath = path.startsWith("/") ? path : `/${path}`;
     const redisKey = `mock:${method.toUpperCase()}:${formattedPath}`;
 
-    await redis.set(redisKey, { status, body }, { ex: TTL });
+    await redis.set(redisKey, { status, body, enableRateLimit: !!enableRateLimit }, { ex: TTL });
 
     return NextResponse.json({ 
       success: true, 

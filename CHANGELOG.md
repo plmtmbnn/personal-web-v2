@@ -1,3 +1,10 @@
+# [0.34.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.33.0...v0.34.0) (2026-06-19)
+
+
+### Features
+
+* **mock:** add rate limiting configuration to mock endpoints ([6bd6ba8](https://github.com/plmtmbnn/personal-web-v2/commit/6bd6ba88690b89bcfec8d12dbfe9003eea0f9ba4))
+
 # [0.33.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.32.0...v0.33.0) (2026-06-19)
 
 

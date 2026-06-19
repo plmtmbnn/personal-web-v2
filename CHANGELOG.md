@@ -1,3 +1,10 @@
+# [0.33.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.32.0...v0.33.0) (2026-06-19)
+
+
+### Features
+
+* add Sentry instrumentation and update dependencies ([a931cf7](https://github.com/plmtmbnn/personal-web-v2/commit/a931cf785cc1eb04e323c1700873a48a01f021e0))
+
 # [0.32.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.31.0...v0.32.0) (2026-06-16)
 
 

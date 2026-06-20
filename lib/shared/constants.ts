@@ -20,6 +20,13 @@ export const AUTHOR = {
 	name: "Polma Tambunan",
 	role: "Software Engineer",
 	email: "plmtmbnn@gmail.com",
+	available: true, // Set to false to hide the "Open to work" badge
+};
+
+export const AUTHOR_STATS = {
+	experienceFrom: 2018,
+	runningKmPerYear: 1000,
+	fintechSystems: 10,
 };
 
 export const SEO = {

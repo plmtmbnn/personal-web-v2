@@ -1,22 +1,46 @@
 "use client";
 
-import { EXPERIENCE_YEAR, AUTHOR } from "@/lib/shared/constants";
+import { AUTHOR, AUTHOR_STATS, SOCIAL_LINKS } from "@/lib/shared/constants";
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { motion, type Variants } from "framer-motion";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 import {
-	Code2,
-	Zap,
 	ArrowRight,
-	MousePointer2,
+	ArrowUpRight,
+	Mail,
+	ChevronDown,
 	Briefcase,
 	Trophy,
+	Layers,
 } from "lucide-react";
 
-/**
- * Countdown Hook for animated numbers
- */
-const useCountdown = (to: number, duration: number) => {
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const TECH_PILLS = ["Node.js", "Next.js", "Go", "PostgreSQL", "MongoDB"];
+
+// ─── Animation Variants ───────────────────────────────────────────────────────
+
+const container: Variants = {
+	hidden: {},
+	visible: {
+		transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+	},
+};
+
+const item: Variants = {
+	hidden: { opacity: 0, y: 16 },
+	visible: {
+		opacity: 1,
+		y: 0,
+		transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] },
+	},
+};
+
+// ─── Animated Counter ─────────────────────────────────────────────────────────
+
+const useCounter = (to: number, duration = 1500) => {
 	const [count, setCount] = useState(0);
 
 	useEffect(() => {
@@ -31,192 +55,288 @@ const useCountdown = (to: number, duration: number) => {
 				setCount(Math.floor(start));
 			}
 		}, 16);
-
 		return () => clearInterval(timer);
 	}, [to, duration]);
 
 	return count;
 };
 
+// ─── Component ───────────────────────────────────────────────────────────────
+
 export default function Home() {
-	const yearsCount = useCountdown(EXPERIENCE_YEAR, 1500);
-	const kmCount = useCountdown(1000, 2000);
+	const experienceYear = new Date().getFullYear() - AUTHOR_STATS.experienceFrom;
+	const yearsCount = useCounter(experienceYear, 1500);
+	const kmCount = useCounter(AUTHOR_STATS.runningKmPerYear, 2000);
+	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1200);
 
 	return (
-		<main className="min-h-screen bg-background relative flex items-center justify-center px-6 overflow-x-hidden py-20 lg:py-0">
-			{/* Aesthetic Background Elements */}
-			<div className="absolute inset-0 pointer-events-none">
-				<div className="absolute top-[-10%] right-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
+		<main className="min-h-screen bg-white relative flex items-center justify-center px-6 overflow-x-hidden py-24 lg:py-0">
+			{/* ── Background ── */}
+			<div className="absolute inset-0 pointer-events-none overflow-hidden">
+				{/* Base gradient — barely-there slate to white */}
+				<div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-white" />
+				{/* Indigo blob — top right */}
+				<div className="absolute -top-[20%] -right-[10%] w-[60%] h-[65%] bg-indigo-100/60 rounded-full blur-[120px] animate-float" />
+				{/* Emerald blob — bottom left */}
 				<div
-					className="absolute bottom-[-10%] left-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse"
-					style={{ animationDelay: "2s" }}
+					className="absolute -bottom-[20%] -left-[10%] w-[55%] h-[55%] bg-emerald-100/50 rounded-full blur-[120px] animate-float"
+					style={{ animationDelay: "3s" }}
 				/>
 			</div>
 
-			<div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center relative z-10">
-				{/* Right Column (Visual) - Appears first on mobile */}
+			<div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-20 items-center relative z-10">
+				{/* ── Right Column — Photo ── */}
 				<div className="lg:col-span-5 flex justify-center lg:justify-end order-1 lg:order-2">
 					<motion.div
-						initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-						animate={{ opacity: 1, scale: 1, rotate: 0 }}
-						transition={{ duration: 0.8, ease: "easeOut" }}
-						className="relative group"
+						initial={{ opacity: 0, scale: 0.92 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+						className="relative group cursor-pointer"
 					>
-						{/* Ambient Glow */}
-						<div className="absolute -inset-4 bg-gradient-to-tr from-accent via-purple-500 to-indigo-500 rounded-[3rem] opacity-20 blur-2xl group-hover:opacity-40 transition duration-700 animate-float" />
+						{/* Ambient glow — works on light bg via colored gradient */}
+						<div className="absolute -inset-6 bg-gradient-to-tr from-indigo-200/40 via-purple-100/30 to-emerald-100/40 rounded-[3.5rem] blur-3xl group-hover:from-indigo-200/70 group-hover:to-emerald-100/70 transition-all duration-700" />
 
-						{/* Main Frame */}
-						<div className="relative w-56 h-56 sm:w-80 sm:h-80 xl:w-96 xl:h-96 rounded-[2.5rem] sm:rounded-[3rem] p-2 sm:p-3 glass-strong border border-white/10 overflow-hidden group-hover:scale-[1.02] transition-transform duration-700">
-							<div className="w-full h-full rounded-[2rem] sm:rounded-[2.2rem] overflow-hidden relative">
+						{/* Photo frame — solid white border visible on light bg */}
+						<div className="relative w-60 h-60 sm:w-80 sm:h-80 xl:w-[22rem] xl:h-[22rem] rounded-[2.5rem] sm:rounded-[3rem] p-2.5 bg-white border border-slate-200 shadow-2xl shadow-slate-200/80 group-hover:shadow-slate-300/60 group-hover:scale-[1.02] transition-all duration-700">
+							<div className="w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden">
 								<Image
 									src="/profile.jpg"
-									alt={AUTHOR.name}
+									alt={`${AUTHOR.name} — Software Engineer and Distance Runner`}
 									className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
 									priority
 									width={800}
 									height={800}
 								/>
+							</div>
 
-								{/* Online Status Badge */}
-								<div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full">
+							{/* Status badge — conditional on AUTHOR.available */}
+							{AUTHOR.available && (
+								<div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-md">
 									<div className="relative">
-										<div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full" />
-										<div className="absolute inset-0 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-ping" />
+										<div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+										<div className="absolute inset-0 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
 									</div>
-									<span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-white">
-										Available
+									<span className="text-[9px] font-black uppercase tracking-widest text-slate-700">
+										Open to work
 									</span>
 								</div>
-							</div>
+							)}
 						</div>
 
-						{/* Decorative floating elements - Hidden on mobile for cleanliness */}
-						<motion.div
-							animate={{ y: [0, -10, 0] }}
-							transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-							className="absolute -top-6 -right-6 p-4 glass-strong rounded-2xl border border-white/10 shadow-2xl hidden lg:block"
-						>
-							<Code2 className="w-6 h-6 text-accent" />
-						</motion.div>
-						<motion.div
-							animate={{ y: [0, 10, 0] }}
-							transition={{
-								duration: 5,
-								repeat: Infinity,
-								ease: "easeInOut",
-								delay: 1,
-							}}
-							className="absolute -bottom-6 -left-6 p-4 glass-strong rounded-2xl border border-white/10 shadow-2xl hidden lg:block"
-						>
-							<MousePointer2 className="w-6 h-6 text-purple-400" />
-						</motion.div>
+						{/* Tech stack pills — top right, parallax hover wrapper */}
+						<div className="absolute -top-5 -right-5 hidden lg:block group-hover:translate-x-3 group-hover:-translate-y-3 transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
+							<motion.div
+								animate={{ y: [0, -8, 0] }}
+								transition={{
+									duration: 5,
+									repeat: Infinity,
+									ease: "easeInOut",
+								}}
+								className="flex flex-col gap-1.5 p-3 bg-white border border-slate-100 rounded-2xl shadow-lg shadow-slate-100/50"
+							>
+								{TECH_PILLS.slice(0, 3).map((tech) => (
+									<span
+										key={tech}
+										className="text-[9px] font-black uppercase tracking-wider text-slate-500 px-2 py-0.5 bg-slate-50 rounded-lg border border-slate-100"
+									>
+										{tech}
+									</span>
+								))}
+							</motion.div>
+						</div>
+
+						{/* Domain context pill — bottom left, parallax hover wrapper */}
+						<div className="absolute -bottom-5 -left-5 hidden lg:block group-hover:-translate-x-3 group-hover:translate-y-3 transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
+							<motion.div
+								animate={{ y: [0, 8, 0] }}
+								transition={{
+									duration: 6,
+									repeat: Infinity,
+									ease: "easeInOut",
+									delay: 2,
+								}}
+								className="p-3 bg-white border border-slate-100 rounded-2xl shadow-lg shadow-slate-100/50"
+							>
+								<div className="flex items-center gap-2 mb-1">
+									<div className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />
+									<span className="text-[9px] font-black uppercase tracking-wider text-slate-500">
+										Fintech
+									</span>
+								</div>
+								<div className="flex items-center gap-2">
+									<div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+									<span className="text-[9px] font-black uppercase tracking-wider text-slate-500">
+										Running
+									</span>
+								</div>
+							</motion.div>
+						</div>
 					</motion.div>
 				</div>
 
-				{/* Left Column (Content) */}
-				<div className="lg:col-span-7 space-y-8 sm:space-y-10 order-2 lg:order-1">
-					<div className="space-y-4 sm:space-y-6">
-						<motion.div
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.5 }}
-							className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-sm"
-						>
-							<Zap className="w-3.5 h-3.5 text-accent fill-accent" />
-							<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-								Software Engineer • Fintech Expert
-							</span>
-						</motion.div>
-
-						<motion.h1
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.5, delay: 0.1 }}
-							className="text-4xl sm:text-7xl xl:text-8xl font-black tracking-tighter text-foreground leading-[0.95] sm:leading-[0.9]"
-						>
-							Crafting <span className="gradient-text">Reliable</span> Digital
-							Systems.
-						</motion.h1>
-
-						<motion.p
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.5, delay: 0.2 }}
-							className="text-base sm:text-xl text-muted-foreground max-w-2xl leading-relaxed font-medium"
-						>
-							Hi, I'm{" "}
-							<span className="text-foreground font-bold">{AUTHOR.name}</span>.
-							For over {EXPERIENCE_YEAR} years, I've specialized in building
-							secure, high-performance software for the global fintech
-							landscape.
-						</motion.p>
-					</div>
-
-					{/* Primary Stats Grid */}
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.3 }}
-						className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6"
-					>
-						<div className="group relative">
-							<div className="absolute -inset-0.5 bg-gradient-to-r from-accent to-indigo-500 rounded-3xl opacity-0 group-hover:opacity-20 transition duration-500 blur-xl" />
-							<div className="relative glass-card p-6 sm:p-8 rounded-3xl border-2 border-white/5 flex items-center gap-5 sm:gap-6 hover:border-accent/30 transition-all duration-500">
-								<div className="w-12 h-12 sm:w-14 sm:h-14 bg-accent/10 rounded-2xl flex items-center justify-center text-accent">
-									<Briefcase className="w-6 h-6 sm:w-7 sm:h-7" />
-								</div>
-								<div>
-									<p className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter">
-										{yearsCount}+ Years
-									</p>
-									<p className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground mt-0.5">
-										Engineering
-									</p>
-								</div>
-							</div>
-						</div>
-
-						<div className="group relative">
-							<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl opacity-0 group-hover:opacity-20 transition duration-500 blur-xl" />
-							<div className="relative glass-card p-6 sm:p-8 rounded-3xl border-2 border-white/5 flex items-center gap-5 sm:gap-6 hover:border-emerald-500/30 transition-all duration-500">
-								<div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500">
-									<Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
-								</div>
-								<div>
-									<p className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter">
-										{kmCount}+ KM
-									</p>
-									<p className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground mt-0.5">
-										Yearly Running
-									</p>
-								</div>
-							</div>
-						</div>
+				{/* ── Left Column — Content ── */}
+				<motion.div
+					className="lg:col-span-7 order-2 lg:order-1"
+					variants={container}
+					initial="hidden"
+					animate="visible"
+				>
+					{/* Role chip */}
+					<motion.div variants={item} className="mb-6">
+						<span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+							<span className="w-1.5 h-1.5 rounded-full bg-slate-900 inline-block" />
+							{AUTHOR.role} · Fintech
+						</span>
 					</motion.div>
 
-					{/* Action Buttons */}
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.4 }}
-						className="flex flex-col sm:flex-row gap-4"
+					{/* Bio */}
+					<motion.p
+						variants={item}
+						className="text-base sm:text-lg text-slate-500 max-w-xl leading-relaxed font-medium mb-4"
 					>
-						<a
+						Hi, I'm{" "}
+						<span className="text-slate-900 font-bold">{AUTHOR.name}</span>. For
+						over {experienceYear} years, I've designed and scaled secure fintech
+						systems. When I'm not writing code, I'm training for marathons and
+						trail runs, applying the same discipline to the miles as I do to the
+						codebase.
+					</motion.p>
+
+					{/* Tech stack pills — concrete identity signal */}
+					<motion.div variants={item} className="flex flex-wrap gap-2 mb-8">
+						{TECH_PILLS.map((tech) => (
+							<span
+								key={tech}
+								className="text-[10px] font-bold text-slate-400 px-2.5 py-1 bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:text-slate-800 hover:border-slate-200 rounded-full transition-all duration-200 cursor-default"
+							>
+								{tech}
+							</span>
+						))}
+					</motion.div>
+
+					{/* Stats — 3 cards with intentionally different color treatments */}
+					<motion.div
+						variants={item}
+						className="grid grid-cols-3 gap-3 sm:gap-4 mb-8"
+					>
+						{/* Years — featured dark card */}
+						<Link
 							href="/work-experience"
-							className="flex items-center justify-center gap-2 px-8 py-4 bg-accent text-white !no-underline rounded-2xl font-black shadow-xl shadow-accent/20 hover:shadow-accent/40 hover:-translate-y-1 active:scale-95 transition-all text-sm sm:text-base"
+							aria-label="View work experience details"
+							className="col-span-1 bg-slate-900 text-white rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:bg-slate-800 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/10 transition-all duration-300 cursor-pointer group/card relative overflow-hidden"
+						>
+							<div className="flex justify-between items-start mb-3">
+								<Briefcase className="w-4 h-4 text-slate-400" />
+								<ArrowUpRight className="w-3.5 h-3.5 text-slate-400 opacity-0 translate-y-1 scale-90 group-hover/card:opacity-100 group-hover/card:translate-y-0 group-hover/card:scale-100 transition-all duration-300" />
+							</div>
+							<div>
+								<p className="text-2xl sm:text-3xl font-black tracking-tighter leading-none !text-white">
+									{yearsCount}+
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest !text-slate-400 mt-1.5">
+									Years Eng.
+								</p>
+							</div>
+						</Link>
+
+						{/* KM Running — emerald */}
+						<Link
+							href="/adventures/running"
+							aria-label="View running performance page"
+							className="col-span-1 bg-emerald-50 border border-emerald-100 rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:border-emerald-200 hover:bg-emerald-100/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-100/30 transition-all duration-300 cursor-pointer group/card relative overflow-hidden"
+						>
+							<div className="flex justify-between items-start mb-3">
+								<Trophy className="w-4 h-4 text-emerald-500" />
+								<ArrowUpRight className="w-3.5 h-3.5 text-emerald-600 opacity-0 translate-y-1 scale-90 group-hover/card:opacity-100 group-hover/card:translate-y-0 group-hover/card:scale-100 transition-all duration-300" />
+							</div>
+							<div>
+								<p className="text-2xl sm:text-3xl font-black tracking-tighter text-emerald-700 leading-none">
+									{kmCount}+
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-emerald-650 mt-1.5">
+									KM / Year
+								</p>
+							</div>
+						</Link>
+
+						{/* Fintech Systems — indigo */}
+						<Link
+							href="/portfolio"
+							aria-label="View portfolio projects"
+							className="col-span-1 bg-indigo-50 border border-indigo-100 rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:border-indigo-200 hover:bg-indigo-100/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-100/30 transition-all duration-300 cursor-pointer group/card relative overflow-hidden"
+						>
+							<div className="flex justify-between items-start mb-3">
+								<Layers className="w-4 h-4 text-indigo-500" />
+								<ArrowUpRight className="w-3.5 h-3.5 text-indigo-600 opacity-0 translate-y-1 scale-90 group-hover/card:opacity-100 group-hover/card:translate-y-0 group-hover/card:scale-100 transition-all duration-300" />
+							</div>
+							<div>
+								<p className="text-2xl sm:text-3xl font-black tracking-tighter text-indigo-700 leading-none">
+									{fintechCount}+
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-indigo-650 mt-1.5">
+									Fintech Sys.
+								</p>
+							</div>
+						</Link>
+					</motion.div>
+
+					{/* CTAs + Social links */}
+					<motion.div
+						variants={item}
+						className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4"
+					>
+						<Link
+							href="/work-experience"
+							className="group/btn flex items-center gap-2 px-7 py-3.5 bg-slate-900 text-white !no-underline rounded-2xl font-black text-sm hover:bg-slate-800 hover:-translate-y-0.5 active:scale-95 transition-all shadow-lg shadow-slate-900/10"
 						>
 							<span className="text-white">Explore Work</span>
-							<ArrowRight className="w-5 h-5 text-white" />
-						</a>
+							<ArrowRight className="w-4 h-4 text-white group-hover/btn:translate-x-1.5 transition-transform duration-300" />
+						</Link>
+
 						<a
-							href="/contact"
-							className="flex items-center justify-center gap-2 px-8 py-4 bg-white/5 border border-white/10 !no-underline rounded-2xl font-black text-foreground hover:bg-white/10 transition-all backdrop-blur-md active:scale-95 text-sm sm:text-base"
+							href={`mailto:${AUTHOR.email}`}
+							className="group/btn flex items-center gap-2 px-7 py-3.5 bg-white border border-slate-200 text-slate-700 !no-underline rounded-2xl font-black text-sm hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm"
 						>
-							<span>Let's Talk</span>
+							<Mail className="w-4 h-4 group-hover/btn:rotate-12 transition-transform duration-300 text-slate-700" />
+							<span className="text-slate-700">Get in Touch</span>
 						</a>
+
+						{/* Social icon links — from SOCIAL_LINKS constant */}
+						<div className="flex items-center gap-1 sm:ml-1">
+							<a
+								href={SOCIAL_LINKS.github}
+								target="_blank"
+								rel="noopener noreferrer"
+								aria-label={`${AUTHOR.name}'s GitHub`}
+								className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all !no-underline"
+							>
+								<FaGithub className="w-4 h-4" />
+							</a>
+							<a
+								href={SOCIAL_LINKS.linkedin}
+								target="_blank"
+								rel="noopener noreferrer"
+								aria-label={`${AUTHOR.name}'s LinkedIn`}
+								className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all !no-underline"
+							>
+								<FaLinkedin className="w-4 h-4" />
+							</a>
+						</div>
 					</motion.div>
-				</div>
+				</motion.div>
 			</div>
+
+			{/* Scroll indicator — subtle, only on large screens */}
+			<motion.div
+				className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-1 text-slate-300 pointer-events-none"
+				animate={{ y: [0, 6, 0] }}
+				transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+			>
+				<span className="text-[8px] font-black uppercase tracking-[0.2em]">
+					Scroll
+				</span>
+				<ChevronDown className="w-3.5 h-3.5" />
+			</motion.div>
 		</main>
 	);
 }

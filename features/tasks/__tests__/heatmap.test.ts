@@ -16,6 +16,7 @@ const createMockTask = (
 	category: "General",
 	is_completed: isCompleted,
 	due_date: "2026-04-01",
+	recurrence: "none",
 	position: 0,
 	reschedule_count: 0,
 	created_at: createdAt,

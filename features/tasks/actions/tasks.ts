@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { SupabaseConn } from "@/lib/core/supabase";
 import { invalidateStatsCache } from "@/lib/core/redis";
-import type { Task, TaskPriority } from "../types";
+import type { Task, TaskPriority, TaskRecurrence } from "../types";
 
 /**
  * Fetch tasks with optional filters.
@@ -73,6 +73,8 @@ export async function addTask(payload: {
 	priority: TaskPriority;
 	category: string;
 	due_date: string;
+	description?: string;
+	recurrence?: TaskRecurrence;
 }) {
 	const { data, error } = await SupabaseConn.from("tasks")
 		.insert([
@@ -104,6 +106,8 @@ export async function addBatchTasks(
 		priority: TaskPriority;
 		category: string;
 		due_date: string;
+		description?: string;
+		recurrence?: TaskRecurrence;
 	}[],
 ) {
 	const { data, error } = await SupabaseConn.from("tasks")

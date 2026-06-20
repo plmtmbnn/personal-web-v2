@@ -1,4 +1,5 @@
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
+export type TaskRecurrence = "none" | "daily" | "weekly" | "monthly";
 
 export interface Task {
 	id: string;
@@ -8,6 +9,7 @@ export interface Task {
 	category: string | null;
 	is_completed: boolean;
 	due_date: string;
+	recurrence: TaskRecurrence;
 	position: number;
 	reschedule_count: number;
 	created_at: string;

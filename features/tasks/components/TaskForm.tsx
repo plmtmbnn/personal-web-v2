@@ -15,40 +15,140 @@ import {
 	Layers,
 	Zap,
 	ZapOff,
+	CheckCircle2,
+	AlertCircle,
+	RefreshCw,
+	FileText,
+	ChevronUp,
 } from "lucide-react";
 import { addTask, addBatchTasks } from "@/features/tasks/actions/tasks";
 import { useRouter } from "next/navigation";
-import type { TaskPriority } from "@/features/tasks/types";
+import type { TaskPriority, TaskRecurrence } from "@/features/tasks/types";
 import { format, addDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+
+// ─── Constants (outside component — not recreated on every render) ───────────
+
+const CATEGORIES = [
+	"Work",
+	"Personal",
+	"Fintech",
+	"Health",
+	"Urgent",
+	"Study",
+	"Finance",
+];
+
+const QUICK_DATE_CHIPS = [
+	{ label: "Today", days: 0 },
+	{ label: "Tomorrow", days: 1 },
+	{ label: "+7 Days", days: 7 },
+] as const;
+
+const RECURRENCE_OPTIONS: { value: TaskRecurrence; label: string }[] = [
+	{ value: "none", label: "None" },
+	{ value: "daily", label: "Daily" },
+	{ value: "weekly", label: "Weekly" },
+	{ value: "monthly", label: "Monthly" },
+];
+
+const DRAFT_KEY = "taskform_draft";
+
+// ─── Draft shape ─────────────────────────────────────────────────────────────
+
+interface TaskFormDraft {
+	title: string;
+	category: string;
+	priority: TaskPriority;
+	dueDate: string;
+	recurrence: TaskRecurrence;
+	description: string;
+}
+
+// ─── Props ───────────────────────────────────────────────────────────────────
 
 interface TaskFormProps {
 	isOpen?: boolean;
 	onClose?: () => void;
 }
 
+// ─── Component ───────────────────────────────────────────────────────────────
+
 export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const [title, setTitle] = useState("");
 	const [category, setCategory] = useState("");
 	const [dueDate, setDueDate] = useState(format(new Date(), "yyyy-MM-dd"));
 	const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
+	const [recurrence, setRecurrence] = useState<TaskRecurrence>("none");
+	const [description, setDescription] = useState("");
+	const [isNotesOpen, setIsNotesOpen] = useState(false);
+
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
 	const [isBatchEnabled, setIsBatchEnabled] = useState(true);
+	const [submitError, setSubmitError] = useState<string | null>(null);
+	const [submitSuccess, setSubmitSuccess] = useState(false);
+	const [draftRestored, setDraftRestored] = useState(false);
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const router = useRouter();
 
-	// Parse titles to check if multiple tasks are being added
+	// ── Derived values ────────────────────────────────────────────────────────
+
 	const taskTitles = title.split("\n").filter((t) => t.trim() !== "");
 	const hasMultipleLines = taskTitles.length > 1;
 	const finalBatchActive = hasMultipleLines && isBatchEnabled;
 
-	// Auto-expand textarea logic
+	// Active date chip for visual feedback
+	const activeDateChipDays = QUICK_DATE_CHIPS.find(
+		(chip) => dueDate === format(addDays(new Date(), chip.days), "yyyy-MM-dd"),
+	)?.days;
+
+	// ── D: Restore draft on mount ─────────────────────────────────────────────
+	useEffect(() => {
+		try {
+			const raw = localStorage.getItem(DRAFT_KEY);
+			if (!raw) return;
+			const draft: TaskFormDraft = JSON.parse(raw);
+			if (draft.title) {
+				setTitle(draft.title);
+				setCategory(draft.category ?? "");
+				setPriority(draft.priority ?? "MEDIUM");
+				setDueDate(draft.dueDate ?? format(new Date(), "yyyy-MM-dd"));
+				setRecurrence(draft.recurrence ?? "none");
+				setDescription(draft.description ?? "");
+				if (draft.description) setIsNotesOpen(true);
+				setDraftRestored(true);
+				setTimeout(() => setDraftRestored(false), 3000);
+			}
+		} catch {
+			localStorage.removeItem(DRAFT_KEY);
+		}
+	}, []);
+
+	// ── D: Persist draft on every change (debounced 300ms) ───────────────────
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			if (!title && !category && !description) {
+				localStorage.removeItem(DRAFT_KEY);
+				return;
+			}
+			const draft: TaskFormDraft = {
+				title,
+				category,
+				priority,
+				dueDate,
+				recurrence,
+				description,
+			};
+			localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [title, category, priority, dueDate, recurrence, description]);
+
+	// ── Auto-expand textarea ──────────────────────────────────────────────────
 	useEffect(() => {
 		if (textareaRef.current) {
-			// Trigger on title change
-			const _ = title;
 			textareaRef.current.style.height = "auto";
 			textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
 		}
@@ -58,17 +158,32 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		setDueDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
 	}, []);
 
+	// ── Ctrl+Enter / Cmd+Enter submit ─────────────────────────────────────────
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+			if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+				e.preventDefault();
+				e.currentTarget.form?.requestSubmit();
+			}
+		},
+		[],
+	);
+
+	// ── Submit ────────────────────────────────────────────────────────────────
 	const handleSubmit = useCallback(
 		async (e: React.FormEvent) => {
 			e.preventDefault();
 			if (!title.trim() || isSubmitting) return;
 
+			setSubmitError(null);
 			setIsSubmitting(true);
 			try {
 				const metadata = {
 					priority,
 					category: category.trim() || "General",
 					due_date: dueDate,
+					recurrence,
+					description: description.trim() || undefined,
 				};
 
 				if (finalBatchActive) {
@@ -85,15 +200,25 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 					});
 				}
 
-				setTitle("");
-				setCategory("");
-				setPriority("MEDIUM");
-				setDueDate(format(new Date(), "yyyy-MM-dd"));
-				router.refresh();
-				setIsFocused(false);
-				onClose?.();
+				localStorage.removeItem(DRAFT_KEY);
+
+				setSubmitSuccess(true);
+				setTimeout(() => {
+					setSubmitSuccess(false);
+					setTitle("");
+					setCategory("");
+					setPriority("MEDIUM");
+					setDueDate(format(new Date(), "yyyy-MM-dd"));
+					setRecurrence("none");
+					setDescription("");
+					setIsNotesOpen(false);
+					router.refresh();
+					setIsFocused(false);
+					onClose?.();
+				}, 600);
 			} catch (error) {
 				console.error("Task creation failed:", error);
+				setSubmitError("Failed to create task. Please try again.");
 			} finally {
 				setIsSubmitting(false);
 			}
@@ -104,22 +229,15 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 			priority,
 			category,
 			dueDate,
-			finalBatchActive,
-			taskTitles,
+			recurrence,
+			description,
+			isBatchEnabled,
 			router,
 			onClose,
 		],
 	);
 
-	const categories = [
-		"Work",
-		"Personal",
-		"Fintech",
-		"Health",
-		"Urgent",
-		"Study",
-		"Finance",
-	];
+	// ─────────────────────────────────────────────────────────────────────────
 
 	return (
 		<AnimatePresence>
@@ -170,24 +288,42 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 							<div className="p-6 md:p-8 space-y-6">
 								{/* Header Label */}
 								<div className="flex items-center justify-between mb-2">
-									<label
-										htmlFor="task-title"
-										className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2"
-									>
-										{finalBatchActive ? (
-											<Layers className="w-3 h-3 text-blue-500" />
-										) : (
-											<Target className="w-3 h-3 text-emerald-500" />
-										)}
-										{finalBatchActive
-											? `Batch Initialization (${taskTitles.length} Tasks)`
-											: "New Objective"}
-									</label>
+									<div className="flex items-center gap-2">
+										<label
+											htmlFor="task-title"
+											className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2"
+										>
+											{finalBatchActive ? (
+												<Layers className="w-3 h-3 text-blue-500" />
+											) : (
+												<Target className="w-3 h-3 text-emerald-500" />
+											)}
+											{finalBatchActive
+												? `Batch Initialization (${taskTitles.length} Tasks)`
+												: "New Objective"}
+										</label>
+
+										{/* D: Draft Restored badge */}
+										<AnimatePresence>
+											{draftRestored && (
+												<motion.span
+													initial={{ opacity: 0, scale: 0.8 }}
+													animate={{ opacity: 1, scale: 1 }}
+													exit={{ opacity: 0, scale: 0.8 }}
+													className="text-[8px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full"
+												>
+													Draft restored
+												</motion.span>
+											)}
+										</AnimatePresence>
+									</div>
+
 									<div className="flex items-center gap-2">
 										{hasMultipleLines && (
 											<button
 												type="button"
 												onClick={() => setIsBatchEnabled(!isBatchEnabled)}
+												aria-pressed={isBatchEnabled}
 												className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
 													isBatchEnabled
 														? "bg-blue-50 border-blue-100 text-blue-600"
@@ -209,6 +345,30 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 												</span>
 											</button>
 										)}
+
+										{/* J: Notes toggle */}
+										<button
+											type="button"
+											onClick={() => setIsNotesOpen((v) => !v)}
+											aria-pressed={isNotesOpen}
+											className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
+												isNotesOpen || description
+													? "bg-violet-50 border-violet-100 text-violet-600"
+													: "bg-slate-50 border-slate-100 text-slate-400 hover:text-slate-600"
+											}`}
+											title="Toggle notes"
+										>
+											<FileText className="w-3 h-3" />
+											<span className="text-[8px] font-black uppercase tracking-wider">
+												Notes
+											</span>
+											{isNotesOpen ? (
+												<ChevronUp className="w-3 h-3" />
+											) : (
+												<ChevronDown className="w-3 h-3" />
+											)}
+										</button>
+
 										{title && (
 											<button
 												type="button"
@@ -240,13 +400,23 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										onChange={(e) => setTitle(e.target.value)}
 										onFocus={() => setIsFocused(true)}
 										onBlur={() => !title && setIsFocused(false)}
+										onKeyDown={handleKeyDown}
 										rows={1}
 										disabled={isSubmitting}
 										className="w-full bg-transparent text-xl md:text-2xl font-black text-slate-900 placeholder:text-slate-200 focus:outline-none resize-none leading-tight overflow-hidden"
 									/>
+
+									{/* B: Batch status badges */}
 									{hasMultipleLines && isBatchEnabled && (
-										<div className="absolute -bottom-4 right-0 text-[8px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-											Auto-Detection Active
+										<div className="absolute -bottom-4 right-0 flex items-center gap-2">
+											<div className="text-[8px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+												Auto-Detection Active
+											</div>
+											<div className="text-[8px] font-black text-blue-400 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+												{taskTitles.length} tasks ·{" "}
+												{title.replace(/\n/g, "").replace(/\s+/g, "").length}{" "}
+												chars
+											</div>
 										</div>
 									)}
 									{hasMultipleLines && !isBatchEnabled && (
@@ -256,9 +426,47 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 									)}
 								</div>
 
+								{/* J: Notes / Description (collapsible) */}
+								<AnimatePresence>
+									{isNotesOpen && (
+										<motion.div
+											key="notes"
+											initial={{ opacity: 0, height: 0 }}
+											animate={{ opacity: 1, height: "auto" }}
+											exit={{ opacity: 0, height: 0 }}
+											transition={{ duration: 0.2, ease: "easeInOut" }}
+											className="overflow-hidden"
+										>
+											<div className="relative pt-1">
+												<label
+													htmlFor="task-description"
+													className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 mb-2"
+												>
+													<FileText className="w-3 h-3 text-violet-400" />
+													Notes / Description
+													{finalBatchActive && (
+														<span className="text-[8px] font-bold text-violet-400 normal-case tracking-normal ml-1">
+															— applied to all tasks
+														</span>
+													)}
+												</label>
+												<textarea
+													id="task-description"
+													placeholder="Add context, links, or references…"
+													value={description}
+													onChange={(e) => setDescription(e.target.value)}
+													rows={3}
+													disabled={isSubmitting}
+													className="w-full bg-violet-50/50 border border-violet-100 rounded-xl px-4 py-3 text-sm text-slate-700 placeholder:text-slate-300 focus:bg-white focus:border-violet-400 focus:outline-none transition-all resize-none leading-relaxed"
+												/>
+											</div>
+										</motion.div>
+									)}
+								</AnimatePresence>
+
 								{/* Metadata Grid */}
-								<div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-50">
-									{/* Category with Suggestions */}
+								<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pt-4 border-t border-slate-50">
+									{/* Category with Suggestions + Quick Pills */}
 									<div className="space-y-2">
 										<label
 											htmlFor="task-category"
@@ -266,6 +474,24 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										>
 											<Tag className="w-3 h-3" /> Category
 										</label>
+										<div className="flex flex-wrap gap-1.5 mb-2">
+											{CATEGORIES.map((cat) => (
+												<button
+													key={cat}
+													type="button"
+													onClick={() =>
+														setCategory(category === cat ? "" : cat)
+													}
+													className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wide border transition-all ${
+														category === cat
+															? "bg-emerald-500 border-emerald-500 text-white shadow-sm"
+															: "bg-slate-50 border-slate-100 text-slate-500 hover:border-emerald-300 hover:text-emerald-600"
+													}`}
+												>
+													{cat}
+												</button>
+											))}
+										</div>
 										<div className="relative group">
 											<input
 												id="task-category"
@@ -277,7 +503,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 												className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-base md:text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
 											/>
 											<datalist id="category-suggestions">
-												{categories.map((cat) => (
+												{CATEGORIES.map((cat) => (
 													<option key={cat} value={cat} />
 												))}
 											</datalist>
@@ -292,24 +518,25 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										>
 											<Calendar className="w-3 h-3" /> Due Date
 										</label>
-
 										<div className="flex flex-wrap gap-2">
-											{[
-												{ label: "Today", days: 0 },
-												{ label: "Tomorrow", days: 1 },
-												{ label: "+7 Days", days: 7 },
-											].map((chip) => (
-												<button
-													key={chip.label}
-													type="button"
-													onClick={() => setQuickDate(chip.days)}
-													className="px-3 py-1.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
-												>
-													{chip.label}
-												</button>
-											))}
+											{QUICK_DATE_CHIPS.map((chip) => {
+												const isActive = activeDateChipDays === chip.days;
+												return (
+													<button
+														key={chip.label}
+														type="button"
+														onClick={() => setQuickDate(chip.days)}
+														className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${
+															isActive
+																? "bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-300"
+																: "bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+														}`}
+													>
+														{chip.label}
+													</button>
+												);
+											})}
 										</div>
-
 										<input
 											id="task-due-date"
 											type="date"
@@ -327,9 +554,10 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										>
 											<Flag className="w-3 h-3" /> Priority Level
 										</label>
-										<div
+										<fieldset
 											id="task-priority"
 											className="flex p-1 bg-slate-50 border border-slate-100 rounded-xl"
+											aria-label="Priority Level"
 										>
 											{(["LOW", "MEDIUM", "HIGH"] as TaskPriority[]).map(
 												(p) => (
@@ -337,6 +565,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 														key={p}
 														type="button"
 														onClick={() => setPriority(p)}
+														aria-pressed={priority === p}
 														className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all ${
 															priority === p
 																? p === "HIGH"
@@ -351,40 +580,107 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 													</button>
 												),
 											)}
-										</div>
+										</fieldset>
+									</div>
+
+									{/* A: Recurring Task Toggle */}
+									<div className="space-y-2">
+										<label
+											htmlFor="task-recurrence"
+											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1"
+										>
+											<RefreshCw className="w-3 h-3" /> Recurrence
+										</label>
+										<fieldset
+											id="task-recurrence"
+											className="flex flex-wrap gap-1 p-1 bg-slate-50 border border-slate-100 rounded-xl"
+											aria-label="Recurrence"
+										>
+											{RECURRENCE_OPTIONS.map((opt) => (
+												<button
+													key={opt.value}
+													type="button"
+													onClick={() => setRecurrence(opt.value)}
+													aria-pressed={recurrence === opt.value}
+													className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all whitespace-nowrap ${
+														recurrence === opt.value
+															? "bg-violet-500 text-white shadow-sm"
+															: "text-slate-400 hover:text-slate-600"
+													}`}
+												>
+													{opt.label}
+												</button>
+											))}
+										</fieldset>
 									</div>
 								</div>
 							</div>
 
 							{/* Action Footer */}
-							<div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between pb-10 lg:pb-4">
-								<div className="flex items-center gap-2">
-									<Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-									<span className="text-[10px] font-bold text-slate-400 uppercase">
-										{finalBatchActive
-											? "Collective execution."
-											: "Strategic initialization."}
-									</span>
-								</div>
-
-								<button
-									type="submit"
-									disabled={isSubmitting || !title.trim()}
-									className={`flex items-center gap-2 px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg disabled:opacity-30 active:scale-95 ${
-										finalBatchActive
-											? "bg-blue-600 hover:bg-blue-700 text-white"
-											: "bg-slate-900 hover:bg-emerald-600 text-white"
-									}`}
-								>
-									{isSubmitting ? (
-										<Loader2 className="w-4 h-4 animate-spin" />
-									) : (
-										<Plus className="w-4 h-4" />
+							<div
+								className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-2"
+								style={{
+									paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+								}}
+							>
+								{/* Error message */}
+								<AnimatePresence>
+									{submitError && (
+										<motion.div
+											initial={{ opacity: 0, y: -4 }}
+											animate={{ opacity: 1, y: 0 }}
+											exit={{ opacity: 0, y: -4 }}
+											className="flex items-center gap-2 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-4 py-2"
+										>
+											<AlertCircle className="w-3.5 h-3.5 shrink-0" />
+											{submitError}
+										</motion.div>
 									)}
-									{finalBatchActive
-										? `Initialize ${taskTitles.length} Tasks`
-										: "Initialize"}
-								</button>
+								</AnimatePresence>
+
+								<div className="flex items-center justify-between">
+									<div className="flex items-center gap-2">
+										<Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+										<span className="text-[10px] font-bold text-slate-400 uppercase">
+											{finalBatchActive
+												? "Collective execution."
+												: "Strategic initialization."}
+										</span>
+										{/* Keyboard shortcut hint */}
+										{isFocused && (
+											<span className="hidden sm:inline-flex items-center text-[9px] font-bold text-slate-300 border border-slate-100 rounded px-1.5 py-0.5 gap-1">
+												⌘ Enter
+											</span>
+										)}
+									</div>
+
+									<button
+										type="submit"
+										disabled={isSubmitting || submitSuccess || !title.trim()}
+										className={`flex items-center gap-2 px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg disabled:opacity-30 active:scale-95 ${
+											submitSuccess
+												? "bg-emerald-500 text-white"
+												: finalBatchActive
+													? "bg-blue-600 hover:bg-blue-700 text-white"
+													: "bg-slate-900 hover:bg-emerald-600 text-white"
+										}`}
+									>
+										{isSubmitting ? (
+											<Loader2 className="w-4 h-4 animate-spin" />
+										) : submitSuccess ? (
+											<CheckCircle2 className="w-4 h-4" />
+										) : (
+											<Plus className="w-4 h-4" />
+										)}
+										{isSubmitting
+											? "Initializing…"
+											: submitSuccess
+												? "Done!"
+												: finalBatchActive
+													? `Initialize ${taskTitles.length} Tasks`
+													: "Initialize"}
+									</button>
+								</div>
 							</div>
 						</form>
 					</motion.div>

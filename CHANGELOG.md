@@ -1,3 +1,10 @@
+# [0.35.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.34.0...v0.35.0) (2026-06-20)
+
+
+### Features
+
+* **tasks:** enhance TaskForm and TaskItem with new features and improvements ([a28add8](https://github.com/plmtmbnn/personal-web-v2/commit/a28add82d16336c80d31366b194e26f8b535ae2b))
+
 # [0.34.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.33.0...v0.34.0) (2026-06-19)
 
 

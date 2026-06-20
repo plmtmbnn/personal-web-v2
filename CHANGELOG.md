@@ -1,3 +1,10 @@
+# [0.36.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.35.0...v0.36.0) (2026-06-20)
+
+
+### Features
+
+* **home:** enhance home view layout, links, animations and bio narrative ([8f1771e](https://github.com/plmtmbnn/personal-web-v2/commit/8f1771eebfece9e63820b75183112fd67c144942))
+
 # [0.35.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.34.0...v0.35.0) (2026-06-20)
 
 

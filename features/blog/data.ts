@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/core/supabase-server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { ENV_GLOBAL } from "@/lib/core/env";
@@ -50,31 +51,35 @@ export async function getBlogsStatic(): Promise<Blog[]> {
 
 /**
  * Fetch a single published blog by slug for static generation.
+ * Wrapped in React cache() to deduplicate concurrent calls within
+ * the same request (e.g. generateMetadata + page render).
  */
-export async function getBlogBySlugStatic(slug: string): Promise<Blog | null> {
-	const supabase = getStaticClient();
-	try {
-		const { data, error } = await supabase
-			.from("blogs")
-			.select("*")
-			.eq("slug", slug)
-			.eq("published", true)
-			.single();
+export const getBlogBySlugStatic = cache(
+	async (slug: string): Promise<Blog | null> => {
+		const supabase = getStaticClient();
+		try {
+			const { data, error } = await supabase
+				.from("blogs")
+				.select("*")
+				.eq("slug", slug)
+				.eq("published", true)
+				.single();
 
-		if (error) {
-			console.warn(`Blog not found for slug static: ${slug}`, error.message);
+			if (error) {
+				console.warn(`Blog not found for slug static: ${slug}`, error.message);
+				return null;
+			}
+
+			return data as Blog;
+		} catch (error) {
+			console.error(
+				`Unexpected error fetching blog by slug static: ${slug}`,
+				error,
+			);
 			return null;
 		}
-
-		return data as Blog;
-	} catch (error) {
-		console.error(
-			`Unexpected error fetching blog by slug static: ${slug}`,
-			error,
-		);
-		return null;
-	}
-}
+	},
+);
 
 /**
  * Fetch all published blogs, ordered by date DESC. (Dynamic/Server-Side)
@@ -102,28 +107,32 @@ export async function getBlogs(): Promise<Blog[]> {
 
 /**
  * Fetch a single published blog by its unique slug. (Dynamic/Server-Side)
+ * Wrapped in React cache() to deduplicate concurrent calls within
+ * the same request (e.g. generateMetadata + page render).
  */
-export async function getBlogBySlug(slug: string): Promise<Blog | null> {
-	const supabase = await createClient();
-	try {
-		const { data, error } = await supabase
-			.from("blogs")
-			.select("*")
-			.eq("slug", slug)
-			.eq("published", true)
-			.single();
+export const getBlogBySlug = cache(
+	async (slug: string): Promise<Blog | null> => {
+		const supabase = await createClient();
+		try {
+			const { data, error } = await supabase
+				.from("blogs")
+				.select("*")
+				.eq("slug", slug)
+				.eq("published", true)
+				.single();
 
-		if (error) {
-			console.warn(`Blog not found for slug: ${slug}`, error.message);
+			if (error) {
+				console.warn(`Blog not found for slug: ${slug}`, error.message);
+				return null;
+			}
+
+			return data as Blog;
+		} catch (error) {
+			console.error(`Unexpected error fetching blog by slug: ${slug}`, error);
 			return null;
 		}
-
-		return data as Blog;
-	} catch (error) {
-		console.error(`Unexpected error fetching blog by slug: ${slug}`, error);
-		return null;
-	}
-}
+	},
+);
 
 /**
  * Fetch all blogs (published and drafts) for admin.
@@ -169,5 +178,39 @@ export async function getBlogById(id: string): Promise<Blog | null> {
 	} catch (error) {
 		console.error(`Unexpected error fetching blog by ID: ${id}`, error);
 		return null;
+	}
+}
+
+/**
+ * Fetch related posts from the same category, excluding the current slug.
+ * Used for the "More from the Journal" section at the bottom of blog detail pages.
+ */
+export async function getRelatedPosts(
+	currentSlug: string,
+	category: string,
+	limit = 3,
+): Promise<Blog[]> {
+	const supabase = await createClient();
+	try {
+		const { data, error } = await supabase
+			.from("blogs")
+			.select(
+				"id, title, slug, description, date, category, image_url, is_headline, published, content",
+			)
+			.eq("published", true)
+			.eq("category", category)
+			.neq("slug", currentSlug)
+			.order("date", { ascending: false })
+			.limit(limit);
+
+		if (error) {
+			console.error("Error fetching related posts:", error.message);
+			return [];
+		}
+
+		return (data as Blog[]) || [];
+	} catch (error) {
+		console.error("Unexpected error fetching related posts:", error);
+		return [];
 	}
 }

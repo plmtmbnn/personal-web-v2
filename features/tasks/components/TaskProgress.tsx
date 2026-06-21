@@ -1,15 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import {
-	CheckCircle2,
-	Circle,
-	Calendar,
-	Clock,
-	BarChart3,
-	Loader2,
-} from "lucide-react";
+import { useEffect, useState, useTransition, useCallback } from "react";
+import { CheckCircle2, Circle, Calendar, Clock, BarChart3 } from "lucide-react";
 import { getTaskProgressMetrics } from "@/features/tasks/actions/analytics";
+import type { Task } from "@/features/tasks/types";
 
 interface Metrics {
 	today: number;
@@ -18,6 +12,10 @@ interface Metrics {
 	allTime: number;
 	verified: number;
 	progress: number;
+}
+
+interface TaskProgressProps {
+	tasks: Task[];
 }
 
 function getStatusText(
@@ -32,7 +30,7 @@ function getStatusText(
 	return "Getting started, keep going.";
 }
 
-export default function TaskProgress() {
+export default function TaskProgress({ tasks }: TaskProgressProps) {
 	const [metrics, setMetrics] = useState<Metrics | null>(null);
 	const [_isPending, startTransition] = useTransition();
 
@@ -41,12 +39,48 @@ export default function TaskProgress() {
 			const data = await getTaskProgressMetrics();
 			setMetrics(data);
 		});
+	}, [tasks]);
+
+	const scrollToSection = useCallback((id: string) => {
+		const el = document.getElementById(id);
+		if (el) {
+			el.scrollIntoView({ behavior: "smooth", block: "start" });
+		}
 	}, []);
 
 	if (!metrics) {
 		return (
-			<div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-center min-h-[160px]">
-				<Loader2 className="w-5 h-5 text-slate-300 animate-spin" />
+			<div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm animate-pulse min-h-[142px]">
+				<div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+					{/* Progress ring + status skeleton */}
+					<div className="flex items-center gap-6 flex-shrink-0 w-full lg:w-auto">
+						<div className="w-20 h-20 bg-slate-100 rounded-full flex-shrink-0" />
+						<div className="space-y-2 flex-1 lg:w-48">
+							<div className="h-2.5 w-16 bg-slate-100 rounded" />
+							<div className="h-4.5 w-36 bg-slate-100 rounded" />
+							<div className="flex gap-2 pt-1">
+								<div className="h-6 w-20 bg-slate-100 rounded-lg" />
+								<div className="h-6 w-20 bg-slate-100 rounded-lg" />
+							</div>
+						</div>
+					</div>
+
+					{/* Divider skeleton */}
+					<div className="hidden lg:block w-px h-16 bg-slate-100 self-center" />
+
+					{/* Metric cards skeleton */}
+					<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 w-full">
+						{[1, 2, 3, 4].map((i) => (
+							<div
+								key={i}
+								className="rounded-xl px-4 py-3 bg-slate-50 border border-slate-100 h-[68px] flex flex-col justify-between"
+							>
+								<div className="h-2.5 w-12 bg-slate-100 rounded" />
+								<div className="h-5 w-8 bg-slate-100 rounded" />
+							</div>
+						))}
+					</div>
+				</div>
 			</div>
 		);
 	}
@@ -66,12 +100,11 @@ export default function TaskProgress() {
 
 	return (
 		<div
-			className={[
-				"p-5 bg-white border rounded-2xl transition-all duration-500",
+			className={`p-5 bg-white border rounded-2xl transition-all duration-500 ${
 				isComplete
 					? "border-emerald-200 bg-emerald-50/30 ring-2 ring-emerald-500/10"
-					: "border-slate-200 shadow-sm",
-			].join(" ")}
+					: "border-slate-200 shadow-sm"
+			}`}
 		>
 			<div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
 				{/* Progress ring + status */}
@@ -93,7 +126,7 @@ export default function TaskProgress() {
 								cy="40"
 								r={radius}
 								fill="transparent"
-								stroke={isComplete ? "#10b981" : "#3b82f6"}
+								stroke="currentColor"
 								strokeWidth="7"
 								strokeDasharray={circumference}
 								style={{
@@ -102,6 +135,7 @@ export default function TaskProgress() {
 										"stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
 								}}
 								strokeLinecap="round"
+								className={isComplete ? "text-emerald-500" : "text-blue-500"}
 							/>
 						</svg>
 						<div className="absolute inset-0 flex items-center justify-center text-[15px] font-black text-slate-900">
@@ -115,10 +149,9 @@ export default function TaskProgress() {
 							Mission Progress
 						</p>
 						<p
-							className={[
-								"text-lg font-black tracking-tight leading-tight mb-3",
-								isComplete ? "text-emerald-700" : "text-slate-900",
-							].join(" ")}
+							className={`text-lg font-black tracking-tight leading-tight mb-3 ${
+								isComplete ? "text-emerald-700" : "text-slate-900"
+							}`}
 						>
 							{statusText}
 						</p>
@@ -145,38 +178,47 @@ export default function TaskProgress() {
 							label: "Today",
 							value: metrics.today,
 							icon: <Clock className="w-3 h-3" />,
+							targetId: "today-section",
 						},
 						{
 							label: "This week",
 							value: metrics.week,
 							icon: <Calendar className="w-3 h-3" />,
+							targetId: "upcoming-section",
 						},
 						{
 							label: "This month",
 							value: metrics.month,
 							icon: <BarChart3 className="w-3 h-3" />,
+							targetId: "upcoming-section",
 						},
-					].map(({ label, value, icon }) => (
-						<div
+					].map(({ label, value, icon, targetId }) => (
+						<button
 							key={label}
-							className="rounded-xl px-4 py-3 bg-slate-50 border border-slate-100 group hover:border-blue-200 transition-colors"
+							type="button"
+							onClick={() => scrollToSection(targetId)}
+							className="rounded-xl px-4 py-3 bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-slate-100/50 hover:shadow-sm text-left transition-all active:scale-95 duration-200 group"
 						>
-							<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 flex items-center gap-1.5">
+							<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 flex items-center gap-1.5 group-hover:text-blue-500 transition-colors">
 								{icon}
 								{label}
 							</p>
 							<p className="text-xl font-black text-slate-900">{value}</p>
-						</div>
+						</button>
 					))}
 					{/* Total Pending Card (High Contrast) */}
-					<div className="rounded-xl px-4 py-3 bg-slate-900 border border-slate-800 shadow-lg shadow-slate-900/10 ring-1 ring-white/10">
-						<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 !text-white">
+					<button
+						type="button"
+						onClick={() => scrollToSection("upcoming-section")}
+						className="rounded-xl px-4 py-3 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 hover:shadow-lg text-left transition-all active:scale-95 duration-200 group"
+					>
+						<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 !text-white opacity-80 group-hover:opacity-100 transition-opacity">
 							Total Pending
 						</p>
 						<p className="text-xl font-black text-white !text-white">
 							{metrics.allTime}
 						</p>
-					</div>
+					</button>
 				</div>
 			</div>
 		</div>

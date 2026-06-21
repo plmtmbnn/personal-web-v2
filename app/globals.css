@@ -86,7 +86,10 @@
 }
 
 @utility gradient-text {
-	@apply bg-clip-text text-transparent bg-gradient-to-r from-accent via-purple-600 to-cyan-500;
+	background-image: linear-gradient(to right, #292524, #1c1917, #0c0a09);
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: transparent;
 }
 
 @utility glow-text {

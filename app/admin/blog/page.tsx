@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getBlogsAdmin } from "@/features/blog/actions";
+import { getBlogsAdmin, getBlogStats } from "@/features/blog/actions";
 import { Plus, ChevronRight, BookOpen } from "lucide-react";
 import AdminBlogList from "@/features/blog/components/AdminBlogList";
 import { redirect } from "next/navigation";
@@ -16,6 +16,8 @@ interface AdminBlogPageProps {
 		status?: string;
 		sort?: string;
 		headline?: string;
+		category?: string;
+		pageSize?: string;
 	}>;
 }
 
@@ -35,15 +37,21 @@ export default async function AdminBlogPage({
 		(params.status as "all" | "published" | "draft") || "all";
 	const currentSort = (params.sort as "newest" | "oldest") || "newest";
 	const currentHeadline = params.headline === "true";
+	const currentCategory = params.category || "all";
+	const currentPageSize = Number(params.pageSize) || 5;
 
-	const { blogs, totalCount } = await getBlogsAdmin({
-		page: currentPage,
-		search: currentSearch,
-		status: currentStatus,
-		sort: currentSort,
-		is_headline: currentHeadline || undefined,
-		limit: 5,
-	});
+	const [{ blogs, totalCount }, blogStats] = await Promise.all([
+		getBlogsAdmin({
+			page: currentPage,
+			search: currentSearch,
+			status: currentStatus,
+			sort: currentSort,
+			is_headline: currentHeadline || undefined,
+			category: currentCategory !== "all" ? currentCategory : undefined,
+			limit: currentPageSize,
+		}),
+		getBlogStats(),
+	]);
 
 	return (
 		<main className="min-h-screen bg-slate-50/50 pb-24">
@@ -94,6 +102,9 @@ export default async function AdminBlogPage({
 							currentStatus={currentStatus}
 							currentSort={currentSort}
 							currentHeadline={currentHeadline}
+							currentCategory={currentCategory}
+							currentPageSize={currentPageSize}
+							blogStats={blogStats}
 						/>
 					</div>
 				</div>

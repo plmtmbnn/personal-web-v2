@@ -5,7 +5,6 @@ import {
 	CheckSquare,
 	LogOut,
 	ShieldCheck,
-	ArrowRight,
 	ChevronRight,
 	Database,
 } from "lucide-react";
@@ -92,33 +91,34 @@ export default async function AdminDashboardPage() {
 
 			<div className="max-w-5xl mx-auto px-6">
 				{/* Action Grid */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
 					{adminActions.map((action) => (
 						<Link
 							key={action.title}
 							href={action.href}
-							className={`group block p-8 sm:p-10 bg-white border border-slate-200 rounded-[2rem] sm:rounded-[2.5rem] transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 ${action.border} !no-underline relative overflow-hidden`}
+							className="group block relative p-5 rounded-2xl bg-white border border-slate-200 transition-all duration-300 hover:shadow-xl hover:border-blue-500/30 overflow-hidden h-28 !no-underline"
 						>
-							<div
-								className={`w-14 h-14 sm:w-16 sm:h-16 ${action.bg} rounded-2xl flex items-center justify-center mb-6 sm:mb-8 group-hover:scale-110 transition-transform duration-500 border border-transparent group-hover:border-white/50`}
-							>
-								<action.icon
-									className={`w-7 h-7 sm:w-8 sm:h-8 ${action.color}`}
-								/>
-							</div>
+							<div className="relative z-10 h-full flex flex-col justify-center">
+								{/* Default view: Icon & Title centered */}
+								<div className="flex items-center gap-3 transition-all duration-300 group-hover:-translate-y-3 group-hover:blur-[2px] group-hover:opacity-20">
+									<div
+										className={`w-12 h-12 flex items-center justify-center rounded-xl flex-shrink-0 ${action.bg} border border-slate-100 group-hover:scale-105 transition-transform duration-300`}
+									>
+										<action.icon className={`w-6 h-6 ${action.color}`} />
+									</div>
+									<div className="min-w-0">
+										<h3 className="text-sm font-black text-slate-900 tracking-tight leading-snug">
+											{action.title}
+										</h3>
+									</div>
+								</div>
 
-							<h3 className="text-xl sm:text-2xl font-black mb-2 sm:mb-3 text-slate-900 tracking-tight">
-								{action.title}
-							</h3>
-							<p className="text-slate-500 text-xs sm:text-sm leading-relaxed mb-8 sm:mb-10 font-medium">
-								{action.description}
-							</p>
-
-							<div
-								className={`inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${action.color} group-hover:gap-4 transition-all`}
-							>
-								<span>Access Module</span>
-								<ArrowRight className="w-3.5 h-3.5" />
+								{/* Description: Hidden by default, slides & fades in on hover */}
+								<div className="absolute bottom-0 left-0 right-0 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+									<p className="text-[10px] text-slate-500 font-medium leading-normal line-clamp-2">
+										{action.description}
+									</p>
+								</div>
 							</div>
 						</Link>
 					))}

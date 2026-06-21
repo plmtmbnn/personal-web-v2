@@ -281,7 +281,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 				/>
 
 				{/* Today Section */}
-				<section>
+				<section id="today-section">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-200/50">
@@ -342,7 +342,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 				</section>
 
 				{/* Upcoming Section */}
-				<section>
+				<section id="upcoming-section">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200/50">

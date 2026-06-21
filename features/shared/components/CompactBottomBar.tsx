@@ -24,7 +24,7 @@ import {
 	Toolbox,
 	Database,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 /**
  * Navigation Item Types
@@ -111,6 +111,51 @@ const NAV_ITEMS: NavItem[] = [
 	},
 ];
 
+// Motion Variants
+const containerVariants: Variants = {
+	hidden: {
+		opacity: 0,
+		y: 15,
+		scale: 0.95,
+		rotateX: -10,
+	},
+	visible: {
+		opacity: 1,
+		y: 0,
+		scale: 1,
+		rotateX: 0,
+		transition: {
+			type: "spring",
+			stiffness: 400,
+			damping: 28,
+			staggerChildren: 0.04,
+			delayChildren: 0.02,
+		},
+	},
+	exit: {
+		opacity: 0,
+		y: 10,
+		scale: 0.95,
+		rotateX: -5,
+		transition: {
+			duration: 0.15,
+		},
+	},
+};
+
+const itemVariants: Variants = {
+	hidden: { opacity: 0, y: 8 },
+	visible: {
+		opacity: 1,
+		y: 0,
+		transition: {
+			type: "spring",
+			stiffness: 300,
+			damping: 22,
+		},
+	},
+};
+
 export default function CompactBottomBar() {
 	const pathname = usePathname();
 	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -118,9 +163,16 @@ export default function CompactBottomBar() {
 	const [isAdmin, setIsAdmin] = useState(false);
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [isMounted, setIsMounted] = useState(false);
+	const [pendingTasksCount, setPendingTasksCount] = useState(0);
+	const [hasHover, setHasHover] = useState(false);
 	const navRef = useRef<HTMLElement>(null);
 
 	const containerScale = expandedItem ? 1.02 : 1;
+
+	// Detect hover-capable device on mount
+	useEffect(() => {
+		setHasHover(window.matchMedia("(hover: hover)").matches);
+	}, []);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -164,17 +216,39 @@ export default function CompactBottomBar() {
 			} else {
 				setIsLoggedIn(false);
 				setIsAdmin(false);
+				setPendingTasksCount(0);
 			}
 		});
 		return () => subscription.unsubscribe();
 	}, []);
+
+	// Fetch pending tasks count on pathname or auth state changes
+	useEffect(() => {
+		if (isLoggedIn && isAdmin) {
+			const fetchPendingCount = async () => {
+				try {
+					const todayStr = new Date().toISOString().split("T")[0];
+					const { count } = await SupabaseConn.from("tasks")
+						.select("*", { count: "exact", head: true })
+						.eq("is_completed", false)
+						.eq("due_date", todayStr);
+					setPendingTasksCount(count || 0);
+				} catch (err) {
+					console.error("Error fetching tasks count:", err);
+				}
+			};
+			fetchPendingCount();
+		} else {
+			setPendingTasksCount(0);
+		}
+	}, [pathname, isLoggedIn, isAdmin]);
 
 	const toggleSubMenu = (
 		e: React.MouseEvent,
 		label: string,
 		hasSubItems: boolean,
 	) => {
-		if (hasSubItems) {
+		if (hasSubItems && !hasHover) {
 			e.preventDefault();
 			setExpandedItem(expandedItem === label ? null : label);
 		}
@@ -217,24 +291,25 @@ export default function CompactBottomBar() {
 									layout
 									key={item.label}
 									className="relative flex-shrink-0"
+									onMouseEnter={
+										hasHover && hasSubItems
+											? () => setExpandedItem(item.label)
+											: undefined
+									}
+									onMouseLeave={
+										hasHover && hasSubItems
+											? () => setExpandedItem(null)
+											: undefined
+									}
 								>
 									{/* Submenu Pop-over */}
 									<AnimatePresence>
 										{hasSubItems && isExpanded && (
 											<motion.div
-												initial={{
-													opacity: 0,
-													y: 15,
-													scale: 0.95,
-													rotateX: -10,
-												}}
-												animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-												exit={{ opacity: 0, y: 10, scale: 0.95, rotateX: -5 }}
-												transition={{
-													type: "spring",
-													stiffness: 400,
-													damping: 28,
-												}}
+												variants={containerVariants}
+												initial="hidden"
+												animate="visible"
+												exit="exit"
 												className="absolute bottom-[calc(100%+16px)] left-1/2 -translate-x-1/2 w-48 sm:w-52 bg-white/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl border border-slate-100 p-1.5 z-50 origin-bottom"
 												style={{ perspective: "1000px" }}
 												role="menu"
@@ -244,27 +319,29 @@ export default function CompactBottomBar() {
 													const isSubActive = pathname === sub.href;
 
 													return (
-														<Link
-															key={sub.label}
-															href={sub.href || "#"}
-															onClick={() => {
-																sub.onClick?.();
-																setExpandedItem(null);
-															}}
-															className={`
-                                flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200
-                                ${isSubActive ? "bg-slate-50 text-indigo-600 font-bold" : "text-muted-foreground hover:text-foreground hover:bg-slate-50/80"}
-                              `}
-															role="menuitem"
-														>
-															<SubIcon
-																className={`w-4 h-4 ${isSubActive ? "text-indigo-600" : "opacity-70"}`}
-															/>
-															<span>{sub.label}</span>
-															{isSubActive && (
-																<div className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
-															)}
-														</Link>
+														<motion.div key={sub.label} variants={itemVariants}>
+															<Link
+																href={sub.href || "#"}
+																onClick={() => {
+																	sub.onClick?.();
+																	setExpandedItem(null);
+																}}
+																className={`flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 ${
+																	isSubActive
+																		? "bg-slate-50 text-indigo-600 font-bold shadow-sm"
+																		: "text-muted-foreground hover:text-foreground hover:bg-slate-50/80"
+																}`}
+																role="menuitem"
+															>
+																<SubIcon
+																	className={`w-4 h-4 ${isSubActive ? "text-indigo-600" : "opacity-70"}`}
+																/>
+																<span>{sub.label}</span>
+																{isSubActive && (
+																	<div className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+																)}
+															</Link>
+														</motion.div>
 													);
 												})}
 											</motion.div>
@@ -279,11 +356,11 @@ export default function CompactBottomBar() {
 										onClick={(e) =>
 											toggleSubMenu(e, item.label, hasSubItems ?? false)
 										}
-										className={`
-                      group relative flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full
-                      transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
-                      ${isActive ? "bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 text-indigo-600 shadow-sm border border-indigo-100/50" : "text-muted-foreground hover:text-foreground active:scale-95"}
-                    `}
+										className={`group relative flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+											isActive
+												? "bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 text-indigo-600 shadow-sm border border-indigo-100/50"
+												: "text-muted-foreground hover:text-foreground active:scale-95"
+										}`}
 									>
 										{isActive && (
 											<motion.div
@@ -307,10 +384,19 @@ export default function CompactBottomBar() {
 											className="relative z-10"
 										>
 											<Icon className="w-5 h-5 sm:w-5 sm:h-5" />
+											{item.label === "Admin" && pendingTasksCount > 0 && (
+												<span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white ring-2 ring-white animate-pulse">
+													{pendingTasksCount}
+												</span>
+											)}
 										</motion.div>
 
 										<span
-											className={`relative z-10 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ease-out ${isActive || isHovered ? "max-w-[80px] opacity-100 ml-1" : "max-w-0 opacity-0"} hidden sm:block`}
+											className={`relative z-10 text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ease-out ${
+												isActive || isHovered
+													? "max-w-[80px] opacity-100 ml-1"
+													: "max-w-0 opacity-0"
+											} hidden sm:block`}
 										>
 											{item.label}
 										</span>

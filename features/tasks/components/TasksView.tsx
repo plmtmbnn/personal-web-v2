@@ -209,7 +209,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 							className="space-y-6 sm:space-y-8"
 						>
 							<Suspense fallback={<ComponentLoader height="80px" />}>
-								<DynamicTaskProgress />
+								<DynamicTaskProgress tasks={tasks} />
 							</Suspense>
 
 							<Suspense fallback={<ComponentLoader height="100px" />}>

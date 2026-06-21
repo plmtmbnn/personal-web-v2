@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
 	Timer,
-	ChevronRight,
 	ArrowLeft,
 	Wrench,
 	Calculator,
@@ -177,42 +176,43 @@ export default function UtilsLanding() {
 				</motion.div>
 
 				{/* Selection Grid */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
 					{utilities.map((util, i) => (
 						<motion.div
 							key={util.slug}
 							initial={{ opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: i * 0.1, duration: 0.6 }}
+							transition={{ delay: i * 0.05, duration: 0.5 }}
 						>
 							<Link
 								href={util.path || `/utils/${util.slug}`}
-								className="group block relative p-10 rounded-[2.5rem] bg-white/5 border-2 border-white/5 backdrop-blur-xl hover:border-blue-500/30 transition-all duration-500 shadow-2xl overflow-hidden !no-underline"
+								className="group block relative p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 shadow-xl overflow-hidden h-28 !no-underline"
 							>
+								{/* Glow effect on hover */}
 								<div
-									className={`absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-gradient-to-br ${util.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl`}
-								></div>
+									className={`absolute -right-12 -bottom-12 w-32 h-32 rounded-full bg-gradient-to-br ${util.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-300 blur-xl pointer-events-none`}
+								/>
 
-								<div className="relative z-10 flex flex-col h-full">
-									<div
-										className={`w-16 h-16 flex items-center justify-center rounded-2xl ${util.bg} ${util.color} shadow-lg mb-8 group-hover:scale-110 transition-transform duration-500 border border-white/5`}
-									>
-										<util.icon className="w-8 h-8" />
+								<div className="relative z-10 h-full flex flex-col justify-center">
+									{/* Default view: Icon & Title centered */}
+									<div className="flex items-center gap-3 transition-all duration-300 group-hover:-translate-y-3 group-hover:blur-[2px] group-hover:opacity-20">
+										<div
+											className={`w-12 h-12 flex items-center justify-center rounded-xl flex-shrink-0 ${util.bg} ${util.color} shadow-md group-hover:scale-105 transition-transform duration-300 border border-white/5`}
+										>
+											<util.icon className="w-6 h-6" />
+										</div>
+										<div className="min-w-0">
+											<h3 className="text-sm font-black text-foreground tracking-tight leading-snug group-hover:text-blue-400 transition-colors">
+												{util.title}
+											</h3>
+										</div>
 									</div>
 
-									<h3 className="text-3xl font-black text-foreground mb-4 tracking-tight">
-										{util.title}
-									</h3>
-
-									<p className="text-muted-foreground font-medium leading-relaxed mb-10 flex-1">
-										{util.description}
-									</p>
-
-									<div
-										className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] ${util.color} transition-all`}
-									>
-										<span>Launch Utility</span>
-										<ChevronRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+									{/* Description: Hidden by default, slides & fades in on hover */}
+									<div className="absolute bottom-0 left-0 right-0 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+										<p className="text-[10px] text-muted-foreground font-medium leading-normal line-clamp-2">
+											{util.description}
+										</p>
 									</div>
 								</div>
 							</Link>

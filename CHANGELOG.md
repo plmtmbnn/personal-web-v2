@@ -1,3 +1,10 @@
+# [0.37.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.36.0...v0.37.0) (2026-06-21)
+
+
+### Features
+
+* overhaul tasks, navigation, utilities, and admin dashboard grids ([95f35ca](https://github.com/plmtmbnn/personal-web-v2/commit/95f35cacd58d125b671a77584963aac25856fc1a))
+
 # [0.36.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.35.0...v0.36.0) (2026-06-20)
 
 

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import CsvToJsonView from "./View";
+import dynamic from "next/dynamic";
+
+const CsvToJsonView = dynamic(() => import("./View"));
 
 export const metadata: Metadata = createMetadata({
 	title: "Advanced CSV to JSON Converter",

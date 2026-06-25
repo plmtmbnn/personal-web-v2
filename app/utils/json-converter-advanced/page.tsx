@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import JsonToSchemaView from "./View";
+import dynamic from "next/dynamic";
+
+const JsonToSchemaView = dynamic(() => import("./View"));
 
 export const metadata: Metadata = createMetadata({
 	title: "Advanced JSON to Schema Converter",

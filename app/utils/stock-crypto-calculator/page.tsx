@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import StockCryptoCalculatorView from "./View";
+import dynamic from "next/dynamic";
+
+const StockCryptoCalculatorView = dynamic(() => import("./View"));
 
 export const metadata: Metadata = createMetadata({
 	title: "Asset Averaging Calculator",

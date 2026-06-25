@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import SqlFormatterView from "./View";
+import dynamic from "next/dynamic";
+
+const SqlFormatterView = dynamic(() => import("./View"));
 
 export const metadata: Metadata = createMetadata({
 	title: "SQL Formatter & Validator",

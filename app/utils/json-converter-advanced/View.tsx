@@ -18,8 +18,15 @@ import {
 	Code2,
 } from "lucide-react";
 import Link from "next/link";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/prism-light";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import typescript from "react-syntax-highlighter/dist/esm/languages/prism/typescript";
+import go from "react-syntax-highlighter/dist/esm/languages/prism/go";
+import javascript from "react-syntax-highlighter/dist/esm/languages/prism/javascript";
+
+SyntaxHighlighter.registerLanguage("typescript", typescript);
+SyntaxHighlighter.registerLanguage("go", go);
+SyntaxHighlighter.registerLanguage("javascript", javascript);
 
 // ─── Utility Logic ─────────────────────────────────────────────────────────
 

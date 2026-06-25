@@ -1,3 +1,10 @@
+## [0.37.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.37.0...v0.37.1) (2026-06-25)
+
+
+### Performance Improvements
+
+* optimize nextjs startup, builds, package imports and lazy load utilities ([a5f7b69](https://github.com/plmtmbnn/personal-web-v2/commit/a5f7b6935ed9ddab63bea0c57de3e0ddba6cedf5))
+
 # [0.37.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.36.0...v0.37.0) (2026-06-21)
 
 

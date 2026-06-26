@@ -20,6 +20,7 @@ import {
 	RefreshCw,
 	FileText,
 	ChevronUp,
+	ListTodo,
 } from "lucide-react";
 import { addTask, addBatchTasks } from "@/features/tasks/actions/tasks";
 import { useRouter } from "next/navigation";
@@ -438,18 +439,51 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 											className="overflow-hidden"
 										>
 											<div className="relative pt-1">
-												<label
-													htmlFor="task-description"
-													className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 mb-2"
-												>
-													<FileText className="w-3 h-3 text-violet-400" />
-													Notes / Description
-													{finalBatchActive && (
-														<span className="text-[8px] font-bold text-violet-400 normal-case tracking-normal ml-1">
-															— applied to all tasks
-														</span>
-													)}
-												</label>
+												<div className="flex items-center justify-between mb-2">
+													<label
+														htmlFor="task-description"
+														className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5"
+													>
+														<FileText className="w-3 h-3 text-violet-400" />
+														Notes / Description
+														{finalBatchActive && (
+															<span className="text-[8px] font-bold text-violet-400 normal-case tracking-normal ml-1">
+																— applied to all tasks
+															</span>
+														)}
+													</label>
+													<button
+														type="button"
+														onClick={() => {
+															const textarea = document.getElementById(
+																"task-description",
+															) as HTMLTextAreaElement;
+															if (!textarea) return;
+															const start = textarea.selectionStart;
+															const end = textarea.selectionEnd;
+															const text = textarea.value;
+															const before = text.substring(0, start);
+															const after = text.substring(end);
+															const prefix =
+																start === 0 || text[start - 1] === "\n"
+																	? ""
+																	: "\n";
+															const insertedText = `${prefix}- [ ] `;
+															setDescription(before + insertedText + after);
+
+															setTimeout(() => {
+																textarea.focus();
+																textarea.setSelectionRange(
+																	start + insertedText.length,
+																	start + insertedText.length,
+																);
+															}, 0);
+														}}
+														className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-violet-500 hover:text-violet-750 transition-colors px-2 py-0.5 bg-violet-50 hover:bg-violet-100 rounded-lg active:scale-95 cursor-pointer"
+													>
+														<ListTodo className="w-2.5 h-2.5" /> + Checklist
+													</button>
+												</div>
 												<textarea
 													id="task-description"
 													placeholder="Add context, links, or references…"

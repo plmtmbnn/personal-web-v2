@@ -14,6 +14,7 @@ import {
 	ChevronDown,
 	ChevronUp,
 	AlertTriangle,
+	ListTodo,
 } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
 import {
@@ -37,6 +38,8 @@ import {
 } from "date-fns";
 
 // ─── Constants (module-level — not recreated on every render) ─────────────────
+
+const CHECKLIST_REGEX = /^(\s*[-*]\s+\[)([ xX])(]\s+)(.*)$/;
 
 // #14 — moved outside component
 const PRIORITY_COLORS = {
@@ -453,12 +456,43 @@ export default function TaskItem({
 							</div>
 
 							<div className="space-y-1">
-								<label
-									htmlFor={`edit-desc-${task.id}`}
-									className="text-[9px] font-black uppercase tracking-widest text-slate-400"
-								>
-									Description & Notes
-								</label>
+								<div className="flex items-center justify-between">
+									<label
+										htmlFor={`edit-desc-${task.id}`}
+										className="text-[9px] font-black uppercase tracking-widest text-slate-400"
+									>
+										Description & Notes
+									</label>
+									<button
+										type="button"
+										onClick={() => {
+											const textarea = document.getElementById(
+												`edit-desc-${task.id}`,
+											) as HTMLTextAreaElement;
+											if (!textarea) return;
+											const start = textarea.selectionStart;
+											const end = textarea.selectionEnd;
+											const text = textarea.value;
+											const before = text.substring(0, start);
+											const after = text.substring(end);
+											const prefix =
+												start === 0 || text[start - 1] === "\n" ? "" : "\n";
+											const insertedText = `${prefix}- [ ] `;
+											setEditDescription(before + insertedText + after);
+
+											setTimeout(() => {
+												textarea.focus();
+												textarea.setSelectionRange(
+													start + insertedText.length,
+													start + insertedText.length,
+												);
+											}, 0);
+										}}
+										className="flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wider text-violet-500 hover:text-violet-750 transition-colors px-1.5 py-0.5 bg-violet-50 hover:bg-violet-100 rounded-lg active:scale-95 cursor-pointer"
+									>
+										<ListTodo className="w-2 h-2" /> + Checklist
+									</button>
+								</div>
 								<textarea
 									id={`edit-desc-${task.id}`}
 									ref={descriptionRef}
@@ -681,9 +715,88 @@ export default function TaskItem({
 												transition={{ duration: 0.18, ease: "easeInOut" }}
 												className="overflow-hidden"
 											>
-												<p className="mt-1.5 text-xs text-slate-500 leading-relaxed bg-violet-50/60 border border-violet-100 rounded-xl px-3 py-2 whitespace-pre-wrap break-words">
-													{renderTextWithLinks(task.description)}
-												</p>
+												<div className="mt-1.5 text-xs text-slate-500 leading-relaxed bg-violet-50/60 border border-violet-100 rounded-xl px-3 py-2 whitespace-pre-wrap break-words space-y-1">
+													{(() => {
+														if (!task.description) return null;
+														const lines = task.description.split("\n");
+														const hasChecklist = lines.some((line) =>
+															CHECKLIST_REGEX.test(line),
+														);
+
+														if (!hasChecklist) {
+															return (
+																<p>{renderTextWithLinks(task.description)}</p>
+															);
+														}
+
+														return lines.map((line, lineIndex) => {
+															const match = line.match(CHECKLIST_REGEX);
+															if (!match) {
+																return (
+																	<div
+																		key={lineIndex}
+																		className="min-h-[1.5rem]"
+																	>
+																		{renderTextWithLinks(line)}
+																	</div>
+																);
+															}
+
+															const [
+																,
+																prefix,
+																statusChar,
+																suffix,
+																contentText,
+															] = match;
+															const isChecked =
+																statusChar.toLowerCase() === "x";
+
+															const handleChecklistToggle = () => {
+																const updatedLines = [...lines];
+																const newStatus = isChecked ? " " : "x";
+																updatedLines[lineIndex] =
+																	`${prefix}${newStatus}${suffix}${contentText}`;
+																onUpdate(task.id, {
+																	description: updatedLines.join("\n"),
+																});
+															};
+
+															return (
+																<div
+																	key={lineIndex}
+																	className="flex items-start gap-2 py-0.5 group/checklist"
+																>
+																	<button
+																		type="button"
+																		onClick={(e) => {
+																			e.stopPropagation();
+																			handleChecklistToggle();
+																		}}
+																		className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center border transition-all ${
+																			isChecked
+																				? "bg-violet-500 border-violet-500 text-white"
+																				: "bg-white border-slate-300 hover:border-violet-500"
+																		}`}
+																	>
+																		{isChecked && (
+																			<Check className="w-3 h-3 stroke-[3]" />
+																		)}
+																	</button>
+																	<span
+																		className={`flex-1 ${
+																			isChecked
+																				? "line-through text-slate-400"
+																				: "text-slate-650"
+																		}`}
+																	>
+																		{renderTextWithLinks(contentText)}
+																	</span>
+																</div>
+															);
+														});
+													})()}
+												</div>
 											</motion.div>
 										)}
 									</AnimatePresence>

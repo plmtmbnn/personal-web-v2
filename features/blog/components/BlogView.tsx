@@ -12,6 +12,8 @@ import {
 	Sparkles,
 	Search,
 	X,
+	ChevronLeft,
+	ChevronRight,
 } from "lucide-react";
 import type { Blog } from "@/features/blog/data";
 import {
@@ -37,6 +39,7 @@ const getCategoryBorderColor = (category: string) => {
 export default function BlogView({ allBlogs }: BlogViewProps) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [activeCategory, setActiveCategory] = useState("All");
+	const [isLeftColumnCollapsed, setIsLeftColumnCollapsed] = useState(false);
 
 	// Filter blogs dynamically
 	const filteredBlogs = useMemo(() => {
@@ -81,18 +84,36 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 	}, [filteredBlogs, isCuratedMode]);
 
 	return (
-		<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+		<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start transition-all duration-300">
 			{/* ═══════════════════════════════════════
 			    LEFT COLUMN: Sticky Header & Filters
 			═══════════════════════════════════════ */}
-			<aside className="lg:col-span-4 lg:sticky lg:top-8 space-y-6 lg:pb-8">
-				{/* Title and Description */}
-				<div className="space-y-4">
-					<div className="flex items-center gap-2.5 text-slate-900">
-						<BookOpen className="w-4 h-4 text-slate-500" />
-						<span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">
-							Engineering Journal
-						</span>
+			<aside
+				className={`transition-all duration-300 lg:sticky lg:top-8 lg:pb-8 ${
+					isLeftColumnCollapsed
+						? "lg:col-span-1 space-y-4 flex flex-col items-center"
+						: "lg:col-span-4 space-y-6"
+				}`}
+			>
+				{/* Expanded State: Title and Description */}
+				<div
+					className={`space-y-4 w-full ${isLeftColumnCollapsed ? "lg:hidden" : "block"}`}
+				>
+					<div className="flex items-center justify-between gap-2.5 text-slate-900">
+						<div className="flex items-center gap-2.5">
+							<BookOpen className="w-4 h-4 text-slate-500" />
+							<span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">
+								Engineering Journal
+							</span>
+						</div>
+						{/* Collapse Button: Desktop only */}
+						<button
+							onClick={() => setIsLeftColumnCollapsed(true)}
+							className="hidden lg:flex items-center justify-center p-1.5 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl transition-all text-slate-450 hover:text-slate-900 active:scale-90"
+							title="Collapse sidebar"
+						>
+							<ChevronLeft className="w-4 h-4" />
+						</button>
 					</div>
 					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-slate-950 leading-[0.95]">
 						The <span className="gradient-text">Pulse</span>
@@ -103,8 +124,48 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 					</p>
 				</div>
 
+				{/* Collapsed State View: Desktop only */}
+				{isLeftColumnCollapsed && (
+					<div className="hidden lg:flex flex-col items-center space-y-6 py-4 w-full">
+						<button
+							onClick={() => setIsLeftColumnCollapsed(false)}
+							className="flex items-center justify-center p-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl transition-all text-slate-450 hover:text-slate-900 active:scale-90 shadow-sm"
+							title="Expand sidebar"
+						>
+							<ChevronRight className="w-4 h-4" />
+						</button>
+
+						<div className="h-px w-8 bg-slate-100" />
+
+						<div className="flex flex-col items-center gap-4">
+							<BookOpen className="w-4 h-4 text-slate-400" />
+							<div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-450 [writing-mode:vertical-lr] rotate-180 select-none py-2">
+								The Pulse
+							</div>
+						</div>
+
+						<div className="h-px w-8 bg-slate-100" />
+
+						{/* Small Indicator for Filters/Category in Collapsed Mode */}
+						<div className="flex flex-col items-center gap-3">
+							<span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">
+								Cat
+							</span>
+							<div
+								className="w-8 h-8 rounded-xl bg-slate-950 text-white flex items-center justify-center text-[10px] font-black shadow-md border border-slate-800 cursor-pointer hover:bg-slate-900 transition-colors"
+								onClick={() => setIsLeftColumnCollapsed(false)}
+								title={`Active: ${activeCategory}. Click to expand.`}
+							>
+								{activeCategory === "All" ? "A" : activeCategory[0]}
+							</div>
+						</div>
+					</div>
+				)}
+
 				{/* Search & Category filter container */}
-				<div className="bg-slate-50 border border-slate-100 p-5 rounded-[2rem] space-y-5">
+				<div
+					className={`bg-slate-50 border border-slate-100 p-5 rounded-[2rem] space-y-5 w-full ${isLeftColumnCollapsed ? "lg:hidden" : "block"}`}
+				>
 					{/* Search Input */}
 					<div className="relative group">
 						<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
@@ -164,7 +225,9 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 				</div>
 
 				{/* Archive Stats Badge */}
-				<div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl max-w-sm">
+				<div
+					className={`flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl max-w-sm w-full ${isLeftColumnCollapsed ? "lg:hidden" : "flex"}`}
+				>
 					<div className="flex items-center gap-3">
 						<div className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center border border-slate-800 shadow-sm text-white">
 							<Sparkles className="w-4 h-4" />
@@ -184,7 +247,11 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 			{/* ═══════════════════════════════════════
 			    RIGHT COLUMN: Highlight & Grid
 			═══════════════════════════════════════ */}
-			<div className="lg:col-span-8 space-y-12">
+			<div
+				className={`transition-all duration-300 space-y-12 ${
+					isLeftColumnCollapsed ? "lg:col-span-11" : "lg:col-span-8"
+				}`}
+			>
 				<AnimatePresence mode="wait">
 					{filteredBlogs.length === 0 ? (
 						<motion.div
@@ -349,7 +416,9 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 									</div>
 								)}
 
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								<div
+									className={`grid grid-cols-1 md:grid-cols-${isLeftColumnCollapsed ? 3 : 2} gap-6`}
+								>
 									{regularPosts.map((post, index) => (
 										<motion.div
 											key={post.slug}

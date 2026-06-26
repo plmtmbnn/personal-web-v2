@@ -7,6 +7,7 @@ import {
 	useCallback,
 	useMemo,
 	useRef,
+	Fragment,
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -698,7 +699,9 @@ function AdminBlogListInner({
 							<th className="px-6 py-4 text-center">Headline</th>
 							<th className="px-6 py-4 text-center">Status</th>
 							<th className="px-6 py-4">Publication</th>
-							<th className="px-6 py-4 text-right">Actions</th>
+							<th className="px-6 py-4 text-right sticky right-0 bg-slate-50 z-20 shadow-[-12px_0_20px_-12px_rgba(0,0,0,0.08)]">
+								Actions
+							</th>
 						</tr>
 					</thead>
 					<tbody className="divide-y divide-slate-100">
@@ -707,7 +710,7 @@ function AdminBlogListInner({
 								const isExpanded = expandedRow === blog.id;
 								const isSelected = selectedIds.has(blog.id);
 								return (
-									<>
+									<Fragment key={blog.id}>
 										<tr
 											key={String(blog.id)}
 											className={`transition-colors group ${
@@ -882,8 +885,13 @@ function AdminBlogListInner({
 												</div>
 											</td>
 
-											{/* Actions */}
-											<td className="px-6 py-5">
+											<td
+												className={`px-6 py-5 sticky right-0 z-10 transition-colors shadow-[-12px_0_20px_-12px_rgba(0,0,0,0.08)] ${
+													isSelected
+														? "bg-blue-50/40"
+														: "bg-white group-hover:bg-blue-50/20"
+												}`}
+											>
 												<div className="flex items-center justify-end gap-1">
 													{/* Expand row preview */}
 													<button
@@ -992,7 +1000,7 @@ function AdminBlogListInner({
 												</motion.tr>
 											)}
 										</AnimatePresence>
-									</>
+									</Fragment>
 								);
 							})
 						) : (

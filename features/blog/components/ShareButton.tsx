@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Share2, Check, Link2 } from "lucide-react";
 import { FaXTwitter, FaLinkedinIn, FaWhatsapp } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,9 +36,13 @@ const socialTargets = (title: string, url: string) => [
 
 export default function ShareButton({ title, url }: ShareButtonProps) {
 	const [copied, setCopied] = useState(false);
+	const [shareUrl, setShareUrl] = useState(url || "");
 
-	const shareUrl =
-		url || (typeof window !== "undefined" ? window.location.href : "");
+	useEffect(() => {
+		if (!url && typeof window !== "undefined") {
+			setShareUrl(window.location.href);
+		}
+	}, [url]);
 
 	const handleNativeShare = async () => {
 		if (navigator.share) {

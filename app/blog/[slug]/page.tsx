@@ -12,7 +12,6 @@ import Link from "next/link";
 import * as motion from "framer-motion/client";
 import { ScrollProgress } from "@/features/blog/components/ScrollProgress";
 import ShareButton from "@/features/blog/components/ShareButton";
-import TableOfContents from "@/features/blog/components/TableOfContents";
 import RelatedPosts from "@/features/blog/components/RelatedPosts";
 import BackToTop from "@/features/blog/components/BackToTop";
 import type { Metadata } from "next";
@@ -26,7 +25,6 @@ import {
 	getReadTime,
 	getWordCount,
 	getBlogImage,
-	parseHeadings,
 } from "@/features/blog/utils";
 
 // ─────────────────────────────────────────────
@@ -92,7 +90,6 @@ export default async function BlogDetailPage({
 	const heroImage = getBlogImage(post.image_url, post.id);
 	const readTime = getReadTime(post.content);
 	const wordCount = getWordCount(post.content);
-	const headings = parseHeadings(post.content);
 	const jsonLd = generateBlogPostJsonLd({
 		title: post.title,
 		description: post.description,
@@ -232,27 +229,18 @@ export default async function BlogDetailPage({
 				</section>
 
 				{/* ═══════════════════════════════════════
-				    MAIN CONTENT — Article + TOC
+				    MAIN CONTENT — Article
 				═══════════════════════════════════════ */}
 				<section className="max-w-5xl mx-auto px-4 sm:px-6 relative mt-12 sm:mt-20">
-					{/* Mobile TOC — above article */}
-					{headings.length > 2 && <TableOfContents headings={headings} />}
-
-					{/* Desktop layout: article + sticky TOC sidebar */}
-					<div className="flex gap-12 items-start">
-						{/* Article body */}
-						<motion.article
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							transition={{ delay: 0.3 }}
-							className="flex-1 min-w-0 shadow-xl shadow-slate-100 print:shadow-none"
-						>
-							<BlogContent content={post.content} />
-						</motion.article>
-
-						{/* Desktop-only sticky TOC sidebar */}
-						{headings.length > 2 && <TableOfContents headings={headings} />}
-					</div>
+					{/* Article body */}
+					<motion.article
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ delay: 0.3 }}
+						className="w-full shadow-xl shadow-slate-100 print:shadow-none"
+					>
+						<BlogContent content={post.content} />
+					</motion.article>
 
 					{/* ── Share Block ── */}
 					<motion.div

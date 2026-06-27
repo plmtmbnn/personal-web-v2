@@ -218,12 +218,12 @@ export async function getStaleTasks(): Promise<Task[]> {
 }
 
 /**
- * Permanently delete completed tasks older than 6 months.
+ * Permanently delete completed tasks older than 36 months (3 years).
  */
 export async function cleanupOldTasks() {
-	const sixMonthsAgo = new Date();
-	sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-	const dateStr = sixMonthsAgo.toISOString();
+	const threeYearsAgo = new Date();
+	threeYearsAgo.setMonth(threeYearsAgo.getMonth() - 36);
+	const dateStr = threeYearsAgo.toISOString();
 
 	const { error } = await SupabaseConn.from("tasks")
 		.delete()

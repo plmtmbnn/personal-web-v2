@@ -48,12 +48,6 @@ const PRIORITY_COLORS = {
 	LOW: "bg-emerald-50 text-emerald-700 border-emerald-100",
 } as const;
 
-const PRIORITY_BAR = {
-	HIGH: "bg-rose-500",
-	MEDIUM: "bg-amber-500",
-	LOW: "bg-emerald-500",
-} as const;
-
 const RECURRENCE_LABELS = {
 	none: null,
 	daily: "Daily",
@@ -66,8 +60,8 @@ const RECURRENCE_LABELS = {
 interface TaskItemProps {
 	task: Task;
 	index: number;
-	provided: DraggableProvided;
-	snapshot: DraggableStateSnapshot;
+	provided?: DraggableProvided;
+	snapshot?: DraggableStateSnapshot;
 	onToggle: (taskId: string, currentStatus: boolean) => void;
 	onDelete: (taskId: string) => void;
 	onUpdate: (taskId: string, updates: Partial<Task>) => void;
@@ -339,8 +333,8 @@ export default function TaskItem({
 
 	return (
 		<div
-			ref={provided.innerRef}
-			{...provided.draggableProps}
+			ref={provided?.innerRef}
+			{...(provided ? provided.draggableProps : {})}
 			className="relative overflow-hidden rounded-[1.5rem] sm:rounded-2xl"
 		>
 			{/* Swipe Action Backgrounds */}
@@ -363,13 +357,13 @@ export default function TaskItem({
 			</motion.div>
 
 			<motion.div
-				drag={isEditing ? false : "x"}
+				drag={isEditing || !provided ? false : "x"}
 				dragConstraints={{ left: 0, right: 0 }}
 				dragElastic={0.4}
 				onDragEnd={handleDragEnd}
 				style={{ x }}
 				className={`group flex items-start gap-3 sm:gap-4 p-4 bg-white border-2 transition-all duration-300 ${
-					snapshot.isDragging
+					snapshot?.isDragging
 						? "shadow-2xl border-emerald-500 ring-2 ring-emerald-500/10 z-50"
 						: isEditing
 							? "border-emerald-500 shadow-md ring-2 ring-emerald-500/5"
@@ -381,27 +375,15 @@ export default function TaskItem({
 				} ${optimisticCompleted ? "bg-slate-50/50 opacity-75" : ""}`}
 			>
 				{/* Drag Handle */}
-				<div
-					{...provided.dragHandleProps}
-					className={`text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing py-1 ${isEditing ? "opacity-50 pointer-events-none" : ""}`}
-					title={isEditing ? "Cannot drag while editing" : "Drag to reorder"}
-				>
-					<GripVertical className="w-4 h-4" />
-				</div>
-
-				{/* Visual Indicator Line */}
-				{/* #9 — Overdue turns the priority bar red regardless of priority */}
-				<div
-					className={`w-1 self-stretch rounded-full transition-all min-h-[1.5rem] ${
-						optimisticCompleted
-							? "bg-slate-200"
-							: isEditing
-								? "bg-emerald-500"
-								: isOverdue
-									? "bg-rose-500 animate-pulse"
-									: PRIORITY_BAR[task.priority]
-					}`}
-				/>
+				{provided && (
+					<div
+						{...provided.dragHandleProps}
+						className={`text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing py-1 ${isEditing ? "opacity-50 pointer-events-none" : ""}`}
+						title={isEditing ? "Cannot drag while editing" : "Drag to reorder"}
+					>
+						<GripVertical className="w-4 h-4" />
+					</div>
+				)}
 
 				{/* #11 — Proper aria attributes on checkbox */}
 				{!isEditing && (

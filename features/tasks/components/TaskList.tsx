@@ -24,15 +24,29 @@ import {
 } from "@/features/tasks/actions/tasks";
 import TaskItem from "./TaskItem";
 import TaskFilters from "./TaskFilters";
-import { format, addDays, isBefore, startOfDay, parseISO } from "date-fns";
+import {
+	format,
+	addDays,
+	isBefore,
+	startOfDay,
+	parseISO,
+	startOfWeek,
+	endOfWeek,
+	isWithinInterval,
+} from "date-fns";
 import CustomModal from "@/features/shared/components/CustomModal";
 
 interface TaskListProps {
 	todayTasks: Task[];
 	upcomingTasks: Task[];
+	completedTasks: Task[];
 }
 
-export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
+export default function TaskList({
+	todayTasks,
+	upcomingTasks,
+	completedTasks,
+}: TaskListProps) {
 	const [_isPending, startTransition] = useTransition();
 	const searchParams = useSearchParams();
 
@@ -40,50 +54,51 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 
+	// Trigger load for Completed Tasks Section
+	const [isCompletedLoaded, setIsCompletedLoaded] = useState(false);
+
 	// Section-specific filter extraction
 	const getFilters = (prefix: string) => ({
 		priority: searchParams.get(`${prefix}_priority`) || "all",
 		category: searchParams.get(`${prefix}_category`) || "all",
-		showCompleted: searchParams.get(`${prefix}_completed`) === "true",
 		range: searchParams.get(`${prefix}_range`) || "week",
+		search: searchParams.get(`${prefix}_search`) || "",
 	});
 
 	const todayFilters = getFilters("today");
 	const upcomingFilters = getFilters("upcoming");
+	const completedFilters = getFilters("completed");
 
 	// Optimistic state for the task lists
 	const [optimisticState, addOptimisticAction] = useOptimistic(
-		{ todayTasks, upcomingTasks },
+		{ todayTasks, upcomingTasks, completedTasks },
 		(state, { action, payload }: { action: string; payload: any }) => {
+			const updateInLists = (updater: (t: Task) => Task) => ({
+				todayTasks: state.todayTasks.map(updater),
+				upcomingTasks: state.upcomingTasks.map(updater),
+				completedTasks: state.completedTasks.map(updater),
+			});
+
 			switch (action) {
 				case "toggle":
-					return {
-						todayTasks: state.todayTasks.map((t: Task) =>
-							t.id === payload.taskId
-								? { ...t, is_completed: !t.is_completed }
-								: t,
-						),
-						upcomingTasks: state.upcomingTasks.map((t: Task) =>
-							t.id === payload.taskId
-								? { ...t, is_completed: !t.is_completed }
-								: t,
-						),
-					};
+					return updateInLists((t: Task) =>
+						t.id === payload.taskId
+							? { ...t, is_completed: !t.is_completed }
+							: t,
+					);
 				case "update":
-					return {
-						todayTasks: state.todayTasks.map((t: Task) =>
-							t.id === payload.taskId ? { ...t, ...payload.updates } : t,
-						),
-						upcomingTasks: state.upcomingTasks.map((t: Task) =>
-							t.id === payload.taskId ? { ...t, ...payload.updates } : t,
-						),
-					};
+					return updateInLists((t: Task) =>
+						t.id === payload.taskId ? { ...t, ...payload.updates } : t,
+					);
 				case "delete":
 					return {
 						todayTasks: state.todayTasks.filter(
 							(t: Task) => t.id !== payload.taskId,
 						),
 						upcomingTasks: state.upcomingTasks.filter(
+							(t: Task) => t.id !== payload.taskId,
+						),
+						completedTasks: state.completedTasks.filter(
 							(t: Task) => t.id !== payload.taskId,
 						),
 					};
@@ -101,6 +116,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 					return {
 						todayTasks: payload.newTodayTasks,
 						upcomingTasks: payload.newUpcomingTasks,
+						completedTasks: state.completedTasks,
 					};
 				default:
 					return state;
@@ -112,8 +128,9 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 	 * Helper to apply local filters to a list
 	 */
 	const applyFilters = useCallback(
-		(list: Task[], filters: any, isUpcoming = false) => {
+		(list: Task[], filters: any, isUpcoming = false, isCompleted = false) => {
 			let result = list;
+			const todayRef = startOfDay(new Date());
 
 			// 1. Priority
 			if (filters.priority !== "all") {
@@ -125,20 +142,51 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 				result = result.filter((t) => t.category === filters.category);
 			}
 
-			// 3. Completion
-			if (!filters.showCompleted) {
+			// 3. Completion check
+			if (isCompleted) {
+				result = result.filter((t) => t.is_completed);
+			} else {
 				result = result.filter((t) => !t.is_completed);
 			}
 
-			// 4. Date Range (Only for Upcoming)
+			// 4. Date Range (For Upcoming & Completed)
 			if (isUpcoming && filters.range === "week") {
-				const nextWeek = addDays(startOfDay(new Date()), 8); // 7 days from today
-				result = result.filter((t) => isBefore(parseISO(t.due_date), nextWeek));
+				const nextWeek = addDays(todayRef, 8); // 7 days from today
+				result = result.filter(
+					(t) => t.due_date && isBefore(parseISO(t.due_date), nextWeek),
+				);
+			}
+
+			if (isCompleted) {
+				const weekOffset = Number(
+					searchParams.get("completed_week_offset") || "0",
+				);
+				const weekStart = addDays(
+					startOfWeek(todayRef, { weekStartsOn: 1 }),
+					weekOffset * 7,
+				);
+				const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+
+				result = result.filter((t) => {
+					if (!t.completed_at && !t.due_date && !t.created_at) return false;
+					const d = parseISO(t.completed_at || t.due_date || t.created_at);
+					return isWithinInterval(d, { start: weekStart, end: weekEnd });
+				});
+			}
+
+			// 5. Search text query
+			if (filters.search) {
+				const searchLower = filters.search.toLowerCase();
+				result = result.filter(
+					(t) =>
+						(t.title || "").toLowerCase().includes(searchLower) ||
+						(t.description || "").toLowerCase().includes(searchLower),
+				);
 			}
 
 			return result;
 		},
-		[],
+		[searchParams],
 	);
 
 	// Derived display lists
@@ -151,6 +199,21 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 		() => applyFilters(optimisticState.upcomingTasks, upcomingFilters, true),
 		[optimisticState.upcomingTasks, upcomingFilters, applyFilters],
 	);
+
+	const displayCompletedTasks = useMemo(() => {
+		if (!isCompletedLoaded) return [];
+		return applyFilters(
+			optimisticState.completedTasks,
+			completedFilters,
+			false,
+			true,
+		);
+	}, [
+		isCompletedLoaded,
+		optimisticState.completedTasks,
+		completedFilters,
+		applyFilters,
+	]);
 
 	const handleToggle = async (taskId: string, currentStatus: boolean) => {
 		startTransition(async () => {
@@ -198,6 +261,16 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 		});
 	};
 
+	const hasActiveFilters = (filters: any) => {
+		return (
+			filters.priority !== "all" ||
+			filters.category !== "all" ||
+			!!filters.search
+		);
+	};
+	const isDragDisabled =
+		hasActiveFilters(todayFilters) || hasActiveFilters(upcomingFilters);
+
 	const onDragEnd = (result: DropResult) => {
 		const { destination, source, draggableId } = result;
 		if (!destination) return;
@@ -235,9 +308,19 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 			const [movedTask] = sourceList.splice(source.index, 1);
 
 			const todayStr = format(new Date(), "yyyy-MM-dd");
-			const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
-			const newDueDate =
-				destination.droppableId === "today-list" ? todayStr : tomorrowStr;
+			let newDueDate = movedTask.due_date;
+
+			if (destination.droppableId === "today-list") {
+				newDueDate = todayStr;
+			} else if (destination.droppableId === "upcoming-list") {
+				const taskDate = movedTask.due_date
+					? parseISO(movedTask.due_date)
+					: null;
+				const tomorrowDate = addDays(startOfDay(new Date()), 1);
+				if (!taskDate || isBefore(taskDate, tomorrowDate)) {
+					newDueDate = format(tomorrowDate, "yyyy-MM-dd");
+				}
+			}
 
 			const updatedTask = { ...movedTask, due_date: newDueDate };
 			destList.splice(destination.index, 0, updatedTask);
@@ -267,16 +350,17 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 
 	return (
 		<DragDropContext onDragEnd={onDragEnd}>
-			<div className="space-y-16">
-				{/* Delete Confirmation Modal */}
+			<div className="space-y-12 sm:space-y-16">
+				{/* Custom Delete Confirmation Modal */}
 				<CustomModal
 					isOpen={!!deleteTaskId}
 					onClose={() => setDeleteTaskId(null)}
 					onConfirm={confirmDelete}
-					title="Purge Task Objective"
-					description="Are you sure you want to permanently remove this objective from your agenda? This action cannot be undone."
+					title="Delete Task"
+					description="Are you sure you want to permanently delete this task? This action cannot be undone."
+					confirmText="Delete"
+					cancelText="Cancel"
 					variant="danger"
-					confirmText="Confirm Purge"
 					isLoading={isDeleting}
 				/>
 
@@ -313,6 +397,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 											key={task.id}
 											draggableId={task.id}
 											index={index}
+											isDragDisabled={isDragDisabled}
 										>
 											{(provided, snapshot) => (
 												<TaskItem
@@ -331,7 +416,9 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 									<div className="text-center py-16 bg-emerald-50/50 border border-emerald-100 rounded-[2.5rem] border-dashed">
 										<CheckCircle2 className="w-10 h-10 text-emerald-300 mx-auto mb-3 opacity-40" />
 										<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
-											All caught up for today!
+											{hasActiveFilters(todayFilters)
+												? "No tasks match your filters"
+												: "All caught up for today!"}
 										</p>
 									</div>
 								)}
@@ -378,6 +465,7 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 											key={task.id}
 											draggableId={task.id}
 											index={index}
+											isDragDisabled={isDragDisabled}
 										>
 											{(provided, snapshot) => (
 												<TaskItem
@@ -396,7 +484,9 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 									<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
 										<Inbox className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
 										<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
-											No upcoming objectives detected.
+											{hasActiveFilters(upcomingFilters)
+												? "No tasks match your filters"
+												: "No upcoming objectives detected."}
 										</p>
 									</div>
 								)}
@@ -404,6 +494,74 @@ export default function TaskList({ todayTasks, upcomingTasks }: TaskListProps) {
 							</div>
 						)}
 					</Droppable>
+				</section>
+
+				{/* Completed Section */}
+				<section
+					id="completed-section"
+					className="pt-4 border-t border-slate-100"
+				>
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200/50">
+								<CheckCircle2 className="w-5 h-5 fill-emerald-600 text-white stroke-[3]" />
+							</div>
+							<div>
+								<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
+									Completed Tasks
+								</h3>
+								<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+									Execution History
+								</p>
+							</div>
+						</div>
+						{/* Completed Filters with Range Toggle */}
+						{isCompletedLoaded && (
+							<TaskFilters
+								tasks={completedTasks}
+								paramPrefix="completed"
+								showRangeFilter={true}
+							/>
+						)}
+					</div>
+
+					{!isCompletedLoaded ? (
+						<div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
+							<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-35 animate-pulse" />
+							<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em] mb-4">
+								Execution History is unloaded
+							</p>
+							<button
+								type="button"
+								onClick={() => setIsCompletedLoaded(true)}
+								className="px-6 py-2.5 bg-slate-900 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+							>
+								Load Completed Tasks
+							</button>
+						</div>
+					) : (
+						<div className="space-y-3 min-h-[100px]">
+							{displayCompletedTasks.length > 0 ? (
+								displayCompletedTasks.map((task: Task, index: number) => (
+									<TaskItem
+										key={task.id}
+										task={task}
+										index={index}
+										onToggle={handleToggle}
+										onUpdate={handleUpdate}
+										onDelete={handleDeleteRequest}
+									/>
+								))
+							) : (
+								<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
+									<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
+									<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
+										No completed tasks found in this range.
+									</p>
+								</div>
+							)}
+						</div>
+					)}
 				</section>
 			</div>
 		</DragDropContext>

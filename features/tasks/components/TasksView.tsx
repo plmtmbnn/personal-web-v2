@@ -81,11 +81,9 @@ interface TasksViewProps {
 
 export default function TasksView({ tasks }: TasksViewProps) {
 	const searchParams = useSearchParams();
-	const completedParam = searchParams.get("completed");
 	const categoryParam = searchParams.get("category");
 	const priorityParam = searchParams.get("priority");
 
-	const showCompleted = completedParam === "true";
 	const selectedCategory = categoryParam || null;
 	const selectedPriority = priorityParam || null;
 
@@ -97,36 +95,34 @@ export default function TasksView({ tasks }: TasksViewProps) {
 		setMounted(true);
 	}, []);
 
-	const { todayTasks, upcomingTasks, todayStats } = useMemo(() => {
-		let filtered = tasks;
-		if (selectedCategory) {
-			filtered = filtered.filter((t) => t.category === selectedCategory);
-		}
-		if (selectedPriority) {
-			filtered = filtered.filter((t) => t.priority === selectedPriority);
-		}
+	const { todayTasks, upcomingTasks, completedTasks, todayStats } =
+		useMemo(() => {
+			let filtered = tasks;
+			if (selectedCategory) {
+				filtered = filtered.filter((t) => t.category === selectedCategory);
+			}
+			if (selectedPriority) {
+				filtered = filtered.filter((t) => t.priority === selectedPriority);
+			}
 
-		const todayRef = startOfDay(new Date());
-		const todayList = filtered.filter((t) =>
-			isSameDay(parseISO(t.due_date), todayRef),
-		);
-		const upcomingList = filtered.filter((t) =>
-			isAfter(parseISO(t.due_date), todayRef),
-		);
+			const todayRef = startOfDay(new Date());
+			const todayList = filtered.filter((t) =>
+				isSameDay(parseISO(t.due_date), todayRef),
+			);
+			const upcomingList = filtered.filter((t) =>
+				isAfter(parseISO(t.due_date), todayRef),
+			);
 
-		return {
-			todayTasks: showCompleted
-				? todayList
-				: todayList.filter((t) => !t.is_completed),
-			upcomingTasks: showCompleted
-				? upcomingList
-				: upcomingList.filter((t) => !t.is_completed),
-			todayStats: {
-				completed: todayList.filter((t) => t.is_completed).length,
-				total: todayList.length,
-			},
-		};
-	}, [tasks, selectedCategory, selectedPriority, showCompleted]);
+			return {
+				todayTasks: todayList.filter((t) => !t.is_completed),
+				upcomingTasks: upcomingList.filter((t) => !t.is_completed),
+				completedTasks: filtered.filter((t) => t.is_completed),
+				todayStats: {
+					completed: todayList.filter((t) => t.is_completed).length,
+					total: todayList.length,
+				},
+			};
+		}, [tasks, selectedCategory, selectedPriority]);
 
 	if (!mounted) return null;
 
@@ -259,6 +255,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 											<DynamicTaskList
 												todayTasks={todayTasks}
 												upcomingTasks={upcomingTasks}
+												completedTasks={completedTasks}
 											/>
 										</Suspense>
 									</div>

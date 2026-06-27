@@ -3,13 +3,14 @@
 This document provides foundational context for the Gemini CLI agent to ensure architectural consistency, security, and efficiency.
 
 ## 🛠 Tech Stack
-- **Framework:** Next.js 16 (App Router)
+- **Framework:** Next.js 16 (App Router) & React 19
 - **Language:** TypeScript
 - **Database:** Supabase (Auth, PostgreSQL)
 - **Real-time Config**: Firebase Remote Config
 - **Cache/Session:** Upstash Redis
+- **Error Tracking:** Sentry (Next.js SDK)
 - **CI/CD:** GitHub Actions + Vercel Cron
-- **Styling:** Tailwind CSS + Framer Motion
+- **Styling:** Tailwind CSS v4 + Framer Motion
 - **Icons:** Lucide-React + React-Icons/Fa
 - **Linter/Formatter:** Biome
 - **Utilities Integration**: PapaParse (CSV), node-sql-parser, sql-formatter
@@ -25,6 +26,7 @@ Contains all business logic, components, and types for specific features.
 - `features/blog/`: Actions, data fetching, and all blog UI components.
 - `features/tasks/`: Actions, analytics, types, utils, and all task UI components.
 - `features/investment/`: Actions, types, and Fear & Greed visualization components.
+- `features/travel/`: Components, types, and static data for the Travel Bucket List Tracker.
 - `features/shared/`: Global UI components (e.g., `CustomModal.tsx`, `StockTicker.tsx`).
 
 ### 2. `services/` (Infrastructure Layer)
@@ -42,10 +44,14 @@ Reserved for feature-agnostic, shared logic.
 Strictly for routing and page definitions.
 - `app/admin/`: Centralized management dashboard.
 - `app/adventures/`: Aesthetic content pages for Running and Travel logs.
+- `app/auth/`: Callback route for Supabase authentication.
 - `app/blog/`: SSG-optimized blog system with dynamic routes.
+- `app/contact/`: User inquiry page and contact submission form.
 - `app/investment/`: Market sentiment and Fear & Greed visualizations.
+- `app/login/`: Admin PIN login interface.
 - `app/portfolio/` & `app/work-experience/`: Professional showcase and career timeline.
 - `app/tasks/`: Personal task management and analytics agenda.
+- `app/unauthorized/`: Fallback access-denied page.
 - `app/utils/`: High-fidelity developer utilities index.
 - `app/api/tasks/cron/`: Secure API endpoint for scheduled task reminders.
 - `app/api/mock/`: Dynamic path-based mocking engine endpoints.
@@ -133,6 +139,7 @@ Strictly for routing and page definitions.
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.
 - **Defensive Data Handling**: Always implement safety fallbacks and type-casting (e.g., `String(val || "")`) when processing external API data to prevent runtime `TypeError` on missing fields.
 - **SEO & Metadata**: Every route must implement `generateMetadata` using `createMetadata` helper in `lib/shared/metadata.ts`.
+- **Error Tracking & Monitoring**: Sentry is configured for client (`instrumentation-client.ts`), server (`sentry.server.config.ts`), and edge environment tracking (`sentry.edge.config.ts`), integrated via Next.js instrumentation (`instrumentation.ts`).
 - **Git Workflow**: Follow **Conventional Commits**.
 - **Linter**: **Biome** for formatting and linting.
 - **Commit/Push Policy**: **NEVER** stage, commit, or push changes unless explicitly requested by the user for each occurrence.

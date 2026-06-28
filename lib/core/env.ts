@@ -31,6 +31,9 @@ const serverSchema = z.object({
 	CRON_SECRET: z.string().min(1).optional(),
 	TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
 	TELEGRAM_CHAT_ID: z.string().min(1).optional(),
+	STRAVA_CLIENT_ID: z.string().min(1).optional(),
+	STRAVA_CLIENT_SECRET: z.string().min(1).optional(),
+	STRAVA_REFRESH_TOKEN: z.string().min(1).optional(),
 });
 
 const validateEnv = () => {
@@ -72,6 +75,9 @@ const validateEnv = () => {
 			CRON_SECRET: process.env.CRON_SECRET,
 			TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
 			TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
+			STRAVA_CLIENT_ID: process.env.STRAVA_CLIENT_ID,
+			STRAVA_CLIENT_SECRET: process.env.STRAVA_CLIENT_SECRET,
+			STRAVA_REFRESH_TOKEN: process.env.STRAVA_REFRESH_TOKEN,
 		});
 
 		if (!serverResult.success) {

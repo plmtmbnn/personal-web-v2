@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
 import RunningView from "./View";
+import { getStravaData } from "@/services/strava/service";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = createMetadata({
 	title: "Endurance Journey | Running",
@@ -16,6 +19,7 @@ export const metadata: Metadata = createMetadata({
 	],
 });
 
-export default function RunningPage() {
-	return <RunningView />;
+export default async function RunningPage() {
+	const stravaData = await getStravaData();
+	return <RunningView initialData={stravaData} />;
 }

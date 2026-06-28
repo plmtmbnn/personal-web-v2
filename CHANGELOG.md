@@ -1,3 +1,10 @@
+# [0.39.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.38.1...v0.39.0) (2026-06-28)
+
+
+### Features
+
+* **running:** integrate strava api for activities and stats with redis caching ([42f2061](https://github.com/plmtmbnn/personal-web-v2/commit/42f2061d977d7260eda8fcc290a900b59130acaa))
+
 ## [0.38.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.38.0...v0.38.1) (2026-06-27)
 
 # [0.38.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.37.2...v0.38.0) (2026-06-26)

@@ -1,3 +1,10 @@
+# [0.40.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.39.0...v0.40.0) (2026-06-28)
+
+
+### Features
+
+* **home:** make runningKmPerYear dynamic using cached Redis stats ([f0cfd20](https://github.com/plmtmbnn/personal-web-v2/commit/f0cfd20e08a91aa570e6699fdb52f49dc56a0138))
+
 # [0.39.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.38.1...v0.39.0) (2026-06-28)
 
 

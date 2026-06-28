@@ -63,10 +63,16 @@ const useCounter = (to: number, duration = 1500) => {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function Home() {
+interface HomeProps {
+	initialRunningKm?: number;
+}
+
+export default function Home({
+	initialRunningKm = AUTHOR_STATS.runningKmPerYear,
+}: HomeProps) {
 	const experienceYear = new Date().getFullYear() - AUTHOR_STATS.experienceFrom;
 	const yearsCount = useCounter(experienceYear, 1500);
-	const kmCount = useCounter(AUTHOR_STATS.runningKmPerYear, 2000);
+	const kmCount = useCounter(initialRunningKm, 2000);
 	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1200);
 
 	return (

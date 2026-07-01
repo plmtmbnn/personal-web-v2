@@ -9,8 +9,16 @@ import {
 import BlogContent from "@/features/blog/components/BlogContent";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import * as motion from "framer-motion/client";
-import EnhancedScrollProgress from "@/features/blog/components/EnhancedScrollProgress";
+import {
+	div as motionDiv,
+	article as motionArticle,
+} from "framer-motion/client";
+
+const motion = {
+	div: motionDiv,
+	article: motionArticle,
+};
+import { EnhancedScrollProgress } from "@/features/blog/components/EnhancedScrollProgress";
 import BlogAnalyticsTracker from "@/features/blog/components/BlogAnalyticsTracker";
 import ShareButton from "@/features/blog/components/ShareButton";
 import RelatedPosts from "@/features/blog/components/RelatedPosts";
@@ -90,6 +98,10 @@ export default async function BlogDetailPage({
 
 	const heroImage = getBlogImage(post.image_url, post.id);
 	const readTime = getReadTime(post.content);
+	const readTimeMinutes = Number.parseInt(
+		readTime.replace(" MIN READ", ""),
+		10,
+	);
 	const wordCount = getWordCount(post.content);
 	const jsonLd = generateBlogPostJsonLd({
 		title: post.title,
@@ -122,17 +134,11 @@ export default async function BlogDetailPage({
 				id="top"
 				className="min-h-screen bg-white relative overflow-x-hidden pb-32 print:overflow-visible print:pb-0"
 			>
-				<EnhancedScrollProgress
-					estimatedReadTimeMinutes={Number.parseInt(
-						readTime.replace(" MIN READ", ""),
-						10,
-					)}
-				/>
+				<EnhancedScrollProgress readTimeMinutes={readTimeMinutes} />
 				<BlogAnalyticsTracker
 					slug={post.slug}
 					title={post.title}
-					category={post.category}
-					wordCount={wordCount}
+					readTime={readTimeMinutes}
 				/>
 				<BackToTop />
 

@@ -1,3 +1,10 @@
+# [0.42.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.41.0...v0.42.0) (2026-07-01)
+
+
+### Features
+
+* **blog:** add analytics tracking and enhanced scroll progress ([45932ca](https://github.com/plmtmbnn/personal-web-v2/commit/45932caf2a2e77194bca524f06a95e81bfee9770))
+
 # [0.41.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.40.0...v0.41.0) (2026-07-01)
 
 

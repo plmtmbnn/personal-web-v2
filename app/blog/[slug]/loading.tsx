@@ -6,7 +6,12 @@
  */
 export default function BlogDetailLoading() {
 	return (
-		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
+		<main
+			className="min-h-screen bg-background relative overflow-hidden pb-32"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading article"
+		>
 			{/* Background Ambience */}
 			<div className="absolute inset-0 pointer-events-none -z-10">
 				<div className="absolute top-[-10%] right-[-10%] w-[70%] lg:w-[50%] h-[50%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />

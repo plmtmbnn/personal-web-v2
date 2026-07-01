@@ -6,7 +6,12 @@
  */
 export default function BlogListLoading() {
 	return (
-		<main className="min-h-screen bg-background relative overflow-x-hidden pb-32">
+		<main
+			className="min-h-screen bg-background relative overflow-x-hidden pb-32"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading blog posts"
+		>
 			{/* Aesthetic Background Ambience */}
 			<div className="absolute inset-0 pointer-events-none -z-10">
 				<div className="absolute top-[-5%] right-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse" />

@@ -1,18 +1,22 @@
 "use client";
 
-import { AUTHOR, AUTHOR_STATS, SOCIAL_LINKS } from "@/lib/shared/constants";
+import {
+	AUTHOR,
+	AUTHOR_STATS,
+	EXPERIENCE_YEAR,
+	SOCIAL_LINKS,
+} from "@/lib/shared/constants";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion, type Variants } from "framer-motion";
-import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaRunning } from "react-icons/fa";
 import {
 	ArrowRight,
 	ArrowUpRight,
 	Mail,
 	ChevronDown,
 	Briefcase,
-	Trophy,
 	Layers,
 } from "lucide-react";
 
@@ -70,8 +74,7 @@ interface HomeProps {
 export default function Home({
 	initialRunningKm = AUTHOR_STATS.runningKmPerYear,
 }: HomeProps) {
-	const experienceYear = new Date().getFullYear() - AUTHOR_STATS.experienceFrom;
-	const yearsCount = useCounter(experienceYear, 1500);
+	const yearsCount = useCounter(EXPERIENCE_YEAR, 1500);
 	const kmCount = useCounter(initialRunningKm, 2000);
 	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1200);
 
@@ -202,10 +205,10 @@ export default function Home({
 					>
 						Hi, I'm{" "}
 						<span className="text-slate-900 font-bold">{AUTHOR.name}</span>. For
-						over {experienceYear} years, I've designed and scaled secure fintech
-						systems. When I'm not writing code, I'm training for marathons and
-						trail runs, applying the same discipline to the miles as I do to the
-						codebase.
+						over {EXPERIENCE_YEAR} years, I've designed and scaled secure
+						fintech systems. When I'm not writing code, I'm training for
+						marathons and trail runs, applying the same discipline to the miles
+						as I do to the codebase.
 					</motion.p>
 
 					{/* Tech stack pills — concrete identity signal */}
@@ -252,15 +255,15 @@ export default function Home({
 							className="col-span-1 bg-emerald-50 border border-emerald-100 rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:border-emerald-200 hover:bg-emerald-100/50 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-100/30 transition-all duration-300 cursor-pointer group/card relative overflow-hidden"
 						>
 							<div className="flex justify-between items-start mb-3">
-								<Trophy className="w-4 h-4 text-emerald-500" />
+								<FaRunning className="w-4 h-4 text-emerald-500" />
 								<ArrowUpRight className="w-3.5 h-3.5 text-emerald-600 opacity-0 translate-y-1 scale-90 group-hover/card:opacity-100 group-hover/card:translate-y-0 group-hover/card:scale-100 transition-all duration-300" />
 							</div>
 							<div>
 								<p className="text-2xl sm:text-3xl font-black tracking-tighter text-emerald-700 leading-none">
 									{kmCount}+
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-emerald-650 mt-1.5">
-									KM / Year
+								<p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mt-1.5">
+									KM this year
 								</p>
 							</div>
 						</Link>
@@ -279,7 +282,7 @@ export default function Home({
 								<p className="text-2xl sm:text-3xl font-black tracking-tighter text-indigo-700 leading-none">
 									{fintechCount}+
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-indigo-650 mt-1.5">
+								<p className="text-[9px] font-black uppercase tracking-widest text-indigo-600 mt-1.5">
 									Fintech Sys.
 								</p>
 							</div>

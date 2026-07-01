@@ -66,9 +66,13 @@ const personalBests = [
 
 interface RunningViewProps {
 	initialData?: StravaDataResult;
+	isAdmin?: boolean;
 }
 
-export default function RunningPage({ initialData }: RunningViewProps) {
+export default function RunningPage({
+	initialData,
+	isAdmin = false,
+}: RunningViewProps) {
 	const [mounted, setMounted] = useState(false);
 	const searchParams = useSearchParams();
 	const [statusMessage, setStatusMessage] = useState<{
@@ -90,13 +94,26 @@ export default function RunningPage({ initialData }: RunningViewProps) {
 				type: "success",
 				text: "Strava authentication successful! Activities are now synced.",
 			});
+			// Auto-dismiss after 5 seconds
+			const timer = setTimeout(() => setStatusMessage(null), 5000);
+			return () => clearTimeout(timer);
 		} else if (error) {
 			setStatusMessage({
 				type: "error",
 				text: `Strava authentication failed: ${decodeURIComponent(error)}`,
 			});
+			// Auto-dismiss after 8 seconds (longer for errors)
+			const timer = setTimeout(() => setStatusMessage(null), 8000);
+			return () => clearTimeout(timer);
 		}
 	}, [searchParams, mounted]);
+
+	// Auto-dismiss status banner after 6 seconds
+	useEffect(() => {
+		if (!statusMessage) return;
+		const timer = setTimeout(() => setStatusMessage(null), 6000);
+		return () => clearTimeout(timer);
+	}, [statusMessage]);
 
 	if (!mounted) return null;
 
@@ -113,7 +130,7 @@ export default function RunningPage({ initialData }: RunningViewProps) {
 		: "1,000+";
 
 	const hasToken = initialData?.hasToken || false;
-	const showConnectPrompt = isConfigured && !hasToken;
+	const showConnectPrompt = isAdmin && isConfigured && !hasToken;
 
 	const oauthUrl =
 		initialData?.clientId && initialData?.siteUrl
@@ -212,7 +229,7 @@ export default function RunningPage({ initialData }: RunningViewProps) {
 									{kmPerYear}
 								</p>
 								<p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">
-									KM / Year
+									KM this year
 								</p>
 							</div>
 						</motion.div>
@@ -359,7 +376,8 @@ export default function RunningPage({ initialData }: RunningViewProps) {
 								const paceSec = Math.floor(paceSeconds % 60)
 									.toString()
 									.padStart(2, "0");
-								const formattedPace = `${paceMin}:${paceSec}/km`;
+								const formattedPace =
+									run.distance > 0 ? `${paceMin}:${paceSec}/km` : "N/A";
 
 								// Duration formatting: e.g. 52m 10s, or 1h 05m
 								const hrs = Math.floor(run.moving_time / 3600);
@@ -461,11 +479,12 @@ export default function RunningPage({ initialData }: RunningViewProps) {
 					</motion.div>
 				)}
 
-				{initialData?.isConfigured === false && (
-					<div className="mt-12 text-center text-[9px] text-muted-foreground/30 font-black uppercase tracking-[0.3em]">
-						Strava Integration Inactive • Displaying Static Milestones
-					</div>
-				)}
+				{(initialData?.isConfigured === false || !hasToken) &&
+					(!runs || runs.length === 0) && (
+						<div className="mt-12 text-center text-[9px] text-muted-foreground/30 font-black uppercase tracking-[0.3em]">
+							Strava Integration Inactive • Displaying Static Milestones
+						</div>
+					)}
 			</div>
 		</main>
 	);

@@ -97,16 +97,25 @@ export default async function BlogDetailPage({
 		image: post.image_url || undefined,
 		publishedTime: post.date,
 		author: AUTHOR.name,
+		wordCount,
 	});
 
 	return (
 		<>
 			{/* JSON-LD Structured Data — Google Rich Results */}
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: controlled server-generated JSON */}
 			<script
 				type="application/ld+json"
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: controlled server-generated JSON
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 			/>
+
+			{/* Skip to content link for keyboard navigation */}
+			<a
+				href="#article-content"
+				className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-lg focus:shadow-lg"
+			>
+				Skip to article content
+			</a>
 
 			<main
 				id="top"
@@ -127,7 +136,7 @@ export default async function BlogDetailPage({
 							fill
 							priority
 							className="object-cover"
-							sizes="100vw"
+							sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1400px"
 						/>
 						{/* Improved overlay — was 20% (invisible), now 45% for card contrast */}
 						<div className="absolute inset-0 bg-slate-950/45" />
@@ -234,10 +243,12 @@ export default async function BlogDetailPage({
 				<section className="max-w-5xl mx-auto px-4 sm:px-6 relative mt-12 sm:mt-20">
 					{/* Article body */}
 					<motion.article
+						id="article-content"
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						transition={{ delay: 0.3 }}
 						className="w-full shadow-xl shadow-slate-100 print:shadow-none"
+						aria-label={`Article: ${post.title}`}
 					>
 						<BlogContent content={post.content} />
 					</motion.article>
@@ -288,18 +299,6 @@ export default async function BlogDetailPage({
 					</div>
 				</section>
 			</main>
-
-			{/* Print styles — applied globally for this page */}
-			<style>{`
-        @media print {
-          .print\\:hidden { display: none !important; }
-          .print\\:shadow-none { box-shadow: none !important; }
-          .print\\:pb-0 { padding-bottom: 0 !important; }
-          body { color: #000 !important; background: #fff !important; }
-          article { max-height: none !important; overflow: visible !important; }
-          pre, code { max-height: none !important; white-space: pre-wrap !important; }
-        }
-      `}</style>
 		</>
 	);
 }

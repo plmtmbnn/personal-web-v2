@@ -70,6 +70,24 @@ async function refreshAccessToken(refreshToken: string): Promise<StravaTokenData
 	};
 }
 
+async function forceTokenRefresh(): Promise<void> {
+	try {
+		const rawTokenData = await redis.get<any>("strava:token_data");
+		if (rawTokenData) {
+			const tokenData: StravaTokenData = typeof rawTokenData === "string"
+				? JSON.parse(rawTokenData)
+				: rawTokenData;
+			if (tokenData) {
+				tokenData.expires_at = 0; // Force refresh on next request
+				await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
+				console.log("Strava token expiration forced to 0 in Redis for self-healing.");
+			}
+		}
+	} catch (err) {
+		console.error("Failed to force token refresh in Redis:", err);
+	}
+}
+
 export async function getAccessToken(): Promise<string | null> {
 	if (!ENV_GLOBAL.STRAVA_CLIENT_ID || !ENV_GLOBAL.STRAVA_CLIENT_SECRET) {
 		return null;
@@ -91,7 +109,7 @@ export async function getAccessToken(): Promise<string | null> {
 			console.log("Bootstrapping Strava token from fallback env refresh token...");
 			const refreshed = await refreshAccessToken(ENV_GLOBAL.STRAVA_REFRESH_TOKEN);
 			tokenData = refreshed;
-			await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 3600 });
+			await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
 		} catch (error) {
 			console.error("Error bootstrapping Strava token:", error);
 			return null;
@@ -112,13 +130,24 @@ export async function getAccessToken(): Promise<string | null> {
 				...refreshed,
 				athlete_id: tokenData.athlete_id || refreshed.athlete_id,
 			};
-			await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 3600 });
-		} catch (error) {
-			console.error("Error refreshing Strava token. Evicting from Redis:", error);
-			try {
-				await redis.del("strava:token_data");
-			} catch (delErr) {
-				console.error("Failed to delete expired token data from Redis:", delErr);
+			await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
+		} catch (error: any) {
+			console.error("Error refreshing Strava token:", error);
+			
+			// Only evict the token if it's a permanent authentication error (400 or 401)
+			// e.g. "Failed to refresh Strava token: 400 - ..."
+			const match = error?.message?.match(/Failed to refresh Strava token: (\d+)/);
+			const status = match ? parseInt(match[1], 10) : null;
+			
+			if (status === 400 || status === 401) {
+				console.warn(`Permanent auth failure (${status}). Evicting Strava token from Redis...`);
+				try {
+					await redis.del("strava:token_data");
+				} catch (delErr) {
+					console.error("Failed to delete expired token data from Redis:", delErr);
+				}
+			} else {
+				console.warn("Transient or network error refreshing Strava token. Retaining token in Redis.");
 			}
 			return null;
 		}
@@ -127,9 +156,9 @@ export async function getAccessToken(): Promise<string | null> {
 	return tokenData.access_token;
 }
 
-export async function getRecentRuns(limit = 10): Promise<StravaRunActivity[] | null> {
-	const accessToken = await getAccessToken();
-	if (!accessToken) return null;
+export async function getRecentRuns(limit = 10, accessToken?: string | null): Promise<StravaRunActivity[] | null> {
+	const token = accessToken ?? await getAccessToken();
+	if (!token) return null;
 
 	try {
 		const cached = await redis.get<any>("strava:activities");
@@ -145,18 +174,14 @@ export async function getRecentRuns(limit = 10): Promise<StravaRunActivity[] | n
 			"https://www.strava.com/api/v3/athlete/activities?per_page=50",
 			{
 				headers: {
-					Authorization: `Bearer ${accessToken}`,
+					Authorization: `Bearer ${token}`,
 				},
 			},
 		);
 
 		if (response.status === 401) {
-			console.warn("Strava access token is unauthorized (401). Evicting from Redis...");
-			try {
-				await redis.del("strava:token_data");
-			} catch (delErr) {
-				console.error("Failed to delete unauthorized token from Redis:", delErr);
-			}
+			console.warn("Strava access token is unauthorized (401). Forcing token refresh in Redis...");
+			await forceTokenRefresh();
 			return null;
 		}
 
@@ -200,9 +225,9 @@ export async function getRecentRuns(limit = 10): Promise<StravaRunActivity[] | n
 	}
 }
 
-export async function getAthleteStats(): Promise<StravaStats | null> {
-	const accessToken = await getAccessToken();
-	if (!accessToken) return null;
+export async function getAthleteStats(accessToken?: string | null): Promise<StravaStats | null> {
+	const token = accessToken ?? await getAccessToken();
+	if (!token) return null;
 
 	try {
 		const cached = await redis.get<any>("strava:stats");
@@ -227,15 +252,11 @@ export async function getAthleteStats(): Promise<StravaStats | null> {
 
 		if (!athleteId) {
 			const athleteResponse = await fetch("https://www.strava.com/api/v3/athlete", {
-				headers: { Authorization: `Bearer ${accessToken}` },
+				headers: { Authorization: `Bearer ${token}` },
 			});
 			if (athleteResponse.status === 401) {
-				console.warn("Strava access token is unauthorized (401) during profile check. Evicting from Redis...");
-				try {
-					await redis.del("strava:token_data");
-				} catch (delErr) {
-					console.error("Failed to delete unauthorized token from Redis:", delErr);
-				}
+				console.warn("Strava access token is unauthorized (401) during profile check. Forcing token refresh in Redis...");
+				await forceTokenRefresh();
 				return null;
 			}
 			if (!athleteResponse.ok) {
@@ -246,7 +267,7 @@ export async function getAthleteStats(): Promise<StravaStats | null> {
 
 			if (tokenData && athleteId) {
 				tokenData.athlete_id = athleteId;
-				await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 3600 });
+				await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
 			}
 		}
 
@@ -257,17 +278,13 @@ export async function getAthleteStats(): Promise<StravaStats | null> {
 		const statsResponse = await fetch(
 			`https://www.strava.com/api/v3/athletes/${athleteId}/stats`,
 			{
-				headers: { Authorization: `Bearer ${accessToken}` },
+				headers: { Authorization: `Bearer ${token}` },
 			},
 		);
 
 		if (statsResponse.status === 401) {
-			console.warn("Strava access token is unauthorized (401) during stats fetch. Evicting from Redis...");
-			try {
-				await redis.del("strava:token_data");
-			} catch (delErr) {
-				console.error("Failed to delete unauthorized token from Redis:", delErr);
-			}
+			console.warn("Strava access token is unauthorized (401) during stats fetch. Forcing token refresh in Redis...");
+			await forceTokenRefresh();
 			return null;
 		}
 
@@ -323,14 +340,15 @@ export async function getStravaData(): Promise<StravaDataResult> {
 		};
 	}
 
-	let hasToken = false;
 	try {
-		// Run fetches first
-		const [runs, stats] = await Promise.all([getRecentRuns(), getAthleteStats()]);
-		
-		// Then verify if the token is still present in Redis (not evicted due to 401)
-		const rawTokenData = await redis.get<any>("strava:token_data");
-		hasToken = Boolean(rawTokenData);
+		// Fetch token once, then pass it to both functions to avoid redundant Redis reads
+		const accessToken = await getAccessToken();
+		const hasToken = Boolean(accessToken);
+
+		const [runs, stats] = await Promise.all([
+			getRecentRuns(10, accessToken),
+			getAthleteStats(accessToken),
+		]);
 
 		return {
 			isConfigured: true,
@@ -342,18 +360,14 @@ export async function getStravaData(): Promise<StravaDataResult> {
 		};
 	} catch (error) {
 		console.error("Error fetching aggregated Strava data:", error);
-		try {
-			const rawTokenData = await redis.get<any>("strava:token_data");
-			hasToken = Boolean(rawTokenData);
-		} catch (_) {}
-		
+
 		return {
 			isConfigured: true,
 			runs: null,
 			stats: null,
 			clientId: ENV_GLOBAL.STRAVA_CLIENT_ID,
 			siteUrl: ENV_GLOBAL.NEXT_PUBLIC_SITE_URL,
-			hasToken,
+			hasToken: false,
 		};
 	}
 }

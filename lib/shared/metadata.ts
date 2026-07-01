@@ -128,6 +128,7 @@ export function createMetadata({
 
 /**
  * Specific helper for Blog Posts
+ * Uses a dedicated blog OG image as fallback instead of profile photo
  */
 export function createBlogMetadata({
 	title,
@@ -152,7 +153,7 @@ export function createBlogMetadata({
 		title,
 		description,
 		path: `/blog/${slug}`,
-		image,
+		image: image || "/og-blog-default.jpg", // Blog-specific fallback
 		publishedTime,
 		modifiedTime,
 		author,
@@ -163,6 +164,7 @@ export function createBlogMetadata({
 
 /**
  * Generate JSON-LD for Search Engine Rich Snippets
+ * Enhanced with word count, keywords, and proper image fallback
  */
 export function generateBlogPostJsonLd({
 	title,
@@ -172,6 +174,8 @@ export function generateBlogPostJsonLd({
 	publishedTime,
 	modifiedTime,
 	author,
+	wordCount,
+	keywords,
 }: {
 	title: string;
 	description: string;
@@ -180,15 +184,19 @@ export function generateBlogPostJsonLd({
 	publishedTime: string;
 	modifiedTime?: string;
 	author?: string;
+	wordCount?: number;
+	keywords?: string[];
 }) {
 	return {
 		"@context": "https://schema.org",
 		"@type": "BlogPosting",
 		headline: title,
 		description,
-		image: image || `${SITE.url}/profile.jpg`,
+		image: image || `${SITE.url}/og-blog-default.jpg`,
 		datePublished: publishedTime,
 		dateModified: modifiedTime || publishedTime,
+		...(wordCount && { wordCount }),
+		...(keywords && keywords.length > 0 && { keywords: keywords.join(", ") }),
 		author: {
 			"@type": "Person",
 			name: author || SITE.author,

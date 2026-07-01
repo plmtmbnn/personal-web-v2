@@ -28,7 +28,10 @@ export async function GET(request: Request) {
 	const hasRequiredScope =
 		scope && (scope.includes("activity:read_all") || scope.includes("activity:read"));
 	if (!hasRequiredScope) {
-		console.warn("Strava OAuth scope warning: missing activity:read_all / activity:read in:", scope);
+		console.error("Strava OAuth scope error: missing activity:read_all / activity:read in:", scope);
+		return NextResponse.redirect(
+			new URL("/adventures/running?error=insufficient_permissions", siteUrl),
+		);
 	}
 
 	if (!ENV_GLOBAL.STRAVA_CLIENT_ID || !ENV_GLOBAL.STRAVA_CLIENT_SECRET) {
@@ -67,8 +70,8 @@ export async function GET(request: Request) {
 			athlete_id: data.athlete?.id ? Number(data.athlete.id) : undefined,
 		};
 
-		// Store in Redis
-		await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 3600 });
+		// Store in Redis (30 days — refresh tokens don't expire, keep them durable)
+		await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
 
 		// Invalidate cached data to pull immediately
 		await redis.del("strava:activities");

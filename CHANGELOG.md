@@ -1,3 +1,10 @@
+## [0.42.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.42.0...v0.42.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* **blog:** resolve framer-motion/client reference and type errors in detail page ([4a754a5](https://github.com/plmtmbnn/personal-web-v2/commit/4a754a5caf6cd71a1be15f0cc1f87588cd83aa01))
+
 # [0.42.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.41.0...v0.42.0) (2026-07-01)
 
 

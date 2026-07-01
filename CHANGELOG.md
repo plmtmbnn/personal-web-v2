@@ -1,3 +1,10 @@
+# [0.41.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.40.0...v0.41.0) (2026-07-01)
+
+
+### Features
+
+* **blog:** phase 1-2 enhancements - critical fixes, SEO, and performance improvements ([52afe97](https://github.com/plmtmbnn/personal-web-v2/commit/52afe97396741f49b438f24f0e4b8bd108edceb4))
+
 # [0.40.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.39.0...v0.40.0) (2026-06-28)
 
 

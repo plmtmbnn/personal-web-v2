@@ -10,7 +10,8 @@ import BlogContent from "@/features/blog/components/BlogContent";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import * as motion from "framer-motion/client";
-import { ScrollProgress } from "@/features/blog/components/ScrollProgress";
+import EnhancedScrollProgress from "@/features/blog/components/EnhancedScrollProgress";
+import BlogAnalyticsTracker from "@/features/blog/components/BlogAnalyticsTracker";
 import ShareButton from "@/features/blog/components/ShareButton";
 import RelatedPosts from "@/features/blog/components/RelatedPosts";
 import BackToTop from "@/features/blog/components/BackToTop";
@@ -121,7 +122,18 @@ export default async function BlogDetailPage({
 				id="top"
 				className="min-h-screen bg-white relative overflow-x-hidden pb-32 print:overflow-visible print:pb-0"
 			>
-				<ScrollProgress />
+				<EnhancedScrollProgress
+					estimatedReadTimeMinutes={Number.parseInt(
+						readTime.replace(" MIN READ", ""),
+						10,
+					)}
+				/>
+				<BlogAnalyticsTracker
+					slug={post.slug}
+					title={post.title}
+					category={post.category}
+					wordCount={wordCount}
+				/>
 				<BackToTop />
 
 				{/* ═══════════════════════════════════════

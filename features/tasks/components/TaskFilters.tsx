@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Tag, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
 import { format, startOfWeek, endOfWeek, addDays, startOfDay } from "date-fns";
+import { SEARCH_DEBOUNCE_MS } from "@/features/tasks/constants";
 
 interface TaskFiltersProps {
 	tasks: Task[];
@@ -63,7 +64,7 @@ export default function TaskFilters({
 				}
 				router.push(`?${params.toString()}`, { scroll: false });
 			}
-		}, 300);
+		}, SEARCH_DEBOUNCE_MS);
 
 		return () => clearTimeout(delayDebounce);
 	}, [searchValue, currentSearch, KEY_SEARCH, searchParams, router]);

@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import {
 	Trash2,
 	Check,
@@ -36,6 +36,10 @@ import {
 	format,
 	addDays,
 } from "date-fns";
+import {
+	QUICK_RESCHEDULE_OPTIONS,
+	DELETE_CONFIRM_TIMEOUT_MS,
+} from "@/features/tasks/constants";
 
 // ─── Constants (module-level — not recreated on every render) ─────────────────
 
@@ -69,7 +73,7 @@ interface TaskItemProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function TaskItem({
+function TaskItem({
 	task,
 	provided,
 	snapshot,
@@ -97,6 +101,7 @@ export default function TaskItem({
 	// #6 — Delete confirmation state
 	const [deleteConfirm, setDeleteConfirm] = useState(false);
 	const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const deleteTimeoutMs = DELETE_CONFIRM_TIMEOUT_MS;
 
 	const titleRef = useRef<HTMLTextAreaElement>(null);
 	const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -154,12 +159,15 @@ export default function TaskItem({
 		}
 	}, [isEditing]);
 
-	// Cleanup delete confirmation timer on unmount
+	// Cleanup delete confirmation timer on unmount and when deleteConfirm changes
 	useEffect(() => {
 		return () => {
-			if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
+			if (deleteTimerRef.current) {
+				clearTimeout(deleteTimerRef.current);
+				deleteTimerRef.current = null;
+			}
 		};
-	}, []);
+	}, [deleteConfirm]);
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -253,14 +261,22 @@ export default function TaskItem({
 
 	// #6 — Two-step delete: first click arms, second confirms; auto-disarms after 3s
 	const handleDeleteClick = useCallback(() => {
+		// Always clear existing timer first to prevent leaks
+		if (deleteTimerRef.current) {
+			clearTimeout(deleteTimerRef.current);
+			deleteTimerRef.current = null;
+		}
+
 		if (!deleteConfirm) {
 			setDeleteConfirm(true);
-			deleteTimerRef.current = setTimeout(() => setDeleteConfirm(false), 3000);
+			deleteTimerRef.current = setTimeout(
+				() => setDeleteConfirm(false),
+				deleteTimeoutMs,
+			);
 		} else {
-			if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
 			onDelete(task.id);
 		}
-	}, [deleteConfirm, task.id, onDelete]);
+	}, [deleteConfirm, task.id, onDelete, deleteTimeoutMs]);
 
 	// #13 — Properly typed with framer-motion's PanInfo
 	const handleDragEnd = useCallback(
@@ -598,12 +614,7 @@ export default function TaskItem({
 										className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
 									/>
 									<div className="flex flex-wrap gap-1.5 items-center">
-										{[
-											{ label: "Today", days: 0 },
-											{ label: "Tomorrow", days: 1 },
-											{ label: "+3 Days", days: 3 },
-											{ label: "+7 Days", days: 7 },
-										].map((opt) => {
+										{QUICK_RESCHEDULE_OPTIONS.map((opt) => {
 											const targetDateStr = format(
 												addDays(new Date(), opt.days),
 												"yyyy-MM-dd",
@@ -896,3 +907,6 @@ export default function TaskItem({
 		</div>
 	);
 }
+
+// Wrap with React.memo to prevent unnecessary re-renders
+export default memo(TaskItem);

@@ -26,9 +26,11 @@ export async function getTasks(options?: {
 	let query = SupabaseConn.from("tasks").select("*");
 
 	// Handle Completion and Date Filtering
+	// Fixed: Simplified logic to avoid including tasks by created_at which could be outside due_date range
 	if (includeCompleted) {
+		// Show: (Due in range AND NOT completed) OR (Completed in range)
 		query = query.or(
-			`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59),and(created_at.gte.${startDate}T00:00:00,created_at.lte.${endDate}T23:59:59)`,
+			`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`,
 		);
 	} else if (showCompletedToday) {
 		// Show: (Due in range AND NOT completed) OR (Completed today)
@@ -58,7 +60,12 @@ export async function getTasks(options?: {
 		.order("created_at", { ascending: false });
 
 	if (error) {
-		console.error("Error fetching tasks:", error);
+		console.error("Failed to fetch tasks:", {
+			dateRange: { startDate, endDate },
+			filters: { priority: options?.priority, category: options?.category },
+			error: error.message,
+			details: error,
+		});
 		return [];
 	}
 
@@ -88,8 +95,16 @@ export async function addTask(payload: {
 		.single();
 
 	if (error) {
-		console.error("Error adding task:", payload, error);
-		throw new Error("Failed to add task");
+		console.error("Failed to create task:", {
+			taskTitle: payload.title,
+			category: payload.category,
+			dueDate: payload.due_date,
+			error: error.message,
+			code: error.code,
+		});
+		throw new Error(
+			`Failed to create task "${payload.title}". ${error.message || "Please try again."}`,
+		);
 	}
 
 	revalidatePath("/tasks");
@@ -121,8 +136,15 @@ export async function addBatchTasks(
 		.select();
 
 	if (error) {
-		console.error("Error adding batch tasks:", error);
-		throw new Error("Failed to add batch tasks");
+		console.error("Failed to create batch tasks:", {
+			taskCount: payloads.length,
+			titles: payloads.map((p) => p.title),
+			error: error.message,
+			code: error.code,
+		});
+		throw new Error(
+			`Failed to create ${payloads.length} tasks. ${error.message || "Please try again."}`,
+		);
 	}
 
 	revalidatePath("/tasks");
@@ -148,8 +170,16 @@ export async function toggleTask(
 		.eq("id", taskId);
 
 	if (error) {
-		console.error("Error toggling task:", error);
-		throw new Error("Failed to toggle task");
+		console.error("Failed to toggle task:", {
+			taskId,
+			currentStatus: isCurrentlyCompleted,
+			newStatus,
+			error: error.message,
+			code: error.code,
+		});
+		throw new Error(
+			`Failed to toggle task ${taskId}. ${error.message || "Please try again."}`,
+		);
 	}
 
 	revalidatePath("/tasks");
@@ -172,8 +202,15 @@ export async function reorderTasks(taskIds: string[]) {
 	const firstError = results.find((r) => r.error)?.error;
 
 	if (firstError) {
-		console.error("Error reordering tasks:", firstError);
-		throw new Error("Failed to reorder tasks");
+		console.error("Failed to reorder tasks:", {
+			taskIds,
+			error: firstError.message,
+			code: firstError.code,
+			failedCount: results.filter((r) => r.error).length,
+		});
+		throw new Error(
+			`Failed to reorder ${taskIds.length} tasks. ${firstError.message || "Please refresh the page."}`,
+		);
 	}
 
 	revalidatePath("/tasks");
@@ -189,8 +226,14 @@ export async function deleteTask(taskId: string) {
 	const { error } = await SupabaseConn.from("tasks").delete().eq("id", taskId);
 
 	if (error) {
-		console.error("Error deleting task:", error);
-		throw new Error("Failed to delete task");
+		console.error("Failed to delete task:", {
+			taskId,
+			error: error.message,
+			code: error.code,
+		});
+		throw new Error(
+			`Failed to delete task ${taskId}. ${error.message || "Please try again."}`,
+		);
 	}
 
 	revalidatePath("/tasks");
@@ -248,8 +291,15 @@ export async function rescheduleStaleTasks(taskIds: string[], newDate: string) {
 		.in("id", taskIds);
 
 	if (error) {
-		console.error("Error rescheduling tasks:", error);
-		throw new Error("Failed to reschedule tasks");
+		console.error("Failed to reschedule tasks:", {
+			taskIds,
+			newDate,
+			error: error.message,
+			code: error.code,
+		});
+		throw new Error(
+			`Failed to reschedule ${taskIds.length} tasks. ${error.message || "Please try again."}`,
+		);
 	}
 
 	revalidatePath("/tasks");
@@ -275,8 +325,15 @@ export async function rescheduleOverdueTasks(daysToAdd: number) {
 		.lt("due_date", today);
 
 	if (fetchError || !overdueTasks) {
-		console.error("Error fetching overdue tasks for rescheduling:", fetchError);
-		return { success: false, message: "Failed to fetch overdue tasks" };
+		console.error("Failed to fetch overdue tasks for rescheduling:", {
+			daysToAdd,
+			error: fetchError?.message,
+			code: fetchError?.code,
+		});
+		return {
+			success: false,
+			message: `Failed to fetch overdue tasks. ${fetchError?.message || "Please try again."}`,
+		};
 	}
 
 	if (overdueTasks.length === 0)
@@ -296,8 +353,17 @@ export async function rescheduleOverdueTasks(daysToAdd: number) {
 	const firstError = results.find((r) => r.error)?.error;
 
 	if (firstError) {
-		console.error("Error during bulk reschedule:", firstError);
-		return { success: false, message: firstError.message };
+		console.error("Failed during bulk reschedule:", {
+			daysToAdd,
+			overdueCount: overdueTasks.length,
+			error: firstError.message,
+			code: firstError.code,
+			failedCount: results.filter((r) => r.error).length,
+		});
+		return {
+			success: false,
+			message: `Failed to reschedule ${overdueTasks.length} tasks. ${firstError.message || "Please try again."}`,
+		};
 	}
 
 	revalidatePath("/tasks");
@@ -317,8 +383,15 @@ export async function updateTask(taskId: string, updates: Partial<Task>) {
 		.eq("id", taskId);
 
 	if (error) {
-		console.error("Error updating task:", error);
-		throw new Error("Failed to update task");
+		console.error("Failed to update task:", {
+			taskId,
+			updates,
+			error: error.message,
+			code: error.code,
+		});
+		throw new Error(
+			`Failed to update task ${taskId}. ${error.message || "Please try again."}`,
+		);
 	}
 
 	revalidatePath("/tasks");

@@ -6,6 +6,7 @@ import {
 	useMemo,
 	useState,
 	useCallback,
+	useRef,
 } from "react";
 import { useSearchParams } from "next/navigation";
 import { Inbox, Flame, Calendar, CheckCircle2 } from "lucide-react";
@@ -22,8 +23,10 @@ import {
 	reorderTasks,
 	updateTask,
 } from "@/features/tasks/actions/tasks";
+import { useToast } from "@/features/tasks/components/Toast";
 import TaskItem from "./TaskItem";
 import TaskFilters from "./TaskFilters";
+import { UNDO_TOAST_DURATION_MS } from "@/features/tasks/constants";
 import {
 	format,
 	addDays,
@@ -49,13 +52,19 @@ export default function TaskList({
 }: TaskListProps) {
 	const [_isPending, startTransition] = useTransition();
 	const searchParams = useSearchParams();
+	const { showSuccess, showError } = useToast();
 
 	// Modal State
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
-	const [isDeleting, setIsDeleting] = useState(false);
+
+	// Undo state for delete operations
+	const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	// Trigger load for Completed Tasks Section
 	const [isCompletedLoaded, setIsCompletedLoaded] = useState(false);
+
+	// Request deduplication to prevent race conditions
+	const pendingRequests = useRef(new Set<string>());
 
 	// Section-specific filter extraction
 	const getFilters = (prefix: string) => ({
@@ -70,9 +79,16 @@ export default function TaskList({
 	const completedFilters = getFilters("completed");
 
 	// Optimistic state for the task lists
-	const [optimisticState, addOptimisticAction] = useOptimistic(
+	const [optimisticState, addOptimisticAction] = useOptimistic<
+		{
+			todayTasks: Task[];
+			upcomingTasks: Task[];
+			completedTasks: Task[];
+		},
+		{ action: string; payload: any }
+	>(
 		{ todayTasks, upcomingTasks, completedTasks },
-		(state, { action, payload }: { action: string; payload: any }) => {
+		(state, { action, payload }) => {
 			const updateInLists = (updater: (t: Task) => Task) => ({
 				todayTasks: state.todayTasks.map(updater),
 				upcomingTasks: state.upcomingTasks.map(updater),
@@ -102,14 +118,37 @@ export default function TaskList({
 							(t: Task) => t.id !== payload.taskId,
 						),
 					};
+				case "restore": {
+					// Restore a deleted task to its original list
+					const { task, listType } = payload;
+					return {
+						todayTasks:
+							listType === "today"
+								? [...state.todayTasks, task]
+								: state.todayTasks.filter((t) => t.id !== task.id),
+						upcomingTasks:
+							listType === "upcoming"
+								? [...state.upcomingTasks, task]
+								: state.upcomingTasks.filter((t) => t.id !== task.id),
+						completedTasks:
+							listType === "completed"
+								? [...state.completedTasks, task]
+								: state.completedTasks.filter((t) => t.id !== task.id),
+					};
+				}
 				case "reorder": {
 					const listKey =
 						payload.droppableId === "today-list"
 							? "todayTasks"
 							: "upcomingTasks";
 					return {
-						...state,
-						[listKey]: payload.newTasks,
+						todayTasks:
+							listKey === "todayTasks" ? payload.newTasks : state.todayTasks,
+						upcomingTasks:
+							listKey === "upcomingTasks"
+								? payload.newTasks
+								: state.upcomingTasks,
+						completedTasks: state.completedTasks,
 					};
 				}
 				case "move":
@@ -216,23 +255,43 @@ export default function TaskList({
 	]);
 
 	const handleToggle = async (taskId: string, currentStatus: boolean) => {
+		// Prevent duplicate requests for the same task
+		if (pendingRequests.current.has(`toggle-${taskId}`)) {
+			return;
+		}
+
+		const actionKey = `toggle-${taskId}`;
+		pendingRequests.current.add(actionKey);
+
 		startTransition(async () => {
 			addOptimisticAction({ action: "toggle", payload: { taskId } });
 			try {
 				await toggleTask(taskId, currentStatus);
 			} catch (error) {
-				console.error(error);
+				console.error("Failed to toggle task:", error);
+			} finally {
+				pendingRequests.current.delete(actionKey);
 			}
 		});
 	};
 
 	const handleUpdate = async (taskId: string, updates: Partial<Task>) => {
+		// Prevent duplicate update requests for the same task
+		if (pendingRequests.current.has(`update-${taskId}`)) {
+			return;
+		}
+
+		const actionKey = `update-${taskId}`;
+		pendingRequests.current.add(actionKey);
+
 		startTransition(async () => {
 			addOptimisticAction({ action: "update", payload: { taskId, updates } });
 			try {
 				await updateTask(taskId, updates);
 			} catch (error) {
-				console.error(error);
+				console.error("Failed to update task:", error);
+			} finally {
+				pendingRequests.current.delete(actionKey);
 			}
 		});
 	};
@@ -244,21 +303,86 @@ export default function TaskList({
 	const confirmDelete = async () => {
 		if (!deleteTaskId) return;
 
-		setIsDeleting(true);
-		startTransition(async () => {
-			addOptimisticAction({
-				action: "delete",
-				payload: { taskId: deleteTaskId },
-			});
+		// Prevent duplicate delete requests
+		if (pendingRequests.current.has(`delete-${deleteTaskId}`)) {
+			return;
+		}
+
+		// Find the task being deleted and its list type
+		let taskToDelete: Task | undefined;
+		let listType: "today" | "upcoming" | "completed" = "today";
+
+		taskToDelete = optimisticState.todayTasks.find(
+			(t: Task) => t.id === deleteTaskId,
+		);
+		if (taskToDelete) listType = "today";
+
+		if (!taskToDelete) {
+			taskToDelete = optimisticState.upcomingTasks.find(
+				(t: Task) => t.id === deleteTaskId,
+			);
+			if (taskToDelete) listType = "upcoming";
+		}
+
+		if (!taskToDelete) {
+			taskToDelete = optimisticState.completedTasks.find(
+				(t: Task) => t.id === deleteTaskId,
+			);
+			if (taskToDelete) listType = "completed";
+		}
+
+		if (!taskToDelete) {
+			console.error("Task not found for deletion:", deleteTaskId);
+			setDeleteTaskId(null);
+			return;
+		}
+
+		// Optimistically remove the task
+		addOptimisticAction({
+			action: "delete",
+			payload: { taskId: deleteTaskId },
+		});
+
+		// Show undo toast
+		showSuccess(
+			`Task "${taskToDelete.title}" deleted`,
+			"Click undo to restore it",
+			{
+				label: "Undo",
+				onClick: () => {
+					if (undoTimeoutRef.current) {
+						clearTimeout(undoTimeoutRef.current);
+					}
+					// Restore the task
+					addOptimisticAction({
+						action: "restore",
+						payload: { task: taskToDelete, listType },
+					});
+				},
+			},
+		);
+
+		// Set timeout to actually delete the task
+		undoTimeoutRef.current = setTimeout(async () => {
 			try {
+				pendingRequests.current.add(`delete-${deleteTaskId}`);
 				await deleteTask(deleteTaskId);
 			} catch (error) {
-				console.error(error);
+				console.error("Failed to delete task:", error);
+				showError(
+					`Failed to delete task. ${error instanceof Error ? error.message : "Please try again."}`,
+				);
+				// Revert optimistic update on error
+				addOptimisticAction({
+					action: "restore",
+					payload: { task: taskToDelete, listType },
+				});
 			} finally {
-				setIsDeleting(false);
-				setDeleteTaskId(null);
+				pendingRequests.current.delete(`delete-${deleteTaskId}`);
 			}
-		});
+		}, UNDO_TOAST_DURATION_MS);
+
+		setDeleteTaskId(null);
 	};
 
 	const hasActiveFilters = (filters: any) => {
@@ -361,7 +485,7 @@ export default function TaskList({
 					confirmText="Delete"
 					cancelText="Cancel"
 					variant="danger"
-					isLoading={isDeleting}
+					isLoading={false}
 				/>
 
 				{/* Today Section */}

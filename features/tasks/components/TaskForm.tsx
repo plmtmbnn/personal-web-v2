@@ -27,33 +27,13 @@ import { useRouter } from "next/navigation";
 import type { TaskPriority, TaskRecurrence } from "@/features/tasks/types";
 import { format, addDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-
-// ─── Constants (outside component — not recreated on every render) ───────────
-
-const CATEGORIES = [
-	"Work",
-	"Personal",
-	"Fintech",
-	"Health",
-	"Urgent",
-	"Study",
-	"Finance",
-];
-
-const QUICK_DATE_CHIPS = [
-	{ label: "Today", days: 0 },
-	{ label: "Tomorrow", days: 1 },
-	{ label: "+7 Days", days: 7 },
-] as const;
-
-const RECURRENCE_OPTIONS: { value: TaskRecurrence; label: string }[] = [
-	{ value: "none", label: "None" },
-	{ value: "daily", label: "Daily" },
-	{ value: "weekly", label: "Weekly" },
-	{ value: "monthly", label: "Monthly" },
-];
-
-const DRAFT_KEY = "taskform_draft";
+import {
+	TASK_CATEGORIES,
+	QUICK_DATE_CHIPS,
+	RECURRENCE_OPTIONS,
+	DRAFT_STORAGE_KEY,
+	DRAFT_AUTOSAVE_DEBOUNCE_MS,
+} from "@/features/tasks/constants";
 
 // ─── Draft shape ─────────────────────────────────────────────────────────────
 
@@ -64,6 +44,7 @@ interface TaskFormDraft {
 	dueDate: string;
 	recurrence: TaskRecurrence;
 	description: string;
+	timestamp?: number;
 }
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -105,33 +86,82 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		(chip) => dueDate === format(addDays(new Date(), chip.days), "yyyy-MM-dd"),
 	)?.days;
 
-	// ── D: Restore draft on mount ─────────────────────────────────────────────
+	// ── D: Restore draft on mount with validation ────────────────────────────
 	useEffect(() => {
 		try {
-			const raw = localStorage.getItem(DRAFT_KEY);
+			const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
 			if (!raw) return;
+
 			const draft: TaskFormDraft = JSON.parse(raw);
-			if (draft.title) {
-				setTitle(draft.title);
-				setCategory(draft.category ?? "");
-				setPriority(draft.priority ?? "MEDIUM");
-				setDueDate(draft.dueDate ?? format(new Date(), "yyyy-MM-dd"));
-				setRecurrence(draft.recurrence ?? "none");
-				setDescription(draft.description ?? "");
-				if (draft.description) setIsNotesOpen(true);
-				setDraftRestored(true);
-				setTimeout(() => setDraftRestored(false), 3000);
+
+			// Validate draft structure and data types
+			if (!draft || typeof draft !== "object") {
+				localStorage.removeItem(DRAFT_STORAGE_KEY);
+				return;
 			}
-		} catch {
-			localStorage.removeItem(DRAFT_KEY);
+
+			// Validate title exists and is a string
+			if (!draft.title || typeof draft.title !== "string") {
+				localStorage.removeItem(DRAFT_STORAGE_KEY);
+				return;
+			}
+
+			// Validate priority is valid
+			const validPriorities: TaskPriority[] = ["LOW", "MEDIUM", "HIGH"];
+			if (draft.priority && !validPriorities.includes(draft.priority)) {
+				draft.priority = "MEDIUM";
+			}
+
+			// Validate recurrence is valid
+			const validRecurrence: TaskRecurrence[] = [
+				"none",
+				"daily",
+				"weekly",
+				"monthly",
+			];
+			if (draft.recurrence && !validRecurrence.includes(draft.recurrence)) {
+				draft.recurrence = "none";
+			}
+
+			// Validate and fix due date if in the past
+			const today = format(new Date(), "yyyy-MM-dd");
+			let validatedDueDate = draft.dueDate ?? today;
+
+			// Check if date is valid and not in the past
+			if (draft.dueDate) {
+				try {
+					const dueDate = new Date(draft.dueDate);
+					const todayDate = new Date(today);
+					if (Number.isNaN(dueDate.getTime()) || dueDate < todayDate) {
+						validatedDueDate = today;
+					}
+				} catch {
+					validatedDueDate = today;
+				}
+			}
+
+			// Restore draft with validated data
+			setTitle(draft.title);
+			setCategory(draft.category ?? "");
+			setPriority(draft.priority ?? "MEDIUM");
+			setDueDate(validatedDueDate);
+			setRecurrence(draft.recurrence ?? "none");
+			setDescription(draft.description ?? "");
+			if (draft.description) setIsNotesOpen(true);
+
+			setDraftRestored(true);
+			setTimeout(() => setDraftRestored(false), 3000);
+		} catch (error) {
+			console.error("Failed to restore draft:", error);
+			localStorage.removeItem(DRAFT_STORAGE_KEY);
 		}
 	}, []);
 
-	// ── D: Persist draft on every change (debounced 300ms) ───────────────────
+	// ── D: Persist draft on every change (debounced) ───────────────────
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			if (!title && !category && !description) {
-				localStorage.removeItem(DRAFT_KEY);
+				localStorage.removeItem(DRAFT_STORAGE_KEY);
 				return;
 			}
 			const draft: TaskFormDraft = {
@@ -141,9 +171,10 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 				dueDate,
 				recurrence,
 				description,
+				timestamp: Date.now(),
 			};
-			localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-		}, 300);
+			localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+		}, DRAFT_AUTOSAVE_DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	}, [title, category, priority, dueDate, recurrence, description]);
 
@@ -201,7 +232,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 					});
 				}
 
-				localStorage.removeItem(DRAFT_KEY);
+				localStorage.removeItem(DRAFT_STORAGE_KEY);
 
 				setSubmitSuccess(true);
 				setTimeout(() => {
@@ -509,7 +540,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 											<Tag className="w-3 h-3" /> Category
 										</label>
 										<div className="flex flex-wrap gap-1.5 mb-2">
-											{CATEGORIES.map((cat) => (
+											{TASK_CATEGORIES.map((cat) => (
 												<button
 													key={cat}
 													type="button"
@@ -537,7 +568,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 												className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-base md:text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
 											/>
 											<datalist id="category-suggestions">
-												{CATEGORIES.map((cat) => (
+												{TASK_CATEGORIES.map((cat) => (
 													<option key={cat} value={cat} />
 												))}
 											</datalist>

@@ -1,3 +1,10 @@
+## [0.42.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.42.1...v0.42.2) (2026-07-02)
+
+
+### Bug Fixes
+
+* **tasks:** resolve build errors and lints for tasks feature ([410c830](https://github.com/plmtmbnn/personal-web-v2/commit/410c830b478be5445c5108ed88e757b5496b1f24))
+
 ## [0.42.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.42.0...v0.42.1) (2026-07-01)
 
 

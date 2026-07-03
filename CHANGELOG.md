@@ -1,3 +1,10 @@
+# [0.43.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.42.3...v0.43.0) (2026-07-03)
+
+
+### Features
+
+* **blog:** update blog grid layout, add lazy loading, and refine skeleton screens ([5c6723b](https://github.com/plmtmbnn/personal-web-v2/commit/5c6723b36360be0fa0182553e2bd9178621d2c81))
+
 ## [0.42.3](https://github.com/plmtmbnn/personal-web-v2/compare/v0.42.2...v0.42.3) (2026-07-02)
 
 ## [0.42.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.42.1...v0.42.2) (2026-07-02)

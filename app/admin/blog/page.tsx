@@ -15,6 +15,8 @@ export const metadata: Metadata = createMetadata({
 	path: "/admin/blog",
 });
 
+export const dynamic = "force-dynamic";
+
 interface AdminBlogPageProps {
 	searchParams: Promise<{
 		page?: string;

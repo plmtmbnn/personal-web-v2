@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Varela_Round, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -53,7 +54,9 @@ export default function RootLayout({
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 				/>
-				<NavigationLoader />
+				<Suspense fallback={null}>
+					<NavigationLoader />
+				</Suspense>
 				{children}
 				<CompactBottomBar />
 			</body>

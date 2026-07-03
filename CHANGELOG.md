@@ -1,3 +1,10 @@
+## [0.43.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.43.0...v0.43.1) (2026-07-03)
+
+
+### Bug Fixes
+
+* resolve static generation build failures with useSearchParams ([3fad079](https://github.com/plmtmbnn/personal-web-v2/commit/3fad0794b20bd3429a1986399c6e5e1f70448a28))
+
 # [0.43.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.42.3...v0.43.0) (2026-07-03)
 
 

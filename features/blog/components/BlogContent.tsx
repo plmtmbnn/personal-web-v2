@@ -177,6 +177,19 @@ export default function BlogContent({ content }: BlogContentProps) {
 							</h3>
 						);
 					},
+
+					// ── Images — native lazy loading + async decode ────
+					img({ src, alt, ...props }: any) {
+						return (
+							<img
+								src={src as string}
+								alt={alt as string}
+								loading="lazy"
+								decoding="async"
+								{...props}
+							/>
+						);
+					},
 				}}
 			>
 				{content}

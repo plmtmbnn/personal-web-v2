@@ -12,8 +12,6 @@ import {
 	Sparkles,
 	Search,
 	X,
-	ChevronLeft,
-	ChevronRight,
 } from "lucide-react";
 import type { Blog } from "@/features/blog/data";
 import {
@@ -21,6 +19,7 @@ import {
 	getBlogImage,
 	getReadTime,
 } from "@/features/blog/utils";
+import { Skeleton } from "@/components/Shimmer";
 
 interface BlogViewProps {
 	allBlogs: Blog[];
@@ -28,18 +27,20 @@ interface BlogViewProps {
 
 const CATEGORIES = ["All", "Tech", "Finance", "Running", "General"];
 
-const getCategoryBorderColor = (category: string) => {
+const getCategoryColor = (category: string) => {
 	const c = category;
-	if (c === "Finance" || c === "Investment") return "border-l-emerald-500";
-	if (c === "Tech") return "border-l-blue-500";
-	if (c === "Running") return "border-l-rose-500";
-	return "border-l-slate-400";
+	if (c === "Finance" || c === "Investment") return "bg-emerald-500";
+	if (c === "Tech") return "bg-blue-500";
+	if (c === "Running") return "bg-rose-500";
+	return "bg-slate-400";
 };
 
 export default function BlogView({ allBlogs }: BlogViewProps) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [activeCategory, setActiveCategory] = useState("All");
-	const [isLeftColumnCollapsed, setIsLeftColumnCollapsed] = useState(false);
+
+	// Check if a filter is actively applied (for skeleton loader)
+	const hasActiveFilter = searchQuery !== "" || activeCategory !== "All";
 
 	// Filter blogs dynamically
 	const filteredBlogs = useMemo(() => {
@@ -54,66 +55,28 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 		});
 	}, [allBlogs, searchQuery, activeCategory]);
 
-	// Curate layouts only when not actively searching/filtering
-	const isCuratedMode = searchQuery === "" && activeCategory === "All";
-
-	const { primaryHero, secondaryHeadlines, regularPosts } = useMemo(() => {
-		if (!isCuratedMode) {
-			return {
-				primaryHero: null,
-				secondaryHeadlines: [],
-				regularPosts: filteredBlogs,
-			};
-		}
-
-		const headlines = filteredBlogs.filter((blog) => blog.is_headline);
-		const hero = headlines[0] || filteredBlogs[0];
-		const secondary = headlines.slice(1, 3);
-		const featuredIds = [hero?.id, ...secondary.map((b) => b.id)].filter(
-			Boolean,
-		);
-		const regulars = filteredBlogs.filter(
-			(blog) => !featuredIds.includes(blog.id),
-		);
-
-		return {
-			primaryHero: hero,
-			secondaryHeadlines: secondary,
-			regularPosts: regulars,
-		};
-	}, [filteredBlogs, isCuratedMode]);
+	// Sort blogs: featured (is_headline) first, then by date
+	const sortedBlogs = useMemo(() => {
+		return [...filteredBlogs].sort((a, b) => {
+			if (a.is_headline && !b.is_headline) return -1;
+			if (!a.is_headline && b.is_headline) return 1;
+			return new Date(b.date).getTime() - new Date(a.date).getTime();
+		});
+	}, [filteredBlogs]);
 
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start transition-all duration-300">
 			{/* ═══════════════════════════════════════
-			    LEFT COLUMN: Sticky Header & Filters
-			═══════════════════════════════════════ */}
-			<aside
-				className={`transition-all duration-300 lg:sticky lg:top-8 lg:pb-8 ${
-					isLeftColumnCollapsed
-						? "lg:col-span-1 space-y-4 flex flex-col items-center"
-						: "lg:col-span-4 space-y-6"
-				}`}
-			>
-				{/* Expanded State: Title and Description */}
-				<div
-					className={`space-y-4 w-full ${isLeftColumnCollapsed ? "lg:hidden" : "block"}`}
-				>
-					<div className="flex items-center justify-between gap-2.5 text-slate-900">
-						<div className="flex items-center gap-2.5">
-							<BookOpen className="w-4 h-4 text-slate-500" />
-							<span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">
-								Engineering Journal
-							</span>
-						</div>
-						{/* Collapse Button: Desktop only */}
-						<button
-							onClick={() => setIsLeftColumnCollapsed(true)}
-							className="hidden lg:flex items-center justify-center p-1.5 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl transition-all text-slate-450 hover:text-slate-900 active:scale-90"
-							title="Collapse sidebar"
-						>
-							<ChevronLeft className="w-4 h-4" />
-						</button>
+		    LEFT COLUMN: Sticky Header & Filters
+		═══════════════════════════════════════ */}
+			<aside className="lg:col-span-3 space-y-6 sticky top-8 pb-8">
+				{/* Title and Description */}
+				<div className="space-y-4 w-full">
+					<div className="flex items-center gap-2.5 text-slate-900">
+						<BookOpen className="w-4 h-4 text-slate-500" />
+						<span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">
+							Engineering Journal
+						</span>
 					</div>
 					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-slate-950 leading-[0.95]">
 						The <span className="gradient-text">Pulse</span>
@@ -124,48 +87,8 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 					</p>
 				</div>
 
-				{/* Collapsed State View: Desktop only */}
-				{isLeftColumnCollapsed && (
-					<div className="hidden lg:flex flex-col items-center space-y-6 py-4 w-full">
-						<button
-							onClick={() => setIsLeftColumnCollapsed(false)}
-							className="flex items-center justify-center p-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl transition-all text-slate-450 hover:text-slate-900 active:scale-90 shadow-sm"
-							title="Expand sidebar"
-						>
-							<ChevronRight className="w-4 h-4" />
-						</button>
-
-						<div className="h-px w-8 bg-slate-100" />
-
-						<div className="flex flex-col items-center gap-4">
-							<BookOpen className="w-4 h-4 text-slate-400" />
-							<div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-450 [writing-mode:vertical-lr] rotate-180 select-none py-2">
-								The Pulse
-							</div>
-						</div>
-
-						<div className="h-px w-8 bg-slate-100" />
-
-						{/* Small Indicator for Filters/Category in Collapsed Mode */}
-						<div className="flex flex-col items-center gap-3">
-							<span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">
-								Cat
-							</span>
-							<div
-								className="w-8 h-8 rounded-xl bg-slate-950 text-white flex items-center justify-center text-[10px] font-black shadow-md border border-slate-800 cursor-pointer hover:bg-slate-900 transition-colors"
-								onClick={() => setIsLeftColumnCollapsed(false)}
-								title={`Active: ${activeCategory}. Click to expand.`}
-							>
-								{activeCategory === "All" ? "A" : activeCategory[0]}
-							</div>
-						</div>
-					</div>
-				)}
-
 				{/* Search & Category filter container */}
-				<div
-					className={`bg-slate-50 border border-slate-100 p-5 rounded-[2rem] space-y-5 w-full ${isLeftColumnCollapsed ? "lg:hidden" : "block"}`}
-				>
+				<div className="bg-slate-50 border border-slate-100 p-5 rounded-[2rem] space-y-5 w-full">
 					{/* Search Input */}
 					<div className="relative group">
 						<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
@@ -174,15 +97,15 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 							placeholder="Search entries..."
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 hover:border-slate-355 focus:border-slate-950 rounded-xl text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none transition-all shadow-sm"
+							className="w-full pl-10 pr-12 py-3 bg-white border border-slate-200 hover:border-slate-300 focus:border-slate-950 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none transition-all shadow-sm"
 						/>
 						{searchQuery && (
 							<button
 								onClick={() => setSearchQuery("")}
-								className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-900"
+								className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
 								aria-label="Clear search"
 							>
-								<X className="w-3 h-3" />
+								<X className="w-4 h-4" />
 							</button>
 						)}
 					</div>
@@ -192,16 +115,16 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 						<p className="text-[9px] font-black uppercase tracking-wider text-slate-450 px-1">
 							Categories
 						</p>
-						<div className="flex flex-row overflow-x-auto lg:flex-col lg:overflow-x-visible gap-1.5 no-scrollbar pb-2 lg:pb-0">
+						<div className="flex flex-row overflow-x-auto gap-1.5 no-scrollbar pb-2">
 							{CATEGORIES.map((category) => {
 								const isActive = activeCategory === category;
 								return (
 									<button
 										key={category}
 										onClick={() => setActiveCategory(category)}
-										className={`relative px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 text-left shrink-0 active:scale-[0.98] ${
+										className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 shrink-0 active:scale-[0.98] ${
 											isActive
-												? "text-white"
+												? "text-white bg-slate-950"
 												: "text-slate-500 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-100"
 										}`}
 									>
@@ -216,6 +139,9 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 												}}
 											/>
 										)}
+										<div
+											className={`relative z-10 w-2 h-2 rounded-full ${getCategoryColor(category)}`}
+										/>
 										<span className="relative z-10">{category}</span>
 									</button>
 								);
@@ -225,9 +151,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 				</div>
 
 				{/* Archive Stats Badge */}
-				<div
-					className={`flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl max-w-sm w-full ${isLeftColumnCollapsed ? "lg:hidden" : "flex"}`}
-				>
+				<div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl max-w-sm w-full">
 					<div className="flex items-center gap-3">
 						<div className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center border border-slate-800 shadow-sm text-white">
 							<Sparkles className="w-4 h-4" />
@@ -245,15 +169,49 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 			</aside>
 
 			{/* ═══════════════════════════════════════
-			    RIGHT COLUMN: Highlight & Grid
-			═══════════════════════════════════════ */}
-			<div
-				className={`transition-all duration-300 space-y-12 ${
-					isLeftColumnCollapsed ? "lg:col-span-11" : "lg:col-span-8"
-				}`}
-			>
+		    RIGHT COLUMN: Unified Grid
+		═══════════════════════════════════════ */}
+			<div className="lg:col-span-9 space-y-8">
 				<AnimatePresence mode="wait">
-					{filteredBlogs.length === 0 ? (
+					{hasActiveFilter && sortedBlogs.length === 0 ? (
+						<motion.div
+							key="filtering"
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							className="grid grid-cols-1 md:grid-cols-2 gap-6"
+						>
+							{/* Skeleton Cards for Filtering */}
+							{[1, 2, 3, 4].map((i) => (
+								<motion.div
+									key={i}
+									initial={{ opacity: 0, y: 15 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{ duration: 0.35, delay: i * 0.04 }}
+								>
+									<div className="relative flex flex-col h-full bg-white border border-slate-200 rounded-[2rem] overflow-hidden">
+										{/* Image Skeleton */}
+										<Skeleton className="relative w-full h-48" />
+										{/* Content Skeleton */}
+										<div className="flex-1 flex flex-col justify-between p-4 space-y-4">
+											<div className="space-y-2.5">
+												<div className="flex items-center gap-3">
+													<Skeleton className="w-12 h-3 rounded-full" />
+													<Skeleton className="w-10 h-3 rounded-full" />
+												</div>
+												<Skeleton className="w-full h-5 rounded-xl" />
+												<Skeleton className="w-3/4 h-3 rounded-full" />
+												<Skeleton className="w-1/2 h-3 rounded-full" />
+											</div>
+											<div className="pt-4 flex items-center gap-1">
+												<Skeleton className="w-16 h-3 rounded-full" />
+											</div>
+										</div>
+									</div>
+								</motion.div>
+							))}
+						</motion.div>
+					) : sortedBlogs.length === 0 ? (
 						<motion.div
 							key="no-results"
 							initial={{ opacity: 0, y: 15 }}
@@ -279,208 +237,103 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.25 }}
-							className="space-y-12"
+							className="space-y-8"
 						>
-							{/* Curated Layout Mode (All + Empty Search) */}
-							{isCuratedMode && (
-								<>
-									{/* Primary Hero Section */}
-									{primaryHero && (
-										<section className="relative">
-											<Link
-												href={`/blog/${primaryHero.slug}`}
-												className="group block relative !no-underline"
+							{/* Header for filtered results */}
+							{(searchQuery !== "" || activeCategory !== "All") && (
+								<div className="flex items-center gap-4 pt-4">
+									<h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 whitespace-nowrap">
+										{activeCategory !== "All"
+											? `Filtered by: ${activeCategory}`
+											: "Search Results"}
+									</h2>
+									<div className="h-px w-full bg-slate-100" />
+								</div>
+							)}
+
+							{/* Unified Grid */}
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								{sortedBlogs.map((post, index) => (
+									<motion.div
+										key={post.slug}
+										initial={{ opacity: 0, y: 15 }}
+										animate={{ opacity: 1, y: 0 }}
+										transition={{ duration: 0.35, delay: index * 0.04 }}
+									>
+										<Link
+											href={`/blog/${post.slug}`}
+											className="group block !no-underline h-full"
+										>
+											<div
+												className={`relative flex flex-col h-full bg-white border border-slate-200 hover:border-slate-400 rounded-[2rem] overflow-hidden transition-all duration-500 group-hover:shadow-xl group-hover:-translate-y-1 ${
+													post.is_headline ? "md:col-span-2" : ""
+												}`}
 											>
-												{/* Ambient Hover Glow */}
-												<div className="absolute -inset-1 bg-gradient-to-tr from-blue-500/10 via-indigo-500/5 to-purple-500/10 rounded-[2.6rem] blur-2xl opacity-60 group-hover:opacity-100 transition duration-500 -z-10" />
-
-												<div className="relative h-[360px] sm:h-[420px] w-full overflow-hidden rounded-[2.5rem] border border-slate-200 shadow-2xl transition-all duration-500 group-hover:scale-[1.01] group-hover:-translate-y-1 group-hover:shadow-indigo-500/5">
+												{/* Image Section */}
+												<div
+													className={`relative w-full overflow-hidden ${
+														post.is_headline ? "h-64 sm:h-80" : "h-48"
+													}`}
+												>
 													<Image
-														src={getBlogImage(
-															primaryHero.image_url,
-															primaryHero.id,
-														)}
-														alt={primaryHero.title}
+														src={getBlogImage(post.image_url, post.id)}
+														alt={post.title}
 														fill
-														priority
-														className="object-cover transition-transform duration-[1.5s] group-hover:scale-105"
-														sizes="(max-width: 1024px) 100vw, 66vw"
+														className="object-cover transition-transform duration-700 group-hover:scale-105"
+														sizes="(max-width: 768px) 100vw, 50vw"
 													/>
-													<div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-
-													<div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8">
-														<motion.div
-															className={`bg-slate-950/60 backdrop-blur-xl border border-white/10 border-l-4 p-5 sm:p-8 rounded-[2rem] space-y-3.5 transition-all duration-300 ${getCategoryBorderColor(primaryHero.category)}`}
-															whileHover={{
-																backgroundColor: "rgba(2, 6, 23, 0.75)",
-															}}
+													{/* Category Badge */}
+													<div className="absolute top-3.5 left-3.5">
+														<span
+															className={`px-2.5 py-0.5 border text-[7.5px] font-black uppercase tracking-widest rounded-full backdrop-blur-md shadow-sm ${getCategoryStyles(post.category)}`}
 														>
-															<div className="flex flex-wrap items-center gap-2">
-																<span className="px-3.5 py-1 bg-accent text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-md">
-																	Headline Story
-																</span>
-																<span
-																	className={`px-3.5 py-1 border text-[8px] font-black uppercase tracking-widest rounded-full backdrop-blur-xl ${getCategoryStyles(primaryHero.category)}`}
-																>
-																	{primaryHero.category}
-																</span>
-															</div>
-															<h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter leading-[1.1] group-hover:text-blue-400 transition-colors duration-500 line-clamp-2">
-																{primaryHero.title}
-															</h2>
-															<p className="!text-white text-xs sm:text-sm font-medium leading-relaxed line-clamp-2 opacity-90">
-																{primaryHero.description}
-															</p>
-															<div className="pt-1.5 border-t border-white/5 flex items-center justify-between">
-																<div className="flex items-center gap-4 text-white/40 text-[8px] font-black uppercase tracking-[0.2em]">
-																	<span className="flex items-center gap-1">
-																		<Calendar className="w-3 h-3" />
-																		{new Intl.DateTimeFormat("en-US", {
-																			dateStyle: "long",
-																		}).format(new Date(primaryHero.date))}
-																	</span>
-																	<span className="flex items-center gap-1">
-																		<Clock className="w-3 h-3" />
-																		{getReadTime(primaryHero.content)}
-																	</span>
-																</div>
-																<span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-blue-400 group-hover:gap-2.5 transition-all duration-300">
-																	Read Story{" "}
-																	<ArrowRight className="w-3.5 h-3.5 text-blue-450" />
-																</span>
-															</div>
-														</motion.div>
+															{post.category}
+														</span>
+														{post.is_headline && (
+															<span className="ml-2 px-2.5 py-0.5 bg-accent text-white text-[7.5px] font-black uppercase tracking-widest rounded-full shadow-md">
+																Headline
+															</span>
+														)}
 													</div>
 												</div>
-											</Link>
-										</section>
-									)}
 
-									{/* Secondary Headlines */}
-									{secondaryHeadlines.length > 0 && (
-										<section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-											{secondaryHeadlines.map((post) => (
-												<Link
-													key={post.id}
-													href={`/blog/${post.slug}`}
-													className="group block relative !no-underline"
-												>
-													<div className="relative h-[340px] w-full overflow-hidden rounded-[2rem] border border-slate-200 shadow-xl transition-all duration-500">
-														<Image
-															src={getBlogImage(post.image_url, post.id)}
-															alt={post.title}
-															fill
-															className="object-cover transition-transform duration-750 group-hover:scale-103"
-															sizes="(max-width: 768px) 100vw, 33vw"
-														/>
-														<div className="absolute inset-0 bg-slate-950/40" />
-
-														<div className="absolute bottom-4 left-4 right-4 p-5 bg-white/95 backdrop-blur-md rounded-[1.5rem] border border-white shadow-2xl transition-all duration-500 group-hover:-translate-y-0.5">
-															<div className="flex items-center gap-2 mb-2">
-																<span
-																	className={`inline-block px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full backdrop-blur-xl ${getCategoryStyles(post.category)}`}
-																>
-																	{post.category}
-																</span>
-																<span className="flex items-center gap-1 text-[7px] font-black text-slate-400 uppercase tracking-widest">
-																	<Clock className="w-2.5 h-2.5" />
-																	{getReadTime(post.content)}
-																</span>
-															</div>
-															<h3 className="text-base sm:text-lg font-black text-slate-950 tracking-tighter leading-snug mb-2.5 group-hover:text-blue-600 transition-colors line-clamp-2">
-																{post.title}
-															</h3>
-															<div className="flex items-center gap-1.5 text-slate-400 text-[7px] font-black uppercase tracking-widest">
-																<Calendar className="w-3 h-3" />
+												{/* Content Section */}
+												<div className="flex-1 flex flex-col justify-between p-4">
+													<div className="space-y-2.5">
+														<div className="flex items-center gap-3 text-slate-400 text-[7.5px] font-black uppercase tracking-widest">
+															<span className="flex items-center gap-1">
+																<Calendar className="w-2.5 h-2.5" />
 																{new Intl.DateTimeFormat("en-US", {
 																	dateStyle: "medium",
 																}).format(new Date(post.date))}
-															</div>
-														</div>
-													</div>
-												</Link>
-											))}
-										</section>
-									)}
-								</>
-							)}
-
-							{/* Regular / Filtered Grid Section */}
-							<section className="space-y-8">
-								{isCuratedMode && (
-									<div className="flex items-center gap-4 pt-4">
-										<h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 whitespace-nowrap">
-											Journal Archives
-										</h2>
-										<div className="h-px w-full bg-slate-100" />
-									</div>
-								)}
-
-								<div
-									className={`grid grid-cols-1 md:grid-cols-${isLeftColumnCollapsed ? 3 : 2} gap-6`}
-								>
-									{regularPosts.map((post, index) => (
-										<motion.div
-											key={post.slug}
-											initial={{ opacity: 0, y: 15 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ duration: 0.35, delay: index * 0.04 }}
-										>
-											<Link
-												href={`/blog/${post.slug}`}
-												className="group block !no-underline h-full"
-											>
-												<div className="flex flex-col h-full bg-white border border-slate-200 hover:border-slate-300 rounded-[2rem] p-3.5 transition-all duration-500 hover:shadow-xl hover:-translate-y-0.5">
-													<div className="relative h-48 w-full mb-4 overflow-hidden rounded-[1.5rem] border border-slate-100">
-														<Image
-															src={getBlogImage(post.image_url, post.id)}
-															alt={post.title}
-															fill
-															className="object-cover transition-transform duration-700 group-hover:scale-103"
-															sizes="(max-width: 768px) 100vw, 33vw"
-														/>
-														<div className="absolute top-3.5 left-3.5">
-															<span
-																className={`px-2.5 py-0.5 border text-[7.5px] font-black uppercase tracking-widest rounded-full backdrop-blur-md shadow-sm ${getCategoryStyles(post.category)}`}
-															>
-																{post.category}
+															</span>
+															<span className="flex items-center gap-1">
+																<Clock className="w-2.5 h-2.5" />
+																{getReadTime(post.content)}
 															</span>
 														</div>
+														<h3
+															className={`font-black text-slate-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 ${
+																post.is_headline ? "text-xl" : "text-base"
+															}`}
+														>
+															{post.title}
+														</h3>
+														<p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
+															{post.description}
+														</p>
 													</div>
 
-													<div className="flex-1 flex flex-col justify-between px-2 pb-2">
-														<div className="space-y-2.5">
-															<div className="flex items-center gap-3 text-slate-400 text-[7.5px] font-black uppercase tracking-widest">
-																<span className="flex items-center gap-1">
-																	<Calendar className="w-2.5 h-2.5" />
-																	{new Intl.DateTimeFormat("en-US", {
-																		dateStyle: "medium",
-																	}).format(new Date(post.date))}
-																</span>
-																<span className="flex items-center gap-1">
-																	<Clock className="w-2.5 h-2.5" />
-																	{getReadTime(post.content)}
-																</span>
-															</div>
-															<h3 className="text-base font-black text-slate-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">
-																{post.title}
-															</h3>
-															<p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
-																{post.description}
-															</p>
-														</div>
-
-														<div className="pt-4 flex items-center gap-1 text-slate-900 font-black text-[8.5px] uppercase tracking-[0.18em] group-hover:gap-2.5 transition-all">
-															Read Article
-															<ArrowRight className="w-3 h-3 text-blue-600" />
-														</div>
+													<div className="pt-4 flex items-center gap-1 text-slate-900 font-black text-[8.5px] uppercase tracking-[0.18em] group-hover:gap-2.5 transition-all">
+														Read Article
+														<ArrowRight className="w-3 h-3 text-blue-600" />
 													</div>
 												</div>
-											</Link>
-										</motion.div>
-									))}
-								</div>
-							</section>
+											</div>
+										</Link>
+									</motion.div>
+								))}
+							</div>
 						</motion.div>
 					)}
 				</AnimatePresence>

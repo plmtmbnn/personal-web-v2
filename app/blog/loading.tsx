@@ -1,83 +1,136 @@
 "use client";
 
+import { Skeleton } from "@/components/Shimmer";
+
 /**
  * Blog List Loading Skeleton
- * Mimics the curated insights grid layout.
+ * Matches the BlogView layout (sidebar + unified grid).
  */
 export default function BlogListLoading() {
 	return (
 		<main
-			className="min-h-screen bg-background relative overflow-x-hidden pb-32"
+			className="min-h-screen bg-white relative overflow-x-hidden pb-32"
 			role="status"
 			aria-live="polite"
 			aria-label="Loading blog posts"
 		>
-			{/* Aesthetic Background Ambience */}
+			{/* Aesthetic Background Ambient */}
 			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-5%] right-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse" />
-				<div
-					className="absolute bottom-[-5%] left-[-10%] w-[70%] lg:w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[120px] animate-pulse"
-					style={{ animationDelay: "2s" }}
-				/>
+				<div className="absolute top-[-5%] right-[-10%] w-[80%] lg:w-[60%] h-[60%] bg-slate-100/50 rounded-full blur-[120px]" />
+				<div className="absolute bottom-[-5%] left-[-10%] w-[80%] lg:w-[60%] h-[60%] bg-blue-50/30 rounded-full blur-[120px]" />
 			</div>
 
-			<div className="max-w-6xl mx-auto px-6 pt-20 sm:pt-32">
-				{/* Header Skeleton */}
-				<div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 sm:mb-20 border-b border-white/5 pb-12 sm:pb-16">
-					<div className="space-y-4 sm:space-y-6 text-center sm:text-left">
-						<div className="flex items-center justify-center sm:justify-start gap-3">
-							<div className="w-5 h-5 bg-white/5 rounded-md animate-pulse" />
-							<div className="w-24 h-3 bg-white/5 rounded-full animate-pulse" />
+			<div className="max-w-7xl mx-auto px-6 pt-10 sm:pt-16">
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+					{/* LEFT COLUMN: Sidebar Skeleton */}
+					<aside className="lg:col-span-3 space-y-6 sticky top-8 pb-8">
+						{/* Title and Description Skeleton */}
+						<div className="space-y-4 w-full">
+							<div className="flex items-center gap-2.5">
+								<Skeleton className="w-4 h-4 rounded-md" />
+								<Skeleton className="w-32 h-3 rounded-full" />
+							</div>
+							<div className="space-y-2">
+								<Skeleton className="w-48 h-10 sm:h-12 rounded-xl" />
+								<Skeleton className="w-full sm:w-64 h-4 rounded-full" />
+								<Skeleton className="w-3/4 sm:w-48 h-4 rounded-full" />
+							</div>
 						</div>
-						<div className="space-y-3">
-							<div className="w-64 sm:w-96 h-10 sm:h-12 bg-white/5 rounded-2xl animate-pulse mx-auto sm:mx-0" />
-						</div>
-						<div className="space-y-2">
-							<div className="w-full sm:w-[480px] h-4 bg-white/5 rounded-full animate-pulse mx-auto sm:mx-0" />
-							<div className="w-3/4 sm:w-[320px] h-4 bg-white/5 rounded-full animate-pulse mx-auto sm:mx-0" />
-						</div>
-					</div>
 
-					<div className="flex items-center self-center sm:self-auto gap-4 px-5 py-2.5 sm:px-6 sm:py-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
-						<div className="text-right space-y-2">
-							<div className="w-8 h-4 bg-white/5 rounded-full animate-pulse ml-auto" />
-							<div className="w-16 h-2 bg-white/5 rounded-full animate-pulse" />
+						{/* Search & Category Filter Skeleton */}
+						<div className="bg-slate-50 border border-slate-100 p-5 rounded-[2rem] space-y-5 w-full">
+							{/* Search Input Skeleton */}
+							<div className="relative">
+								<Skeleton className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-md" />
+								<Skeleton className="w-full h-10 rounded-xl" />
+							</div>
+
+							{/* Category Tabs Skeleton */}
+							<div className="space-y-2">
+								<Skeleton className="w-16 h-3 rounded-full" />
+								<div className="flex flex-row overflow-x-auto gap-1.5 no-scrollbar pb-2">
+									{[1, 2, 3, 4, 5].map((i) => (
+										<Skeleton
+											key={i}
+											className="w-16 h-8 rounded-xl shrink-0"
+										/>
+									))}
+								</div>
+							</div>
 						</div>
-						<div className="w-px h-6 sm:h-8 bg-white/10" />
-						<div className="w-5 h-5 bg-white/5 rounded-md animate-pulse" />
-					</div>
-				</div>
 
-				{/* Blog Grid Skeleton - 3 Cards */}
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-					{[1, 2, 3].map((i) => (
-						<div
-							key={i}
-							className="h-[400px] relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-white/5 border-2 border-white/10 p-6 sm:p-10 flex flex-col justify-between"
-						>
-							<div className="space-y-6">
-								{/* Meta Info Skeleton */}
-								<div className="w-32 h-6 bg-white/5 border border-white/10 rounded-full animate-pulse" />
+						{/* Archive Stats Badge Skeleton */}
+						<div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl max-w-sm w-full">
+							<div className="flex items-center gap-3">
+								<Skeleton className="w-9 h-9 rounded-xl" />
+								<div className="space-y-2">
+									<Skeleton className="w-20 h-3 rounded-full" />
+									<Skeleton className="w-12 h-2 rounded-full" />
+								</div>
+							</div>
+						</div>
+					</aside>
 
-								{/* Title & Description Skeleton */}
-								<div className="space-y-4">
-									<div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" />
-									<div className="w-5/6 h-8 bg-white/5 rounded-xl animate-pulse" />
-									<div className="space-y-2 pt-4">
-										<div className="w-full h-3 bg-white/5 rounded-full animate-pulse" />
-										<div className="w-full h-3 bg-white/5 rounded-full animate-pulse" />
-										<div className="w-2/3 h-3 bg-white/5 rounded-full animate-pulse" />
+					{/* RIGHT COLUMN: Grid Skeleton */}
+					<div className="lg:col-span-9 space-y-8">
+						{/* Filtered Results Header Skeleton (optional) */}
+						<div className="flex items-center gap-4 pt-4">
+							<Skeleton className="w-32 h-3 rounded-full" />
+							<Skeleton className="h-px w-full" />
+						</div>
+
+						{/* Unified Grid Skeleton */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+							{/* Headline Card Skeleton (spans 2 columns) */}
+							<div className="md:col-span-2">
+								<div className="relative flex flex-col h-full bg-white border border-slate-200 rounded-[2rem] overflow-hidden">
+									{/* Image Skeleton */}
+									<Skeleton className="relative w-full h-64 sm:h-80" />
+									{/* Content Skeleton */}
+									<div className="flex-1 flex flex-col justify-between p-4 space-y-4">
+										<div className="space-y-2.5">
+											<div className="flex items-center gap-3">
+												<Skeleton className="w-12 h-3 rounded-full" />
+												<Skeleton className="w-10 h-3 rounded-full" />
+											</div>
+											<Skeleton className="w-full h-6 rounded-xl" />
+											<Skeleton className="w-3/4 h-4 rounded-full" />
+											<Skeleton className="w-1/2 h-4 rounded-full" />
+										</div>
+										<div className="pt-4 flex items-center gap-1">
+											<Skeleton className="w-16 h-3 rounded-full" />
+										</div>
 									</div>
 								</div>
 							</div>
 
-							{/* Footer Skeleton */}
-							<div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-white/5 flex items-center justify-between">
-								<div className="w-24 h-3 bg-white/5 rounded-full animate-pulse" />
-								<div className="w-10 h-10 rounded-xl bg-white/5 animate-pulse" />
-							</div>
+							{/* Regular Cards Skeleton */}
+							{[1, 2, 3, 4].map((i) => (
+								<div
+									key={i}
+									className="relative flex flex-col h-full bg-white border border-slate-200 rounded-[2rem] overflow-hidden"
+								>
+									{/* Image Skeleton */}
+									<Skeleton className="relative w-full h-48" />
+									{/* Content Skeleton */}
+									<div className="flex-1 flex flex-col justify-between p-4 space-y-4">
+										<div className="space-y-2.5">
+											<div className="flex items-center gap-3">
+												<Skeleton className="w-12 h-3 rounded-full" />
+												<Skeleton className="w-10 h-3 rounded-full" />
+											</div>
+											<Skeleton className="w-full h-5 rounded-xl" />
+											<Skeleton className="w-3/4 h-3 rounded-full" />
+											<Skeleton className="w-1/2 h-3 rounded-full" />
+										</div>
+										<div className="pt-4 flex items-center gap-1">
+											<Skeleton className="w-16 h-3 rounded-full" />
+										</div>
+									</div>
+								</div>
+							))}
 						</div>
-					))}
+					</div>
 				</div>
 			</div>
 		</main>

@@ -32,7 +32,6 @@ export function Skeleton({
 				return "rounded";
 			case "rounded":
 				return "rounded-xl";
-			case "text":
 			default:
 				return "rounded";
 		}

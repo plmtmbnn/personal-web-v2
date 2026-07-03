@@ -61,7 +61,6 @@ const Toast = ({
 					actionBg: "bg-amber-600 hover:bg-amber-700",
 					icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
 				};
-			case "info":
 			default:
 				return {
 					bg: "bg-slate-50",

@@ -1,3 +1,10 @@
+# [0.44.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.43.1...v0.44.0) (2026-07-04)
+
+
+### Features
+
+* **ui:** revamp auth views, optimize SSR, and add defensive check fallbacks ([6659167](https://github.com/plmtmbnn/personal-web-v2/commit/665916760cbdce37fc1e3f09e0f12feffb132c02))
+
 ## [0.43.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.43.0...v0.43.1) (2026-07-03)
 
 

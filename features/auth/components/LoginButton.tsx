@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SupabaseConn } from "@/lib/core/supabase";
 import { logout } from "@/features/auth/actions";
 import { LogOut, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface LoginButtonProps {
 	user?: {
@@ -42,53 +43,93 @@ export default function LoginButton({ user }: LoginButtonProps) {
 
 	if (user) {
 		return (
-			<div className="flex items-center gap-4 p-2 bg-background-secondary rounded-2xl border border-border/50 shadow-sm">
-				{user.user_metadata?.avatar_url && (
+			<motion.div
+				initial={{ opacity: 0, scale: 0.95 }}
+				animate={{ opacity: 1, scale: 1 }}
+				className="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 shadow-sm rounded-3xl group transition-all"
+			>
+				{user.user_metadata?.avatar_url ? (
 					<img
 						src={user.user_metadata.avatar_url}
 						alt="Avatar"
-						className="w-10 h-10 rounded-xl border-2 border-accent/20"
+						className="w-12 h-12 rounded-2xl border-2 border-indigo-500/20 group-hover:border-indigo-500/50 transition-colors"
 					/>
+				) : (
+					<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-black">
+						{user.user_metadata?.full_name?.[0] || user.email?.[0] || "?"}
+					</div>
 				)}
-				<div className="hidden md:block">
-					<p className="text-xs font-black uppercase tracking-tighter text-foreground">
+				<div className="hidden md:block text-left">
+					<p className="text-xs font-black uppercase tracking-tight text-slate-800">
 						{user.user_metadata?.full_name || "Verified User"}
 					</p>
-					<p className="text-[10px] text-muted-foreground font-medium">
+					<p className="text-[10px] text-slate-400 font-bold tracking-tight">
 						{user.email}
 					</p>
 				</div>
-				<button
-					onClick={() => logout()}
-					className="p-2.5 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+				<motion.button
+					whileHover={{ scale: 1.05 }}
+					whileTap={{ scale: 0.95 }}
+					onClick={async () => {
+						setIsLoading(true);
+						await logout();
+					}}
+					disabled={isLoading}
+					className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
 					title="Logout"
 				>
-					<LogOut className="w-5 h-5" />
-				</button>
-			</div>
+					{isLoading ? (
+						<Loader2 className="w-5 h-5 animate-spin" />
+					) : (
+						<LogOut className="w-5 h-5" />
+					)}
+				</motion.button>
+			</motion.div>
 		);
 	}
 
 	return (
-		<button
+		<motion.button
 			onClick={handleLogin}
 			disabled={isLoading}
-			className="flex items-center gap-3 px-8 py-4 bg-white text-slate-900 rounded-2xl font-black shadow-xl shadow-black/5 hover:shadow-2xl hover:-translate-y-1 active:scale-95 transition-all border border-slate-200 disabled:opacity-70 disabled:pointer-events-none"
+			whileHover={{
+				y: -2,
+				boxShadow:
+					"0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+			}}
+			whileTap={{ scale: 0.97 }}
+			className="flex items-center gap-4 px-8 py-4 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl font-black transition-all border border-slate-800 disabled:opacity-70 disabled:pointer-events-none group relative overflow-hidden"
 		>
 			{isLoading ? (
-				<Loader2 className="w-5 h-5 animate-spin text-accent" />
+				<Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
 			) : (
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 50 50"
-					className="flex-shrink-0"
-				>
-					<path d="M 25.996094 48 C 13.3125 48 2.992188 37.683594 2.992188 25 C 2.992188 12.316406 13.3125 2 25.996094 2 C 31.742188 2 37.242188 4.128906 41.488281 7.996094 L 42.261719 8.703125 L 34.675781 16.289063 L 33.972656 15.6875 C 31.746094 13.78125 28.914063 12.730469 25.996094 12.730469 C 19.230469 12.730469 13.722656 18.234375 13.722656 25 C 13.722656 31.765625 19.230469 37.269531 25.996094 37.269531 C 30.875 37.269531 34.730469 34.777344 36.546875 30.53125 L 24.996094 30.53125 L 24.996094 20.175781 L 47.546875 20.207031 L 47.714844 21 C 48.890625 26.582031 47.949219 34.792969 43.183594 40.667969 C 39.238281 45.53125 33.457031 48 25.996094 48 Z"></path>
-				</svg>
+				<div className="w-5 h-5 bg-white rounded-lg flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform duration-300">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 48 48"
+						className="w-full h-full"
+						aria-hidden="true"
+					>
+						<path
+							fill="#EA4335"
+							d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+						/>
+						<path
+							fill="#4285F4"
+							d="M46.5 24c0-1.61-.15-3.16-.42-4.69H24v8.87h12.66c-.54 2.89-2.18 5.34-4.63 6.99l7.21 5.59C43.47 36.31 46.5 30.79 46.5 24z"
+						/>
+						<path
+							fill="#FBBC05"
+							d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"
+						/>
+						<path
+							fill="#34A853"
+							d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.21-5.59c-2 .99-4.57 1.58-7.21 1.58-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+						/>
+					</svg>
+				</div>
 			)}
 			<span>{isLoading ? "Connecting..." : "Continue with Google"}</span>
-		</button>
+		</motion.button>
 	);
 }

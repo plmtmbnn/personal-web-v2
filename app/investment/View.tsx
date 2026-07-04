@@ -171,15 +171,23 @@ export default function InvestmentPage() {
 										className="w-full"
 									>
 										<FearAndGreedGauge
-											score={marketData.fear_and_greed.score}
-											rating={marketData.fear_and_greed.rating}
-											previousClose={marketData.fear_and_greed.previous_close}
-											previous1Week={marketData.fear_and_greed.previous_1_week}
-											previous1Month={
-												marketData.fear_and_greed.previous_1_month
+											score={marketData.fear_and_greed?.score ?? 50}
+											rating={marketData.fear_and_greed?.rating ?? "neutral"}
+											previousClose={
+												marketData.fear_and_greed?.previous_close ?? 50
 											}
-											previous1Year={marketData.fear_and_greed.previous_1_year}
-											historicalData={marketData.fear_and_greed_historical.data}
+											previous1Week={
+												marketData.fear_and_greed?.previous_1_week ?? 50
+											}
+											previous1Month={
+												marketData.fear_and_greed?.previous_1_month ?? 50
+											}
+											previous1Year={
+												marketData.fear_and_greed?.previous_1_year ?? 50
+											}
+											historicalData={
+												marketData.fear_and_greed_historical?.data ?? []
+											}
 										/>
 									</motion.div>
 								)
@@ -213,9 +221,9 @@ export default function InvestmentPage() {
 									<SentimentCard
 										key={index.title}
 										title={index.title}
-										score={index.data.score}
-										rating={index.data.rating}
-										data={index.data.data}
+										score={index.data?.score ?? 50}
+										rating={index.data?.rating ?? "neutral"}
+										data={index.data?.data ?? []}
 										delay={i * 0.03}
 									/>
 								))}

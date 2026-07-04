@@ -1,7 +1,6 @@
 "use client";
 
 import { EXPERIENCE_YEAR } from "@/lib/shared/constants";
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
 	Briefcase,
@@ -134,12 +133,6 @@ const experiences: Experience[] = [
 ];
 
 export default function WorkExperience() {
-	const [mounted, setMounted] = useState(false);
-
-	useEffect(() => setMounted(true), []);
-
-	if (!mounted) return null;
-
 	return (
 		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
 			{/* Dynamic Background Ambience */}
@@ -192,7 +185,7 @@ export default function WorkExperience() {
 									className={`relative flex flex-col md:flex-row items-center ${idx % 2 === 0 ? "md:flex-row-reverse" : ""}`}
 								>
 									{/* Timeline Node */}
-									<div className="absolute left-4 md:left-1/2 top-0 md:top-8 w-8 h-8 rounded-full bg-background border-4 border-accent shadow-[0_0_20px_rgba(15,23,42,0.3)] z-20 md:-translate-x-1/2 flex items-center justify-center">
+									<div className="absolute left-4 md:left-1/2 top-0 md:top-8 w-8 h-8 rounded-full bg-background border-4 border-accent shadow-[0_0_20px_rgba(15,23,42,0.3)] z-20 -translate-x-1/2 flex items-center justify-center">
 										<div className="w-2 h-2 rounded-full bg-accent animate-ping" />
 									</div>
 
@@ -310,11 +303,11 @@ export default function WorkExperience() {
 							label: "Years Experience",
 							icon: Briefcase,
 						},
-						{ num: "4", label: "Companies", icon: Building2 }, // Building2 is part of lucide
+						{ num: "4", label: "Companies", icon: Building2 },
 						{ num: "3", label: "Awards", icon: Award },
 						{ num: "5M+", label: "Users Impacted", icon: Users },
 					].map((s) => {
-						const SIcon = s.icon === Building2 ? LayoutDashboard : s.icon; // Fail-safe for icon naming
+						const SIcon = s.icon;
 						return (
 							<div
 								key={s.label}

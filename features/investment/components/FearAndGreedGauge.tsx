@@ -44,7 +44,7 @@ export default function FearAndGreedGauge({
 }: FearAndGreedGaugeProps) {
 	// Sort historical data
 	const sortedData = useMemo(() => {
-		return [...historicalData].sort((a, b) => a.x - b.x);
+		return historicalData ? [...historicalData].sort((a, b) => a.x - b.x) : [];
 	}, [historicalData]);
 
 	const getRatingColor = (r: string) => {
@@ -66,7 +66,7 @@ export default function FearAndGreedGauge({
 		labels: sortedData.map((_d) => ""),
 		datasets: [
 			{
-				data: sortedData.map((d) => d.y),
+				data: sortedData.map((d) => d?.y ?? 0),
 				fill: true,
 				borderColor: "rgb(79, 70, 229)",
 				backgroundColor: "rgba(79, 70, 229, 0.05)",

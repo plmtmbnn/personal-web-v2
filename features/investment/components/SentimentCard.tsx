@@ -38,14 +38,14 @@ export default function SentimentCard({
 	delay = 0,
 }: SentimentCardProps) {
 	const sortedData = useMemo(() => {
-		return [...data].sort((a, b) => a.x - b.x);
+		return data ? [...data].sort((a, b) => a.x - b.x) : [];
 	}, [data]);
 
 	const chartData = {
 		labels: sortedData.map((_d) => ""),
 		datasets: [
 			{
-				data: sortedData.map((d) => d.y),
+				data: sortedData.map((d) => d?.y ?? 0),
 				fill: true,
 				borderColor: "rgb(99, 102, 241)",
 				backgroundColor: "rgba(99, 102, 241, 0.03)",

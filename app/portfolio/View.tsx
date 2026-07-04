@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
 	PieChart as PieIcon,
@@ -75,13 +75,6 @@ const otherProjects = [
 export default function PortfolioPage() {
 	const [activeSlice, setActiveSlice] = useState<number | null>(null);
 	const [expandedSection, setExpandedSection] = useState<string | null>("los");
-	const [mounted, setMounted] = useState(false);
-
-	useEffect(() => {
-		setMounted(true);
-	}, []);
-
-	if (!mounted) return null;
 
 	return (
 		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
@@ -137,6 +130,8 @@ export default function PortfolioPage() {
 									<svg
 										viewBox="0 0 200 200"
 										className="w-full h-full transform -rotate-90"
+										aria-label="Project Distribution Chart"
+										role="img"
 									>
 										{/* LOS & LMS (80%) */}
 										<motion.circle
@@ -192,14 +187,14 @@ export default function PortfolioPage() {
 												? "80%"
 												: activeSlice === 1
 													? "20%"
-													: "100%"}
+													: "11"}
 										</span>
 										<span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">
 											{activeSlice === 0
 												? "Fintech"
 												: activeSlice === 1
 													? "Platform"
-													: "Core Focus"}
+													: "Total Projects"}
 										</span>
 									</div>
 								</div>
@@ -207,7 +202,12 @@ export default function PortfolioPage() {
 								{/* Legend */}
 								<div className="w-full space-y-3">
 									<button
-										onClick={() => setExpandedSection("los")}
+										onClick={() => {
+											setExpandedSection("los");
+											setActiveSlice(0);
+										}}
+										onMouseEnter={() => setActiveSlice(0)}
+										onMouseLeave={() => setActiveSlice(null)}
 										className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${expandedSection === "los" ? "bg-blue-500/10 border-blue-500/20 text-blue-500" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"}`}
 									>
 										<div className="flex items-center gap-3">
@@ -219,7 +219,12 @@ export default function PortfolioPage() {
 										<span className="text-xs font-bold">80%</span>
 									</button>
 									<button
-										onClick={() => setExpandedSection("other")}
+										onClick={() => {
+											setExpandedSection("other");
+											setActiveSlice(1);
+										}}
+										onMouseEnter={() => setActiveSlice(1)}
+										onMouseLeave={() => setActiveSlice(null)}
 										className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${expandedSection === "other" ? "bg-purple-500/10 border-purple-500/20 text-purple-500" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"}`}
 									>
 										<div className="flex items-center gap-3">
@@ -245,16 +250,20 @@ export default function PortfolioPage() {
 							className={`group glass-card rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${expandedSection === "los" ? "border-blue-500/30 ring-1 ring-blue-500/20" : "border-white/5"}`}
 						>
 							<button
-								onClick={() =>
-									setExpandedSection(expandedSection === "los" ? null : "los")
-								}
-								className="w-full p-8 sm:p-10 flex items-center justify-between"
+								onClick={() => {
+									setExpandedSection(expandedSection === "los" ? null : "los");
+									setActiveSlice(expandedSection === "los" ? null : 0);
+								}}
+								onMouseEnter={() => setActiveSlice(0)}
+								onMouseLeave={() => setActiveSlice(null)}
+								aria-expanded={expandedSection === "los"}
+								className="w-full p-8 sm:p-10 flex items-center justify-between text-left"
 							>
 								<div className="flex items-center gap-6">
 									<div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
 										<Briefcase className="w-7 h-7" />
 									</div>
-									<div className="text-left">
+									<div>
 										<h3 className="text-2xl font-black text-foreground tracking-tight">
 											Fintech Core Systems
 										</h3>
@@ -277,6 +286,7 @@ export default function PortfolioPage() {
 										animate={{ height: "auto", opacity: 1 }}
 										exit={{ height: 0, opacity: 0 }}
 										transition={{ duration: 0.4, ease: "easeInOut" }}
+										style={{ overflow: "hidden" }}
 									>
 										<div className="px-8 sm:px-10 pb-10 space-y-8">
 											<p className="text-muted-foreground font-medium leading-relaxed">
@@ -316,18 +326,22 @@ export default function PortfolioPage() {
 							className={`group glass-card rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${expandedSection === "other" ? "border-purple-500/30 ring-1 ring-purple-500/20" : "border-white/5"}`}
 						>
 							<button
-								onClick={() =>
+								onClick={() => {
 									setExpandedSection(
 										expandedSection === "other" ? null : "other",
-									)
-								}
-								className="w-full p-8 sm:p-10 flex items-center justify-between"
+									);
+									setActiveSlice(expandedSection === "other" ? null : 1);
+								}}
+								onMouseEnter={() => setActiveSlice(1)}
+								onMouseLeave={() => setActiveSlice(null)}
+								aria-expanded={expandedSection === "other"}
+								className="w-full p-8 sm:p-10 flex items-center justify-between text-left"
 							>
 								<div className="flex items-center gap-6">
 									<div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500">
 										<Rocket className="w-7 h-7" />
 									</div>
-									<div className="text-left">
+									<div>
 										<h3 className="text-2xl font-black text-foreground tracking-tight">
 											Notable Platforms
 										</h3>
@@ -350,6 +364,7 @@ export default function PortfolioPage() {
 										animate={{ height: "auto", opacity: 1 }}
 										exit={{ height: 0, opacity: 0 }}
 										transition={{ duration: 0.4, ease: "easeInOut" }}
+										style={{ overflow: "hidden" }}
 									>
 										<div className="px-8 sm:px-10 pb-10 space-y-8">
 											<p className="text-muted-foreground font-medium leading-relaxed">

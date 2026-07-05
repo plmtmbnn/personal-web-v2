@@ -1,35 +1,14 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Compass } from "lucide-react";
 import { destinations } from "@/features/travel/data";
+import useDestinations from "@/features/travel/hooks/useDestinations";
 import StatsCard from "@/features/travel/components/StatsCard";
 import DestinationCard from "@/features/travel/components/DestinationCard";
 
 export default function TravelPage() {
-	const [mounted, setMounted] = useState(false);
-
-	useEffect(() => {
-		setMounted(true);
-	}, []);
-
-	const visitedDestinations = useMemo(
-		() =>
-			destinations
-				.filter((d) => d.isVisited)
-				.sort((a, b) =>
-					(b.visitedDate || "").localeCompare(a.visitedDate || ""),
-				),
-		[],
-	);
-
-	const wishlistDestinations = useMemo(
-		() => destinations.filter((d) => !d.isVisited),
-		[],
-	);
-
-	if (!mounted) return null;
+	const { visitedDestinations, wishlistDestinations } = useDestinations();
 
 	return (
 		<main className="min-h-screen bg-slate-50 pb-32">
@@ -72,9 +51,15 @@ export default function TravelPage() {
 							<div className="h-px flex-1 bg-slate-200" />
 						</div>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-							{visitedDestinations.map((dest, i) => (
-								<DestinationCard key={dest.id} destination={dest} index={i} />
-							))}
+							{visitedDestinations.length === 0 ? (
+								<p className="text-slate-500 text-center col-span-3">
+									No journeys completed yet. Start exploring!
+								</p>
+							) : (
+								visitedDestinations.map((dest, i) => (
+									<DestinationCard key={dest.id} destination={dest} index={i} />
+								))
+							)}
 						</div>
 					</section>
 
@@ -86,9 +71,15 @@ export default function TravelPage() {
 							<div className="h-px flex-1 bg-slate-200" />
 						</div>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-							{wishlistDestinations.map((dest, i) => (
-								<DestinationCard key={dest.id} destination={dest} index={i} />
-							))}
+							{wishlistDestinations.length === 0 ? (
+								<p className="text-slate-500 text-center col-span-3">
+									No future adventures yet. Add some to your wishlist!
+								</p>
+							) : (
+								wishlistDestinations.map((dest, i) => (
+									<DestinationCard key={dest.id} destination={dest} index={i} />
+								))
+							)}
 						</div>
 					</section>
 				</div>

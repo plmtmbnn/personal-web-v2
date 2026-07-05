@@ -20,10 +20,14 @@ const DestinationCard = ({
 		>
 			<div className="aspect-[16/10] relative overflow-hidden">
 				<Image
-					src={destination.imageUrl}
-					alt={destination.name}
+					src={destination.imageUrl
+						.replace("w=2070", "w=800")
+						.replace("w=2072", "w=800")
+						.replace("w=1974", "w=800")}
+					alt={`${destination.name}, ${destination.location}, ${destination.country}`}
 					fill
 					className="object-cover transition-transform duration-500 group-hover:scale-105"
+					loading="lazy"
 				/>
 				<div className="absolute top-4 left-4">
 					{destination.isVisited ? (
@@ -54,11 +58,14 @@ const DestinationCard = ({
 					{destination.isVisited && destination.visitedDate && (
 						<div className="flex items-center gap-1 text-emerald-600/70 text-[10px] font-black uppercase">
 							<Calendar size={12} />
-							{new Date(destination.visitedDate).toLocaleDateString("en-US", {
-								month: "short",
-								year: "numeric",
-								timeZone: "UTC",
-							})}
+							{new Date(`${destination.visitedDate}-01`).toLocaleDateString(
+								"en-US",
+								{
+									month: "short",
+									year: "numeric",
+									timeZone: "UTC",
+								},
+							)}
 						</div>
 					)}
 				</div>

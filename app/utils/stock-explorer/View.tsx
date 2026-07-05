@@ -1,31 +1,25 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useDebounce } from "./hooks/useDebounce";
 import {
 	Search,
-	ArrowUpDown,
-	TrendingUp,
-	TrendingDown,
-	Minus,
 	RefreshCw,
 	ArrowLeft,
-	ArrowUp,
-	ArrowDown,
 	Filter,
 	X,
 	Settings,
 	Activity,
-	Globe,
 	BarChart2,
 	ChevronRight,
-	Zap,
 	Eye,
 	AlertCircle,
-	DollarSign,
 	Flame,
 	ArrowRightLeft,
-	ChevronDown,
+	Globe,
 } from "lucide-react";
+import StockTable from "./components/StockTable";
+import MarketSummary from "./components/MarketSummary";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
@@ -66,1061 +60,38 @@ export interface IDXStock {
 	percentage: number | null;
 }
 
-interface ProcessedStock extends IDXStock {
+export interface ProcessedStock extends IDXStock {
 	ForeignNet: number;
 	ChangePct: number;
 	IsHighVolume: boolean;
 }
 
-type SortKey = keyof IDXStock | "ForeignNet" | "ChangePct";
-interface SortConfig {
+export type SortKey = keyof ProcessedStock;
+
+/**
+ * Type guard to validate if an object matches the IDXStock interface.
+ * @param data - The data to validate.
+ * @returns True if the data matches the IDXStock interface.
+ */
+const isIDXStock = (data: any): data is IDXStock => {
+	return (
+		data &&
+		typeof data.StockCode === "string" &&
+		typeof data.Previous === "number"
+	);
+};
+export interface SortConfig {
 	key: SortKey;
 	direction: "asc" | "desc" | null;
 }
 
 // ─── Formatters ────────────────────────────────────────────────────────────
 
-const fmtCompact = (n: number) =>
-	n === 0
-		? "0"
-		: Intl.NumberFormat("en-US", {
-				notation: "compact",
-				maximumFractionDigits: 2,
-			}).format(n);
-
 const fmtIDR = (n: number) =>
 	new Intl.NumberFormat("id-ID", {
 		style: "decimal",
 		minimumFractionDigits: 0,
 	}).format(n);
-
-const fmtPct = (n: number, sign = true) =>
-	`${sign && n > 0 ? "+" : ""}${n.toFixed(2)}%`;
-
-// ─── Mini bar ──────────────────────────────────────────────────────────────
-
-function Bar({
-	pct,
-	color = "amber",
-	delay = 0,
-}: {
-	pct: number;
-	color?: string;
-	delay?: number;
-}) {
-	const colorMap: Record<string, string> = {
-		amber: "bg-amber-400",
-		emerald: "bg-emerald-500",
-		rose: "bg-rose-400",
-		sky: "bg-sky-400",
-		stone: "bg-stone-400",
-	};
-	return (
-		<div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
-			<motion.div
-				initial={{ width: 0 }}
-				animate={{ width: `${Math.min(pct * 100, 100)}%` }}
-				transition={{ duration: 0.7, ease: "easeOut", delay }}
-				className={`h-full rounded-full ${colorMap[color] || "bg-amber-400"}`}
-			/>
-		</div>
-	);
-}
-
-// ─── Breadth Gauge (SVG semicircle) ────────────────────────────────────────
-
-function BreadthGauge({
-	advancers,
-	decliners,
-	unchanged,
-	total,
-}: {
-	advancers: number;
-	decliners: number;
-	unchanged: number;
-	total: number;
-}) {
-	const r = 52;
-	const circ = Math.PI * r;
-	const advPct = total > 0 ? advancers / total : 0;
-	const decPct = total > 0 ? decliners / total : 0;
-	const advDash = advPct * circ;
-	const decDash = decPct * circ;
-
-	return (
-		<div className="flex flex-col items-center">
-			<div className="relative w-40 h-22">
-				<svg viewBox="0 0 120 68" className="w-40 h-22">
-					<path
-						d={`M 8,62 A ${r},${r} 0 0,1 112,62`}
-						fill="none"
-						stroke="#f5f5f4"
-						strokeWidth="10"
-						strokeLinecap="round"
-					/>
-					<path
-						d={`M 8,62 A ${r},${r} 0 0,1 112,62`}
-						fill="none"
-						stroke="#fca5a5"
-						strokeWidth="10"
-						strokeLinecap="round"
-						strokeDasharray={`${decDash} ${circ}`}
-						strokeDashoffset={-circ + decDash}
-						style={{ transform: "scaleX(-1)", transformOrigin: "60px 62px" }}
-					/>
-					<path
-						d={`M 8,62 A ${r},${r} 0 0,1 112,62`}
-						fill="none"
-						stroke="#34d399"
-						strokeWidth="10"
-						strokeLinecap="round"
-						strokeDasharray={`${advDash} ${circ}`}
-					/>
-					<text
-						x="60"
-						y="57"
-						textAnchor="middle"
-						fontSize="11"
-						fill="#44403c"
-						fontWeight="800"
-					>
-						{(advPct * 100).toFixed(0)}%
-					</text>
-					<text
-						x="60"
-						y="66"
-						textAnchor="middle"
-						fontSize="7"
-						fill="#a8a29e"
-						fontWeight="700"
-						letterSpacing="1"
-					>
-						ADVANCING
-					</text>
-				</svg>
-			</div>
-			<div className="flex gap-4 text-[9px] font-black uppercase tracking-wider mt-1">
-				<span className="flex items-center gap-1 text-emerald-600">
-					<span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-					{advancers} Up
-				</span>
-				<span className="flex items-center gap-1 text-stone-400">
-					<span className="w-2 h-2 rounded-full bg-stone-300 inline-block" />
-					{unchanged} Flat
-				</span>
-				<span className="flex items-center gap-1 text-rose-500">
-					<span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />
-					{decliners} Down
-				</span>
-			</div>
-		</div>
-	);
-}
-
-// ─── Summary Panel ─────────────────────────────────────────────────────────
-
-function MarketSummary({
-	stocks,
-	date,
-}: {
-	stocks: ProcessedStock[];
-	date: string;
-}) {
-	const [tab, setTab] = useState<"movers" | "foreign" | "volume">("movers");
-
-	const total = stocks.length;
-	const advancers = stocks.filter((s) => s.Change > 0).length;
-	const decliners = stocks.filter((s) => s.Change < 0).length;
-	const unchanged = total - advancers - decliners;
-	const totalValue = stocks.reduce((a, s) => a + s.Value, 0);
-	const totalVolume = stocks.reduce((a, s) => a + s.Volume, 0);
-	const totalFrequency = stocks.reduce((a, s) => a + s.Frequency, 0);
-	const totalForeignBuy = stocks.reduce((a, s) => a + (s.ForeignBuy || 0), 0);
-	const totalForeignSell = stocks.reduce((a, s) => a + (s.ForeignSell || 0), 0);
-	const totalForeignNet = totalForeignBuy - totalForeignSell;
-	const avgChangePct =
-		total > 0 ? stocks.reduce((a, s) => a + s.ChangePct, 0) / total : 0;
-	const highVolCount = stocks.filter((s) => s.IsHighVolume).length;
-	const fgnNetBuy = stocks.filter((s) => s.ForeignNet > 0).length;
-
-	const topGainers = [...stocks]
-		.sort((a, b) => b.ChangePct - a.ChangePct)
-		.slice(0, 5);
-	const topLosers = [...stocks]
-		.sort((a, b) => a.ChangePct - b.ChangePct)
-		.slice(0, 5);
-	const topVolume = [...stocks].sort((a, b) => b.Volume - a.Volume).slice(0, 5);
-	const topForeignNet = [...stocks]
-		.sort((a, b) => b.ForeignNet - a.ForeignNet)
-		.slice(0, 5);
-	const topForeignBuy = [...stocks]
-		.sort((a, b) => b.ForeignBuy - a.ForeignBuy)
-		.slice(0, 5);
-	const topForeignSell = [...stocks]
-		.sort((a, b) => b.ForeignSell - a.ForeignSell)
-		.slice(0, 5);
-
-	const tabs = [
-		{ key: "movers" as const, label: "Top Movers", icon: TrendingUp },
-		{ key: "foreign" as const, label: "Foreign Flow", icon: Globe },
-		{ key: "volume" as const, label: "Volume Leaders", icon: Flame },
-	];
-
-	return (
-		<div className="mb-8 space-y-4">
-			{/* ── Row 1: KPI Cards ── */}
-			<div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-				{/* Breadth */}
-				<div className="col-span-2 bg-white border border-stone-200 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row items-center gap-6">
-					<BreadthGauge
-						advancers={advancers}
-						decliners={decliners}
-						unchanged={unchanged}
-						total={total}
-					/>
-					<div className="flex-1 grid grid-cols-2 gap-x-8 gap-y-4 w-full">
-						{[
-							{ label: "Instruments", value: total, color: "text-stone-900" },
-							{
-								label: "Avg. Change",
-								value: fmtPct(avgChangePct),
-								color: avgChangePct >= 0 ? "text-emerald-600" : "text-rose-500",
-							},
-							{
-								label: "High Vol.",
-								value: highVolCount,
-								color: "text-amber-600",
-							},
-							{
-								label: "Fgn. Net Buy",
-								value: fgnNetBuy,
-								color: "text-sky-600",
-							},
-						].map(({ label, value, color }) => (
-							<div key={label}>
-								<p className="text-[8px] font-black uppercase tracking-[0.3em] text-stone-400 mb-0.5">
-									{label}
-								</p>
-								<p
-									className={`text-2xl font-black tabular-nums leading-tight ${color}`}
-								>
-									{value}
-								</p>
-							</div>
-						))}
-					</div>
-				</div>
-
-				{/* Total Value */}
-				<div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:border-amber-200 transition-colors">
-					<div className="absolute -top-4 -right-4 w-20 h-20 bg-amber-50 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
-					<div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-3">
-						<DollarSign className="w-4 h-4" />
-					</div>
-					<p className="text-[8px] font-black uppercase tracking-[0.3em] text-stone-400">
-						Total Value
-					</p>
-					<p className="text-2xl font-black text-stone-900 tabular-nums leading-tight mt-1">
-						{fmtCompact(totalValue)}
-					</p>
-					<p className="text-[9px] font-bold text-stone-400 mt-0.5">
-						IDR traded today
-					</p>
-					<div className="mt-3 pt-3 border-t border-stone-100 space-y-1.5">
-						<div className="flex justify-between text-[9px] font-black">
-							<span className="text-stone-400 uppercase tracking-wider">
-								Volume
-							</span>
-							<span className="text-stone-700 tabular-nums">
-								{fmtCompact(totalVolume)}
-							</span>
-						</div>
-						<div className="flex justify-between text-[9px] font-black">
-							<span className="text-stone-400 uppercase tracking-wider">
-								Transactions
-							</span>
-							<span className="text-stone-700 tabular-nums">
-								{fmtCompact(totalFrequency)}
-							</span>
-						</div>
-					</div>
-				</div>
-
-				{/* Foreign Net */}
-				<div
-					className={`bg-white rounded-2xl p-5 shadow-sm relative overflow-hidden group transition-colors ${totalForeignNet >= 0 ? "border border-emerald-200 hover:border-emerald-300" : "border border-rose-200 hover:border-rose-300"}`}
-				>
-					<div
-						className={`absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-50 group-hover:opacity-80 transition-opacity ${totalForeignNet >= 0 ? "bg-emerald-50" : "bg-rose-50"}`}
-					/>
-					<div
-						className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${totalForeignNet >= 0 ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-500"}`}
-					>
-						<Globe className="w-4 h-4" />
-					</div>
-					<p className="text-[8px] font-black uppercase tracking-[0.3em] text-stone-400">
-						Foreign Net
-					</p>
-					<p
-						className={`text-2xl font-black tabular-nums leading-tight mt-1 ${totalForeignNet >= 0 ? "text-emerald-600" : "text-rose-500"}`}
-					>
-						{totalForeignNet >= 0 ? "+" : ""}
-						{fmtCompact(totalForeignNet)}
-					</p>
-					<p
-						className={`text-[9px] font-bold mt-0.5 ${totalForeignNet >= 0 ? "text-emerald-500" : "text-rose-400"}`}
-					>
-						{totalForeignNet >= 0 ? "Net Inflow" : "Net Outflow"}
-					</p>
-					<div className="mt-3 pt-3 border-t border-stone-100 space-y-1.5">
-						<div className="flex justify-between text-[9px] font-black">
-							<span className="text-stone-400 uppercase tracking-wider">
-								Buy
-							</span>
-							<span className="text-emerald-600 tabular-nums">
-								{fmtCompact(totalForeignBuy)}
-							</span>
-						</div>
-						<div className="flex justify-between text-[9px] font-black">
-							<span className="text-stone-400 uppercase tracking-wider">
-								Sell
-							</span>
-							<span className="text-rose-500 tabular-nums">
-								{fmtCompact(totalForeignSell)}
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* ── Row 2: Activity Strip ── */}
-			<div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-				{[
-					{
-						label: "Active >20k",
-						value: stocks.filter((s) => s.Frequency > 20000).length,
-						icon: Zap,
-						accent: "amber",
-					},
-					{
-						label: "High Vol.",
-						value: highVolCount,
-						icon: Flame,
-						accent: "orange",
-					},
-					{
-						label: "Fgn. Net Buy",
-						value: fgnNetBuy,
-						icon: TrendingUp,
-						accent: "emerald",
-					},
-					{
-						label: "Fgn. Net Sell",
-						value: stocks.filter((s) => s.ForeignNet < 0).length,
-						icon: TrendingDown,
-						accent: "rose",
-					},
-					{ label: "Flat", value: unchanged, icon: Minus, accent: "stone" },
-					{
-						label: "Total Freq.",
-						value: fmtCompact(totalFrequency),
-						icon: Activity,
-						accent: "sky",
-					},
-				].map(({ label, value, icon: Icon, accent }) => {
-					const bg: Record<string, string> = {
-						amber: "bg-amber-100 text-amber-600",
-						orange: "bg-orange-100 text-orange-600",
-						emerald: "bg-emerald-100 text-emerald-600",
-						rose: "bg-rose-100 text-rose-500",
-						stone: "bg-stone-100 text-stone-500",
-						sky: "bg-sky-100 text-sky-600",
-					};
-					return (
-						<div
-							key={label}
-							className="bg-white border border-stone-200 rounded-xl p-3 text-center hover:border-stone-300 hover:shadow-sm transition-all"
-						>
-							<div
-								className={`w-6 h-6 rounded-lg mx-auto mb-2 flex items-center justify-center ${bg[accent]}`}
-							>
-								<Icon className="w-3 h-3" />
-							</div>
-							<p className="text-base font-black text-stone-900 tabular-nums leading-none">
-								{value}
-							</p>
-							<p className="text-[8px] font-black uppercase tracking-wider text-stone-400 mt-1 leading-tight">
-								{label}
-							</p>
-						</div>
-					);
-				})}
-			</div>
-
-			{/* ── Row 3: Tabbed Detail Panel ── */}
-			<div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
-				{/* Tab nav */}
-				<div className="flex items-center border-b border-stone-100 px-2 pt-2 gap-0.5">
-					{tabs.map(({ key, label, icon: Icon }) => (
-						<button
-							key={key}
-							onClick={() => setTab(key)}
-							className={`relative flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${tab === key ? "text-stone-900 bg-stone-50" : "text-stone-400 hover:text-stone-600 hover:bg-stone-50/50"}`}
-						>
-							<Icon className="w-3 h-3" />
-							{label}
-							{tab === key && (
-								<motion.div
-									layoutId="tab-line"
-									className="absolute bottom-0 left-3 right-3 h-0.5 bg-amber-400 rounded-t"
-								/>
-							)}
-						</button>
-					))}
-					<span className="ml-auto pr-4 text-[8px] font-black text-stone-300 uppercase tracking-wider">
-						{date || "—"}
-					</span>
-				</div>
-
-				<AnimatePresence mode="wait">
-					{/* MOVERS */}
-					{tab === "movers" && (
-						<motion.div
-							key="movers"
-							initial={{ opacity: 0, y: 4 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.15 }}
-							className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-stone-100"
-						>
-							{[
-								{ title: "Top Gainers", list: topGainers, up: true },
-								{ title: "Top Losers", list: topLosers, up: false },
-							].map(({ title, list, up }) => (
-								<div key={title} className="p-5">
-									<div className="flex items-center gap-2 mb-4">
-										<div
-											className={`w-6 h-6 rounded-lg flex items-center justify-center ${up ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-500"}`}
-										>
-											{up ? (
-												<TrendingUp className="w-3.5 h-3.5" />
-											) : (
-												<TrendingDown className="w-3.5 h-3.5" />
-											)}
-										</div>
-										<span className="text-[9px] font-black uppercase tracking-widest text-stone-700">
-											{title}
-										</span>
-									</div>
-									<div className="space-y-2.5">
-										{list.map((s, i) => (
-											<div
-												key={s.StockCode}
-												className="flex items-center gap-3"
-											>
-												<span className="text-[9px] font-black text-stone-300 w-4 text-right">
-													{i + 1}
-												</span>
-												<div
-													className={`w-13 min-w-[48px] h-7 px-1 rounded-lg flex items-center justify-center border ${up ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200"}`}
-												>
-													<span
-														className={`text-[9px] font-black ${up ? "text-emerald-700" : "text-rose-600"}`}
-													>
-														{s.StockCode}
-													</span>
-												</div>
-												<div className="flex-1 min-w-0 space-y-1">
-													<div className="flex justify-between">
-														<span className="text-[10px] font-bold text-stone-600 truncate max-w-[130px]">
-															{s.StockName}
-														</span>
-														<span
-															className={`text-[10px] font-black tabular-nums ${up ? "text-emerald-600" : "text-rose-500"}`}
-														>
-															{fmtPct(s.ChangePct)}
-														</span>
-													</div>
-													<Bar
-														pct={Math.abs(s.ChangePct) / 35}
-														color={up ? "emerald" : "rose"}
-														delay={i * 0.06}
-													/>
-												</div>
-											</div>
-										))}
-									</div>
-								</div>
-							))}
-						</motion.div>
-					)}
-
-					{/* FOREIGN */}
-					{tab === "foreign" && (
-						<motion.div
-							key="foreign"
-							initial={{ opacity: 0, y: 4 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.15 }}
-							className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-stone-100"
-						>
-							{[
-								{
-									title: "Net Buy Leaders",
-									list: topForeignNet,
-									color: "emerald",
-									fn: (s: ProcessedStock) => s.ForeignNet,
-								},
-								{
-									title: "Foreign Buy",
-									list: topForeignBuy,
-									color: "sky",
-									fn: (s: ProcessedStock) => s.ForeignBuy,
-								},
-								{
-									title: "Foreign Sell",
-									list: topForeignSell,
-									color: "rose",
-									fn: (s: ProcessedStock) => s.ForeignSell,
-								},
-							].map(({ title, list, color, fn }) => {
-								const maxVal = fn(list[0]) || 1;
-								return (
-									<div key={title} className="p-5">
-										<div className="flex items-center gap-2 mb-4">
-											<div
-												className={`w-6 h-6 rounded-lg flex items-center justify-center ${color === "emerald" ? "bg-emerald-100 text-emerald-600" : color === "sky" ? "bg-sky-100 text-sky-600" : "bg-rose-100 text-rose-500"}`}
-											>
-												<Globe className="w-3.5 h-3.5" />
-											</div>
-											<span className="text-[9px] font-black uppercase tracking-widest text-stone-700">
-												{title}
-											</span>
-										</div>
-										<div className="space-y-2.5">
-											{list.map((s, i) => {
-												const val = fn(s);
-												return (
-													<div
-														key={s.StockCode}
-														className="flex items-center gap-3"
-													>
-														<span className="text-[9px] font-black text-stone-300 w-4 text-right">
-															{i + 1}
-														</span>
-														<div
-															className={`w-13 min-w-[48px] h-7 px-1 rounded-lg flex items-center justify-center border ${color === "emerald" ? "bg-emerald-50 border-emerald-200" : color === "sky" ? "bg-sky-50 border-sky-200" : "bg-rose-50 border-rose-200"}`}
-														>
-															<span
-																className={`text-[9px] font-black ${color === "emerald" ? "text-emerald-700" : color === "sky" ? "text-sky-700" : "text-rose-600"}`}
-															>
-																{s.StockCode}
-															</span>
-														</div>
-														<div className="flex-1 min-w-0 space-y-1">
-															<div className="flex justify-between">
-																<span className="text-[10px] font-bold text-stone-600 truncate max-w-[100px]">
-																	{s.StockName}
-																</span>
-																<span
-																	className={`text-[10px] font-black tabular-nums ${color === "emerald" ? "text-emerald-600" : color === "sky" ? "text-sky-600" : "text-rose-500"}`}
-																>
-																	{fmtCompact(val)}
-																</span>
-															</div>
-															<Bar
-																pct={val / maxVal}
-																color={color}
-																delay={i * 0.06}
-															/>
-														</div>
-													</div>
-												);
-											})}
-										</div>
-									</div>
-								);
-							})}
-						</motion.div>
-					)}
-
-					{/* VOLUME */}
-					{tab === "volume" && (
-						<motion.div
-							key="volume"
-							initial={{ opacity: 0, y: 4 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.15 }}
-							className="p-5"
-						>
-							<div className="flex items-center gap-2 mb-4">
-								<div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-									<Flame className="w-3.5 h-3.5" />
-								</div>
-								<span className="text-[9px] font-black uppercase tracking-widest text-stone-700">
-									Volume Leaders — Today
-								</span>
-							</div>
-							<div className="space-y-3">
-								{topVolume.map((s, i) => (
-									<div key={s.StockCode} className="flex items-center gap-3">
-										<span className="text-[9px] font-black text-stone-300 w-4 text-right">
-											{i + 1}
-										</span>
-										<div className="w-14 min-w-[52px] h-7 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-center">
-											<span className="text-[9px] font-black text-amber-700">
-												{s.StockCode}
-											</span>
-										</div>
-										<div className="flex-1 min-w-0 space-y-1">
-											<div className="flex items-center justify-between">
-												<span className="text-[10px] font-bold text-stone-600 truncate max-w-[160px]">
-													{s.StockName}
-												</span>
-												<div className="flex items-center gap-2">
-													<span className="text-[10px] font-black text-stone-700 tabular-nums">
-														{fmtCompact(s.Volume)}
-													</span>
-													<span
-														className={`text-[9px] font-black tabular-nums ${s.ChangePct >= 0 ? "text-emerald-600" : "text-rose-500"}`}
-													>
-														{fmtPct(s.ChangePct)}
-													</span>
-												</div>
-											</div>
-											<Bar
-												pct={s.Volume / (topVolume[0].Volume || 1)}
-												color="amber"
-												delay={i * 0.07}
-											/>
-										</div>
-									</div>
-								))}
-							</div>
-						</motion.div>
-					)}
-				</AnimatePresence>
-			</div>
-		</div>
-	);
-}
-
-// ─── Sortable Header ───────────────────────────────────────────────────────
-
-function SortableHeader({
-	label,
-	sortKey,
-	currentSort,
-	onSort,
-	align = "left",
-}: {
-	label: string;
-	sortKey: SortKey;
-	currentSort: SortConfig;
-	onSort: (k: SortKey) => void;
-	align?: "left" | "right" | "center";
-}) {
-	const isActive = currentSort.key === sortKey;
-	const Icon =
-		isActive && currentSort.direction
-			? currentSort.direction === "asc"
-				? ArrowUp
-				: ArrowDown
-			: ArrowUpDown;
-	return (
-		<th
-			className={`px-4 py-3.5 text-[9px] font-black uppercase tracking-[0.25em] sticky top-0 bg-stone-50 z-20 border-b border-stone-200 transition-colors whitespace-nowrap ${isActive ? "text-amber-600" : "text-stone-400"} ${align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left"}`}
-		>
-			<button
-				onClick={() => onSort(sortKey)}
-				className={`inline-flex items-center gap-1.5 hover:text-amber-600 transition-colors ${align === "right" ? "flex-row-reverse" : ""}`}
-			>
-				{label}
-				<Icon
-					className={`w-2.5 h-2.5 ${isActive ? "opacity-100" : "opacity-30"}`}
-				/>
-			</button>
-		</th>
-	);
-}
-
-// ─── Stock Row ─────────────────────────────────────────────────────────────
-
-function StockRow({
-	stock,
-	maxVolume,
-	rank,
-	isExpanded,
-	onToggle,
-}: {
-	stock: ProcessedStock;
-	maxVolume: number;
-	rank: number;
-	isExpanded: boolean;
-	onToggle: () => void;
-}) {
-	const up = stock.Change > 0;
-	const dn = stock.Change < 0;
-
-	return (
-		<>
-			<motion.tr
-				layout
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				exit={{ opacity: 0 }}
-				onClick={onToggle}
-				className={`group border-b border-stone-100 cursor-pointer transition-all ${isExpanded ? "bg-amber-50/70" : "hover:bg-stone-50/80"}`}
-			>
-				{/* Rank + Instrument */}
-				<td className="px-4 py-3.5">
-					<div className="flex items-center gap-3">
-						<span className="text-[9px] font-black text-stone-300 w-4 text-right tabular-nums flex-shrink-0">
-							{rank}
-						</span>
-						<div
-							className={`min-w-[52px] h-8 px-1.5 flex items-center justify-center rounded-lg font-black text-[10px] tracking-tight flex-shrink-0 border ${up ? "bg-emerald-50 text-emerald-700 border-emerald-200" : dn ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-stone-100 text-stone-500 border-stone-200"}`}
-						>
-							{stock.StockCode}
-						</div>
-						<div className="min-w-0">
-							<p className="text-[11px] font-bold text-stone-800 truncate max-w-[160px] leading-tight">
-								{stock.StockName}
-							</p>
-							<div className="flex items-center gap-1.5 mt-0.5">
-								{stock.IsHighVolume && (
-									<span className="inline-flex items-center gap-0.5 px-1 py-0.5 bg-amber-100 text-amber-700 text-[7px] font-black uppercase tracking-wider rounded border border-amber-200">
-										<Flame className="w-2 h-2" /> Hot
-									</span>
-								)}
-								{stock.Frequency > 20000 && (
-									<span className="inline-flex items-center gap-0.5 px-1 py-0.5 bg-sky-100 text-sky-700 text-[7px] font-black uppercase tracking-wider rounded border border-sky-200">
-										<Zap className="w-2 h-2" /> Active
-									</span>
-								)}
-							</div>
-						</div>
-					</div>
-				</td>
-
-				{/* Price */}
-				<td className="px-4 py-3.5">
-					<p className="text-[12px] font-black text-stone-900 tabular-nums font-mono">
-						{fmtIDR(stock.Close)}
-					</p>
-					<p className="text-[9px] text-stone-400 font-bold mt-0.5 tabular-nums">
-						prev {fmtIDR(stock.Previous)}
-					</p>
-				</td>
-
-				{/* Change */}
-				<td className="px-4 py-3.5 text-right">
-					<span
-						className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black tabular-nums border ${up ? "bg-emerald-50 text-emerald-700 border-emerald-200" : dn ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-stone-100 text-stone-500 border-stone-200"}`}
-					>
-						{up ? (
-							<TrendingUp className="w-3 h-3" />
-						) : dn ? (
-							<TrendingDown className="w-3 h-3" />
-						) : (
-							<Minus className="w-3 h-3" />
-						)}
-						{fmtPct(stock.ChangePct)}
-					</span>
-					<p
-						className={`text-[9px] font-black mt-1 text-right tabular-nums ${up ? "text-emerald-600" : dn ? "text-rose-500" : "text-stone-400"}`}
-					>
-						{up ? "+" : ""}
-						{fmtIDR(stock.Change)}
-					</p>
-				</td>
-
-				{/* Volume */}
-				<td className="px-4 py-3.5 text-right">
-					<p className="text-[11px] font-black text-stone-700 tabular-nums font-mono">
-						{fmtCompact(stock.Volume)}
-					</p>
-					<div className="mt-1.5 flex justify-end">
-						<div className="w-16 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-							<motion.div
-								initial={{ width: 0 }}
-								animate={{ width: `${(stock.Volume / maxVolume) * 100}%` }}
-								transition={{ duration: 0.5 }}
-								className="h-full bg-amber-400 rounded-full"
-							/>
-						</div>
-					</div>
-				</td>
-
-				{/* Value */}
-				<td className="px-4 py-3.5 text-right">
-					<p className="text-[11px] font-black text-stone-700 tabular-nums font-mono">
-						{fmtCompact(stock.Value)}
-					</p>
-					<p className="text-[9px] font-bold text-stone-400 mt-0.5">IDR</p>
-				</td>
-
-				{/* Freq */}
-				<td className="px-4 py-3.5 text-right">
-					<p className="text-[11px] font-black text-stone-700 tabular-nums font-mono">
-						{fmtIDR(stock.Frequency)}
-					</p>
-				</td>
-
-				{/* Bid / Ask */}
-				<td className="px-4 py-3.5 text-right">
-					<div className="flex flex-col items-end gap-0.5">
-						<div className="flex items-center gap-1">
-							<span className="text-[7px] font-black text-emerald-500 uppercase">
-								B
-							</span>
-							<span className="text-[10px] font-black text-stone-700 tabular-nums font-mono">
-								{fmtIDR(stock.Bid)}
-							</span>
-						</div>
-						<div className="flex items-center gap-1">
-							<span className="text-[7px] font-black text-rose-400 uppercase">
-								A
-							</span>
-							<span className="text-[10px] font-black text-stone-700 tabular-nums font-mono">
-								{fmtIDR(stock.Offer)}
-							</span>
-						</div>
-					</div>
-				</td>
-
-				{/* Foreign */}
-				<td className="px-4 py-3.5 text-right">
-					<p
-						className={`text-[11px] font-black tabular-nums font-mono ${stock.ForeignNet > 0 ? "text-emerald-600" : stock.ForeignNet < 0 ? "text-rose-500" : "text-stone-400"}`}
-					>
-						{stock.ForeignNet > 0 ? "+" : ""}
-						{fmtCompact(stock.ForeignNet)}
-					</p>
-					{stock.ForeignNet !== 0 && (
-						<span
-							className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded mt-1 inline-block ${stock.ForeignNet > 0 ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-rose-100 text-rose-600 border border-rose-200"}`}
-						>
-							{stock.ForeignNet > 0 ? "Net Buy" : "Net Sell"}
-						</span>
-					)}
-				</td>
-
-				{/* Expand toggle */}
-				<td className="px-3 py-3.5 text-center">
-					<motion.div
-						animate={{ rotate: isExpanded ? 180 : 0 }}
-						transition={{ duration: 0.2 }}
-					>
-						<ChevronDown className="w-3.5 h-3.5 text-stone-300 group-hover:text-amber-500 transition-colors mx-auto" />
-					</motion.div>
-				</td>
-			</motion.tr>
-
-			{/* Expanded detail row */}
-			<AnimatePresence>
-				{isExpanded && (
-					<motion.tr
-						key={`${stock.StockCode}-detail`}
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-					>
-						<td colSpan={9} className="p-0">
-							<motion.div
-								initial={{ height: 0 }}
-								animate={{ height: "auto" }}
-								exit={{ height: 0 }}
-								className="overflow-hidden"
-							>
-								<div className="bg-amber-50/80 border-b border-amber-200/60 px-8 py-5 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-5">
-									{[
-										{ label: "Open", value: fmtIDR(stock.OpenPrice) },
-										{
-											label: "High",
-											value: fmtIDR(stock.High),
-											cls: "text-emerald-700",
-										},
-										{
-											label: "Low",
-											value: fmtIDR(stock.Low),
-											cls: "text-rose-600",
-										},
-										{ label: "First Trade", value: fmtIDR(stock.FirstTrade) },
-										{
-											label: "Foreign Buy",
-											value: fmtCompact(stock.ForeignBuy),
-											cls: "text-emerald-700",
-										},
-										{
-											label: "Foreign Sell",
-											value: fmtCompact(stock.ForeignSell),
-											cls: "text-rose-600",
-										},
-										{ label: "Bid Volume", value: fmtCompact(stock.BidVolume) },
-										{
-											label: "Offer Volume",
-											value: fmtCompact(stock.OfferVolume),
-										},
-									].map(({ label, value, cls }) => (
-										<div key={label}>
-											<p className="text-[8px] font-black uppercase tracking-[0.3em] text-stone-400 mb-1">
-												{label}
-											</p>
-											<p
-												className={`text-[12px] font-black tabular-nums font-mono ${cls || "text-stone-800"}`}
-											>
-												{value}
-											</p>
-										</div>
-									))}
-								</div>
-							</motion.div>
-						</td>
-					</motion.tr>
-				)}
-			</AnimatePresence>
-		</>
-	);
-}
-
-// ─── Table ─────────────────────────────────────────────────────────────────
-
-function StockTable({
-	stocks,
-	isLoading,
-	sortConfig,
-	handleSort,
-	visibleStocks,
-}: {
-	stocks: IDXStock[];
-	isLoading: boolean;
-	sortConfig: SortConfig;
-	handleSort: (k: SortKey) => void;
-	visibleStocks: ProcessedStock[];
-}) {
-	const maxVolume = useMemo(
-		() => Math.max(...visibleStocks.map((s) => s.Volume), 1),
-		[visibleStocks],
-	);
-	const [expanded, setExpanded] = useState<string | null>(null);
-	const toggle = (code: string) =>
-		setExpanded((p) => (p === code ? null : code));
-
-	return (
-		<div className="overflow-x-auto overflow-y-auto max-h-[700px] scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent">
-			<table className="w-full text-left border-collapse min-w-[1020px]">
-				<thead>
-					<tr>
-						<SortableHeader
-							label="Instrument"
-							sortKey="StockCode"
-							currentSort={sortConfig}
-							onSort={handleSort}
-						/>
-						<SortableHeader
-							label="Price"
-							sortKey="Close"
-							currentSort={sortConfig}
-							onSort={handleSort}
-						/>
-						<SortableHeader
-							label="Change"
-							sortKey="ChangePct"
-							currentSort={sortConfig}
-							onSort={handleSort}
-							align="right"
-						/>
-						<SortableHeader
-							label="Volume"
-							sortKey="Volume"
-							currentSort={sortConfig}
-							onSort={handleSort}
-							align="right"
-						/>
-						<SortableHeader
-							label="Value"
-							sortKey="Value"
-							currentSort={sortConfig}
-							onSort={handleSort}
-							align="right"
-						/>
-						<SortableHeader
-							label="Freq."
-							sortKey="Frequency"
-							currentSort={sortConfig}
-							onSort={handleSort}
-							align="right"
-						/>
-						<SortableHeader
-							label="Bid / Ask"
-							sortKey="Bid"
-							currentSort={sortConfig}
-							onSort={handleSort}
-							align="right"
-						/>
-						<SortableHeader
-							label="Foreign Net"
-							sortKey="ForeignNet"
-							currentSort={sortConfig}
-							onSort={handleSort}
-							align="right"
-						/>
-						<th className="px-3 py-3.5 sticky top-0 bg-stone-50 z-20 border-b border-stone-200 text-center text-[9px] font-black text-stone-300 uppercase tracking-widest w-8">
-							↕
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					<AnimatePresence mode="popLayout">
-						{visibleStocks.map((stock, i) => (
-							<StockRow
-								key={stock.StockCode}
-								stock={stock}
-								maxVolume={maxVolume}
-								rank={i + 1}
-								isExpanded={expanded === stock.StockCode}
-								onToggle={() => toggle(stock.StockCode)}
-							/>
-						))}
-					</AnimatePresence>
-					{isLoading &&
-						stocks.length === 0 &&
-						[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((id) => (
-							<tr
-								key={`skel-row-${id}`}
-								className="animate-pulse border-b border-stone-100"
-							>
-								<td className="px-4 py-4">
-									<div className="flex items-center gap-3">
-										<div className="w-4 h-3 bg-stone-100 rounded" />
-										<div className="w-14 h-8 bg-stone-100 rounded-lg" />
-										<div className="space-y-1.5">
-											<div className="h-2.5 w-28 bg-stone-100 rounded" />
-											<div className="h-2 w-16 bg-stone-50 rounded" />
-										</div>
-									</div>
-								</td>
-								{[1, 2, 3, 4, 5, 6, 7].map((cellId) => (
-									<td
-										key={`skel-cell-${cellId}`}
-										className="px-4 py-4 text-right"
-									>
-										<div className="h-3 w-14 bg-stone-100 rounded ml-auto" />
-									</td>
-								))}
-								<td className="px-3 py-4">
-									<div className="w-4 h-4 bg-stone-100 rounded mx-auto" />
-								</td>
-							</tr>
-						))}
-				</tbody>
-			</table>
-		</div>
-	);
-}
 
 // ─── Search Header ─────────────────────────────────────────────────────────
 
@@ -1420,6 +391,7 @@ export default function StockExplorerView() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [searchQuery, setSearchQuery] = useState("");
+	const debouncedSearchQuery = useDebounce(searchQuery, 300);
 	const [sortConfig, setSortConfig] = useState<SortConfig>({
 		key: "Volume",
 		direction: "desc",
@@ -1446,7 +418,14 @@ export default function StockExplorerView() {
 				throw new Error(e.error || "Sync failure");
 			}
 			const result = await res.json();
-			setStocks(Array.isArray(result.data) ? result.data : []);
+			if (!Array.isArray(result.data)) {
+				throw new Error("Invalid data format received");
+			}
+			// Validate each stock item
+			if (!result.data.every(isIDXStock)) {
+				throw new Error("Invalid stock data received");
+			}
+			setStocks(result.data);
 		} catch (e: any) {
 			setError(e.message || "Failed to fetch");
 		} finally {
@@ -1471,6 +450,8 @@ export default function StockExplorerView() {
 
 	const processedStocks = useMemo((): ProcessedStock[] => {
 		if (!stocks.length) return [];
+
+		// Step 1: Process raw stock data into ProcessedStock
 		let result: ProcessedStock[] = stocks.map((s) => ({
 			...s,
 			ForeignNet: (s.ForeignBuy || 0) - (s.ForeignSell || 0),
@@ -1478,20 +459,26 @@ export default function StockExplorerView() {
 				s.Previous !== 0 ? ((s.Close - s.Previous) / s.Previous) * 100 : 0,
 			IsHighVolume: false,
 		}));
+
+		// Step 2: Determine high volume threshold
 		const sortedVol = [...result].map((s) => s.Volume).sort((a, b) => b - a);
 		const volThresh = sortedVol[Math.floor(result.length * 0.1)] || 0;
 		result = result.map((s) => ({
 			...s,
 			IsHighVolume: s.Volume >= volThresh && s.Volume > 0,
 		}));
-		if (searchQuery) {
-			const q = searchQuery.toLowerCase().trim();
+
+		// Step 3: Apply search filter
+		if (debouncedSearchQuery) {
+			const q = debouncedSearchQuery.toLowerCase().trim();
 			result = result.filter(
 				(s) =>
 					s.StockCode.toLowerCase().includes(q) ||
 					s.StockName.toLowerCase().includes(q),
 			);
 		}
+
+		// Step 4: Apply price and change filters
 		result = result.filter(
 			(s) =>
 				s.Close >= priceRange[0] &&
@@ -1499,11 +486,17 @@ export default function StockExplorerView() {
 				s.ChangePct >= changeRange[0] &&
 				s.ChangePct <= changeRange[1],
 		);
+
+		// Step 5: Apply foreign flow filter
 		if (foreignFilter === "buy")
 			result = result.filter((s) => s.ForeignNet > 0);
 		if (foreignFilter === "sell")
 			result = result.filter((s) => s.ForeignNet < 0);
+
+		// Step 6: Apply volume filter
 		if (volumeOnly) result = result.filter((s) => s.IsHighVolume);
+
+		// Step 7: Apply sorting
 		if (sortConfig.key && sortConfig.direction) {
 			result.sort((a, b) => {
 				const k = sortConfig.key as keyof ProcessedStock;
@@ -1518,10 +511,11 @@ export default function StockExplorerView() {
 					: (vb as number) - (va as number);
 			});
 		}
+
 		return result;
 	}, [
 		stocks,
-		searchQuery,
+		debouncedSearchQuery,
 		sortConfig,
 		priceRange,
 		changeRange,
@@ -1680,13 +674,43 @@ export default function StockExplorerView() {
 						</span>
 					</div>
 
-					<StockTable
-						stocks={stocks}
-						isLoading={isLoading}
-						sortConfig={sortConfig}
-						handleSort={handleSort}
-						visibleStocks={visibleStocks}
-					/>
+					{error ? (
+						<div className="p-8 text-center">
+							<p className="text-stone-500 mb-4">Failed to load stock data.</p>
+							<button
+								onClick={fetchData}
+								className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+							>
+								Retry
+							</button>
+						</div>
+					) : processedStocks.length === 0 ? (
+						<div className="p-8 text-center">
+							<p className="text-stone-500 mb-4">
+								No stocks match your criteria.
+							</p>
+							<button
+								onClick={() => {
+									setSearchQuery("");
+									setPriceRange([0, 1000000]);
+									setChangeRange([-100, 100]);
+									setForeignFilter("all");
+									setVolumeOnly(false);
+								}}
+								className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+							>
+								Reset Filters
+							</button>
+						</div>
+					) : (
+						<StockTable
+							stocks={visibleStocks}
+							sortConfig={sortConfig}
+							onSort={handleSort}
+							hasMore={hasMore}
+							onLoadMore={() => setVisibleCount((c) => c + 50)}
+						/>
+					)}
 
 					{!isLoading && processedStocks.length > 0 && (
 						<div className="flex items-center justify-center p-8 border-t border-stone-100 bg-stone-50/40">

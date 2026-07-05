@@ -2,19 +2,6 @@ import type { Destination } from "./types";
 
 export const destinations: Destination[] = [
 	{
-		id: "1",
-		name: "Lake Toba & Medan",
-		location: "North Sumatra",
-		country: "Indonesia",
-		type: "domestic",
-		isVisited: true,
-		visitedDate: "2005-03",
-		imageUrl:
-			"https://images.unsplash.com/photo-1625024017825-1a1dfc2f4ad7?q=80&w=2072&auto=format&fit=crop",
-		description:
-			"The largest volcanic lake in the world paired with the culinary heritage of Medan.",
-	},
-	{
 		id: "2",
 		name: "Bali",
 		location: "Bali Province",

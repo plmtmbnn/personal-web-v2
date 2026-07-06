@@ -1,3 +1,10 @@
+# [0.45.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.44.0...v0.45.0) (2026-07-06)
+
+
+### Features
+
+* **ui:** optimize HomeView performance with memoization and animation improvements ([6fb7feb](https://github.com/plmtmbnn/personal-web-v2/commit/6fb7febed91db16568c84a1881da113698a46a26))
+
 # [0.44.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.43.1...v0.44.0) (2026-07-04)
 
 

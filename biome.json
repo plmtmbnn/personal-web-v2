@@ -33,6 +33,7 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
+		"maxSize": 500000,
 		"includes": [
 			"app/**/*.tsx",
 			"app/**/*.css",

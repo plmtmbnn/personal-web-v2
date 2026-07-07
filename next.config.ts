@@ -2,47 +2,58 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-	productionBrowserSourceMaps: false,
-	images: {
-		remotePatterns: [
-			{
-				protocol: "https",
-				hostname: "**.unsplash.com",
-			},
-			{
-				protocol: "https",
-				hostname: "**.cloudinary.com",
-			},
-			{
-				protocol: "https",
-				hostname: "**.pexels.com",
-			},
-			{
-				protocol: "https",
-				hostname: "**.githubusercontent.com",
-			},
-			{
-				protocol: "https",
-				hostname: "**.googleusercontent.com",
-			},
-			{
-				protocol: "https",
-				hostname: "**.ibb.co.com",
-			},
-		],
-	},
-	reactStrictMode: true,
-	serverExternalPackages: ["node-sql-parser"],
-	experimental: {
-		optimizePackageImports: [
-			"lucide-react",
-			"recharts",
-			"react-icons",
-			"framer-motion",
-			"date-fns",
-		],
-	},
-};
+		productionBrowserSourceMaps: false,
+		images: {
+			remotePatterns: [
+				{
+					protocol: "https",
+					hostname: "**.unsplash.com",
+				},
+				{
+					protocol: "https",
+					hostname: "**.cloudinary.com",
+				},
+				{
+					protocol: "https",
+					hostname: "**.pexels.com",
+				},
+				{
+					protocol: "https",
+					hostname: "**.githubusercontent.com",
+				},
+				{
+					protocol: "https",
+					hostname: "**.googleusercontent.com",
+				},
+				{
+					protocol: "https",
+					hostname: "**.ibb.co.com",
+				},
+			],
+		},
+		reactStrictMode: true,
+		serverExternalPackages: ["node-sql-parser"],
+		experimental: {
+			optimizePackageImports: [
+				"lucide-react",
+				"recharts",
+				"react-icons",
+				"framer-motion",
+				"date-fns",
+				"@radix-ui/react-icons",
+			],
+			webVitalsAttribution: ['CLS', 'LCP', 'FCP', 'TTFB', 'INP'],
+		},
+		webpack: (config) => {
+			config.cache = {
+				type: 'filesystem',
+				buildDependencies: {
+					config: [__filename],
+				},
+			};
+			return config;
+		},
+	};
 
 const isProd = process.env.NODE_ENV === "production";
 

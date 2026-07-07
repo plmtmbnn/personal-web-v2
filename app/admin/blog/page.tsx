@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getBlogsAdmin, getBlogStats } from "@/features/blog/actions";
 import { Plus, ChevronRight, BookOpen } from "lucide-react";
-import AdminBlogList from "@/features/blog/components/AdminBlogList";
+import DynamicAdminBlogList from "@/features/blog/components/DynamicAdminBlogList";
 import { redirect } from "next/navigation";
 import { checkAdmin } from "@/features/auth/actions";
 import { Suspense } from "react";
@@ -126,20 +126,20 @@ async function BlogListDataLoader({
 			getBlogStats(),
 		]);
 
-		return (
-			<AdminBlogList
-				initialBlogs={blogs}
-				totalCount={totalCount}
-				currentPage={currentPage}
-				currentSearch={currentSearch}
-				currentStatus={currentStatus}
-				currentSort={currentSort}
-				currentHeadline={currentHeadline}
-				currentCategory={currentCategory}
-				currentPageSize={currentPageSize}
-				blogStats={blogStats}
-			/>
-		);
+        return (
+          <DynamicAdminBlogList
+            initialBlogs={blogs}
+            totalCount={totalCount}
+            currentPage={currentPage}
+            currentSearch={currentSearch}
+            currentStatus={currentStatus}
+            currentSort={currentSort}
+            currentHeadline={currentHeadline}
+            currentCategory={currentCategory}
+            currentPageSize={currentPageSize}
+            blogStats={blogStats}
+          />
+        );
 	} catch (error) {
 		console.error("Failed to load admin blog list:", error);
 		return <ErrorStateFallback />;

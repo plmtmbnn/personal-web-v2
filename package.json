@@ -2,9 +2,11 @@
 	"name": "personal-web-v2",
 	"version": "0.44.0",
 	"private": true,
-	"scripts": {
-		"dev": "next dev",
-		"build": "next build",
+  "scripts": {
+		"dev": "next dev --no-lint --no-tsc",
+		"build": "npm-run-all --parallel build:next build:sentry",
+		"build:next": "next build",
+		"build:sentry": "sentry-cli sourcemaps upload .next/static",
 		"start": "next start",
 		"check": "biome check --no-errors-on-unmatched .",
 		"lint": "biome lint --no-errors-on-unmatched .",

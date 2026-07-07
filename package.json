@@ -3,7 +3,7 @@
 	"version": "0.45.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev --no-lint --no-tsc",
+		"dev": "next dev",
 		"build": "next build",
 		"build:next": "next build",
 		"start": "next start",

@@ -69,10 +69,7 @@ export default isProd
 
 			project: "javascript-nextjs",
 
-			// Skip uploads locally (dryRun) and disable plugins outside of CI
-			dryRun: !process.env.CI,
-			disableServerWebpackPlugin: !process.env.CI,
-			disableClientWebpackPlugin: !process.env.CI,
+
 
 			// Only print logs for uploading source maps in CI
 			silent: !process.env.CI,

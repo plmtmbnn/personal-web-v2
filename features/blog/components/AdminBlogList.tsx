@@ -41,6 +41,7 @@ import {
 	CheckSquare,
 	Square,
 	FileText,
+	Plus,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,6 +51,7 @@ import {
 	useAdminToast,
 } from "@/features/shared/components/AdminToast";
 import { getCategoryStyles } from "@/features/blog/utils";
+import { Skeleton } from "@/features/tasks/components/Skeleton";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -87,6 +89,25 @@ interface AdminBlogListProps {
 }
 
 // ─────────────────────────────────────────────
+// Helper: useMediaQuery hook for responsive layouts
+// ─────────────────────────────────────────────
+function useMediaQuery(query: string): boolean {
+	const [matches, setMatches] = useState(false);
+
+	useEffect(() => {
+		const media = window.matchMedia(query);
+		setMatches(media.matches);
+
+		const listener = () => setMatches(media.matches);
+		media.addEventListener("change", listener);
+
+		return () => media.removeEventListener("change", listener);
+	}, [query]);
+
+	return matches;
+}
+
+// ─────────────────────────────────────────────
 // Inner Component (uses toast context)
 // ─────────────────────────────────────────────
 function AdminBlogListInner({
@@ -106,6 +127,9 @@ function AdminBlogListInner({
 	const searchParams = useSearchParams();
 	const { toast } = useAdminToast();
 	const [isPending, startTransition] = useTransition();
+
+	// ── Responsive layout ─────────────────────
+	const isMobile = useMediaQuery("(max-width: 768px)");
 
 	// ── Per-row action states ──────────────────
 	const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -171,7 +195,7 @@ function AdminBlogListInner({
 			if (searchQuery !== currentSearch) {
 				updateParams({ search: searchQuery, page: "1" });
 			}
-		}, 500);
+		}, 300); // Reduced debounce delay to 300ms
 		return () => {
 			if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 		};
@@ -374,7 +398,7 @@ function AdminBlogListInner({
 	// Render
 	// ─────────────────────────────────────────
 	return (
-		<div className="flex flex-col bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden text-slate-900">
+		<div className="flex flex-col bg-white border border-slate-200 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm overflow-hidden text-slate-900">
 			{/* ── Delete Single Modal ── */}
 			<CustomModal
 				isOpen={!!deleteModalId}
@@ -402,8 +426,8 @@ function AdminBlogListInner({
 			{/* ═══════════════════════════════════════
 			    STATS BAR
 			═══════════════════════════════════════ */}
-			<div className="px-6 pt-5 pb-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-				<div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+			<div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+				<div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2">
 					{(
 						[
 							{
@@ -428,9 +452,11 @@ function AdminBlogListInner({
 							},
 						] as const
 					).map(({ label, value, color }) => (
-						<div key={label} className="flex items-center gap-2">
-							<span className={`text-lg font-black ${color}`}>{value}</span>
-							<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+						<div key={label} className="flex items-center gap-1.5 sm:gap-2">
+							<span className={`text-base sm:text-lg font-black ${color}`}>
+								{value}
+							</span>
+							<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">
 								{label}
 							</span>
 							<span className="text-slate-200 text-lg font-light last:hidden">
@@ -439,14 +465,21 @@ function AdminBlogListInner({
 						</div>
 					))}
 
-					{/* Export CSV */}
-					<div className="ml-auto">
+					{/* Export CSV + New Blog */}
+					<div className="ml-auto flex items-center gap-2">
+						<Link
+							href="/admin/blog/editor/new"
+							className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm"
+						>
+							<Plus className="w-3 h-3" />
+							<span className="hidden sm:inline">New Blog</span>
+						</Link>
 						<button
 							onClick={handleExportCSV}
 							className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm"
 						>
 							<Download className="w-3 h-3" />
-							Export CSV
+							<span className="hidden sm:inline">Export CSV</span>
 						</button>
 					</div>
 				</div>
@@ -455,9 +488,9 @@ function AdminBlogListInner({
 			{/* ═══════════════════════════════════════
 			    FILTER BAR
 			═══════════════════════════════════════ */}
-			<div className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50 space-y-4">
+			<div className="p-4 sm:p-5 md:p-6 border-b border-slate-100 bg-slate-50/50 space-y-3 sm:space-y-4">
 				{/* Row 1: Search + Controls */}
-				<div className="flex flex-col lg:flex-row items-center gap-4">
+				<div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 sm:gap-4">
 					{/* Search */}
 					<div className="relative flex-1 w-full">
 						<Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -472,13 +505,14 @@ function AdminBlogListInner({
 							<button
 								onClick={() => setSearchQuery("")}
 								className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-slate-400 hover:text-slate-700 transition-colors"
+								aria-label="Clear search"
 							>
 								<X className="w-3.5 h-3.5" />
 							</button>
 						)}
 					</div>
 
-					<div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+					<div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
 						{/* Headlines filter */}
 						<button
 							onClick={() =>
@@ -487,7 +521,7 @@ function AdminBlogListInner({
 									page: "1",
 								})
 							}
-							className={`flex items-center gap-2 px-4 py-2 bg-white border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
+							className={`flex items-center gap-2 px-3 sm:px-4 py-2 bg-white border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
 								currentHeadline
 									? "border-blue-500 text-blue-600 ring-4 ring-blue-500/10"
 									: "border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50"
@@ -496,22 +530,22 @@ function AdminBlogListInner({
 							<Sparkles
 								className={`w-3.5 h-3.5 ${currentHeadline ? "fill-blue-600" : ""}`}
 							/>
-							Headlines
+							<span className="hidden sm:inline">Headlines</span>
 						</button>
 
 						{/* Status filter */}
-						<div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+						<div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
 							{(["all", "published", "draft"] as const).map((s) => (
 								<button
 									key={s}
 									onClick={() => updateParams({ status: s, page: "1" })}
-									className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+									className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
 										currentStatus === s
 											? "bg-slate-900 text-white shadow-sm"
 											: "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
 									}`}
 								>
-									{s}
+									{s === "all" ? "All" : s === "published" ? "Pub" : "Draft"}
 								</button>
 							))}
 						</div>
@@ -524,10 +558,12 @@ function AdminBlogListInner({
 									page: "1",
 								})
 							}
-							className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+							className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
 						>
 							<ArrowUpDown className="w-3.5 h-3.5" />
-							{currentSort === "newest" ? "Newest First" : "Oldest First"}
+							<span className="hidden sm:inline">
+								{currentSort === "newest" ? "Newest First" : "Oldest First"}
+							</span>
 						</button>
 
 						{/* Clear all filters */}
@@ -558,7 +594,7 @@ function AdminBlogListInner({
 				</div>
 
 				{/* Row 2: Category Filter Chips */}
-				<div className="flex flex-wrap items-center gap-2">
+				<div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
 					<span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mr-1">
 						Category
 					</span>
@@ -566,10 +602,9 @@ function AdminBlogListInner({
 						<button
 							key={cat}
 							onClick={() => updateParams({ category: cat, page: "1" })}
-							className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
+							className={`px-2.5 sm:px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
 								currentCategory === cat
-									? getCategoryStyles(cat) +
-										" ring-2 ring-offset-1 ring-current/20 shadow-sm"
+									? `${getCategoryStyles(cat)} ring-2 ring-offset-1 ring-current/20 shadow-sm`
 									: "bg-white border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50"
 							}`}
 						>
@@ -580,10 +615,10 @@ function AdminBlogListInner({
 			</div>
 
 			{/* ═══════════════════════════════════════
-			    BULK ACTION BAR
+			    BULK ACTION BAR (Desktop only — mobile uses FAB)
 			═══════════════════════════════════════ */}
 			<AnimatePresence>
-				{someSelected && (
+				{someSelected && !isMobile && (
 					<motion.div
 						initial={{ height: 0, opacity: 0 }}
 						animate={{ height: "auto", opacity: 1 }}
@@ -654,9 +689,9 @@ function AdminBlogListInner({
 			</AnimatePresence>
 
 			{/* ═══════════════════════════════════════
-			    TABLE
+			    CONTENT AREA (Desktop Table + Mobile Cards)
 			═══════════════════════════════════════ */}
-			<div className="overflow-x-auto custom-scrollbar relative">
+			<div className="relative">
 				{/* Loading Overlay */}
 				<AnimatePresence>
 					{isPending && (
@@ -676,380 +711,666 @@ function AdminBlogListInner({
 					)}
 				</AnimatePresence>
 
-				<table className="w-full text-left min-w-[1060px]">
-					<thead className="bg-slate-50 border-b border-slate-100">
-						<tr className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-							{/* Checkbox col */}
-							<th className="px-5 py-4 w-12">
-								<button
-									onClick={toggleSelectAll}
-									className="text-slate-400 hover:text-blue-600 transition-colors"
-									title={allSelected ? "Deselect all" : "Select all"}
-								>
-									{allSelected ? (
-										<CheckSquare className="w-4 h-4 text-blue-600" />
-									) : (
-										<Square className="w-4 h-4" />
-									)}
-								</button>
-							</th>
-							<th className="px-4 py-4 text-center w-16">#</th>
-							<th className="px-6 py-4">Knowledge Entry</th>
-							<th className="px-6 py-4">Category</th>
-							<th className="px-6 py-4 text-center">Headline</th>
-							<th className="px-6 py-4 text-center">Status</th>
-							<th className="px-6 py-4">Publication</th>
-							<th className="px-6 py-4 text-right sticky right-0 bg-slate-50 z-20 shadow-[-12px_0_20px_-12px_rgba(0,0,0,0.08)]">
-								Actions
-							</th>
-						</tr>
-					</thead>
-					<tbody className="divide-y divide-slate-100">
-						{initialBlogs.length > 0 ? (
-							initialBlogs.map((blog, idx) => {
-								const isExpanded = expandedRow === blog.id;
-								const isSelected = selectedIds.has(blog.id);
-								return (
-									<Fragment key={blog.id}>
-										<tr
-											key={String(blog.id)}
-											className={`transition-colors group ${
-												isSelected ? "bg-blue-50/40" : "hover:bg-blue-50/20"
-											}`}
+				{/* ── Skeleton Loaders (shown during initial pending state) ── */}
+				{isPending && initialBlogs.length === 0 && (
+					<div className="p-6 space-y-4">
+						{/* Stats skeleton */}
+						<div className="flex flex-wrap gap-6">
+							{[1, 2, 3, 4].map((i) => (
+								<div key={i} className="flex items-center gap-2">
+									<Skeleton width="2rem" height="1.5rem" />
+									<Skeleton width="3rem" height="0.75rem" />
+								</div>
+							))}
+						</div>
+						{/* Table rows skeleton */}
+						{Array.from({ length: 5 }).map((_, i) => (
+							<div
+								key={i}
+								className="flex items-center gap-4 p-4 border border-slate-100 rounded-xl"
+							>
+								<Skeleton width="1.5rem" height="1.5rem" variant="circle" />
+								<Skeleton width="3rem" height="0.75rem" />
+								<div className="flex items-center gap-3 flex-1">
+									<Skeleton width="3rem" height="3rem" variant="rounded" />
+									<div className="flex-1 space-y-2">
+										<Skeleton width="60%" height="1rem" />
+										<Skeleton width="40%" height="0.75rem" />
+									</div>
+								</div>
+								<Skeleton width="4rem" height="1.5rem" variant="rounded" />
+								<Skeleton width="2rem" height="2rem" variant="circle" />
+							</div>
+						))}
+					</div>
+				)}
+
+				{/* ═══════════════════════════════════
+				    DESKTOP TABLE (hidden on mobile)
+				═══════════════════════════════════ */}
+				{!isMobile && initialBlogs.length > 0 && (
+					<div className="overflow-x-auto custom-scrollbar">
+						<table className="w-full text-left min-w-[1060px]">
+							<thead className="bg-slate-50 border-b border-slate-100">
+								<tr className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+									<th className="px-5 py-4 w-12">
+										<button
+											onClick={toggleSelectAll}
+											className="text-slate-400 hover:text-blue-600 transition-colors"
+											title={allSelected ? "Deselect all" : "Select all"}
+											aria-label={allSelected ? "Deselect all" : "Select all"}
 										>
-											{/* Checkbox */}
-											<td className="px-5 py-5">
-												<button
-													onClick={() => toggleSelectOne(blog.id)}
-													className="text-slate-400 hover:text-blue-600 transition-colors"
-												>
-													{isSelected ? (
-														<CheckSquare className="w-4 h-4 text-blue-600" />
-													) : (
-														<Square className="w-4 h-4" />
-													)}
-												</button>
-											</td>
-
-											{/* Row number */}
-											<td className="px-4 py-5 text-center text-[10px] font-black text-slate-300">
-												{(currentPage - 1) * currentPageSize + idx + 1}
-											</td>
-
-											{/* Title + slug + image */}
-											<td className="px-6 py-5">
-												<div className="flex items-center gap-4">
-													{/* Thumbnail */}
-													<div className="relative w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0">
-														{blog.image_url ? (
-															<Image
-																src={blog.image_url}
-																alt={blog.title}
-																fill
-																className="object-cover"
-																sizes="48px"
-															/>
+											{allSelected ? (
+												<CheckSquare className="w-4 h-4 text-blue-600" />
+											) : (
+												<Square className="w-4 h-4" />
+											)}
+										</button>
+									</th>
+									<th className="px-4 py-4 text-center w-16">#</th>
+									<th className="px-6 py-4">Knowledge Entry</th>
+									<th className="px-6 py-4">Category</th>
+									<th className="px-6 py-4 text-center">Headline</th>
+									<th className="px-6 py-4 text-center">Status</th>
+									<th className="px-6 py-4">Publication</th>
+									<th className="px-6 py-4 text-right sticky right-0 bg-slate-50 z-20 shadow-[-12px_0_20px_-12px_rgba(0,0,0,0.08)]">
+										Actions
+									</th>
+								</tr>
+							</thead>
+							<tbody className="divide-y divide-slate-100">
+								{initialBlogs.map((blog, idx) => {
+									const isExpanded = expandedRow === blog.id;
+									const isSelected = selectedIds.has(blog.id);
+									return (
+										<Fragment key={blog.id}>
+											<tr
+												className={`transition-colors group ${
+													isSelected ? "bg-blue-50/40" : "hover:bg-blue-50/20"
+												}`}
+											>
+												{/* Checkbox */}
+												<td className="px-5 py-5">
+													<button
+														onClick={() => toggleSelectOne(blog.id)}
+														className="text-slate-400 hover:text-blue-600 transition-colors"
+														aria-label={`Select "${blog.title}"`}
+													>
+														{isSelected ? (
+															<CheckSquare className="w-4 h-4 text-blue-600" />
 														) : (
-															<div className="w-full h-full flex items-center justify-center text-slate-300">
-																<ImageIcon className="w-5 h-5" />
-															</div>
+															<Square className="w-4 h-4" />
 														)}
-													</div>
+													</button>
+												</td>
 
-													<div className="flex flex-col min-w-0">
-														<div className="flex items-center gap-2">
+												{/* Row number */}
+												<td className="px-4 py-5 text-center text-[10px] font-black text-slate-300">
+													{(currentPage - 1) * currentPageSize + idx + 1}
+												</td>
+
+												{/* Title + slug + image */}
+												<td className="px-6 py-5">
+													<div className="flex items-center gap-4">
+														<div className="relative w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0">
+															{blog.image_url ? (
+																<Image
+																	src={blog.image_url}
+																	alt={blog.title}
+																	fill
+																	loading={idx < 3 ? "eager" : "lazy"}
+																	priority={idx < 3}
+																	className="object-cover"
+																	sizes="48px"
+																/>
+															) : (
+																<div className="w-full h-full flex items-center justify-center text-slate-300">
+																	<ImageIcon className="w-5 h-5" />
+																</div>
+															)}
+														</div>
+														<div className="flex flex-col min-w-0">
 															<Link
 																href={`/admin/blog/editor/${blog.id}`}
 																className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors truncate"
 															>
 																{blog.title}
 															</Link>
+															{blog.description && (
+																<p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1 max-w-xs">
+																	{blog.description}
+																</p>
+															)}
+															<span className="text-[10px] font-mono text-slate-400 mt-0.5 truncate lowercase opacity-60">
+																/{blog.slug}
+															</span>
 														</div>
-														{blog.description && (
-															<p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1 max-w-xs">
-																{blog.description}
-															</p>
-														)}
-														<span className="text-[10px] font-mono text-slate-400 mt-0.5 truncate lowercase opacity-60">
-															/{blog.slug}
-														</span>
 													</div>
-												</div>
-											</td>
+												</td>
 
-											{/* Category select */}
-											<td className="px-6 py-5">
-												<div className="relative inline-block group/select">
-													<select
-														disabled={!!updatingMetadataId}
-														value={blog.category || "General"}
-														onChange={(e) =>
-															handleUpdateMetadata(blog.id, {
-																category: e.target.value,
-															})
-														}
-														className={`appearance-none px-3 py-1.5 pr-8 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)} disabled:opacity-50`}
-													>
-														{CATEGORIES.map((cat) => (
-															<option key={cat} value={cat}>
-																{cat}
-															</option>
-														))}
-													</select>
-													<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-40" />
-													{updatingMetadataId === blog.id && (
-														<div className="absolute -right-6 top-1/2 -translate-y-1/2">
-															<Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
-														</div>
-													)}
-												</div>
-											</td>
-
-											{/* Headline toggle */}
-											<td className="px-6 py-5">
-												<div className="flex justify-center">
-													<button
-														onClick={() =>
-															handleUpdateMetadata(blog.id, {
-																is_headline: !blog.is_headline,
-															})
-														}
-														className={`p-2 rounded-xl border transition-all duration-300 ${
-															blog.is_headline
-																? "bg-blue-50 border-blue-100 text-blue-600 shadow-sm"
-																: "bg-white border-slate-100 text-slate-300 hover:text-blue-400 hover:bg-slate-50"
-														}`}
-														title={
-															blog.is_headline
-																? "Headline Active"
-																: "Set as Headline"
-														}
-													>
-														<Sparkles
-															className={`w-4 h-4 ${blog.is_headline ? "fill-blue-600" : ""}`}
-														/>
-													</button>
-												</div>
-											</td>
-
-											{/* Publish toggle */}
-											<td className="px-6 py-5">
-												<div className="flex items-center justify-center gap-3">
-													<button
-														onClick={() =>
-															handleToggleStatus(blog.id, blog.published)
-														}
-														disabled={togglingId === blog.id}
-														aria-label={
-															blog.published
-																? `Unpublish "${blog.title}"`
-																: `Publish "${blog.title}"`
-														}
-														className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-															blog.published ? "bg-emerald-500" : "bg-slate-200"
-														}`}
-													>
-														<span
-															className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-																blog.published
-																	? "translate-x-6"
-																	: "translate-x-1"
-															}`}
-														/>
-														{togglingId === blog.id && (
-															<div className="absolute -right-6">
+												{/* Category select */}
+												<td className="px-6 py-5">
+													<div className="relative inline-block">
+														<select
+															disabled={!!updatingMetadataId}
+															value={blog.category || "General"}
+															onChange={(e) =>
+																handleUpdateMetadata(blog.id, {
+																	category: e.target.value,
+																})
+															}
+															aria-label={`Category for "${blog.title}"`}
+															className={`appearance-none px-3 py-1.5 pr-8 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)} disabled:opacity-50`}
+														>
+															{CATEGORIES.map((cat) => (
+																<option key={cat} value={cat}>
+																	{cat}
+																</option>
+															))}
+														</select>
+														<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-40" />
+														{updatingMetadataId === blog.id && (
+															<div className="absolute -right-6 top-1/2 -translate-y-1/2">
 																<Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
 															</div>
 														)}
-													</button>
-												</div>
-											</td>
+													</div>
+												</td>
 
-											{/* Date with relative tooltip */}
-											<td className="px-6 py-5">
-												<div
-													className="flex items-center gap-2 text-xs font-medium text-slate-500 whitespace-nowrap group/date cursor-default"
-													title={formatDistanceToNow(new Date(blog.date), {
-														addSuffix: true,
-													})}
-												>
-													<Calendar className="w-3.5 h-3.5 opacity-40" />
-													<span className="group-hover/date:hidden">
-														{format(new Date(blog.date), "MMM d, yyyy")}
-													</span>
-													<span className="hidden group-hover/date:inline text-slate-400 text-[10px] font-bold">
-														{formatDistanceToNow(new Date(blog.date), {
+												{/* Headline toggle */}
+												<td className="px-6 py-5">
+													<div className="flex justify-center">
+														<button
+															onClick={() =>
+																handleUpdateMetadata(blog.id, {
+																	is_headline: !blog.is_headline,
+																})
+															}
+															aria-label={
+																blog.is_headline
+																	? `Remove headline from "${blog.title}"`
+																	: `Set "${blog.title}" as headline`
+															}
+															className={`p-2 rounded-xl border transition-all duration-300 ${
+																blog.is_headline
+																	? "bg-blue-50 border-blue-100 text-blue-600 shadow-sm"
+																	: "bg-white border-slate-100 text-slate-300 hover:text-blue-400 hover:bg-slate-50"
+															}`}
+														>
+															<Sparkles
+																className={`w-4 h-4 ${blog.is_headline ? "fill-blue-600" : ""}`}
+															/>
+														</button>
+													</div>
+												</td>
+
+												{/* Publish toggle */}
+												<td className="px-6 py-5">
+													<div className="flex items-center justify-center">
+														<button
+															onClick={() =>
+																handleToggleStatus(blog.id, blog.published)
+															}
+															disabled={togglingId === blog.id}
+															aria-label={
+																blog.published
+																	? `Unpublish "${blog.title}"`
+																	: `Publish "${blog.title}"`
+															}
+															className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+																blog.published
+																	? "bg-emerald-500"
+																	: "bg-slate-200"
+															}`}
+														>
+															<span
+																className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${blog.published ? "translate-x-6" : "translate-x-1"}`}
+															/>
+															{togglingId === blog.id && (
+																<div className="absolute -right-6">
+																	<Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
+																</div>
+															)}
+														</button>
+													</div>
+												</td>
+
+												{/* Date */}
+												<td className="px-6 py-5">
+													<div
+														className="flex items-center gap-2 text-xs font-medium text-slate-500 whitespace-nowrap group/date cursor-default"
+														title={formatDistanceToNow(new Date(blog.date), {
 															addSuffix: true,
 														})}
-													</span>
-												</div>
-											</td>
+													>
+														<Calendar className="w-3.5 h-3.5 opacity-40" />
+														<span className="group-hover/date:hidden">
+															{format(new Date(blog.date), "MMM d, yyyy")}
+														</span>
+														<span className="hidden group-hover/date:inline text-slate-400 text-[10px] font-bold">
+															{formatDistanceToNow(new Date(blog.date), {
+																addSuffix: true,
+															})}
+														</span>
+													</div>
+												</td>
 
-											<td
-												className={`px-6 py-5 sticky right-0 z-10 transition-colors shadow-[-12px_0_20px_-12px_rgba(0,0,0,0.08)] ${
-													isSelected
-														? "bg-blue-50/40"
-														: "bg-white group-hover:bg-blue-50/20"
-												}`}
-											>
-												<div className="flex items-center justify-end gap-1">
-													{/* Expand row preview */}
-													<button
-														onClick={() =>
-															setExpandedRow(isExpanded ? null : blog.id)
-														}
-														className={`p-2 rounded-lg transition-all ${
-															isExpanded
-																? "text-blue-600 bg-blue-50"
-																: "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-														}`}
-														title="Preview"
-													>
-														<FileText className="w-4 h-4" />
-													</button>
-													<Link
-														href={`/blog/${blog.slug}`}
-														target="_blank"
-														className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-														title="View Live"
-													>
-														<Eye className="w-4 h-4" />
-													</Link>
-													<Link
-														href={`/admin/blog/editor/${blog.id}`}
-														className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-														title="Edit Entry"
-													>
-														<Edit className="w-4 h-4" />
-													</Link>
-													<button
-														onClick={() => setDeleteModalId(blog.id)}
-														className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-														title="Purge"
-													>
-														<Trash2 className="w-4 h-4" />
-													</button>
-												</div>
-											</td>
-										</tr>
-
-										{/* ── Expandable Preview Row ── */}
-										<AnimatePresence>
-											{isExpanded && (
-												<motion.tr
-													key={`preview-${blog.id}`}
-													initial={{ opacity: 0 }}
-													animate={{ opacity: 1 }}
-													exit={{ opacity: 0 }}
+												{/* Actions */}
+												<td
+													className={`px-6 py-5 sticky right-0 z-10 transition-colors shadow-[-12px_0_20px_-12px_rgba(0,0,0,0.08)] ${isSelected ? "bg-blue-50/40" : "bg-white group-hover:bg-blue-50/20"}`}
 												>
-													<td colSpan={8} className="px-0 py-0">
-														<motion.div
-															initial={{ height: 0 }}
-															animate={{ height: "auto" }}
-															exit={{ height: 0 }}
-															transition={{ duration: 0.2, ease: "easeInOut" }}
-															className="overflow-hidden"
+													<div className="flex items-center justify-end gap-1">
+														<button
+															onClick={() =>
+																setExpandedRow(isExpanded ? null : blog.id)
+															}
+															className={`p-2 rounded-lg transition-all ${isExpanded ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"}`}
+															title="Preview"
 														>
-															<div className="px-6 py-5 bg-slate-50/70 border-t border-b border-slate-100 flex gap-6">
-																{blog.image_url && (
-																	<div className="relative w-28 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
-																		<Image
-																			src={blog.image_url}
-																			alt={blog.title}
-																			fill
-																			className="object-cover"
-																			sizes="112px"
-																		/>
-																	</div>
-																)}
-																<div className="flex flex-col gap-1.5 min-w-0">
-																	<p className="text-xs font-bold text-slate-700">
-																		{blog.title}
-																	</p>
-																	{blog.description ? (
-																		<p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
-																			{blog.description}
-																		</p>
-																	) : (
-																		<p className="text-xs text-slate-400 italic">
-																			No description provided.
-																		</p>
+															<FileText className="w-4 h-4" />
+														</button>
+														<Link
+															href={`/blog/${blog.slug}`}
+															target="_blank"
+															className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+															title="View Live"
+														>
+															<Eye className="w-4 h-4" />
+														</Link>
+														<Link
+															href={`/admin/blog/editor/${blog.id}`}
+															className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+															title="Edit Entry"
+														>
+															<Edit className="w-4 h-4" />
+														</Link>
+														<button
+															onClick={() => setDeleteModalId(blog.id)}
+															className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+															title="Purge"
+														>
+															<Trash2 className="w-4 h-4" />
+														</button>
+													</div>
+												</td>
+											</tr>
+
+											{/* ── Expandable Preview Row ── */}
+											<AnimatePresence>
+												{isExpanded && (
+													<motion.tr
+														key={`preview-${blog.id}`}
+														initial={{ opacity: 0 }}
+														animate={{ opacity: 1 }}
+														exit={{ opacity: 0 }}
+													>
+														<td colSpan={8} className="px-0 py-0">
+															<motion.div
+																initial={{ height: 0 }}
+																animate={{ height: "auto" }}
+																exit={{ height: 0 }}
+																transition={{
+																	duration: 0.2,
+																	ease: "easeInOut",
+																}}
+																className="overflow-hidden"
+															>
+																<div className="px-6 py-5 bg-slate-50/70 border-t border-b border-slate-100 flex gap-6">
+																	{blog.image_url && (
+																		<div className="relative w-28 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
+																			<Image
+																				src={blog.image_url}
+																				alt={blog.title}
+																				fill
+																				className="object-cover"
+																				sizes="112px"
+																				loading="lazy"
+																			/>
+																		</div>
 																	)}
-																	<div className="flex items-center gap-3 mt-1">
-																		<span
-																			className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${getCategoryStyles(blog.category)}`}
-																		>
-																			{blog.category}
-																		</span>
-																		<span
-																			className={`text-[9px] font-black uppercase tracking-widest ${blog.published ? "text-emerald-600" : "text-amber-600"}`}
-																		>
-																			{blog.published ? "Published" : "Draft"}
-																		</span>
-																		{blog.is_headline && (
-																			<span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600">
-																				<Sparkles className="w-3 h-3 fill-blue-600" />
-																				Headline
-																			</span>
+																	<div className="flex flex-col gap-1.5 min-w-0">
+																		<p className="text-xs font-bold text-slate-700">
+																			{blog.title}
+																		</p>
+																		{blog.description ? (
+																			<p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+																				{blog.description}
+																			</p>
+																		) : (
+																			<p className="text-xs text-slate-400 italic">
+																				No description provided.
+																			</p>
 																		)}
+																		<div className="flex items-center gap-3 mt-1">
+																			<span
+																				className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${getCategoryStyles(blog.category)}`}
+																			>
+																				{blog.category}
+																			</span>
+																			<span
+																				className={`text-[9px] font-black uppercase tracking-widest ${blog.published ? "text-emerald-600" : "text-amber-600"}`}
+																			>
+																				{blog.published ? "Published" : "Draft"}
+																			</span>
+																			{blog.is_headline && (
+																				<span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600">
+																					<Sparkles className="w-3 h-3 fill-blue-600" />
+																					Headline
+																				</span>
+																			)}
+																		</div>
 																	</div>
 																</div>
-															</div>
-														</motion.div>
-													</td>
-												</motion.tr>
+															</motion.div>
+														</td>
+													</motion.tr>
+												)}
+											</AnimatePresence>
+										</Fragment>
+									);
+								})}
+							</tbody>
+						</table>
+					</div>
+				)}
+
+				{/* ═══════════════════════════════════
+				    MOBILE CARD LAYOUT (hidden on desktop)
+				═══════════════════════════════════ */}
+				{isMobile && initialBlogs.length > 0 && (
+					<div className="p-4 space-y-3">
+						{initialBlogs.map((blog, idx) => {
+							const isExpanded = expandedRow === blog.id;
+							const isSelected = selectedIds.has(blog.id);
+							return (
+								<motion.div
+									key={blog.id}
+									initial={{ opacity: 0, y: 10 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{ delay: idx * 0.03 }}
+									className={`border rounded-2xl p-4 transition-all ${
+										isSelected
+											? "border-blue-200 bg-blue-50/40 shadow-sm"
+											: "border-slate-200 bg-white shadow-sm"
+									}`}
+								>
+									{/* Card Header: Checkbox + Title + Image */}
+									<div className="flex items-start gap-3">
+										<button
+											onClick={() => toggleSelectOne(blog.id)}
+											className="mt-1 text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0"
+											aria-label={`Select "${blog.title}"`}
+										>
+											{isSelected ? (
+												<CheckSquare className="w-5 h-5 text-blue-600" />
+											) : (
+												<Square className="w-5 h-5" />
 											)}
-										</AnimatePresence>
-									</Fragment>
-								);
-							})
-						) : (
-							<tr>
-								<td colSpan={8} className="px-6 py-24 text-center">
-									<div className="flex flex-col items-center gap-4">
-										<div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200">
-											<Inbox className="w-6 h-6" />
+										</button>
+
+										{/* Thumbnail */}
+										<div className="relative w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0">
+											{blog.image_url ? (
+												<Image
+													src={blog.image_url}
+													alt={blog.title}
+													fill
+													loading={idx < 2 ? "eager" : "lazy"}
+													priority={idx < 2}
+													className="object-cover"
+													sizes="56px"
+												/>
+											) : (
+												<div className="w-full h-full flex items-center justify-center text-slate-300">
+													<ImageIcon className="w-5 h-5" />
+												</div>
+											)}
 										</div>
-										<p className="text-slate-400 font-bold text-sm">
-											No entries found for this configuration.
-										</p>
-										{hasActiveFilters && (
-											<button
-												onClick={() => {
-													setSearchQuery("");
-													updateParams({
-														search: null,
-														status: null,
-														headline: null,
-														category: null,
-														page: "1",
-													});
-												}}
-												className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:underline"
+
+										{/* Title + Meta */}
+										<div className="flex-1 min-w-0">
+											<Link
+												href={`/admin/blog/editor/${blog.id}`}
+												className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors line-clamp-2"
 											>
-												Clear all filters
-											</button>
-										)}
+												{blog.title}
+											</Link>
+											<span className="text-[10px] font-mono text-slate-400 mt-0.5 block truncate lowercase opacity-60">
+												/{blog.slug}
+											</span>
+										</div>
 									</div>
-								</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
+
+									{/* Card Body: Meta chips */}
+									<div className="mt-3 flex flex-wrap items-center gap-2">
+										<select
+											disabled={!!updatingMetadataId}
+											value={blog.category || "General"}
+											onChange={(e) =>
+												handleUpdateMetadata(blog.id, {
+													category: e.target.value,
+												})
+											}
+											className={`appearance-none px-2.5 py-1 pr-6 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)} disabled:opacity-50`}
+										>
+											{CATEGORIES.map((cat) => (
+												<option key={cat} value={cat}>
+													{cat}
+												</option>
+											))}
+										</select>
+										<span
+											className={`text-[9px] font-black uppercase tracking-widest ${blog.published ? "text-emerald-600" : "text-amber-600"}`}
+										>
+											{blog.published ? "Published" : "Draft"}
+										</span>
+										{blog.is_headline && (
+											<span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600">
+												<Sparkles className="w-3 h-3 fill-blue-600" />
+												Headline
+											</span>
+										)}
+										<div className="flex items-center gap-1 text-[10px] text-slate-400 ml-auto">
+											<Calendar className="w-3 h-3" />
+											{format(new Date(blog.date), "MMM d, yyyy")}
+										</div>
+									</div>
+
+									{/* Card Footer: Action Buttons */}
+									<div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+										<div className="flex items-center gap-1">
+											<button
+												onClick={() =>
+													handleToggleStatus(blog.id, blog.published)
+												}
+												disabled={togglingId === blog.id}
+												aria-label={
+													blog.published
+														? `Unpublish "${blog.title}"`
+														: `Publish "${blog.title}"`
+												}
+												className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+													blog.published ? "bg-emerald-500" : "bg-slate-200"
+												}`}
+											>
+												<span
+													className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${blog.published ? "translate-x-6" : "translate-x-1"}`}
+												/>
+											</button>
+										</div>
+										<div className="flex items-center gap-1">
+											<button
+												onClick={() =>
+													setExpandedRow(isExpanded ? null : blog.id)
+												}
+												className={`p-2.5 rounded-xl transition-all ${isExpanded ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"}`}
+												aria-label="Preview"
+											>
+												<FileText className="w-4 h-4" />
+											</button>
+											<Link
+												href={`/blog/${blog.slug}`}
+												target="_blank"
+												className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
+												aria-label="View live"
+											>
+												<Eye className="w-4 h-4" />
+											</Link>
+											<Link
+												href={`/admin/blog/editor/${blog.id}`}
+												className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+												aria-label="Edit"
+											>
+												<Edit className="w-4 h-4" />
+											</Link>
+											<button
+												onClick={() => setDeleteModalId(blog.id)}
+												className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+												aria-label="Delete"
+											>
+												<Trash2 className="w-4 h-4" />
+											</button>
+										</div>
+									</div>
+
+									{/* Expandable Preview */}
+									<AnimatePresence>
+										{isExpanded && (
+											<motion.div
+												initial={{ height: 0, opacity: 0 }}
+												animate={{ height: "auto", opacity: 1 }}
+												exit={{ height: 0, opacity: 0 }}
+												transition={{ duration: 0.2, ease: "easeInOut" }}
+												className="overflow-hidden"
+											>
+												<div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+													{blog.image_url && (
+														<div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-200">
+															<Image
+																src={blog.image_url}
+																alt={blog.title}
+																fill
+																className="object-cover"
+																sizes="(max-width: 768px) 100vw, 384px"
+																loading="lazy"
+															/>
+														</div>
+													)}
+													<p className="text-xs text-slate-500 leading-relaxed">
+														{blog.description || "No description provided."}
+													</p>
+												</div>
+											</motion.div>
+										)}
+									</AnimatePresence>
+								</motion.div>
+							);
+						})}
+					</div>
+				)}
+
+				{/* ── Empty State ── */}
+				{initialBlogs.length === 0 && !isPending && (
+					<div className="px-6 py-24 text-center">
+						<div className="flex flex-col items-center gap-4">
+							<div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200">
+								<Inbox className="w-6 h-6" />
+							</div>
+							<p className="text-slate-400 font-bold text-sm">
+								No entries found for this configuration.
+							</p>
+							{hasActiveFilters && (
+								<button
+									onClick={() => {
+										setSearchQuery("");
+										updateParams({
+											search: null,
+											status: null,
+											headline: null,
+											category: null,
+											page: "1",
+										});
+									}}
+									className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:underline"
+								>
+									Clear all filters
+								</button>
+							)}
+						</div>
+					</div>
+				)}
 			</div>
+
+			{/* ═══════════════════════════════════════
+			    MOBILE BULK ACTION FAB (shown only on mobile when items selected)
+			═══════════════════════════════════════ */}
+			<AnimatePresence>
+				{isMobile && someSelected && (
+					<motion.div
+						initial={{ y: 100, opacity: 0 }}
+						animate={{ y: 0, opacity: 1 }}
+						exit={{ y: 100, opacity: 0 }}
+						transition={{ type: "spring", damping: 25, stiffness: 300 }}
+						className="fixed bottom-6 left-4 right-4 z-50"
+					>
+						<div className="bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700">
+							<div className="flex items-center justify-between mb-3">
+								<span className="text-xs font-bold">
+									{selectedIds.size} selected
+								</span>
+								<button
+									onClick={() => setSelectedIds(new Set())}
+									className="text-slate-400 hover:text-white transition-colors"
+									aria-label="Clear selection"
+								>
+									<X className="w-4 h-4" />
+								</button>
+							</div>
+							<div className="flex items-center gap-2">
+								<button
+									onClick={() => handleBulkPublish(true)}
+									disabled={isBulkLoading}
+									className="flex-1 px-3 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50"
+								>
+									Publish
+								</button>
+								<button
+									onClick={() => handleBulkPublish(false)}
+									disabled={isBulkLoading}
+									className="flex-1 px-3 py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-all disabled:opacity-50"
+								>
+									Draft
+								</button>
+								<button
+									onClick={() => setBulkDeleteModal(true)}
+									disabled={isBulkLoading}
+									className="flex-1 px-3 py-2.5 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all disabled:opacity-50"
+								>
+									Delete
+								</button>
+							</div>
+							{isBulkLoading && (
+								<div className="flex justify-center mt-2">
+									<Loader2 className="w-4 h-4 text-white animate-spin" />
+								</div>
+							)}
+						</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
 
 			{/* ═══════════════════════════════════════
 			    PAGINATION FOOTER
 			═══════════════════════════════════════ */}
-			<div className="p-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-6">
+			<div className="p-4 sm:p-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
 				{/* Left: count + page size */}
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-3 sm:gap-4">
 					<div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
 						{totalCount === 0 ? (
 							<span className="text-slate-900">0</span>
 						) : (
 							<>
-								Showing <span className="text-slate-900">{showFrom}</span> to{" "}
+								Showing <span className="text-slate-900">{showFrom}</span>–
 								<span className="text-slate-900">{showTo}</span>
 							</>
 						)}
@@ -1058,14 +1379,14 @@ function AdminBlogListInner({
 					</div>
 
 					{/* Page size selector */}
-					<div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+					<div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
 						{PAGE_SIZE_OPTIONS.map((size) => (
 							<button
 								key={size}
 								onClick={() =>
 									updateParams({ pageSize: String(size), page: "1" })
 								}
-								className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
+								className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
 									currentPageSize === size
 										? "bg-slate-900 text-white"
 										: "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
@@ -1082,7 +1403,8 @@ function AdminBlogListInner({
 					<button
 						onClick={() => updateParams({ page: String(currentPage - 1) })}
 						disabled={currentPage <= 1 || isPending}
-						className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all disabled:opacity-20 disabled:pointer-events-none shadow-sm mr-2"
+						aria-label="Previous page"
+						className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all disabled:opacity-20 disabled:pointer-events-none shadow-sm mr-1 sm:mr-2"
 					>
 						<ChevronLeft className="w-4 h-4" />
 					</button>
@@ -1093,7 +1415,7 @@ function AdminBlogListInner({
 								return (
 									<div
 										key={`dots-${idx}`}
-										className="w-10 h-10 flex items-center justify-center text-slate-300"
+										className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-slate-300"
 									>
 										<MoreHorizontal className="w-4 h-4" />
 									</div>
@@ -1105,7 +1427,9 @@ function AdminBlogListInner({
 									key={`page-${page}`}
 									onClick={() => updateParams({ page: String(page) })}
 									disabled={isPending}
-									className={`w-10 h-10 rounded-xl text-[10px] font-black transition-all shadow-sm ${
+									aria-label={`Page ${page}`}
+									aria-current={isActive ? "page" : undefined}
+									className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl text-[10px] font-black transition-all shadow-sm ${
 										isActive
 											? "bg-blue-600 text-white shadow-blue-200"
 											: "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
@@ -1120,7 +1444,8 @@ function AdminBlogListInner({
 					<button
 						onClick={() => updateParams({ page: String(currentPage + 1) })}
 						disabled={currentPage >= totalPages || isPending}
-						className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all disabled:opacity-20 disabled:pointer-events-none shadow-sm ml-2"
+						aria-label="Next page"
+						className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all disabled:opacity-20 disabled:pointer-events-none shadow-sm ml-1 sm:ml-2"
 					>
 						<ChevronRight className="w-4 h-4" />
 					</button>

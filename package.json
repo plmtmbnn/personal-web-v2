@@ -4,9 +4,8 @@
 	"private": true,
   "scripts": {
 		"dev": "next dev --no-lint --no-tsc",
-		"build": "npm-run-all --parallel build:next build:sentry",
+		"build": "next build && sentry-cli sourcemaps upload .next/static",
 		"build:next": "next build",
-		"build:sentry": "sentry-cli sourcemaps upload .next/static",
 		"start": "next start",
 		"check": "biome check --no-errors-on-unmatched .",
 		"lint": "biome lint --no-errors-on-unmatched .",

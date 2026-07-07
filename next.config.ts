@@ -32,6 +32,9 @@ const nextConfig: NextConfig = {
 			],
 		},
 		reactStrictMode: true,
+		typescript: {
+			ignoreBuildErrors: process.env.FAST_BUILD === "true",
+		},
 		serverExternalPackages: ["node-sql-parser"],
 		experimental: {
 			optimizePackageImports: [
@@ -65,6 +68,11 @@ export default isProd
 			org: "peoel-corps",
 
 			project: "javascript-nextjs",
+
+			// Skip uploads locally (dryRun) and disable plugins outside of CI
+			dryRun: !process.env.CI,
+			disableServerWebpackPlugin: !process.env.CI,
+			disableClientWebpackPlugin: !process.env.CI,
 
 			// Only print logs for uploading source maps in CI
 			silent: !process.env.CI,

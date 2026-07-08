@@ -1,3 +1,10 @@
+# [0.48.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.47.0...v0.48.0) (2026-07-08)
+
+
+### Features
+
+* **stock-explorer:** revamp dashboard into premium market intelligence platform ([b5c7888](https://github.com/plmtmbnn/personal-web-v2/commit/b5c7888d5f0a0c9664ebb334d4c47fccecb13d5b))
+
 # [0.47.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.46.0...v0.47.0) (2026-07-08)
 
 

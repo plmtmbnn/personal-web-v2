@@ -43,6 +43,9 @@ const nextConfig: NextConfig = {
 		"node-sql-parser",
 		"got-scraping",
 		"header-generator",
+		"adm-zip",
+		"http2-wrapper",
+		"got",
 	],
 	experimental: {
 		optimizePackageImports: [

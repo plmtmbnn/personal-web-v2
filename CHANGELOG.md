@@ -1,3 +1,10 @@
+## [0.48.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.0...v0.48.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **stock-explorer:** fix ProcessedStock import paths in components ([a06ed51](https://github.com/plmtmbnn/personal-web-v2/commit/a06ed5131a0cf6d67bdaa0a35185968e940b8015))
+
 # [0.48.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.47.0...v0.48.0) (2026-07-08)
 
 

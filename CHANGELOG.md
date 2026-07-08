@@ -1,3 +1,10 @@
+## [0.48.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.1...v0.48.2) (2026-07-08)
+
+
+### Bug Fixes
+
+* **stock-explorer:** add adm-zip and http2-wrapper to serverExternalPackages ([f20e133](https://github.com/plmtmbnn/personal-web-v2/commit/f20e133a47210ab1c05e39ff142be7687cb3ad9b))
+
 ## [0.48.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.0...v0.48.1) (2026-07-08)
 
 

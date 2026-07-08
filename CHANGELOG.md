@@ -1,3 +1,24 @@
+# [0.46.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.45.0...v0.46.0) (2026-07-08)
+
+
+### Bug Fixes
+
+* **build:** remove redundant sentry-cli from build script ([f91f9d7](https://github.com/plmtmbnn/personal-web-v2/commit/f91f9d722a34ea9fcf24e6aa813f5cd32b8aa00b))
+* **build:** use sequential build commands for Vercel compatibility ([58d206e](https://github.com/plmtmbnn/personal-web-v2/commit/58d206e0d4a49b66938875fe7c6a08c451c02c33))
+* remove invalid Sentry plugin options ([2f092f2](https://github.com/plmtmbnn/personal-web-v2/commit/2f092f2e5cd6a357f28d2aa3004c52094693f90b))
+
+
+### Features
+
+* **auth:** revamp pinguard ui and integrate google authenticator (totp) ([ff138dd](https://github.com/plmtmbnn/personal-web-v2/commit/ff138dd81b1f4827818531e5f56b588505e55e8a))
+* **blog:** responsive mobile card layout, skeleton loaders, image optimization, accessibility ([21bdba4](https://github.com/plmtmbnn/personal-web-v2/commit/21bdba42b130cbc60981655fcaf2381e5c7df15a))
+* **perf:** optimize build and runtime performance ([402c95e](https://github.com/plmtmbnn/personal-web-v2/commit/402c95ee74b1935a1b165b96788e3c46ac009200))
+
+
+### Performance Improvements
+
+* optimize build and dev configurations ([8a79aa6](https://github.com/plmtmbnn/personal-web-v2/commit/8a79aa62bd7d3a595eae1ab2195158356fd04549))
+
 # [0.45.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.44.0...v0.45.0) (2026-07-06)
 
 

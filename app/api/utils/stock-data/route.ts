@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStockData, saveStockData, redis } from "@/lib/core/redis";
-import { gotScraping } from "got-scraping";
+
 
 const FETCH_ATTEMPT_KEY = "idx:last-fetch-attempt";
 
@@ -34,6 +34,8 @@ export async function GET() {
 		if (shouldFetch) {
 			try {
 				console.log("Fetching fresh stock data from IDX...");
+				// Bypass Turbopack bundling for got-scraping to avoid __dirname adm-zip issues
+				const gotScraping = eval("require('got-scraping')").gotScraping;
 				const response = await gotScraping.get(
 					"https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
 					{

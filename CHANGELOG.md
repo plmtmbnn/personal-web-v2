@@ -1,3 +1,10 @@
+# [0.47.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.46.0...v0.47.0) (2026-07-08)
+
+
+### Features
+
+* **stock:** implement auto sync, 3-hour cache TTL, and revamped admin status panel ([cfdfac1](https://github.com/plmtmbnn/personal-web-v2/commit/cfdfac123f325d457ea1fb04c6774c43444001da))
+
 # [0.46.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.45.0...v0.46.0) (2026-07-08)
 
 

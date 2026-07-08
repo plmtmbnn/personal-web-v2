@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { startOfDay, isSameDay, isAfter, parseISO } from "date-fns";
@@ -20,7 +20,6 @@ import QuickNav, {
 import { LayoutList, Target, Plus } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
 import { motion, AnimatePresence } from "framer-motion";
-import { KEYBOARD_SHORTCUTS } from "@/features/tasks/constants";
 
 /**
  * Optimization: Lazy load heavy interactive/visual components.
@@ -104,50 +103,9 @@ export default function TasksView({ tasks }: TasksViewProps) {
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState<TaskViewTab>("agenda");
 
-	// Keyboard shortcut handlers
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
-			// Don't handle keyboard shortcuts when form is open or editing
-			if (isFormOpen) return;
-
-			// Ctrl/Cmd + N: New task
-			if (
-				(e.ctrlKey || e.metaKey) &&
-				e.key === KEYBOARD_SHORTCUTS.NEW_TASK.key
-			) {
-				e.preventDefault();
-				setIsFormOpen(true);
-			}
-
-			// Ctrl/Cmd + A: Toggle analytics
-			if (
-				(e.ctrlKey || e.metaKey) &&
-				e.key === KEYBOARD_SHORTCUTS.TOGGLE_ANALYTICS.key
-			) {
-				e.preventDefault();
-				setActiveTab((prev) => (prev === "analytics" ? "agenda" : "analytics"));
-			}
-
-			// Ctrl/Cmd + F: Focus search (implemented in TaskFilters)
-			if (
-				(e.ctrlKey || e.metaKey) &&
-				e.key === KEYBOARD_SHORTCUTS.TOGGLE_FILTERS.key
-			) {
-				e.preventDefault();
-				// This will be handled by TaskFilters component
-			}
-		},
-		[isFormOpen],
-	);
-
 	useEffect(() => {
 		setMounted(true);
-		// Add keyboard event listeners
-		document.addEventListener("keydown", handleKeyDown);
-		return () => {
-			document.removeEventListener("keydown", handleKeyDown);
-		};
-	}, [handleKeyDown]);
+	}, []);
 
 	const { todayTasks, upcomingTasks, completedTasks, todayStats } =
 		useMemo(() => {

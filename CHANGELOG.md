@@ -1,3 +1,10 @@
+## [0.48.3](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.2...v0.48.3) (2026-07-08)
+
+
+### Bug Fixes
+
+* **stock-explorer:** bypass Turbopack for got-scraping via eval require ([9ba3a7c](https://github.com/plmtmbnn/personal-web-v2/commit/9ba3a7c30f837c53e98399a63a38d6ddb1f3dbf3))
+
 ## [0.48.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.1...v0.48.2) (2026-07-08)
 
 

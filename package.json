@@ -45,7 +45,8 @@
 		"recharts": "^3.9.0",
 		"sql-formatter": "^15.8.2",
 		"tailwindcss": "^4.3.1",
-		"zod": "^4.4.3"
+		"zod": "^4.4.3",
+		"got-scraping": "^4.2.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.1",
@@ -65,7 +66,6 @@
 		"@types/react-syntax-highlighter": "^15.5.13",
 		"@vitest/ui": "^4.1.9",
 		"depcheck": "^1.4.7",
-		"got-scraping": "^4.2.1",
 		"husky": "^9.1.7",
 		"qrcode-terminal": "^0.12.0",
 		"semantic-release": "^25.0.5",

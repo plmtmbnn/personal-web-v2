@@ -13,7 +13,7 @@ This document provides foundational context for the Gemini CLI agent to ensure a
 - **Styling:** Tailwind CSS v4 + Framer Motion
 - **Icons:** Lucide-React + React-Icons/Fa
 - **Linter/Formatter:** Biome
-- **Utilities Integration**: PapaParse (CSV), node-sql-parser, sql-formatter
+- **Utilities Integration**: PapaParse (CSV), node-sql-parser, sql-formatter, otplib (TOTP)
 - **Advanced APIs**: Wake Lock API (Utilities), Web Audio API (Timer beeps)
 - **Workflow:** Semantic Release + Commitlint + Husky
 
@@ -61,8 +61,9 @@ Strictly for routing and page definitions.
 - **Authorization:** 
   - Centralized verification via `checkAdmin()` in `features/auth/actions.ts`.
   - **Cron Security**: API routes for crons must check for `CRON_SECRET` via headers or params.
-- **PIN Protection:** 
-  - `PinGuard.tsx` protects restricted sections (Admin, Tasks, Investment).
+- **TOTP / Authenticator Protection:** 
+  - `PinGuard.tsx` protects restricted sections (Admin, Tasks, Investment) using a 6-digit Google Authenticator code verified via `otplib` (utilizing `TOTP_SECRET` in server environment).
+  - Designed for native device numeric keyboards (virtual keypad obsolete).
   - **Session Duration**: 12 hours.
 - **Auth Cookies**: Long-lived sessions (30 weeks).
 
@@ -73,8 +74,11 @@ Strictly for routing and page definitions.
   - **Headlines**: Use dark-themed solid backing cards behind white headline text.
   - **Details**: Metadata and titles anchored in high-contrast white cards overlapping hero banners.
 - **Custom Modal System**: Use `features/shared/components/CustomModal.tsx` for high-fidelity alerts and confirmations.
-- **Interactive Feedback**: All server transitions must provide high-fidelity feedback (e.g., **Synchronization Overlays**, loading spinners).
-- **Module Focus Pattern**: For side-by-side utility modules (e.g., Input/Output), provide `Minimize2` / `Maximize2` buttons to collapse/expand modules, allowing users to focus on specific panes. Use `framer-motion` for smooth layout transitions.
+- **Interactive Feedback**: 
+  - All server transitions must provide high-fidelity feedback (e.g., **Synchronization Overlays**, loading spinners).
+  - Global loading screens utilize a non-repeating progress crawl (e.g., 40% -> 70% -> 95%) with a translucent blurred backdrop (`bg-white/80 backdrop-blur-md`) to simulate realistic page readiness.
+  - Page-level skeleton loading is preferred over redundant inline "Synchronizing Intel" indicators.
+- **Module Focus Pattern**: For side-by-side utility modules (e.g., Input/Output), provide `Minimize2` / `Maximize2` buttons to collapse/expand modules, allowing users to focus on specific panes. Use `framer-motion` for smooth layout transitions. Ensure Framer Motion transforms do not conflict with Tailwind transform classes (use `style={{ x: ... }}` directly).
 - **Mobile-First UX**:
   - **Strategic Grids**: Utilities transition from 1-column mobile to multi-column desktop/tablet.
   - **Touch Targets**: Enhanced padding and `active:scale-90` feedback for handheld training tools.
@@ -127,12 +131,12 @@ Strictly for routing and page definitions.
   - **File Renamer**: SEO-friendly kebab-case normalization for batch file operations.
   - **Running Timer**: High-precision interval timer with automated transitions and wake-lock.
 - **JSON Tree View**: Standardized `JsonValue` component for interactive exploration of parsed data, supporting nested expansion, item counts, and value-level copying.
-- **Architecture**: Redis-backed with an **Admin Import Portal** (`/utils/stock-explorer/admin`) for manual synchronization.
+- **Architecture**: Redis-backed with automatic IDX synchronization via `got-scraping` (configured as an external server package to resolve static TLS files) and an **Admin Portal** (`/utils/stock-explorer/admin`) for cache management and status monitoring.
 - **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity.
 
 ### Administrative Ecosystem
 - **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, and Stock Registry.
-- **Stock Manager**: Manual JSON import protocol with validation to persist IDX market statistics to Redis.
+- **Stock Manager**: Re-engineered portal (`/utils/stock-explorer/admin`) providing live cache status statistics (instruments count, trading date, 3-hour lifespan info), a programmatic "Purge Cache" action, and manual override form validation as a fallback synchronization protocol.
 - **Navigation**: "Manage Stocks" integrated into `CompactBottomBar.tsx` Admin sub-menu.
 
 ## 📏 Engineering Standards

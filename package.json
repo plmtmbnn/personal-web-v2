@@ -65,6 +65,7 @@
 		"@types/react-syntax-highlighter": "^15.5.13",
 		"@vitest/ui": "^4.1.9",
 		"depcheck": "^1.4.7",
+		"got-scraping": "^4.2.1",
 		"husky": "^9.1.7",
 		"qrcode-terminal": "^0.12.0",
 		"semantic-release": "^25.0.5",

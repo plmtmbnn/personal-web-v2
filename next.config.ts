@@ -29,13 +29,21 @@ const nextConfig: NextConfig = {
 				protocol: "https",
 				hostname: "**.ibb.co.com",
 			},
+			{
+				protocol: "https",
+				hostname: "**.idx.co.id",
+			},
 		],
 	},
 	reactStrictMode: true,
 	typescript: {
 		ignoreBuildErrors: process.env.FAST_BUILD === "true",
 	},
-	serverExternalPackages: ["node-sql-parser"],
+	serverExternalPackages: [
+		"node-sql-parser",
+		"got-scraping",
+		"header-generator",
+	],
 	experimental: {
 		optimizePackageImports: [
 			"lucide-react",

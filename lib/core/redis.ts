@@ -25,7 +25,8 @@ export async function saveStockData(data: any[]) {
 	try {
 		const key = CACHE_KEYS.STOCK_SUMMARY;
 		const value = JSON.stringify(data);
-		await redis.set(key, value);
+		// Expire after 3 hours (10800 seconds)
+		await redis.set(key, value, { ex: 10800 });
 		return true;
 	} catch (error) {
 		console.error("Redis Save Stock Error:", error);

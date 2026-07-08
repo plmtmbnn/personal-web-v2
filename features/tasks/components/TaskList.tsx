@@ -163,74 +163,74 @@ export default function TaskList({
 		},
 	);
 
-  /**
-   * Helper to apply local filters to a list
-   */
-  const applyFilters = useCallback(
-    (list: Task[], filters: any, isUpcoming = false, isCompleted = false) => {
-      let result = list;
-      const todayRef = startOfDay(new Date());
+	/**
+	 * Helper to apply local filters to a list
+	 */
+	const applyFilters = useCallback(
+		(list: Task[], filters: any, isUpcoming = false, isCompleted = false) => {
+			let result = list;
+			const todayRef = startOfDay(new Date());
 
-      // Memoize filter values to avoid recomputation
-      const priorityFilter = filters.priority;
-      const categoryFilter = filters.category;
-      const searchFilter = filters.search?.toLowerCase();
+			// Memoize filter values to avoid recomputation
+			const priorityFilter = filters.priority;
+			const categoryFilter = filters.category;
+			const searchFilter = filters.search?.toLowerCase();
 
-      // 1. Priority
-      if (priorityFilter !== "all") {
-        result = result.filter((t) => t.priority === priorityFilter);
-      }
+			// 1. Priority
+			if (priorityFilter !== "all") {
+				result = result.filter((t) => t.priority === priorityFilter);
+			}
 
-      // 2. Category
-      if (categoryFilter !== "all") {
-        result = result.filter((t) => t.category === categoryFilter);
-      }
+			// 2. Category
+			if (categoryFilter !== "all") {
+				result = result.filter((t) => t.category === categoryFilter);
+			}
 
-      // 3. Completion check
-      if (isCompleted) {
-        result = result.filter((t) => t.is_completed);
-      } else {
-        result = result.filter((t) => !t.is_completed);
-      }
+			// 3. Completion check
+			if (isCompleted) {
+				result = result.filter((t) => t.is_completed);
+			} else {
+				result = result.filter((t) => !t.is_completed);
+			}
 
-      // 4. Date Range (For Upcoming & Completed)
-      if (isUpcoming && filters.range === "week") {
-        const nextWeek = addDays(todayRef, 8); // 7 days from today
-        result = result.filter(
-          (t) => t.due_date && isBefore(parseISO(t.due_date), nextWeek),
-        );
-      }
+			// 4. Date Range (For Upcoming & Completed)
+			if (isUpcoming && filters.range === "week") {
+				const nextWeek = addDays(todayRef, 8); // 7 days from today
+				result = result.filter(
+					(t) => t.due_date && isBefore(parseISO(t.due_date), nextWeek),
+				);
+			}
 
-      if (isCompleted) {
-        const weekOffset = Number(
-          searchParams.get("completed_week_offset") || "0",
-        );
-        const weekStart = addDays(
-          startOfWeek(todayRef, { weekStartsOn: 1 }),
-          weekOffset * 7,
-        );
-        const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+			if (isCompleted) {
+				const weekOffset = Number(
+					searchParams.get("completed_week_offset") || "0",
+				);
+				const weekStart = addDays(
+					startOfWeek(todayRef, { weekStartsOn: 1 }),
+					weekOffset * 7,
+				);
+				const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
 
-        result = result.filter((t) => {
-          if (!t.completed_at && !t.due_date && !t.created_at) return false;
-          const d = parseISO(t.completed_at || t.due_date || t.created_at);
-          return isWithinInterval(d, { start: weekStart, end: weekEnd });
-        });
-      }
+				result = result.filter((t) => {
+					if (!t.completed_at && !t.due_date && !t.created_at) return false;
+					const d = parseISO(t.completed_at || t.due_date || t.created_at);
+					return isWithinInterval(d, { start: weekStart, end: weekEnd });
+				});
+			}
 
-      // 5. Search text query
-      if (searchFilter) {
-        result = result.filter(
-          (t) =>
-            (t.title || "").toLowerCase().includes(searchFilter) ||
-            (t.description || "").toLowerCase().includes(searchFilter),
-        );
-      }
+			// 5. Search text query
+			if (searchFilter) {
+				result = result.filter(
+					(t) =>
+						(t.title || "").toLowerCase().includes(searchFilter) ||
+						(t.description || "").toLowerCase().includes(searchFilter),
+				);
+			}
 
-      return result;
-    },
-    [searchParams],
-  );
+			return result;
+		},
+		[searchParams],
+	);
 
 	// Derived display lists
 	const displayTodayTasks = useMemo(
@@ -514,44 +514,44 @@ export default function TaskList({
 
 					<Droppable droppableId="today-list">
 						{(provided) => (
-        <div
-          {...provided.droppableProps}
-          ref={provided.innerRef}
-          className="space-y-3 min-h-[100px]"
-        >
-          {displayTodayTasks.length > 0 ? (
-            displayTodayTasks.map((task: Task, index: number) => (
-              <Draggable
-                key={task.id}
-                draggableId={task.id}
-                index={index}
-                isDragDisabled={isDragDisabled}
-              >
-                {(provided, snapshot) => (
-                  <TaskItem
-                    task={task}
-                    index={index}
-                    provided={provided}
-                    snapshot={snapshot}
-                    onToggle={handleToggle}
-                    onUpdate={handleUpdate}
-                    onDelete={handleDeleteRequest}
-                  />
-                )}
-              </Draggable>
-            ))
-          ) : (
-            <div className="text-center py-16 bg-emerald-50/50 border border-emerald-100 rounded-[2.5rem] border-dashed">
-              <CheckCircle2 className="w-10 h-10 text-emerald-300 mx-auto mb-3 opacity-40" />
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
-                {hasActiveFilters(todayFilters)
-                  ? "No tasks match your filters"
-                  : "All caught up for today!"}
-              </p>
-            </div>
-          )}
-          {provided.placeholder}
-        </div>
+							<div
+								{...provided.droppableProps}
+								ref={provided.innerRef}
+								className="space-y-3 min-h-[100px]"
+							>
+								{displayTodayTasks.length > 0 ? (
+									displayTodayTasks.map((task: Task, index: number) => (
+										<Draggable
+											key={task.id}
+											draggableId={task.id}
+											index={index}
+											isDragDisabled={isDragDisabled}
+										>
+											{(provided, snapshot) => (
+												<TaskItem
+													task={task}
+													index={index}
+													provided={provided}
+													snapshot={snapshot}
+													onToggle={handleToggle}
+													onUpdate={handleUpdate}
+													onDelete={handleDeleteRequest}
+												/>
+											)}
+										</Draggable>
+									))
+								) : (
+									<div className="text-center py-16 bg-emerald-50/50 border border-emerald-100 rounded-[2.5rem] border-dashed">
+										<CheckCircle2 className="w-10 h-10 text-emerald-300 mx-auto mb-3 opacity-40" />
+										<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
+											{hasActiveFilters(todayFilters)
+												? "No tasks match your filters"
+												: "All caught up for today!"}
+										</p>
+									</div>
+								)}
+								{provided.placeholder}
+							</div>
 						)}
 					</Droppable>
 				</section>
@@ -582,44 +582,44 @@ export default function TaskList({
 
 					<Droppable droppableId="upcoming-list">
 						{(provided) => (
-        <div
-          {...provided.droppableProps}
-          ref={provided.innerRef}
-          className="space-y-3 min-h-[100px]"
-        >
-          {displayUpcomingTasks.length > 0 ? (
-            displayUpcomingTasks.map((task: Task, index: number) => (
-              <Draggable
-                key={task.id}
-                draggableId={task.id}
-                index={index}
-                isDragDisabled={isDragDisabled}
-              >
-                {(provided, snapshot) => (
-                  <TaskItem
-                    task={task}
-                    index={index}
-                    provided={provided}
-                    snapshot={snapshot}
-                    onToggle={handleToggle}
-                    onUpdate={handleUpdate}
-                    onDelete={handleDeleteRequest}
-                  />
-                )}
-              </Draggable>
-            ))
-          ) : (
-            <div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
-              <Inbox className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
-                {hasActiveFilters(upcomingFilters)
-                  ? "No tasks match your filters"
-                  : "No upcoming objectives detected."}
-              </p>
-            </div>
-          )}
-          {provided.placeholder}
-        </div>
+							<div
+								{...provided.droppableProps}
+								ref={provided.innerRef}
+								className="space-y-3 min-h-[100px]"
+							>
+								{displayUpcomingTasks.length > 0 ? (
+									displayUpcomingTasks.map((task: Task, index: number) => (
+										<Draggable
+											key={task.id}
+											draggableId={task.id}
+											index={index}
+											isDragDisabled={isDragDisabled}
+										>
+											{(provided, snapshot) => (
+												<TaskItem
+													task={task}
+													index={index}
+													provided={provided}
+													snapshot={snapshot}
+													onToggle={handleToggle}
+													onUpdate={handleUpdate}
+													onDelete={handleDeleteRequest}
+												/>
+											)}
+										</Draggable>
+									))
+								) : (
+									<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
+										<Inbox className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
+										<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
+											{hasActiveFilters(upcomingFilters)
+												? "No tasks match your filters"
+												: "No upcoming objectives detected."}
+										</p>
+									</div>
+								)}
+								{provided.placeholder}
+							</div>
 						)}
 					</Droppable>
 				</section>
@@ -668,27 +668,27 @@ export default function TaskList({
 							</button>
 						</div>
 					) : (
-        <div className="space-y-3 min-h-[100px]">
-          {displayCompletedTasks.length > 0 ? (
-            displayCompletedTasks.map((task: Task, index: number) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                index={index}
-                onToggle={handleToggle}
-                onUpdate={handleUpdate}
-                onDelete={handleDeleteRequest}
-              />
-            ))
-          ) : (
-            <div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
-              <CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
-                No completed tasks found in this range.
-              </p>
-            </div>
-          )}
-        </div>
+						<div className="space-y-3 min-h-[100px]">
+							{displayCompletedTasks.length > 0 ? (
+								displayCompletedTasks.map((task: Task, index: number) => (
+									<TaskItem
+										key={task.id}
+										task={task}
+										index={index}
+										onToggle={handleToggle}
+										onUpdate={handleUpdate}
+										onDelete={handleDeleteRequest}
+									/>
+								))
+							) : (
+								<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
+									<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
+									<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
+										No completed tasks found in this range.
+									</p>
+								</div>
+							)}
+						</div>
 					)}
 				</section>
 			</div>

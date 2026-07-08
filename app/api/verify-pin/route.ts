@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 import { ENV_GLOBAL } from '@/lib/core/env';
+import { verifySync } from 'otplib';
 
 /**
  * Redis & Ratelimit Configuration
@@ -53,13 +54,20 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: 'Invalid PIN format' }, { status: 400 });
 		}
 
-		const requiredPin = ENV_GLOBAL?.NEXT_PUBLIC_PAGE_PIN;
+		const secret = ENV_GLOBAL?.TOTP_SECRET;
 
-		if (pin === requiredPin) {
+		if (!secret) {
+			console.error('TOTP_SECRET is not configured');
+			return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+		}
+
+		const result = verifySync({ token: pin, secret });
+
+		if (result.valid) {
 			return NextResponse.json({ authenticated: true });
 		}
 
-		return NextResponse.json({ authenticated: false, error: 'Incorrect PIN' }, { status: 401 });
+		return NextResponse.json({ authenticated: false, error: 'Incorrect Authenticator Code' }, { status: 401 });
 	} catch (error) {
 		console.error('PIN Verification Error:', error);
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

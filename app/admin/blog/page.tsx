@@ -126,20 +126,20 @@ async function BlogListDataLoader({
 			getBlogStats(),
 		]);
 
-        return (
-          <DynamicAdminBlogList
-            initialBlogs={blogs}
-            totalCount={totalCount}
-            currentPage={currentPage}
-            currentSearch={currentSearch}
-            currentStatus={currentStatus}
-            currentSort={currentSort}
-            currentHeadline={currentHeadline}
-            currentCategory={currentCategory}
-            currentPageSize={currentPageSize}
-            blogStats={blogStats}
-          />
-        );
+		return (
+			<DynamicAdminBlogList
+				initialBlogs={blogs}
+				totalCount={totalCount}
+				currentPage={currentPage}
+				currentSearch={currentSearch}
+				currentStatus={currentStatus}
+				currentSort={currentSort}
+				currentHeadline={currentHeadline}
+				currentCategory={currentCategory}
+				currentPageSize={currentPageSize}
+				blogStats={blogStats}
+			/>
+		);
 	} catch (error) {
 		console.error("Failed to load admin blog list:", error);
 		return <ErrorStateFallback />;

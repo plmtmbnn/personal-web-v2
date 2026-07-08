@@ -5,7 +5,6 @@ import {
 	BarChart3,
 	ClipboardList,
 	Zap,
-	Loader2,
 	ChevronDown,
 	ChevronUp,
 	Activity,
@@ -42,7 +41,7 @@ interface GeneralReportProps {
 export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 	const [period, setPeriod] = useState<"today" | "week" | "month">("week");
 	const [stats, setStats] = useState<AnalyticsStats | null>(null);
-	const [loading, setLoading] = useState(true);
+	const [, setLoading] = useState(true);
 	const [isExpanded, setIsExpanded] = useState(false);
 
 	useEffect(() => {
@@ -164,17 +163,6 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 		</div>
 	);
 
-	if (loading && !stats) {
-		return (
-			<div className="flex flex-col items-center justify-center py-24 bg-slate-50 border border-slate-200 rounded-[3rem]">
-				<Loader2 className="w-10 h-10 text-slate-300 animate-spin mb-4" />
-				<p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">
-					Synchronizing Intel
-				</p>
-			</div>
-		);
-	}
-
 	if (!stats) return null;
 
 	return (
@@ -197,7 +185,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 							)}
 						</h2>
 						<p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em]">
-							Senior Strategic Audit
+							Strategic Audit
 						</p>
 					</div>
 				</div>

@@ -17,11 +17,11 @@ export default function GlobalLoading() {
 	const progress = useMotionValue(0);
 
 	useEffect(() => {
-		const controls = animate(progress, 0.93, {
-			duration: 4,
-			ease: [0.4, 0, 0.2, 1],
-			repeat: Infinity,
-			repeatDelay: 0.5,
+		// Realistic loader: moves to 40% quickly, then crawls to 95% over time
+		const controls = animate(progress, [0, 0.4, 0.7, 0.95], {
+			times: [0, 0.1, 0.4, 1],
+			duration: 15,
+			ease: ["easeOut", "easeInOut", "linear"],
 		});
 		return controls.stop;
 	}, [progress]);
@@ -29,13 +29,15 @@ export default function GlobalLoading() {
 	const barWidth = useTransform(progress, [0, 1], ["0%", "100%"]);
 
 	return (
-		<div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center pointer-events-none overflow-hidden">
+		<div className="fixed inset-0 bg-white/80 backdrop-blur-md z-[9999] flex flex-col items-center justify-center pointer-events-none overflow-hidden">
 			{/* Ambient glow */}
 			<motion.div
 				animate={{ scale: [1, 1.08, 1], opacity: [0.08, 0.18, 0.08] }}
 				transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-				className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] rounded-full"
+				className="absolute top-1/2 left-1/2 w-[480px] h-[480px] rounded-full"
 				style={{
+					x: "-50%",
+					y: "-50%",
 					background:
 						"radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)",
 				}}
@@ -48,8 +50,10 @@ export default function GlobalLoading() {
 					ease: "easeInOut",
 					delay: 0.6,
 				}}
-				className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full"
+				className="absolute top-1/2 left-1/2 w-[300px] h-[300px] rounded-full"
 				style={{
+					x: "-50%",
+					y: "-50%",
 					background:
 						"radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)",
 				}}

@@ -2,61 +2,61 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-		productionBrowserSourceMaps: false,
-		images: {
-			remotePatterns: [
-				{
-					protocol: "https",
-					hostname: "**.unsplash.com",
-				},
-				{
-					protocol: "https",
-					hostname: "**.cloudinary.com",
-				},
-				{
-					protocol: "https",
-					hostname: "**.pexels.com",
-				},
-				{
-					protocol: "https",
-					hostname: "**.githubusercontent.com",
-				},
-				{
-					protocol: "https",
-					hostname: "**.googleusercontent.com",
-				},
-				{
-					protocol: "https",
-					hostname: "**.ibb.co.com",
-				},
-			],
-		},
-		reactStrictMode: true,
-		typescript: {
-			ignoreBuildErrors: process.env.FAST_BUILD === "true",
-		},
-		serverExternalPackages: ["node-sql-parser"],
-		experimental: {
-			optimizePackageImports: [
-				"lucide-react",
-				"recharts",
-				"react-icons",
-				"framer-motion",
-				"date-fns",
-				"@radix-ui/react-icons",
-			],
-			webVitalsAttribution: ['CLS', 'LCP', 'FCP', 'TTFB', 'INP'],
-		},
-		webpack: (config) => {
-			config.cache = {
-				type: 'filesystem',
-				buildDependencies: {
-					config: [__filename],
-				},
-			};
-			return config;
-		},
-	};
+	productionBrowserSourceMaps: false,
+	images: {
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "**.unsplash.com",
+			},
+			{
+				protocol: "https",
+				hostname: "**.cloudinary.com",
+			},
+			{
+				protocol: "https",
+				hostname: "**.pexels.com",
+			},
+			{
+				protocol: "https",
+				hostname: "**.githubusercontent.com",
+			},
+			{
+				protocol: "https",
+				hostname: "**.googleusercontent.com",
+			},
+			{
+				protocol: "https",
+				hostname: "**.ibb.co.com",
+			},
+		],
+	},
+	reactStrictMode: true,
+	typescript: {
+		ignoreBuildErrors: process.env.FAST_BUILD === "true",
+	},
+	serverExternalPackages: ["node-sql-parser"],
+	experimental: {
+		optimizePackageImports: [
+			"lucide-react",
+			"recharts",
+			"react-icons",
+			"framer-motion",
+			"date-fns",
+			"@radix-ui/react-icons",
+		],
+		webVitalsAttribution: ["CLS", "LCP", "FCP", "TTFB", "INP"],
+	},
+	webpack: (config) => {
+		config.cache = {
+			type: "filesystem",
+			buildDependencies: {
+				config: [__filename],
+			},
+		};
+		return config;
+	},
+};
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -68,8 +68,6 @@ export default isProd
 			org: "peoel-corps",
 
 			project: "javascript-nextjs",
-
-
 
 			// Only print logs for uploading source maps in CI
 			silent: !process.env.CI,

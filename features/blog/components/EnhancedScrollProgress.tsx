@@ -63,7 +63,7 @@ export function EnhancedScrollProgress({
 					opacity: showProgress ? 1 : 0,
 					y: showProgress ? 0 : 20,
 				}}
-				className="fixed bottom-8 right-8 z-40 print:hidden"
+				className="fixed bottom-8 left-8 z-40 print:hidden"
 			>
 				<div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-2xl px-4 py-3 shadow-2xl">
 					<div className="flex items-center gap-3">

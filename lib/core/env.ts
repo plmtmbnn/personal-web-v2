@@ -26,7 +26,7 @@ const clientSchema = z.object({
 const serverSchema = z.object({
 	UPSTASH_REDIS_REST_URL: z.string().url(),
 	UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
-	NEXT_PUBLIC_PAGE_PIN: z.string().length(6),
+	TOTP_SECRET: z.string().min(1),
 	SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 	CRON_SECRET: z.string().min(1).optional(),
 	TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
@@ -70,7 +70,7 @@ const validateEnv = () => {
 		const serverResult = serverSchema.safeParse({
 			UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
 			UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
-			NEXT_PUBLIC_PAGE_PIN: process.env.NEXT_PUBLIC_PAGE_PIN,
+			TOTP_SECRET: process.env.TOTP_SECRET,
 			SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
 			CRON_SECRET: process.env.CRON_SECRET,
 			TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,

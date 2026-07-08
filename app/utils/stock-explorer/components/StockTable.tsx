@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import type { ProcessedStock, SortConfig, SortKey } from "../View";
+import type { ProcessedStock, SortConfig, SortKey } from "../types";
 
 interface StockTableProps {
 	stocks: ProcessedStock[];

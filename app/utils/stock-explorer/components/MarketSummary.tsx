@@ -9,7 +9,7 @@ import {
 	DollarSign,
 	ArrowRightLeft,
 } from "lucide-react";
-import type { ProcessedStock } from "../View";
+import type { ProcessedStock } from "../types";
 import { fmtCompact, fmtPct } from "../utils";
 import BreadthGauge from "./BreadthGauge";
 

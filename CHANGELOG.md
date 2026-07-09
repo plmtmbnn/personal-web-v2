@@ -1,3 +1,10 @@
+## [0.48.6](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.5...v0.48.6) (2026-07-09)
+
+
+### Bug Fixes
+
+* correct vercel.json ignore command property name ([00af7e0](https://github.com/plmtmbnn/personal-web-v2/commit/00af7e07210e67094939a87f4a5fa5bb54fd3bca))
+
 ## [0.48.5](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.4...v0.48.5) (2026-07-09)
 
 ## [0.48.4](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.3...v0.48.4) (2026-07-09)

@@ -1,3 +1,10 @@
+# [0.50.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.49.0...v0.50.0) (2026-07-09)
+
+
+### Features
+
+* **tasks:** advanced task system with status, subtasks, effort, dependencies ([707e8d2](https://github.com/plmtmbnn/personal-web-v2/commit/707e8d294cbc0f9470b6093fe653c3efe62652ef))
+
 # [0.49.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.6...v0.49.0) (2026-07-09)
 
 

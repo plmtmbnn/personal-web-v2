@@ -7,7 +7,6 @@ import { Clock } from "lucide-react";
 
 interface EnhancedScrollProgressProps {
 	readTimeMinutes: number;
-	wordCount?: number;
 }
 
 export function EnhancedScrollProgress({
@@ -23,30 +22,39 @@ export function EnhancedScrollProgress({
 	const params = useParams();
 	const slug = params?.slug;
 
-	const [progress, setProgress] = useState(0);
+	const [percent, setPercent] = useState(0);
 	const [timeRemaining, setTimeRemaining] = useState(readTimeMinutes);
 	const [showProgress, setShowProgress] = useState(false);
-
-	// Track scroll progress
-	useEffect(() => {
-		const unsubscribe = scrollYProgress.on("change", (latest) => {
-			setProgress(latest);
-
-			// Calculate time remaining based on scroll position
-			const remaining = Math.ceil(readTimeMinutes * (1 - latest));
-			setTimeRemaining(remaining);
-
-			// Show progress badge after scrolling 10%
-			setShowProgress(latest > 0.1);
-		});
-
-		return () => unsubscribe();
-	}, [scrollYProgress, readTimeMinutes]);
 
 	// Scroll to top on article change
 	useEffect(() => {
 		window.scrollTo(0, 0);
 	}, [slug]);
+
+	// Track scroll progress with throttled state updates
+	useEffect(() => {
+		const unsubscribe = scrollYProgress.on("change", (latest) => {
+			const currentPercent = Math.round(latest * 100);
+			setPercent((prev) => (prev !== currentPercent ? currentPercent : prev));
+
+			// Calculate time remaining based on scroll position
+			const remaining = Math.ceil(readTimeMinutes * (1 - latest));
+			setTimeRemaining((prev) => (prev !== remaining ? remaining : prev));
+
+			// Show progress badge after scrolling 10%
+			setShowProgress((prev) => {
+				const shouldShow = latest > 0.1;
+				return prev !== shouldShow ? shouldShow : prev;
+			});
+		});
+
+		return () => unsubscribe();
+	}, [scrollYProgress, readTimeMinutes]);
+
+	// Defensive check: don't render on extremely short posts
+	if (!readTimeMinutes || readTimeMinutes <= 0) {
+		return null;
+	}
 
 	return (
 		<>
@@ -65,7 +73,7 @@ export function EnhancedScrollProgress({
 				}}
 				className="fixed bottom-8 left-8 z-40 print:hidden"
 			>
-				<div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-2xl px-4 py-3 shadow-2xl">
+				<div className="bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl px-4 py-3 shadow-2xl">
 					<div className="flex items-center gap-3">
 						{/* Circular progress */}
 						<div className="relative w-10 h-10">
@@ -77,26 +85,25 @@ export function EnhancedScrollProgress({
 									r="16"
 									fill="none"
 									stroke="currentColor"
-									strokeWidth="2"
-									className="text-slate-700"
+									strokeWidth="2.5"
+									className="text-slate-800"
 								/>
-								{/* Progress circle */}
-								<circle
+								{/* Progress circle animated via hardware-accelerated Framer Motion style */}
+								<motion.circle
 									cx="18"
 									cy="18"
 									r="16"
 									fill="none"
 									stroke="currentColor"
-									strokeWidth="2"
-									strokeDasharray="100"
-									strokeDashoffset={100 - progress * 100}
-									className="text-blue-400 transition-all duration-300"
+									strokeWidth="2.5"
+									style={{ pathLength: scaleX }}
+									className="text-blue-500"
 									strokeLinecap="round"
 								/>
 							</svg>
 							<div className="absolute inset-0 flex items-center justify-center">
 								<span className="text-[10px] font-black text-white">
-									{Math.round(progress * 100)}%
+									{percent}%
 								</span>
 							</div>
 						</div>
@@ -107,8 +114,8 @@ export function EnhancedScrollProgress({
 								{timeRemaining > 0 ? "Time Left" : "Completed"}
 							</p>
 							<div className="flex items-center gap-1.5">
-								<Clock className="w-3 h-3 text-blue-400" />
-								<span className="text-xs font-bold text-white">
+								<Clock className="w-3.5 h-3.5 text-blue-500" />
+								<span className="text-xs font-black text-white">
 									{timeRemaining > 0 ? `${timeRemaining} min` : "Done!"}
 								</span>
 							</div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import FileRenamerView from "./View";
+import FileRenamerView from "@/features/utils/file-renamer/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "Kebab-Case File Renamer",

@@ -19,7 +19,7 @@ import {
 	getBlogImage,
 	getReadTime,
 } from "@/features/blog/utils";
-import { Skeleton } from "@/components/Shimmer";
+import { Skeleton } from "@/features/shared/components/Shimmer";
 
 interface BlogViewProps {
 	allBlogs: Blog[];

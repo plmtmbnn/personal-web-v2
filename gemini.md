@@ -24,10 +24,10 @@ The project follows a modular, domain-driven structure to ensure scalability and
 Contains all business logic, components, and types for specific features.
 - `features/auth/`: Actions, `PinGuard.tsx`, and auth-specific components.
 - `features/blog/`: Actions, data fetching, and all blog UI components.
-- `features/tasks/`: Actions, analytics, types, utils, and all task UI components.
+- `features/tasks/`: Actions, analytics, types, utils, and task UI components structured under logical `components/` subdirectories (`agenda/`, `analytics/`, `health/`, `shared/`).
 - `features/investment/`: Actions, types, and Fear & Greed visualization components.
 - `features/travel/`: Components, types, and static data for the Travel Bucket List Tracker.
-- `features/shared/`: Global UI components (e.g., `CustomModal.tsx`, `StockTicker.tsx`).
+- `features/shared/`: Global reusable UI components (e.g., `CustomModal.tsx`, `StockTicker.tsx`, `Skeleton.tsx`).
 
 ### 2. `services/` (Infrastructure Layer)
 Reserved for cross-cutting infrastructure logic and pluggable systems.
@@ -103,6 +103,7 @@ Strictly for routing and page definitions.
   - High-fidelity layout combining Share actions and interactive motion feedback.
 
 ### Task System
+- **Modular Directory Organization**: Task system UI components are organized into logical sub-directories under `components/`: `agenda/` (forms, lists, filters, items), `analytics/` (charts, graphs, reports), `health/` (system checks), and `shared/` (task-specific loading skeletons, toasts, errors).
 - **Tabbed Architecture**:
   - **Agenda**: Prominent `TaskProgress` (independent fetch) and collapsible `HealthCheck`.
   - **Analytics**: Multi-Metric Heatmap (Created vs Done) with diagonal visualization.
@@ -132,7 +133,8 @@ Strictly for routing and page definitions.
   - **Running Timer**: High-precision interval timer with automated transitions and wake-lock.
 - **JSON Tree View**: Standardized `JsonValue` component for interactive exploration of parsed data, supporting nested expansion, item counts, and value-level copying.
 - **Architecture**: Redis-backed with automatic IDX synchronization via `got-scraping` (configured as an external server package to resolve static TLS files) and an **Admin Portal** (`/utils/stock-explorer/admin`) for cache management and status monitoring.
-- **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity.
+- **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity. 
+  - **Logic Decoupling**: Heavy business logic (e.g., schema generation, formatters, string transformations) is decoupled from the `View.tsx` component into dedicated `utils/` (e.g., `generators.ts`, `transform.ts`) and `types.ts` files within each specific utility's feature directory.
 
 ### Administrative Ecosystem
 - **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, and Stock Registry.

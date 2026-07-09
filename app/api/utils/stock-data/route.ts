@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getStockData, saveStockData, redis } from "@/lib/core/redis";
+import { gotScraping } from "got-scraping";
 
+export const dynamic = "force-dynamic";
 
 const FETCH_ATTEMPT_KEY = "idx:last-fetch-attempt";
 
@@ -33,25 +35,22 @@ export async function GET() {
 		// 3. Perform fetch from IDX if needed
 		if (shouldFetch) {
 			try {
-				console.log("Fetching fresh stock data from IDX...");
-				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 10000);
+				console.log("Fetching fresh stock data from IDX using got-scraping...");
 
-				const response = await fetch(
-					"https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
-					{
-						headers: {
-							Referer: "https://www.idx.co.id/",
-							"User-Agent":
-								"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-							Accept: "application/json, text/plain, */*",
-						},
-						signal: controller.signal,
+				const response = await gotScraping({
+					url: "https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
+					headers: {
+						Referer: "https://www.idx.co.id/",
+						"User-Agent":
+							"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+						Accept: "application/json, text/plain, */*",
 					},
-				).finally(() => clearTimeout(timeoutId));
+					timeout: { request: 10000 },
+					responseType: "json",
+				});
 
-				if (response.ok) {
-					const body = await response.json();
+				if (response.statusCode >= 200 && response.statusCode < 300) {
+					const body = response.body as any;
 					if (body && Array.isArray(body.data) && body.data.length > 0) {
 						// Store to Redis
 						await saveStockData(body.data);

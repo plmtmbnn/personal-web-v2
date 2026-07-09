@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import AdventuresView from "./View";
+import AdventuresView from "@/features/adventures/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "Personal Adventures",

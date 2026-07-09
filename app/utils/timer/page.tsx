@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import TimerView from "./View";
+import TimerView from "@/features/utils/timer/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "HIIT Interval Timer",

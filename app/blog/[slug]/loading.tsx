@@ -1,6 +1,6 @@
 "use client";
 
-import { Skeleton } from "@/components/Shimmer";
+import { Skeleton } from "@/features/shared/components/Shimmer";
 
 /**
  * Blog Detail Loading Skeleton

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import PinGuard from "@/features/auth/PinGuard";
-import TasksView from "@/features/tasks/components/TasksView";
+import TasksView from "@/features/tasks/components/agenda/TasksView";
 import { getTasks } from "@/features/tasks/actions/tasks";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import { redis } from "@/lib/core/redis";

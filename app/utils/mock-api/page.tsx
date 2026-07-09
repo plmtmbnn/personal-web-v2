@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import MockApiView from "./View";
+import MockApiView from "@/features/utils/mock-api/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "Dynamic Mock API Engine",

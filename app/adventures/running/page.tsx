@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { createMetadata } from "@/lib/shared/metadata";
-import RunningView from "./View";
+import RunningView from "@/features/adventures/running/components/View";
 import { getStravaData } from "@/services/strava/service";
 import { checkAdmin } from "@/features/auth/actions";
 

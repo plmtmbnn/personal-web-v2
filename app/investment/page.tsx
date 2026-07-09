@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import InvestmentView from "./View";
+import InvestmentView from "@/features/investment/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "Market Insights | Investments",

@@ -18,13 +18,13 @@ export async function GET(request: Request) {
 
   if (!code) {
     console.error('[Auth Callback] No code provided in URL');
-    return NextResponse.redirect(`${siteUrl}/unauthorized?message=no_code`);
+    return NextResponse.redirect(new URL('/unauthorized?message=no_code', siteUrl));
   }
 
   // Feature Toggle Check
   if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false") {
     console.warn('[Auth Callback] Google Auth is disabled via feature toggle');
-    return NextResponse.redirect(`${siteUrl}/login?message=disabled`);
+    return NextResponse.redirect(new URL('/login?message=disabled', siteUrl));
   }
 
   const supabase = await createClient();
@@ -35,7 +35,13 @@ export async function GET(request: Request) {
   
   if (error || !data?.user) {
     console.error('[Auth Callback] Code exchange failed:', error?.message || 'No user data');
-    return NextResponse.redirect(`${siteUrl}/unauthorized?message=exchange_failed`);
+    return NextResponse.redirect(new URL('/unauthorized?message=exchange_failed', siteUrl));
+  }
+
+  // Sanitize redirect target to prevent open redirect vulnerabilities
+  let safeNext = '/tasks';
+  if (next && next.startsWith('/') && !next.startsWith('//')) {
+    safeNext = next;
   }
 
   console.log('[Auth Callback] Session exchanged successfully for user:', data.user.id);
@@ -59,7 +65,7 @@ export async function GET(request: Request) {
   if (!isVerified) {
     console.warn('[Auth Callback] User is not verified. Rejecting access.');
     await supabase.auth.signOut();
-    return NextResponse.redirect(`${siteUrl}/unauthorized?message=pending`);
+    return NextResponse.redirect(new URL('/unauthorized?message=pending', siteUrl));
   }
 
   // 3. User is verified: Create custom Redis session
@@ -72,7 +78,7 @@ export async function GET(request: Request) {
   } catch (redisError) {
     console.error('[Auth Callback] Redis session creation failed:', redisError);
     // If Redis fails, we can't establish our custom session layer
-    return NextResponse.redirect(`${siteUrl}/unauthorized?message=session_error`);
+    return NextResponse.redirect(new URL('/unauthorized?message=session_error', siteUrl));
   }
 
   // 4. Set custom session cookie
@@ -82,10 +88,10 @@ export async function GET(request: Request) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 604800 * 30, // 1 week
+    maxAge: 604800 * 30, // 30 weeks
     path: '/',
   });
 
-  console.log('[Auth Callback] Authentication complete. Redirecting to:', next);
-  return NextResponse.redirect(`${siteUrl}${next}`);
+  console.log('[Auth Callback] Authentication complete. Redirecting to:', safeNext);
+  return NextResponse.redirect(new URL(safeNext, siteUrl));
 }

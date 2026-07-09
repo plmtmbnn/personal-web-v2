@@ -51,7 +51,7 @@ import {
 	useAdminToast,
 } from "@/features/shared/components/AdminToast";
 import { getCategoryStyles } from "@/features/blog/utils";
-import { Skeleton } from "@/features/tasks/components/Skeleton";
+import { Skeleton } from "@/features/shared/components/Skeleton";
 
 // ─────────────────────────────────────────────
 // Constants

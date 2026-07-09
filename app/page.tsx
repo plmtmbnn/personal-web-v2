@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import HomeView from "./HomeView";
+import HomeView from "@/features/home/components/HomeView";
 import { redis } from "@/lib/core/redis";
 
 export const dynamic = "force-dynamic";

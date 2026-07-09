@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
 import dynamic from "next/dynamic";
 
-const StockExplorerView = dynamic(() => import("./View"));
+const StockExplorerView = dynamic(
+	() => import("@/features/utils/stock-explorer/components/View"),
+);
 
 export const metadata: Metadata = createMetadata({
 	title: "Advanced IDX Stock Explorer",

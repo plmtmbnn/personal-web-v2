@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import WorkExperienceView from "./View";
+import WorkExperienceView from "@/features/work-experience/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "Professional Experience",

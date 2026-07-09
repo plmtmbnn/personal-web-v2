@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import PortfolioView from "./View";
+import PortfolioView from "@/features/portfolio/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "Project Portfolio",

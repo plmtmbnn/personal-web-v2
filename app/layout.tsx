@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Varela_Round, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CompactBottomBar from "@/features/shared/components/CompactBottomBar";
-import NavigationLoader from "@/components/NavigationLoader";
+import NavigationLoader from "@/features/shared/components/NavigationLoader";
 import { createMetadata } from "@/lib/shared/metadata";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = createMetadata();

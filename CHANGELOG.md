@@ -1,3 +1,10 @@
+# [0.49.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.6...v0.49.0) (2026-07-09)
+
+
+### Features
+
+* **tasks:** add task status, effort estimation, tags, and archiving ([f2c5291](https://github.com/plmtmbnn/personal-web-v2/commit/f2c5291b0da0e7add0bc8531099f60abb672b103))
+
 ## [0.48.6](https://github.com/plmtmbnn/personal-web-v2/compare/v0.48.5...v0.48.6) (2026-07-09)
 
 

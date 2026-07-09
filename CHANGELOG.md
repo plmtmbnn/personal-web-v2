@@ -1,3 +1,10 @@
+# [0.51.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.50.0...v0.51.0) (2026-07-09)
+
+
+### Features
+
+* **tasks:** add drag-and-drop kanban board view for tasks agenda ([1e02d49](https://github.com/plmtmbnn/personal-web-v2/commit/1e02d49728437254f85422a1a565b355a4c8de6b))
+
 # [0.50.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.49.0...v0.50.0) (2026-07-09)
 
 

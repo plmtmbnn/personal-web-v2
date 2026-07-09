@@ -152,6 +152,7 @@ function SubtaskItem({ subtask, onToggle, onDelete }: SubtaskItemProps) {
 interface TaskItemProps {
 	task: Task;
 	index: number;
+	layoutMode?: "list" | "board";
 	provided?: DraggableProvided;
 	snapshot?: DraggableStateSnapshot;
 	onToggle: (taskId: string, currentStatus: boolean) => void;
@@ -168,6 +169,7 @@ function TaskItem({
 	onToggle,
 	onDelete,
 	onUpdate,
+	layoutMode = "list",
 }: TaskItemProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editValue, setEditValue] = useState(task.title);
@@ -481,7 +483,6 @@ function TaskItem({
 		const nextIndex = (currentIndex + 1) % STATUS_CYCLE.length;
 		const nextStatus = STATUS_CYCLE[nextIndex];
 		setOptimisticStatus(nextStatus);
-		setOptimisticCompleted(nextStatus === "done");
 		onUpdate(task.id, {
 			status: nextStatus,
 			is_completed: nextStatus === "done",
@@ -700,7 +701,7 @@ function TaskItem({
 				dragElastic={0.4}
 				onDragEnd={handleDragEnd}
 				style={{ x }}
-				className={`group flex items-start gap-3 sm:gap-4 p-4 bg-white border-2 transition-all duration-300 ${
+				className={`group flex items-start gap-3 sm:gap-4 ${layoutMode === "board" ? "p-3" : "p-4"} bg-white border-2 transition-all duration-300 ${
 					snapshot?.isDragging
 						? "shadow-2xl border-emerald-500 ring-2 ring-emerald-500/10 z-50"
 						: isEditing

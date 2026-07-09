@@ -17,7 +17,7 @@ import {
 import QuickNav, {
 	type TaskViewTab,
 } from "@/features/tasks/components/shared/QuickNav";
-import { LayoutList, Target, Plus } from "lucide-react";
+import { LayoutList, Target, Plus, Kanban } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -87,6 +87,14 @@ const DynamicTaskList = dynamic(
 	},
 );
 
+const DynamicTaskBoard = dynamic(
+	() => import("@/features/tasks/components/agenda/TaskBoard"),
+	{
+		loading: () => <TaskListSkeleton />,
+		ssr: false,
+	},
+);
+
 interface TasksViewProps {
 	tasks: Task[];
 }
@@ -102,6 +110,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 	const [mounted, setMounted] = useState(false);
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState<TaskViewTab>("agenda");
+	const [viewMode, setViewMode] = useState<"list" | "board">("list");
 
 	useEffect(() => {
 		setMounted(true);
@@ -262,10 +271,29 @@ export default function TasksView({ tasks }: TasksViewProps) {
 															Active Agenda
 														</h2>
 													</div>
-													<div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
-														<span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-tight">
-															Ready
-														</span>
+													<div className="flex items-center gap-3 bg-slate-50 p-1 rounded-xl border border-slate-200">
+														<button
+															type="button"
+															onClick={() => setViewMode("list")}
+															className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+																viewMode === "list"
+																	? "bg-white text-slate-800 shadow-sm border border-slate-200/50"
+																	: "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+															}`}
+														>
+															<LayoutList className="w-3.5 h-3.5" /> List
+														</button>
+														<button
+															type="button"
+															onClick={() => setViewMode("board")}
+															className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+																viewMode === "board"
+																	? "bg-white text-slate-800 shadow-sm border border-slate-200/50"
+																	: "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+															}`}
+														>
+															<Kanban className="w-3.5 h-3.5" /> Board
+														</button>
 													</div>
 												</div>
 
@@ -277,11 +305,19 @@ export default function TasksView({ tasks }: TasksViewProps) {
 														</div>
 													}
 												>
-													<DynamicTaskList
-														todayTasks={todayTasks}
-														upcomingTasks={upcomingTasks}
-														completedTasks={completedTasks}
-													/>
+													{viewMode === "board" ? (
+														<DynamicTaskBoard
+															todayTasks={todayTasks}
+															upcomingTasks={upcomingTasks}
+															completedTasks={completedTasks}
+														/>
+													) : (
+														<DynamicTaskList
+															todayTasks={todayTasks}
+															upcomingTasks={upcomingTasks}
+															completedTasks={completedTasks}
+														/>
+													)}
 												</Suspense>
 											</div>
 										</div>

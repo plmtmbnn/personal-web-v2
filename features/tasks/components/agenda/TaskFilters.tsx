@@ -2,10 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Tag, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+	Tag,
+	Search,
+	X,
+	ChevronLeft,
+	ChevronRight,
+	Workflow,
+} from "lucide-react";
 import type { Task } from "@/features/tasks/types";
 import { format, startOfWeek, endOfWeek, addDays, startOfDay } from "date-fns";
-import { SEARCH_DEBOUNCE_MS } from "@/features/tasks/constants";
+import {
+	SEARCH_DEBOUNCE_MS,
+	TASK_STATUS_CONFIG,
+} from "@/features/tasks/constants";
 
 interface TaskFiltersProps {
 	tasks: Task[];
@@ -28,6 +38,7 @@ export default function TaskFilters({
 	const KEY_RANGE = `${paramPrefix}_range`;
 	const KEY_SEARCH = `${paramPrefix}_search`;
 	const KEY_WEEK_OFFSET = `${paramPrefix}_week_offset`;
+	const KEY_STATUS = `${paramPrefix}_status`;
 
 	const currentPriority = searchParams.get(KEY_PRIORITY) || "all";
 	const currentCategory = searchParams.get(KEY_CATEGORY) || "all";
@@ -35,6 +46,7 @@ export default function TaskFilters({
 	const showCompleted = searchParams.get(KEY_COMPLETED) === "true";
 	const currentSearch = searchParams.get(KEY_SEARCH) || "";
 	const weekOffset = Number(searchParams.get(KEY_WEEK_OFFSET) || "0");
+	const currentStatus = searchParams.get(KEY_STATUS) || "all";
 
 	// Weekly date range calculation for Completed navigator
 	const todayRef = startOfDay(new Date());
@@ -116,12 +128,28 @@ export default function TaskFilters({
 	const hasActiveFilters =
 		currentPriority !== "all" ||
 		currentCategory !== "all" ||
+		currentStatus !== "all" ||
 		showCompleted ||
 		(showRangeFilter &&
 			(paramPrefix === "completed"
 				? weekOffset !== 0
 				: currentRange !== "week")) ||
 		!!currentSearch;
+
+	const statusOptions = [
+		{ label: "All", value: "all" },
+		...Object.entries(TASK_STATUS_CONFIG).map(([key, cfg]) => ({
+			label: cfg.shortLabel,
+			value: key,
+			color: cfg.color,
+		})),
+	];
+
+	const getStatusCount = (statusVal: string) => {
+		const items = tasks || [];
+		if (statusVal === "all") return items.length;
+		return items.filter((t) => (t.status || "todo") === statusVal).length;
+	};
 
 	return (
 		<div className="flex flex-col gap-4 py-2">
@@ -242,6 +270,7 @@ export default function TaskFilters({
 							params.delete(KEY_CATEGORY);
 							params.delete(KEY_COMPLETED);
 							params.delete(KEY_SEARCH);
+							params.delete(KEY_STATUS);
 							if (showRangeFilter) {
 								params.delete(KEY_RANGE);
 								params.delete(KEY_WEEK_OFFSET);
@@ -284,6 +313,33 @@ export default function TaskFilters({
 						</button>
 					))}
 				</div>
+			</div>
+
+			{/* Status Row */}
+			<div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+				<Workflow className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+				{statusOptions.map((s) => (
+					<button
+						key={s.value}
+						onClick={() => setFilter(KEY_STATUS, s.value)}
+						className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all border flex-shrink-0 cursor-pointer flex items-center gap-1 ${
+							currentStatus === s.value
+								? "bg-slate-900 text-white border-slate-900 shadow-sm"
+								: "bg-white text-slate-400 border-slate-100 hover:border-slate-200"
+						}`}
+					>
+						{s.label}
+						<span
+							className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
+								currentStatus === s.value
+									? "bg-white/20 text-white"
+									: "bg-slate-100 text-slate-400"
+							}`}
+						>
+							{getStatusCount(s.value)}
+						</span>
+					</button>
+				))}
 			</div>
 		</div>
 	);

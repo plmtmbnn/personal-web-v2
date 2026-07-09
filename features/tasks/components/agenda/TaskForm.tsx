@@ -21,10 +21,16 @@ import {
 	FileText,
 	ChevronUp,
 	ListTodo,
+	Clock,
+	Hash,
 } from "lucide-react";
 import { addTask, addBatchTasks } from "@/features/tasks/actions/tasks";
 import { useRouter } from "next/navigation";
-import type { TaskPriority, TaskRecurrence } from "@/features/tasks/types";
+import type {
+	TaskPriority,
+	TaskRecurrence,
+	TaskStatus,
+} from "@/features/tasks/types";
 import { format, addDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -33,6 +39,9 @@ import {
 	RECURRENCE_OPTIONS,
 	DRAFT_STORAGE_KEY,
 	DRAFT_AUTOSAVE_DEBOUNCE_MS,
+	TASK_STATUS_CONFIG,
+	EFFORT_CHIPS,
+	formatEstimatedTime,
 } from "@/features/tasks/constants";
 
 // ─── Draft shape ─────────────────────────────────────────────────────────────
@@ -44,6 +53,12 @@ interface TaskFormDraft {
 	dueDate: string;
 	recurrence: TaskRecurrence;
 	description: string;
+	status: TaskStatus;
+	estimatedMinutes: number | null;
+	tags: string[];
+	startDate: string | null;
+	startTime: string | null;
+	dueTime: string | null;
 	timestamp?: number;
 }
 
@@ -63,7 +78,15 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
 	const [recurrence, setRecurrence] = useState<TaskRecurrence>("none");
 	const [description, setDescription] = useState("");
+	const [status, setStatus] = useState<TaskStatus>("todo");
+	const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(null);
+	const [tags, setTags] = useState<string[]>([]);
+	const [tagInput, setTagInput] = useState("");
+	const [startDate, setStartDate] = useState<string | null>(null);
+	const [startTime, setStartTime] = useState<string | null>(null);
+	const [dueTime, setDueTime] = useState<string | null>(null);
 	const [isNotesOpen, setIsNotesOpen] = useState(false);
+	const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
@@ -73,6 +96,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const [draftRestored, setDraftRestored] = useState(false);
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const tagInputRef = useRef<HTMLInputElement>(null);
 	const router = useRouter();
 
 	// ── Derived values ────────────────────────────────────────────────────────
@@ -86,33 +110,27 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		(chip) => dueDate === format(addDays(new Date(), chip.days), "yyyy-MM-dd"),
 	)?.days;
 
-	// ── D: Restore draft on mount with validation ────────────────────────────
+	// ── Draft: Restore on mount ────────────────────────────────────────────────
 	useEffect(() => {
 		try {
 			const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
 			if (!raw) return;
 
 			const draft: TaskFormDraft = JSON.parse(raw);
-
-			// Validate draft structure and data types
 			if (!draft || typeof draft !== "object") {
 				localStorage.removeItem(DRAFT_STORAGE_KEY);
 				return;
 			}
-
-			// Validate title exists and is a string
 			if (!draft.title || typeof draft.title !== "string") {
 				localStorage.removeItem(DRAFT_STORAGE_KEY);
 				return;
 			}
 
-			// Validate priority is valid
 			const validPriorities: TaskPriority[] = ["LOW", "MEDIUM", "HIGH"];
 			if (draft.priority && !validPriorities.includes(draft.priority)) {
 				draft.priority = "MEDIUM";
 			}
 
-			// Validate recurrence is valid
 			const validRecurrence: TaskRecurrence[] = [
 				"none",
 				"daily",
@@ -123,16 +141,13 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 				draft.recurrence = "none";
 			}
 
-			// Validate and fix due date if in the past
 			const today = format(new Date(), "yyyy-MM-dd");
 			let validatedDueDate = draft.dueDate ?? today;
-
-			// Check if date is valid and not in the past
 			if (draft.dueDate) {
 				try {
-					const dueDate = new Date(draft.dueDate);
+					const dd = new Date(draft.dueDate);
 					const todayDate = new Date(today);
-					if (Number.isNaN(dueDate.getTime()) || dueDate < todayDate) {
+					if (Number.isNaN(dd.getTime()) || dd < todayDate) {
 						validatedDueDate = today;
 					}
 				} catch {
@@ -140,13 +155,18 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 				}
 			}
 
-			// Restore draft with validated data
 			setTitle(draft.title);
 			setCategory(draft.category ?? "");
 			setPriority(draft.priority ?? "MEDIUM");
 			setDueDate(validatedDueDate);
 			setRecurrence(draft.recurrence ?? "none");
 			setDescription(draft.description ?? "");
+			setStatus(draft.status ?? "todo");
+			setEstimatedMinutes(draft.estimatedMinutes ?? null);
+			setTags(Array.isArray(draft.tags) ? draft.tags : []);
+			setStartDate(draft.startDate ?? null);
+			setStartTime(draft.startTime ?? null);
+			setDueTime(draft.dueTime ?? null);
 			if (draft.description) setIsNotesOpen(true);
 
 			setDraftRestored(true);
@@ -157,7 +177,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		}
 	}, []);
 
-	// ── D: Persist draft on every change (debounced) ───────────────────
+	// ── Draft: Persist on change (debounced) ───────────────────────────────────
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			if (!title && !category && !description) {
@@ -171,14 +191,33 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 				dueDate,
 				recurrence,
 				description,
+				status,
+				estimatedMinutes,
+				tags,
+				startDate,
+				startTime,
+				dueTime,
 				timestamp: Date.now(),
 			};
 			localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
 		}, DRAFT_AUTOSAVE_DEBOUNCE_MS);
 		return () => clearTimeout(timer);
-	}, [title, category, priority, dueDate, recurrence, description]);
+	}, [
+		title,
+		category,
+		priority,
+		dueDate,
+		recurrence,
+		description,
+		status,
+		estimatedMinutes,
+		tags,
+		startDate,
+		startTime,
+		dueTime,
+	]);
 
-	// ── Auto-expand textarea ──────────────────────────────────────────────────
+	// ── Auto-expand textarea ───────────────────────────────────────────────────
 	useEffect(() => {
 		if (textareaRef.current) {
 			textareaRef.current.style.height = "auto";
@@ -190,7 +229,28 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		setDueDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
 	}, []);
 
-	// ── Ctrl+Enter / Cmd+Enter submit ─────────────────────────────────────────
+	// ── Tag Handlers ───────────────────────────────────────────────────────────
+	const handleTagKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
+				e.preventDefault();
+				const newTag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
+				if (!tags.includes(newTag)) {
+					setTags((prev) => [...prev, newTag]);
+				}
+				setTagInput("");
+			} else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
+				setTags((prev) => prev.slice(0, -1));
+			}
+		},
+		[tagInput, tags],
+	);
+
+	const removeTag = useCallback((tag: string) => {
+		setTags((prev) => prev.filter((t) => t !== tag));
+	}, []);
+
+	// ── Ctrl+Enter / Cmd+Enter submit ──────────────────────────────────────────
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 			if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -202,6 +262,24 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	);
 
 	// ── Submit ────────────────────────────────────────────────────────────────
+	const resetForm = useCallback(() => {
+		setTitle("");
+		setCategory("");
+		setPriority("MEDIUM");
+		setDueDate(format(new Date(), "yyyy-MM-dd"));
+		setRecurrence("none");
+		setDescription("");
+		setStatus("todo");
+		setEstimatedMinutes(null);
+		setTags([]);
+		setTagInput("");
+		setStartDate(null);
+		setStartTime(null);
+		setDueTime(null);
+		setIsNotesOpen(false);
+		setIsAdvancedOpen(false);
+	}, []);
+
 	const handleSubmit = useCallback(
 		async (e: React.FormEvent) => {
 			e.preventDefault();
@@ -216,6 +294,12 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 					due_date: dueDate,
 					recurrence,
 					description: description.trim() || undefined,
+					status,
+					estimated_minutes: estimatedMinutes || undefined,
+					tags,
+					start_date: startDate || undefined,
+					start_time: startTime || undefined,
+					due_time: dueTime || undefined,
 				};
 
 				if (finalBatchActive) {
@@ -237,13 +321,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 				setSubmitSuccess(true);
 				setTimeout(() => {
 					setSubmitSuccess(false);
-					setTitle("");
-					setCategory("");
-					setPriority("MEDIUM");
-					setDueDate(format(new Date(), "yyyy-MM-dd"));
-					setRecurrence("none");
-					setDescription("");
-					setIsNotesOpen(false);
+					resetForm();
 					router.refresh();
 					setIsFocused(false);
 					onClose?.();
@@ -264,8 +342,15 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 			recurrence,
 			description,
 			isBatchEnabled,
+			status,
+			estimatedMinutes,
+			tags,
+			startDate,
+			startTime,
+			dueTime,
 			router,
 			onClose,
+			resetForm,
 		],
 	);
 
@@ -335,7 +420,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 												: "New Objective"}
 										</label>
 
-										{/* D: Draft Restored badge */}
+										{/* Draft Restored badge */}
 										<AnimatePresence>
 											{draftRestored && (
 												<motion.span
@@ -378,7 +463,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 											</button>
 										)}
 
-										{/* J: Notes toggle */}
+										{/* Notes toggle */}
 										<button
 											type="button"
 											onClick={() => setIsNotesOpen((v) => !v)}
@@ -438,7 +523,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										className="w-full bg-transparent text-xl md:text-2xl font-black text-slate-900 placeholder:text-slate-200 focus:outline-none resize-none leading-tight overflow-hidden"
 									/>
 
-									{/* B: Batch status badges */}
+									{/* Batch status badges */}
 									{hasMultipleLines && isBatchEnabled && (
 										<div className="absolute -bottom-4 right-0 flex items-center gap-2">
 											<div className="text-[8px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
@@ -458,7 +543,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 									)}
 								</div>
 
-								{/* J: Notes / Description (collapsible) */}
+								{/* Notes / Description (collapsible) */}
 								<AnimatePresence>
 									{isNotesOpen && (
 										<motion.div
@@ -648,7 +733,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										</fieldset>
 									</div>
 
-									{/* A: Recurring Task Toggle */}
+									{/* Recurring Task Toggle */}
 									<div className="space-y-2">
 										<label
 											htmlFor="task-recurrence"
@@ -678,6 +763,238 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 											))}
 										</fieldset>
 									</div>
+								</div>
+
+								{/* Advanced Section — Status, Effort, Tags */}
+								<div>
+									<button
+										type="button"
+										onClick={() => setIsAdvancedOpen((v) => !v)}
+										className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+									>
+										{isAdvancedOpen ? (
+											<ChevronUp className="w-3 h-3" />
+										) : (
+											<ChevronDown className="w-3 h-3" />
+										)}
+										Advanced (Status, Effort, Tags, Schedule)
+										{(status !== "todo" ||
+											estimatedMinutes ||
+											tags.length > 0 ||
+											startDate ||
+											startTime ||
+											dueTime) && (
+											<span className="ml-1 px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-emerald-100 text-emerald-700">
+												{[
+													status !== "todo" ? 1 : 0,
+													estimatedMinutes ? 1 : 0,
+													tags.length > 0 ? 1 : 0,
+													startDate || startTime || dueTime ? 1 : 0,
+												].reduce((a, b) => a + b, 0)}{" "}
+												set
+											</span>
+										)}
+									</button>
+
+									<AnimatePresence>
+										{isAdvancedOpen && (
+											<motion.div
+												key="advanced"
+												initial={{ opacity: 0, height: 0 }}
+												animate={{ opacity: 1, height: "auto" }}
+												exit={{ opacity: 0, height: 0 }}
+												transition={{ duration: 0.2, ease: "easeInOut" }}
+												className="overflow-hidden"
+											>
+												<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pt-4 border-t border-slate-50 mt-3">
+													{/* Status */}
+													<div className="space-y-2">
+														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
+															<CheckCircle2 className="w-3 h-3" /> Initial
+															Status
+														</span>
+														<div className="flex flex-col gap-1.5">
+															{(
+																Object.entries(TASK_STATUS_CONFIG) as [
+																	TaskStatus,
+																	(typeof TASK_STATUS_CONFIG)[TaskStatus],
+																][]
+															)
+																.filter(([key]) => key !== "cancelled")
+																.map(([key, cfg]) => (
+																	<button
+																		key={key}
+																		type="button"
+																		onClick={() => setStatus(key)}
+																		className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all ${
+																			status === key
+																				? `${cfg.color} shadow-sm`
+																				: "bg-slate-50 border-slate-100 text-slate-400 hover:border-slate-200"
+																		}`}
+																	>
+																		<span
+																			className={`w-2 h-2 rounded-full ${cfg.dotColor}`}
+																		/>
+																		{cfg.label}
+																	</button>
+																))}
+														</div>
+													</div>
+
+													{/* Effort Estimation */}
+													<div className="space-y-2">
+														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
+															<Clock className="w-3 h-3" /> Effort Estimate
+														</span>
+														<div className="flex flex-wrap gap-1.5">
+															{EFFORT_CHIPS.map((chip) => (
+																<button
+																	key={chip.minutes}
+																	type="button"
+																	onClick={() =>
+																		setEstimatedMinutes(
+																			estimatedMinutes === chip.minutes
+																				? null
+																				: chip.minutes,
+																		)
+																	}
+																	className={`px-3 py-1.5 rounded-lg text-[9px] font-black border transition-all ${
+																		estimatedMinutes === chip.minutes
+																			? "bg-cyan-500 text-white border-cyan-500 shadow-sm"
+																			: "bg-slate-50 border-slate-100 text-slate-500 hover:border-cyan-300 hover:text-cyan-600"
+																	}`}
+																>
+																	{chip.label}
+																</button>
+															))}
+														</div>
+														{/* Custom minutes input */}
+														<div className="flex items-center gap-2 mt-2">
+															<input
+																type="number"
+																min="1"
+																max="480"
+																placeholder="Custom (min)"
+																value={
+																	estimatedMinutes !== null &&
+																	!EFFORT_CHIPS.some(
+																		(c) => c.minutes === estimatedMinutes,
+																	)
+																		? estimatedMinutes
+																		: ""
+																}
+																onChange={(e) => {
+																	const v = Number.parseInt(e.target.value, 10);
+																	setEstimatedMinutes(
+																		Number.isNaN(v) || v <= 0 ? null : v,
+																	);
+																}}
+																className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-cyan-500 transition-all outline-none"
+															/>
+															{estimatedMinutes && (
+																<span className="text-[9px] font-black text-cyan-600 bg-cyan-50 border border-cyan-100 px-2 py-1 rounded-lg whitespace-nowrap">
+																	⏱ {formatEstimatedTime(estimatedMinutes)}
+																</span>
+															)}
+														</div>
+													</div>
+
+													{/* Tags */}
+													<div className="space-y-2">
+														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
+															<Hash className="w-3 h-3" /> Tags
+														</span>
+														<div
+															className="min-h-[60px] bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 flex flex-wrap gap-1.5 cursor-text focus-within:bg-white focus-within:border-slate-300 transition-all"
+															onClick={() => tagInputRef.current?.focus()}
+														>
+															{tags.map((tag) => (
+																<span
+																	key={tag}
+																	className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wide bg-slate-200 text-slate-700"
+																>
+																	#{tag}
+																	<button
+																		type="button"
+																		onClick={(e) => {
+																			e.stopPropagation();
+																			removeTag(tag);
+																		}}
+																		className="text-slate-400 hover:text-slate-700"
+																	>
+																		<X className="w-2.5 h-2.5" />
+																	</button>
+																</span>
+															))}
+															<input
+																ref={tagInputRef}
+																type="text"
+																value={tagInput}
+																onChange={(e) => setTagInput(e.target.value)}
+																onKeyDown={handleTagKeyDown}
+																placeholder={
+																	tags.length === 0
+																		? "Add tags (Enter or comma)…"
+																		: ""
+																}
+																className="bg-transparent text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none min-w-[80px] flex-1"
+															/>
+														</div>
+													</div>
+
+													{/* Scheduling Window */}
+													<div className="space-y-2">
+														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
+															<Calendar className="w-3 h-3" /> Scheduling Window
+														</span>
+														<div className="space-y-2.5">
+															<div>
+																<span className="text-[8px] font-black text-slate-450 uppercase tracking-wider block mb-1">
+																	Start Date
+																</span>
+																<input
+																	type="date"
+																	value={startDate || ""}
+																	onChange={(e) =>
+																		setStartDate(e.target.value || null)
+																	}
+																	className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
+																/>
+															</div>
+															<div className="grid grid-cols-2 gap-2">
+																<div>
+																	<span className="text-[8px] font-black text-slate-455 uppercase tracking-wider block mb-1">
+																		Start Time
+																	</span>
+																	<input
+																		type="time"
+																		value={startTime || ""}
+																		onChange={(e) =>
+																			setStartTime(e.target.value || null)
+																		}
+																		className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
+																	/>
+																</div>
+																<div>
+																	<span className="text-[8px] font-black text-slate-455 uppercase tracking-wider block mb-1">
+																		Due Time
+																	</span>
+																	<input
+																		type="time"
+																		value={dueTime || ""}
+																		onChange={(e) =>
+																			setDueTime(e.target.value || null)
+																		}
+																		className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
+																	/>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</motion.div>
+										)}
+									</AnimatePresence>
 								</div>
 							</div>
 

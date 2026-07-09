@@ -82,7 +82,7 @@ export async function getTaskStats(
 	const { data: globalTasks, error: globalError } = await SupabaseConn.from(
 		"tasks",
 	)
-		.select("title, due_date, is_completed, reschedule_count")
+		.select("title, due_date, is_completed, reschedule_count, status")
 		.eq("is_completed", false);
 
 	if (globalError) {
@@ -96,7 +96,9 @@ export async function getTaskStats(
 		.gte("completed_at", prevStartDate.toISOString())
 		.lt("completed_at", startDate.toISOString());
 
-	const tasks = (currentTasks || []) as Task[];
+	const tasks = ((currentTasks || []) as Task[]).filter(
+		(t) => (t.status || "todo") !== "cancelled",
+	);
 	const totalTasks = tasks.length;
 	const completedTasks = tasks.filter((t) => t.is_completed).length;
 	const completionRate =
@@ -137,9 +139,15 @@ export async function getTaskStats(
 	const todayStr = format(today, "yyyy-MM-dd");
 	const gTasks = (globalTasks || []) as Task[];
 	const distribution = {
-		today: gTasks.filter((t) => t.due_date === todayStr).length,
-		upcoming: gTasks.filter((t) => t.due_date > todayStr).length,
-		overdue: gTasks.filter((t) => t.due_date < todayStr).length,
+		today: gTasks.filter(
+			(t) => t.due_date === todayStr && (t.status || "todo") !== "cancelled",
+		).length,
+		upcoming: gTasks.filter(
+			(t) => t.due_date > todayStr && (t.status || "todo") !== "cancelled",
+		).length,
+		overdue: gTasks.filter(
+			(t) => t.due_date < todayStr && (t.status || "todo") !== "cancelled",
+		).length,
 	};
 
 	// Most Productive Day
@@ -257,12 +265,15 @@ export async function getTaskProgressMetrics() {
 	const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 	const monthStartStr = format(monthStart, "yyyy-MM-dd");
 
-	const { data: pendingTasks, error } = await SupabaseConn.from("tasks")
-		.select("due_date, is_completed")
-		.eq("is_completed", false);
+	const { data: pendingTasks, error: pendingError } = await SupabaseConn.from(
+		"tasks",
+	)
+		.select("due_date, status, estimated_minutes")
+		.eq("is_completed", false)
+		.is("parent_id", null);
 
-	if (error) {
-		console.error("Error fetching progress metrics:", error);
+	if (pendingError) {
+		console.error("Error fetching progress metrics:", pendingError);
 		return {
 			today: 0,
 			week: 0,
@@ -270,37 +281,62 @@ export async function getTaskProgressMetrics() {
 			allTime: 0,
 			verified: 0,
 			progress: 0,
+			todayEstimatedMinutes: 0,
+			todayCompletedMinutes: 0,
 		};
 	}
 
 	// Also need today's completed for progress calculation
-	const { count: todayCompleted } = await SupabaseConn.from("tasks")
-		.select("*", { count: "exact", head: true })
-		.eq("is_completed", true)
-		.gte("completed_at", `${todayStr}T00:00:00`)
-		.lte("completed_at", `${todayStr}T23:59:59`);
+	const { data: todayCompletedTasks, error: completedError } =
+		await SupabaseConn.from("tasks")
+			.select("estimated_minutes")
+			.eq("is_completed", true)
+			.is("parent_id", null)
+			.gte("completed_at", `${todayStr}T00:00:00`)
+			.lte("completed_at", `${todayStr}T23:59:59`);
 
-	const pendingToday = pendingTasks.filter(
-		(t) => t.due_date === todayStr,
-	).length;
-	const pendingWeek = pendingTasks.filter(
+	if (completedError) {
+		console.error("Error fetching completed progress metrics:", completedError);
+	}
+
+	const activePending = (pendingTasks || []).filter(
+		(t) => (t.status || "todo") !== "cancelled",
+	);
+
+	const pendingToday = activePending.filter((t) => t.due_date === todayStr);
+	const pendingTodayCount = pendingToday.length;
+	const pendingWeek = activePending.filter(
 		(t) => t.due_date >= weekStartStr,
 	).length;
-	const pendingMonth = pendingTasks.filter(
+	const pendingMonth = activePending.filter(
 		(t) => t.due_date >= monthStartStr,
 	).length;
-	const allTimePending = pendingTasks.length;
+	const allTimePending = activePending.length;
 
-	const totalToday = pendingToday + (todayCompleted || 0);
+	const completedTodayCount = todayCompletedTasks?.length || 0;
+	const totalToday = pendingTodayCount + completedTodayCount;
 	const progress =
-		totalToday > 0 ? Math.round(((todayCompleted || 0) / totalToday) * 100) : 0;
+		totalToday > 0 ? Math.round((completedTodayCount / totalToday) * 100) : 0;
+
+	// Effort tracking for today
+	const pendingTodayEffort = pendingToday.reduce(
+		(acc, t) => acc + (t.estimated_minutes || 0),
+		0,
+	);
+	const completedTodayEffort = (todayCompletedTasks || []).reduce(
+		(acc, t) => acc + (t.estimated_minutes || 0),
+		0,
+	);
+	const todayEstimatedMinutes = pendingTodayEffort + completedTodayEffort;
 
 	return {
-		today: pendingToday,
+		today: pendingTodayCount,
 		week: pendingWeek,
 		month: pendingMonth,
 		allTime: allTimePending,
-		verified: todayCompleted || 0,
+		verified: completedTodayCount,
 		progress,
+		todayEstimatedMinutes,
+		todayCompletedMinutes: completedTodayEffort,
 	};
 }

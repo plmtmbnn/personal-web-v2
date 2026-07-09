@@ -125,13 +125,24 @@ export default function TasksView({ tasks }: TasksViewProps) {
 				isAfter(parseISO(t.due_date), todayRef),
 			);
 
+			// Exclude cancelled tasks from active lists
+			const isActive = (t: Task) => (t.status || "todo") !== "cancelled";
+			const isDone = (t: Task) =>
+				t.is_completed || (t.status || "todo") === "done";
+			const isActionable = (t: Task) => {
+				if (!t.start_date) return true;
+				return !isAfter(parseISO(t.start_date), todayRef);
+			};
+
 			return {
-				todayTasks: todayList.filter((t) => !t.is_completed),
-				upcomingTasks: upcomingList.filter((t) => !t.is_completed),
-				completedTasks: filtered.filter((t) => t.is_completed),
+				todayTasks: todayList.filter(
+					(t) => !isDone(t) && isActive(t) && isActionable(t),
+				),
+				upcomingTasks: upcomingList.filter((t) => !isDone(t) && isActive(t)),
+				completedTasks: filtered.filter((t) => isDone(t)),
 				todayStats: {
-					completed: todayList.filter((t) => t.is_completed).length,
-					total: todayList.length,
+					completed: todayList.filter((t) => isDone(t)).length,
+					total: todayList.filter((t) => isActive(t) && isActionable(t)).length,
 				},
 			};
 		}, [tasks, selectedCategory, selectedPriority]);

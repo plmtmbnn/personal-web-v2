@@ -72,6 +72,7 @@ export default function TaskList({
 		category: searchParams.get(`${prefix}_category`) || "all",
 		range: searchParams.get(`${prefix}_range`) || "week",
 		search: searchParams.get(`${prefix}_search`) || "",
+		status: searchParams.get(`${prefix}_status`) || "all",
 	});
 
 	const todayFilters = getFilters("today");
@@ -191,6 +192,11 @@ export default function TaskList({
 				result = result.filter((t) => t.is_completed);
 			} else {
 				result = result.filter((t) => !t.is_completed);
+			}
+
+			// 3b. Status filter
+			if (filters.status && filters.status !== "all") {
+				result = result.filter((t) => (t.status || "todo") === filters.status);
 			}
 
 			// 4. Date Range (For Upcoming & Completed)
@@ -342,9 +348,11 @@ export default function TaskList({
 		}
 
 		// Optimistically remove the task
-		addOptimisticAction({
-			action: "delete",
-			payload: { taskId: deleteTaskId },
+		startTransition(() => {
+			addOptimisticAction({
+				action: "delete",
+				payload: { taskId: deleteTaskId },
+			});
 		});
 
 		// Show undo toast
@@ -358,9 +366,11 @@ export default function TaskList({
 						clearTimeout(undoTimeoutRef.current);
 					}
 					// Restore the task
-					addOptimisticAction({
-						action: "restore",
-						payload: { task: taskToDelete, listType },
+					startTransition(() => {
+						addOptimisticAction({
+							action: "restore",
+							payload: { task: taskToDelete, listType },
+						});
 					});
 				},
 			},
@@ -377,9 +387,11 @@ export default function TaskList({
 					`Failed to delete task. ${error instanceof Error ? error.message : "Please try again."}`,
 				);
 				// Revert optimistic update on error
-				addOptimisticAction({
-					action: "restore",
-					payload: { task: taskToDelete, listType },
+				startTransition(() => {
+					addOptimisticAction({
+						action: "restore",
+						payload: { task: taskToDelete, listType },
+					});
 				});
 			} finally {
 				pendingRequests.current.delete(`delete-${deleteTaskId}`);
@@ -393,6 +405,7 @@ export default function TaskList({
 		return (
 			filters.priority !== "all" ||
 			filters.category !== "all" ||
+			filters.status !== "all" ||
 			!!filters.search
 		);
 	};
@@ -437,9 +450,11 @@ export default function TaskList({
 
 			const todayStr = format(new Date(), "yyyy-MM-dd");
 			let newDueDate = movedTask.due_date;
+			let newStartDate = movedTask.start_date;
 
 			if (destination.droppableId === "today-list") {
 				newDueDate = todayStr;
+				newStartDate = null; // Clear start date so it's actionable today
 			} else if (destination.droppableId === "upcoming-list") {
 				const taskDate = movedTask.due_date
 					? parseISO(movedTask.due_date)
@@ -450,7 +465,11 @@ export default function TaskList({
 				}
 			}
 
-			const updatedTask = { ...movedTask, due_date: newDueDate };
+			const updatedTask = {
+				...movedTask,
+				due_date: newDueDate,
+				start_date: newStartDate,
+			};
 			destList.splice(destination.index, 0, updatedTask);
 
 			const finalToday =
@@ -467,7 +486,10 @@ export default function TaskList({
 					},
 				});
 				try {
-					await updateTask(draggableId, { due_date: newDueDate });
+					await updateTask(draggableId, {
+						due_date: newDueDate,
+						start_date: newStartDate,
+					});
 					await reorderTasks(destList.map((t: Task) => t.id));
 				} catch (error) {
 					console.error("Failed to move task:", error);

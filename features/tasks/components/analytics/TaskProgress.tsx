@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition, useCallback } from "react";
 import { CheckCircle2, Circle, Calendar, Clock, BarChart3 } from "lucide-react";
 import { getTaskProgressMetrics } from "@/features/tasks/actions/analytics";
 import type { Task } from "@/features/tasks/types";
+import { formatEstimatedTime } from "@/features/tasks/constants";
 
 interface Metrics {
 	today: number;
@@ -12,6 +13,8 @@ interface Metrics {
 	allTime: number;
 	verified: number;
 	progress: number;
+	todayEstimatedMinutes: number;
+	todayCompletedMinutes: number;
 }
 
 interface TaskProgressProps {
@@ -165,6 +168,32 @@ export default function TaskProgress({ tasks }: TaskProgressProps) {
 								{metrics.today} Pending
 							</span>
 						</div>
+						{metrics.todayEstimatedMinutes > 0 && (
+							<div className="mt-3 pt-3 border-t border-slate-100/50 space-y-1.5">
+								<div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
+									<span className="flex items-center gap-1">
+										<Clock className="w-2.5 h-2.5" /> Effort today
+									</span>
+									<span>
+										{formatEstimatedTime(metrics.todayCompletedMinutes)} /{" "}
+										{formatEstimatedTime(metrics.todayEstimatedMinutes)}
+									</span>
+								</div>
+								<div className="w-48 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+									<div
+										className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+										style={{
+											width: `${Math.min(
+												100,
+												(metrics.todayCompletedMinutes /
+													metrics.todayEstimatedMinutes) *
+													100,
+											)}%`,
+										}}
+									/>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 

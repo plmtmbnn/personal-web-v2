@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.5.0/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
 	"assist": {
 		"actions": {
 			"source": {
@@ -21,7 +21,8 @@
 				"useButtonType": "off",
 				"noStaticElementInteractions": "off",
 				"noSvgWithoutTitle": "off",
-				"useKeyWithClickEvents": "off"
+				"useKeyWithClickEvents": "off",
+				"noAutofocus": "off"
 			},
 			"security": {
 				"noDangerouslySetInnerHtml": "off"

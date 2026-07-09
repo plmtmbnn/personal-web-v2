@@ -64,8 +64,6 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CHECKLIST_REGEX = /^(\s*[-*]\s+\[)([ xX])(\]\s+)(.*)$/;
-
 const PRIORITY_COLORS = {
 	HIGH: "bg-rose-50 text-rose-700 border-rose-100",
 	MEDIUM: "bg-amber-50 text-amber-700 border-amber-100",
@@ -211,10 +209,7 @@ function TaskItem({
 	const [isAddingSubtask, setIsAddingSubtask] = useState(false);
 	const [subtaskLoading, setSubtaskLoading] = useState(false);
 
-	// Optimistic toggle state
-	const [optimisticCompleted, setOptimisticCompleted] = useState(
-		task.is_completed,
-	);
+	// Optimistic status state
 	const [optimisticStatus, setOptimisticStatus] = useState<TaskStatus>(
 		task.status || "todo",
 	);
@@ -297,10 +292,6 @@ function TaskItem({
 			setPotentialBlockers([]);
 		}
 	}, [isEditing, task.id]);
-
-	useEffect(() => {
-		setOptimisticCompleted(task.is_completed);
-	}, [task.is_completed]);
 
 	useEffect(() => {
 		setOptimisticStatus(task.status || "todo");
@@ -519,12 +510,6 @@ function TaskItem({
 			longPressTimer.current = null;
 		}
 	}, []);
-
-	// Legacy toggle (backward compat)
-	const handleToggle = useCallback(() => {
-		setOptimisticCompleted((prev) => !prev);
-		onToggle(task.id, task.is_completed);
-	}, [task.id, task.is_completed, onToggle]);
 
 	// Two-step delete
 	const handleDeleteClick = useCallback(() => {
@@ -893,7 +878,7 @@ function TaskItem({
 											onClick={() => setEditStatus(key)}
 											className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all ${
 												editStatus === key
-													? cfg.color + " shadow-sm"
+													? `${cfg.color} shadow-sm`
 													: "bg-slate-50 border-slate-100 text-slate-400 hover:border-slate-200"
 											}`}
 										>

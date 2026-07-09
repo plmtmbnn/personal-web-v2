@@ -1,3 +1,3 @@
 {
-	"ignoredBuildStep": "bash scripts/vercel-ignored-build.sh"
+	"ignoreCommand": "bash scripts/vercel-ignored-build.sh"
 }

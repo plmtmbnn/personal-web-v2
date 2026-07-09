@@ -34,22 +34,24 @@ export async function GET() {
 		if (shouldFetch) {
 			try {
 				console.log("Fetching fresh stock data from IDX...");
-				// Bypass Turbopack bundling for got-scraping to avoid __dirname adm-zip issues
-				const gotScraping = eval("require('got-scraping')").gotScraping;
-				const response = await gotScraping.get(
+				const controller = new AbortController();
+				const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+				const response = await fetch(
 					"https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
 					{
 						headers: {
 							Referer: "https://www.idx.co.id/",
+							"User-Agent":
+								"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+							Accept: "application/json, text/plain, */*",
 						},
-						timeout: {
-							request: 10000, // 10 seconds timeout
-						},
+						signal: controller.signal,
 					},
-				);
+				).finally(() => clearTimeout(timeoutId));
 
-				if (response.statusCode === 200) {
-					const body = JSON.parse(response.body);
+				if (response.ok) {
+					const body = await response.json();
 					if (body && Array.isArray(body.data) && body.data.length > 0) {
 						// Store to Redis
 						await saveStockData(body.data);

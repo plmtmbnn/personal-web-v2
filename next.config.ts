@@ -39,14 +39,7 @@ const nextConfig: NextConfig = {
 	typescript: {
 		ignoreBuildErrors: process.env.FAST_BUILD === "true",
 	},
-	serverExternalPackages: [
-		"node-sql-parser",
-		"got-scraping",
-		"header-generator",
-		"adm-zip",
-		"http2-wrapper",
-		"got",
-	],
+	serverExternalPackages: ["node-sql-parser"],
 	experimental: {
 		optimizePackageImports: [
 			"lucide-react",

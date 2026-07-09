@@ -1,3 +1,10 @@
+# [0.53.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.52.0...v0.53.0) (2026-07-09)
+
+
+### Features
+
+* **tasks:** velocity burndown charts, weekly review dashboard, and analytics enhancements ([24eb3a7](https://github.com/plmtmbnn/personal-web-v2/commit/24eb3a7360f40865b3cc02022667e2579df36bcf))
+
 # [0.52.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.51.0...v0.52.0) (2026-07-09)
 
 

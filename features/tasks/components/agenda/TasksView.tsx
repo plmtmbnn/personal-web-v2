@@ -95,6 +95,14 @@ const DynamicTaskBoard = dynamic(
 	},
 );
 
+const DynamicWeeklyReview = dynamic(
+	() => import("@/features/tasks/components/analytics/WeeklyReview"),
+	{
+		loading: () => <TaskListSkeleton />,
+		ssr: false,
+	},
+);
+
 interface TasksViewProps {
 	tasks: Task[];
 }
@@ -228,6 +236,18 @@ export default function TasksView({ tasks }: TasksViewProps) {
 									{/* Heatmap Section */}
 									<Suspense fallback={<ComponentLoader height="150px" />}>
 										<DynamicTaskHeatmap tasks={tasks} />
+									</Suspense>
+								</motion.div>
+							) : activeTab === "review" ? (
+								<motion.div
+									key="review"
+									initial={{ opacity: 0, y: 10 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: -10 }}
+									className="space-y-6 sm:space-y-8"
+								>
+									<Suspense fallback={<ComponentLoader height="120px" />}>
+										<DynamicWeeklyReview />
 									</Suspense>
 								</motion.div>
 							) : (

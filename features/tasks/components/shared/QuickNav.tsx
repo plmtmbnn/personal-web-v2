@@ -1,9 +1,9 @@
 "use client";
 
-import { BarChart3, ListTodo } from "lucide-react";
+import { BarChart3, ListTodo, CalendarDays } from "lucide-react";
 import { motion } from "framer-motion";
 
-export type TaskViewTab = "agenda" | "analytics";
+export type TaskViewTab = "agenda" | "analytics" | "review";
 
 interface QuickNavProps {
 	activeTab: TaskViewTab;
@@ -13,6 +13,7 @@ interface QuickNavProps {
 const navItems = [
 	{ id: "agenda", label: "Agenda", icon: ListTodo },
 	{ id: "analytics", label: "Analytics", icon: BarChart3 },
+	{ id: "review", label: "Weekly Review", icon: CalendarDays },
 ];
 
 export default function QuickNav({ activeTab, onTabChange }: QuickNavProps) {
@@ -29,7 +30,9 @@ export default function QuickNav({ activeTab, onTabChange }: QuickNavProps) {
 								isActive
 									? item.id === "agenda"
 										? "text-emerald-600"
-										: "text-blue-600"
+										: item.id === "analytics"
+											? "text-blue-600"
+											: "text-violet-600"
 									: "text-slate-400 hover:text-slate-900"
 							}`}
 						>
@@ -44,7 +47,11 @@ export default function QuickNav({ activeTab, onTabChange }: QuickNavProps) {
 								<motion.div
 									layoutId="nav-pill"
 									className={`absolute inset-0 rounded-full -z-10 ${
-										item.id === "agenda" ? "bg-emerald-50" : "bg-blue-50"
+										item.id === "agenda"
+											? "bg-emerald-50"
+											: item.id === "analytics"
+												? "bg-blue-50"
+												: "bg-violet-50"
 									}`}
 									transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
 								/>

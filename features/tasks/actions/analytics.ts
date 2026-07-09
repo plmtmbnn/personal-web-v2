@@ -3,7 +3,14 @@
 import { SupabaseConn } from "@/lib/core/supabase";
 import { redis, CACHE_KEYS } from "@/lib/core/redis";
 import type { Task, TaskPriority } from "../types";
-import { startOfToday, subDays, format, parseISO, isSameDay } from "date-fns";
+import {
+	startOfToday,
+	subDays,
+	format,
+	parseISO,
+	isSameDay,
+	addDays,
+} from "date-fns";
 
 export interface AnalyticsStats {
 	totalTasks: number;
@@ -338,5 +345,254 @@ export async function getTaskProgressMetrics() {
 		progress,
 		todayEstimatedMinutes,
 		todayCompletedMinutes: completedTodayEffort,
+	};
+}
+
+export interface VelocityDay {
+	date: string;
+	completedCount: number;
+	effortMinutes: number;
+}
+
+export interface BurndownDay {
+	date: string;
+	actualRemaining: number;
+	idealRemaining: number;
+}
+
+export async function getVelocityAndBurndownData(period: "week" | "month") {
+	const today = startOfToday();
+	const days = period === "week" ? 7 : 30;
+	const startDate = subDays(today, days - 1);
+
+	const startDateStr = format(startDate, "yyyy-MM-dd");
+	const endDateStr = format(today, "yyyy-MM-dd");
+
+	const { data: completedTasks, error: completedError } =
+		await SupabaseConn.from("tasks")
+			.select("id, completed_at, estimated_minutes, due_date, status")
+			.eq("is_completed", true)
+			.not("completed_at", "is", null)
+			.gte("completed_at", `${startDateStr}T00:00:00`)
+			.lte("completed_at", `${endDateStr}T23:59:59`);
+
+	if (completedError) {
+		console.error(
+			"Error fetching completed tasks for velocity:",
+			completedError,
+		);
+	}
+
+	const { data: rangeTasks, error: rangeError } = await SupabaseConn.from(
+		"tasks",
+	)
+		.select(
+			"id, due_date, is_completed, completed_at, estimated_minutes, status",
+		)
+		.not("due_date", "is", null)
+		.gte("due_date", startDateStr)
+		.lte("due_date", endDateStr);
+
+	if (rangeError) {
+		console.error("Error fetching range tasks for burndown:", rangeError);
+	}
+
+	const cTasks = (completedTasks || []) as Task[];
+	const rTasks = ((rangeTasks || []) as Task[]).filter(
+		(t) => t.status !== "cancelled",
+	);
+
+	const datesList: Date[] = [];
+	for (let i = 0; i < days; i++) {
+		datesList.push(addDays(startDate, i));
+	}
+
+	const velocityData: VelocityDay[] = datesList.map((d) => {
+		const dateStr = format(d, "yyyy-MM-dd");
+		const completedOnDay = cTasks.filter((t) => {
+			const compDate = format(parseISO(t.completed_at!), "yyyy-MM-dd");
+			return compDate === dateStr;
+		});
+
+		return {
+			date: format(d, "dd MMM"),
+			completedCount: completedOnDay.length,
+			effortMinutes: completedOnDay.reduce(
+				(acc, t) => acc + (t.estimated_minutes || 0),
+				0,
+			),
+		};
+	});
+
+	const totalScope = rTasks.length;
+	const burndownData: BurndownDay[] = datesList.map((d, index) => {
+		const dateStr = format(d, "yyyy-MM-dd");
+		const completedSoFar = rTasks.filter((t) => {
+			if (!t.is_completed || !t.completed_at) return false;
+			const compDate = format(parseISO(t.completed_at), "yyyy-MM-dd");
+			return compDate <= dateStr;
+		}).length;
+
+		const remaining = Math.max(0, totalScope - completedSoFar);
+		const ideal = totalScope - (totalScope / (days - 1)) * index;
+
+		return {
+			date: format(d, "dd MMM"),
+			actualRemaining: remaining,
+			idealRemaining: parseFloat(ideal.toFixed(1)),
+		};
+	});
+
+	return {
+		velocity: velocityData,
+		burndown: burndownData,
+		totalScope,
+	};
+}
+
+export interface WeeklyReviewStats {
+	completedCount: number;
+	createdCount: number;
+	completionRate: number;
+	effortNeutralized: number;
+	totalDelays: number;
+	carriedForwardCount: number;
+	activeCategory: string;
+	topWins: {
+		id: string;
+		title: string;
+		priority: string;
+		estimated_minutes: number;
+	}[];
+	performanceGrade: "A+" | "A" | "B" | "C" | "D";
+	feedbackMessage: string;
+}
+
+export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
+	const today = startOfToday();
+	const dayOfWeek = today.getDay();
+	const distanceToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+	const weekStart = subDays(today, distanceToMonday);
+	const weekEnd = addDays(weekStart, 6);
+
+	const weekStartStr = format(weekStart, "yyyy-MM-dd");
+	const weekEndStr = format(weekEnd, "yyyy-MM-dd");
+
+	const { data: weekTasks, error: weekError } = await SupabaseConn.from("tasks")
+		.select("*")
+		.or(
+			`due_date.gte.${weekStartStr},completed_at.gte.${weekStartStr}T00:00:00`,
+		);
+
+	if (weekError) {
+		console.error("Error fetching tasks for weekly review:", weekError);
+	}
+
+	const allWeekTasks = (weekTasks || []) as Task[];
+	const activeWeekTasks = allWeekTasks.filter(
+		(t) => (t.status || "todo") !== "cancelled",
+	);
+
+	const completedThisWeek = activeWeekTasks.filter((t) => {
+		if (!t.is_completed || !t.completed_at) return false;
+		const compDateStr = format(parseISO(t.completed_at), "yyyy-MM-dd");
+		return compDateStr >= weekStartStr && compDateStr <= weekEndStr;
+	});
+
+	const createdThisWeek = activeWeekTasks.filter((t) => {
+		const createdDateStr = format(parseISO(t.created_at), "yyyy-MM-dd");
+		return createdDateStr >= weekStartStr && createdDateStr <= weekEndStr;
+	});
+
+	const dueThisWeek = activeWeekTasks.filter(
+		(t) => t.due_date >= weekStartStr && t.due_date <= weekEndStr,
+	);
+	const dueAndCompleted = dueThisWeek.filter((t) => t.is_completed);
+	const completionRate =
+		dueThisWeek.length > 0
+			? Math.round((dueAndCompleted.length / dueThisWeek.length) * 100)
+			: 100;
+
+	const effortNeutralized = completedThisWeek.reduce(
+		(acc, t) => acc + (t.estimated_minutes || 0),
+		0,
+	);
+	const totalDelays = dueThisWeek.reduce(
+		(acc, t) => acc + (t.reschedule_count || 0),
+		0,
+	);
+	const carriedForward = activeWeekTasks.filter(
+		(t) => !t.is_completed && t.due_date <= weekEndStr,
+	);
+
+	const categoryCounts: Record<string, number> = {};
+	completedThisWeek.forEach((t) => {
+		const cat = t.category || "General";
+		categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+	});
+	let activeCategory = "None";
+	let maxCatCount = 0;
+	Object.entries(categoryCounts).forEach(([cat, count]) => {
+		if (count > maxCatCount) {
+			maxCatCount = count;
+			activeCategory = cat;
+		}
+	});
+
+	const topWins = completedThisWeek
+		.map((t) => ({
+			id: t.id,
+			title: t.title,
+			priority: t.priority,
+			estimated_minutes: t.estimated_minutes || 0,
+			score:
+				(t.priority === "HIGH" ? 100 : t.priority === "MEDIUM" ? 50 : 10) +
+				(t.estimated_minutes || 0),
+		}))
+		.sort((a, b) => b.score - a.score)
+		.slice(0, 3)
+		.map(({ id, title, priority, estimated_minutes }) => ({
+			id,
+			title,
+			priority,
+			estimated_minutes,
+		}));
+
+	let performanceGrade: "A+" | "A" | "B" | "C" | "D" = "C";
+	let feedbackMessage = "Keep working on your objectives. Consistency is key!";
+
+	if (completionRate >= 95) {
+		performanceGrade = "A+";
+		feedbackMessage =
+			"Absolute masterclass! Zero friction execution. Every objective was neutralized punctually.";
+	} else if (completionRate >= 80) {
+		performanceGrade = "A";
+		feedbackMessage =
+			"Highly disciplined performance this week. Almost all targets were met successfully.";
+	} else if (completionRate >= 65) {
+		performanceGrade = "B";
+		feedbackMessage =
+			"Solid progress made. Try to minimize reschedules to build stronger execution habits.";
+	} else if (completionRate >= 45) {
+		performanceGrade = "C";
+		feedbackMessage =
+			"Moderate completion rate. Focus on estimation and scheduling realistic loads.";
+	} else {
+		performanceGrade = "D";
+		feedbackMessage =
+			"Low completion rate. Break larger objectives into smaller subtasks to regain momentum.";
+	}
+
+	return {
+		completedCount: completedThisWeek.length,
+		createdCount: createdThisWeek.length,
+		completionRate,
+		effortNeutralized,
+		totalDelays,
+		carriedForwardCount: carriedForward.length,
+		activeCategory,
+		topWins,
+		performanceGrade,
+		feedbackMessage,
 	};
 }

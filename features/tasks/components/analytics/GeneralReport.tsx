@@ -32,7 +32,24 @@ import {
 	differenceInDays,
 } from "date-fns";
 
+import dynamic from "next/dynamic";
+
 const ANALYTICS_EXPAND_KEY = "analytics_expanded_state_v6";
+
+const DynamicVelocityBurndownCharts = dynamic(
+	() => import("./VelocityBurndownCharts"),
+	{
+		loading: () => (
+			<div className="h-64 flex flex-col items-center justify-center gap-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+				<div className="w-6 h-6 border-2 border-slate-300 border-t-slate-800 animate-spin rounded-full" />
+				<p className="text-[9px] font-black text-slate-400 uppercase tracking-widest animate-pulse">
+					Loading charts telemetry...
+				</p>
+			</div>
+		),
+		ssr: false,
+	},
+);
 
 interface GeneralReportProps {
 	tasks?: Task[];
@@ -354,6 +371,11 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								</div>
 							</div>
 						</div>
+
+						{/* Velocity & Burndown Charts Section - NEW */}
+						<section className="bg-slate-50/50 p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-inner">
+							<DynamicVelocityBurndownCharts />
+						</section>
 
 						{/* Row 2: Supporting Stats */}
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -1,3 +1,10 @@
+# [0.54.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.53.0...v0.54.0) (2026-07-10)
+
+
+### Features
+
+* **tasks:** revamp task item layout, optimize general report, and improve bottom navigation ([9a5c65e](https://github.com/plmtmbnn/personal-web-v2/commit/9a5c65e5acf9e302dd124e79c05a9cac002e3f0e))
+
 # [0.53.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.52.0...v0.53.0) (2026-07-09)
 
 

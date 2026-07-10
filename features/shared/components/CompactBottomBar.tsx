@@ -240,7 +240,8 @@ export default function CompactBottomBar() {
 					const todayStr = new Date().toISOString().split("T")[0];
 					const { count } = await SupabaseConn.from("tasks")
 						.select("*", { count: "exact", head: true })
-						.eq("is_completed", false)
+						.neq("status", "done")
+						.neq("status", "cancelled")
 						.eq("due_date", todayStr);
 					setPendingTasksCount(count || 0);
 				} catch (err) {

@@ -156,6 +156,9 @@ importers:
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
+      header-generator:
+        specifier: ^2.1.82
+        version: 2.1.82
       husky:
         specifier: ^9.1.7
         version: 9.1.7

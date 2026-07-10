@@ -40,6 +40,11 @@ const nextConfig: NextConfig = {
 		ignoreBuildErrors: process.env.FAST_BUILD === "true",
 	},
 	serverExternalPackages: ["node-sql-parser", "got-scraping"],
+	outputFileTracingIncludes: {
+		"/api/utils/stock-data": [
+			"./node_modules/header-generator/data_files/**/*",
+		],
+	},
 	experimental: {
 		optimizePackageImports: [
 			"lucide-react",

@@ -86,6 +86,10 @@ Strictly for routing and page definitions.
 ## 🗺 Navigation
 - **Data-Driven:** Driven by the `NAV_ITEMS` constant in `CompactBottomBar.tsx`.
 - **Sub-Menu Strategy**: "Insights" now contains Blog, Investment, and Utils.
+- **Click Pass-through**: Outer `<motion.nav>` uses `pointer-events-none` and the inner bar uses `pointer-events-auto` to prevent the floating workspace container from blocking clicks on underlying page content.
+- **SSR & Hydration Strategy**: Avoids returning `null` before mounting. Default public navigation links render server-side (SSR) to preserve SEO internal links and prevent a visual pop-in layout shift, updating dynamically after client-side authentication checks.
+- **Optimized Queries**: Pending task count queries only fetch on auth status changes, rather than firing on every page navigation.
+- **Dynamic Hover Detection**: Attaches a media query listener to `window.matchMedia("(hover: hover)")` to dynamically adapt UI hover states in real-time.
 
 ## 📝 Content Systems
 ### Blog System
@@ -106,7 +110,9 @@ Strictly for routing and page definitions.
 - **Modular Directory Organization**: Task system UI components are organized into logical sub-directories under `components/`: `agenda/` (forms, lists, filters, items), `analytics/` (charts, graphs, reports), `health/` (system checks), and `shared/` (task-specific loading skeletons, toasts, errors).
 - **Tabbed Architecture**:
   - **Agenda**: Prominent `TaskProgress` (independent fetch) and collapsible `HealthCheck`.
-  - **Analytics**: Multi-Metric Heatmap (Created vs Done) with diagonal visualization.
+  - **Analytics**: Displays a permanently visible `GeneralReport` panel with period filters (Today, Week, Month). Displays a clean "Awaiting Data" fallback and placeholder formatting for reliability metrics when there are zero completed tasks in the selected period.
+- **Task Layout & Actions**: `TaskItem` separates title and description with clear vertical breathing room. A status selector dropdown is positioned in the bottom-right actions bar; selecting "DONE" automatically completes the task (`is_completed = true` with a timestamp), and selecting other options resets it.
+- **Kanban Board Optimization**: Transitions the item card to a vertical layout with dedicated top header handles and stacks controls at the bottom to maintain touch target usability in narrow columns.
 - **Dynamic Initialization**: `TaskForm` utilizes an auto-expanding `textarea` triggered by content changes to support multi-line batch entry without layout shifting.
 - **Notifier System**: Pluggable dispatcher delivering alerts via Telegram Bot and Browser API.
 

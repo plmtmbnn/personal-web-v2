@@ -270,7 +270,6 @@ export default function TaskBoard({
 																provided={dragProvided}
 																snapshot={dragSnapshot}
 																layoutMode="board"
-																onToggle={handleToggle}
 																onDelete={handleDeleteRequest}
 																onUpdate={handleUpdate}
 															/>

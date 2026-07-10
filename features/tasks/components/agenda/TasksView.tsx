@@ -59,18 +59,6 @@ const DynamicTaskProgress = dynamic(
 	},
 );
 
-const DynamicTaskHeatmap = dynamic(
-	() => import("@/features/tasks/components/analytics/TaskHeatmap"),
-	{
-		loading: () => (
-			<div className="p-6">
-				<Skeleton height="150px" variant="rounded" />
-			</div>
-		),
-		ssr: false,
-	},
-);
-
 const DynamicTaskForm = dynamic(
 	() => import("@/features/tasks/components/agenda/TaskForm"),
 	{
@@ -226,17 +214,10 @@ export default function TasksView({ tasks }: TasksViewProps) {
 								>
 									{/* Analytics & Status Grid */}
 									<section className="space-y-6">
-										<div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1">
-											<Suspense fallback={<ComponentLoader height="120px" />}>
-												<DynamicGeneralReport tasks={tasks} />
-											</Suspense>
-										</div>
+										<Suspense fallback={<ComponentLoader height="120px" />}>
+											<DynamicGeneralReport tasks={tasks} />
+										</Suspense>
 									</section>
-
-									{/* Heatmap Section */}
-									<Suspense fallback={<ComponentLoader height="150px" />}>
-										<DynamicTaskHeatmap tasks={tasks} />
-									</Suspense>
 								</motion.div>
 							) : activeTab === "review" ? (
 								<motion.div

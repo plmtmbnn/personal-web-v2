@@ -10,7 +10,6 @@ import {
 	Tag,
 	Edit2,
 	RefreshCw,
-	FileText,
 	ChevronDown,
 	ChevronUp,
 	AlertTriangle,
@@ -46,7 +45,6 @@ import {
 	QUICK_RESCHEDULE_OPTIONS,
 	DELETE_CONFIRM_TIMEOUT_MS,
 	TASK_STATUS_CONFIG,
-	STATUS_CYCLE,
 	EFFORT_CHIPS,
 	formatEstimatedTime,
 	TASK_CATEGORIES,
@@ -81,11 +79,11 @@ const RECURRENCE_LABELS = {
 
 interface SubtaskItemProps {
 	subtask: Task;
-	onToggle: (id: string, current: boolean) => void;
+	onUpdate: (id: string, updates: Partial<Task>) => void;
 	onDelete: (id: string) => void;
 }
 
-function SubtaskItem({ subtask, onToggle, onDelete }: SubtaskItemProps) {
+function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
 	const [deleteConfirm, setDeleteConfirm] = useState(false);
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -97,6 +95,15 @@ function SubtaskItem({ subtask, onToggle, onDelete }: SubtaskItemProps) {
 		} else {
 			onDelete(subtask.id);
 		}
+	};
+
+	const handleToggle = () => {
+		const nextDone = !(subtask.status === "done" || subtask.is_completed);
+		onUpdate(subtask.id, {
+			status: nextDone ? "done" : "todo",
+			is_completed: nextDone,
+			completed_at: nextDone ? new Date().toISOString() : null,
+		});
 	};
 
 	useEffect(
@@ -112,7 +119,7 @@ function SubtaskItem({ subtask, onToggle, onDelete }: SubtaskItemProps) {
 		<div className="flex items-center gap-2 py-1 group/sub">
 			<button
 				type="button"
-				onClick={() => onToggle(subtask.id, subtask.is_completed)}
+				onClick={handleToggle}
 				className={`flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
 					isDone
 						? "bg-emerald-500 border-emerald-500 text-white"
@@ -155,7 +162,6 @@ interface TaskItemProps {
 	layoutMode?: "list" | "board";
 	provided?: DraggableProvided;
 	snapshot?: DraggableStateSnapshot;
-	onToggle: (taskId: string, currentStatus: boolean) => void;
 	onDelete: (taskId: string) => void;
 	onUpdate: (taskId: string, updates: Partial<Task>) => void;
 }
@@ -166,7 +172,6 @@ function TaskItem({
 	task,
 	provided,
 	snapshot,
-	onToggle,
 	onDelete,
 	onUpdate,
 	layoutMode = "list",
@@ -203,7 +208,7 @@ function TaskItem({
 	const [potentialBlockers, setPotentialBlockers] = useState<Task[]>([]);
 	const [potentialBlockersLoaded, setPotentialBlockersLoaded] = useState(false);
 
-	const [isNotesOpen, setIsNotesOpen] = useState(false);
+	const [isDescExpanded, setIsDescExpanded] = useState(false);
 	const [isSubtasksOpen, setIsSubtasksOpen] = useState(false);
 	const [subtasks, setSubtasks] = useState<Task[]>([]);
 	const [subtasksLoaded, setSubtasksLoaded] = useState(false);
@@ -475,43 +480,6 @@ function TaskItem({
 		[handleSave, handleCancel],
 	);
 
-	// Status cycle: click to advance through todo → in_progress → done
-	const handleStatusCycle = useCallback(() => {
-		const currentIndex = STATUS_CYCLE.indexOf(
-			optimisticStatus as (typeof STATUS_CYCLE)[number],
-		);
-		const nextIndex = (currentIndex + 1) % STATUS_CYCLE.length;
-		const nextStatus = STATUS_CYCLE[nextIndex];
-		setOptimisticStatus(nextStatus);
-		onUpdate(task.id, {
-			status: nextStatus,
-			is_completed: nextStatus === "done",
-			completed_at: nextStatus === "done" ? new Date().toISOString() : null,
-		});
-	}, [optimisticStatus, task.id, onUpdate]);
-
-	// Long-press status: set blocked
-	const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const handleStatusLongPress = useCallback(() => {
-		longPressTimer.current = setTimeout(() => {
-			const nextStatus: TaskStatus =
-				optimisticStatus === "blocked" ? "todo" : "blocked";
-			setOptimisticStatus(nextStatus);
-			onUpdate(task.id, {
-				status: nextStatus,
-				is_completed: false,
-				completed_at: null,
-			});
-		}, 600);
-	}, [optimisticStatus, task.id, onUpdate]);
-
-	const handleStatusMouseUp = useCallback(() => {
-		if (longPressTimer.current) {
-			clearTimeout(longPressTimer.current);
-			longPressTimer.current = null;
-		}
-	}, []);
-
 	// Two-step delete
 	const handleDeleteClick = useCallback(() => {
 		if (deleteTimerRef.current) {
@@ -559,19 +527,13 @@ function TaskItem({
 	}, [newSubtaskTitle, task.id]);
 
 	const handleSubtaskToggle = useCallback(
-		(subtaskId: string, currentStatus: boolean) => {
-			const nextCompleted = !currentStatus;
-			const nextStatus: TaskStatus = nextCompleted ? "done" : "todo";
+		(subtaskId: string, updates: Partial<Task>) => {
 			setSubtasks((prev) =>
-				prev.map((s) =>
-					s.id === subtaskId
-						? { ...s, is_completed: nextCompleted, status: nextStatus }
-						: s,
-				),
+				prev.map((s) => (s.id === subtaskId ? { ...s, ...updates } : s)),
 			);
-			onToggle(subtaskId, currentStatus);
+			onUpdate(subtaskId, updates);
 		},
-		[onToggle],
+		[onUpdate],
 	);
 
 	const handleSubtaskDelete = useCallback(
@@ -701,7 +663,11 @@ function TaskItem({
 				dragElastic={0.4}
 				onDragEnd={handleDragEnd}
 				style={{ x }}
-				className={`group flex items-start gap-3 sm:gap-4 ${layoutMode === "board" ? "p-3" : "p-4"} bg-white border-2 transition-all duration-300 ${
+				className={`group flex ${
+					layoutMode === "board"
+						? "flex-col p-3.5 gap-2.5"
+						: "flex-row items-start p-4 gap-3 sm:gap-4"
+				} bg-white border-2 transition-all duration-300 ${
 					snapshot?.isDragging
 						? "shadow-2xl border-emerald-500 ring-2 ring-emerald-500/10 z-50"
 						: isEditing
@@ -715,8 +681,8 @@ function TaskItem({
 					optimisticStatus === "cancelled" ? "opacity-50" : ""
 				}`}
 			>
-				{/* Drag Handle */}
-				{provided && (
+				{/* Drag Handle (List Mode) */}
+				{provided && layoutMode === "list" && (
 					<div
 						{...provided.dragHandleProps}
 						className={`text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing py-1 ${isEditing ? "opacity-50 pointer-events-none" : ""}`}
@@ -726,64 +692,32 @@ function TaskItem({
 					</div>
 				)}
 
-				{/* Status Cycle Button */}
-				{!isEditing && (
-					<button
-						type="button"
-						onClick={handleStatusCycle}
-						onMouseDown={handleStatusLongPress}
-						onMouseUp={handleStatusMouseUp}
-						onTouchStart={handleStatusLongPress}
-						onTouchEnd={handleStatusMouseUp}
-						aria-label={`Status: ${statusConfig.label}. Click to advance, hold for blocked.`}
-						title={`${statusConfig.label} — click to advance, hold to mark blocked`}
-						className={`flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded border-2 flex items-center justify-center mt-1 sm:mt-0.5 transition-all duration-200 select-none ${
-							optimisticStatus === "done"
-								? "bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-200"
-								: optimisticStatus === "in_progress"
-									? "bg-blue-100 border-blue-400 text-blue-600"
-									: optimisticStatus === "blocked"
-										? "bg-amber-100 border-amber-400 text-amber-600"
-										: optimisticStatus === "cancelled"
-											? "bg-slate-100 border-slate-300 text-slate-400"
-											: "bg-white border-slate-300 hover:border-emerald-500"
-						}`}
-					>
-						<AnimatePresence mode="wait">
-							{optimisticStatus === "done" && (
-								<motion.div
-									key="done"
-									initial={{ scale: 0, opacity: 0 }}
-									animate={{ scale: 1, opacity: 1 }}
-									exit={{ scale: 0, opacity: 0 }}
-								>
-									<Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[4]" />
-								</motion.div>
-							)}
-							{optimisticStatus === "in_progress" && (
-								<motion.div
-									key="ip"
-									initial={{ scale: 0 }}
-									animate={{ scale: 1 }}
-									exit={{ scale: 0 }}
-									className="w-2 h-2 rounded-full bg-blue-500"
-								/>
-							)}
-							{optimisticStatus === "blocked" && (
-								<motion.div
-									key="blocked"
-									initial={{ scale: 0 }}
-									animate={{ scale: 1 }}
-									exit={{ scale: 0 }}
-									className="w-2 h-2 rounded-sm bg-amber-500"
-								/>
-							)}
-						</AnimatePresence>
-					</button>
+				{/* Drag Handle Header (Board Mode) */}
+				{provided && layoutMode === "board" && !isEditing && (
+					<div className="flex items-center justify-between border-b border-slate-100/60 pb-2 w-full select-none">
+						<div
+							{...provided.dragHandleProps}
+							className="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-slate-50 transition-colors"
+							title="Drag to reorder card"
+						>
+							<GripVertical className="w-3.5 h-3.5 rotate-90" />
+						</div>
+						<div className="flex items-center gap-1.5">
+							<span
+								className={`w-2 h-2 rounded-full ${
+									TASK_STATUS_CONFIG[optimisticStatus]?.dotColor ||
+									"bg-slate-300"
+								}`}
+							/>
+							<span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+								{TASK_STATUS_CONFIG[optimisticStatus]?.shortLabel}
+							</span>
+						</div>
+					</div>
 				)}
 
 				{/* Main Content */}
-				<div className="flex-1 min-w-0">
+				<div className="flex-1 min-w-0 w-full">
 					{/* Title — edit or display */}
 					{isEditing ? (
 						<div className="space-y-4 py-1" onKeyDown={handleKeyDown}>
@@ -1270,139 +1204,150 @@ function TaskItem({
 						</div>
 					) : (
 						<>
+							{/* ── Title ─────────────────────────────────────────── */}
 							<div
 								onDoubleClick={startEditing}
-								className={`text-base sm:text-sm font-semibold text-slate-900 transition-all cursor-text break-words whitespace-pre-wrap ${
-									optimisticStatus === "done"
+								className={`text-sm sm:text-base font-bold text-slate-900 leading-relaxed mb-3 break-words whitespace-pre-wrap cursor-text select-text ${
+									optimisticStatus === "done" ||
+									optimisticStatus === "cancelled"
 										? "line-through text-slate-400"
-										: optimisticStatus === "cancelled"
-											? "line-through text-slate-400"
-											: ""
+										: ""
 								}`}
 								title="Double-click to edit"
 							>
 								{renderTextWithLinks(task.title)}
 							</div>
 
-							{/* Description / Notes preview (collapsible) */}
+							{/* ── Description (always visible, selectable) ────── */}
 							{task.description && (
-								<div className="mt-1.5">
-									<button
-										type="button"
-										onClick={() => setIsNotesOpen((v) => !v)}
-										className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-violet-500 hover:text-violet-700 transition-colors"
-										aria-label={isNotesOpen ? "Hide notes" : "Show notes"}
-									>
-										<FileText className="w-2.5 h-2.5" />
-										Notes
-										{isNotesOpen ? (
-											<ChevronUp className="w-2.5 h-2.5" />
-										) : (
-											<ChevronDown className="w-2.5 h-2.5" />
-										)}
-									</button>
-									<AnimatePresence>
-										{isNotesOpen && (
-											<motion.div
-												key="notes"
-												initial={{ opacity: 0, height: 0 }}
-												animate={{ opacity: 1, height: "auto" }}
-												exit={{ opacity: 0, height: 0 }}
-												transition={{ duration: 0.18, ease: "easeInOut" }}
-												className="overflow-hidden"
-											>
-												<div className="mt-1.5 text-xs text-slate-500 leading-relaxed bg-violet-50/60 border border-violet-100 rounded-xl px-3 py-2 whitespace-pre-wrap break-words space-y-1">
-													{(() => {
-														if (!task.description) return null;
-														const lines = task.description.split("\n");
-														const hasChecklist = lines.some((line) =>
-															/^(\s*[-*]\s+\[)([ xX]]\s+)/.test(line),
-														);
+								<div className="mt-3">
+									{(() => {
+										const lines = task.description.split("\n");
+										const hasChecklist = lines.some((line) =>
+											/^\s*[-*]\s+\[[ xX]\]\s+/.test(line),
+										);
+										const PREVIEW_LINES = 4;
+										const needsExpand =
+											!hasChecklist && lines.length > PREVIEW_LINES;
+										const visibleLines =
+											needsExpand && !isDescExpanded
+												? lines.slice(0, PREVIEW_LINES)
+												: lines;
 
-														if (!hasChecklist) {
-															return (
-																<p>{renderTextWithLinks(task.description)}</p>
-															);
-														}
-
-														return lines.map((line, lineIndex) => {
-															const match = line.match(
-																/^(\s*[-*]\s+\[)([ xX])\]\s+(.*)/,
-															);
-															if (!match) {
-																return (
-																	<div
-																		key={lineIndex}
-																		className="min-h-[1.5rem]"
-																	>
-																		{renderTextWithLinks(line)}
-																	</div>
-																);
-															}
-
-															const [, , statusChar, contentText] = match;
-															const isChecked =
-																statusChar.toLowerCase() === "x";
-
-															const handleChecklistToggle = () => {
-																const updatedLines = [...lines];
-																const newStatus = isChecked ? " " : "x";
-																updatedLines[lineIndex] = line.replace(
-																	/\[([ xX])\]/,
-																	`[${newStatus}]`,
-																);
-																onUpdate(task.id, {
-																	description: updatedLines.join("\n"),
-																});
-															};
-
-															return (
-																<div
-																	key={lineIndex}
-																	className="flex items-start gap-2 py-0.5 group/checklist"
-																>
-																	<button
-																		type="button"
-																		onClick={(e) => {
-																			e.stopPropagation();
-																			handleChecklistToggle();
-																		}}
-																		className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center border transition-all ${
-																			isChecked
-																				? "bg-violet-500 border-violet-500 text-white"
-																				: "bg-white border-slate-300 hover:border-violet-500"
-																		}`}
-																	>
-																		{isChecked && (
-																			<Check className="w-3 h-3 stroke-[3]" />
-																		)}
-																	</button>
-																	<span
-																		className={`flex-1 ${
-																			isChecked
-																				? "line-through text-slate-400"
-																				: "text-slate-650"
-																		}`}
-																	>
-																		{renderTextWithLinks(contentText)}
-																	</span>
-																</div>
-															);
-														});
-													})()}
+										if (!hasChecklist) {
+											return (
+												<div className="text-xs text-slate-500 leading-relaxed bg-slate-50/50 border border-slate-100/80 rounded-2xl px-4 py-3 select-text">
+													<p className="whitespace-pre-wrap break-words">
+														{renderTextWithLinks(visibleLines.join("\n"))}
+													</p>
+													{needsExpand && (
+														<button
+															type="button"
+															onClick={(e) => {
+																e.stopPropagation();
+																setIsDescExpanded((v) => !v);
+															}}
+															className="mt-2 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-violet-500 hover:text-violet-750 transition-colors bg-violet-55/60 hover:bg-violet-100/80 px-2 py-0.5 rounded-lg w-fit"
+														>
+															{isDescExpanded ? (
+																<>
+																	<ChevronUp className="w-2.5 h-2.5" />
+																	Show less
+																</>
+															) : (
+																<>
+																	<ChevronDown className="w-2.5 h-2.5" />
+																	{lines.length - PREVIEW_LINES} more
+																	{lines.length - PREVIEW_LINES === 1
+																		? " line"
+																		: " lines"}
+																</>
+															)}
+														</button>
+													)}
 												</div>
-											</motion.div>
-										)}
-									</AnimatePresence>
+											);
+										}
+
+										// Checklist rendering
+										return (
+											<div className="text-xs text-slate-500 leading-relaxed bg-slate-50/50 border border-slate-100/80 rounded-2xl px-4 py-3 space-y-1.5 select-text">
+												{lines.map((line, lineIndex) => {
+													const match = line.match(
+														/^(\s*[-*]\s+\[)([ xX])\]\s+(.*)/,
+													);
+													if (!match) {
+														return (
+															<div
+																key={lineIndex}
+																className={
+																	line.trim() === ""
+																		? "h-2"
+																		: "whitespace-pre-wrap break-words text-slate-550"
+																}
+															>
+																{renderTextWithLinks(line)}
+															</div>
+														);
+													}
+													const [, , statusChar, contentText] = match;
+													const isChecked = statusChar.toLowerCase() === "x";
+													const handleChecklistToggle = () => {
+														const updatedLines = [...lines];
+														const newStatus = isChecked ? " " : "x";
+														updatedLines[lineIndex] = line.replace(
+															/\[([ xX])\]/,
+															`[${newStatus}]`,
+														);
+														onUpdate(task.id, {
+															description: updatedLines.join("\n"),
+														});
+													};
+													return (
+														<div
+															key={lineIndex}
+															className="flex items-start gap-2 py-0.5 group/checklist"
+														>
+															<button
+																type="button"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	handleChecklistToggle();
+																}}
+																className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded flex items-center justify-center border transition-all ${
+																	isChecked
+																		? "bg-violet-500 border-violet-500 text-white"
+																		: "bg-white border-slate-300 hover:border-violet-500"
+																}`}
+															>
+																{isChecked && (
+																	<Check className="w-3 h-3 stroke-[3]" />
+																)}
+															</button>
+															<span
+																className={`flex-1 ${
+																	isChecked
+																		? "line-through text-slate-400"
+																		: "text-slate-600"
+																}`}
+															>
+																{renderTextWithLinks(contentText)}
+															</span>
+														</div>
+													);
+												})}
+											</div>
+										);
+									})()}
 								</div>
 							)}
 
-							{/* Subtasks Section */}
-							<div className="mt-2">
+							{/* ── Subtasks ────────────────────────────────────── */}
+							<div className="mt-3">
 								<button
 									type="button"
 									onClick={() => setIsSubtasksOpen((v) => !v)}
-									className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+									className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-655 transition-colors"
 								>
 									<ChevronRight
 										className={`w-2.5 h-2.5 transition-transform ${isSubtasksOpen ? "rotate-90" : ""}`}
@@ -1425,10 +1370,9 @@ function TaskItem({
 											transition={{ duration: 0.18, ease: "easeInOut" }}
 											className="overflow-hidden"
 										>
-											<div className="mt-2 pl-2 border-l-2 border-slate-100 space-y-0.5">
-												{/* Subtask progress bar */}
+											<div className="mt-2.5 pl-2 border-l-2 border-slate-100 space-y-0.5">
 												{subtaskTotal > 0 && (
-													<div className="mb-2">
+													<div className="mb-2.5">
 														<div className="flex items-center justify-between mb-1">
 															<span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
 																Progress
@@ -1440,22 +1384,18 @@ function TaskItem({
 														<div className="h-1 bg-slate-100 rounded-full overflow-hidden">
 															<motion.div
 																initial={{ width: 0 }}
-																animate={{
-																	width: `${subtaskProgress}%`,
-																}}
+																animate={{ width: `${subtaskProgress}%` }}
 																transition={{ duration: 0.4, ease: "easeOut" }}
 																className="h-full bg-emerald-500 rounded-full"
 															/>
 														</div>
 													</div>
 												)}
-
 												{!subtasksLoaded && (
 													<p className="text-[9px] text-slate-400 py-1">
 														Loading…
 													</p>
 												)}
-
 												{subtasksLoaded &&
 													subtasks.length === 0 &&
 													!isAddingSubtask && (
@@ -1463,17 +1403,14 @@ function TaskItem({
 															No subtasks yet
 														</p>
 													)}
-
 												{subtasks.map((sub) => (
 													<SubtaskItem
 														key={sub.id}
 														subtask={sub}
-														onToggle={handleSubtaskToggle}
+														onUpdate={handleSubtaskToggle}
 														onDelete={handleSubtaskDelete}
 													/>
 												))}
-
-												{/* Add subtask input */}
 												{isAddingSubtask ? (
 													<div className="flex items-center gap-1.5 pt-1">
 														<input
@@ -1536,200 +1473,237 @@ function TaskItem({
 								</AnimatePresence>
 							</div>
 
-							{/* Metadata Badges */}
-							<div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
-								{/* Status Badge */}
-								{optimisticStatus !== "todo" && (
+							{/* ── Footer Metadata & Actions Row ────────────────── */}
+							<div
+								className={`flex border-t border-slate-100 ${
+									layoutMode === "board"
+										? "flex-col gap-2.5 mt-3 pt-2.5"
+										: "flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 pt-3"
+								}`}
+							>
+								{/* Left/Top: Metadata Badges */}
+								<div className="flex flex-wrap items-center gap-1.5">
+									{optimisticStatus !== "todo" && (
+										<span
+											className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest border ${statusConfig.color}`}
+										>
+											{statusConfig.shortLabel}
+										</span>
+									)}
 									<span
-										className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest border ${statusConfig.color}`}
+										className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest border ${PRIORITY_COLORS[task.priority]}`}
 									>
-										{statusConfig.shortLabel}
+										{task.priority}
 									</span>
-								)}
-
-								{/* Priority */}
-								<span
-									className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest border ${PRIORITY_COLORS[task.priority]}`}
-								>
-									{task.priority}
-								</span>
-
-								{/* Category */}
-								{task.category && (
-									<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
-										<Tag className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-										{task.category}
-									</span>
-								)}
-
-								{/* Effort estimate */}
-								{task.estimated_minutes && (
-									<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-cyan-50 text-cyan-700 border border-cyan-100">
-										<Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-										{formatEstimatedTime(task.estimated_minutes)}
-									</span>
-								)}
-
-								{/* Tags */}
-								{task.tags && task.tags.length > 0 && (
-									<>
-										{task.tags.slice(0, 2).map((tag) => (
-											<span
-												key={tag}
-												className="flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200"
-											>
-												<Hash className="w-2 h-2" />
-												{tag}
-											</span>
-										))}
-										{task.tags.length > 2 && (
-											<span className="text-[8px] font-bold text-slate-400">
-												+{task.tags.length - 2}
+									{task.category && (
+										<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
+											<Tag className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+											{task.category}
+										</span>
+									)}
+									{task.estimated_minutes && (
+										<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-cyan-50 text-cyan-700 border border-cyan-100">
+											<Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+											{formatEstimatedTime(task.estimated_minutes)}
+										</span>
+									)}
+									{task.tags && task.tags.length > 0 && (
+										<>
+											{task.tags.slice(0, 2).map((tag) => (
+												<span
+													key={tag}
+													className="flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200"
+												>
+													<Hash className="w-2 h-2" />
+													{tag}
+												</span>
+											))}
+											{task.tags.length > 2 && (
+												<span className="text-[8px] font-bold text-slate-400">
+													+{task.tags.length - 2}
+												</span>
+											)}
+										</>
+									)}
+									{dueDateInfo && (
+										<div
+											className={`flex items-center gap-1 text-[9px] font-bold ${
+												isOverdue
+													? "text-rose-500"
+													: isDueToday
+														? "text-orange-500"
+														: "text-slate-400"
+											}`}
+										>
+											<Clock className="w-2.5 h-2.5" />
+											<span>{dueDateInfo.formatted}</span>
+										</div>
+									)}
+									{task.start_date &&
+										isAfter(
+											parseISO(task.start_date),
+											startOfDay(new Date()),
+										) && (
+											<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-100">
+												Starts {format(parseISO(task.start_date), "dd MMM")}
 											</span>
 										)}
-									</>
-								)}
+									{(task.start_time || task.due_time) && (
+										<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
+											<Clock className="w-2 h-2" />
+											{task.start_time && task.due_time
+												? `${task.start_time.substring(0, 5)} - ${task.due_time.substring(0, 5)}`
+												: task.start_time
+													? `Start: ${task.start_time.substring(0, 5)}`
+													: `Due: ${task.due_time?.substring(0, 5)}`}
+										</span>
+									)}
+									{task.recurrence && task.recurrence !== "none" && (
+										<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-violet-50 text-violet-600 border border-violet-100">
+											<RefreshCw className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+											{RECURRENCE_LABELS[task.recurrence]}
+										</span>
+									)}
+									{task.reschedule_count > 0 && optimisticStatus !== "done" && (
+										<div
+											className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100 text-[8px] sm:text-[9px] font-black"
+											title={`Delayed ${task.reschedule_count} times`}
+										>
+											<RefreshCw className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+											{task.reschedule_count}
+										</div>
+									)}
+									{timeLeft && (
+										<span
+											className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-tight border ${timeLeft.color}`}
+										>
+											<span>{timeLeft.emoji}</span>
+											{timeLeft.text}
+										</span>
+									)}
+									{optimisticStatus === "blocked" &&
+										blockersLoaded &&
+										blockers.length > 0 && (
+											<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-100">
+												<AlertTriangle className="w-2 h-2" />
+												Blocked by: {blockers.map((b) => b.title).join(", ")}
+											</span>
+										)}
+								</div>
 
-								{/* Formatted due date */}
-								{dueDateInfo && (
-									<div
-										className={`flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold ml-0.5 sm:ml-1 ${
-											isOverdue
-												? "text-rose-500"
-												: isDueToday
-													? "text-orange-500"
-													: "text-slate-400"
+								{/* Right/Bottom: Actions block */}
+								<div
+									className={`flex items-center gap-1.5 transition-all ${
+										layoutMode === "board"
+											? "w-full justify-between mt-1 pt-1.5 border-t border-slate-50 opacity-100"
+											: "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity justify-end flex-shrink-0 self-end sm:self-auto"
+									}`}
+								>
+									{/* Status Selector Dropdown */}
+									<div className="relative inline-block mr-1">
+										<select
+											value={optimisticStatus}
+											onChange={(e) => {
+												const nextStatus = e.target.value as TaskStatus;
+												setOptimisticStatus(nextStatus);
+												const isDone = nextStatus === "done";
+												onUpdate(task.id, {
+													status: nextStatus,
+													is_completed: isDone,
+													completed_at: isDone
+														? new Date().toISOString()
+														: null,
+												});
+											}}
+											className={`appearance-none border text-[9px] font-black uppercase tracking-wider rounded-xl pl-2.5 pr-7 py-1 focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all cursor-pointer ${
+												TASK_STATUS_CONFIG[optimisticStatus]?.color ||
+												"bg-white border-slate-200 text-slate-700"
+											}`}
+											title="Change Task Status"
+										>
+											{(
+												Object.entries(TASK_STATUS_CONFIG) as [
+													TaskStatus,
+													(typeof TASK_STATUS_CONFIG)[TaskStatus],
+												][]
+											).map(([key, cfg]) => (
+												<option
+													key={key}
+													value={key}
+													className="text-slate-750 bg-white font-bold uppercase tracking-wider"
+												>
+													{cfg.label.toUpperCase()}
+												</option>
+											))}
+										</select>
+										<div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+											<ChevronDown className="w-2.5 h-2.5" />
+										</div>
+									</div>
+
+									<button
+										type="button"
+										onClick={startEditing}
+										className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+										aria-label={`Edit task: ${task.title}`}
+										title="Quick Edit"
+									>
+										<Edit2 className="w-3.5 h-3.5" />
+									</button>
+
+									<button
+										type="button"
+										onClick={async () => {
+											try {
+												await archiveTask(task.id);
+											} catch (err) {
+												console.error(err);
+											}
+										}}
+										className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+										aria-label={`Archive task: ${task.title}`}
+										title="Archive Task"
+									>
+										<Archive className="w-3.5 h-3.5" />
+									</button>
+
+									{/* Two-step delete confirmation */}
+									<button
+										type="button"
+										onClick={handleDeleteClick}
+										aria-label={
+											deleteConfirm
+												? "Confirm delete"
+												: `Delete task: ${task.title}`
+										}
+										title={
+											deleteConfirm ? "Click again to confirm" : "Delete Task"
+										}
+										className={`p-1.5 rounded-xl transition-all ${
+											deleteConfirm
+												? "text-white bg-rose-500 hover:bg-rose-600 scale-105"
+												: "text-slate-400 hover:text-rose-600 hover:bg-rose-50"
 										}`}
 									>
-										<Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-										<span>{dueDateInfo.formatted}</span>
-									</div>
-								)}
-
-								{/* Future Start Date */}
-								{task.start_date &&
-									isAfter(
-										parseISO(task.start_date),
-										startOfDay(new Date()),
-									) && (
-										<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-100">
-											Starts {format(parseISO(task.start_date), "dd MMM")}
-										</span>
-									)}
-
-								{/* Start Time / Due Time */}
-								{(task.start_time || task.due_time) && (
-									<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
-										<Clock className="w-2 h-2" />
-										{task.start_time && task.due_time
-											? `${task.start_time.substring(0, 5)} - ${task.due_time.substring(0, 5)}`
-											: task.start_time
-												? `Start: ${task.start_time.substring(0, 5)}`
-												: task.due_time
-													? `Due: ${task.due_time.substring(0, 5)}`
-													: ""}
-									</span>
-								)}
-
-								{/* Recurrence badge */}
-								{task.recurrence && task.recurrence !== "none" && (
-									<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-violet-50 text-violet-600 border border-violet-100">
-										<RefreshCw className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-										{RECURRENCE_LABELS[task.recurrence]}
-									</span>
-								)}
-
-								{/* Reschedule count */}
-								{task.reschedule_count > 0 && optimisticStatus !== "done" && (
-									<div
-										className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100 text-[8px] sm:text-[9px] font-black"
-										title={`Delayed ${task.reschedule_count} times`}
-									>
-										<RefreshCw className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-										{task.reschedule_count}
-									</div>
-								)}
-
-								{/* Time left / overdue / due today */}
-								{timeLeft && (
-									<span
-										className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-tight border ${timeLeft.color}`}
-									>
-										<span>{timeLeft.emoji}</span>
-										{timeLeft.text}
-									</span>
-								)}
-
-								{/* Blocked by badge */}
-								{optimisticStatus === "blocked" &&
-									blockersLoaded &&
-									blockers.length > 0 && (
-										<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-100">
-											<AlertTriangle className="w-2 h-2" />
-											Blocked by: {blockers.map((b) => b.title).join(", ")}
-										</span>
-									)}
+										{deleteConfirm ? (
+											<AlertTriangle className="w-3.5 h-3.5" />
+										) : (
+											<Trash2 className="w-3.5 h-3.5" />
+										)}
+									</button>
+								</div>
 							</div>
 
 							{/* Mobile edit hint */}
 							{optimisticStatus !== "done" &&
 								optimisticStatus !== "cancelled" && (
-									<p className="mt-1 text-[8px] text-slate-300 font-medium sm:hidden">
+									<p className="mt-1.5 text-[8px] text-slate-300 font-medium sm:hidden">
 										Double-tap title to edit · Hold status to block
 									</p>
 								)}
 						</>
 					)}
 				</div>
-
-				{/* Desktop Only Actions */}
-				{!isEditing && (
-					<div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
-						<button
-							onClick={startEditing}
-							className="p-2 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-							aria-label={`Edit task: ${task.title}`}
-							title="Quick Edit"
-						>
-							<Edit2 className="w-4 h-4" />
-						</button>
-
-						<button
-							onClick={async () => {
-								try {
-									await archiveTask(task.id);
-								} catch (err) {
-									console.error(err);
-								}
-							}}
-							className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-							aria-label={`Archive task: ${task.title}`}
-							title="Archive Task"
-						>
-							<Archive className="w-4 h-4" />
-						</button>
-
-						{/* Two-step delete confirmation */}
-						<button
-							onClick={handleDeleteClick}
-							aria-label={
-								deleteConfirm ? "Confirm delete" : `Delete task: ${task.title}`
-							}
-							title={deleteConfirm ? "Click again to confirm" : "Delete Task"}
-							className={`p-2 rounded-xl transition-all ${
-								deleteConfirm
-									? "text-white bg-rose-500 hover:bg-rose-600 scale-105"
-									: "text-slate-300 hover:text-rose-600 hover:bg-rose-50"
-							}`}
-						>
-							{deleteConfirm ? (
-								<AlertTriangle className="w-4 h-4" />
-							) : (
-								<Trash2 className="w-4 h-4" />
-							)}
-						</button>
-					</div>
-				)}
 			</motion.div>
 		</div>
 	);

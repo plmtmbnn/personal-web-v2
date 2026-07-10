@@ -162,16 +162,26 @@ export default function CompactBottomBar() {
 	const [expandedItem, setExpandedItem] = useState<string | null>(null);
 	const [isAdmin, setIsAdmin] = useState(false);
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
-	const [isMounted, setIsMounted] = useState(false);
+	const [_isMounted, setIsMounted] = useState(false);
 	const [pendingTasksCount, setPendingTasksCount] = useState(0);
 	const [hasHover, setHasHover] = useState(false);
 	const navRef = useRef<HTMLElement>(null);
 
 	const containerScale = expandedItem ? 1.02 : 1;
 
-	// Detect hover-capable device on mount
+	// Detect hover-capable device dynamically
 	useEffect(() => {
-		setHasHover(window.matchMedia("(hover: hover)").matches);
+		const mediaQuery = window.matchMedia("(hover: hover)");
+		setHasHover(mediaQuery.matches);
+
+		const listener = (e: MediaQueryListEvent) => {
+			setHasHover(e.matches);
+		};
+
+		mediaQuery.addEventListener("change", listener);
+		return () => {
+			mediaQuery.removeEventListener("change", listener);
+		};
 	}, []);
 
 	useEffect(() => {
@@ -222,7 +232,7 @@ export default function CompactBottomBar() {
 		return () => subscription.unsubscribe();
 	}, []);
 
-	// Fetch pending tasks count on pathname or auth state changes
+	// Fetch pending tasks count on auth state changes
 	useEffect(() => {
 		if (isLoggedIn && isAdmin) {
 			const fetchPendingCount = async () => {
@@ -241,7 +251,7 @@ export default function CompactBottomBar() {
 		} else {
 			setPendingTasksCount(0);
 		}
-	}, [pathname, isLoggedIn, isAdmin]);
+	}, [isLoggedIn, isAdmin]);
 
 	const toggleSubMenu = (
 		e: React.MouseEvent,
@@ -261,17 +271,17 @@ export default function CompactBottomBar() {
 		return true;
 	});
 
-	if (!isMounted) return null;
+	// Render nav items statically to match SSR, updates dynamically after client checks auth
 
 	return (
 		<motion.nav
 			ref={navRef}
 			animate={{ scale: containerScale }}
 			transition={{ type: "spring", stiffness: 300, damping: 25 }}
-			className="fixed bottom-6 left-0 right-0 z-50 px-4 flex justify-center"
+			className="fixed bottom-6 left-0 right-0 z-50 px-4 flex justify-center pointer-events-none"
 			aria-label="Main Navigation"
 		>
-			<div className="glass-strong flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 rounded-full shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] border border-white/20 backdrop-blur-xl relative">
+			<div className="glass-strong flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 rounded-full shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] border border-white/20 backdrop-blur-xl relative pointer-events-auto">
 				{/* Glow effect */}
 				<div className="absolute inset-0 rounded-full bg-gradient-to-r from-accent/10 via-purple-500/5 to-cyan-500/10 blur-xl opacity-50 -z-10 pointer-events-none" />
 
@@ -322,7 +332,10 @@ export default function CompactBottomBar() {
 														<motion.div key={sub.label} variants={itemVariants}>
 															<Link
 																href={sub.href || "#"}
-																onClick={() => {
+																onClick={(e) => {
+																	if (!sub.href || sub.href === "#") {
+																		e.preventDefault();
+																	}
 																	sub.onClick?.();
 																	setExpandedItem(null);
 																}}

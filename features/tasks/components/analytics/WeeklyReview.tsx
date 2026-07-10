@@ -6,7 +6,6 @@ import {
 	type WeeklyReviewStats,
 } from "../../actions/analytics";
 import {
-	Loader2,
 	Trophy,
 	Clock,
 	AlertTriangle,
@@ -99,35 +98,35 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 const GRADE_CONFIG = {
 	"A+": {
 		bg: "from-emerald-500 to-teal-400",
-		text: "text-emerald-400",
+		text: "!text-emerald-400",
 		badge: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
 		ring: "#10b981",
 		label: "Elite Execution",
 	},
 	A: {
 		bg: "from-teal-500 to-cyan-400",
-		text: "text-teal-400",
+		text: "!text-teal-400",
 		badge: "bg-teal-400/20 text-teal-300 border-teal-400/30",
 		ring: "#14b8a6",
 		label: "High Performer",
 	},
 	B: {
 		bg: "from-blue-500 to-indigo-400",
-		text: "text-blue-400",
+		text: "!text-blue-400",
 		badge: "bg-blue-400/20 text-blue-300 border-blue-400/30",
 		ring: "#3b82f6",
 		label: "Solid Progress",
 	},
 	C: {
 		bg: "from-amber-500 to-orange-400",
-		text: "text-amber-400",
+		text: "!text-amber-400",
 		badge: "bg-amber-400/20 text-amber-300 border-amber-400/30",
 		ring: "#f59e0b",
 		label: "Moderate Run",
 	},
 	D: {
 		bg: "from-rose-500 to-pink-400",
-		text: "text-rose-400",
+		text: "!text-rose-400",
 		badge: "bg-rose-400/20 text-rose-300 border-rose-400/30",
 		ring: "#f43f5e",
 		label: "Needs Recovery",
@@ -190,18 +189,110 @@ export default function WeeklyReview() {
 
 	if (isPending || !stats || !grade) {
 		return (
-			<div className="h-[480px] flex flex-col items-center justify-center gap-4 bg-slate-50/50 rounded-[2.5rem] border border-slate-100">
-				<div className="relative">
-					<Loader2 className="w-10 h-10 animate-spin text-violet-400" />
-					<div className="absolute inset-0 rounded-full bg-violet-400/10 animate-ping" />
+			<div className="space-y-6 sm:space-y-8 animate-pulse pointer-events-none select-none">
+				{/* Hero Banner Skeleton */}
+				<div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 border border-slate-800 p-8 sm:p-10 h-64 sm:h-72 flex flex-col justify-between">
+					<div className="flex justify-between items-start gap-4">
+						<div className="space-y-4">
+							<div className="h-5 w-40 bg-slate-800 rounded-full" />
+							<div className="space-y-2">
+								<div className="h-8 w-64 bg-slate-800 rounded-lg" />
+								<div className="h-8 w-48 bg-slate-800 rounded-lg" />
+							</div>
+						</div>
+						<div className="w-20 h-20 bg-slate-800 rounded-3xl" />
+					</div>
+					<div className="flex gap-2">
+						<div className="h-5 w-24 bg-slate-800 rounded-full" />
+						<div className="h-5 w-32 bg-slate-800 rounded-full" />
+					</div>
 				</div>
-				<div className="text-center space-y-1">
-					<p className="text-xs font-black text-slate-600 uppercase tracking-widest">
-						Consolidating Weekly Logs
-					</p>
-					<p className="text-[10px] text-slate-400 font-medium">
-						Crunching mission data...
-					</p>
+
+				{/* Metrics Row Skeleton */}
+				<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+					{Array.from({ length: 4 }).map((_, i) => (
+						<div
+							key={i}
+							className="bg-white border border-slate-100 rounded-3xl p-5 flex flex-col gap-4 shadow-sm"
+						>
+							<div className="w-10 h-10 bg-slate-100 rounded-xl" />
+							<div className="space-y-2">
+								<div className="h-3 w-16 bg-slate-100 rounded-full" />
+								<div className="h-6 w-24 bg-slate-200 rounded-lg" />
+								<div className="h-3 w-28 bg-slate-100 rounded-full" />
+							</div>
+							<div className="h-1.5 bg-slate-100 rounded-full" />
+						</div>
+					))}
+				</div>
+
+				{/* Main Content Skeleton */}
+				<div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+					<div className="lg:col-span-3 bg-white border border-slate-200 rounded-[2rem] p-7 shadow-sm space-y-6">
+						<div className="flex justify-between items-center pb-4 border-b border-slate-50">
+							<div className="flex items-center gap-3">
+								<div className="w-9 h-9 bg-slate-100 rounded-xl" />
+								<div className="space-y-1.5">
+									<div className="h-4 w-28 bg-slate-200 rounded-full" />
+									<div className="h-3 w-36 bg-slate-100 rounded-full" />
+								</div>
+							</div>
+							<div className="h-5 w-16 bg-slate-100 rounded-lg" />
+						</div>
+						<div className="space-y-3">
+							{Array.from({ length: 3 }).map((_, i) => (
+								<div
+									key={i}
+									className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100"
+								>
+									<div className="w-8 h-8 bg-slate-200 rounded-xl" />
+									<div className="flex-1 space-y-2">
+										<div className="h-3 w-3/4 bg-slate-200 rounded-full" />
+										<div className="h-2 w-1/3 bg-slate-100 rounded-full" />
+									</div>
+									<div className="w-12 h-4 bg-slate-200 rounded-lg" />
+									<div className="w-4 h-4 bg-slate-200 rounded-full" />
+								</div>
+							))}
+						</div>
+					</div>
+
+					<div className="lg:col-span-2 flex flex-col gap-6">
+						<div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm space-y-4">
+							<div className="flex items-center gap-3">
+								<div className="w-9 h-9 bg-slate-100 rounded-xl" />
+								<div className="space-y-1">
+									<div className="h-3 w-20 bg-slate-200 rounded-full" />
+									<div className="h-2 w-24 bg-slate-100 rounded-full" />
+								</div>
+							</div>
+							<div className="h-32 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center">
+								<div className="space-y-2 text-center w-full px-8">
+									<div className="w-10 h-10 bg-slate-200 rounded-xl mx-auto" />
+									<div className="h-4 w-24 bg-slate-200 rounded-full mx-auto" />
+									<div className="h-3 w-16 bg-slate-100 rounded-full mx-auto" />
+								</div>
+							</div>
+						</div>
+
+						<div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm space-y-5 flex-1">
+							<div className="flex items-center gap-3">
+								<div className="w-9 h-9 bg-slate-100 rounded-xl" />
+								<div className="h-4 w-24 bg-slate-200 rounded-full" />
+							</div>
+							<div className="space-y-3.5">
+								{Array.from({ length: 4 }).map((_, i) => (
+									<div key={i} className="flex justify-between items-center">
+										<div className="flex items-center gap-2">
+											<div className="w-6 h-6 bg-slate-100 rounded-lg" />
+											<div className="h-3 w-16 bg-slate-200 rounded-full" />
+										</div>
+										<div className="h-4 w-6 bg-slate-200 rounded-lg" />
+									</div>
+								))}
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		);
@@ -266,7 +357,7 @@ export default function WeeklyReview() {
 									</h2>
 								</div>
 
-								<p className="text-slate-400 text-sm font-medium leading-relaxed max-w-sm">
+								<p className="!text-slate-400 text-sm font-medium leading-relaxed max-w-sm">
 									{stats.feedbackMessage}
 								</p>
 
@@ -320,19 +411,19 @@ export default function WeeklyReview() {
 							{/* Right: Key numbers column */}
 							<div className="flex flex-row lg:flex-col gap-4 lg:gap-5 flex-shrink-0">
 								<div className="text-center lg:text-right">
-									<p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+									<p className="text-[9px] font-black !text-white uppercase tracking-widest">
 										Tasks Completed
 									</p>
-									<p className="text-2xl font-black text-white mt-0.5">
+									<p className="text-2xl font-black !text-white mt-0.5">
 										<CountUp target={stats.completedCount} />
 									</p>
 								</div>
 								<div className="w-px lg:w-full h-full lg:h-px bg-white/5" />
 								<div className="text-center lg:text-right">
-									<p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+									<p className="text-[9px] font-black !text-white uppercase tracking-widest">
 										Effort Neutralized
 									</p>
-									<p className="text-2xl font-black text-white mt-0.5">
+									<p className="text-2xl font-black !text-white mt-0.5">
 										{formatMinutes(stats.effortNeutralized)}
 									</p>
 								</div>

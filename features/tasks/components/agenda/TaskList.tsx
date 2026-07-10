@@ -555,7 +555,6 @@ export default function TaskList({
 													index={index}
 													provided={provided}
 													snapshot={snapshot}
-													onToggle={handleToggle}
 													onUpdate={handleUpdate}
 													onDelete={handleDeleteRequest}
 												/>
@@ -623,7 +622,6 @@ export default function TaskList({
 													index={index}
 													provided={provided}
 													snapshot={snapshot}
-													onToggle={handleToggle}
 													onUpdate={handleUpdate}
 													onDelete={handleDeleteRequest}
 												/>
@@ -697,7 +695,6 @@ export default function TaskList({
 										key={task.id}
 										task={task}
 										index={index}
-										onToggle={handleToggle}
 										onUpdate={handleUpdate}
 										onDelete={handleDeleteRequest}
 									/>

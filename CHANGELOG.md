@@ -1,3 +1,10 @@
+## [0.54.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.54.0...v0.54.1) (2026-07-10)
+
+
+### Bug Fixes
+
+* downgrade typescript to v5 to resolve next.js detection error ([2e76066](https://github.com/plmtmbnn/personal-web-v2/commit/2e76066be91c135d28b340fcde856106865931ed))
+
 # [0.54.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.53.0...v0.54.0) (2026-07-10)
 
 

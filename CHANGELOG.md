@@ -1,3 +1,10 @@
+## [0.54.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.54.1...v0.54.2) (2026-07-10)
+
+
+### Bug Fixes
+
+* resolve got-scraping error on vercel and update task count logic ([4ec0ffe](https://github.com/plmtmbnn/personal-web-v2/commit/4ec0ffe1ba38b602c4aa4372291cc3110f95a837))
+
 ## [0.54.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.54.0...v0.54.1) (2026-07-10)
 
 

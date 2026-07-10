@@ -1,8 +1,12 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import withBundleAnalyzer from "@next/bundle-analyzer";
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	productionBrowserSourceMaps: false,
+	compress: true,
+
 	images: {
 		remotePatterns: [
 			{
@@ -27,24 +31,30 @@ const nextConfig: NextConfig = {
 			},
 			{
 				protocol: "https",
-				hostname: "**.ibb.co.com",
+				hostname: "**.ibb.co",
 			},
 			{
 				protocol: "https",
 				hostname: "**.idx.co.id",
 			},
 		],
+		deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+		formats: ["image/avif", "image/webp"],
 	},
+
 	reactStrictMode: true,
 	typescript: {
 		ignoreBuildErrors: process.env.FAST_BUILD === "true",
 	},
+
 	serverExternalPackages: ["node-sql-parser", "got-scraping"],
 	outputFileTracingIncludes: {
 		"/api/utils/stock-data": [
 			"./node_modules/header-generator/data_files/**/*",
 		],
 	},
+
 	experimental: {
 		optimizePackageImports: [
 			"lucide-react",
@@ -56,26 +66,52 @@ const nextConfig: NextConfig = {
 		],
 		webVitalsAttribution: ["CLS", "LCP", "FCP", "TTFB", "INP"],
 	},
-	webpack: (config) => {
+
+	webpack: (config, { isServer, dev }) => {
 		config.cache = {
 			type: "filesystem",
 			buildDependencies: {
 				config: [__filename],
+				tsconfig: ["./tsconfig.json"],
 			},
+			cacheDirectory: path.resolve(".next/cache/webpack"),
 		};
+
+		if (!dev && isServer) {
+			config.optimization = {
+				...config.optimization,
+				minimize: true,
+				splitChunks: {
+					chunks: "all",
+					maxSize: 200000,
+				},
+				runtimeChunk: "single",
+			};
+		}
+
 		return config;
 	},
+
+	// Enable standalone output for self-hosting
+	output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
 };
 
 const isProd = process.env.NODE_ENV === "production";
 
+// Apply bundle analyzer first
+const configWithAnalyzer = withBundleAnalyzer({
+	enabled: process.env.ANALYZE === "true",
+	openAnalyzer: false,
+	analyzerMode: "static",
+})(nextConfig);
+
+// Then apply Sentry config for production
 export default isProd
-	? withSentryConfig(nextConfig, {
+	? withSentryConfig(configWithAnalyzer, {
 			// For all available options, see:
 			// https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
 			org: "peoel-corps",
-
 			project: "javascript-nextjs",
 
 			// Only print logs for uploading source maps in CI
@@ -106,5 +142,13 @@ export default isProd
 					removeDebugLogging: true,
 				},
 			},
+
+			// Cache Sentry builds
+			cacheDirectory: ".next/cache/sentry",
+
+			// Reduce source map size
+			sourceMapUploadOptions: {
+				stripPrefix: ["node_modules/", "app/"],
+			},
 		})
-	: nextConfig;
+	: configWithAnalyzer;

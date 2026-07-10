@@ -21,7 +21,11 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    // Performance optimizations
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": [
     "next-env.d.ts",
@@ -31,5 +35,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", ".next", "dist", "out"]
+  "exclude": ["node_modules", ".next", "dist", "out", "**/*.spec.ts", "**/*.test.ts"]
 }

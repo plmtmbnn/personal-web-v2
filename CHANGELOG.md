@@ -1,3 +1,10 @@
+## [0.55.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.0...v0.55.1) (2026-07-11)
+
+
+### Bug Fixes
+
+* **tasks:** update cron to use status column instead of is_completed ([f83f878](https://github.com/plmtmbnn/personal-web-v2/commit/f83f8785cccee29b896f98865a41ef9674607f2e))
+
 # [0.55.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.54.2...v0.55.0) (2026-07-11)
 
 

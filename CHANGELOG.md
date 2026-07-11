@@ -1,3 +1,10 @@
+## [0.55.8](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.7...v0.55.8) (2026-07-11)
+
+
+### Bug Fixes
+
+* enhance contact page with submission form and add ibb.co.com image host config ([0c71bc5](https://github.com/plmtmbnn/personal-web-v2/commit/0c71bc55d75806a188553ba1c80b527c1fd76b3e))
+
 ## [0.55.7](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.6...v0.55.7) (2026-07-11)
 
 

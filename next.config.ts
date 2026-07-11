@@ -114,8 +114,8 @@ export default isProd
 			org: "peoel-corps",
 			project: "javascript-nextjs",
 
-			// Only print logs for uploading source maps in CI
-			silent: !process.env.CI,
+			// Silence Sentry CLI logs to prevent build log clutter from Turbopack chunks
+			silent: true,
 
 			// For all available options, see:
 			// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/

@@ -142,13 +142,5 @@ export default isProd
 					removeDebugLogging: true,
 				},
 			},
-
-			// Cache Sentry builds
-			cacheDirectory: ".next/cache/sentry",
-
-			// Reduce source map size
-			sourceMapUploadOptions: {
-				stripPrefix: ["node_modules/", "app/"],
-			},
 		})
 	: configWithAnalyzer;

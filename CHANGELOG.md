@@ -1,3 +1,10 @@
+# [0.56.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.10...v0.56.0) (2026-07-11)
+
+
+### Features
+
+* implement global command palette and revamp task analytics report ([327eeeb](https://github.com/plmtmbnn/personal-web-v2/commit/327eeeb6d9543ed7b40e75cbc118e84fdb03e404))
+
 ## [0.55.10](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.9...v0.55.10) (2026-07-11)
 
 

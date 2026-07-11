@@ -1,6 +1,6 @@
 {
 	"name": "personal-web-v2",
-	"version": "0.54.2",
+	"version": "0.55.0",
 	"private": true,
 	"scripts": {
 		"dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev --turbo --port 3000",

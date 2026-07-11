@@ -1,3 +1,15 @@
+# [0.55.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.54.2...v0.55.0) (2026-07-11)
+
+
+### Bug Fixes
+
+* **build:** remove invalid sentry config properties ([abd1d84](https://github.com/plmtmbnn/personal-web-v2/commit/abd1d84082fb64ac76589d037638fb066e732fb7))
+
+
+### Features
+
+* **perf:** optimize dev and build performance with pnpm upgrades and Next.js enhancements ([5a11a3c](https://github.com/plmtmbnn/personal-web-v2/commit/5a11a3c4882c13b9c7fea46e22f60dee963d8563))
+
 ## [0.54.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.54.1...v0.54.2) (2026-07-10)
 
 

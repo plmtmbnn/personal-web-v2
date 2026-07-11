@@ -1,3 +1,10 @@
+## [0.55.7](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.6...v0.55.7) (2026-07-11)
+
+
+### Bug Fixes
+
+* use hoisted node-linker to eliminate pnpm symlinks in Vercel serverless packaging ([e690308](https://github.com/plmtmbnn/personal-web-v2/commit/e690308112f5fe72f3ed797064a988f8d17ec987))
+
 ## [0.55.6](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.5...v0.55.6) (2026-07-11)
 
 

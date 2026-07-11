@@ -92,8 +92,11 @@ const nextConfig: NextConfig = {
 		return config;
 	},
 
-	// Enable standalone output for self-hosting
-	output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
+	// Enable standalone output for self-hosting (bypassed on Vercel to prevent deployment packaging symlink errors)
+	output:
+		process.env.NODE_ENV === "production" && !process.env.VERCEL
+			? "standalone"
+			: undefined,
 };
 
 const isProd = process.env.NODE_ENV === "production";

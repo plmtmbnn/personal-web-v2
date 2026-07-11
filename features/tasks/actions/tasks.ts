@@ -6,15 +6,6 @@ import { invalidateStatsCache } from "@/lib/core/redis";
 import type { Task, TaskPriority, TaskRecurrence, TaskStatus } from "../types";
 import { addDays, addMonths, parseISO, format } from "date-fns";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Derive is_completed from status for backward-compatibility.
- */
-function isCompletedFromStatus(status: TaskStatus): boolean {
-	return status === "done";
-}
-
 /**
  * Handle recurrence task instance creation.
  */
@@ -71,7 +62,6 @@ async function handleRecurrenceSpawning(task: Task) {
 			priority: task.priority,
 			category: task.category,
 			status: "todo",
-			is_completed: false,
 			due_date: nextDateStr,
 			recurrence: task.recurrence,
 			tags: task.tags || [],
@@ -95,7 +85,7 @@ async function handleRecurrenceSpawning(task: Task) {
 
 /**
  * Fetch tasks with optional filters.
- * Default: Today, is_completed: false
+ * Default: Today, pending (status != done)
  */
 export async function getTasks(options?: {
 	startDate?: string;
@@ -115,17 +105,17 @@ export async function getTasks(options?: {
 
 	// Handle Completion and Date Filtering
 	if (includeCompleted) {
-		// Show: (Due in range AND NOT completed) OR (Completed in range)
+		// Show: (Due in range AND NOT done) OR (Completed in range)
 		query = query.or(
-			`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`,
+			`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`,
 		);
 	} else if (showCompletedToday) {
 		query = query.or(
-			`and(due_date.gte.${startDate},due_date.lte.${endDate},is_completed.eq.false),and(is_completed.eq.true,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`,
+			`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`,
 		);
 	} else {
 		query = query
-			.eq("is_completed", false)
+			.neq("status", "done")
 			.gte("due_date", startDate)
 			.lte("due_date", endDate);
 	}
@@ -204,7 +194,6 @@ export async function addTask(payload: {
 			{
 				...payload,
 				status,
-				is_completed: isCompletedFromStatus(status),
 				tags: payload.tags || [],
 				position: 0,
 			},
@@ -259,7 +248,6 @@ export async function addSubtask(payload: {
 				category: parent.category,
 				due_date: payload.due_date || parent.due_date,
 				status: "todo",
-				is_completed: false,
 				tags: [],
 				recurrence: "none",
 				reschedule_count: 0,
@@ -307,7 +295,6 @@ export async function addBatchTasks(
 			payloads.map((p) => ({
 				...p,
 				status: p.status || status,
-				is_completed: false,
 				tags: p.tags || [],
 				position: 0,
 			})),
@@ -334,16 +321,14 @@ export async function addBatchTasks(
 // ─── Update ───────────────────────────────────────────────────────────────────
 
 /**
- * Update task status and keep is_completed in sync
+ * Update task status.
  */
 export async function updateTaskStatus(taskId: string, status: TaskStatus) {
-	const newCompleted = isCompletedFromStatus(status);
 	const completedAt = status === "done" ? new Date().toISOString() : null;
 
 	const { data, error } = await SupabaseConn.from("tasks")
 		.update({
 			status,
-			is_completed: newCompleted,
 			completed_at: completedAt,
 		})
 		.eq("id", taskId)
@@ -371,68 +356,29 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus) {
 }
 
 /**
- * Toggle task completion status (backward-compatible)
- * Now maps to status: done <-> todo
+ * Toggle task completion — delegates to updateTaskStatus.
  */
 export async function toggleTask(
 	taskId: string,
 	isCurrentlyCompleted: boolean,
 ) {
 	const newStatus: TaskStatus = isCurrentlyCompleted ? "todo" : "done";
-	const newCompleted = !isCurrentlyCompleted;
-	const completedAt = newCompleted ? new Date().toISOString() : null;
-
-	const { data, error } = await SupabaseConn.from("tasks")
-		.update({
-			is_completed: newCompleted,
-			status: newStatus,
-			completed_at: completedAt,
-		})
-		.eq("id", taskId)
-		.select()
-		.single();
-
-	if (error) {
-		console.error("Failed to toggle task:", {
-			taskId,
-			currentStatus: isCurrentlyCompleted,
-			newStatus,
-			error: error.message,
-			code: error.code,
-		});
-		throw new Error(
-			`Failed to toggle task ${taskId}. ${error.message || "Please try again."}`,
-		);
-	}
-
-	if (newStatus === "done" && data) {
-		await handleRecurrenceSpawning(data as Task);
-		await handleDependenciesUnblocking(taskId);
-	}
-
-	revalidatePath("/tasks");
-	await invalidateStatsCache();
+	await updateTaskStatus(taskId, newStatus);
 }
 
 /**
  * Update task details (title, priority, etc.)
  */
 export async function updateTask(taskId: string, updates: Partial<Task>) {
-	// Keep is_completed in sync if status is being updated
 	const payload: Partial<Task> = { ...updates };
 	let newDone = false;
 
 	if (updates.status) {
-		payload.is_completed = isCompletedFromStatus(updates.status);
 		if (updates.status === "done" && !updates.completed_at) {
 			payload.completed_at = new Date().toISOString();
 			newDone = true;
 		} else if (updates.status !== "done") {
 			payload.completed_at = null;
-		}
-	} else if (updates.is_completed !== undefined) {
-		if (updates.is_completed) {
-			newDone = true;
 		}
 	}
 
@@ -525,7 +471,7 @@ export async function getStaleTasks(): Promise<Task[]> {
 
 	const { data, error } = await SupabaseConn.from("tasks")
 		.select("*")
-		.eq("is_completed", false)
+		.neq("status", "done")
 		.not("status", "in", '("cancelled")')
 		.lt("due_date", today)
 		.is("parent_id", null)
@@ -550,7 +496,7 @@ export async function cleanupOldTasks() {
 
 	const { error } = await SupabaseConn.from("tasks")
 		.delete()
-		.eq("is_completed", true)
+		.eq("status", "done")
 		.lt("completed_at", dateStr);
 
 	if (error) {
@@ -601,7 +547,7 @@ export async function rescheduleOverdueTasks(daysToAdd: number) {
 		"tasks",
 	)
 		.select("id, reschedule_count")
-		.eq("is_completed", false)
+		.neq("status", "done")
 		.not("status", "in", '("cancelled")')
 		.lt("due_date", today)
 		.is("parent_id", null)
@@ -690,7 +636,7 @@ async function handleDependenciesUnblocking(completedTaskId: string) {
 			const { data: activeBlockers } = await SupabaseConn.from("tasks")
 				.select("id")
 				.in("id", blockerIds)
-				.eq("is_completed", false);
+				.neq("status", "done");
 
 			if (activeBlockers && activeBlockers.length > 0) {
 				continue;
@@ -753,11 +699,11 @@ export async function addTaskDependency(taskId: string, dependsOnId: string) {
 	}
 
 	const { data: blocker } = await SupabaseConn.from("tasks")
-		.select("is_completed")
+		.select("status")
 		.eq("id", dependsOnId)
 		.single();
 
-	if (blocker && !blocker.is_completed) {
+	if (blocker && blocker.status !== "done") {
 		await SupabaseConn.from("tasks")
 			.update({ status: "blocked" })
 			.eq("id", taskId);
@@ -833,7 +779,7 @@ export async function getTasksThatDependOn(taskId: string): Promise<Task[]> {
 export async function getPotentialBlockers(taskId: string): Promise<Task[]> {
 	const { data, error } = await SupabaseConn.from("tasks")
 		.select("*")
-		.eq("is_completed", false)
+		.neq("status", "done")
 		.neq("id", taskId)
 		.is("parent_id", null)
 		.is("archived_at", null)

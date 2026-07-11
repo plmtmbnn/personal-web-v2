@@ -13,7 +13,6 @@ export interface Task {
 	description: string | null;
 	priority: TaskPriority;
 	category: string | null;
-	is_completed: boolean;
 	status: TaskStatus;
 	due_date: string;
 	recurrence: TaskRecurrence;

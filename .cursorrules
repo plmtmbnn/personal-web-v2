@@ -1,6 +1,6 @@
-# Gemini CLI Project Context & Mandates
+# AI Agent Project Context & Mandates
 
-This document provides foundational context for the Gemini CLI agent to ensure architectural consistency, security, and efficiency.
+This document provides foundational context for any AI coding assistant (e.g., Claude, GPT, Gemini, Grok, Mima, Copilot) to ensure architectural consistency, security, and efficiency across the codebase.
 
 ## 🛠 Tech Stack
 - **Framework:** Next.js 16.2.10 (App Router) & React 19.2.7
@@ -122,7 +122,7 @@ Strictly for routing and page definitions.
 - **Tabbed Architecture**:
   - **Agenda**: Prominent `TaskProgress` (independent fetch) and collapsible `HealthCheck`.
   - **Analytics**: Displays a permanently visible `GeneralReport` panel with period filters (Today, Week, Month). Displays a clean "Awaiting Data" fallback and placeholder formatting for reliability metrics when there are zero completed tasks in the selected period.
-- **Task Layout & Actions**: `TaskItem` separates title and description with clear vertical breathing room. A status selector dropdown is positioned in the bottom-right actions bar; selecting "DONE" automatically completes the task (`is_completed = true` with a timestamp), and selecting other options resets it.
+- **Task Layout & Actions**: `TaskItem` separates title and description with clear vertical breathing room. A status selector dropdown is positioned in the bottom-right actions bar; selecting "DONE" automatically completes the task (setting `status = "done"` with a timestamp), and selecting other options resets it.
 - **Kanban Board Optimization**: Transitions the item card to a vertical layout with dedicated top header handles and stacks controls at the bottom to maintain touch target usability in narrow columns.
 - **Dynamic Initialization**: `TaskForm` utilizes an auto-expanding `textarea` triggered by content changes to support multi-line batch entry without layout shifting.
 - **Notifier System**: Pluggable dispatcher delivering alerts via Telegram Bot and Browser API.

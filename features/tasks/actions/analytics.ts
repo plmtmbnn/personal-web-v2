@@ -89,8 +89,8 @@ export async function getTaskStats(
 	const { data: globalTasks, error: globalError } = await SupabaseConn.from(
 		"tasks",
 	)
-		.select("title, due_date, is_completed, reschedule_count, status")
-		.eq("is_completed", false);
+		.select("title, due_date, reschedule_count, status")
+		.neq("status", "done");
 
 	if (globalError) {
 		console.error("Error fetching global tasks for distribution:", globalError);
@@ -99,7 +99,7 @@ export async function getTaskStats(
 	// Fetch previous period completed tasks for comparison
 	const { count: prevCompletedCount } = await SupabaseConn.from("tasks")
 		.select("*", { count: "exact", head: true })
-		.eq("is_completed", true)
+		.eq("status", "done")
 		.gte("completed_at", prevStartDate.toISOString())
 		.lt("completed_at", startDate.toISOString());
 
@@ -107,7 +107,7 @@ export async function getTaskStats(
 		(t) => (t.status || "todo") !== "cancelled",
 	);
 	const totalTasks = tasks.length;
-	const completedTasks = tasks.filter((t) => t.is_completed).length;
+	const completedTasks = tasks.filter((t) => t.status === "done").length;
 	const completionRate =
 		totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 	const taskVelocity = parseFloat((completedTasks / days).toFixed(1));
@@ -160,7 +160,7 @@ export async function getTaskStats(
 	// Most Productive Day
 	const dayCounts: Record<string, number> = {};
 	tasks
-		.filter((t) => t.is_completed && t.completed_at)
+		.filter((t) => t.status === "done" && t.completed_at)
 		.forEach((t) => {
 			const day = format(parseISO(t.completed_at!), "EEEE");
 			dayCounts[day] = (dayCounts[day] || 0) + 1;
@@ -209,7 +209,7 @@ export async function getTaskStats(
 	// Streak
 	const { data: allCompleted } = await SupabaseConn.from("tasks")
 		.select("completed_at")
-		.eq("is_completed", true)
+		.eq("status", "done")
 		.not("completed_at", "is", null)
 		.order("completed_at", { ascending: false })
 		.limit(100);
@@ -276,7 +276,7 @@ export async function getTaskProgressMetrics() {
 		"tasks",
 	)
 		.select("due_date, status, estimated_minutes")
-		.eq("is_completed", false)
+		.neq("status", "done")
 		.is("parent_id", null);
 
 	if (pendingError) {
@@ -297,7 +297,7 @@ export async function getTaskProgressMetrics() {
 	const { data: todayCompletedTasks, error: completedError } =
 		await SupabaseConn.from("tasks")
 			.select("estimated_minutes")
-			.eq("is_completed", true)
+			.eq("status", "done")
 			.is("parent_id", null)
 			.gte("completed_at", `${todayStr}T00:00:00`)
 			.lte("completed_at", `${todayStr}T23:59:59`);
@@ -371,7 +371,7 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 	const { data: completedTasks, error: completedError } =
 		await SupabaseConn.from("tasks")
 			.select("id, completed_at, estimated_minutes, due_date, status")
-			.eq("is_completed", true)
+			.eq("status", "done")
 			.not("completed_at", "is", null)
 			.gte("completed_at", `${startDateStr}T00:00:00`)
 			.lte("completed_at", `${endDateStr}T23:59:59`);
@@ -386,9 +386,7 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 	const { data: rangeTasks, error: rangeError } = await SupabaseConn.from(
 		"tasks",
 	)
-		.select(
-			"id, due_date, is_completed, completed_at, estimated_minutes, status",
-		)
+		.select("id, due_date, completed_at, estimated_minutes, status")
 		.not("due_date", "is", null)
 		.gte("due_date", startDateStr)
 		.lte("due_date", endDateStr);
@@ -428,7 +426,7 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 	const burndownData: BurndownDay[] = datesList.map((d, index) => {
 		const dateStr = format(d, "yyyy-MM-dd");
 		const completedSoFar = rTasks.filter((t) => {
-			if (!t.is_completed || !t.completed_at) return false;
+			if (t.status !== "done" || !t.completed_at) return false;
 			const compDate = format(parseISO(t.completed_at), "yyyy-MM-dd");
 			return compDate <= dateStr;
 		}).length;
@@ -494,7 +492,7 @@ export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
 	);
 
 	const completedThisWeek = activeWeekTasks.filter((t) => {
-		if (!t.is_completed || !t.completed_at) return false;
+		if (t.status !== "done" || !t.completed_at) return false;
 		const compDateStr = format(parseISO(t.completed_at), "yyyy-MM-dd");
 		return compDateStr >= weekStartStr && compDateStr <= weekEndStr;
 	});
@@ -507,7 +505,7 @@ export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
 	const dueThisWeek = activeWeekTasks.filter(
 		(t) => t.due_date >= weekStartStr && t.due_date <= weekEndStr,
 	);
-	const dueAndCompleted = dueThisWeek.filter((t) => t.is_completed);
+	const dueAndCompleted = dueThisWeek.filter((t) => t.status === "done");
 	const completionRate =
 		dueThisWeek.length > 0
 			? Math.round((dueAndCompleted.length / dueThisWeek.length) * 100)
@@ -522,7 +520,7 @@ export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
 		0,
 	);
 	const carriedForward = activeWeekTasks.filter(
-		(t) => !t.is_completed && t.due_date <= weekEndStr,
+		(t) => t.status !== "done" && t.due_date <= weekEndStr,
 	);
 
 	const categoryCounts: Record<string, number> = {};

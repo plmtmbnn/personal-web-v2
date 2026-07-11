@@ -15,6 +15,7 @@ import {
 } from "@hello-pangea/dnd";
 import type { Task, TaskStatus } from "@/features/tasks/types";
 import {
+	updateTaskStatus,
 	updateTask,
 	toggleTask,
 	deleteTask,
@@ -66,7 +67,6 @@ export default function TaskBoard({
 						? {
 								...t,
 								status: payload.status,
-								is_completed: payload.is_completed,
 							}
 						: t,
 				);
@@ -75,8 +75,7 @@ export default function TaskBoard({
 					t.id === payload.taskId
 						? {
 								...t,
-								is_completed: !t.is_completed,
-								status: !t.is_completed ? "done" : "todo",
+								status: t.status === "done" ? "todo" : "done",
 							}
 						: t,
 				);
@@ -122,7 +121,6 @@ export default function TaskBoard({
 		}
 
 		const newStatus = destination.droppableId as TaskStatus;
-		const isCompleted = newStatus === "done";
 
 		startTransition(() => {
 			addOptimisticAction({
@@ -130,20 +128,12 @@ export default function TaskBoard({
 				payload: {
 					id: draggableId,
 					status: newStatus,
-					is_completed: isCompleted,
 				},
 			});
 		});
 
 		try {
-			if (isCompleted) {
-				await toggleTask(draggableId, false);
-			} else {
-				await updateTask(draggableId, {
-					status: newStatus,
-					is_completed: false,
-				});
-			}
+			await updateTaskStatus(draggableId, newStatus);
 		} catch (err) {
 			console.error("Failed to update status", err);
 			showError("Failed to move task. Please try again.");

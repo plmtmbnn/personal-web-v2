@@ -50,6 +50,6 @@ export function renderTextWithLinks(text: string) {
 export function calculateProgress(tasks: Task[]): number {
 	if (!tasks || tasks.length === 0) return 0;
 
-	const completedCount = tasks.filter((task) => task.is_completed).length;
+	const completedCount = tasks.filter((task) => task.status === "done").length;
 	return Math.round((completedCount / tasks.length) * 100);
 }

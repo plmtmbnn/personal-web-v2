@@ -59,7 +59,7 @@ export default function TaskNotificationHandler({
 			// Check for specific times: 10:00 AM or 02:00 PM
 			if (timeStr === "10:00" || timeStr === "14:00") {
 				const highPriorityTasks = tasks.filter(
-					(t) => t.priority === "HIGH" && !t.is_completed,
+					(t) => t.priority === "HIGH" && t.status !== "done",
 				);
 
 				highPriorityTasks.forEach((task) => {

@@ -98,10 +98,9 @@ function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
 	};
 
 	const handleToggle = () => {
-		const nextDone = !(subtask.status === "done" || subtask.is_completed);
+		const nextDone = subtask.status !== "done";
 		onUpdate(subtask.id, {
 			status: nextDone ? "done" : "todo",
-			is_completed: nextDone,
 			completed_at: nextDone ? new Date().toISOString() : null,
 		});
 	};
@@ -113,7 +112,7 @@ function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
 		[],
 	);
 
-	const isDone = subtask.status === "done" || subtask.is_completed;
+	const isDone = subtask.status === "done";
 
 	return (
 		<div className="flex items-center gap-2 py-1 group/sub">
@@ -421,7 +420,6 @@ function TaskItem({
 
 		if (editStatus !== (task.status || "todo")) {
 			updates.status = editStatus;
-			updates.is_completed = editStatus === "done";
 			updates.completed_at =
 				editStatus === "done" ? new Date().toISOString() : null;
 		}
@@ -623,9 +621,7 @@ function TaskItem({
 		TASK_STATUS_CONFIG[optimisticStatus] || TASK_STATUS_CONFIG.todo;
 
 	// Subtask progress
-	const subtaskDone = subtasks.filter(
-		(s) => s.is_completed || s.status === "done",
-	).length;
+	const subtaskDone = subtasks.filter((s) => s.status === "done").length;
 	const subtaskTotal = subtasks.length;
 	const subtaskProgress =
 		subtaskTotal > 0 ? Math.round((subtaskDone / subtaskTotal) * 100) : 0;
@@ -1609,7 +1605,6 @@ function TaskItem({
 												const isDone = nextStatus === "done";
 												onUpdate(task.id, {
 													status: nextStatus,
-													is_completed: isDone,
 													completed_at: isDone
 														? new Date().toISOString()
 														: null,

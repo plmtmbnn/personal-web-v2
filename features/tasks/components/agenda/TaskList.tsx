@@ -100,7 +100,7 @@ export default function TaskList({
 				case "toggle":
 					return updateInLists((t: Task) =>
 						t.id === payload.taskId
-							? { ...t, is_completed: !t.is_completed }
+							? { ...t, status: t.status === "done" ? "todo" : "done" }
 							: t,
 					);
 				case "update":
@@ -189,9 +189,9 @@ export default function TaskList({
 
 			// 3. Completion check
 			if (isCompleted) {
-				result = result.filter((t) => t.is_completed);
+				result = result.filter((t) => t.status === "done");
 			} else {
-				result = result.filter((t) => !t.is_completed);
+				result = result.filter((t) => t.status !== "done");
 			}
 
 			// 3b. Status filter

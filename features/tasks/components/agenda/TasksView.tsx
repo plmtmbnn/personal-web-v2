@@ -132,8 +132,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 
 			// Exclude cancelled tasks from active lists
 			const isActive = (t: Task) => (t.status || "todo") !== "cancelled";
-			const isDone = (t: Task) =>
-				t.is_completed || (t.status || "todo") === "done";
+			const isDone = (t: Task) => t.status === "done";
 			const isActionable = (t: Task) => {
 				if (!t.start_date) return true;
 				return !isAfter(parseISO(t.start_date), todayRef);

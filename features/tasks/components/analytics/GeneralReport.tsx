@@ -96,7 +96,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 		});
 
 		const completed = periodFiltered.filter(
-			(t) => t.is_completed && t.completed_at,
+			(t) => t.status === "done" && t.completed_at,
 		);
 		if (completed.length === 0)
 			return {

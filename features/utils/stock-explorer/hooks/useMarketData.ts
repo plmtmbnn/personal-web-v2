@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import type { IDXStock, ProcessedStock, OpportunityCategory } from "../types";
+import type { IDXStock, ProcessedStock, OpportunityCategory, ScoreWeights } from "../types";
 import { getMockSector, getMockFundamentals } from "../data/mockData";
 
-export function useMarketData(rawData: IDXStock[]) {
+export function useMarketData(rawData: IDXStock[], weights: ScoreWeights) {
 	return useMemo(() => {
 		let totalForeignBuy = 0;
 		let totalForeignSell = 0;
@@ -29,8 +29,7 @@ export function useMarketData(rawData: IDXStock[]) {
 			else if (stock.Change < 0) decliners++;
 			else unchanged++;
 
-			// Calculate composite score
-			// Weights: 25% Price, 25% Volume, 20% Foreign, 15% Liquidity, 15% Volatility (approximated)
+			// Calculate composite score using dynamic weights
 			const priceScore = Math.min(Math.max((ChangePct + 5) * 10, 0), 100); // Scale -5% to +5% into 0-100
 			const volScore =
 				stock.Volume > 100000000 ? 100 : (stock.Volume / 100000000) * 100;
@@ -41,15 +40,16 @@ export function useMarketData(rawData: IDXStock[]) {
 			const liqScore =
 				stock.Frequency > 10000 ? 100 : (stock.Frequency / 10000) * 100;
 			let volaScore =
-				100 - (Math.abs(stock.High - stock.Low) / (stock.Previous || 1)) * 1000; // Lower volatility = higher score (or depends on strategy, but we assume stability is good)
+				100 - (Math.abs(stock.High - stock.Low) / (stock.Previous || 1)) * 1000; // Lower volatility = higher score
 			volaScore = Math.min(Math.max(volaScore, 0), 100);
 
 			const CompositeScore = Math.round(
-				priceScore * 0.25 +
-					volScore * 0.25 +
-					foreignScore * 0.2 +
-					liqScore * 0.15 +
-					volaScore * 0.15,
+				(priceScore * weights.price +
+					volScore * weights.volume +
+					foreignScore * weights.foreign +
+					liqScore * weights.liquidity +
+					volaScore * weights.volatility) /
+					100,
 			);
 
 			// Categorization
@@ -85,7 +85,6 @@ export function useMarketData(rawData: IDXStock[]) {
 		const netForeign = totalForeignBuy - totalForeignSell;
 
 		// Sentiment 0-100
-		// Base 50 + Adv/Dec ratio + Avg Return + Foreign
 		const adRatio = advancers / (decliners || 1);
 		let sentimentScore =
 			50 + (adRatio - 1) * 10 + avgReturn * 10 + (netForeign > 0 ? 10 : -10);
@@ -113,5 +112,5 @@ export function useMarketData(rawData: IDXStock[]) {
 				sentimentLabel,
 			},
 		};
-	}, [rawData]);
+	}, [rawData, weights]);
 }

@@ -85,3 +85,11 @@ export interface SortConfig {
 	key: SortKey;
 	direction: "asc" | "desc" | null;
 }
+
+export interface ScoreWeights {
+	price: number;
+	volume: number;
+	foreign: number;
+	liquidity: number;
+	volatility: number;
+}

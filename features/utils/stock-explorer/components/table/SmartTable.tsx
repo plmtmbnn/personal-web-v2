@@ -1,21 +1,36 @@
 import { useState, useMemo } from "react";
 import type { ProcessedStock, SortConfig, SortKey } from "../../types";
-import { ArrowUp, ArrowDown, ArrowUpDown, Info } from "lucide-react";
+import { ArrowUp, ArrowDown, ArrowUpDown, Star } from "lucide-react";
 
 interface SmartTableProps {
 	stocks: ProcessedStock[];
 	onSelectStock?: (stock: ProcessedStock) => void;
+	watchlist: string[];
+	onToggleWatchlist: (code: string) => void;
 }
 
-export default function SmartTable({ stocks, onSelectStock }: SmartTableProps) {
+export default function SmartTable({
+	stocks,
+	onSelectStock,
+	watchlist,
+	onToggleWatchlist,
+}: SmartTableProps) {
 	const [sortConfig, setSortConfig] = useState<SortConfig>({
 		key: "CompositeScore",
 		direction: "desc",
 	});
 	const [limit, setLimit] = useState(100);
+	const [filterTab, setFilterTab] = useState<"all" | "watchlist">("all");
+
+	const filteredStocks = useMemo(() => {
+		if (filterTab === "watchlist") {
+			return stocks.filter((s) => watchlist.includes(s.StockCode));
+		}
+		return stocks;
+	}, [stocks, filterTab, watchlist]);
 
 	const sortedStocks = useMemo(() => {
-		const sorted = [...stocks].sort((a, b) => {
+		const sorted = [...filteredStocks].sort((a, b) => {
 			const aVal = a[sortConfig.key];
 			const bVal = b[sortConfig.key];
 			if (aVal === null) return 1;
@@ -25,7 +40,7 @@ export default function SmartTable({ stocks, onSelectStock }: SmartTableProps) {
 			return 0;
 		});
 		return sorted.slice(0, limit);
-	}, [stocks, sortConfig, limit]);
+	}, [filteredStocks, sortConfig, limit]);
 
 	const requestSort = (key: SortKey) => {
 		let direction: "asc" | "desc" = "desc";
@@ -60,22 +75,49 @@ export default function SmartTable({ stocks, onSelectStock }: SmartTableProps) {
 
 	return (
 		<div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm flex flex-col overflow-hidden">
-			<div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+			<div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
 				<div>
 					<h3 className="text-sm font-black uppercase tracking-widest text-slate-900">
 						Market Screener
 					</h3>
 					<p className="text-[10px] font-bold text-slate-400 mt-1">
-						Showing top {sortedStocks.length} of {stocks.length} instruments
+						Showing top {sortedStocks.length} of {filteredStocks.length} instruments
 					</p>
+				</div>
+				<div className="flex gap-2 p-1 bg-slate-200/60 rounded-xl">
+					<button
+						onClick={() => setFilterTab("all")}
+						className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+							filterTab === "all"
+								? "bg-white text-slate-900 shadow-sm"
+								: "text-slate-500 hover:text-slate-950"
+						}`}
+					>
+						All Stocks
+					</button>
+					<button
+						onClick={() => setFilterTab("watchlist")}
+						className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 cursor-pointer ${
+							filterTab === "watchlist"
+								? "bg-white text-slate-900 shadow-sm"
+								: "text-slate-500 hover:text-slate-950"
+						}`}
+					>
+						<Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+						Watchlist ({watchlist.length})
+					</button>
 				</div>
 			</div>
 
 			<div className="overflow-x-auto">
-				<table className="w-full text-left border-collapse min-w-[800px]">
+				<table className="w-full text-left border-collapse min-w-[850px]">
 					<thead>
 						<tr className="bg-white border-b border-slate-100">
-							{/* Columns */}
+							<th className="py-4 px-6 w-12 text-center">
+								<div className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Pin
+								</div>
+							</th>
 							<th
 								className="py-4 px-6 cursor-pointer group"
 								onClick={() => requestSort("StockCode")}
@@ -141,6 +183,23 @@ export default function SmartTable({ stocks, onSelectStock }: SmartTableProps) {
 								onClick={() => onSelectStock && onSelectStock(s)}
 								className="group hover:bg-indigo-50/50 transition-colors cursor-pointer"
 							>
+								<td
+									className="py-3 px-6 text-center"
+									onClick={(e) => {
+										e.stopPropagation();
+										onToggleWatchlist(s.StockCode);
+									}}
+								>
+									<button className="text-slate-300 hover:text-amber-500 transition-colors cursor-pointer focus:outline-none">
+										<Star
+											className={`w-4 h-4 ${
+												watchlist.includes(s.StockCode)
+													? "fill-amber-400 text-amber-400"
+													: "text-slate-300 hover:scale-110 transition-transform"
+											}`}
+										/>
+									</button>
+								</td>
 								<td className="py-3 px-6">
 									<p className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
 										{s.StockCode}
@@ -209,11 +268,11 @@ export default function SmartTable({ stocks, onSelectStock }: SmartTableProps) {
 					</tbody>
 				</table>
 			</div>
-			{limit < stocks.length && (
+			{limit < filteredStocks.length && (
 				<div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-center">
 					<button
 						onClick={() => setLimit((l) => l + 100)}
-						className="px-4 py-2 bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:border-indigo-200 rounded-xl transition-all shadow-sm active:scale-95"
+						className="px-4 py-2 bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:border-indigo-200 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
 					>
 						Load More Rows
 					</button>

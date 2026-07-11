@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertCircle, Loader2 } from "lucide-react";
-import type { IDXStock, ProcessedStock } from "../types";
+import { RefreshCw, AlertCircle, Loader2, Sliders, ChevronDown, ChevronUp } from "lucide-react";
+import type { IDXStock, ProcessedStock, ScoreWeights } from "../types";
 import { useMarketData } from "../hooks/useMarketData";
 
 // Dashboard Components
@@ -29,6 +29,56 @@ export default function StockExplorerView() {
 	const [selectedStock, setSelectedStock] = useState<ProcessedStock | null>(
 		null,
 	);
+
+	// Watchlist and Custom Weights States
+	const [watchlist, setWatchlist] = useState<string[]>([]);
+	const [weights, setWeights] = useState<ScoreWeights>({
+		price: 25,
+		volume: 25,
+		foreign: 20,
+		liquidity: 15,
+		volatility: 15,
+	});
+	const [isScorerExpanded, setIsScorerExpanded] = useState(false);
+
+	// Load stored states from localStorage on mount
+	useEffect(() => {
+		const storedWeights = localStorage.getItem("idx:weights");
+		if (storedWeights) {
+			try {
+				setWeights(JSON.parse(storedWeights));
+			} catch (e) {}
+		}
+		const storedWatchlist = localStorage.getItem("idx:watchlist");
+		if (storedWatchlist) {
+			try {
+				setWatchlist(JSON.parse(storedWatchlist));
+			} catch (e) {}
+		}
+	}, []);
+
+	const handleWeightChange = (key: keyof ScoreWeights, val: number) => {
+		setWeights((prev) => {
+			const updated = { ...prev, [key]: val };
+			localStorage.setItem("idx:weights", JSON.stringify(updated));
+			return updated;
+		});
+	};
+
+	const applyPreset = (preset: ScoreWeights) => {
+		setWeights(preset);
+		localStorage.setItem("idx:weights", JSON.stringify(preset));
+	};
+
+	const toggleWatchlist = (code: string) => {
+		setWatchlist((prev) => {
+			const updated = prev.includes(code)
+				? prev.filter((c) => c !== code)
+				: [...prev, code];
+			localStorage.setItem("idx:watchlist", JSON.stringify(updated));
+			return updated;
+		});
+	};
 
 	const fetchData = useCallback(async () => {
 		setIsLoading(true);
@@ -63,7 +113,9 @@ export default function StockExplorerView() {
 		fetchData();
 	}, [fetchData]);
 
-	const { processed, marketHealth } = useMarketData(rawStocks);
+	const { processed, marketHealth } = useMarketData(rawStocks, weights);
+
+	const totalWeightsSum = Object.values(weights).reduce((a, b) => a + b, 0);
 
 	return (
 		<div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
@@ -86,7 +138,7 @@ export default function StockExplorerView() {
 					<button
 						onClick={fetchData}
 						disabled={isLoading}
-						className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-colors disabled:opacity-50"
+						className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-colors disabled:opacity-50 cursor-pointer"
 					>
 						{isLoading ? (
 							<Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -110,7 +162,7 @@ export default function StockExplorerView() {
 						</p>
 						<button
 							onClick={fetchData}
-							className="mt-6 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-bold text-xs shadow-sm hover:bg-rose-700 transition-colors"
+							className="mt-6 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-bold text-xs shadow-sm hover:bg-rose-700 transition-colors cursor-pointer"
 						>
 							Retry Connection
 						</button>
@@ -124,7 +176,122 @@ export default function StockExplorerView() {
 					</div>
 				) : (
 					<>
-						{/* Phase 2: Top Dashboard */}
+						{/* Custom Scoring Engine Control Panel */}
+						<div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
+							<button
+								onClick={() => setIsScorerExpanded(!isScorerExpanded)}
+								className="w-full p-6 flex justify-between items-center bg-slate-50/50 hover:bg-slate-50 transition-colors focus:outline-none cursor-pointer border-none text-left"
+							>
+								<div className="flex items-center gap-3">
+									<Sliders className="w-5 h-5 text-indigo-600" />
+									<div>
+										<h3 className="text-sm font-black uppercase tracking-widest text-slate-900">
+											Custom Scoring Engine
+										</h3>
+										<p className="text-[10px] font-bold text-slate-400 mt-1">
+											Adjust parameter weights to recalculate stock opportunity scores in real time
+										</p>
+									</div>
+								</div>
+								<div className="flex items-center gap-4">
+									<span className="hidden lg:inline-block text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+										Weights: {weights.price}% P / {weights.volume}% V / {weights.foreign}% F / {weights.liquidity}% L / {weights.volatility}% S
+									</span>
+									{isScorerExpanded ? (
+										<ChevronUp className="w-4 h-4 text-slate-500" />
+									) : (
+										<ChevronDown className="w-4 h-4 text-slate-500" />
+									)}
+								</div>
+							</button>
+
+							{isScorerExpanded && (
+								<div className="p-8 border-t border-slate-100 bg-white space-y-8">
+									{/* Presets */}
+									<div className="flex flex-wrap gap-2 items-center">
+										<span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2">
+											Strategy Presets:
+										</span>
+										{[
+											{
+												name: "Balanced (Default)",
+												weights: { price: 25, volume: 25, foreign: 20, liquidity: 15, volatility: 15 }
+											},
+											{
+												name: "Whale Accumulation",
+												weights: { price: 10, volume: 10, foreign: 60, liquidity: 20, volatility: 0 }
+											},
+											{
+												name: "Momentum Hunter",
+												weights: { price: 45, volume: 45, foreign: 0, liquidity: 10, volatility: 0 }
+											},
+											{
+												name: "Stability & Value",
+												weights: { price: 10, volume: 10, foreign: 10, liquidity: 30, volatility: 40 }
+											}
+										].map((preset) => (
+											<button
+												key={preset.name}
+												onClick={() => applyPreset(preset.weights)}
+												className="px-4 py-2 bg-slate-100 hover:bg-indigo-55 hover:text-indigo-600 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer border-none"
+											>
+												{preset.name}
+											</button>
+										))}
+									</div>
+
+									{/* Sliders Grid */}
+									<div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+										{[
+											{ label: "Price Trend", key: "price" as const, desc: "Price Change % weight" },
+											{ label: "Trade Volume", key: "volume" as const, desc: "Volume velocity weight" },
+											{ label: "Foreign Net Flow", key: "foreign" as const, desc: "Foreign net flows weight" },
+											{ label: "Liquidity", key: "liquidity" as const, desc: "Transaction frequency weight" },
+											{ label: "Volatility", key: "volatility" as const, desc: "Price stability weight" }
+										].map((slider) => (
+											<div key={slider.key} className="space-y-3">
+												<div className="flex justify-between items-center">
+													<span className="text-[10px] font-black uppercase tracking-widest text-slate-700">
+														{slider.label}
+													</span>
+													<span className="text-xs font-black text-indigo-600">
+														{weights[slider.key]}%
+													</span>
+												</div>
+												<input
+													type="range"
+													min="0"
+													max="100"
+													step="5"
+													value={weights[slider.key]}
+													onChange={(e) => handleWeightChange(slider.key, Number(e.target.value))}
+													className="w-full accent-indigo-600 h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer"
+												/>
+												<p className="text-[9px] font-bold text-slate-400">
+													{slider.desc}
+												</p>
+											</div>
+										))}
+									</div>
+
+									{/* Warning if not summing to 100 */}
+									{totalWeightsSum !== 100 && (
+										<div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl flex items-center gap-3 text-xs font-semibold">
+											<AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-600" />
+											<span>
+												Warning: Active weights sum to{" "}
+												<strong>
+													{totalWeightsSum}%
+												</strong>
+												. Standardizing to 100% is recommended for accurate composite scores.
+											</span>
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* Top Dashboard */}
 						<HeroOverview marketHealth={marketHealth} />
 
 						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -149,19 +316,24 @@ export default function StockExplorerView() {
 							</div>
 						</div>
 
-						{/* Phase 3: Analytics & Table */}
+						{/* Analytics & Table */}
 						<div className="mt-8">
 							<Heatmap stocks={processed} onSelectStock={setSelectedStock} />
 						</div>
 
 						<div className="mt-8">
-							<SmartTable stocks={processed} onSelectStock={setSelectedStock} />
+							<SmartTable
+								stocks={processed}
+								onSelectStock={setSelectedStock}
+								watchlist={watchlist}
+								onToggleWatchlist={toggleWatchlist}
+							/>
 						</div>
 					</>
 				)}
 			</main>
 
-			{/* Phase 4: Analyst Drawer */}
+			{/* Analyst Drawer */}
 			<StockDetailDrawer
 				stock={selectedStock}
 				onClose={() => setSelectedStock(null)}

@@ -147,7 +147,7 @@ Strictly for routing and page definitions.
 ### Adventure Utilities
 - **System Integrity**: Uses **Wake Lock API** and **Web Audio API** beeps.
 - **Advanced Tools**: 
-  - **Market Intelligence (Stock Explorer)**: Premium-grade IDX dashboard (`/utils/stock-explorer`) featuring a composite scoring engine, sector rotation visualizations, automated Opportunity Scanner (Momentum, Breakout, Value), volume heatmap, and a high-fidelity AI Analyst Drawer providing automated narrative insights.
+  - **Market Intelligence (Stock Explorer)**: Premium-grade IDX dashboard (`/utils/stock-explorer`) featuring a dynamic composite scoring engine with custom weights (price, volume, foreign net flow, frequency, stability), range sliders, strategy presets (Whale, Momentum, Value), interactive star-watchlist, sector rotation visualizations, opportunity scanner, volume heatmap, and a high-fidelity AI Analyst Drawer.
   - **Mock API Engine**: Path-based dynamic mocking (`/api/mock/*`) with Redis persistence and 1-month TTL. Supports JSON validation with `CustomModal` feedback.
   - **Schema Forge**: Advanced JSON to Multi-Target converter (TS, Go, Zod, Mongoose, Joi).
   - **Asset Averaging**: Weighted average cost analysis for stock and crypto investments.

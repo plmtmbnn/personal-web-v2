@@ -1,3 +1,10 @@
+# [0.57.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.56.0...v0.57.0) (2026-07-11)
+
+
+### Features
+
+* implement filesystem-based second brain ([5f2e0b1](https://github.com/plmtmbnn/personal-web-v2/commit/5f2e0b18ece308c43e5c9fc33f08c52c3d059570))
+
 # [0.56.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.10...v0.56.0) (2026-07-11)
 
 

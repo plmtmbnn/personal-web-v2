@@ -14,6 +14,7 @@ import {
 	Database,
 	Files,
 	Table as TableIcon,
+	Globe,
 } from "lucide-react";
 
 const utilities = [
@@ -117,6 +118,16 @@ const utilities = [
 		color: "text-cyan-500",
 		bg: "bg-cyan-500/5",
 		icon: Braces,
+	},
+	{
+		title: "Web Archiver",
+		slug: "web-archiver",
+		description:
+			"Scrape articles from URLs, extract clean content, and archive them directly into your Second Brain.",
+		accent: "from-blue-500 to-cyan-500",
+		color: "text-blue-500",
+		bg: "bg-blue-500/5",
+		icon: Globe,
 	},
 ];
 

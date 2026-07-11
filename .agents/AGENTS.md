@@ -155,6 +155,7 @@ Strictly for routing and page definitions.
   - **Converters**: Universal Case and CSV-to-JSON recursive parsers.
   - **File Renamer**: SEO-friendly kebab-case normalization for batch file operations.
   - **Running Timer**: High-precision interval timer with automated transitions and wake-lock.
+  - **Web Archiver**: Read-It-Later utility (`/utils/web-archiver`) that scrapes articles from URLs using `got-scraping`, extracts clean core content with `@mozilla/readability`, converts it to Markdown using `turndown`, and archives it directly into the local Second Brain.
 - **JSON Tree View**: Standardized `JsonValue` component for interactive exploration of parsed data, supporting nested expansion, item counts, and value-level copying.
 - **Architecture**: Redis-backed with automatic IDX synchronization via `got-scraping` (configured as an external server package to resolve static TLS files) and an **Admin Portal** (`/utils/stock-explorer/admin`) for cache management and status monitoring.
 - **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity. 

@@ -20,6 +20,7 @@
 	},
 	"dependencies": {
 		"@hello-pangea/dnd": "^18.0.1",
+		"@mozilla/readability": "^0.6.0",
 		"@sentry/nextjs": "^10.65.0",
 		"@supabase/ssr": "^0.12.0",
 		"@supabase/supabase-js": "^2.110.2",
@@ -35,6 +36,7 @@
 		"firebase": "^12.16.0",
 		"framer-motion": "^12.42.2",
 		"got-scraping": "^4.2.1",
+		"jsdom": "^29.1.1",
 		"lucide-react": "^1.24.0",
 		"next": "16.2.10",
 		"node-sql-parser": "^5.4.0",
@@ -52,6 +54,7 @@
 		"recharts": "^3.9.2",
 		"sql-formatter": "^15.8.2",
 		"tailwindcss": "^4.3.2",
+		"turndown": "^7.2.4",
 		"zod": "^4.4.3"
 	},
 	"devDependencies": {
@@ -65,12 +68,14 @@
 		"@semantic-release/github": "^12.0.9",
 		"@semantic-release/release-notes-generator": "^14.1.1",
 		"@sentry/cli": "^3.6.0",
+		"@types/jsdom": "^28.0.3",
 		"@types/node": "^26.1.1",
 		"@types/papaparse": "^5.5.2",
 		"@types/qrcode-terminal": "^0.12.2",
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@types/react-syntax-highlighter": "^15.5.13",
+		"@types/turndown": "^5.0.6",
 		"@vitest/ui": "^4.1.10",
 		"autoprefixer": "^10.5.2",
 		"cross-env": "^10.1.0",

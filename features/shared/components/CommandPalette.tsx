@@ -25,6 +25,7 @@ import {
 	RotateCw,
 	X,
 	Network,
+	Globe,
 } from "lucide-react";
 import { getNotes } from "@/features/brain/actions";
 
@@ -270,6 +271,11 @@ export default function CommandPalette() {
 												name: "Mock API Engine",
 												slug: "mock-api",
 												icon: Braces,
+											},
+											{
+												name: "Web Archiver",
+												slug: "web-archiver",
+												icon: Globe,
 											},
 										].map((item) => (
 											<Command.Item

@@ -35,6 +35,10 @@ const nextConfig: NextConfig = {
 			},
 			{
 				protocol: "https",
+				hostname: "**.ibb.co.com",
+			},
+			{
+				protocol: "https",
 				hostname: "**.idx.co.id",
 			},
 		],

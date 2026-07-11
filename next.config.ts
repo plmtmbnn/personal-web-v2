@@ -52,7 +52,6 @@ const nextConfig: NextConfig = {
 	outputFileTracingIncludes: {
 		"/api/utils/stock-data": [
 			"./node_modules/header-generator/data_files/**/*",
-			"./node_modules/.pnpm/**/header-generator*/node_modules/header-generator/data_files/**/*",
 		],
 	},
 
@@ -68,7 +67,8 @@ const nextConfig: NextConfig = {
 		webVitalsAttribution: ["CLS", "LCP", "FCP", "TTFB", "INP"],
 	},
 
-	webpack: (config, { isServer, dev }) => {
+	webpack: (config) => {
+		// Filesystem cache for faster rebuilds
 		config.cache = {
 			type: "filesystem",
 			buildDependencies: {
@@ -78,17 +78,10 @@ const nextConfig: NextConfig = {
 			cacheDirectory: path.resolve(".next/cache/webpack"),
 		};
 
-		if (!dev && isServer) {
-			config.optimization = {
-				...config.optimization,
-				minimize: true,
-				splitChunks: {
-					chunks: "all",
-					maxSize: 200000,
-				},
-				runtimeChunk: "single",
-			};
-		}
+		// NOTE: Do NOT add server-side splitChunks or runtimeChunk:"single" here.
+		// Vercel packages each Serverless Function independently; shared runtime
+		// chunks created by those options are seen as symlinked directories and
+		// cause the "invalid deployment package" error.
 
 		return config;
 	},

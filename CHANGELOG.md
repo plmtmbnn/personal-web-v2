@@ -1,3 +1,10 @@
+## [0.55.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.1...v0.55.2) (2026-07-11)
+
+
+### Bug Fixes
+
+* **home:** optimize styling, animations, SEO, and GPU rendering ([4643385](https://github.com/plmtmbnn/personal-web-v2/commit/4643385e52756026d4e79b23b6ac500f92a8fefb))
+
 ## [0.55.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.0...v0.55.1) (2026-07-11)
 
 

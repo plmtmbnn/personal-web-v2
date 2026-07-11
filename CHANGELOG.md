@@ -1,3 +1,10 @@
+## [0.55.4](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.3...v0.55.4) (2026-07-11)
+
+
+### Bug Fixes
+
+* resolve vercel serverless function symlink error ([a76ce5e](https://github.com/plmtmbnn/personal-web-v2/commit/a76ce5e7721d2596e1f54086f0d2fd2631fa0bef))
+
 ## [0.55.3](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.2...v0.55.3) (2026-07-11)
 
 ## [0.55.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.1...v0.55.2) (2026-07-11)

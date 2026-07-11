@@ -17,3 +17,6 @@ minimumReleaseAgeExclude:
   - '@sentry/replay@10.65.0'
   - '@sentry/server-utils@10.65.0'
   - '@sentry/vercel-edge@10.65.0'
+
+packages:
+  - "."

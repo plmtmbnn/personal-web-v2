@@ -1,7 +1,7 @@
 {
 	"packageManager": "pnpm@11.11.0",
 	"name": "personal-web-v2",
-	"version": "0.55.8",
+	"version": "0.55.9",
 	"private": true,
 	"scripts": {
 		"dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev --turbo --port 3000",

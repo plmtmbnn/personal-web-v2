@@ -1,3 +1,10 @@
+## [0.55.9](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.8...v0.55.9) (2026-07-11)
+
+
+### Bug Fixes
+
+* next config ([453bb9e](https://github.com/plmtmbnn/personal-web-v2/commit/453bb9eed74012accd9412f912de1b92ba6339f9))
+
 ## [0.55.8](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.7...v0.55.8) (2026-07-11)
 
 

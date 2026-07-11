@@ -9,7 +9,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, memo } from "react";
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, animate } from "framer-motion";
 import { FaGithub, FaLinkedin, FaRunning } from "react-icons/fa";
 import {
 	ArrowRight,
@@ -124,28 +124,16 @@ const item: Variants = {
 
 // ─── Animated Counter ─────────────────────────────────────────────────────────
 
-const useCounter = (to: number, duration = 1500) => {
-	const [count, setCount] = useState(0);
+const useCounter = (to: number, duration = 1.5) => {
+	const [count, setCount] = useState(to); // Start with final value for SEO & hydration compatibility
 
 	useEffect(() => {
-		let startTime: number | null = null;
-		let animationFrameId: number;
-
-		const animate = (timestamp: number) => {
-			if (startTime === null) startTime = timestamp;
-			const elapsed = timestamp - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-			const currentCount = Math.floor(progress * to);
-
-			setCount(currentCount);
-
-			if (progress < 1) {
-				animationFrameId = requestAnimationFrame(animate);
-			}
-		};
-
-		animationFrameId = requestAnimationFrame(animate);
-		return () => cancelAnimationFrame(animationFrameId);
+		const controls = animate(0, to, {
+			duration,
+			ease: "easeOut",
+			onUpdate: (value) => setCount(Math.floor(value)),
+		});
+		return () => controls.stop();
 	}, [to, duration]);
 
 	return count;
@@ -160,26 +148,20 @@ interface HomeProps {
 export default function Home({
 	initialRunningKm = AUTHOR_STATS.runningKmPerYear,
 }: HomeProps) {
-	const yearsCount = useCounter(EXPERIENCE_YEAR, 1500);
-	const kmCount = useCounter(initialRunningKm, 2000);
-	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1200);
+	const yearsCount = useCounter(EXPERIENCE_YEAR, 1.5);
+	const kmCount = useCounter(initialRunningKm, 2.0);
+	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1.2);
 
 	return (
 		<main className="min-h-screen bg-white relative flex items-center justify-center px-6 overflow-x-hidden py-24 lg:py-0">
 			{/* ── Background ── */}
-			<div className="absolute inset-0 pointer-events-none overflow-hidden will-change-transform">
+			<div className="absolute inset-0 pointer-events-none overflow-hidden">
 				{/* Base gradient — barely-there slate to white */}
 				<div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-white" />
 				{/* Indigo blob — top right (static for performance) */}
-				<div
-					className="absolute -top-[20%] -right-[10%] w-[60%] h-[65%] bg-indigo-100/60 rounded-full blur-[120px]"
-					style={{ willChange: "transform" }}
-				/>
+				<div className="absolute -top-[20%] -right-[10%] w-[60%] h-[65%] bg-indigo-100/60 rounded-full blur-[120px]" />
 				{/* Emerald blob — bottom left (static for performance) */}
-				<div
-					className="absolute -bottom-[20%] -left-[10%] w-[55%] h-[55%] bg-emerald-100/50 rounded-full blur-[120px]"
-					style={{ willChange: "transform" }}
-				/>
+				<div className="absolute -bottom-[20%] -left-[10%] w-[55%] h-[55%] bg-emerald-100/50 rounded-full blur-[120px]" />
 			</div>
 
 			<div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-20 items-center relative z-10">
@@ -192,10 +174,7 @@ export default function Home({
 						className="relative group cursor-pointer"
 					>
 						{/* Ambient glow — static gradient for performance */}
-						<div
-							className="absolute -inset-6 bg-gradient-to-tr from-indigo-200/40 via-purple-100/30 to-emerald-100/40 rounded-[3.5rem] blur-3xl"
-							style={{ willChange: "background" }}
-						/>
+						<div className="absolute -inset-6 bg-gradient-to-tr from-indigo-200/40 via-purple-100/30 to-emerald-100/40 rounded-[3.5rem] blur-3xl" />
 
 						{/* Photo frame — solid white border visible on light bg */}
 						<div className="relative w-60 h-60 sm:w-80 sm:h-80 xl:w-[22rem] xl:h-[22rem] rounded-[2.5rem] sm:rounded-[3rem] p-2.5 bg-white border border-slate-200 shadow-2xl shadow-slate-200/80 group-hover:shadow-slate-300/60 group-hover:scale-[1.02] transition-all duration-500 will-change-transform">
@@ -215,7 +194,7 @@ export default function Home({
 
 						{/* Status badge — conditional on AUTHOR.available */}
 						{AUTHOR.available && (
-							<div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-md will-change-transform">
+							<div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-md">
 								<div className="relative">
 									<div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
 									<div className="absolute inset-0 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
@@ -304,18 +283,18 @@ export default function Home({
 						className="grid grid-cols-3 gap-3 sm:gap-4 mb-8"
 					>
 						<StatCard
-							icon={<Briefcase className="w-4 h-4 text-grey-500" />}
+							icon={<Briefcase className="w-4 h-4 text-slate-500" />}
 							value={`${yearsCount}+`}
 							label="Years Eng."
 							href="/work-experience"
-							bgColor="bg-grey-400"
-							borderColor="border border-emerald-100"
-							hoverBgColor="hover:bg-red-400"
-							hoverBorderColor="hover:border-grey-400"
-							shadowColor="hover:shadow-grey-900/10"
-							textColor="!black"
-							iconColor="black"
-							labelTextColor="black"
+							bgColor="bg-slate-50"
+							borderColor="border border-slate-100"
+							hoverBgColor="hover:bg-slate-100/50"
+							hoverBorderColor="hover:border-slate-200"
+							shadowColor="hover:shadow-slate-100/30"
+							textColor="slate-700"
+							iconColor="text-slate-600"
+							labelTextColor="slate-600"
 						/>
 
 						<StatCard
@@ -396,10 +375,7 @@ export default function Home({
 			</div>
 
 			{/* Scroll indicator — subtle, only on large screens */}
-			<div
-				className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-1 text-slate-300 pointer-events-none"
-				style={{ willChange: "transform" }}
-			>
+			<div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-1 text-slate-300 pointer-events-none">
 				<span className="text-[8px] font-black uppercase tracking-[0.2em]">
 					Scroll
 				</span>

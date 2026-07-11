@@ -35,7 +35,8 @@ export async function runTaskReminders() {
   const { data: tasks, error } = await supabase
     .from('tasks')
     .select('id, title, due_date, reschedule_count, priority')
-    .eq('is_completed', false)
+    .neq('status', 'done')
+    .neq('status', 'cancelled')
     .eq('due_date', todayStr);
 
   if (error) {

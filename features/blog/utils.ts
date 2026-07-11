@@ -80,4 +80,3 @@ export const getBlogImage = (imageUrl: string | null, seed: string): string => {
 		.reduce((acc, char) => acc + char.charCodeAt(0), 0);
 	return PLACEHOLDERS[charSum % PLACEHOLDERS.length];
 };
-

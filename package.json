@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev --turbo --port 3000",
 		"dev:debug": "cross-env NODE_OPTIONS='--inspect' NEXT_TELEMETRY_DISABLED=1 next dev --turbo --port 3000",
-		"build": "cross-env NEXT_TELEMETRY_DISABLED=1 next build",
+		"build": "next build",
 		"build:next": "cross-env NEXT_TELEMETRY_DISABLED=1 next build",
 		"build:analyze": "cross-env ANALYZE=true NEXT_TELEMETRY_DISABLED=1 next build",
 		"build:profile": "cross-env NODE_OPTIONS='--prof' NEXT_TELEMETRY_DISABLED=1 next build",

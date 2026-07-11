@@ -52,6 +52,7 @@ const nextConfig: NextConfig = {
 	outputFileTracingIncludes: {
 		"/api/utils/stock-data": [
 			"./node_modules/header-generator/data_files/**/*",
+			"./node_modules/.pnpm/header-generator*/node_modules/header-generator/data_files/**/*",
 		],
 	},
 

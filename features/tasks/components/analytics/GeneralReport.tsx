@@ -29,6 +29,7 @@ import {
 	subDays,
 	differenceInDays,
 } from "date-fns";
+import { AnalyticsDashboardSkeleton } from "../shared/Skeleton";
 
 import dynamic from "next/dynamic";
 
@@ -56,7 +57,7 @@ interface GeneralReportProps {
 export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 	const [period, setPeriod] = useState<"today" | "week" | "month">("week");
 	const [stats, setStats] = useState<AnalyticsStats | null>(null);
-	const [, setLoading] = useState(true);
+	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		const fetchStats = async () => {
@@ -176,7 +177,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 		</div>
 	);
 
-	if (!stats) return null;
+	if (loading || !stats) return <AnalyticsDashboardSkeleton />;
 
 	return (
 		<div className="space-y-10 pb-10">
@@ -363,7 +364,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 			</section>
 
 			{/* Row 2: Supporting Stats */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
 				<StatCard
 					title="Total Scope"
 					value={stats.totalTasks}
@@ -399,6 +400,30 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 					icon={Clock}
 					colorClass="bg-purple-50 text-purple-600"
 					description="Avg cycle duration"
+				/>
+				<StatCard
+					title="Velocity"
+					value={`${stats.taskVelocity}/d`}
+					icon={Zap}
+					colorClass="bg-rose-50 text-rose-600"
+					description="Average completion rate"
+				/>
+				<StatCard
+					title="Trend"
+					value={
+						stats.comparison > 0
+							? `+${stats.comparison}%`
+							: `${stats.comparison}%`
+					}
+					icon={Activity}
+					colorClass={
+						stats.comparison > 0
+							? "bg-emerald-50 text-emerald-600"
+							: stats.comparison < 0
+								? "bg-rose-50 text-rose-600"
+								: "bg-slate-50 text-slate-600"
+					}
+					description="vs. Previous Period"
 				/>
 			</div>
 

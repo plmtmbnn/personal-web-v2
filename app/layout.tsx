@@ -4,6 +4,7 @@ import { Varela_Round, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CompactBottomBar from "@/features/shared/components/CompactBottomBar";
 import NavigationLoader from "@/features/shared/components/NavigationLoader";
+import CommandPalette from "@/features/shared/components/CommandPalette";
 import { createMetadata } from "@/lib/shared/metadata";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = createMetadata();
@@ -58,6 +59,7 @@ export default function RootLayout({
 					<NavigationLoader />
 				</Suspense>
 				{children}
+				<CommandPalette />
 				<CompactBottomBar />
 			</body>
 		</html>

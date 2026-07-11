@@ -24,12 +24,15 @@ import {
 	Link as LinkIcon,
 	RotateCw,
 	X,
+	Network,
 } from "lucide-react";
+import { getNotes } from "@/features/brain/actions";
 
 export default function CommandPalette() {
 	const [open, setOpen] = useState(false);
 	const [search, setSearch] = useState("");
 	const router = useRouter();
+	const [notes, setNotes] = useState<{ slug: string; title: string }[]>([]);
 
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
@@ -42,6 +45,16 @@ export default function CommandPalette() {
 		document.addEventListener("keydown", down);
 		return () => document.removeEventListener("keydown", down);
 	}, []);
+
+	useEffect(() => {
+		if (open) {
+			getNotes()
+				.then((data) => {
+					setNotes(data.map((n) => ({ slug: n.slug, title: n.title })));
+				})
+				.catch((err) => console.error("Failed to load brain notes:", err));
+		}
+	}, [open]);
 
 	const handleNavigate = (path: string) => {
 		setOpen(false);
@@ -149,6 +162,11 @@ export default function CommandPalette() {
 										{[
 											{ name: "Home Dashboard", path: "/", icon: Home },
 											{
+												name: "Second Brain Vault",
+												path: "/brain",
+												icon: Network,
+											},
+											{
 												name: "Personal Tasks & Analytics",
 												path: "/tasks",
 												icon: ClipboardList,
@@ -181,6 +199,25 @@ export default function CommandPalette() {
 											</Command.Item>
 										))}
 									</Command.Group>
+
+									{/* Second Brain Notes */}
+									{notes.length > 0 && (
+										<Command.Group
+											heading="Second Brain Notes"
+											className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-black [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.15em] [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-items]]:space-y-1"
+										>
+											{notes.map((note) => (
+												<Command.Item
+													key={note.slug}
+													onSelect={() => handleNavigate(`/brain/${note.slug}`)}
+													className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-slate-800 data-[selected=true]:text-white"
+												>
+													<Network className="w-4 h-4 text-slate-500" />
+													<span>{note.title}</span>
+												</Command.Item>
+											))}
+										</Command.Group>
+									)}
 
 									{/* Developer Utilities links */}
 									<Command.Group

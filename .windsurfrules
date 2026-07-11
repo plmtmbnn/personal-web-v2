@@ -127,6 +127,13 @@ Strictly for routing and page definitions.
 - **Dynamic Initialization**: `TaskForm` utilizes an auto-expanding `textarea` triggered by content changes to support multi-line batch entry without layout shifting.
 - **Notifier System**: Pluggable dispatcher delivering alerts via Telegram Bot and Browser API.
 
+### Second Brain / Knowledge Graph
+- **Architecture**: Local filesystem-backed (`content/brain/*.md`) knowledge management system.
+- **Environment Behavior**: Read/Write in `development` mode (for local note-taking), Read-Only in `production` to accommodate serverless environments.
+- **Graph Visualization**: Uses `react-force-graph-2d` loaded dynamically (`ssr: false`) for 2D network visualization of node connections.
+- **Link Parsing**: Robust server-side regex engine parsing Obsidian-style wikilinks (`[[Note Title]]`) and frontmatter.
+- **Access Control**: Write operations (create, update, delete) are strictly protected by `checkAdmin()` in `features/auth/actions.ts`.
+
 ### Adventures & Professional Showcase
 - **Adventures**: High-fidelity logs for Running and Travel missions, utilizing Glassmorphism and rich typography.
   - **Running Performance**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Supports dynamic grid scaling (up to 5 columns) for high-density performance visualization.

@@ -23,6 +23,7 @@ import {
 	Sparkles,
 	Toolbox,
 	Database,
+	Network,
 } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 
@@ -72,6 +73,7 @@ const NAV_ITEMS: NavItem[] = [
 		icon: BookOpen,
 		subItems: [
 			{ label: "Blog Posts", href: "/blog", icon: BookOpen },
+			{ label: "Second Brain", href: "/brain", icon: Network },
 			{ label: "Investments", href: "/investment", icon: TrendingUp },
 			{ label: "Utils", href: "/utils", icon: Toolbox },
 		],

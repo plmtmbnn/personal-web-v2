@@ -185,7 +185,7 @@ pnpm run analyze         # Alias for build:analyze
 ```
 
 ### Configuration Files
-- `next.config.ts`: Optimized with bundle analyzer, Sentry, and caching
+- `next.config.ts`: Optimized with bundle analyzer, Sentry (configured with `silent: true` to suppress Turbopack warning noise in CI), and caching
 - `tsconfig.json`: Performance-optimized TypeScript settings
 - `.env.development`: Development-specific environment variables
 - `tailwind.config.js`: Optimized Tailwind CSS v4 configuration
@@ -195,7 +195,7 @@ pnpm run analyze         # Alias for build:analyze
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.
 - **Defensive Data Handling**: Always implement safety fallbacks and type-casting (e.g., `String(val || "")`) when processing external API data to prevent runtime `TypeError` on missing fields.
 - **SEO & Metadata**: Every route must implement `generateMetadata` using `createMetadata` helper in `lib/shared/metadata.ts`.
-- **Error Tracking & Monitoring**: Sentry is configured for client (`instrumentation-client.ts`), server (`sentry.server.config.ts`), and edge environment tracking (`sentry.edge.config.ts`), integrated via Next.js instrumentation (`instrumentation.ts`).
+- **Error Tracking & Monitoring**: Sentry is configured for client (`instrumentation-client.ts`), server (`sentry.server.config.ts`), and edge environment tracking (`sentry.edge.config.ts`), integrated via Next.js instrumentation (`instrumentation.ts`). Sentry builds use `silent: true` to suppress noisy missing source map warnings from Turbopack internal chunks.
 - **Git Workflow**: Follow **Conventional Commits**.
 - **Linter**: **Biome** for formatting and linting.
 - **Performance Tools:** Bundle analyzer, profiling scripts, and optimized configurations.

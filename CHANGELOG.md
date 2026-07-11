@@ -1,3 +1,10 @@
+## [0.55.10](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.9...v0.55.10) (2026-07-11)
+
+
+### Bug Fixes
+
+* resolve vercel symlink error in next.config ([74f8ee1](https://github.com/plmtmbnn/personal-web-v2/commit/74f8ee12f7cc1a7a267c2c742fb6a07ecf6fb6ba))
+
 ## [0.55.9](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.8...v0.55.9) (2026-07-11)
 
 

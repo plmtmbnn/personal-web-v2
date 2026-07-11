@@ -1,3 +1,10 @@
+## [0.55.6](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.5...v0.55.6) (2026-07-11)
+
+
+### Bug Fixes
+
+* remove server runtimeChunk and splitChunks to fix Vercel serverless packaging ([a37e629](https://github.com/plmtmbnn/personal-web-v2/commit/a37e629289749bf217c200ab34f96a609f3f48d1))
+
 ## [0.55.5](https://github.com/plmtmbnn/personal-web-v2/compare/v0.55.4...v0.55.5) (2026-07-11)
 
 

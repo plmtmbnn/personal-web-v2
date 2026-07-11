@@ -81,33 +81,3 @@ export const getBlogImage = (imageUrl: string | null, seed: string): string => {
 	return PLACEHOLDERS[charSum % PLACEHOLDERS.length];
 };
 
-// ─────────────────────────────────────────────
-// Heading Parser — for Table of Contents
-// ─────────────────────────────────────────────
-export interface HeadingItem {
-	level: number;
-	text: string;
-	id: string;
-}
-
-function slugifyHeading(text: string): string {
-	return text
-		.toLowerCase()
-		.replace(/[^\w\s-]/g, "")
-		.replace(/\s+/g, "-")
-		.replace(/-+/g, "-")
-		.trim();
-}
-
-/**
- * Parses Markdown content and returns a list of headings (h1–h3)
- * suitable for building a Table of Contents.
- */
-export const parseHeadings = (content: string): HeadingItem[] => {
-	const matches = Array.from(content.matchAll(/^(#{1,3})\s+(.+)$/gm));
-	return matches.map(([, hashes, text]) => ({
-		level: hashes.length,
-		text: text.trim(),
-		id: slugifyHeading(text.trim()),
-	}));
-};

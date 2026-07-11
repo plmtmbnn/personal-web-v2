@@ -72,9 +72,7 @@
 		"autoprefixer": "^10.5.2",
 		"cross-env": "^10.1.0",
 		"depcheck": "^1.4.7",
-		"header-generator": "^2.1.82",
 		"husky": "^9.1.7",
-		"qrcode-terminal": "^0.12.0",
 		"semantic-release": "^25.0.5",
 		"typescript": "^5.7.3",
 		"vitest": "^4.1.10"

@@ -1,3 +1,12 @@
+# [0.58.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.57.0...v0.58.0) (2026-07-17)
+
+
+### Features
+
+* add dummy and verification complete pages ([f972302](https://github.com/plmtmbnn/personal-web-v2/commit/f972302e027fcbc5935b87178bb24deb337d3a81))
+* add watchlist, custom scoring builder, and update docs ([7c0c885](https://github.com/plmtmbnn/personal-web-v2/commit/7c0c8855a4a47586f79784520f71e577d72c074a))
+* implement Read-It-Later Web Archiver utility ([5add726](https://github.com/plmtmbnn/personal-web-v2/commit/5add7269bbd2b4d7087ff3ae930fbf098f403a0a))
+
 # [0.57.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.56.0...v0.57.0) (2026-07-11)
 
 

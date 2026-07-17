@@ -107,7 +107,8 @@ export async function archiveUrl(url: string): Promise<ArchiveResult> {
 
 		const finalMarkdownContent = `${metadataLines}\n\n---\n\n${markdownBody}`;
 
-		const title = article.title?.trim() || `Archived Page ${targetUrl.hostname}`;
+		const title =
+			article.title?.trim() || `Archived Page ${targetUrl.hostname}`;
 		const tags = ["web-archive"];
 
 		// 7. Save to local Second Brain
@@ -135,7 +136,8 @@ export async function archiveUrl(url: string): Promise<ArchiveResult> {
 		console.error("Error during URL archiving:", error);
 		return {
 			success: false,
-			message: error.message || "An unexpected error occurred during archiving.",
+			message:
+				error.message || "An unexpected error occurred during archiving.",
 		};
 	}
 }

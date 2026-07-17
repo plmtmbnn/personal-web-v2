@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertCircle, Loader2, Sliders, ChevronDown, ChevronUp } from "lucide-react";
+import {
+	RefreshCw,
+	AlertCircle,
+	Loader2,
+	Sliders,
+	ChevronDown,
+	ChevronUp,
+} from "lucide-react";
 import type { IDXStock, ProcessedStock, ScoreWeights } from "../types";
 import { useMarketData } from "../hooks/useMarketData";
 
@@ -189,13 +196,16 @@ export default function StockExplorerView() {
 											Custom Scoring Engine
 										</h3>
 										<p className="text-[10px] font-bold text-slate-400 mt-1">
-											Adjust parameter weights to recalculate stock opportunity scores in real time
+											Adjust parameter weights to recalculate stock opportunity
+											scores in real time
 										</p>
 									</div>
 								</div>
 								<div className="flex items-center gap-4">
 									<span className="hidden lg:inline-block text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
-										Weights: {weights.price}% P / {weights.volume}% V / {weights.foreign}% F / {weights.liquidity}% L / {weights.volatility}% S
+										Weights: {weights.price}% P / {weights.volume}% V /{" "}
+										{weights.foreign}% F / {weights.liquidity}% L /{" "}
+										{weights.volatility}% S
 									</span>
 									{isScorerExpanded ? (
 										<ChevronUp className="w-4 h-4 text-slate-500" />
@@ -215,20 +225,44 @@ export default function StockExplorerView() {
 										{[
 											{
 												name: "Balanced (Default)",
-												weights: { price: 25, volume: 25, foreign: 20, liquidity: 15, volatility: 15 }
+												weights: {
+													price: 25,
+													volume: 25,
+													foreign: 20,
+													liquidity: 15,
+													volatility: 15,
+												},
 											},
 											{
 												name: "Whale Accumulation",
-												weights: { price: 10, volume: 10, foreign: 60, liquidity: 20, volatility: 0 }
+												weights: {
+													price: 10,
+													volume: 10,
+													foreign: 60,
+													liquidity: 20,
+													volatility: 0,
+												},
 											},
 											{
 												name: "Momentum Hunter",
-												weights: { price: 45, volume: 45, foreign: 0, liquidity: 10, volatility: 0 }
+												weights: {
+													price: 45,
+													volume: 45,
+													foreign: 0,
+													liquidity: 10,
+													volatility: 0,
+												},
 											},
 											{
 												name: "Stability & Value",
-												weights: { price: 10, volume: 10, foreign: 10, liquidity: 30, volatility: 40 }
-											}
+												weights: {
+													price: 10,
+													volume: 10,
+													foreign: 10,
+													liquidity: 30,
+													volatility: 40,
+												},
+											},
 										].map((preset) => (
 											<button
 												key={preset.name}
@@ -243,11 +277,31 @@ export default function StockExplorerView() {
 									{/* Sliders Grid */}
 									<div className="grid grid-cols-1 md:grid-cols-5 gap-6">
 										{[
-											{ label: "Price Trend", key: "price" as const, desc: "Price Change % weight" },
-											{ label: "Trade Volume", key: "volume" as const, desc: "Volume velocity weight" },
-											{ label: "Foreign Net Flow", key: "foreign" as const, desc: "Foreign net flows weight" },
-											{ label: "Liquidity", key: "liquidity" as const, desc: "Transaction frequency weight" },
-											{ label: "Volatility", key: "volatility" as const, desc: "Price stability weight" }
+											{
+												label: "Price Trend",
+												key: "price" as const,
+												desc: "Price Change % weight",
+											},
+											{
+												label: "Trade Volume",
+												key: "volume" as const,
+												desc: "Volume velocity weight",
+											},
+											{
+												label: "Foreign Net Flow",
+												key: "foreign" as const,
+												desc: "Foreign net flows weight",
+											},
+											{
+												label: "Liquidity",
+												key: "liquidity" as const,
+												desc: "Transaction frequency weight",
+											},
+											{
+												label: "Volatility",
+												key: "volatility" as const,
+												desc: "Price stability weight",
+											},
 										].map((slider) => (
 											<div key={slider.key} className="space-y-3">
 												<div className="flex justify-between items-center">
@@ -264,7 +318,12 @@ export default function StockExplorerView() {
 													max="100"
 													step="5"
 													value={weights[slider.key]}
-													onChange={(e) => handleWeightChange(slider.key, Number(e.target.value))}
+													onChange={(e) =>
+														handleWeightChange(
+															slider.key,
+															Number(e.target.value),
+														)
+													}
 													className="w-full accent-indigo-600 h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer"
 												/>
 												<p className="text-[9px] font-bold text-slate-400">
@@ -280,10 +339,8 @@ export default function StockExplorerView() {
 											<AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-600" />
 											<span>
 												Warning: Active weights sum to{" "}
-												<strong>
-													{totalWeightsSum}%
-												</strong>
-												. Standardizing to 100% is recommended for accurate composite scores.
+												<strong>{totalWeightsSum}%</strong>. Standardizing to
+												100% is recommended for accurate composite scores.
 											</span>
 										</div>
 									)}

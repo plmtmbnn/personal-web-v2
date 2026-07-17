@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import type { IDXStock, ProcessedStock, OpportunityCategory, ScoreWeights } from "../types";
+import type {
+	IDXStock,
+	ProcessedStock,
+	OpportunityCategory,
+	ScoreWeights,
+} from "../types";
 import { getMockSector, getMockFundamentals } from "../data/mockData";
 
 export function useMarketData(rawData: IDXStock[], weights: ScoreWeights) {

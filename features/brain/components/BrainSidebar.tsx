@@ -132,7 +132,7 @@ export default function BrainSidebar({
 										{note.title}
 									</h4>
 									<p className="text-xs text-slate-400 line-clamp-2 mt-0.5">
-										{note.content.replace(/[#*`_\[\]]/g, "")}
+										{note.content.replace(/[#*`_[\]]/g, "")}
 									</p>
 									<div className="flex items-center justify-between mt-2.5">
 										<span className="text-[10px] text-slate-400 flex items-center gap-1">

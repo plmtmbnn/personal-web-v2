@@ -81,7 +81,8 @@ export default function SmartTable({
 						Market Screener
 					</h3>
 					<p className="text-[10px] font-bold text-slate-400 mt-1">
-						Showing top {sortedStocks.length} of {filteredStocks.length} instruments
+						Showing top {sortedStocks.length} of {filteredStocks.length}{" "}
+						instruments
 					</p>
 				</div>
 				<div className="flex gap-2 p-1 bg-slate-200/60 rounded-xl">

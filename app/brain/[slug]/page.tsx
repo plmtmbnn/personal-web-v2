@@ -26,7 +26,7 @@ export async function generateMetadata({
 
 	return {
 		title: `${note.title} | Second Brain`,
-		description: note.content.slice(0, 150).replace(/[#*`_\[\]]/g, ""),
+		description: note.content.slice(0, 150).replace(/[#*`_[\]]/g, ""),
 	};
 }
 

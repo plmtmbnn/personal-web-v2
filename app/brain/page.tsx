@@ -123,7 +123,7 @@ export default async function BrainPage() {
 									</span>
 								</div>
 								<p className="text-xs text-slate-500 line-clamp-2">
-									{notes[0].content.replace(/[#*`_\[\]]/g, "")}
+									{notes[0].content.replace(/[#*`_[\]]/g, "")}
 								</p>
 							</Link>
 						)}

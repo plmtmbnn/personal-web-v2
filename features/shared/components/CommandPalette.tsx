@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
 	Search,
 	Home,
@@ -34,6 +34,7 @@ export default function CommandPalette() {
 	const [search, setSearch] = useState("");
 	const router = useRouter();
 	const [notes, setNotes] = useState<{ slug: string; title: string }[]>([]);
+	const reduceMotion = useReducedMotion();
 
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
@@ -89,7 +90,7 @@ export default function CommandPalette() {
 					<div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] px-4 overflow-hidden">
 						{/* Backdrop Blur Overlay */}
 						<motion.div
-							initial={{ opacity: 0 }}
+							initial={reduceMotion ? false : { opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							onClick={() => setOpen(false)}
@@ -98,7 +99,9 @@ export default function CommandPalette() {
 
 						{/* Palette Container */}
 						<motion.div
-							initial={{ opacity: 0, scale: 0.95, y: -10 }}
+							initial={
+								reduceMotion ? false : { opacity: 0, scale: 0.95, y: -10 }
+							}
 							animate={{ opacity: 1, scale: 1, y: 0 }}
 							exit={{ opacity: 0, scale: 0.95, y: -10 }}
 							transition={{ duration: 0.2 }}

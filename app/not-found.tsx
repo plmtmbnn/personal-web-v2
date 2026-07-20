@@ -5,7 +5,7 @@ export default function NotFound() {
 				<div className="glass-card text-center animate-fade-in">
 					{/* Animated 404 */}
 					<div className="relative mb-8">
-						<h2 className="text-[10rem] md:text-[15rem] font-bold gradient-text leading-none animate-float">
+						<h2 className="text-[10rem] md:text-[15rem] font-bold text-indigo-600 leading-none animate-float">
 							404
 						</h2>
 						<div className="absolute inset-0 flex items-center justify-center">

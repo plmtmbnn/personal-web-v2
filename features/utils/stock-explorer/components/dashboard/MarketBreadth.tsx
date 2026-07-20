@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface MarketBreadthProps {
 	advancers: number;
@@ -11,6 +11,7 @@ export default function MarketBreadth({
 	decliners,
 	unchanged,
 }: MarketBreadthProps) {
+	const reduceMotion = useReducedMotion();
 	const total = advancers + decliners + unchanged;
 	const advPct = total > 0 ? (advancers / total) * 100 : 0;
 	const decPct = total > 0 ? (decliners / total) * 100 : 0;
@@ -38,7 +39,7 @@ export default function MarketBreadth({
 					</div>
 					<div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
 						<motion.div
-							initial={{ width: 0 }}
+							initial={reduceMotion ? false : { width: 0 }}
 							animate={{ width: `${advPct}%` }}
 							className="h-full bg-emerald-500 rounded-full"
 						/>
@@ -58,7 +59,7 @@ export default function MarketBreadth({
 					</div>
 					<div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
 						<motion.div
-							initial={{ width: 0 }}
+							initial={reduceMotion ? false : { width: 0 }}
 							animate={{ width: `${decPct}%` }}
 							className="h-full bg-rose-500 rounded-full"
 						/>
@@ -78,7 +79,7 @@ export default function MarketBreadth({
 					</div>
 					<div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
 						<motion.div
-							initial={{ width: 0 }}
+							initial={reduceMotion ? false : { width: 0 }}
 							animate={{ width: `${uncPct}%` }}
 							className="h-full bg-slate-400 rounded-full"
 						/>

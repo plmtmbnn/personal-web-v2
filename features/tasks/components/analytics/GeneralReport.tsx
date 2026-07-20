@@ -16,7 +16,7 @@ import {
 	Clock,
 	ShieldCheck,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
 	getTaskStats,
 	type AnalyticsStats,
@@ -58,6 +58,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 	const [period, setPeriod] = useState<"today" | "week" | "month">("week");
 	const [stats, setStats] = useState<AnalyticsStats | null>(null);
 	const [loading, setLoading] = useState(true);
+	const reduceMotion = useReducedMotion();
 
 	useEffect(() => {
 		const fetchStats = async () => {
@@ -235,7 +236,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								strokeWidth="10"
 								className="text-emerald-400"
 								strokeDasharray="251.2"
-								initial={{ strokeDashoffset: 251.2 }}
+								initial={reduceMotion ? false : { strokeDashoffset: 251.2 }}
 								animate={{
 									strokeDashoffset:
 										251.2 - (251.2 * stats.completionRate) / 100,
@@ -292,7 +293,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 									stroke="currentColor"
 									strokeWidth="10"
 									strokeDasharray="251.2"
-									initial={{ strokeDashoffset: 251.2 }}
+									initial={reduceMotion ? false : { strokeDashoffset: 251.2 }}
 									animate={{
 										strokeDashoffset:
 											251.2 -
@@ -474,7 +475,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 									</div>
 									<div className="h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
 										<motion.div
-											initial={{ width: 0 }}
+											initial={reduceMotion ? false : { width: 0 }}
 											animate={{
 												width: `${(item.count / (stats.distribution.today + stats.distribution.upcoming + stats.distribution.overdue || 1)) * 100}%`,
 											}}
@@ -514,7 +515,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 									</div>
 									<div className="h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
 										<motion.div
-											initial={{ width: 0 }}
+											initial={reduceMotion ? false : { width: 0 }}
 											animate={{
 												width: `${(item.count / stats.totalTasks) * 100}%`,
 											}}

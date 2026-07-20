@@ -9,7 +9,7 @@ import {
 	ArrowLeft,
 	Lock,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import LoginButton from "@/features/auth/components/LoginButton";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import Link from "next/link";
@@ -19,6 +19,7 @@ import { useEffect } from "react";
  * Login Page Content
  */
 function LoginContent() {
+	const reduceMotion = useReducedMotion();
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const error = searchParams.get("error");
@@ -72,7 +73,7 @@ function LoginContent() {
 			<div className="w-full max-w-md z-10 space-y-6">
 				{/* Login Card - Solid Productivity Pattern */}
 				<motion.div
-					initial={{ opacity: 0, y: 15 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.4, ease: "easeOut" }}
 					className="bg-white p-8 sm:p-10 border border-slate-200/80 shadow-[0_20px_50px_rgba(0,0,0,0.04)] rounded-3xl relative overflow-hidden"
@@ -80,10 +81,10 @@ function LoginContent() {
 					<div className="relative z-10">
 						{/* Dark Header Accent Card - Contrast Mastery Pattern */}
 						<div className="bg-slate-900 text-white rounded-2xl p-6 text-center mb-8 relative overflow-hidden shadow-md">
-							<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
+							<div className="absolute inset-0 bg-indigo-500/5 pointer-events-none" />
 
 							<motion.div
-								initial={{ scale: 0.8 }}
+								initial={reduceMotion ? false : { scale: 0.8 }}
 								animate={{ scale: 1 }}
 								transition={{ duration: 0.5, type: "spring" }}
 								className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center mx-auto mb-4"
@@ -110,7 +111,7 @@ function LoginContent() {
 						<AnimatePresence>
 							{errorMsg && (
 								<motion.div
-									initial={{ opacity: 0, y: -10 }}
+									initial={reduceMotion ? false : { opacity: 0, y: -10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0 }}
 									className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-3"
@@ -148,7 +149,7 @@ function LoginContent() {
 				</motion.div>
 
 				<motion.div
-					initial={{ opacity: 0 }}
+					initial={reduceMotion ? false : { opacity: 0 }}
 					animate={{ opacity: 1 }}
 					transition={{ delay: 0.3 }}
 					className="text-center"

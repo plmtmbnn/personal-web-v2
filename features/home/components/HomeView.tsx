@@ -9,7 +9,12 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, memo } from "react";
-import { motion, type Variants, animate } from "framer-motion";
+import {
+	motion,
+	type Variants,
+	animate,
+	useReducedMotion,
+} from "framer-motion";
 import { FaGithub, FaLinkedin, FaRunning } from "react-icons/fa";
 import {
 	ArrowRight,
@@ -55,9 +60,9 @@ interface StatCardProps {
 	hoverBgColor: string;
 	hoverBorderColor: string;
 	shadowColor: string;
-	textColor: string;
-	iconColor: string;
-	labelTextColor: string;
+	textColorClass: string;
+	iconColorClass: string;
+	labelTextColorClass: string;
 }
 
 const StatCard = memo(
@@ -71,29 +76,29 @@ const StatCard = memo(
 		hoverBgColor,
 		hoverBorderColor,
 		shadowColor,
-		textColor,
-		iconColor,
-		labelTextColor,
-	}: StatCardProps & { labelTextColor: string }) => (
+		textColorClass,
+		iconColorClass,
+		labelTextColorClass,
+	}: StatCardProps) => (
 		<Link
 			href={href}
 			aria-label={`View ${label} details`}
-			className={`col-span-1 ${bgColor} ${borderColor} rounded-2xl p-4 sm:p-5 flex flex-col justify-between ${hoverBorderColor} ${hoverBgColor} hover:-translate-y-0.5 hover:shadow-md ${shadowColor} transition-all duration-200 cursor-pointer group/card relative overflow-hidden will-change-transform`}
+			className={`col-span-1 ${bgColor} ${borderColor} rounded-2xl p-4 sm:p-5 flex flex-col justify-between ${hoverBorderColor} ${hoverBgColor} hover:-translate-y-0.5 hover:shadow-md ${shadowColor} transition-all duration-200 cursor-pointer group/card relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2`}
 		>
 			<div className="flex justify-between items-start mb-3">
 				{icon}
 				<ArrowUpRight
-					className={`w-3.5 h-3.5 !${iconColor} opacity-0 group-hover/card:opacity-100 transition-opacity duration-200`}
+					className={`w-3.5 h-3.5 ${iconColorClass} opacity-0 group-hover/card:opacity-100 transition-opacity duration-200`}
 				/>
 			</div>
 			<div>
 				<p
-					className={`text-2xl sm:text-3xl font-black tracking-tighter leading-none !text-${textColor}`}
+					className={`text-2xl sm:text-3xl font-black tracking-tighter leading-none ${textColorClass}`}
 				>
 					{value}
 				</p>
 				<p
-					className={`text-[9px] font-black uppercase tracking-widest !text-${labelTextColor} mt-1.5`}
+					className={`text-[9px] font-black uppercase tracking-widest ${labelTextColorClass} mt-1.5`}
 				>
 					{label}
 				</p>
@@ -125,16 +130,21 @@ const item: Variants = {
 // ─── Animated Counter ─────────────────────────────────────────────────────────
 
 const useCounter = (to: number, duration = 1.5) => {
-	const [count, setCount] = useState(to); // Start with final value for SEO & hydration compatibility
+	const reduceMotion = useReducedMotion();
+	const [count, setCount] = useState(reduceMotion ? to : 0);
 
 	useEffect(() => {
+		if (reduceMotion) {
+			setCount(to);
+			return;
+		}
 		const controls = animate(0, to, {
 			duration,
 			ease: "easeOut",
 			onUpdate: (value) => setCount(Math.floor(value)),
 		});
 		return () => controls.stop();
-	}, [to, duration]);
+	}, [to, duration, reduceMotion]);
 
 	return count;
 };
@@ -148,37 +158,25 @@ interface HomeProps {
 export default function Home({
 	initialRunningKm = AUTHOR_STATS.runningKmPerYear,
 }: HomeProps) {
+	const reduceMotion = useReducedMotion();
 	const yearsCount = useCounter(EXPERIENCE_YEAR, 1.5);
 	const kmCount = useCounter(initialRunningKm, 2.0);
 	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1.2);
 
 	return (
 		<main className="min-h-screen bg-white relative flex items-center justify-center px-6 overflow-x-hidden py-24 lg:py-0">
-			{/* ── Background ── */}
-			<div className="absolute inset-0 pointer-events-none overflow-hidden">
-				{/* Base gradient — barely-there slate to white */}
-				<div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-white" />
-				{/* Indigo blob — top right (static for performance) */}
-				<div className="absolute -top-[20%] -right-[10%] w-[60%] h-[65%] bg-indigo-100/60 rounded-full blur-[120px]" />
-				{/* Emerald blob — bottom left (static for performance) */}
-				<div className="absolute -bottom-[20%] -left-[10%] w-[55%] h-[55%] bg-emerald-100/50 rounded-full blur-[120px]" />
-			</div>
-
 			<div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-20 items-center relative z-10">
 				{/* ── Right Column — Photo ── */}
 				<div className="lg:col-span-5 flex justify-center lg:justify-end order-1 lg:order-2">
 					<motion.div
-						initial={{ opacity: 0, scale: 0.92 }}
+						initial={reduceMotion ? false : { opacity: 0, scale: 0.92 }}
 						animate={{ opacity: 1, scale: 1 }}
 						transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
 						className="relative group cursor-pointer"
 					>
-						{/* Ambient glow — static gradient for performance */}
-						<div className="absolute -inset-6 bg-gradient-to-tr from-indigo-200/40 via-purple-100/30 to-emerald-100/40 rounded-[3.5rem] blur-3xl" />
-
 						{/* Photo frame — solid white border visible on light bg */}
-						<div className="relative w-60 h-60 sm:w-80 sm:h-80 xl:w-[22rem] xl:h-[22rem] rounded-[2.5rem] sm:rounded-[3rem] p-2.5 bg-white border border-slate-200 shadow-2xl shadow-slate-200/80 group-hover:shadow-slate-300/60 group-hover:scale-[1.02] transition-all duration-500 will-change-transform">
-							<div className="w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden will-change-transform">
+						<div className="relative w-60 h-60 sm:w-80 sm:h-80 xl:w-[22rem] xl:h-[22rem] rounded-[2.5rem] sm:rounded-[3rem] p-2.5 bg-white border border-slate-200 shadow-2xl shadow-slate-200/80 group-hover:shadow-slate-300/60 group-hover:scale-[1.02] transition-all duration-500">
+							<div className="w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden">
 								<Image
 									src="/profile.jpg"
 									alt={`${AUTHOR.name} — Software Engineer and Distance Runner`}
@@ -186,8 +184,6 @@ export default function Home({
 									priority
 									width={400}
 									height={400}
-									placeholder="blur"
-									blurDataURL="data:image/webp;base64,UklGRigAAABXRUJQVlA4IB4AAAAQAgCDASoEAAwAAP4APAAAADhYfEwAAAAA"
 								/>
 							</div>
 						</div>
@@ -248,7 +244,7 @@ export default function Home({
 				<motion.div
 					className="lg:col-span-7 order-2 lg:order-1"
 					variants={container}
-					initial="hidden"
+					initial={reduceMotion ? false : "hidden"}
 					animate="visible"
 				>
 					{/* Role chip */}
@@ -292,9 +288,9 @@ export default function Home({
 							hoverBgColor="hover:bg-slate-100/50"
 							hoverBorderColor="hover:border-slate-200"
 							shadowColor="hover:shadow-slate-100/30"
-							textColor="slate-700"
-							iconColor="text-slate-600"
-							labelTextColor="slate-600"
+							textColorClass="text-slate-700"
+							iconColorClass="text-slate-600"
+							labelTextColorClass="text-slate-600"
 						/>
 
 						<StatCard
@@ -307,9 +303,9 @@ export default function Home({
 							hoverBgColor="hover:bg-emerald-100/50"
 							hoverBorderColor="hover:border-emerald-200"
 							shadowColor="hover:shadow-emerald-100/30"
-							textColor="emerald-700"
-							iconColor="text-emerald-600"
-							labelTextColor="emerald-600"
+							textColorClass="text-emerald-700"
+							iconColorClass="text-emerald-600"
+							labelTextColorClass="text-emerald-600"
 						/>
 
 						<StatCard
@@ -322,9 +318,9 @@ export default function Home({
 							hoverBgColor="hover:bg-indigo-100/50"
 							hoverBorderColor="hover:border-indigo-200"
 							shadowColor="hover:shadow-indigo-100/30"
-							textColor="indigo-700"
-							iconColor="text-indigo-600"
-							labelTextColor="indigo-600"
+							textColorClass="text-indigo-700"
+							iconColorClass="text-indigo-600"
+							labelTextColorClass="text-indigo-600"
 						/>
 					</motion.div>
 
@@ -335,7 +331,7 @@ export default function Home({
 					>
 						<Link
 							href="/work-experience"
-							className="group/btn flex items-center gap-2 px-7 py-3.5 bg-slate-900 text-white !no-underline rounded-2xl font-black text-sm hover:bg-slate-800 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-slate-900/10 will-change-transform"
+							className="group/btn flex items-center gap-2 px-7 py-3.5 bg-slate-900 text-white !no-underline rounded-2xl font-black text-sm hover:bg-slate-800 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-slate-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
 						>
 							<span className="text-white">Explore Work</span>
 							<ArrowRight className="w-4 h-4 text-white group-hover/btn:translate-x-1 transition-transform duration-200" />
@@ -343,7 +339,7 @@ export default function Home({
 
 						<a
 							href={`mailto:${AUTHOR.email}`}
-							className="group/btn flex items-center gap-2 px-7 py-3.5 bg-white border border-slate-200 text-slate-700 !no-underline rounded-2xl font-black text-sm hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-sm will-change-transform"
+							className="group/btn flex items-center gap-2 px-7 py-3.5 bg-white border border-slate-200 text-slate-700 !no-underline rounded-2xl font-black text-sm hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
 						>
 							<Mail className="w-4 h-4 group-hover/btn:rotate-6 transition-transform duration-200 text-slate-700" />
 							<span className="text-slate-700">Get in Touch</span>
@@ -356,7 +352,7 @@ export default function Home({
 								target="_blank"
 								rel="noopener noreferrer"
 								aria-label={`${AUTHOR.name}'s GitHub`}
-								className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors duration-200 !no-underline will-change-transform"
+								className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
 							>
 								<FaGithub className="w-4 h-4" />
 							</a>
@@ -365,7 +361,7 @@ export default function Home({
 								target="_blank"
 								rel="noopener noreferrer"
 								aria-label={`${AUTHOR.name}'s LinkedIn`}
-								className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors duration-200 !no-underline will-change-transform"
+								className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
 							>
 								<FaLinkedin className="w-4 h-4" />
 							</a>

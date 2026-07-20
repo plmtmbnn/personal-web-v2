@@ -15,8 +15,6 @@ export default function ComponentLoader({
 			style={{ height }}
 			className="w-full glass rounded-[2rem] border border-border/50 relative overflow-hidden animate-pulse"
 		>
-			<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-
 			<div className="p-6 space-y-4">
 				<div className="flex items-center gap-3">
 					<div className="w-10 h-10 bg-background-secondary rounded-xl" />

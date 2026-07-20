@@ -44,7 +44,7 @@ SyntaxHighlighter.registerLanguage("json", json);
 SyntaxHighlighter.registerLanguage("sql", sql);
 SyntaxHighlighter.registerLanguage("css", css);
 SyntaxHighlighter.registerLanguage("bash", bash);
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface BlogFormProps {
 	initialData?: Blog | null;
@@ -52,6 +52,7 @@ interface BlogFormProps {
 
 export default function BlogForm({ initialData }: BlogFormProps) {
 	const router = useRouter();
+	const reduceMotion = useReducedMotion();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [editorMode, setEditorMode] = useState<"edit" | "preview" | "split">(
 		"edit",
@@ -723,7 +724,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 				<AnimatePresence>
 					{draftAvailable && (
 						<motion.div
-							initial={{ opacity: 0, y: -10 }}
+							initial={reduceMotion ? false : { opacity: 0, y: -10 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0 }}
 							className="p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border bg-amber-50 text-amber-900 border-amber-200 shadow-sm"
@@ -763,7 +764,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 				<AnimatePresence>
 					{status && (
 						<motion.div
-							initial={{ opacity: 0, y: -10 }}
+							initial={reduceMotion ? false : { opacity: 0, y: -10 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0 }}
 							className={`p-4 rounded-xl flex items-center gap-3 border ${
@@ -793,7 +794,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							{editorMode === "split" ? (
 								<motion.div
 									key="split"
-									initial={{ opacity: 0 }}
+									initial={reduceMotion ? false : { opacity: 0 }}
 									animate={{ opacity: 1 }}
 									className="grid grid-cols-1 lg:grid-cols-2 gap-8"
 								>
@@ -805,7 +806,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							) : editorMode === "preview" ? (
 								<motion.div
 									key="preview"
-									initial={{ opacity: 0 }}
+									initial={reduceMotion ? false : { opacity: 0 }}
 									animate={{ opacity: 1 }}
 								>
 									{renderPreviewPane()}
@@ -813,7 +814,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							) : (
 								<motion.div
 									key="editor"
-									initial={{ opacity: 0 }}
+									initial={reduceMotion ? false : { opacity: 0 }}
 									animate={{ opacity: 1 }}
 									className="space-y-6"
 								>

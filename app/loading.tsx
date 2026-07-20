@@ -1,6 +1,12 @@
 "use client";
 
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import {
+	motion,
+	useMotionValue,
+	useTransform,
+	animate,
+	useReducedMotion,
+} from "framer-motion";
 import { Zap } from "lucide-react";
 import { useEffect } from "react";
 
@@ -15,6 +21,7 @@ const PARTICLES = [
 
 export default function GlobalLoading() {
 	const progress = useMotionValue(0);
+	const reduceMotion = useReducedMotion();
 
 	useEffect(() => {
 		// Realistic loader: moves to 40% quickly, then crawls to 95% over time
@@ -82,7 +89,7 @@ export default function GlobalLoading() {
 
 			{/* Core */}
 			<motion.div
-				initial={{ opacity: 0, y: 8 }}
+				initial={reduceMotion ? false : { opacity: 0, y: 8 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.5 }}
 				className="relative flex flex-col items-center gap-7"

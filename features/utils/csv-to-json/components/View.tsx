@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	FileSpreadsheet,
 	Upload,
@@ -32,6 +32,7 @@ import { JsonValue } from "@/features/shared/components/JsonValue";
 // ─── Main View ──────────────────────────────────────────────────────────────
 
 export default function CsvToJsonView() {
+	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");
 	const [parsedData, setParsedData] = useState<any[] | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -302,7 +303,7 @@ export default function CsvToJsonView() {
 								<AnimatePresence>
 									{parsedData && parsedData.length > 0 && (
 										<motion.section
-											initial={{ opacity: 0, y: 10 }}
+											initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 											animate={{ opacity: 1, y: 0 }}
 											exit={{ opacity: 0 }}
 											className="p-6 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm space-y-4 overflow-hidden"
@@ -443,7 +444,7 @@ export default function CsvToJsonView() {
 									{error ? (
 										<motion.div
 											key="error"
-											initial={{ opacity: 0 }}
+											initial={reduceMotion ? false : { opacity: 0 }}
 											animate={{ opacity: 1 }}
 											exit={{ opacity: 0 }}
 											className="absolute inset-0 z-20 flex items-center justify-center p-12 text-center"
@@ -465,7 +466,7 @@ export default function CsvToJsonView() {
 									) : parsedData ? (
 										<motion.div
 											key="output"
-											initial={{ opacity: 0 }}
+											initial={reduceMotion ? false : { opacity: 0 }}
 											animate={{ opacity: 1 }}
 											className="h-full p-8 overflow-auto scrollbar-hide"
 										>

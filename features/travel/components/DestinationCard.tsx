@@ -1,6 +1,6 @@
 import { MapPin, Calendar, CheckCircle2, Compass } from "lucide-react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { Destination } from "../types";
 
 const DestinationCard = ({
@@ -10,9 +10,10 @@ const DestinationCard = ({
 	destination: Destination;
 	index: number;
 }) => {
+	const reduceMotion = useReducedMotion();
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 30 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 30 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ delay: index * 0.1 }}
 			whileHover={{ y: -5 }}

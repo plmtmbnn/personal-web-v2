@@ -1,7 +1,7 @@
 "use client";
 
 import { BarChart3, ListTodo, CalendarDays } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 export type TaskViewTab = "agenda" | "analytics" | "review";
 
@@ -17,6 +17,7 @@ const navItems = [
 ];
 
 export default function QuickNav({ activeTab, onTabChange }: QuickNavProps) {
+	const reduceMotion = useReducedMotion();
 	return (
 		<div className="fixed top-6 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none">
 			<nav className="pointer-events-auto flex items-center gap-1 p-1.5 bg-white/80 backdrop-blur-xl border border-slate-200 rounded-full shadow-2xl">
@@ -45,7 +46,7 @@ export default function QuickNav({ activeTab, onTabChange }: QuickNavProps) {
 
 							{isActive && (
 								<motion.div
-									layoutId="nav-pill"
+									layoutId={reduceMotion ? undefined : "nav-pill"}
 									className={`absolute inset-0 rounded-full -z-10 ${
 										item.id === "agenda"
 											? "bg-emerald-50"

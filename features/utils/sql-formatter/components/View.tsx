@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Database,
 	Copy,
@@ -24,6 +24,7 @@ import { validateSql } from "../utils/sql";
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export default function SqlFormatterView() {
+	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");
 	const [output, setOutput] = useState("");
 	const [dialect, setDialect] = useState<Dialect>("postgresql");
@@ -209,7 +210,7 @@ export default function SqlFormatterView() {
 								{error ? (
 									<motion.div
 										key="error"
-										initial={{ opacity: 0, scale: 0.98 }}
+										initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
 										animate={{ opacity: 1, scale: 1 }}
 										exit={{ opacity: 0, scale: 0.98 }}
 										className="absolute inset-0 z-20 flex items-center justify-center p-12 text-center bg-white"
@@ -243,7 +244,7 @@ export default function SqlFormatterView() {
 								) : output ? (
 									<motion.div
 										key="output"
-										initial={{ opacity: 0 }}
+										initial={reduceMotion ? false : { opacity: 0 }}
 										animate={{ opacity: 1 }}
 										className="h-full p-10 overflow-auto scrollbar-hide"
 									>

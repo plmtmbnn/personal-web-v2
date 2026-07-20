@@ -25,7 +25,12 @@ import {
 	Database,
 	Network,
 } from "lucide-react";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import {
+	motion,
+	AnimatePresence,
+	useReducedMotion,
+	type Variants,
+} from "framer-motion";
 
 /**
  * Navigation Item Types
@@ -168,6 +173,7 @@ export default function CompactBottomBar() {
 	const [pendingTasksCount, setPendingTasksCount] = useState(0);
 	const [hasHover, setHasHover] = useState(false);
 	const navRef = useRef<HTMLElement>(null);
+	const reduceMotion = useReducedMotion();
 
 	const containerScale = expandedItem ? 1.02 : 1;
 
@@ -286,7 +292,7 @@ export default function CompactBottomBar() {
 		>
 			<div className="glass-strong flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 rounded-full shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] border border-white/20 backdrop-blur-xl relative pointer-events-auto">
 				{/* Glow effect */}
-				<div className="absolute inset-0 rounded-full bg-gradient-to-r from-accent/10 via-purple-500/5 to-cyan-500/10 blur-xl opacity-50 -z-10 pointer-events-none" />
+				<div className="absolute inset-0 rounded-full bg-accent/10 blur-xl opacity-50 -z-10 pointer-events-none" />
 
 				<div className="flex items-center gap-0.5 sm:gap-1">
 					<AnimatePresence mode="popLayout" initial={false}>
@@ -320,7 +326,7 @@ export default function CompactBottomBar() {
 										{hasSubItems && isExpanded && (
 											<motion.div
 												variants={containerVariants}
-												initial="hidden"
+												initial={reduceMotion ? false : "hidden"}
 												animate="visible"
 												exit="exit"
 												className="absolute bottom-[calc(100%+16px)] left-1/2 -translate-x-1/2 w-48 sm:w-52 bg-white/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl border border-slate-100 p-1.5 z-50 origin-bottom"
@@ -374,7 +380,7 @@ export default function CompactBottomBar() {
 										}
 										className={`group relative flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
 											isActive
-												? "bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 text-indigo-600 shadow-sm border border-indigo-100/50"
+												? "bg-indigo-50/80 text-indigo-600 shadow-sm border border-indigo-100/50"
 												: "text-muted-foreground hover:text-foreground active:scale-95"
 										}`}
 									>

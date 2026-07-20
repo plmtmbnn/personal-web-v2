@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Copy,
 	Check,
@@ -41,6 +41,7 @@ import {
 type OutputFormat = "typescript" | "go" | "mongoose" | "zod" | "joi";
 
 export default function JsonToSchemaView() {
+	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");
 	const [rootName, setRootName] = useState("Generated");
 	const [activeTab, setActiveTab] = useState<OutputFormat>("typescript");
@@ -237,7 +238,7 @@ export default function JsonToSchemaView() {
 									{error ? (
 										<motion.div
 											key="error"
-											initial={{ opacity: 0, y: 10 }}
+											initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 											animate={{ opacity: 1, y: 0 }}
 											exit={{ opacity: 0, y: -10 }}
 											className="h-full flex items-center justify-center p-12 text-center"
@@ -257,7 +258,7 @@ export default function JsonToSchemaView() {
 									) : output ? (
 										<motion.div
 											key={activeTab}
-											initial={{ opacity: 0 }}
+											initial={reduceMotion ? false : { opacity: 0 }}
 											animate={{ opacity: 1 }}
 											className="h-full"
 										>

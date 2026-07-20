@@ -13,11 +13,12 @@ import {
 	FaGlobeAsia,
 } from "react-icons/fa";
 import { Sparkles, MessageSquare } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import pkg from "@/package.json";
 import ContactForm from "./ContactForm";
 
 export default function ContactView() {
+	const reduceMotion = useReducedMotion();
 	const [mounted, setMounted] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [localTime, setLocalTime] = useState("");
@@ -99,23 +100,14 @@ export default function ContactView() {
 		},
 	];
 
-	if (!mounted) return null;
-
 	return (
 		<main className="min-h-screen bg-white relative overflow-x-hidden flex items-center justify-center px-6 py-24 lg:py-0">
-			{/* ── Background Blobs (Synchronized with Homepage design language) ── */}
-			<div className="absolute inset-0 pointer-events-none overflow-hidden">
-				<div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-white" />
-				<div className="absolute -top-[20%] -right-[10%] w-[60%] h-[65%] bg-indigo-100/60 rounded-full blur-[120px]" />
-				<div className="absolute -bottom-[20%] -left-[10%] w-[55%] h-[55%] bg-emerald-100/50 rounded-full blur-[120px]" />
-			</div>
-
 			<div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start lg:items-center relative z-10">
 				{/* ── Left Column: Personal Context & Channels ── */}
 				<div className="lg:col-span-6 space-y-8">
 					{/* Micro-Interaction Top Badge */}
 					<motion.div
-						initial={{ opacity: 0, y: 10 }}
+						initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.4 }}
 						className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500"
@@ -126,13 +118,13 @@ export default function ContactView() {
 
 					{/* Title Section */}
 					<motion.div
-						initial={{ opacity: 0, y: 15 }}
+						initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.5, delay: 0.05 }}
 						className="space-y-4"
 					>
 						<h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-slate-900 leading-[0.95] sm:leading-[0.9]">
-							Get in <span className="gradient-text">Touch.</span>
+							Get in <span className="text-indigo-600">Touch.</span>
 						</h1>
 						<p className="text-slate-500 text-sm sm:text-base font-medium leading-relaxed max-w-lg">
 							Have an interesting project, collaboration proposal, or just want
@@ -143,7 +135,7 @@ export default function ContactView() {
 
 					{/* Interactive Status & Time Panel */}
 					<motion.div
-						initial={{ opacity: 0, y: 15 }}
+						initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.5, delay: 0.1 }}
 						className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-5 rounded-3xl bg-slate-50/50 backdrop-blur-md border border-slate-100 shadow-sm"
@@ -197,13 +189,13 @@ export default function ContactView() {
 						{contactLinks.map((item, index) => (
 							<motion.div
 								key={item.label}
-								initial={{ opacity: 0, scale: 0.97 }}
+								initial={reduceMotion ? false : { opacity: 0, scale: 0.97 }}
 								animate={{ opacity: 1, scale: 1 }}
 								transition={{ delay: 0.15 + index * 0.05, duration: 0.4 }}
 								className="group relative"
 							>
 								{/* Card Glow */}
-								<div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500/10 to-emerald-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-300 blur-md pointer-events-none" />
+								<div className="absolute -inset-0.5 bg-indigo-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-300 blur-md pointer-events-none" />
 
 								<div className="relative bg-white/60 hover:bg-white backdrop-blur-md p-4 rounded-2xl border border-slate-200/50 flex flex-col justify-between h-full hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-300 shadow-sm">
 									<div className="flex justify-between items-start mb-3">
@@ -218,6 +210,7 @@ export default function ContactView() {
 												onClick={handleCopyEmail}
 												className="p-1.5 text-slate-400 hover:text-slate-900 transition-colors hover:bg-slate-50 rounded-lg cursor-pointer"
 												title="Copy Email"
+												aria-label="Copy email address to clipboard"
 											>
 												{copied ? (
 													<FaCheck className="w-3.5 h-3.5 text-emerald-500" />
@@ -231,6 +224,7 @@ export default function ContactView() {
 												target="_blank"
 												rel="noopener noreferrer"
 												className="p-1.5 text-slate-400 hover:text-slate-900 transition-colors hover:bg-slate-50 rounded-lg flex items-center justify-center"
+												aria-label={`Open ${item.label} profile in a new tab`}
 											>
 												<svg
 													className="w-3.5 h-3.5"
@@ -278,7 +272,7 @@ export default function ContactView() {
 
 					{/* Version Info */}
 					<motion.div
-						initial={{ opacity: 0 }}
+						initial={reduceMotion ? false : { opacity: 0 }}
 						animate={{ opacity: 1 }}
 						transition={{ delay: 0.4 }}
 						className="pt-2 flex justify-start"
@@ -303,7 +297,7 @@ export default function ContactView() {
 			<AnimatePresence>
 				{copied && (
 					<motion.div
-						initial={{ opacity: 0, y: 30 }}
+						initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 30 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: 15 }}
 						className="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] sm:w-auto px-5 py-3 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-emerald-500/10 z-[100] flex items-center justify-center gap-2"

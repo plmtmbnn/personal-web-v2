@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 
 /**
@@ -11,6 +11,7 @@ import { ArrowUp } from "lucide-react";
  */
 export default function BackToTop() {
 	const [visible, setVisible] = useState(false);
+	const reduceMotion = useReducedMotion();
 
 	useEffect(() => {
 		const onScroll = () => setVisible(window.scrollY > 400);
@@ -24,7 +25,7 @@ export default function BackToTop() {
 		<AnimatePresence>
 			{visible && (
 				<motion.button
-					initial={{ opacity: 0, scale: 0.8, y: 12 }}
+					initial={reduceMotion ? false : { opacity: 0, scale: 0.8, y: 12 }}
 					animate={{ opacity: 1, scale: 1, y: 0 }}
 					exit={{ opacity: 0, scale: 0.8, y: 12 }}
 					transition={{ type: "spring", stiffness: 380, damping: 28 }}

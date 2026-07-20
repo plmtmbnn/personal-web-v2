@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Send, Check, AlertCircle, Loader2 } from "lucide-react";
 import { submitContactForm } from "../actions";
 import type { ContactFormData } from "../types";
 
 export default function ContactForm() {
+	const reduceMotion = useReducedMotion();
 	const [formData, setFormData] = useState<ContactFormData>({
 		name: "",
 		email: "",
@@ -85,13 +86,13 @@ export default function ContactForm() {
 
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 20 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.5, delay: 0.2 }}
 			className="relative w-full max-w-lg mx-auto lg:mx-0"
 		>
 			{/* Form Container Border & Subtle Glow */}
-			<div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500/20 to-emerald-500/20 rounded-[2rem] blur-xl opacity-75 pointer-events-none" />
+			<div className="absolute -inset-0.5 bg-indigo-500/15 rounded-[2rem] blur-xl opacity-75 pointer-events-none" />
 
 			<div className="relative bg-white/70 backdrop-blur-xl border border-slate-200/50 p-6 sm:p-8 rounded-[2rem] shadow-xl shadow-slate-100/50">
 				<h2 className="text-xl font-black text-slate-800 tracking-tight mb-6">

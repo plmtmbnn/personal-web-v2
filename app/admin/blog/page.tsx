@@ -150,7 +150,7 @@ function BlogListSkeleton() {
 	return (
 		<div className="flex flex-col bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden animate-pulse">
 			{/* Stats Bar Skeleton */}
-			<div className="px-6 pt-5 pb-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+			<div className="px-6 pt-5 pb-4 border-b border-slate-100 bg-slate-50">
 				<div className="flex items-center gap-6">
 					{[1, 2, 3, 4].map((i) => (
 						<div key={i} className="h-6 w-24 bg-slate-200 rounded-md" />

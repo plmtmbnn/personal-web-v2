@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Info, HelpCircle } from "lucide-react";
 
 interface CustomModalProps {
@@ -72,6 +72,7 @@ export default function CustomModal({
 
 	const currentVariant = variantStyles[variant];
 	const Icon = currentVariant.icon;
+	const reduceMotion = useReducedMotion();
 
 	return (
 		<AnimatePresence>
@@ -79,7 +80,7 @@ export default function CustomModal({
 				<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
 					{/* Backdrop */}
 					<motion.div
-						initial={{ opacity: 0 }}
+						initial={reduceMotion ? false : { opacity: 0 }}
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0 }}
 						onClick={onClose}
@@ -88,7 +89,7 @@ export default function CustomModal({
 
 					{/* Modal Content */}
 					<motion.div
-						initial={{ opacity: 0, scale: 0.95, y: 20 }}
+						initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 20 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
 						exit={{ opacity: 0, scale: 0.95, y: 20 }}
 						transition={{ type: "spring", damping: 25, stiffness: 300 }}

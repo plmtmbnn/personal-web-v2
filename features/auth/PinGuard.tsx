@@ -3,7 +3,7 @@
 import type React from "react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ENV_GLOBAL } from "@/lib/core/env";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	ShieldCheck,
 	Lock,
@@ -31,6 +31,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 	const [isFocused, setIsFocused] = useState(false);
 
 	const inputRef = useRef<HTMLInputElement>(null);
+	const reduceMotion = useReducedMotion();
 
 	const isPinGuardDisabled =
 		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false" ||
@@ -145,7 +146,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 			<div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
 
 			<motion.div
-				initial={{ opacity: 0, y: 15 }}
+				initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.4, ease: "easeOut" }}
 				onClick={(e) => {
@@ -157,7 +158,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 			>
 				{/* Dark Header Accent Card - Contrast Mastery Pattern */}
 				<div className="bg-slate-900 text-white rounded-2xl p-6 text-center mb-8 relative overflow-hidden shadow-md">
-					<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
+					<div className="absolute inset-0 bg-emerald-500/10 pointer-events-none" />
 
 					<motion.div
 						initial={{ scale: 0.8 }}
@@ -250,7 +251,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 							<AnimatePresence>
 								{error && (
 									<motion.div
-										initial={{ opacity: 0, y: -5 }}
+										initial={reduceMotion ? false : { opacity: 0, y: -5 }}
 										animate={{ opacity: 1, y: 0 }}
 										exit={{ opacity: 0 }}
 										className="absolute inset-0 text-center"

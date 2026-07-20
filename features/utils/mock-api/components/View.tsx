@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Plus,
 	Trash2,
@@ -24,6 +24,7 @@ interface MockDefinition {
 }
 
 export default function MockApiView() {
+	const reduceMotion = useReducedMotion();
 	const [method, setMethod] = useState("GET");
 	const [path, setPath] = useState("");
 	const [status, setStatus] = useState(200);
@@ -267,7 +268,7 @@ export default function MockApiView() {
 						<AnimatePresence>
 							{lastCreatedUrl && (
 								<motion.div
-									initial={{ opacity: 0, y: 10 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, scale: 0.95 }}
 									className="bg-green-50 border border-green-200 p-4 rounded-xl"
@@ -317,7 +318,7 @@ export default function MockApiView() {
 							<AnimatePresence mode="popLayout">
 								{mocks.length === 0 ? (
 									<motion.div
-										initial={{ opacity: 0 }}
+										initial={reduceMotion ? false : { opacity: 0 }}
 										animate={{ opacity: 1 }}
 										className="bg-white border border-dashed border-slate-300 p-12 rounded-xl text-center"
 									>
@@ -330,7 +331,7 @@ export default function MockApiView() {
 										<motion.div
 											layout
 											key={mock.key}
-											initial={{ opacity: 0, x: -10 }}
+											initial={reduceMotion ? false : { opacity: 0, x: -10 }}
 											animate={{ opacity: 1, x: 0 }}
 											exit={{ opacity: 0, scale: 0.95 }}
 											className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow group"

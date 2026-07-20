@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Share2, Check, Link2 } from "lucide-react";
 import { FaXTwitter, FaLinkedinIn, FaWhatsapp } from "react-icons/fa6";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface ShareButtonProps {
 	title: string;
@@ -37,6 +37,7 @@ const socialTargets = (title: string, url: string) => [
 export default function ShareButton({ title, url }: ShareButtonProps) {
 	const [copied, setCopied] = useState(false);
 	const [shareUrl, setShareUrl] = useState(url || "");
+	const reduceMotion = useReducedMotion();
 
 	useEffect(() => {
 		if (!url && typeof window !== "undefined") {
@@ -79,7 +80,7 @@ export default function ShareButton({ title, url }: ShareButtonProps) {
 					{copied ? (
 						<motion.span
 							key="copied"
-							initial={{ opacity: 0, y: 8 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 8 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -8 }}
 							className="flex items-center gap-2 text-emerald-400"
@@ -89,7 +90,7 @@ export default function ShareButton({ title, url }: ShareButtonProps) {
 					) : (
 						<motion.span
 							key="share"
-							initial={{ opacity: 0, y: 8 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 8 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -8 }}
 							className="flex items-center gap-2"

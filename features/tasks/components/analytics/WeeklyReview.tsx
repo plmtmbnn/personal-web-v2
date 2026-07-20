@@ -22,7 +22,7 @@ import {
 	BarChart2,
 	Activity,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 // ─── Mini circular progress ───────────────────────────────────────────────────
 function RingProgress({
@@ -36,6 +36,7 @@ function RingProgress({
 	stroke?: number;
 	color?: string;
 }) {
+	const reduceMotion = useReducedMotion();
 	const r = (size - stroke) / 2;
 	const circ = 2 * Math.PI * r;
 	const offset = circ - (value / 100) * circ;
@@ -60,7 +61,7 @@ function RingProgress({
 				strokeWidth={stroke}
 				strokeLinecap="round"
 				strokeDasharray={circ}
-				initial={{ strokeDashoffset: circ }}
+				initial={reduceMotion ? false : { strokeDashoffset: circ }}
 				animate={{ strokeDashoffset: offset }}
 				transition={{ duration: 1.4, ease: "easeOut" }}
 				transform={`rotate(-90 ${size / 2} ${size / 2})`}
@@ -97,35 +98,35 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 // ─── Grade config ─────────────────────────────────────────────────────────────
 const GRADE_CONFIG = {
 	"A+": {
-		bg: "from-emerald-500 to-teal-400",
+		bg: "bg-emerald-500",
 		text: "!text-emerald-400",
 		badge: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
 		ring: "#10b981",
 		label: "Elite Execution",
 	},
 	A: {
-		bg: "from-teal-500 to-cyan-400",
+		bg: "bg-teal-500",
 		text: "!text-teal-400",
 		badge: "bg-teal-400/20 text-teal-300 border-teal-400/30",
 		ring: "#14b8a6",
 		label: "High Performer",
 	},
 	B: {
-		bg: "from-blue-500 to-indigo-400",
+		bg: "bg-blue-500",
 		text: "!text-blue-400",
 		badge: "bg-blue-400/20 text-blue-300 border-blue-400/30",
 		ring: "#3b82f6",
 		label: "Solid Progress",
 	},
 	C: {
-		bg: "from-amber-500 to-orange-400",
+		bg: "bg-amber-500",
 		text: "!text-amber-400",
 		badge: "bg-amber-400/20 text-amber-300 border-amber-400/30",
 		ring: "#f59e0b",
 		label: "Moderate Run",
 	},
 	D: {
-		bg: "from-rose-500 to-pink-400",
+		bg: "bg-rose-500",
 		text: "!text-rose-400",
 		badge: "bg-rose-400/20 text-rose-300 border-rose-400/30",
 		ring: "#f43f5e",
@@ -170,6 +171,7 @@ const PRIORITY_CFG: Record<
 export default function WeeklyReview() {
 	const [stats, setStats] = useState<WeeklyReviewStats | null>(null);
 	const [isPending, startTransition] = useTransition();
+	const reduceMotion = useReducedMotion();
 
 	useEffect(() => {
 		startTransition(async () => {
@@ -311,21 +313,17 @@ export default function WeeklyReview() {
 	return (
 		<AnimatePresence>
 			<motion.div
-				initial={{ opacity: 0 }}
+				initial={reduceMotion ? false : { opacity: 0 }}
 				animate={{ opacity: 1 }}
 				className="space-y-6 sm:space-y-8"
 			>
 				{/* ── Hero Banner ──────────────────────────────────────────────── */}
 				<motion.div
-					initial={{ opacity: 0, y: 16 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5 }}
 					className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 shadow-2xl border border-slate-800"
 				>
-					{/* Gradient accent */}
-					<div
-						className={`absolute inset-0 bg-gradient-to-br ${grade.bg} opacity-10 pointer-events-none`}
-					/>
 					{/* Decorative grid lines */}
 					<div
 						className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -499,7 +497,7 @@ export default function WeeklyReview() {
 					].map((item, idx) => (
 						<motion.div
 							key={item.label}
-							initial={{ opacity: 0, y: 12 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.05 * idx }}
 							className={`bg-white border ${item.border} rounded-3xl p-5 shadow-sm flex flex-col gap-4`}
@@ -523,7 +521,7 @@ export default function WeeklyReview() {
 							{/* Mini progress bar */}
 							<div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
 								<motion.div
-									initial={{ width: 0 }}
+									initial={reduceMotion ? false : { width: 0 }}
 									animate={{ width: `${item.bar}%` }}
 									transition={{ duration: 1, delay: 0.2 + 0.05 * idx }}
 									className={`h-full ${item.barColor} rounded-full`}
@@ -537,7 +535,7 @@ export default function WeeklyReview() {
 				<div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
 					{/* Left: Top Wins (wider) */}
 					<motion.div
-						initial={{ opacity: 0, y: 12 }}
+						initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.2 }}
 						className="lg:col-span-3 bg-white border border-slate-200 rounded-[2rem] p-7 shadow-sm space-y-5"
@@ -575,7 +573,7 @@ export default function WeeklyReview() {
 									return (
 										<motion.div
 											key={win.id}
-											initial={{ opacity: 0, x: -12 }}
+											initial={reduceMotion ? false : { opacity: 0, x: -12 }}
 											animate={{ opacity: 1, x: 0 }}
 											transition={{ delay: 0.25 + idx * 0.1 }}
 											className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-200 hover:bg-white transition-all group"
@@ -624,7 +622,7 @@ export default function WeeklyReview() {
 					<div className="lg:col-span-2 flex flex-col gap-6">
 						{/* Domain Focus */}
 						<motion.div
-							initial={{ opacity: 0, y: 12 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.25 }}
 							className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm space-y-4"
@@ -643,8 +641,8 @@ export default function WeeklyReview() {
 								</div>
 							</div>
 
-							<div className="p-5 rounded-2xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 text-center">
-								<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-violet-500/25">
+							<div className="p-5 rounded-2xl bg-violet-50 border border-violet-100 text-center">
+								<div className="w-12 h-12 rounded-2xl bg-violet-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-violet-500/25">
 									<Activity className="w-6 h-6" />
 								</div>
 								<h4 className="text-lg font-black text-slate-900 mt-3">
@@ -658,7 +656,7 @@ export default function WeeklyReview() {
 
 						{/* Sprint Audit */}
 						<motion.div
-							initial={{ opacity: 0, y: 12 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.3 }}
 							className="flex-1 bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm space-y-5"
@@ -741,10 +739,10 @@ export default function WeeklyReview() {
 								</div>
 								<div className="h-2 bg-slate-100 rounded-full overflow-hidden">
 									<motion.div
-										initial={{ width: 0 }}
+										initial={reduceMotion ? false : { width: 0 }}
 										animate={{ width: `${stats.completionRate}%` }}
 										transition={{ duration: 1.2, ease: "easeOut", delay: 0.4 }}
-										className={`h-full rounded-full bg-gradient-to-r ${grade.bg}`}
+										className={`h-full rounded-full ${grade.bg}`}
 									/>
 								</div>
 							</div>
@@ -754,10 +752,10 @@ export default function WeeklyReview() {
 
 				{/* ── Feedback Banner ───────────────────────────────────────────── */}
 				<motion.div
-					initial={{ opacity: 0, y: 12 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4 }}
-					className={`relative overflow-hidden rounded-[2rem] p-7 border bg-gradient-to-br ${grade.bg} shadow-lg`}
+					className={`relative overflow-hidden rounded-[2rem] p-7 border ${grade.bg} shadow-lg`}
 				>
 					<div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
 						<Award className="w-32 h-32 text-white" />

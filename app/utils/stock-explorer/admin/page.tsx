@@ -14,10 +14,11 @@ import {
 	RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import PinGuard from "@/features/auth/PinGuard";
 
 export default function StockImportAdmin() {
+	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");
 	const [status, setStatus] = useState<{
 		type: "idle" | "loading" | "success" | "error";
@@ -310,7 +311,7 @@ export default function StockImportAdmin() {
 										{status.type !== "idle" && (
 											<motion.div
 												key={status.type}
-												initial={{ opacity: 0, x: -10 }}
+												initial={reduceMotion ? false : { opacity: 0, x: -10 }}
 												animate={{ opacity: 1, x: 0 }}
 												exit={{ opacity: 0, x: 10 }}
 												className="flex items-center gap-3"

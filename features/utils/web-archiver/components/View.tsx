@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	ArrowLeft,
 	Globe,
@@ -16,6 +16,7 @@ import PinGuard from "@/features/auth/PinGuard";
 import { archiveUrl } from "../actions";
 
 export default function WebArchiverView() {
+	const reduceMotion = useReducedMotion();
 	const [url, setUrl] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -130,7 +131,7 @@ export default function WebArchiverView() {
 						<AnimatePresence mode="wait">
 							{error && (
 								<motion.div
-									initial={{ opacity: 0, y: 10 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, y: -10 }}
 									className="mt-8 p-6 bg-red-50 border border-red-200 rounded-2xl flex gap-3 text-red-700"
@@ -145,7 +146,7 @@ export default function WebArchiverView() {
 
 							{result && (
 								<motion.div
-									initial={{ opacity: 0, y: 10 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, y: -10 }}
 									className="mt-8 p-6 bg-emerald-50 border border-emerald-200 rounded-2xl flex gap-3 text-emerald-800"

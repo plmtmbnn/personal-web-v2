@@ -1,13 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 const StatsCard = ({ visited, total }: { visited: number; total: number }) => {
+	const reduceMotion = useReducedMotion();
 	const percentage = total > 0 ? Math.round((visited / total) * 100) : 0;
 
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 20 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			className="bg-white border border-slate-200 rounded-3xl p-8 mb-12 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8"
 		>
@@ -30,7 +31,7 @@ const StatsCard = ({ visited, total }: { visited: number; total: number }) => {
 				</div>
 				<div className="h-4 bg-slate-100 rounded-full overflow-hidden">
 					<motion.div
-						initial={{ width: 0 }}
+						initial={reduceMotion ? false : { width: 0 }}
 						animate={{ width: `${percentage}%` }}
 						transition={{ duration: 1.5, ease: "easeOut" }}
 						className="h-full bg-emerald-500 rounded-full"

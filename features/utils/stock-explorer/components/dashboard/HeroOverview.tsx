@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
 	TrendingUp,
 	TrendingDown,
@@ -14,6 +14,7 @@ interface HeroOverviewProps {
 }
 
 export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
+	const reduceMotion = useReducedMotion();
 	const {
 		avgReturn,
 		sentimentScore,
@@ -31,7 +32,7 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 			{/* IHSG Return */}
 			<motion.div
-				initial={{ opacity: 0, y: 10 }}
+				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
 				className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between"
 			>
@@ -64,7 +65,7 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 
 			{/* Market Score */}
 			<motion.div
-				initial={{ opacity: 0, y: 10 }}
+				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.1 }}
 				className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-xl flex flex-col justify-between text-white relative overflow-hidden"
@@ -101,7 +102,7 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 
 			{/* Foreign Flow */}
 			<motion.div
-				initial={{ opacity: 0, y: 10 }}
+				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.2 }}
 				className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between"
@@ -131,7 +132,7 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 
 			{/* Volume & Value */}
 			<motion.div
-				initial={{ opacity: 0, y: 10 }}
+				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.3 }}
 				className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between"

@@ -44,7 +44,7 @@ export function Skeleton({
 		>
 			{animation && (
 				<motion.div
-					className="h-full w-full bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 bg-[length:200%_100%]"
+					className="h-full w-full bg-slate-100"
 					animate={{ backgroundPosition: ["0% 0%", "-100% 0%"] }}
 					transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
 				/>

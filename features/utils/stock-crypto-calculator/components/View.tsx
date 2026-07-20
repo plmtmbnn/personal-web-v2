@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Wallet,
 	TrendingUp,
@@ -214,6 +214,7 @@ function ScenarioTooltip({ active, payload, label }: any) {
 // ─── Main Component ────────────────────────────────────────────────────────
 
 export default function StockCryptoCalculatorView() {
+	const reduceMotion = useReducedMotion();
 	// ── State ──────────────────────────────────────────────────────────────
 	const [oldPrice, setOldPrice] = useState("");
 	const [oldQty, setOldQty] = useState("");
@@ -423,7 +424,7 @@ export default function StockCryptoCalculatorView() {
 							{/* Summary pill */}
 							{parseFloat(oldPrice) > 0 && parseFloat(oldQty) > 0 && (
 								<motion.div
-									initial={{ opacity: 0, y: 6 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 6 }}
 									animate={{ opacity: 1, y: 0 }}
 									className="mt-4 px-4 py-2.5 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-between"
 								>
@@ -461,7 +462,7 @@ export default function StockCryptoCalculatorView() {
 							</div>
 							{parseFloat(newPrice) > 0 && parseFloat(newQty) > 0 && (
 								<motion.div
-									initial={{ opacity: 0, y: 6 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 6 }}
 									animate={{ opacity: 1, y: 0 }}
 									className="mt-4 px-4 py-2.5 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between"
 								>
@@ -562,13 +563,13 @@ export default function StockCryptoCalculatorView() {
 										<div className="flex h-full gap-1">
 											<motion.div
 												className="bg-blue-500 rounded-full"
-												initial={{ width: 0 }}
+												initial={reduceMotion ? false : { width: 0 }}
 												animate={{ width: `${stats.initialWeight}%` }}
 												transition={{ duration: 1, ease: "easeOut" }}
 											/>
 											<motion.div
 												className="bg-emerald-500 rounded-full flex-1"
-												initial={{ opacity: 0 }}
+												initial={reduceMotion ? false : { opacity: 0 }}
 												animate={{
 													opacity: stats.additionalWeight > 0 ? 1 : 0,
 												}}
@@ -583,7 +584,7 @@ export default function StockCryptoCalculatorView() {
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 							{/* P/L Card */}
 							<motion.div
-								initial={{ opacity: 0, y: 16 }}
+								initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 								animate={{ opacity: 1, y: 0 }}
 								className="p-6 bg-white border border-slate-200 rounded-[2rem] shadow-sm flex flex-col gap-4"
 							>
@@ -665,7 +666,7 @@ export default function StockCryptoCalculatorView() {
 
 							{/* Action Plan Card */}
 							<motion.div
-								initial={{ opacity: 0, y: 16 }}
+								initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: 0.08 }}
 								className="p-6 bg-white border border-slate-200 rounded-[2rem] shadow-sm flex flex-col gap-4"
@@ -683,7 +684,7 @@ export default function StockCryptoCalculatorView() {
 									{stats.goalPossible ? (
 										<motion.div
 											key="possible"
-											initial={{ opacity: 0, x: 8 }}
+											initial={reduceMotion ? false : { opacity: 0, x: 8 }}
 											animate={{ opacity: 1, x: 0 }}
 											exit={{ opacity: 0, x: -8 }}
 											className="flex flex-col gap-3 flex-1"
@@ -725,7 +726,7 @@ export default function StockCryptoCalculatorView() {
 									) : (
 										<motion.div
 											key="not-possible"
-											initial={{ opacity: 0 }}
+											initial={reduceMotion ? false : { opacity: 0 }}
 											animate={{ opacity: 1 }}
 											exit={{ opacity: 0 }}
 											className="flex-1 flex items-start gap-3 text-slate-400"

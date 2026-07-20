@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, Undo2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { UNDO_TOAST_DURATION_MS } from "@/features/tasks/constants";
 
@@ -73,10 +73,11 @@ const Toast = ({
 	};
 
 	const colors = getToastColors();
+	const reduceMotion = useReducedMotion();
 
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 100, scale: 0.95 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 100, scale: 0.95 }}
 			animate={{ opacity: 1, y: 0, scale: 1 }}
 			exit={{ opacity: 0, y: 100, scale: 0.95 }}
 			transition={{ duration: 0.2, ease: "easeOut" }}

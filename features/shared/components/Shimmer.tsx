@@ -1,17 +1,18 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 /**
  * Shimmer Effect Component
- * Adds a gradient shimmer animation to skeleton loaders for a polished look.
+ * Adds a subtle shimmer to skeleton loaders for a polished look.
  */
 export function Shimmer() {
+	const reduceMotion = useReducedMotion();
 	return (
 		<div className="absolute inset-0 overflow-hidden">
 			<motion.div
-				className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-200/70 to-transparent"
-				initial={{ x: "-100%" }}
+				className="absolute inset-0 bg-slate-200/40"
+				initial={reduceMotion ? false : { x: "-100%" }}
 				animate={{ x: "100%" }}
 				transition={{
 					duration: 1.5,

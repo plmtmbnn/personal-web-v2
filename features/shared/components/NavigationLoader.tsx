@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 /**
  * NavigationLoader
@@ -17,6 +17,7 @@ import { AnimatePresence, motion } from "framer-motion";
 export default function NavigationLoader() {
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
+	const reduceMotion = useReducedMotion();
 	const [isLoading, setIsLoading] = useState(false);
 	const isFirstMount = useRef(true);
 
@@ -47,8 +48,8 @@ export default function NavigationLoader() {
 					transition={{ duration: 0.2 }}
 				>
 					<motion.div
-						className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]"
-						initial={{ width: "0%" }}
+						className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]"
+						initial={reduceMotion ? { width: "85%" } : { width: "0%" }}
 						animate={{ width: "85%" }}
 						exit={{ width: "100%" }}
 						transition={{

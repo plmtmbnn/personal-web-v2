@@ -1,7 +1,7 @@
 "use client";
 
 import { EXPERIENCE_YEAR } from "@/lib/shared/constants";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
 	Briefcase,
 	MapPin,
@@ -13,6 +13,8 @@ import {
 	Cpu,
 	CheckCircle2,
 	LayoutDashboard,
+	Building2,
+	type LucideIcon,
 } from "lucide-react";
 
 interface Experience {
@@ -21,7 +23,7 @@ interface Experience {
 	positions: Position[];
 	description: string;
 	color: string;
-	icon: any;
+	icon: LucideIcon;
 }
 
 interface Position {
@@ -36,7 +38,7 @@ const experiences: Experience[] = [
 		company: "RELIID (PT Relianceintegrasi Dunia Anda)",
 		location: "Indonesia – Remote",
 		description: "Technology Solution Company",
-		color: "from-blue-500 to-cyan-500",
+		color: "bg-blue-500",
 		icon: Cpu,
 		positions: [
 			{
@@ -58,7 +60,7 @@ const experiences: Experience[] = [
 		company: "Finsoft (PT. Solutif Teknologi Indonesia)",
 		location: "Indonesia – Remote",
 		description: "Technology Solution Company",
-		color: "from-purple-500 to-pink-500",
+		color: "bg-purple-500",
 		icon: ShieldCheck,
 		positions: [
 			{
@@ -80,7 +82,7 @@ const experiences: Experience[] = [
 		company: "Cooderu",
 		location: "Remote",
 		description: "EdTech Startup",
-		color: "from-orange-500 to-red-500",
+		color: "bg-orange-500",
 		icon: Zap,
 		positions: [
 			{
@@ -98,7 +100,7 @@ const experiences: Experience[] = [
 		company: "Pinjam Modal",
 		location: "Indonesia – Remote",
 		description: "Fintech Company",
-		color: "from-emerald-500 to-teal-500",
+		color: "bg-emerald-500",
 		icon: LayoutDashboard,
 		positions: [
 			{
@@ -133,21 +135,13 @@ const experiences: Experience[] = [
 ];
 
 export default function WorkExperience() {
+	const reduceMotion = useReducedMotion();
 	return (
-		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
-			{/* Dynamic Background Ambience */}
-			<div className="absolute top-0 left-0 w-full h-full pointer-events-none -z-10">
-				<div className="absolute top-[-5%] right-[-5%] w-[60%] h-[60%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
-				<div
-					className="absolute bottom-[-5%] left-[-5%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse"
-					style={{ animationDelay: "2s" }}
-				/>
-			</div>
-
+		<main className="min-h-screen bg-background relative pb-32">
 			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
 				{/* Header Section */}
 				<motion.div
-					initial={{ opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.8 }}
 					className="text-center space-y-6 mb-24"
@@ -159,7 +153,7 @@ export default function WorkExperience() {
 						</span>
 					</div>
 					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground">
-						Professional <span className="gradient-text">Experience</span>
+						Professional <span className="text-accent">Experience</span>
 					</h1>
 					<p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium leading-relaxed">
 						{EXPERIENCE_YEAR}+ years architecting secure fintech ecosystems and
@@ -170,7 +164,7 @@ export default function WorkExperience() {
 				{/* Enhanced Timeline */}
 				<div className="relative">
 					{/* Central Line */}
-					<div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-accent/50 via-indigo-500/20 to-transparent md:-translate-x-1/2" />
+					<div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-accent/20 md:-translate-x-1/2" />
 
 					<div className="space-y-24">
 						{experiences.map((exp, idx) => {
@@ -178,8 +172,8 @@ export default function WorkExperience() {
 							return (
 								<motion.div
 									key={exp.company}
-									initial={{ opacity: 0, y: 40 }}
-									whileInView={{ opacity: 1, y: 0 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 40 }}
+									whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
 									viewport={{ once: true, margin: "-100px" }}
 									transition={{ duration: 0.7, delay: idx * 0.1 }}
 									className={`relative flex flex-col md:flex-row items-center ${idx % 2 === 0 ? "md:flex-row-reverse" : ""}`}
@@ -194,9 +188,9 @@ export default function WorkExperience() {
 										className={`w-full md:w-1/2 pl-12 md:pl-0 ${idx % 2 === 0 ? "md:pl-16" : "md:pr-16"}`}
 									>
 										<div className="group relative">
-											{/* Hover Gradient Glow */}
+											{/* Hover Glow */}
 											<div
-												className={`absolute -inset-0.5 bg-gradient-to-r ${exp.color} rounded-[2.5rem] opacity-0 group-hover:opacity-20 transition duration-500 blur-xl`}
+												className={`absolute -inset-0.5 ${exp.color} rounded-[2.5rem] opacity-0 group-hover:opacity-20 transition duration-500 blur-xl`}
 											/>
 
 											<div className="relative glass-card p-8 sm:p-10 rounded-[2.5rem] border-2 border-white/5 bg-white/5 backdrop-blur-xl hover:border-accent/30 transition-all duration-500 shadow-2xl">
@@ -205,7 +199,7 @@ export default function WorkExperience() {
 													<div className="space-y-1">
 														<div className="flex items-center gap-3">
 															<div
-																className={`p-2 rounded-lg bg-gradient-to-br ${exp.color} text-white shadow-lg`}
+																className={`p-2 rounded-lg ${exp.color} text-white shadow-lg`}
 															>
 																<Icon className="w-5 h-5" />
 															</div>
@@ -292,8 +286,8 @@ export default function WorkExperience() {
 
 				{/* Impact Stats */}
 				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					whileInView={{ opacity: 1, y: 0 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+					whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
 					viewport={{ once: true }}
 					className="mt-32 grid grid-cols-2 md:grid-cols-4 gap-6"
 				>
@@ -328,31 +322,5 @@ export default function WorkExperience() {
 				</motion.div>
 			</div>
 		</main>
-	);
-}
-
-// Fail-safe for building icon
-function Building2(props: any) {
-	return (
-		<svg
-			{...props}
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-		>
-			<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
-			<path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
-			<path d="M18 9h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2" />
-			<path d="M10 6h4" />
-			<path d="M10 10h4" />
-			<path d="M10 14h4" />
-			<path d="M10 18h4" />
-		</svg>
 	);
 }

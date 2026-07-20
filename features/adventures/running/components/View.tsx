@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
 	Trophy,
 	Zap,
@@ -74,6 +74,7 @@ export default function RunningPage({
 	isAdmin = false,
 }: RunningViewProps) {
 	const [mounted, setMounted] = useState(false);
+	const reduceMotion = useReducedMotion();
 	const searchParams = useSearchParams();
 	const [statusMessage, setStatusMessage] = useState<{
 		type: "success" | "error";
@@ -149,7 +150,7 @@ export default function RunningPage({
 				{/* Status Banners */}
 				{statusMessage && (
 					<motion.div
-						initial={{ opacity: 0, y: -20 }}
+						initial={reduceMotion ? false : { opacity: 0, y: -20 }}
 						animate={{ opacity: 1, y: 0 }}
 						className={`p-4 rounded-2xl flex items-center gap-3 border backdrop-blur-md ${
 							statusMessage.type === "success"
@@ -174,7 +175,7 @@ export default function RunningPage({
 					<div className="lg:col-span-5 space-y-6">
 						{/* Breadcrumb */}
 						<motion.div
-							initial={{ opacity: 0, x: -10 }}
+							initial={reduceMotion ? false : { opacity: 0, x: -10 }}
 							animate={{ opacity: 1, x: 0 }}
 						>
 							<Link
@@ -188,7 +189,7 @@ export default function RunningPage({
 
 						{/* Header Content */}
 						<motion.div
-							initial={{ opacity: 0, y: 20 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6 }}
 							className="space-y-4"
@@ -200,7 +201,7 @@ export default function RunningPage({
 								</span>
 							</div>
 							<h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-foreground leading-[0.95]">
-								Endurance <span className="gradient-text">Journey</span>
+								Endurance <span className="text-emerald-500">Journey</span>
 							</h1>
 							<p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-md">
 								Tracking physical limits and mental discipline. Running is the
@@ -211,7 +212,7 @@ export default function RunningPage({
 
 						{/* Quick Stats Cards */}
 						<motion.div
-							initial={{ opacity: 0, scale: 0.95 }}
+							initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
 							animate={{ opacity: 1, scale: 1 }}
 							transition={{ delay: 0.15 }}
 							className="grid grid-cols-2 gap-4 p-5 bg-white/5 border border-white/10 rounded-[1.5rem] max-w-sm backdrop-blur-md"
@@ -240,7 +241,7 @@ export default function RunningPage({
 					═══════════════════════════════════════ */}
 					<div className="lg:col-span-7 space-y-6">
 						<motion.h3
-							initial={{ opacity: 0, y: 10 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.1 }}
 							className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 flex items-center gap-2"
@@ -253,7 +254,7 @@ export default function RunningPage({
 							{personalBests.map((pb, idx) => (
 								<motion.div
 									key={pb.distance}
-									initial={{ opacity: 0, y: 15 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ delay: 0.05 * idx, duration: 0.4 }}
 									className="p-5 glass-card border border-white/10 rounded-[1.8rem] bg-white/5 hover:border-emerald-500/20 transition-all group flex flex-col justify-between h-full"
@@ -312,7 +313,7 @@ export default function RunningPage({
 				═══════════════════════════════════════ */}
 				{showConnectPrompt && oauthUrl && (
 					<motion.div
-						initial={{ opacity: 0, scale: 0.95 }}
+						initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
 						animate={{ opacity: 1, scale: 1 }}
 						className="mt-12 p-8 glass-card border border-emerald-500/20 rounded-[2.5rem] bg-emerald-500/5 max-w-xl mx-auto backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden"
 					>
@@ -346,7 +347,7 @@ export default function RunningPage({
 				═══════════════════════════════════════ */}
 				{runs && runs.length > 0 && (
 					<motion.div
-						initial={{ opacity: 0, y: 30 }}
+						initial={reduceMotion ? false : { opacity: 0, y: 30 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.3 }}
 						className="mt-20 space-y-6"
@@ -389,12 +390,12 @@ export default function RunningPage({
 								return (
 									<motion.div
 										key={run.id}
-										initial={{ opacity: 0, y: 15 }}
+										initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 										animate={{ opacity: 1, y: 0 }}
 										transition={{ delay: 0.05 * idx, duration: 0.4 }}
 										className="p-6 glass-card border border-white/10 rounded-[2rem] bg-white/5 hover:border-emerald-500/20 transition-all group flex flex-col justify-between h-full relative overflow-hidden"
 									>
-										{/* Inner gradient highlight */}
+										{/* Inner highlight */}
 										<div className="absolute -right-8 -bottom-8 w-24 h-24 rounded-full bg-emerald-500/5 blur-xl group-hover:bg-emerald-500/10 transition-colors" />
 
 										<div className="space-y-4 relative z-10">

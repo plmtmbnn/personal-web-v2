@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Play,
 	Pause,
@@ -46,28 +46,28 @@ const PHASE_THEME: Record<
 	{ bg: string; accent: string; ring: string; pill: string; text: string }
 > = {
 	warmup: {
-		bg: "from-amber-950 via-amber-900 to-orange-950",
+		bg: "bg-amber-950",
 		accent: "#f59e0b",
 		ring: "#fbbf24",
 		pill: "bg-amber-500/20 text-amber-300 border-amber-500/30",
 		text: "text-amber-300",
 	},
 	speed: {
-		bg: "from-rose-950 via-red-900 to-rose-950",
+		bg: "bg-rose-950",
 		accent: "#f43f5e",
 		ring: "#fb7185",
 		pill: "bg-rose-500/20 text-rose-300 border-rose-500/30",
 		text: "text-rose-300",
 	},
 	rest: {
-		bg: "from-emerald-950 via-teal-900 to-emerald-950",
+		bg: "bg-emerald-950",
 		accent: "#10b981",
 		ring: "#34d399",
 		pill: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
 		text: "text-emerald-300",
 	},
 	cooldown: {
-		bg: "from-blue-950 via-indigo-900 to-blue-950",
+		bg: "bg-blue-950",
 		accent: "#3b82f6",
 		ring: "#60a5fa",
 		pill: "bg-blue-500/20 text-blue-300 border-blue-500/30",
@@ -196,11 +196,12 @@ function PhaseTimeline({
 // ─── Next Phase Preview ──────────────────────────────────────────────────────
 
 function NextPhasePreview({ phase }: { phase: Phase }) {
+	const reduceMotion = useReducedMotion();
 	const theme = PHASE_THEME[phase.type];
 	const Icon = PHASE_ICONS[phase.type];
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 6 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 6 }}
 			animate={{ opacity: 1, y: 0 }}
 			className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-xl ${theme.pill} text-xs text-white uppercase tracking-widest`}
 		>
@@ -214,6 +215,7 @@ function NextPhasePreview({ phase }: { phase: Phase }) {
 // ─── Lap History ─────────────────────────────────────────────────────────────
 
 function LapLog({ laps }: { laps: LapEntry[] }) {
+	const reduceMotion = useReducedMotion();
 	if (laps.length === 0) return null;
 	return (
 		<div className="w-full max-w-sm space-y-1.5 max-h-40 overflow-y-auto scrollbar-hide pr-1">
@@ -222,7 +224,7 @@ function LapLog({ laps }: { laps: LapEntry[] }) {
 				return (
 					<motion.div
 						key={`lap-${lap.completedAt}`}
-						initial={{ opacity: 0, x: -8 }}
+						initial={reduceMotion ? false : { opacity: 0, x: -8 }}
 						animate={{ opacity: 1, x: 0 }}
 						className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/5 border border-white/5"
 					>
@@ -695,16 +697,14 @@ export default function TimerView() {
 		? PHASE_THEME[currentPhase?.type ?? "warmup"]
 		: PHASE_THEME.cooldown;
 
+	const reduceMotion = useReducedMotion();
+
 	// ── Render ────────────────────────────────────────────────────────────────
 
 	return (
 		<main
-			className={`min-h-screen bg-gradient-to-br transition-[background] duration-700 ${
-				isComplete
-					? "from-emerald-950 via-teal-950 to-emerald-950"
-					: isActive
-						? theme.bg
-						: "from-slate-950 via-slate-900 to-zinc-950"
+			className={`min-h-screen transition-[background] duration-700 ${
+				isComplete ? "bg-emerald-950" : isActive ? theme.bg : "bg-slate-950"
 			} relative overflow-hidden font-sans`}
 		>
 			{isComplete && <Confetti />}
@@ -779,7 +779,7 @@ export default function TimerView() {
 					{isComplete && (
 						<motion.div
 							key="complete"
-							initial={{ opacity: 0, scale: 0.92 }}
+							initial={reduceMotion ? false : { opacity: 0, scale: 0.92 }}
 							animate={{ opacity: 1, scale: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.4 }}
@@ -865,7 +865,7 @@ export default function TimerView() {
 					{!isActive && !isComplete && (
 						<motion.div
 							key="setup"
-							initial={{ opacity: 0, y: 16 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, scale: 0.96 }}
 							transition={{ duration: 0.35 }}
@@ -963,7 +963,7 @@ export default function TimerView() {
 					{isActive && (
 						<motion.div
 							key={`active-${currentPhaseIndex}`}
-							initial={{ opacity: 0, scale: 1.04 }}
+							initial={reduceMotion ? false : { opacity: 0, scale: 1.04 }}
 							animate={{ opacity: 1, scale: 1 }}
 							exit={{ opacity: 0, scale: 0.96 }}
 							transition={{ duration: 0.45 }}
@@ -980,7 +980,7 @@ export default function TimerView() {
 								</span>
 								<motion.h2
 									key={currentPhase.label}
-									initial={{ opacity: 0, y: 8 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 8 }}
 									animate={{ opacity: 1, y: 0 }}
 									className="text-4xl text-white tracking-tighter text-white"
 								>
@@ -998,7 +998,9 @@ export default function TimerView() {
 								>
 									<motion.span
 										key={timeLeft}
-										initial={{ scale: 0.92, opacity: 0.5 }}
+										initial={
+											reduceMotion ? false : { scale: 0.92, opacity: 0.5 }
+										}
 										animate={{ scale: 1, opacity: 1 }}
 										className="text-7xl text-white tabular-nums text-white drop-shadow-xl"
 									>

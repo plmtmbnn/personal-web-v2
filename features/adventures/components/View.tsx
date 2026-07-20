@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Camera, ChevronRight, Activity, Compass } from "lucide-react";
 
 const categories = [
@@ -11,7 +10,7 @@ const categories = [
 		slug: "running",
 		description:
 			"Tracking consistency, endurance, and mental clarity through miles logged.",
-		accent: "from-emerald-500 to-teal-500",
+		accent: "bg-emerald-500",
 		color: "text-emerald-500",
 		bg: "bg-emerald-500/5",
 		icon: Activity,
@@ -21,7 +20,7 @@ const categories = [
 		slug: "travel",
 		description:
 			"Visual stories and cultural insights captured across the globe.",
-		accent: "from-purple-500 to-pink-500",
+		accent: "bg-purple-500",
 		color: "text-purple-500",
 		bg: "bg-purple-500/5",
 		icon: Camera,
@@ -29,26 +28,14 @@ const categories = [
 ];
 
 export default function AdventuresLanding() {
-	const [mounted, setMounted] = useState(false);
-	useEffect(() => setMounted(true), []);
-
-	if (!mounted) return null;
+	const reduceMotion = useReducedMotion();
 
 	return (
-		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
-			{/* Aesthetic Background Elements */}
-			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-5%] right-[-10%] w-[60%] h-[60%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
-				<div
-					className="absolute bottom-[-10%] left-[-5%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse"
-					style={{ animationDelay: "2s" }}
-				/>
-			</div>
-
+		<main className="min-h-screen bg-background relative pb-32">
 			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
 				{/* Header Section */}
 				<motion.div
-					initial={{ opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.8 }}
 					className="text-center space-y-6 mb-20"
@@ -60,7 +47,7 @@ export default function AdventuresLanding() {
 						</span>
 					</div>
 					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground leading-[0.9]">
-						Personal <span className="gradient-text">Adventures</span>
+						Personal <span className="text-accent">Adventures</span>
 					</h1>
 					<p className="text-muted-foreground text-lg max-w-xl mx-auto font-medium leading-relaxed">
 						Exploring the intersection of endurance and aesthetics. A collection
@@ -73,7 +60,7 @@ export default function AdventuresLanding() {
 					{categories.map((cat, i) => (
 						<motion.div
 							key={cat.slug}
-							initial={{ opacity: 0, y: 20 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: i * 0.1, duration: 0.6 }}
 						>
@@ -83,7 +70,7 @@ export default function AdventuresLanding() {
 							>
 								{/* Dynamic Inner Glow */}
 								<div
-									className={`absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-gradient-to-br ${cat.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl`}
+									className={`absolute -right-12 -bottom-12 w-48 h-48 rounded-full ${cat.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-2xl`}
 								></div>
 
 								<div className="relative z-10 flex flex-col h-full">

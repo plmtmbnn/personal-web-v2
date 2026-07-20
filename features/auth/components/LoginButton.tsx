@@ -4,7 +4,7 @@ import { useState } from "react";
 import { SupabaseConn } from "@/lib/core/supabase";
 import { logout } from "@/features/auth/actions";
 import { LogOut, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface LoginButtonProps {
 	user?: {
@@ -18,6 +18,7 @@ interface LoginButtonProps {
 
 export default function LoginButton({ user }: LoginButtonProps) {
 	const [isLoading, setIsLoading] = useState(false);
+	const reduceMotion = useReducedMotion();
 
 	const handleLogin = async () => {
 		setIsLoading(true);
@@ -44,7 +45,7 @@ export default function LoginButton({ user }: LoginButtonProps) {
 	if (user) {
 		return (
 			<motion.div
-				initial={{ opacity: 0, scale: 0.95 }}
+				initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
 				animate={{ opacity: 1, scale: 1 }}
 				className="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 shadow-sm rounded-3xl group transition-all"
 			>

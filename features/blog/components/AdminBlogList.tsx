@@ -44,7 +44,7 @@ import {
 	Plus,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import CustomModal from "@/features/shared/components/CustomModal";
 import {
 	AdminToastProvider,
@@ -127,6 +127,7 @@ function AdminBlogListInner({
 	const searchParams = useSearchParams();
 	const { toast } = useAdminToast();
 	const [isPending, startTransition] = useTransition();
+	const reduceMotion = useReducedMotion();
 
 	// ── Responsive layout ─────────────────────
 	const isMobile = useMediaQuery("(max-width: 768px)");
@@ -426,7 +427,7 @@ function AdminBlogListInner({
 			{/* ═══════════════════════════════════════
 			    STATS BAR
 			═══════════════════════════════════════ */}
-			<div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+			<div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-slate-100 bg-slate-50">
 				<div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2">
 					{(
 						[
@@ -570,7 +571,7 @@ function AdminBlogListInner({
 						<AnimatePresence>
 							{hasActiveFilters && (
 								<motion.button
-									initial={{ opacity: 0, scale: 0.9 }}
+									initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
 									animate={{ opacity: 1, scale: 1 }}
 									exit={{ opacity: 0, scale: 0.9 }}
 									onClick={() => {
@@ -620,7 +621,7 @@ function AdminBlogListInner({
 			<AnimatePresence>
 				{someSelected && !isMobile && (
 					<motion.div
-						initial={{ height: 0, opacity: 0 }}
+						initial={reduceMotion ? false : { height: 0, opacity: 0 }}
 						animate={{ height: "auto", opacity: 1 }}
 						exit={{ height: 0, opacity: 0 }}
 						transition={{ duration: 0.2 }}
@@ -696,7 +697,7 @@ function AdminBlogListInner({
 				<AnimatePresence>
 					{isPending && (
 						<motion.div
-							initial={{ opacity: 0 }}
+							initial={reduceMotion ? false : { opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center gap-4"
@@ -1000,13 +1001,13 @@ function AdminBlogListInner({
 												{isExpanded && (
 													<motion.tr
 														key={`preview-${blog.id}`}
-														initial={{ opacity: 0 }}
+														initial={reduceMotion ? false : { opacity: 0 }}
 														animate={{ opacity: 1 }}
 														exit={{ opacity: 0 }}
 													>
 														<td colSpan={8} className="px-0 py-0">
 															<motion.div
-																initial={{ height: 0 }}
+																initial={reduceMotion ? false : { height: 0 }}
 																animate={{ height: "auto" }}
 																exit={{ height: 0 }}
 																transition={{
@@ -1085,7 +1086,7 @@ function AdminBlogListInner({
 							return (
 								<motion.div
 									key={blog.id}
-									initial={{ opacity: 0, y: 10 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ delay: idx * 0.03 }}
 									className={`border rounded-2xl p-4 transition-all ${
@@ -1237,7 +1238,9 @@ function AdminBlogListInner({
 									<AnimatePresence>
 										{isExpanded && (
 											<motion.div
-												initial={{ height: 0, opacity: 0 }}
+												initial={
+													reduceMotion ? false : { height: 0, opacity: 0 }
+												}
 												animate={{ height: "auto", opacity: 1 }}
 												exit={{ height: 0, opacity: 0 }}
 												transition={{ duration: 0.2, ease: "easeInOut" }}
@@ -1307,7 +1310,7 @@ function AdminBlogListInner({
 			<AnimatePresence>
 				{isMobile && someSelected && (
 					<motion.div
-						initial={{ y: 100, opacity: 0 }}
+						initial={reduceMotion ? false : { y: 100, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						exit={{ y: 100, opacity: 0 }}
 						transition={{ type: "spring", damping: 25, stiffness: 300 }}

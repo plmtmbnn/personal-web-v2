@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Braces,
 	Copy,
@@ -66,6 +66,7 @@ import { JsonValue } from "@/features/shared/components/JsonValue";
 // ─── Main View ──────────────────────────────────────────────────────────────
 
 export default function JsonFormatterView() {
+	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");
 	const [parsedData, setParsedData] = useState<any>(null);
 	const [status, setStatus] = useState<
@@ -330,7 +331,9 @@ export default function JsonFormatterView() {
 									{error ? (
 										<motion.div
 											key="error"
-											initial={{ opacity: 0, scale: 0.98 }}
+											initial={
+												reduceMotion ? false : { opacity: 0, scale: 0.98 }
+											}
 											animate={{ opacity: 1, scale: 1 }}
 											exit={{ opacity: 0, scale: 0.98 }}
 											className="absolute inset-0 z-20 flex items-center justify-center p-12 text-center"
@@ -352,7 +355,7 @@ export default function JsonFormatterView() {
 									) : parsedData ? (
 										<motion.div
 											key="output"
-											initial={{ opacity: 0 }}
+											initial={reduceMotion ? false : { opacity: 0 }}
 											animate={{ opacity: 1 }}
 											className="h-full p-8 overflow-auto scrollbar-hide"
 										>

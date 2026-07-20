@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Compass } from "lucide-react";
 import { destinations } from "@/features/travel/data";
 import useDestinations from "@/features/travel/hooks/useDestinations";
@@ -8,6 +8,7 @@ import StatsCard from "@/features/travel/components/StatsCard";
 import DestinationCard from "@/features/travel/components/DestinationCard";
 
 export default function TravelPage() {
+	const reduceMotion = useReducedMotion();
 	const { visitedDestinations, wishlistDestinations } = useDestinations();
 
 	return (
@@ -16,7 +17,7 @@ export default function TravelPage() {
 				{/* Header Section */}
 				<div className="mb-16">
 					<motion.div
-						initial={{ opacity: 0, x: -20 }}
+						initial={reduceMotion ? false : { opacity: 0, x: -20 }}
 						animate={{ opacity: 1, x: 0 }}
 						className="space-y-4"
 					>

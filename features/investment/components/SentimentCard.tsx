@@ -11,7 +11,7 @@ import {
 	Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 ChartJS.register(
 	CategoryScale,
@@ -37,6 +37,7 @@ export default function SentimentCard({
 	data,
 	delay = 0,
 }: SentimentCardProps) {
+	const reduceMotion = useReducedMotion();
 	const sortedData = useMemo(() => {
 		return data ? [...data].sort((a, b) => a.x - b.x) : [];
 	}, [data]);
@@ -98,7 +99,7 @@ export default function SentimentCard({
 
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 10 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ delay }}
 			className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all group"

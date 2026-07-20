@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ProcessedStock, Sector } from "../../types";
 
 interface SectorRotationProps {
@@ -15,6 +15,7 @@ interface SectorData {
 }
 
 export default function SectorRotation({ stocks }: SectorRotationProps) {
+	const reduceMotion = useReducedMotion();
 	const sectorStats = useMemo(() => {
 		const map = new Map<Sector, SectorData>();
 
@@ -82,7 +83,7 @@ export default function SectorRotation({ stocks }: SectorRotationProps) {
 								<div className="flex-1 h-full flex justify-end">
 									{!isPositive && (
 										<motion.div
-											initial={{ width: 0 }}
+											initial={reduceMotion ? false : { width: 0 }}
 											animate={{ width: `${widthPct}%` }}
 											className="h-full bg-rose-500 rounded-l-full"
 										/>
@@ -96,7 +97,7 @@ export default function SectorRotation({ stocks }: SectorRotationProps) {
 								<div className="flex-1 h-full flex justify-start">
 									{isPositive && (
 										<motion.div
-											initial={{ width: 0 }}
+											initial={reduceMotion ? false : { width: 0 }}
 											animate={{ width: `${widthPct}%` }}
 											className="h-full bg-emerald-500 rounded-r-full"
 										/>

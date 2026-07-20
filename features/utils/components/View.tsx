@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
 	Timer,
 	ArrowLeft,
@@ -23,7 +23,7 @@ const utilities = [
 		slug: "timer",
 		description:
 			"High-precision interval timer with automated transitions, beeps, and wake-lock.",
-		accent: "from-rose-500 to-orange-500",
+		accent: "bg-rose-500",
 		color: "text-rose-500",
 		bg: "bg-rose-500/5",
 		icon: Timer,
@@ -33,7 +33,7 @@ const utilities = [
 		slug: "stock-crypto-calculator",
 		description:
 			"Strategic calculator for weighted average cost analysis and goal-based purchase planning.",
-		accent: "from-blue-500 to-indigo-500",
+		accent: "bg-blue-500",
 		color: "text-blue-500",
 		bg: "bg-blue-500/5",
 		icon: Calculator,
@@ -43,7 +43,7 @@ const utilities = [
 		slug: "json-formatter",
 		description:
 			"Developer-centric tool to beautify, minify, and validate JSON strings with syntax highlighting.",
-		accent: "from-indigo-500 to-purple-500",
+		accent: "bg-indigo-500",
 		color: "text-indigo-500",
 		bg: "bg-indigo-500/5",
 		icon: Braces,
@@ -53,7 +53,7 @@ const utilities = [
 		slug: "case-converter",
 		description:
 			"Universal recursive converter for variable names and JSON keys (Camel, Pascal, Snake, Kebab).",
-		accent: "from-blue-600 to-cyan-500",
+		accent: "bg-blue-600",
 		color: "text-blue-600",
 		bg: "bg-blue-600/5",
 		icon: ArrowRightLeft,
@@ -63,7 +63,7 @@ const utilities = [
 		slug: "csv-to-json",
 		description:
 			"Advanced CSV parser with support for nested objects, custom delimiters, and file uploads.",
-		accent: "from-emerald-600 to-teal-500",
+		accent: "bg-emerald-600",
 		color: "text-emerald-600",
 		bg: "bg-emerald-600/5",
 		icon: FileSpreadsheet,
@@ -73,7 +73,7 @@ const utilities = [
 		slug: "sql-formatter",
 		description:
 			"Advanced SQL beautifier and syntax validator supporting PostgreSQL, MySQL, and T-SQL.",
-		accent: "from-blue-500 to-indigo-500",
+		accent: "bg-blue-500",
 		color: "text-blue-500",
 		bg: "bg-blue-500/5",
 		icon: Database,
@@ -84,7 +84,7 @@ const utilities = [
 		path: "/utils/json-converter-advanced",
 		description:
 			"Advanced JSON to Multi-Target converter (TS, Go, Zod, Mongoose, Joi) with recursive parsing.",
-		accent: "from-blue-600 to-indigo-600",
+		accent: "bg-blue-600",
 		color: "text-blue-600",
 		bg: "bg-blue-600/5",
 		icon: Braces,
@@ -94,7 +94,7 @@ const utilities = [
 		slug: "file-renamer",
 		description:
 			"Batch rename files into clean, SEO-friendly kebab-case while preserving extensions.",
-		accent: "from-slate-600 to-slate-800",
+		accent: "bg-slate-600",
 		color: "text-slate-700",
 		bg: "bg-slate-700/5",
 		icon: Files,
@@ -104,7 +104,7 @@ const utilities = [
 		slug: "stock-explorer",
 		description:
 			"Interactive IDX stock summary explorer with foreign flow tracking and performance analysis.",
-		accent: "from-indigo-600 to-blue-500",
+		accent: "bg-indigo-600",
 		color: "text-indigo-600",
 		bg: "bg-indigo-600/5",
 		icon: TableIcon,
@@ -114,7 +114,7 @@ const utilities = [
 		slug: "mock-api",
 		description:
 			"Dynamic API mocking tool to create temporary endpoints with custom JSON responses and status codes.",
-		accent: "from-blue-400 to-cyan-400",
+		accent: "bg-blue-400",
 		color: "text-cyan-500",
 		bg: "bg-cyan-500/5",
 		icon: Braces,
@@ -124,7 +124,7 @@ const utilities = [
 		slug: "web-archiver",
 		description:
 			"Scrape articles from URLs, extract clean content, and archive them directly into your Second Brain.",
-		accent: "from-blue-500 to-cyan-500",
+		accent: "bg-blue-500",
 		color: "text-blue-500",
 		bg: "bg-blue-500/5",
 		icon: Globe,
@@ -133,6 +133,7 @@ const utilities = [
 
 export default function UtilsLanding() {
 	const [mounted, setMounted] = useState(false);
+	const reduceMotion = useReducedMotion();
 	useEffect(() => setMounted(true), []);
 
 	if (!mounted) return null;
@@ -151,7 +152,7 @@ export default function UtilsLanding() {
 			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
 				{/* Breadcrumb */}
 				<motion.div
-					initial={{ opacity: 0, x: -10 }}
+					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
 					animate={{ opacity: 1, x: 0 }}
 					className="mb-12"
 				>
@@ -166,7 +167,7 @@ export default function UtilsLanding() {
 
 				{/* Header Section */}
 				<motion.div
-					initial={{ opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.8 }}
 					className="text-center space-y-6 mb-20"
@@ -178,7 +179,7 @@ export default function UtilsLanding() {
 						</span>
 					</div>
 					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground leading-[0.9]">
-						Adventure <span className="gradient-text">Utilities</span>
+						Adventure <span className="text-blue-600">Utilities</span>
 					</h1>
 					<p className="text-muted-foreground text-lg max-w-xl mx-auto font-medium leading-relaxed">
 						High-fidelity tools designed to optimize physical performance and
@@ -191,7 +192,7 @@ export default function UtilsLanding() {
 					{utilities.map((util, i) => (
 						<motion.div
 							key={util.slug}
-							initial={{ opacity: 0, y: 20 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: i * 0.05, duration: 0.5 }}
 						>
@@ -201,7 +202,7 @@ export default function UtilsLanding() {
 							>
 								{/* Glow effect on hover */}
 								<div
-									className={`absolute -right-12 -bottom-12 w-32 h-32 rounded-full bg-gradient-to-br ${util.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-300 blur-xl pointer-events-none`}
+									className={`absolute -right-12 -bottom-12 w-32 h-32 rounded-full ${util.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-300 blur-xl pointer-events-none`}
 								/>
 
 								<div className="relative z-10 h-full flex flex-col justify-center">

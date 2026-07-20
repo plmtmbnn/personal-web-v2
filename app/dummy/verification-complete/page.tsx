@@ -1,10 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { CheckCircle2, ShieldCheck, UserCheck, FileCheck } from "lucide-react";
 import Link from "next/link";
 
 export default function VerificationCompletePage() {
+	const reduceMotion = useReducedMotion();
 	const steps = [
 		{
 			id: 1,
@@ -43,17 +44,17 @@ export default function VerificationCompletePage() {
 	return (
 		<div className="min-h-screen pt-24 pb-12 flex flex-col items-center justify-center bg-slate-50 relative overflow-hidden">
 			{/* Background decoration */}
-			<div className="absolute top-0 w-full h-[40vh] bg-gradient-to-b from-emerald-500/10 to-transparent pointer-events-none" />
+			<div className="absolute top-0 w-full h-[40vh] bg-emerald-500/5 pointer-events-none" />
 
 			<motion.div
 				className="z-10 bg-white rounded-2xl border border-slate-200 shadow-xl p-8 md:p-12 max-w-md w-full mx-4"
 				variants={containerVariants}
-				initial="hidden"
+				initial={reduceMotion ? false : "hidden"}
 				animate="visible"
 			>
 				<div className="flex flex-col items-center text-center mb-8">
 					<motion.div
-						initial={{ scale: 0 }}
+						initial={reduceMotion ? false : { scale: 0 }}
 						animate={{ scale: 1 }}
 						transition={{
 							type: "spring",

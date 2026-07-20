@@ -19,7 +19,7 @@ import QuickNav, {
 } from "@/features/tasks/components/shared/QuickNav";
 import { LayoutList, Target, Plus, Kanban } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 /**
  * Optimization: Lazy load heavy interactive/visual components.
@@ -107,6 +107,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState<TaskViewTab>("agenda");
 	const [viewMode, setViewMode] = useState<"list" | "board">("list");
+	const reduceMotion = useReducedMotion();
 
 	useEffect(() => {
 		setMounted(true);
@@ -206,7 +207,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 							{activeTab === "analytics" ? (
 								<motion.div
 									key="analytics"
-									initial={{ opacity: 0, y: 10 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, y: -10 }}
 									className="space-y-6 sm:space-y-8"
@@ -221,7 +222,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 							) : activeTab === "review" ? (
 								<motion.div
 									key="review"
-									initial={{ opacity: 0, y: 10 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, y: -10 }}
 									className="space-y-6 sm:space-y-8"
@@ -233,7 +234,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 							) : (
 								<motion.div
 									key="agenda"
-									initial={{ opacity: 0, y: 10 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, y: -10 }}
 									className="space-y-6 sm:space-y-8"

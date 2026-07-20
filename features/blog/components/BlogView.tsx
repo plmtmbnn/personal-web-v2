@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	ArrowRight,
 	Calendar,
@@ -38,6 +38,7 @@ const getCategoryColor = (category: string) => {
 export default function BlogView({ allBlogs }: BlogViewProps) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [activeCategory, setActiveCategory] = useState("All");
+	const reduceMotion = useReducedMotion();
 
 	// Check if a filter is actively applied (for skeleton loader)
 	const hasActiveFilter = searchQuery !== "" || activeCategory !== "All";
@@ -79,7 +80,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 						</span>
 					</div>
 					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-slate-950 leading-[0.95]">
-						The <span className="gradient-text">Pulse</span>
+						The <span className="text-indigo-600">Pulse</span>
 					</h1>
 					<p className="text-slate-500 text-sm font-medium leading-relaxed max-w-sm">
 						High-fidelity insights on fintech architecture, distributed systems,
@@ -176,7 +177,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 					{hasActiveFilter && sortedBlogs.length === 0 ? (
 						<motion.div
 							key="filtering"
-							initial={{ opacity: 0 }}
+							initial={reduceMotion ? false : { opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							className="grid grid-cols-1 md:grid-cols-2 gap-6"
@@ -185,7 +186,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 							{[1, 2, 3, 4].map((i) => (
 								<motion.div
 									key={i}
-									initial={{ opacity: 0, y: 15 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ duration: 0.35, delay: i * 0.04 }}
 								>
@@ -214,7 +215,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 					) : sortedBlogs.length === 0 ? (
 						<motion.div
 							key="no-results"
-							initial={{ opacity: 0, y: 15 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -15 }}
 							className="flex flex-col items-center justify-center text-center py-20 bg-slate-50 border border-dashed border-slate-200 rounded-[2.5rem] p-8"
@@ -233,7 +234,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 					) : (
 						<motion.div
 							key={`${activeCategory}-${searchQuery}`}
-							initial={{ opacity: 0 }}
+							initial={reduceMotion ? false : { opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.25 }}
@@ -256,7 +257,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 								{sortedBlogs.map((post, index) => (
 									<motion.div
 										key={post.slug}
-										initial={{ opacity: 0, y: 15 }}
+										initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 										animate={{ opacity: 1, y: 0 }}
 										transition={{ duration: 0.35, delay: index * 0.04 }}
 									>

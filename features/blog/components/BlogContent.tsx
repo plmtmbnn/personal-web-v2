@@ -20,7 +20,7 @@ SyntaxHighlighter.registerLanguage("sql", sql);
 SyntaxHighlighter.registerLanguage("css", css);
 SyntaxHighlighter.registerLanguage("bash", bash);
 import { Copy, Check } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface BlogContentProps {
 	content: string;
@@ -31,6 +31,7 @@ interface BlogContentProps {
 // ─────────────────────────────────────────────
 function CopyButton({ code }: { code: string }) {
 	const [copied, setCopied] = useState(false);
+	const reduceMotion = useReducedMotion();
 
 	const handleCopy = useCallback(async () => {
 		try {
@@ -52,7 +53,7 @@ function CopyButton({ code }: { code: string }) {
 				{copied ? (
 					<motion.span
 						key="check"
-						initial={{ opacity: 0, scale: 0.8 }}
+						initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
 						animate={{ opacity: 1, scale: 1 }}
 						exit={{ opacity: 0, scale: 0.8 }}
 						className="flex items-center gap-1 text-emerald-400"
@@ -63,7 +64,7 @@ function CopyButton({ code }: { code: string }) {
 				) : (
 					<motion.span
 						key="copy"
-						initial={{ opacity: 0, scale: 0.8 }}
+						initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
 						animate={{ opacity: 1, scale: 1 }}
 						exit={{ opacity: 0, scale: 0.8 }}
 						className="flex items-center gap-1"

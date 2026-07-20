@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	ArrowLeft,
 	ArrowRightLeft,
@@ -23,6 +23,7 @@ import { toWords, fromWords, transformObject } from "../utils/case";
 // ─── View Component ─────────────────────────────────────────────────────────
 
 export default function CaseConverterView() {
+	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");
 	const [output, setOutput] = useState("");
 	const [isCopied, setIsCopied] = useState(false);
@@ -262,7 +263,7 @@ export default function CaseConverterView() {
 									{error ? (
 										<motion.div
 											key="error"
-											initial={{ opacity: 0 }}
+											initial={reduceMotion ? false : { opacity: 0 }}
 											animate={{ opacity: 1 }}
 											exit={{ opacity: 0 }}
 											className="absolute inset-0 flex items-center justify-center p-12 text-center"
@@ -284,7 +285,7 @@ export default function CaseConverterView() {
 									) : output ? (
 										<motion.div
 											key="output"
-											initial={{ opacity: 0 }}
+											initial={reduceMotion ? false : { opacity: 0 }}
 											animate={{ opacity: 1 }}
 											className="h-full"
 										>

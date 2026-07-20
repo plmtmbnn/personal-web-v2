@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { TrendingUp, Activity, History, Clock } from "lucide-react";
 import {
 	Chart as ChartJS,
@@ -42,6 +42,7 @@ export default function FearAndGreedGauge({
 	previous1Year,
 	historicalData,
 }: FearAndGreedGaugeProps) {
+	const reduceMotion = useReducedMotion();
 	// Sort historical data
 	const sortedData = useMemo(() => {
 		return historicalData ? [...historicalData].sort((a, b) => a.x - b.x) : [];
@@ -100,7 +101,7 @@ export default function FearAndGreedGauge({
 					<div className="absolute top-0 left-0 w-72 h-72 rounded-full border-[20px] border-transparent border-t-emerald-500/20 border-r-emerald-500/20 rotate-45" />
 
 					<motion.div
-						initial={{ rotate: -90 }}
+						initial={reduceMotion ? false : { rotate: -90 }}
 						animate={{ rotate: (score / 100) * 180 - 90 }}
 						transition={{
 							type: "spring",

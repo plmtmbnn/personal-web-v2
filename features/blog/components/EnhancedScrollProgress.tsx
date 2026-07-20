@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useScroll, useSpring, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Clock } from "lucide-react";
@@ -21,6 +21,7 @@ export function EnhancedScrollProgress({
 
 	const params = useParams();
 	const slug = params?.slug;
+	const reduceMotion = useReducedMotion();
 
 	const [percent, setPercent] = useState(0);
 	const [timeRemaining, setTimeRemaining] = useState(readTimeMinutes);
@@ -60,13 +61,13 @@ export function EnhancedScrollProgress({
 		<>
 			{/* Progress bar */}
 			<motion.div
-				className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 z-50 origin-left print:hidden"
+				className="fixed top-0 left-0 right-0 h-1 bg-blue-500 z-50 origin-left print:hidden"
 				style={{ scaleX }}
 			/>
 
 			{/* Floating progress indicator */}
 			<motion.div
-				initial={{ opacity: 0, y: 20 }}
+				initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 				animate={{
 					opacity: showProgress ? 1 : 0,
 					y: showProgress ? 0 : 20,

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { ProcessedStock, SortConfig, SortKey } from "../types";
 
@@ -52,6 +52,7 @@ const SortableHeader = ({
 };
 
 const StockRow = ({ stock }: { stock: ProcessedStock }) => {
+	const reduceMotion = useReducedMotion();
 	const isGainer = stock.ChangePct > 0;
 	const isLoser = stock.ChangePct < 0;
 	const _isNeutral = stock.ChangePct === 0;
@@ -59,7 +60,7 @@ const StockRow = ({ stock }: { stock: ProcessedStock }) => {
 
 	return (
 		<motion.tr
-			initial={{ opacity: 0 }}
+			initial={reduceMotion ? false : { opacity: 0 }}
 			animate={{ opacity: 1 }}
 			transition={{ duration: 0.2 }}
 			className="border-t border-stone-100 hover:bg-stone-50 transition-colors"

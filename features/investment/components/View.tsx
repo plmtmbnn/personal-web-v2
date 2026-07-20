@@ -12,7 +12,7 @@ import {
 	Table as TableIcon,
 } from "lucide-react";
 import PinGuard from "@/features/auth/PinGuard";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { getFearAndGreedData } from "@/features/investment/actions";
 import type { FearAndGreedData } from "@/features/investment/types";
@@ -20,6 +20,7 @@ import FearAndGreedGauge from "@/features/investment/components/FearAndGreedGaug
 import SentimentCard from "@/features/investment/components/SentimentCard";
 
 export default function InvestmentPage() {
+	const reduceMotion = useReducedMotion();
 	const [marketData, setMarketData] = useState<FearAndGreedData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,7 @@ export default function InvestmentPage() {
 			} else {
 				setError("Failed to synchronize market data");
 			}
-		} catch (_err) {
+		} catch {
 			setError("Operational connection failure");
 		} finally {
 			setIsLoading(false);
@@ -112,7 +113,7 @@ export default function InvestmentPage() {
 									</p>
 									<div className="flex items-center justify-center gap-2">
 										<div
-											className={`w-1.5 h-1.5 rounded-full ${isLoading ? "bg-slate-300" : "bg-emerald-500 animate-pulse"}`}
+											className={`w-1.5 h-1.5 rounded-full ${isLoading ? "bg-slate-300 animate-pulse" : "bg-emerald-500"}`}
 										/>
 										<span className="text-xs font-black text-slate-900 uppercase">
 											{isLoading ? "Syncing" : "Connected"}
@@ -122,6 +123,7 @@ export default function InvestmentPage() {
 								<button
 									onClick={fetchData}
 									disabled={isLoading}
+									aria-label="Refresh market data"
 									className="p-2 text-slate-400 hover:text-indigo-600 transition-colors disabled:opacity-30"
 								>
 									<RefreshCw
@@ -166,7 +168,7 @@ export default function InvestmentPage() {
 							) : (
 								marketData && (
 									<motion.div
-										initial={{ opacity: 0, scale: 0.98 }}
+										initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
 										animate={{ opacity: 1, scale: 1 }}
 										className="w-full"
 									>

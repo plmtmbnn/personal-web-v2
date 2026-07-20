@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Files,
 	Copy,
@@ -56,6 +56,7 @@ const transformToKebab = (filename: string): string => {
 // ─── Main View ──────────────────────────────────────────────────────────────
 
 export default function FileRenamerView() {
+	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");
 	const [isCopied, setIsCopied] = useState(false);
 
@@ -183,7 +184,7 @@ export default function FileRenamerView() {
 												<motion.div
 													// biome-ignore lint/suspicious/noArrayIndexKey: List is purely decorative preview, index is stable for this usage
 													key={`${name}-${idx}`}
-													initial={{ opacity: 0, x: 20 }}
+													initial={reduceMotion ? false : { opacity: 0, x: 20 }}
 													animate={{ opacity: 1, x: 0 }}
 													exit={{ opacity: 0, x: -20 }}
 													transition={{

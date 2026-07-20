@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	PieChart as PieIcon,
 	Briefcase,
@@ -72,22 +72,17 @@ const otherProjects = [
 	},
 ];
 
-export default function PortfolioPage() {
+export default function PortfolioView() {
+	const reduceMotion = useReducedMotion();
 	const [activeSlice, setActiveSlice] = useState<number | null>(null);
 	const [expandedSection, setExpandedSection] = useState<string | null>("los");
 
 	return (
-		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
-			{/* Background Ambience */}
-			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px]" />
-				<div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[120px]" />
-			</div>
-
+		<main className="min-h-screen bg-background relative pb-32">
 			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
 				{/* Header Section */}
 				<motion.div
-					initial={{ opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.6 }}
 					className="text-center space-y-6 mb-20"
@@ -99,7 +94,7 @@ export default function PortfolioPage() {
 						</span>
 					</div>
 					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground">
-						Project <span className="gradient-text">Portfolio</span>
+						Project <span className="text-accent">Portfolio</span>
 					</h1>
 					<p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium leading-relaxed">
 						A comprehensive look at the high-impact systems I've architected,
@@ -111,7 +106,7 @@ export default function PortfolioPage() {
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 					{/* Analytics Visualizer (LHS) */}
 					<motion.div
-						initial={{ opacity: 0, x: -20 }}
+						initial={reduceMotion ? false : { opacity: 0, x: -20 }}
 						animate={{ opacity: 1, x: 0 }}
 						transition={{ duration: 0.8, delay: 0.2 }}
 						className="lg:col-span-5"
@@ -141,8 +136,11 @@ export default function PortfolioPage() {
 											fill="none"
 											stroke="currentColor"
 											strokeWidth="32"
-											className="text-blue-500/80 cursor-pointer"
+											className="text-blue-500/80 cursor-pointer focus:outline-none focus-visible:stroke-blue-400"
 											strokeDasharray="402 502"
+											role="button"
+											tabIndex={0}
+											aria-label="Show LOS & LMS systems (80%)"
 											animate={{
 												strokeWidth: activeSlice === 0 ? 40 : 32,
 												opacity:
@@ -151,6 +149,13 @@ export default function PortfolioPage() {
 											onClick={() => {
 												setActiveSlice(0);
 												setExpandedSection("los");
+											}}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" || e.key === " ") {
+													e.preventDefault();
+													setActiveSlice(0);
+													setExpandedSection("los");
+												}
 											}}
 											onMouseEnter={() => setActiveSlice(0)}
 											onMouseLeave={() => setActiveSlice(null)}
@@ -163,9 +168,12 @@ export default function PortfolioPage() {
 											fill="none"
 											stroke="currentColor"
 											strokeWidth="32"
-											className="text-purple-500/80 cursor-pointer"
+											className="text-purple-500/80 cursor-pointer focus:outline-none focus-visible:stroke-purple-400"
 											strokeDasharray="100 502"
 											strokeDashoffset="-402"
+											role="button"
+											tabIndex={0}
+											aria-label="Show notable platforms (20%)"
 											animate={{
 												strokeWidth: activeSlice === 1 ? 40 : 32,
 												opacity:
@@ -174,6 +182,13 @@ export default function PortfolioPage() {
 											onClick={() => {
 												setActiveSlice(1);
 												setExpandedSection("other");
+											}}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" || e.key === " ") {
+													e.preventDefault();
+													setActiveSlice(1);
+													setExpandedSection("other");
+												}
 											}}
 											onMouseEnter={() => setActiveSlice(1)}
 											onMouseLeave={() => setActiveSlice(null)}
@@ -244,7 +259,7 @@ export default function PortfolioPage() {
 					<div className="lg:col-span-7 space-y-6">
 						{/* LOS SECTION */}
 						<motion.div
-							initial={{ opacity: 0, y: 20 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6, delay: 0.4 }}
 							className={`group glass-card rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${expandedSection === "los" ? "border-blue-500/30 ring-1 ring-blue-500/20" : "border-white/5"}`}
@@ -320,7 +335,7 @@ export default function PortfolioPage() {
 
 						{/* OTHER SECTION */}
 						<motion.div
-							initial={{ opacity: 0, y: 20 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6, delay: 0.5 }}
 							className={`group glass-card rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${expandedSection === "other" ? "border-purple-500/30 ring-1 ring-purple-500/20" : "border-white/5"}`}

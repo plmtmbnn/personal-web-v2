@@ -26,6 +26,7 @@ import {
 	AnimatePresence,
 	useMotionValue,
 	useTransform,
+	useReducedMotion,
 	type PanInfo,
 } from "framer-motion";
 import type {
@@ -224,6 +225,7 @@ function TaskItem({
 	const [deleteConfirm, setDeleteConfirm] = useState(false);
 	const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const deleteTimeoutMs = DELETE_CONFIRM_TIMEOUT_MS;
+	const reduceMotion = useReducedMotion();
 
 	const titleRef = useRef<HTMLTextAreaElement>(null);
 	const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -1360,7 +1362,7 @@ function TaskItem({
 									{isSubtasksOpen && (
 										<motion.div
 											key="subtasks"
-											initial={{ opacity: 0, height: 0 }}
+											initial={reduceMotion ? false : { opacity: 0, height: 0 }}
 											animate={{ opacity: 1, height: "auto" }}
 											exit={{ opacity: 0, height: 0 }}
 											transition={{ duration: 0.18, ease: "easeInOut" }}
@@ -1379,7 +1381,7 @@ function TaskItem({
 														</div>
 														<div className="h-1 bg-slate-100 rounded-full overflow-hidden">
 															<motion.div
-																initial={{ width: 0 }}
+																initial={reduceMotion ? false : { width: 0 }}
 																animate={{ width: `${subtaskProgress}%` }}
 																transition={{ duration: 0.4, ease: "easeOut" }}
 																className="h-full bg-emerald-500 rounded-full"

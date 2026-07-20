@@ -32,7 +32,7 @@ import type {
 	TaskStatus,
 } from "@/features/tasks/types";
 import { format, addDays } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	TASK_CATEGORIES,
 	QUICK_DATE_CHIPS,
@@ -98,6 +98,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const tagInputRef = useRef<HTMLInputElement>(null);
 	const router = useRouter();
+	const reduceMotion = useReducedMotion();
 
 	// ── Derived values ────────────────────────────────────────────────────────
 
@@ -363,7 +364,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 					{/* Backdrop for mobile */}
 					{onClose && (
 						<motion.div
-							initial={{ opacity: 0 }}
+							initial={reduceMotion ? false : { opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							onClick={onClose}
@@ -372,7 +373,13 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 					)}
 
 					<motion.div
-						initial={onClose ? { y: "100%" } : { scale: 0.95, opacity: 0 }}
+						initial={
+							reduceMotion
+								? false
+								: onClose
+									? { y: "100%" }
+									: { scale: 0.95, opacity: 0 }
+						}
 						animate={onClose ? { y: 0 } : { scale: 1, opacity: 1 }}
 						exit={onClose ? { y: "100%" } : { scale: 0.95, opacity: 0 }}
 						transition={{ type: "spring", damping: 25, stiffness: 200 }}
@@ -424,7 +431,9 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										<AnimatePresence>
 											{draftRestored && (
 												<motion.span
-													initial={{ opacity: 0, scale: 0.8 }}
+													initial={
+														reduceMotion ? false : { opacity: 0, scale: 0.8 }
+													}
 													animate={{ opacity: 1, scale: 1 }}
 													exit={{ opacity: 0, scale: 0.8 }}
 													className="text-[8px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full"
@@ -548,7 +557,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 									{isNotesOpen && (
 										<motion.div
 											key="notes"
-											initial={{ opacity: 0, height: 0 }}
+											initial={reduceMotion ? false : { opacity: 0, height: 0 }}
 											animate={{ opacity: 1, height: "auto" }}
 											exit={{ opacity: 0, height: 0 }}
 											transition={{ duration: 0.2, ease: "easeInOut" }}
@@ -800,7 +809,9 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										{isAdvancedOpen && (
 											<motion.div
 												key="advanced"
-												initial={{ opacity: 0, height: 0 }}
+												initial={
+													reduceMotion ? false : { opacity: 0, height: 0 }
+												}
 												animate={{ opacity: 1, height: "auto" }}
 												exit={{ opacity: 0, height: 0 }}
 												transition={{ duration: 0.2, ease: "easeInOut" }}
@@ -1009,7 +1020,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 								<AnimatePresence>
 									{submitError && (
 										<motion.div
-											initial={{ opacity: 0, y: -4 }}
+											initial={reduceMotion ? false : { opacity: 0, y: -4 }}
 											animate={{ opacity: 1, y: 0 }}
 											exit={{ opacity: 0, y: -4 }}
 											className="flex items-center gap-2 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-4 py-2"

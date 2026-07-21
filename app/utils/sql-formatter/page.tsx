@@ -3,7 +3,7 @@ import { createMetadata } from "@/lib/shared/metadata";
 import dynamic from "next/dynamic";
 
 const SqlFormatterView = dynamic(
-	() => import("@/features/utils/sql-formatter/components/View"),
+	() => import("@/features/utils/data-tools/sql-formatter/components/View"),
 );
 
 export const metadata: Metadata = createMetadata({

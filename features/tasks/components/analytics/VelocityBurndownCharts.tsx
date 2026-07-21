@@ -1,22 +1,26 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import {
-	BarChart,
-	Bar,
-	Line,
-	LineChart,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip,
-	ResponsiveContainer,
-	Legend,
-} from "recharts";
-import { getVelocityAndBurndownData } from "../../actions/analytics";
 import { BarChart3, TrendingDown, Loader2 } from "lucide-react";
+import { getVelocityAndBurndownData } from "../../actions/analytics";
 
 export default function VelocityBurndownCharts() {
+	const [Recharts, setRecharts] = useState<any>(null);
+
+	useEffect(() => {
+		// Load recharts dynamically to reduce bundle size
+		import("recharts").then((mod) => {
+			setRecharts(mod);
+		});
+	}, []);
+
+	if (!Recharts) {
+		return (
+			<div className="flex items-center justify-center h-64">
+				<Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+			</div>
+		);
+	}
 	const [period, setPeriod] = useState<"week" | "month">("week");
 	const [data, setData] = useState<any>(null);
 	const [isPending, startTransition] = useTransition();
@@ -110,82 +114,82 @@ export default function VelocityBurndownCharts() {
 							</p>
 						</div>
 
-						<div className="h-60 w-full">
-							<ResponsiveContainer width="100%" height="100%">
-								<BarChart
-									data={data.velocity}
-									margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-								>
-									<defs>
-										<linearGradient id="colorTasks" x1="0" y1="0" x2="0" y2="1">
-											<stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-											<stop
-												offset="95%"
-												stopColor="#10b981"
-												stopOpacity={0.2}
-											/>
-										</linearGradient>
-									</defs>
-									<CartesianGrid
-										strokeDasharray="3 3"
-										vertical={false}
-										stroke="#f1f5f9"
+				<div className="h-60 w-full">
+					<Recharts.ResponsiveContainer width="100%" height="100%">
+						<Recharts.BarChart
+							data={data.velocity}
+							margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+						>
+							<defs>
+								<linearGradient id="colorTasks" x1="0" y1="0" x2="0" y2="1">
+									<stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+									<stop
+										offset="95%"
+										stopColor="#10b981"
+										stopOpacity={0.2}
 									/>
-									<XAxis
-										dataKey="date"
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
-										axisLine={false}
-										tickLine={false}
-									/>
-									<YAxis
-										yAxisId="left"
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
-										axisLine={false}
-										tickLine={false}
-										allowDecimals={false}
-									/>
-									<YAxis
-										yAxisId="right"
-										orientation="right"
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
-										axisLine={false}
-										tickLine={false}
-										allowDecimals={false}
-									/>
-									<Tooltip
-										content={<CustomTooltip />}
-										cursor={{ fill: "#f8fafc" }}
-									/>
-									<Legend
-										verticalAlign="top"
-										height={36}
-										iconSize={8}
-										formatter={(value) => (
-											<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
-												{value}
-											</span>
-										)}
-									/>
-									<Bar
-										yAxisId="left"
-										dataKey="completedCount"
-										name="Tasks Done"
-										fill="url(#colorTasks)"
-										radius={[4, 4, 0, 0]}
-									/>
-									<Line
-										yAxisId="right"
-										type="monotone"
-										dataKey="effortMinutes"
-										name="Effort (Min)"
-										stroke="#8b5cf6"
-										strokeWidth={2.5}
-										dot={{ r: 3, strokeWidth: 2 }}
-										activeDot={{ r: 5 }}
-									/>
-								</BarChart>
-							</ResponsiveContainer>
-						</div>
+								</linearGradient>
+							</defs>
+							<Recharts.CartesianGrid
+								strokeDasharray="3 3"
+								vertical={false}
+								stroke="#f1f5f9"
+							/>
+							<Recharts.XAxis
+								dataKey="date"
+								tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+								axisLine={false}
+								tickLine={false}
+							/>
+							<Recharts.YAxis
+								yAxisId="left"
+								tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+								axisLine={false}
+								tickLine={false}
+								allowDecimals={false}
+							/>
+							<Recharts.YAxis
+								yAxisId="right"
+								orientation="right"
+								tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+								axisLine={false}
+								tickLine={false}
+								allowDecimals={false}
+							/>
+							<Recharts.Tooltip
+								content={<CustomTooltip />}
+								cursor={{ fill: "#f8fafc" }}
+							/>
+							<Recharts.Legend
+								verticalAlign="top"
+								height={36}
+								iconSize={8}
+								formatter={(value: string) => (
+									<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+										{value}
+									</span>
+								)}
+							/>
+							<Recharts.Bar
+								yAxisId="left"
+								dataKey="completedCount"
+								name="Tasks Done"
+								fill="url(#colorTasks)"
+								radius={[4, 4, 0, 0]}
+							/>
+							<Recharts.Line
+								yAxisId="right"
+								type="monotone"
+								dataKey="effortMinutes"
+								name="Effort (Min)"
+								stroke="#8b5cf6"
+								strokeWidth={2.5}
+								dot={{ r: 3, strokeWidth: 2 }}
+								activeDot={{ r: 5 }}
+							/>
+						</Recharts.BarChart>
+					</Recharts.ResponsiveContainer>
+				</div>
 					</div>
 
 					{/* Burndown Chart */}
@@ -200,61 +204,61 @@ export default function VelocityBurndownCharts() {
 							</p>
 						</div>
 
-						<div className="h-60 w-full">
-							<ResponsiveContainer width="100%" height="100%">
-								<LineChart
-									data={data.burndown}
-									margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-								>
-									<CartesianGrid
-										strokeDasharray="3 3"
-										vertical={false}
-										stroke="#f1f5f9"
-									/>
-									<XAxis
-										dataKey="date"
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
-										axisLine={false}
-										tickLine={false}
-									/>
-									<YAxis
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
-										axisLine={false}
-										tickLine={false}
-										allowDecimals={false}
-									/>
-									<Tooltip content={<CustomTooltip />} />
-									<Legend
-										verticalAlign="top"
-										height={36}
-										iconSize={8}
-										formatter={(value) => (
-											<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
-												{value}
-											</span>
-										)}
-									/>
-									<Line
-										type="monotone"
-										dataKey="idealRemaining"
-										name="Ideal Burn"
-										stroke="#94a3b8"
-										strokeDasharray="5 5"
-										strokeWidth={1.5}
-										dot={false}
-									/>
-									<Line
-										type="stepAfter"
-										dataKey="actualRemaining"
-										name="Actual Burn"
-										stroke="#3b82f6"
-										strokeWidth={2.5}
-										dot={{ r: 3, strokeWidth: 2 }}
-										activeDot={{ r: 5 }}
-									/>
-								</LineChart>
-							</ResponsiveContainer>
-						</div>
+				<div className="h-60 w-full">
+					<Recharts.ResponsiveContainer width="100%" height="100%">
+						<Recharts.LineChart
+							data={data.burndown}
+							margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+						>
+							<Recharts.CartesianGrid
+								strokeDasharray="3 3"
+								vertical={false}
+								stroke="#f1f5f9"
+							/>
+							<Recharts.XAxis
+								dataKey="date"
+								tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+								axisLine={false}
+								tickLine={false}
+							/>
+							<Recharts.YAxis
+								tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+								axisLine={false}
+								tickLine={false}
+								allowDecimals={false}
+							/>
+							<Recharts.Tooltip content={<CustomTooltip />} />
+							<Recharts.Legend
+								verticalAlign="top"
+								height={36}
+								iconSize={8}
+								formatter={(value: string) => (
+									<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+										{value}
+									</span>
+								)}
+							/>
+							<Recharts.Line
+								type="monotone"
+								dataKey="idealRemaining"
+								name="Ideal Burn"
+								stroke="#94a3b8"
+								strokeDasharray="5 5"
+								strokeWidth={1.5}
+								dot={false}
+							/>
+							<Recharts.Line
+								type="stepAfter"
+								dataKey="actualRemaining"
+								name="Actual Burn"
+								stroke="#10b981"
+								strokeWidth={2.5}
+								dot={{ r: 4, fill: "#10b981" }}
+								activeDot={{ r: 6, fill: "#10b981" }}
+							/>
+						</Recharts.LineChart>
+					</Recharts.ResponsiveContainer>
+				</div>
 					</div>
 				</div>
 			)}

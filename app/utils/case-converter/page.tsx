@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import CaseConverterView from "@/features/utils/case-converter/components/View";
+import CaseConverterView from "@/features/utils/text-tools/case-converter/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "Universal Case Converter",

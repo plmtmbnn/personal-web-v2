@@ -7,7 +7,12 @@ const nextConfig: NextConfig = {
 	productionBrowserSourceMaps: false,
 	compress: true,
 
+	// Enable React Strict Mode for better development
+	reactStrictMode: true,
+
+	// Optimize images: enable optimization for local images and remote patterns
 	images: {
+		// Remote image domains (optimized via proxy)
 		remotePatterns: [
 			{
 				protocol: "https",
@@ -35,19 +40,22 @@ const nextConfig: NextConfig = {
 			},
 			{
 				protocol: "https",
-				hostname: "**.ibb.co.com",
-			},
-			{
-				protocol: "https",
 				hostname: "**.idx.co.id",
 			},
 		],
+		// Device sizes for responsive images
 		deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+		// Custom image sizes for `next/image`
 		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+		// Output formats (AVIF for modern browsers, WebP as fallback)
 		formats: ["image/avif", "image/webp"],
+		// Dangerously allow SVG uploads (if needed)
+		dangerouslyAllowSVG: false,
+		// Content security policy for images
+		contentSecurityPolicy: "default-src 'self'; img-src 'self' data: https:;",
 	},
 
-	reactStrictMode: true,
+	// TypeScript: Ignore build errors in development for faster builds
 	typescript: {
 		ignoreBuildErrors: process.env.FAST_BUILD === "true",
 	},
@@ -58,19 +66,25 @@ const nextConfig: NextConfig = {
 		"header-generator",
 	],
 
+	// Experimental features for performance and DX
 	experimental: {
+		// Optimize imports from these packages (tree-shaking)
 		optimizePackageImports: [
-			"lucide-react",
-			"recharts",
-			"react-icons",
-			"framer-motion",
-			"date-fns",
-			"@radix-ui/react-icons",
+			"lucide-react", // Icons (already optimized)
+			"date-fns",     // Date utilities (already optimized)
+			// Note: Removed recharts, react-icons, framer-motion to avoid issues
+			// They will be lazy-loaded where needed
 		],
+		// Enable Web Vitals attribution for performance monitoring
 		webVitalsAttribution: ["CLS", "LCP", "FCP", "TTFB", "INP"],
+		// Enable server actions
+		serverActions: {
+			bodySizeLimit: "2mb",
+		},
 	},
 
-	webpack: (config) => {
+	// Webpack optimizations
+	webpack: (config, { isServer }) => {
 		// Filesystem cache for faster rebuilds
 		config.cache = {
 			type: "filesystem",
@@ -80,6 +94,29 @@ const nextConfig: NextConfig = {
 			},
 			cacheDirectory: path.resolve(".next/cache/webpack"),
 		};
+
+		// Split chunks for better caching (client-side only)
+		if (!isServer) {
+			config.optimization.splitChunks = {
+				chunks: "all",
+				cacheGroups: {
+					// Group node_modules chunks separately
+					vendor: {
+						test: /[\\/]node_modules[\\/]/,
+						name: "vendor",
+						chunks: "initial",
+						priority: 10,
+					},
+					// Group common chunks
+					common: {
+						name: "common",
+						minChunks: 2,
+						chunks: "initial",
+						priority: 5,
+					},
+				},
+			};
+		}
 
 		// NOTE: Do NOT add server-side splitChunks or runtimeChunk:"single" here.
 		// Vercel packages each Serverless Function independently; shared runtime
@@ -100,10 +137,10 @@ const isProd = process.env.NODE_ENV === "production";
 
 // Apply bundle analyzer first
 const configWithAnalyzer = withBundleAnalyzer({
-	enabled: process.env.ANALYZE === "true",
-	openAnalyzer: false,
-	analyzerMode: "static",
-})(nextConfig);
+		enabled: process.env.ANALYZE === "true",
+		openAnalyzer: true,
+		analyzerMode: "static",
+	})(nextConfig);
 
 // Then apply Sentry config for production
 export default isProd

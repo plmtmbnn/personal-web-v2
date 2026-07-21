@@ -3,7 +3,7 @@ import { createMetadata } from "@/lib/shared/metadata";
 import dynamic from "next/dynamic";
 
 const StockExplorerView = dynamic(
-	() => import("@/features/utils/stock-explorer/components/View"),
+	() => import("@/features/utils/stock-tools/stock-explorer/components/View"),
 );
 
 export const metadata: Metadata = createMetadata({

@@ -1,4 +1,13 @@
-import { NextResponse } from "next/server";
+import { z } from "zod";
+import { type NextRequest, NextResponse } from "next/server";
+
+// Schema for validating query parameters (optional: add filtering parameters)
+const stockDataQuerySchema = z
+	.object({
+		limit: z.coerce.number().optional().default(100),
+		offset: z.coerce.number().optional().default(0),
+	})
+	.partial();
 import { getStockData, saveStockData, redis } from "@/lib/core/redis";
 import { gotScraping } from "got-scraping";
 
@@ -6,8 +15,24 @@ export const dynamic = "force-dynamic";
 
 const FETCH_ATTEMPT_KEY = "idx:last-fetch-attempt";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
 	try {
+		// Validate query parameters
+		const url = new URL(request.url);
+		const queryParams = {
+			limit: url.searchParams.get("limit"),
+			offset: url.searchParams.get("offset"),
+		};
+		const parsedQuery = stockDataQuerySchema.safeParse(queryParams);
+
+		if (!parsedQuery.success) {
+			return NextResponse.json(
+				{ error: "Invalid query parameters", details: parsedQuery.error.format() },
+				{ status: 400 },
+			);
+		}
+
+		const { limit, offset } = parsedQuery.data;
 		// 1. Get cached data from Redis
 		let data = await getStockData();
 

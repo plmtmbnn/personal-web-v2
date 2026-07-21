@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import WebArchiverView from "@/features/utils/web-archiver/components/View";
+import WebArchiverView from "@/features/utils/web-tools/web-archiver/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "Web Archiver",

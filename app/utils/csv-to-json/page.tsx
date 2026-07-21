@@ -3,7 +3,7 @@ import { createMetadata } from "@/lib/shared/metadata";
 import dynamic from "next/dynamic";
 
 const CsvToJsonView = dynamic(
-	() => import("@/features/utils/csv-to-json/components/View"),
+	() => import("@/features/utils/file-tools/csv-to-json/components/View"),
 );
 
 export const metadata: Metadata = createMetadata({

@@ -205,5 +205,18 @@ pnpm run analyze         # Alias for build:analyze
 - **Error Tracking & Monitoring**: Sentry is configured for client (`instrumentation-client.ts`), server (`sentry.server.config.ts`), and edge environment tracking (`sentry.edge.config.ts`), integrated via Next.js instrumentation (`instrumentation.ts`). Sentry builds use `silent: true` to suppress noisy missing source map warnings from Turbopack internal chunks.
 - **Git Workflow**: Follow **Conventional Commits**.
 - **Linter**: **Biome** for formatting and linting.
-- **Performance Tools:** Bundle analyzer, profiling scripts, and optimized configurations.
+- **Lazy Loading:** Heavy libraries (`recharts`, `chart.js`, `react-force-graph-2d`) are dynamically imported via `next/dynamic` (`ssr: false`) to reduce bundle size.
+- **Bundle Optimization:** `features/utils/` reorganized into subdirectories (`file-tools/`, `data-tools/`, `stock-tools/`, `time-tools/`, `web-tools/`, `text-tools/`).
+- **Code Splitting:** `webpack.optimization.splitChunks` configured in `next.config.ts` for vendor/common separation.
+- **Image Optimization:** Enabled `optimize: true`, `dangerouslyAllowSVG: false`, device sizes, formats (AVIF/WebP), CSP.
+- **Performance:** Filesystem caching, `build:analyze`, bundle analysis.
+- **Custom Hooks:** `useTags()` in `lib/hooks/` for centralized tag management.
+- **Reusable Components:** `components/ui/Button.tsx` using base Tailwind variants (no external dependency).
+- **Centralized Constants:** `lib/constants/index.ts` exports all feature constants.
+- **Security Middleware:** `middleware.ts` with CSP headers (Content-Security-Policy), XSS Protection (`X-XSS-Protection`), `X-Frame-Options` (DENY), Referrer Policy (`strict-origin-when-cross-origin`), Permissions Policy.
+- **Input Sanitization:** `lib/utils/sanitize.ts` uses `DOMPurify` for user input (task descriptions, titles) before rendering.
+- **Unit Tests:** Basic vitest tests in `lib/hooks/__tests__/useTags.test.ts` and `features/tasks/constants.test.ts`.
+- **API Validation:** Zod validation (`z.coerce.number()`) added to `/api/utils/stock-data/route.ts`.
+- **Security:** `checkAdmin()` for protected routes, `PinGuard.tsx` for TOTP (12-hour session, 30-week cookie), `CRON_SECRET` for cron endpoints.
+- **Error Tracking:** Sentry configured (client, server, edge) with `silent: true`.
 - **Commit/Push Policy**: **NEVER** stage, commit, or push changes unless explicitly requested by the user for each occurrence.

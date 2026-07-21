@@ -1,26 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { TrendingUp, Activity, History, Clock } from "lucide-react";
-import {
-	Chart as ChartJS,
-	CategoryScale,
-	LinearScale,
-	PointElement,
-	LineElement,
-	Filler,
-	Tooltip,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
+import { TrendingUp, Activity, History, Clock, Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
 
-ChartJS.register(
-	CategoryScale,
-	LinearScale,
-	PointElement,
-	LineElement,
-	Filler,
-	Tooltip,
+// Lazy-load the entire chart component to avoid bundling chart.js in the main chunk
+const ChartWrapper = dynamic(
+	() => import("./FearAndGreedChartWrapper"),
+	{ ssr: false, loading: () => <Loader2 className="w-6 h-6 animate-spin text-slate-400" /> },
 );
 
 interface FearAndGreedGaugeProps {
@@ -194,9 +182,9 @@ export default function FearAndGreedGauge({
 							7D Window
 						</span>
 					</div>
-					<div className="h-24 w-full bg-slate-50/50 rounded-3xl border border-slate-100 p-4">
-						<Line data={chartData} options={chartOptions} />
-					</div>
+						<div className="h-24 w-full bg-slate-50/50 rounded-3xl border border-slate-100 p-4">
+							<ChartWrapper data={chartData} options={chartOptions} />
+						</div>
 				</div>
 			</div>
 		</div>

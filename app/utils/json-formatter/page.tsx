@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
-import JsonFormatterView from "@/features/utils/json-formatter/components/View";
+import JsonFormatterView from "@/features/utils/file-tools/json-formatter/components/View";
 
 export const metadata: Metadata = createMetadata({
 	title: "JSON Formatter & Beautifier",

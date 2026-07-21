@@ -6,10 +6,10 @@ import { TrendingUp, Activity, History, Clock, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 
 // Lazy-load the entire chart component to avoid bundling chart.js in the main chunk
-const ChartWrapper = dynamic(
-	() => import("./FearAndGreedChartWrapper"),
-	{ ssr: false, loading: () => <Loader2 className="w-6 h-6 animate-spin text-slate-400" /> },
-);
+const ChartWrapper = dynamic(() => import("./FearAndGreedChartWrapper"), {
+	ssr: false,
+	loading: () => <Loader2 className="w-6 h-6 animate-spin text-slate-400" />,
+});
 
 interface FearAndGreedGaugeProps {
 	score: number;
@@ -182,9 +182,9 @@ export default function FearAndGreedGauge({
 							7D Window
 						</span>
 					</div>
-						<div className="h-24 w-full bg-slate-50/50 rounded-3xl border border-slate-100 p-4">
-							<ChartWrapper data={chartData} options={chartOptions} />
-						</div>
+					<div className="h-24 w-full bg-slate-50/50 rounded-3xl border border-slate-100 p-4">
+						<ChartWrapper data={chartData} options={chartOptions} />
+					</div>
 				</div>
 			</div>
 		</div>

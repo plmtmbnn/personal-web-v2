@@ -71,7 +71,7 @@ const nextConfig: NextConfig = {
 		// Optimize imports from these packages (tree-shaking)
 		optimizePackageImports: [
 			"lucide-react", // Icons (already optimized)
-			"date-fns",     // Date utilities (already optimized)
+			"date-fns", // Date utilities (already optimized)
 			// Note: Removed recharts, react-icons, framer-motion to avoid issues
 			// They will be lazy-loaded where needed
 		],
@@ -137,10 +137,10 @@ const isProd = process.env.NODE_ENV === "production";
 
 // Apply bundle analyzer first
 const configWithAnalyzer = withBundleAnalyzer({
-		enabled: process.env.ANALYZE === "true",
-		openAnalyzer: true,
-		analyzerMode: "static",
-	})(nextConfig);
+	enabled: process.env.ANALYZE === "true",
+	openAnalyzer: true,
+	analyzerMode: "static",
+})(nextConfig);
 
 // Then apply Sentry config for production
 export default isProd

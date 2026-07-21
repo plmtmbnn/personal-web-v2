@@ -3,7 +3,10 @@ import { createMetadata } from "@/lib/shared/metadata";
 import dynamic from "next/dynamic";
 
 const JsonToSchemaView = dynamic(
-	() => import("@/features/utils/file-tools/json-converter-advanced/components/View"),
+	() =>
+		import(
+			"@/features/utils/file-tools/json-converter-advanced/components/View"
+		),
 );
 
 export const metadata: Metadata = createMetadata({

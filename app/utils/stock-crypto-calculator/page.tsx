@@ -3,7 +3,10 @@ import { createMetadata } from "@/lib/shared/metadata";
 import dynamic from "next/dynamic";
 
 const StockCryptoCalculatorView = dynamic(
-	() => import("@/features/utils/stock-tools/stock-crypto-calculator/components/View"),
+	() =>
+		import(
+			"@/features/utils/stock-tools/stock-crypto-calculator/components/View"
+		),
 );
 
 export const metadata: Metadata = createMetadata({

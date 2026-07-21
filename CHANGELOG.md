@@ -1,3 +1,15 @@
+# [0.59.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.58.1...v0.59.0) (2026-07-21)
+
+
+### Bug Fixes
+
+* linter error ([29e5f62](https://github.com/plmtmbnn/personal-web-v2/commit/29e5f624534dc614bfbf2a37629f95093b9dddc4))
+
+
+### Features
+
+* Phase 1-4 improvements - lazy loading, security, tests, docs ([745d013](https://github.com/plmtmbnn/personal-web-v2/commit/745d013ecc7b5ab9c9d0640a68c1358612ace668))
+
 ## [0.58.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.58.0...v0.58.1) (2026-07-20)
 
 # [0.58.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.57.0...v0.58.0) (2026-07-17)

@@ -150,28 +150,37 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 		colorClass,
 		subtext,
 		description,
-	}: any) => (
-		<div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl shadow-sm transition-all duration-300 hover:border-slate-300 group flex flex-col min-w-0">
-			<div className="flex items-center justify-between mb-6">
-				<div
-					className={`p-3 sm:p-4 rounded-2xl ${colorClass} shadow-sm group-hover:scale-110 transition-transform flex-shrink-0`}
-				>
-					<Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+	}: {
+		title: string;
+		value: React.ReactNode;
+		icon: any;
+		colorClass: string;
+		subtext?: string;
+		description?: string;
+	}) => (
+		<div className="bg-white border border-slate-200/80 p-4 sm:p-5 lg:p-6 rounded-2xl sm:rounded-3xl shadow-xs hover:shadow-md hover:border-slate-300/80 transition-all duration-300 group flex flex-col justify-between min-w-0 hover:-translate-y-0.5 active:scale-[0.98]">
+			<div>
+				<div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+					<div
+						className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl ${colorClass} shadow-2xs group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}
+					>
+						<Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+					</div>
+					{subtext && (
+						<span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-100/60 flex-shrink-0">
+							{subtext}
+						</span>
+					)}
 				</div>
-				{subtext && (
-					<span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex-shrink-0">
-						{subtext}
-					</span>
-				)}
+				<p className="text-slate-400 text-[9px] sm:text-[10px] lg:text-[11px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1 sm:mb-1.5 truncate">
+					{title}
+				</p>
+				<h4 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight break-words leading-none sm:leading-tight">
+					{value}
+				</h4>
 			</div>
-			<p className="text-slate-400 text-[11px] font-black uppercase tracking-[0.2em] mb-2">
-				{title}
-			</p>
-			<h4 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight break-words whitespace-normal leading-tight">
-				{value}
-			</h4>
 			{description && (
-				<p className="text-xs text-slate-400 mt-4 pt-4 border-t border-slate-50 font-medium leading-relaxed break-words">
+				<p className="text-[10px] sm:text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100 font-medium leading-relaxed break-words">
 					{description}
 				</p>
 			)}
@@ -365,68 +374,76 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 			</section>
 
 			{/* Row 2: Supporting Stats */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-				<StatCard
-					title="Total Scope"
-					value={stats.totalTasks}
-					icon={ClipboardList}
-					colorClass="bg-blue-50 text-blue-600"
-					description="Objectives in cycle"
-				/>
-				<StatCard
-					title="Active Streak"
-					value={`${stats.streak}d`}
-					icon={Flame}
-					colorClass="bg-orange-50 text-orange-600"
-					description="Operational momentum"
-				/>
-				<StatCard
-					title="Execution Score"
-					value={
-						reliabilityMetrics.hasData
-							? `${reliabilityMetrics.executionScore}/100`
-							: "—"
-					}
-					icon={Zap}
-					colorClass="bg-yellow-50 text-yellow-600"
-					description="Weighted reliability grade"
-				/>
-				<StatCard
-					title="Lead Time"
-					value={
-						reliabilityMetrics.hasData
-							? `${reliabilityMetrics.avgLeadTime}d`
-							: "—"
-					}
-					icon={Clock}
-					colorClass="bg-purple-50 text-purple-600"
-					description="Avg cycle duration"
-				/>
-				<StatCard
-					title="Velocity"
-					value={`${stats.taskVelocity}/d`}
-					icon={Zap}
-					colorClass="bg-rose-50 text-rose-600"
-					description="Average completion rate"
-				/>
-				<StatCard
-					title="Trend"
-					value={
-						stats.comparison > 0
-							? `+${stats.comparison}%`
-							: `${stats.comparison}%`
-					}
-					icon={Activity}
-					colorClass={
-						stats.comparison > 0
-							? "bg-emerald-50 text-emerald-600"
-							: stats.comparison < 0
-								? "bg-rose-50 text-rose-600"
-								: "bg-slate-50 text-slate-600"
-					}
-					description="vs. Previous Period"
-				/>
-			</div>
+			<section className="space-y-4">
+				<div className="flex items-center justify-between px-1">
+					<h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+						<Activity className="w-3.5 h-3.5 text-slate-400" />
+						Supporting Intel
+					</h3>
+				</div>
+				<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+					<StatCard
+						title="Total Scope"
+						value={stats.totalTasks}
+						icon={ClipboardList}
+						colorClass="bg-blue-50 text-blue-600"
+						description="Objectives in cycle"
+					/>
+					<StatCard
+						title="Active Streak"
+						value={`${stats.streak}d`}
+						icon={Flame}
+						colorClass="bg-orange-50 text-orange-600"
+						description="Operational momentum"
+					/>
+					<StatCard
+						title="Execution Score"
+						value={
+							reliabilityMetrics.hasData
+								? `${reliabilityMetrics.executionScore}/100`
+								: "—"
+						}
+						icon={Zap}
+						colorClass="bg-yellow-50 text-yellow-600"
+						description="Weighted reliability grade"
+					/>
+					<StatCard
+						title="Lead Time"
+						value={
+							reliabilityMetrics.hasData
+								? `${reliabilityMetrics.avgLeadTime}d`
+								: "—"
+						}
+						icon={Clock}
+						colorClass="bg-purple-50 text-purple-600"
+						description="Avg cycle duration"
+					/>
+					<StatCard
+						title="Velocity"
+						value={`${stats.taskVelocity}/d`}
+						icon={Zap}
+						colorClass="bg-rose-50 text-rose-600"
+						description="Average completion rate"
+					/>
+					<StatCard
+						title="Trend"
+						value={
+							stats.comparison > 0
+								? `+${stats.comparison}%`
+								: `${stats.comparison}%`
+						}
+						icon={Activity}
+						colorClass={
+							stats.comparison > 0
+								? "bg-emerald-50 text-emerald-600"
+								: stats.comparison < 0
+									? "bg-rose-50 text-rose-600"
+									: "bg-slate-50 text-slate-600"
+						}
+						description="vs. Previous Period"
+					/>
+				</div>
+			</section>
 
 			{/* Row 3: Tactical Breakdown */}
 			<div className="grid grid-cols-1 gap-8">

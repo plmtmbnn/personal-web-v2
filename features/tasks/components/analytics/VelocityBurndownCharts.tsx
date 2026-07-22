@@ -6,6 +6,9 @@ import { getVelocityAndBurndownData } from "../../actions/analytics";
 
 export default function VelocityBurndownCharts() {
 	const [Recharts, setRecharts] = useState<any>(null);
+	const [period, setPeriod] = useState<"week" | "month">("week");
+	const [data, setData] = useState<any>(null);
+	const [isPending, startTransition] = useTransition();
 
 	useEffect(() => {
 		// Load recharts dynamically to reduce bundle size
@@ -13,17 +16,6 @@ export default function VelocityBurndownCharts() {
 			setRecharts(mod);
 		});
 	}, []);
-
-	if (!Recharts) {
-		return (
-			<div className="flex items-center justify-center h-64">
-				<Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-			</div>
-		);
-	}
-	const [period, setPeriod] = useState<"week" | "month">("week");
-	const [data, setData] = useState<any>(null);
-	const [isPending, startTransition] = useTransition();
 
 	useEffect(() => {
 		const fetchData = () => {
@@ -38,6 +30,14 @@ export default function VelocityBurndownCharts() {
 		};
 		fetchData();
 	}, [period]);
+
+	if (!Recharts) {
+		return (
+			<div className="flex items-center justify-center h-64">
+				<Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+			</div>
+		);
+	}
 
 	const CustomTooltip = ({ active, payload, label }: any) => {
 		if (active && payload?.length) {

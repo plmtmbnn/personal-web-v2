@@ -1,6 +1,3 @@
-import { withSentryConfig } from "@sentry/nextjs";
-import withBundleAnalyzer from "@next/bundle-analyzer";
-import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -9,6 +6,16 @@ const nextConfig: NextConfig = {
 
 	// Enable React Strict Mode for better development
 	reactStrictMode: true,
+
+	// Compiler optimization with SWC
+	compiler: {
+		// Enable styled-components optimization if used
+		styledComponents: false,
+		// Remove console logs in production
+		removeConsole: process.env.NODE_ENV === "production",
+	},
+
+	// Enable build caching
 
 	// Optimize images: enable optimization for local images and remote patterns
 	images: {
@@ -43,12 +50,14 @@ const nextConfig: NextConfig = {
 				hostname: "**.idx.co.id",
 			},
 		],
-		// Device sizes for responsive images
-		deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-		// Custom image sizes for `next/image`
-		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+		// Device sizes for responsive images - optimized for common breakpoints
+		deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+		// Custom image sizes for `next/image` - reduced for faster builds
+		imageSizes: [16, 32, 48, 64, 96, 128, 256],
 		// Output formats (AVIF for modern browsers, WebP as fallback)
 		formats: ["image/avif", "image/webp"],
+		// Enable image optimization caching
+		minimumCacheTTL: 60,
 		// Dangerously allow SVG uploads (if needed)
 		dangerouslyAllowSVG: false,
 		// Content security policy for images
@@ -64,16 +73,35 @@ const nextConfig: NextConfig = {
 		"node-sql-parser",
 		"got-scraping",
 		"header-generator",
+		"jsdom",
+		"@mozilla/readability",
+		"turndown",
+		"papaparse",
+		"sql-formatter",
+		"dompurify",
+		"firebase",
+		"@upstash/redis",
+		"@upstash/ratelimit",
 	],
+
+	// Use Turbopack (default in Next.js 16) with optimizations
+	turbopack: {},
 
 	// Experimental features for performance and DX
 	experimental: {
 		// Optimize imports from these packages (tree-shaking)
 		optimizePackageImports: [
-			"lucide-react", // Icons (already optimized)
-			"date-fns", // Date utilities (already optimized)
-			// Note: Removed recharts, react-icons, framer-motion to avoid issues
-			// They will be lazy-loaded where needed
+			"lucide-react",
+			"date-fns",
+			"react-icons",
+			"framer-motion",
+			"@supabase/supabase-js",
+			"recharts",
+			"react-syntax-highlighter",
+			"react-chartjs-2",
+			"chart.js",
+			"react-hook-form",
+			"zod",
 		],
 		// Enable Web Vitals attribution for performance monitoring
 		webVitalsAttribution: ["CLS", "LCP", "FCP", "TTFB", "INP"],
@@ -83,101 +111,61 @@ const nextConfig: NextConfig = {
 		},
 	},
 
-	// Webpack optimizations
-	webpack: (config, { isServer }) => {
-		// Filesystem cache for faster rebuilds
-		config.cache = {
-			type: "filesystem",
-			buildDependencies: {
-				config: [__filename],
-				tsconfig: ["./tsconfig.json"],
-			},
-			cacheDirectory: path.resolve(".next/cache/webpack"),
-		};
-
-		// Split chunks for better caching (client-side only)
-		if (!isServer) {
-			config.optimization.splitChunks = {
-				chunks: "all",
-				cacheGroups: {
-					// Group node_modules chunks separately
-					vendor: {
-						test: /[\\/]node_modules[\\/]/,
-						name: "vendor",
-						chunks: "initial",
-						priority: 10,
-					},
-					// Group common chunks
-					common: {
-						name: "common",
-						minChunks: 2,
-						chunks: "initial",
-						priority: 5,
-					},
-				},
-			};
-		}
-
-		// NOTE: Do NOT add server-side splitChunks or runtimeChunk:"single" here.
-		// Vercel packages each Serverless Function independently; shared runtime
-		// chunks created by those options are seen as symlinked directories and
-		// cause the "invalid deployment package" error.
-
-		return config;
-	},
-
 	// Enable standalone output for self-hosting (bypassed on Vercel to prevent deployment packaging symlink errors)
 	output:
 		process.env.NODE_ENV === "production" && !process.env.VERCEL
 			? "standalone"
 			: undefined,
+
+	// Optimize static generation
+	staticPageGenerationTimeout: 120,
 };
 
+let finalConfig = nextConfig;
+
+// Lazy-load bundle analyzer only when ANALYZE=true
+if (process.env.ANALYZE === "true") {
+	const withBundleAnalyzer = require("@next/bundle-analyzer")({
+		enabled: true,
+		openAnalyzer: true,
+		analyzerMode: "static",
+	});
+	finalConfig = withBundleAnalyzer(finalConfig);
+}
+
+// Lazy-load Sentry plugin only for production releases
 const isProd = process.env.NODE_ENV === "production";
+const shouldEnableSentry =
+	isProd &&
+	(process.env.VERCEL_ENV === "production" ||
+		process.env.ENABLE_SENTRY_BUILD === "true");
 
-// Apply bundle analyzer first
-const configWithAnalyzer = withBundleAnalyzer({
-	enabled: process.env.ANALYZE === "true",
-	openAnalyzer: true,
-	analyzerMode: "static",
-})(nextConfig);
+if (shouldEnableSentry) {
+	const { withSentryConfig } = require("@sentry/nextjs");
+	finalConfig = withSentryConfig(finalConfig, {
+		org: "peoel-corps",
+		project: "javascript-nextjs",
 
-// Then apply Sentry config for production
-export default isProd
-	? withSentryConfig(configWithAnalyzer, {
-			// For all available options, see:
-			// https://www.npmjs.com/package/@sentry/webpack-plugin#options
+		// Silence Sentry CLI logs to prevent build log clutter
+		silent: true,
 
-			org: "peoel-corps",
-			project: "javascript-nextjs",
+		// Upload a larger set of source maps for prettier stack traces (disabled for fast builds)
+		widenClientFileUpload: false,
 
-			// Silence Sentry CLI logs to prevent build log clutter from Turbopack chunks
-			silent: true,
+		// Delete sourcemaps after upload to keep public bundles lightweight
+		sourcemaps: {
+			deleteSourcemapsAfterUpload: true,
+		},
 
-			// For all available options, see:
-			// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+		webpack: {
+			automaticVercelMonitors: true,
 
-			// Upload a larger set of source maps for prettier stack traces (increases build time)
-			widenClientFileUpload: false,
-
-			// Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-			// This can increase your server load as well as your hosting bill.
-			// Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-			// side errors will fail.
-			// tunnelRoute: "/monitoring",
-
-			webpack: {
-				// Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-				// See the following for more information:
-				// https://docs.sentry.io/product/crons/
-				// https://vercel.com/docs/cron-jobs
-				automaticVercelMonitors: true,
-
-				// Tree-shaking options for reducing bundle size
-				treeshake: {
-					// Automatically tree-shake Sentry logger statements to reduce bundle size
-					removeDebugLogging: true,
-				},
+			// Tree-shaking options for reducing bundle size
+			treeshake: {
+				removeDebugLogging: true,
 			},
-		})
-	: configWithAnalyzer;
+		},
+	});
+}
+
+export default finalConfig;

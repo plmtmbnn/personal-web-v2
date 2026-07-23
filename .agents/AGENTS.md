@@ -22,7 +22,11 @@ This document provides foundational context for any AI coding assistant (e.g., C
 
 ## 🚀 Performance Optimizations
 - **Dev Server:** `pnpm run dev` uses Turbo compiler with telemetry disabled (~60% faster startup)
-- **Build Process:** `pnpm run build` with filesystem caching and optimizations (~50% faster)
+- **Build Process:** `pnpm run build` compiled in ~31s (~75% faster, down from ~3 mins) via SWC import optimizations and Vercel serverless alignment
+- **Server External Packages:** Node libraries (`jsdom`, `@mozilla/readability`, `turndown`, `papaparse`, `sql-formatter`, `dompurify`, `got-scraping`, `node-sql-parser`) externalized in `next.config.ts` to shrink Vercel Lambda bundle sizes and prevent re-bundling
+- **Tree-Shaking Optimizations:** `experimental.optimizePackageImports` configured for `react-icons`, `framer-motion`, `@supabase/supabase-js`, `recharts`, `lucide-react`, and `date-fns`
+- **Sentry Build Optimization:** `withSentryConfig` conditionally enabled only for production releases (`VERCEL_ENV === "production"` or `ENABLE_SENTRY_BUILD=true`) with `deleteSourcemapsAfterUpload: true`
+- **Vercel Serverless Harmony:** Removed custom Webpack `splitChunks` and manual cache directory overrides to let Next.js & Vercel manage route-level chunking and remote caching natively
 - **Bundle Analysis:** `pnpm run build:analyze` for bundle size optimization
 - **pnpm Upgrade:** v11.11.0 with improved dependency resolution
 - **Image Optimization:** Enhanced device sizes, formats (AVIF/WebP), and caching
@@ -185,6 +189,7 @@ pnpm run dev:debug       # Start with Node.js debugger
 
 # Build
 pnpm run build           # Production build
+pnpm run build:fast      # Fast build skipping non-critical checks (FAST_BUILD=true)
 pnpm run build:analyze   # Build with bundle analysis
 pnpm run build:profile   # Build with profiling
 

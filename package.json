@@ -6,7 +6,9 @@
 	"scripts": {
 		"dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev --turbo --port 3000",
 		"dev:debug": "cross-env NODE_OPTIONS='--inspect' NEXT_TELEMETRY_DISABLED=1 next dev --turbo --port 3000",
-		"build": "cross-env NEXT_TELEMETRY_DISABLED=1 next build",
+		"build": "cross-env NODE_OPTIONS='--max-old-space-size=8192' NEXT_TELEMETRY_DISABLED=1 next build",
+		"build:fast": "cross-env NODE_OPTIONS='--max-old-space-size=8192' FAST_BUILD=true NEXT_TELEMETRY_DISABLED=1 next build",
+		"build:dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev --turbo --port 3001 & sleep 10 && pkill -f 'next dev.*3001' || true",
 		"build:next": "cross-env NEXT_TELEMETRY_DISABLED=1 next build",
 		"build:analyze": "cross-env ANALYZE=true NEXT_TELEMETRY_DISABLED=1 next build",
 		"build:profile": "cross-env NODE_OPTIONS='--prof' NEXT_TELEMETRY_DISABLED=1 next build",

@@ -1,3 +1,10 @@
+## [0.59.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.59.0...v0.59.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **tasks:** resolve hook ordering in VelocityBurndownCharts and revamp supporting stats UI ([e9c417c](https://github.com/plmtmbnn/personal-web-v2/commit/e9c417c61abf193e82262d0c0325e0aee94dc3ca))
+
 # [0.59.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.58.1...v0.59.0) (2026-07-21)
 
 

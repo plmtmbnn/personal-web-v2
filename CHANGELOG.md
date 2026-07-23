@@ -1,3 +1,10 @@
+## [0.59.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.59.1...v0.59.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* **build:** optimize Next.js build performance with Turbopack and SWC configurations ([530c8e7](https://github.com/plmtmbnn/personal-web-v2/commit/530c8e723fd6523d0ed9d1128168e3ac1161ff17))
+
 ## [0.59.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.59.0...v0.59.1) (2026-07-22)
 
 

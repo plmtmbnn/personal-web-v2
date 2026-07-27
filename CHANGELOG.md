@@ -1,3 +1,10 @@
+# [0.60.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.59.2...v0.60.0) (2026-07-27)
+
+
+### Features
+
+* **tasks,investment:** revamp task agenda, subtasks management, and investment dashboard ([46639da](https://github.com/plmtmbnn/personal-web-v2/commit/46639da45d699aeb13e2a712d5d9fdce4f6087ee))
+
 ## [0.59.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.59.1...v0.59.2) (2026-07-23)
 
 

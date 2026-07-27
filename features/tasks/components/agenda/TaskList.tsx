@@ -7,6 +7,7 @@ import {
 	useState,
 	useCallback,
 	useRef,
+	useEffect,
 } from "react";
 import { useSearchParams } from "next/navigation";
 import { Inbox, Flame, Calendar, CheckCircle2 } from "lucide-react";
@@ -59,6 +60,15 @@ export default function TaskList({
 
 	// Undo state for delete operations
 	const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+	// Cleanup any pending undo deletion timer on unmount
+	useEffect(() => {
+		return () => {
+			if (undoTimeoutRef.current) {
+				clearTimeout(undoTimeoutRef.current);
+			}
+		};
+	}, []);
 
 	// Trigger load for Completed Tasks Section
 	const [isCompletedLoaded, setIsCompletedLoaded] = useState(false);
@@ -264,7 +274,7 @@ export default function TaskList({
 		applyFilters,
 	]);
 
-	const handleToggle = async (taskId: string, currentStatus: boolean) => {
+	const _handleToggle = async (taskId: string, currentStatus: boolean) => {
 		// Prevent duplicate requests for the same task
 		if (pendingRequests.current.has(`toggle-${taskId}`)) {
 			return;

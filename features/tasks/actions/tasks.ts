@@ -95,7 +95,7 @@ export async function getTasks(options?: {
 	showCompletedToday?: boolean;
 	includeCompleted?: boolean;
 }): Promise<Task[]> {
-	const today = new Date().toISOString().split("T")[0];
+	const today = format(new Date(), "yyyy-MM-dd");
 	const startDate = options?.startDate || today;
 	const endDate = options?.endDate || today;
 	const showCompletedToday = options?.showCompletedToday ?? false;
@@ -415,22 +415,22 @@ export async function updateTask(taskId: string, updates: Partial<Task>) {
  * Bulk update task positions
  */
 export async function reorderTasks(taskIds: string[]) {
-	const promises = taskIds.map((id, index) =>
-		SupabaseConn.from("tasks").update({ position: index }).eq("id", id),
-	);
+	if (!taskIds.length) return;
 
-	const results = await Promise.all(promises);
-	const firstError = results.find((r) => r.error)?.error;
+	const updates = taskIds.map((id, index) => ({ id, position: index }));
 
-	if (firstError) {
+	const { error } = await SupabaseConn.from("tasks").upsert(updates, {
+		onConflict: "id",
+	});
+
+	if (error) {
 		console.error("Failed to reorder tasks:", {
 			taskIds,
-			error: firstError.message,
-			code: firstError.code,
-			failedCount: results.filter((r) => r.error).length,
+			error: error.message,
+			code: error.code,
 		});
 		throw new Error(
-			`Failed to reorder ${taskIds.length} tasks. ${firstError.message || "Please refresh the page."}`,
+			`Failed to reorder ${taskIds.length} tasks. ${error.message || "Please refresh the page."}`,
 		);
 	}
 
@@ -467,7 +467,7 @@ export async function deleteTask(taskId: string) {
  * Fetch tasks that are not completed and past their due date.
  */
 export async function getStaleTasks(): Promise<Task[]> {
-	const today = new Date().toISOString().split("T")[0];
+	const today = format(new Date(), "yyyy-MM-dd");
 
 	const { data, error } = await SupabaseConn.from("tasks")
 		.select("*")
@@ -537,10 +537,9 @@ export async function rescheduleStaleTasks(taskIds: string[], newDate: string) {
  * Increments the reschedule_count for each task.
  */
 export async function rescheduleOverdueTasks(daysToAdd: number) {
-	const today = new Date().toISOString().split("T")[0];
-	const newDate = new Date();
-	newDate.setDate(newDate.getDate() + daysToAdd);
-	const newDateStr = newDate.toISOString().split("T")[0];
+	const today = format(new Date(), "yyyy-MM-dd");
+	const newDate = addDays(new Date(), daysToAdd);
+	const newDateStr = format(newDate, "yyyy-MM-dd");
 
 	// 1. Fetch overdue tasks
 	const { data: overdueTasks, error: fetchError } = await SupabaseConn.from(
@@ -568,30 +567,28 @@ export async function rescheduleOverdueTasks(daysToAdd: number) {
 	if (overdueTasks.length === 0)
 		return { success: true, message: "No overdue tasks to reschedule" };
 
-	// 2. Perform updates (Due Date + Increment Counter)
-	const promises = overdueTasks.map((t) =>
-		SupabaseConn.from("tasks")
-			.update({
-				due_date: newDateStr,
-				reschedule_count: (t.reschedule_count || 0) + 1,
-			})
-			.eq("id", t.id),
+	// 2. Perform updates (Due Date + Increment Counter) in a single batch upsert
+	const updates = overdueTasks.map((t) => ({
+		id: t.id,
+		due_date: newDateStr,
+		reschedule_count: (t.reschedule_count || 0) + 1,
+	}));
+
+	const { error: updateError } = await SupabaseConn.from("tasks").upsert(
+		updates,
+		{ onConflict: "id" },
 	);
 
-	const results = await Promise.all(promises);
-	const firstError = results.find((r) => r.error)?.error;
-
-	if (firstError) {
+	if (updateError) {
 		console.error("Failed during bulk reschedule:", {
 			daysToAdd,
 			overdueCount: overdueTasks.length,
-			error: firstError.message,
-			code: firstError.code,
-			failedCount: results.filter((r) => r.error).length,
+			error: updateError.message,
+			code: updateError.code,
 		});
 		return {
 			success: false,
-			message: `Failed to reschedule ${overdueTasks.length} tasks. ${firstError.message || "Please try again."}`,
+			message: `Failed to reschedule ${overdueTasks.length} tasks. ${updateError.message || "Please try again."}`,
 		};
 	}
 

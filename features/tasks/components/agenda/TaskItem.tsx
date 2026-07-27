@@ -85,8 +85,29 @@ interface SubtaskItemProps {
 }
 
 function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
+	const [isEditing, setIsEditing] = useState(false);
+	const [editTitle, setEditTitle] = useState(subtask.title);
 	const [deleteConfirm, setDeleteConfirm] = useState(false);
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		setEditTitle(subtask.title);
+	}, [subtask.title]);
+
+	useEffect(() => {
+		if (isEditing && inputRef.current) {
+			inputRef.current.focus();
+			inputRef.current.select();
+		}
+	}, [isEditing]);
+
+	useEffect(
+		() => () => {
+			if (timerRef.current) clearTimeout(timerRef.current);
+		},
+		[],
+	);
 
 	const handleDeleteClick = () => {
 		if (timerRef.current) clearTimeout(timerRef.current);
@@ -106,21 +127,33 @@ function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
 		});
 	};
 
-	useEffect(
-		() => () => {
-			if (timerRef.current) clearTimeout(timerRef.current);
-		},
-		[],
-	);
+	const handleSaveEdit = () => {
+		const cleanTitle = editTitle.trim();
+		if (cleanTitle && cleanTitle !== subtask.title) {
+			onUpdate(subtask.id, { title: cleanTitle });
+		}
+		setIsEditing(false);
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			handleSaveEdit();
+		} else if (e.key === "Escape") {
+			setEditTitle(subtask.title);
+			setIsEditing(false);
+		}
+	};
 
 	const isDone = subtask.status === "done";
 
 	return (
-		<div className="flex items-center gap-2 py-1 group/sub">
+		<div className="flex items-center gap-2 py-1.5 group/sub">
+			{/* Checkbox */}
 			<button
 				type="button"
 				onClick={handleToggle}
-				className={`flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+				className={`flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all cursor-pointer ${
 					isDone
 						? "bg-emerald-500 border-emerald-500 text-white"
 						: "bg-white border-slate-300 hover:border-emerald-400"
@@ -128,28 +161,82 @@ function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
 			>
 				{isDone && <Check className="w-2.5 h-2.5 stroke-[4]" />}
 			</button>
-			<span
-				className={`flex-1 text-xs font-medium truncate ${
-					isDone ? "line-through text-slate-400" : "text-slate-700"
-				}`}
-			>
-				{subtask.title}
-			</span>
-			<button
-				type="button"
-				onClick={handleDeleteClick}
-				className={`opacity-0 group-hover/sub:opacity-100 p-0.5 rounded transition-all ${
-					deleteConfirm
-						? "text-white bg-rose-500"
-						: "text-slate-300 hover:text-rose-500"
-				}`}
-			>
-				{deleteConfirm ? (
-					<AlertTriangle className="w-3 h-3" />
-				) : (
-					<X className="w-3 h-3" />
-				)}
-			</button>
+
+			{/* Title or Edit Input */}
+			{isEditing ? (
+				<div className="flex items-center gap-1 flex-1 min-w-0">
+					<input
+						ref={inputRef}
+						type="text"
+						value={editTitle}
+						onChange={(e) => setEditTitle(e.target.value)}
+						onKeyDown={handleKeyDown}
+						className="flex-1 text-xs font-semibold text-slate-800 bg-white border border-emerald-400 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+					/>
+					<button
+						type="button"
+						onClick={handleSaveEdit}
+						className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+						title="Save subtask"
+					>
+						<Check className="w-3.5 h-3.5 stroke-[3]" />
+					</button>
+					<button
+						type="button"
+						onClick={() => {
+							setEditTitle(subtask.title);
+							setIsEditing(false);
+						}}
+						className="p-1 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+						title="Cancel"
+					>
+						<X className="w-3.5 h-3.5" />
+					</button>
+				</div>
+			) : (
+				<>
+					<span
+						onDoubleClick={() => setIsEditing(true)}
+						className={`flex-1 text-xs font-medium truncate cursor-pointer ${
+							isDone ? "line-through text-slate-400" : "text-slate-700"
+						}`}
+						title="Double-click to edit"
+					>
+						{subtask.title}
+					</span>
+
+					{/* Action Controls */}
+					<div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover/sub:opacity-100 transition-opacity">
+						<button
+							type="button"
+							onClick={() => setIsEditing(true)}
+							className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
+							title="Edit subtask"
+						>
+							<Edit2 className="w-3 h-3" />
+						</button>
+						<button
+							type="button"
+							onClick={handleDeleteClick}
+							className={`p-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+								deleteConfirm
+									? "text-white bg-rose-500 hover:bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold"
+									: "text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+							}`}
+							title="Delete subtask"
+						>
+							{deleteConfirm ? (
+								<>
+									<AlertTriangle className="w-3 h-3" />
+									<span>Confirm?</span>
+								</>
+							) : (
+								<Trash2 className="w-3 h-3" />
+							)}
+						</button>
+					</div>
+				</>
+			)}
 		</div>
 	);
 }
@@ -242,6 +329,22 @@ function TaskItem({
 
 	const editOpacity = useTransform(x, [0, 60], [0, 1]);
 	const deleteOpacity = useTransform(x, [-60, 0], [1, 0]);
+
+	// Mobile view detection: only enable slide/swipe actions in mobile view (< 768px)
+	const [isMobile, setIsMobile] = useState(false);
+
+	useEffect(() => {
+		const media = window.matchMedia("(max-width: 767px)");
+		setIsMobile(media.matches);
+
+		const listener = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+		if (media.addEventListener) {
+			media.addEventListener("change", listener);
+			return () => media.removeEventListener("change", listener);
+		}
+		media.addListener(listener);
+		return () => media.removeListener(listener);
+	}, []);
 
 	// Sync states when task changes externally
 	useEffect(() => {
@@ -637,26 +740,28 @@ function TaskItem({
 			className={`relative overflow-hidden rounded-[1.5rem] sm:rounded-2xl border-l-4 transition-all ${statusConfig.borderColor}`}
 		>
 			{/* Swipe Action Backgrounds */}
-			<motion.div
-				style={{ background }}
-				className="absolute inset-0 flex items-center justify-between px-6 -z-10"
-			>
+			{isMobile && (
 				<motion.div
-					style={{ opacity: editOpacity }}
-					className="flex items-center gap-2 text-blue-600 font-black text-[10px] uppercase tracking-widest"
+					style={{ background }}
+					className="absolute inset-0 flex items-center justify-between px-6 -z-10"
 				>
-					<Edit2 className="w-4 h-4" /> Edit
+					<motion.div
+						style={{ opacity: editOpacity }}
+						className="flex items-center gap-2 text-blue-600 font-black text-[10px] uppercase tracking-widest"
+					>
+						<Edit2 className="w-4 h-4" /> Edit
+					</motion.div>
+					<motion.div
+						style={{ opacity: deleteOpacity }}
+						className="flex items-center gap-2 text-rose-600 font-black text-[10px] uppercase tracking-widest"
+					>
+						Delete <Trash2 className="w-4 h-4" />
+					</motion.div>
 				</motion.div>
-				<motion.div
-					style={{ opacity: deleteOpacity }}
-					className="flex items-center gap-2 text-rose-600 font-black text-[10px] uppercase tracking-widest"
-				>
-					Delete <Trash2 className="w-4 h-4" />
-				</motion.div>
-			</motion.div>
+			)}
 
 			<motion.div
-				drag={isEditing || !provided ? false : "x"}
+				drag={!isMobile || isEditing || !provided ? false : "x"}
 				dragConstraints={{ left: 0, right: 0 }}
 				dragElastic={0.4}
 				onDragEnd={handleDragEnd}
@@ -1352,9 +1457,17 @@ function TaskItem({
 									/>
 									Subtasks
 									{subtaskTotal > 0 && (
-										<span className="ml-1 px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[8px] font-bold">
-											{subtaskDone}/{subtaskTotal}
-										</span>
+										<div className="flex items-center gap-1.5 ml-1">
+											<span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[8px] font-bold">
+												{subtaskDone}/{subtaskTotal}
+											</span>
+											<div className="w-10 h-1 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+												<div
+													className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+													style={{ width: `${subtaskProgress}%` }}
+												/>
+											</div>
+										</div>
 									)}
 								</button>
 

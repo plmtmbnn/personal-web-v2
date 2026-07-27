@@ -140,7 +140,7 @@ export default function TaskBoard({
 		}
 	};
 
-	const handleToggle = useCallback(
+	const _handleToggle = useCallback(
 		async (taskId: string, currentStatus: boolean) => {
 			if (pendingRequests.current.has(`toggle-${taskId}`)) return;
 			const actionKey = `toggle-${taskId}`;

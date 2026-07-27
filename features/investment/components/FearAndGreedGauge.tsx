@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, Suspense } from "react";
+import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { TrendingUp, Activity, History, Clock, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";

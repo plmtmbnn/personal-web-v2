@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 
 interface StockData {
 	symbol: string;
@@ -15,27 +15,39 @@ export default function StockTicker() {
 	const [stocks, setStocks] = useState<StockData[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	const fetchStocks = useCallback(async () => {
-		try {
-			const response = await fetch(
-				"https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=.HSI%7C.NSEI%7C.NZ50%7C.KLSE%7C.TWII%7C.N225%7C.AXJO%7C.SSEC%7C.SZI%7C.KS11%7C.SETI%7C.STI%7C.IECNCGP%7CSGD%3D%7CCNY%3D%7CAUD%3D%7CINR%3D%7CNZD%3D%7CJPY%3D%7CHKD%3D%7CEURJPY%3D%7C%40LCO.1%7C%40CL.1%7C%40NG.1%7C%40HG.1&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json&events=1",
-			);
-			const data = await response.json();
-			const quotes = data.FormattedQuoteResult.FormattedQuote;
-			if (Array.isArray(quotes)) {
-				setStocks(quotes);
-			}
-			setLoading(false);
-		} catch (error) {
-			console.error("Failed to fetch stock data:", error);
-		}
-	}, []);
-
 	useEffect(() => {
-		fetchStocks();
-		const interval = setInterval(fetchStocks, 15000); // 15s polling
-		return () => clearInterval(interval);
-	}, [fetchStocks]);
+		let isMounted = true;
+
+		const loadStocks = async () => {
+			try {
+				const response = await fetch("/api/stocks/ticker");
+				if (response.ok) {
+					const data = await response.json();
+					if (
+						isMounted &&
+						Array.isArray(data?.stocks) &&
+						data.stocks.length > 0
+					) {
+						setStocks(data.stocks);
+					}
+				}
+			} catch (error) {
+				console.error("Failed to fetch stock ticker data:", error);
+			} finally {
+				if (isMounted) {
+					setLoading(false);
+				}
+			}
+		};
+
+		loadStocks();
+		const interval = setInterval(loadStocks, 15000); // 15s polling
+
+		return () => {
+			isMounted = false;
+			clearInterval(interval);
+		};
+	}, []);
 
 	if (loading && stocks.length === 0) {
 		return (

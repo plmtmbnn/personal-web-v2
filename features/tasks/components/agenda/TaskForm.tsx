@@ -226,6 +226,44 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		}
 	}, [title]);
 
+	// Smart syntax parsing handler (!high, #category, @tomorrow)
+	const handleTitleChange = useCallback(
+		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+			let val = e.target.value;
+
+			// Smart Priority token parsing (!high, !medium, !low)
+			const priorityMatch = val.match(/!(high|medium|low)\b/i);
+			if (priorityMatch) {
+				const p = priorityMatch[1].toUpperCase() as TaskPriority;
+				setPriority(p);
+				val = val.replace(priorityMatch[0], "").trimStart();
+			}
+
+			// Smart Category token parsing (#work, #personal, etc.)
+			const categoryMatch = val.match(/#([a-zA-Z0-9_-]+)\b/);
+			if (categoryMatch) {
+				const matchedCat = categoryMatch[1];
+				setCategory(matchedCat);
+				val = val.replace(categoryMatch[0], "").trimStart();
+			}
+
+			// Smart Date token parsing (@today, @tomorrow)
+			const dateMatch = val.match(/@(today|tomorrow)\b/i);
+			if (dateMatch) {
+				const d = dateMatch[1].toLowerCase();
+				if (d === "today") {
+					setDueDate(format(new Date(), "yyyy-MM-dd"));
+				} else if (d === "tomorrow") {
+					setDueDate(format(addDays(new Date(), 1), "yyyy-MM-dd"));
+				}
+				val = val.replace(dateMatch[0], "").trimStart();
+			}
+
+			setTitle(val);
+		},
+		[],
+	);
+
 	const setQuickDate = useCallback((days: number) => {
 		setDueDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
 	}, []);
@@ -523,7 +561,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										ref={textareaRef}
 										placeholder="Enter task titles (one per line for multiple)..."
 										value={title}
-										onChange={(e) => setTitle(e.target.value)}
+										onChange={handleTitleChange}
 										onFocus={() => setIsFocused(true)}
 										onBlur={() => !title && setIsFocused(false)}
 										onKeyDown={handleKeyDown}

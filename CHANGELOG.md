@@ -1,3 +1,10 @@
+# [0.61.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.60.0...v0.61.0) (2026-07-29)
+
+
+### Features
+
+* **blog:** enhance AdminBlogList and update image host configuration ([a73f8ba](https://github.com/plmtmbnn/personal-web-v2/commit/a73f8bae8e9141f235239de2f80456097abb167b))
+
 # [0.60.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.59.2...v0.60.0) (2026-07-27)
 
 

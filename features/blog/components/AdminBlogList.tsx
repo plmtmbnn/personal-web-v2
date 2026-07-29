@@ -42,6 +42,8 @@ import {
 	Square,
 	FileText,
 	Plus,
+	Copy,
+	Check,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -144,9 +146,48 @@ function AdminBlogListInner({
 	const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
 	const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
 
-	// ── Local search state ────────────────────
+	// ── Local search & copy state ──────────────
 	const [searchQuery, setSearchQuery] = useState(currentSearch);
+	const [copiedId, setCopiedId] = useState<string | null>(null);
+	const searchInputRef = useRef<HTMLInputElement>(null);
 	const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// ── Global Keyboard Shortcuts (/ to search, Esc to clear) ──
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			const targetTag = (e.target as HTMLElement)?.tagName;
+			if (["INPUT", "TEXTAREA", "SELECT"].includes(targetTag)) {
+				if (e.key === "Escape" && searchQuery) {
+					setSearchQuery("");
+				}
+				return;
+			}
+
+			if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) {
+				e.preventDefault();
+				searchInputRef.current?.focus();
+			} else if (e.key === "Escape") {
+				if (expandedRow) setExpandedRow(null);
+				if (searchQuery) setSearchQuery("");
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [searchQuery, expandedRow]);
+
+	const handleCopyLink = useCallback(
+		(slug: string, id: string) => {
+			const origin =
+				typeof window !== "undefined" ? window.location.origin : "";
+			const url = `${origin}/blog/${slug}`;
+			navigator.clipboard.writeText(url);
+			setCopiedId(id);
+			toast("Live link copied to clipboard!", "success");
+			setTimeout(() => setCopiedId(null), 2000);
+		},
+		[toast],
+	);
 
 	// ── Bulk select ───────────────────────────
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -428,42 +469,67 @@ function AdminBlogListInner({
 			    STATS BAR
 			═══════════════════════════════════════ */}
 			<div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-slate-100 bg-slate-50">
-				<div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2">
+				<div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-2">
 					{(
 						[
 							{
 								label: "Total",
 								value: blogStats.total,
 								color: "text-slate-900",
+								active: currentStatus === "all" && !currentHeadline,
+								onClick: () =>
+									updateParams({ status: "all", headline: null, page: "1" }),
 							},
 							{
 								label: "Published",
 								value: blogStats.published,
 								color: "text-emerald-600",
+								active: currentStatus === "published" && !currentHeadline,
+								onClick: () =>
+									updateParams({
+										status: "published",
+										headline: null,
+										page: "1",
+									}),
 							},
 							{
 								label: "Drafts",
 								value: blogStats.draft,
 								color: "text-amber-600",
+								active: currentStatus === "draft" && !currentHeadline,
+								onClick: () =>
+									updateParams({ status: "draft", headline: null, page: "1" }),
 							},
 							{
 								label: "Headlines",
 								value: blogStats.headlines,
 								color: "text-blue-600",
+								active: currentHeadline,
+								onClick: () =>
+									updateParams({
+										headline: !currentHeadline ? "true" : null,
+										page: "1",
+									}),
 							},
 						] as const
-					).map(({ label, value, color }) => (
-						<div key={label} className="flex items-center gap-1.5 sm:gap-2">
+					).map(({ label, value, color, active, onClick }) => (
+						<button
+							key={label}
+							onClick={onClick}
+							className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-xl transition-all ${
+								active
+									? "bg-white shadow-xs ring-1 ring-slate-200"
+									: "hover:bg-white/60 opacity-80 hover:opacity-100"
+							}`}
+							title={`Filter by ${label}`}
+						>
 							<span className={`text-base sm:text-lg font-black ${color}`}>
 								{value}
 							</span>
 							<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">
 								{label}
 							</span>
-							<span className="text-slate-200 text-lg font-light last:hidden">
-								•
-							</span>
-						</div>
+						</button>
 					))}
 
 					{/* Export CSV + New Blog */}
@@ -496,13 +562,14 @@ function AdminBlogListInner({
 					<div className="relative flex-1 w-full">
 						<Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
 						<input
+							ref={searchInputRef}
 							type="text"
-							placeholder="Search by title or description..."
+							placeholder="Search by title or description... (Press / to search)"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-400 shadow-sm"
+							className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-14 py-2.5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-400 shadow-sm"
 						/>
-						{searchQuery && (
+						{searchQuery ? (
 							<button
 								onClick={() => setSearchQuery("")}
 								className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-slate-400 hover:text-slate-700 transition-colors"
@@ -510,6 +577,10 @@ function AdminBlogListInner({
 							>
 								<X className="w-3.5 h-3.5" />
 							</button>
+						) : (
+							<kbd className="hidden sm:inline-flex absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[9px] font-mono text-slate-400 bg-slate-100 border border-slate-200 rounded shadow-xs pointer-events-none">
+								/
+							</kbd>
 						)}
 					</div>
 
@@ -970,6 +1041,17 @@ function AdminBlogListInner({
 														>
 															<FileText className="w-4 h-4" />
 														</button>
+														<button
+															onClick={() => handleCopyLink(blog.slug, blog.id)}
+															className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+															title="Copy Live Link"
+														>
+															{copiedId === blog.id ? (
+																<Check className="w-4 h-4 text-emerald-600 animate-pulse" />
+															) : (
+																<Copy className="w-4 h-4" />
+															)}
+														</button>
 														<Link
 															href={`/blog/${blog.slug}`}
 															target="_blank"
@@ -1208,6 +1290,17 @@ function AdminBlogListInner({
 												aria-label="Preview"
 											>
 												<FileText className="w-4 h-4" />
+											</button>
+											<button
+												onClick={() => handleCopyLink(blog.slug, blog.id)}
+												className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+												aria-label="Copy link"
+											>
+												{copiedId === blog.id ? (
+													<Check className="w-4 h-4 text-emerald-600 animate-pulse" />
+												) : (
+													<Copy className="w-4 h-4" />
+												)}
 											</button>
 											<Link
 												href={`/blog/${blog.slug}`}

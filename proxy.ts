@@ -8,7 +8,7 @@ const securityHeaders = {
 			default-src 'self';
 			script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.googletagmanager.com;
 			style-src 'self' 'unsafe-inline';
-			img-src 'self' data: blob: https://*.unsplash.com https://*.cloudinary.com https://*.pexels.com https://*.githubusercontent.com https://*.googleusercontent.com https://*.ibb.co;
+			img-src 'self' data: blob: https://*.unsplash.com https://*.cloudinary.com https://*.pexels.com https://*.githubusercontent.com https://*.googleusercontent.com https://*.ibb.co https://*.pbrd.co;
 			connect-src 'self' https://*.supabase.co https://*.firebaseio.com https://*.googleapis.com wss://*.supabase.co https://o4511591853850625.ingest.us.sentry.io;
 			font-src 'self';
 			object-src 'none';

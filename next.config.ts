@@ -47,6 +47,10 @@ const nextConfig: NextConfig = {
 			},
 			{
 				protocol: "https",
+				hostname: "**.pbrd.co",
+			},
+			{
+				protocol: "https",
 				hostname: "**.idx.co.id",
 			},
 		],

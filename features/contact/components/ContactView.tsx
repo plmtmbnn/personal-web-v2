@@ -12,14 +12,14 @@ import {
 	FaClock,
 	FaGlobeAsia,
 } from "react-icons/fa";
-import { Sparkles, MessageSquare } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import pkg from "@/package.json";
 import ContactForm from "./ContactForm";
 
 export default function ContactView() {
 	const reduceMotion = useReducedMotion();
-	const [mounted, setMounted] = useState(false);
+	const [_mounted, setMounted] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [localTime, setLocalTime] = useState("");
 	const [statusChip, setStatusChip] = useState({

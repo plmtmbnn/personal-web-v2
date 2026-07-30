@@ -74,7 +74,7 @@ export default function ContactForm() {
 					message: res.message || "Please correct the highlighted errors.",
 				});
 			}
-		} catch (err: any) {
+		} catch (_err: any) {
 			setStatus({
 				type: "error",
 				message: "A network error occurred. Please try again.",

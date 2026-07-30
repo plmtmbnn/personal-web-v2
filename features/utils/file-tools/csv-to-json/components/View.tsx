@@ -14,9 +14,6 @@ import {
 	ArrowLeft,
 	Settings2,
 	Download,
-	ChevronRight,
-	ChevronDown,
-	ClipboardCheck,
 	Maximize2,
 	Minimize2,
 } from "lucide-react";

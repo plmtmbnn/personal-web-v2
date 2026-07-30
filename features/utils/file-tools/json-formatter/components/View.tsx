@@ -13,11 +13,8 @@ import {
 	ArrowLeft,
 	Zap,
 	ZapOff,
-	ChevronRight,
-	ChevronDown,
 	Maximize2,
 	Minimize2,
-	ClipboardCheck,
 } from "lucide-react";
 import Link from "next/link";
 

@@ -181,7 +181,7 @@ export default function SmartTable({
 						{sortedStocks.map((s) => (
 							<tr
 								key={s.StockCode}
-								onClick={() => onSelectStock && onSelectStock(s)}
+								onClick={() => onSelectStock?.(s)}
 								className="group hover:bg-indigo-50/50 transition-colors cursor-pointer"
 							>
 								<td

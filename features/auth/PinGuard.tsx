@@ -34,8 +34,8 @@ export default function PinGuard({ children }: PinGuardProps) {
 	const reduceMotion = useReducedMotion();
 
 	const isPinGuardDisabled =
-		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false" ||
-		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false";
+		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD ||
+		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH;
 
 	const checkSession = useCallback(() => {
 		const session = localStorage.getItem(PIN_SESSION_KEY);

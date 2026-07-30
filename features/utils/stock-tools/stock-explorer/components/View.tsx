@@ -54,13 +54,13 @@ export default function StockExplorerView() {
 		if (storedWeights) {
 			try {
 				setWeights(JSON.parse(storedWeights));
-			} catch (e) {}
+			} catch (_e) {}
 		}
 		const storedWatchlist = localStorage.getItem("idx:watchlist");
 		if (storedWatchlist) {
 			try {
 				setWatchlist(JSON.parse(storedWatchlist));
-			} catch (e) {}
+			} catch (_e) {}
 		}
 	}, []);
 

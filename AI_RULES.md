@@ -79,6 +79,8 @@ Strictly for routing and page definitions.
 - **Auth Cookies**: Long-lived sessions (30 weeks).
 
 ## 🎨 UI/UX Patterns
+**CRITICAL MANDATE**: All new UI/UX development MUST adhere to the [UI/UX Engineering Guidelines](ui-uix-guideline.md). This encompasses our mobile-first responsive approaches, glassmorphism vs productivity aesthetics, animation physics, and typography standards.
+
 - **Solid Productivity Pattern**: For admin, operational, and utility pages, use solid white containers, `slate-50` backgrounds, and defined borders.
 - **Glassmorphism**: Reserved for public aesthetic pages (Home, Blog, Travel, Running) using `bg-white/5` and `backdrop-blur-xl`.
 - **Contrast Mastery**: 
@@ -206,7 +208,7 @@ pnpm run analyze         # Alias for build:analyze
 - **Git Workflow**: Follow **Conventional Commits**.
 - **Linter**: **Biome** for formatting and linting.
 - **Lazy Loading:** Heavy libraries (`recharts`, `chart.js`, `react-force-graph-2d`) are dynamically imported via `next/dynamic` (`ssr: false`) to reduce bundle size.
-- **Bundle Optimization:** `features/utils/` reorganized into subdirectories (`file-tools/`, `data-tools/`, `stock-tools/`, `time-tools/`, `web-tools/`, `text-tools/`).
+- **Bundle Optimization:** `features/utils/` reorganized into subdirectories (`file-tools/`, `data-tools/`, `stock-tools/`, `time-tools/`, `text-tools/`).
 - **Code Splitting:** `webpack.optimization.splitChunks` configured in `next.config.ts` for vendor/common separation.
 - **Image Optimization:** Enabled `optimize: true`, `dangerouslyAllowSVG: false`, device sizes, formats (AVIF/WebP), CSP.
 - **Performance:** Filesystem caching, `build:analyze`, bundle analysis.

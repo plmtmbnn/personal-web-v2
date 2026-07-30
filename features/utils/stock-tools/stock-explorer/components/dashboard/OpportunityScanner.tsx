@@ -65,7 +65,7 @@ export default function OpportunityScanner({
 						{filteredStocks.map((s) => (
 							<div
 								key={s.StockCode}
-								onClick={() => onSelectStock && onSelectStock(s)}
+								onClick={() => onSelectStock?.(s)}
 								className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-indigo-50 hover:shadow-sm transition-all cursor-pointer border border-transparent hover:border-indigo-100 group"
 							>
 								<div className="flex items-center gap-4">

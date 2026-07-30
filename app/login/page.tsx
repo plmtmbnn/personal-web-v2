@@ -28,16 +28,16 @@ function LoginContent() {
 	// Feature Toggle Check: If either is disabled, mark as logined and redirect
 	useEffect(() => {
 		if (
-			ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false" ||
-			ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false"
+			!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH ||
+			!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD
 		) {
 			router.push("/admin");
 		}
 	}, [router]);
 
 	if (
-		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false" ||
-		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD === "false"
+		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH ||
+		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD
 	) {
 		return (
 			<div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { X, ExternalLink, Activity, Target, Layers } from "lucide-react";
+import { X, ExternalLink } from "lucide-react";
 import type { ProcessedStock } from "../../types";
 import AIInsights from "./AIInsights";
 
@@ -21,7 +21,7 @@ export default function StockDetailDrawer({
 
 	if (!stock) return null;
 
-	const formatBillions = (val: number) => (val / 1e9).toFixed(1) + "B";
+	const formatBillions = (val: number) => `${(val / 1e9).toFixed(1)}B`;
 
 	const renderFundamentalTab = () => (
 		<div className="space-y-6">

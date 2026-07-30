@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   }
 
   // Feature Toggle Check
-  if (ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false") {
+  if (!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH) {
     console.warn('[Auth Callback] Google Auth is disabled via feature toggle');
     return NextResponse.redirect(new URL('/login?message=disabled', siteUrl));
   }

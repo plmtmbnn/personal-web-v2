@@ -53,7 +53,7 @@ export default function Heatmap({ stocks, onSelectStock }: HeatmapProps) {
 				{topStocks.map((s) => (
 					<div
 						key={s.StockCode}
-						onClick={() => onSelectStock && onSelectStock(s)}
+						onClick={() => onSelectStock?.(s)}
 						title={`${s.StockCode}\nChange: ${s.ChangePct.toFixed(2)}%\nVolume: ${(s.Volume / 1e6).toFixed(1)}M`}
 						className={`cursor-pointer transition-transform hover:scale-110 hover:z-10 rounded-sm flex items-center justify-center ${getColor(s.ChangePct)}`}
 						style={{

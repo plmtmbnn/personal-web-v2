@@ -23,7 +23,6 @@ import {
 	Sparkles,
 	Toolbox,
 	Database,
-	Network,
 } from "lucide-react";
 import {
 	motion,
@@ -78,7 +77,6 @@ const NAV_ITEMS: NavItem[] = [
 		icon: BookOpen,
 		subItems: [
 			{ label: "Blog Posts", href: "/blog", icon: BookOpen },
-			{ label: "Second Brain", href: "/brain", icon: Network },
 			{ label: "Investments", href: "/investment", icon: TrendingUp },
 			{ label: "Utils", href: "/utils", icon: Toolbox },
 		],
@@ -274,7 +272,7 @@ export default function CompactBottomBar() {
 	};
 
 	const visibleItems = NAV_ITEMS.filter((item) => {
-		if (item.toggle && ENV_GLOBAL[item.toggle] === "false") return false;
+		if (item.toggle && !ENV_GLOBAL[item.toggle]) return false;
 		if (item.adminOnly && !isAdmin) return false;
 		if (item.hideIfLoggedIn && isLoggedIn) return false;
 		return true;

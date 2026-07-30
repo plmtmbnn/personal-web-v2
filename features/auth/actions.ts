@@ -13,8 +13,8 @@ import { ENV_GLOBAL } from "@/lib/core/env";
 export async function checkAdmin() {
 	// If either feature flag is disabled, bypass the auth check (marked as logined/admin)
 	if (
-		ENV_GLOBAL.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "false" ||
-		ENV_GLOBAL.NEXT_PUBLIC_ENABLE_PINGUARD === "false"
+		!ENV_GLOBAL.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH ||
+		!ENV_GLOBAL.NEXT_PUBLIC_ENABLE_PINGUARD
 	) {
 		return true;
 	}

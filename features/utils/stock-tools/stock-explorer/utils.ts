@@ -7,9 +7,9 @@
  */
 export function fmtCompact(n: number): string {
 	if (n < 1e3) return n.toLocaleString();
-	if (n < 1e6) return (n / 1e3).toFixed(1) + "K";
-	if (n < 1e9) return (n / 1e6).toFixed(1) + "M";
-	return (n / 1e9).toFixed(1) + "B";
+	if (n < 1e6) return `${(n / 1e3).toFixed(1)}K`;
+	if (n < 1e9) return `${(n / 1e6).toFixed(1)}M`;
+	return `${(n / 1e9).toFixed(1)}B`;
 }
 
 /**
@@ -18,5 +18,5 @@ export function fmtCompact(n: number): string {
  * @returns The formatted percentage string.
  */
 export function fmtPct(n: number): string {
-	return (n > 0 ? "+" : "") + n.toFixed(2) + "%";
+	return `${(n > 0 ? "+" : "") + n.toFixed(2)}%`;
 }

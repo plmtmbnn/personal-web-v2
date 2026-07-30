@@ -7,7 +7,6 @@ import {
 	BarChart2,
 	Coins,
 } from "lucide-react";
-import type { ProcessedStock } from "../../types";
 
 interface HeroOverviewProps {
 	marketHealth: any;
@@ -24,9 +23,9 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 		totalValue,
 	} = marketHealth;
 
-	const formatBillions = (val: number) => (val / 1000000000).toFixed(1) + "B";
+	const formatBillions = (val: number) => `${(val / 1000000000).toFixed(1)}B`;
 	const formatTrillions = (val: number) =>
-		(val / 1000000000000).toFixed(1) + "T";
+		`${(val / 1000000000000).toFixed(1)}T`;
 
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

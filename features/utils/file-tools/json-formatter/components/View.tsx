@@ -114,28 +114,28 @@ export default function JsonFormatterView() {
 	}, [input, isAutoFormat, processJson]);
 
 	return (
-		<main className="min-h-screen bg-slate-50 font-sans selection:bg-blue-100 text-slate-900 pb-20">
-			<div className="max-w-[1600px] mx-auto px-4 sm:px-8 pt-10 sm:pt-16 relative z-10">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1600px] mx-auto space-y-8">
 				{/* Header */}
-				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 sm:mb-14">
-					<div className="space-y-6">
+				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8">
+					<div className="space-y-4">
 						<Link
 							href="/utils"
-							className="inline-flex items-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-blue-600 transition-colors gap-2 group"
+							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
 						>
 							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Operational Utilities
+							Back to Utilities
 						</Link>
-						<div className="flex items-center gap-5">
-							<div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20 active:scale-90 transition-transform">
-								<Braces className="w-7 h-7 sm:w-8 sm:h-8" />
+						<div className="flex items-center gap-4">
+							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
+								<Braces className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
 							</div>
 							<div>
-								<h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-slate-900 leading-none">
-									JSON <span className="text-blue-600">Architect</span>
+								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
+									JSON <span className="text-indigo-600">Architect</span>
 								</h1>
-								<p className="text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] mt-3">
-									High-Fidelity Structure & Validation
+								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
+									High-fidelity JSON structure & syntax validation.
 								</p>
 							</div>
 						</div>
@@ -144,14 +144,14 @@ export default function JsonFormatterView() {
 					<div className="flex flex-wrap items-center gap-3">
 						<button
 							onClick={() => setIsAutoFormat(!isAutoFormat)}
-							className={`flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm border ${
+							className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
 								isAutoFormat
-									? "bg-blue-50 border-blue-200 text-blue-600"
-									: "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+									? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xs"
+									: "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50"
 							}`}
 						>
 							{isAutoFormat ? (
-								<Zap className="w-4 h-4" />
+								<Zap className="w-4 h-4 text-indigo-600" />
 							) : (
 								<ZapOff className="w-4 h-4" />
 							)}

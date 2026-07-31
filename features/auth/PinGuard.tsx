@@ -33,9 +33,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const reduceMotion = useReducedMotion();
 
-	const isPinGuardDisabled =
-		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD ||
-		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH;
+	const isPinGuardDisabled = !ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD;
 
 	const checkSession = useCallback(() => {
 		const session = localStorage.getItem(PIN_SESSION_KEY);
@@ -70,7 +68,12 @@ export default function PinGuard({ children }: PinGuardProps) {
 
 				const data = await response.json();
 
-				if (response.ok && data.authenticated) {
+				if (response.status === 429) {
+					setError(
+						data.error || "Too many attempts. Locked out for 10 minutes.",
+					);
+					setPin("");
+				} else if (response.ok && data.authenticated) {
 					const session = {
 						timestamp: Date.now(),
 						authenticated: true,

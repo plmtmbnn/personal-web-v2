@@ -118,20 +118,20 @@ export default function MockApiView() {
 	};
 
 	return (
-		<div className="min-h-screen bg-slate-50 p-4 md:p-8">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-5xl mx-auto space-y-8">
 				{/* Header */}
 				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 					<div>
-						<h1 className="text-3xl font-bold text-slate-900">
+						<h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
 							Dynamic Mock API Engine
 						</h1>
-						<p className="text-slate-500 mt-1">
+						<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
 							Create temporary REST endpoints with custom logic.
 						</p>
 					</div>
-					<div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-100">
-						<Info className="w-4 h-4" />
+					<div className="flex items-center gap-2 px-3.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold border border-indigo-100 shrink-0">
+						<Info className="w-4 h-4 text-indigo-600" />
 						<span>Mocks expire after 1 month of inactivity.</span>
 					</div>
 				</div>
@@ -139,9 +139,9 @@ export default function MockApiView() {
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 					{/* Configuration Form */}
 					<div className="lg:col-span-5 space-y-6">
-						<div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-							<h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800">
-								<Plus className="w-5 h-5" />
+						<div className="bg-white p-6 sm:p-8 border border-slate-200/80 rounded-[2.5rem] shadow-xl shadow-slate-200/50">
+							<h2 className="text-lg font-extrabold mb-4 flex items-center gap-2 text-slate-900">
+								<Plus className="w-5 h-5 text-indigo-600" />
 								New Mock Definition
 							</h2>
 
@@ -150,7 +150,7 @@ export default function MockApiView() {
 									<div>
 										<label
 											htmlFor="mock-method"
-											className="block text-sm font-medium text-slate-700 mb-1"
+											className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5"
 										>
 											Method
 										</label>
@@ -158,7 +158,7 @@ export default function MockApiView() {
 											id="mock-method"
 											value={method}
 											onChange={(e) => setMethod(e.target.value)}
-											className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+											className="w-full bg-slate-50/70 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none cursor-pointer"
 										>
 											{["GET", "POST", "PUT", "DELETE", "PATCH"].map((m) => (
 												<option key={m} value={m}>
@@ -170,7 +170,7 @@ export default function MockApiView() {
 									<div>
 										<label
 											htmlFor="mock-status"
-											className="block text-sm font-medium text-slate-700 mb-1"
+											className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5"
 										>
 											Status Code
 										</label>
@@ -179,7 +179,7 @@ export default function MockApiView() {
 											type="number"
 											value={status}
 											onChange={(e) => setStatus(parseInt(e.target.value, 10))}
-											className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+											className="w-full bg-slate-50/70 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none"
 										/>
 									</div>
 								</div>
@@ -187,12 +187,12 @@ export default function MockApiView() {
 								<div>
 									<label
 										htmlFor="mock-path"
-										className="block text-sm font-medium text-slate-700 mb-1"
+										className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5"
 									>
 										Endpoint Path
 									</label>
 									<div className="flex">
-										<span className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-lg px-3 py-2 text-sm text-slate-500">
+										<span className="bg-slate-100 border border-r-0 border-slate-200/80 rounded-l-xl px-3.5 py-2.5 text-xs font-bold text-slate-600">
 											/api/mock
 										</span>
 										<input
@@ -201,7 +201,7 @@ export default function MockApiView() {
 											value={path}
 											onChange={(e) => setPath(e.target.value)}
 											placeholder="/v1/users/1"
-											className="w-full bg-slate-50 border border-slate-200 rounded-r-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+											className="w-full bg-slate-50/70 border border-slate-200/80 rounded-r-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none"
 										/>
 									</div>
 								</div>
@@ -209,7 +209,7 @@ export default function MockApiView() {
 								<div>
 									<label
 										htmlFor="mock-body"
-										className="block text-sm font-medium text-slate-700 mb-1"
+										className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5"
 									>
 										Response JSON Body
 									</label>
@@ -218,17 +218,17 @@ export default function MockApiView() {
 										value={body}
 										onChange={(e) => setBody(e.target.value)}
 										rows={8}
-										className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+										className="w-full bg-slate-50/70 border border-slate-200/80 rounded-xl p-3.5 text-xs font-mono focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none resize-none text-slate-900"
 									/>
 								</div>
 
-								<div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
+								<div className="flex items-start gap-3 p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80 hover:border-slate-300 transition-colors">
 									<input
 										id="enable-rate-limit"
 										type="checkbox"
 										checked={enableRateLimit}
 										onChange={(e) => setEnableRateLimit(e.target.checked)}
-										className="mt-1 w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+										className="mt-0.5 w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
 									/>
 									<div
 										className="flex flex-col cursor-pointer"
@@ -236,11 +236,11 @@ export default function MockApiView() {
 									>
 										<label
 											htmlFor="enable-rate-limit"
-											className="text-sm font-semibold text-slate-800 cursor-pointer select-none"
+											className="text-xs font-bold text-slate-900 cursor-pointer select-none"
 										>
 											Enable Rate Limiter
 										</label>
-										<span className="text-xs text-slate-500 select-none">
+										<span className="text-[11px] font-semibold text-slate-500 select-none">
 											Limit requests to 10 requests per 10 seconds per IP
 											address to prevent abuse.
 										</span>
@@ -250,14 +250,14 @@ export default function MockApiView() {
 								<button
 									onClick={handleSave}
 									disabled={loading || !path}
-									className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+									className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer"
 								>
 									{loading ? (
-										<div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+										<div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
 									) : (
 										<>
-											<Plus className="w-5 h-5" />
-											Generate Mock Endpoint
+											<Plus className="w-4 h-4" />
+											<span>Generate Mock Endpoint</span>
 										</>
 									)}
 								</button>
@@ -271,23 +271,23 @@ export default function MockApiView() {
 									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, scale: 0.95 }}
-									className="bg-green-50 border border-green-200 p-4 rounded-xl"
+									className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl shadow-xs"
 								>
-									<p className="text-green-800 text-sm font-medium mb-2">
+									<p className="text-emerald-900 text-xs font-bold uppercase tracking-wider mb-2">
 										Endpoint created successfully!
 									</p>
 									<div
-										className="flex items-center gap-2 bg-white border border-green-100 p-3 rounded-lg group cursor-pointer"
+										className="flex items-center gap-2 bg-white border border-emerald-200/80 p-3 rounded-xl group cursor-pointer"
 										onClick={() => copyToClipboard(lastCreatedUrl, "last-url")}
 									>
-										<Link className="w-4 h-4 text-green-600 shrink-0" />
-										<code className="text-xs text-green-700 truncate flex-1">
+										<Link className="w-4 h-4 text-emerald-600 shrink-0" />
+										<code className="text-xs font-mono text-emerald-900 truncate flex-1">
 											{lastCreatedUrl}
 										</code>
 										{copiedKey === "last-url" ? (
-											<Check className="w-4 h-4 text-green-600" />
+											<Check className="w-4 h-4 text-emerald-600" />
 										) : (
-											<Copy className="w-4 h-4 text-slate-400 group-hover:text-green-600" />
+											<Copy className="w-4 h-4 text-slate-400 group-hover:text-emerald-600" />
 										)}
 									</div>
 									<div className="mt-3 flex justify-end">
@@ -295,7 +295,7 @@ export default function MockApiView() {
 											href={lastCreatedUrl}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="text-xs font-semibold text-green-700 hover:underline flex items-center gap-1"
+											className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer !no-underline"
 										>
 											<Play className="w-3 h-3" /> Test in New Tab
 										</a>
@@ -307,9 +307,9 @@ export default function MockApiView() {
 
 					{/* Active Mocks List */}
 					<div className="lg:col-span-7 space-y-4">
-						<h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+						<h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
 							Active Endpoints
-							<span className="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full">
+							<span className="bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-full border border-slate-200/80 font-bold">
 								{mocks.length}
 							</span>
 						</h3>
@@ -320,9 +320,9 @@ export default function MockApiView() {
 									<motion.div
 										initial={reduceMotion ? false : { opacity: 0 }}
 										animate={{ opacity: 1 }}
-										className="bg-white border border-dashed border-slate-300 p-12 rounded-xl text-center"
+										className="bg-white border border-dashed border-slate-300 p-12 rounded-[2rem] text-center shadow-xs"
 									>
-										<p className="text-slate-400 italic">
+										<p className="text-slate-500 font-semibold text-xs uppercase tracking-wider">
 											No active mocks. Create one to get started.
 										</p>
 									</motion.div>
@@ -334,41 +334,41 @@ export default function MockApiView() {
 											initial={reduceMotion ? false : { opacity: 0, x: -10 }}
 											animate={{ opacity: 1, x: 0 }}
 											exit={{ opacity: 0, scale: 0.95 }}
-											className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow group"
+											className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md transition-all group"
 										>
 											<div className="flex items-start justify-between gap-4">
 												<div className="flex-1 min-w-0">
 													<div className="flex items-center gap-2 mb-2">
 														<span
-															className={`text-[10px] font-bold px-2 py-0.5 rounded text-white ${
+															className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md text-white ${
 																mock.method === "GET"
-																	? "bg-green-500"
+																	? "bg-emerald-600"
 																	: mock.method === "POST"
-																		? "bg-blue-500"
+																		? "bg-indigo-600"
 																		: mock.method === "PUT"
-																			? "bg-amber-500"
+																			? "bg-amber-600"
 																			: mock.method === "DELETE"
-																				? "bg-red-500"
-																				: "bg-slate-500"
+																				? "bg-rose-600"
+																				: "bg-slate-600"
 															}`}
 														>
 															{mock.method}
 														</span>
-														<span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+														<span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/80">
 															{mock.status}
 														</span>
 														{mock.enableRateLimit && (
-															<span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-																<Shield className="w-3 h-3 text-amber-500" />
+															<span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+																<Shield className="w-3 h-3 text-amber-600" />
 																Rate Limited
 															</span>
 														)}
-														<span className="text-xs font-mono text-slate-600 truncate">
+														<span className="text-xs font-mono font-bold text-slate-800 truncate">
 															/api/mock{mock.path}
 														</span>
 													</div>
 													<div
-														className="flex items-center gap-2 text-slate-400 hover:text-blue-600 cursor-pointer transition-colors"
+														className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 cursor-pointer transition-colors"
 														onClick={() =>
 															copyToClipboard(
 																`${window.location.origin}/api/mock${mock.path}`,
@@ -377,29 +377,29 @@ export default function MockApiView() {
 														}
 													>
 														<Link className="w-3.5 h-3.5" />
-														<span className="text-[11px] truncate">
+														<span className="text-xs font-mono truncate">
 															{window.location.origin}/api/mock{mock.path}
 														</span>
 														{copiedKey === mock.key ? (
-															<Check className="w-3.5 h-3.5 text-green-500" />
+															<Check className="w-3.5 h-3.5 text-emerald-600" />
 														) : (
 															<Copy className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100" />
 														)}
 													</div>
 												</div>
-												<div className="flex items-center gap-2">
+												<div className="flex items-center gap-1.5">
 													<a
 														href={`/api/mock${mock.path}`}
 														target="_blank"
 														rel="noopener noreferrer"
-														className="p-2 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-lg transition-colors"
+														className="p-2 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 rounded-lg transition-colors cursor-pointer"
 														title="Quick Preview"
 													>
 														<Play className="w-4 h-4" />
 													</a>
 													<button
 														onClick={() => handleDelete(mock.key)}
-														className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-lg transition-colors"
+														className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
 														title="Delete Mock"
 													>
 														<Trash2 className="w-4 h-4" />
@@ -423,6 +423,6 @@ export default function MockApiView() {
 				description="The response body must be a valid JSON string. Please check your syntax and try again."
 				cancelText="Close"
 			/>
-		</div>
+		</main>
 	);
 }

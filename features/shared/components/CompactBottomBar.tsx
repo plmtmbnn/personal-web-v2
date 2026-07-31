@@ -399,13 +399,13 @@ export default function CompactBottomBar() {
 												{pendingTasksCount}
 											</span>
 										)}
-										<span className="text-xs sm:text-sm font-semibold whitespace-nowrap !text-current">
+										<span className="hidden sm:inline text-xs sm:text-sm font-extrabold whitespace-nowrap !text-current">
 											{item.label}
 										</span>
 										{hasSubItems && (
 											<motion.div
 												animate={{ rotate: isExpanded ? 180 : 0 }}
-												className="opacity-70 !text-current"
+												className="hidden sm:block opacity-70 !text-current"
 											>
 												<ChevronUp className="w-3 h-3" strokeWidth={2.5} />
 											</motion.div>

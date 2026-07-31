@@ -73,6 +73,9 @@ export default function LoginButton({ user }: LoginButtonProps) {
 					whileTap={{ scale: 0.95 }}
 					onClick={async () => {
 						setIsLoading(true);
+						if (typeof window !== "undefined") {
+							localStorage.removeItem("auth_pin_session");
+						}
 						await logout();
 					}}
 					disabled={isLoading}

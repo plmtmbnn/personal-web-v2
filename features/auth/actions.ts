@@ -11,11 +11,8 @@ import { ENV_GLOBAL } from "@/lib/core/env";
  * Bypasses check if Google Auth or PIN Guard is disabled.
  */
 export async function checkAdmin() {
-	// If either feature flag is disabled, bypass the auth check (marked as logined/admin)
-	if (
-		!ENV_GLOBAL.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH ||
-		!ENV_GLOBAL.NEXT_PUBLIC_ENABLE_PINGUARD
-	) {
+	// If Google Auth is disabled, bypass the auth check (allow dev/local access)
+	if (!ENV_GLOBAL.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH) {
 		return true;
 	}
 

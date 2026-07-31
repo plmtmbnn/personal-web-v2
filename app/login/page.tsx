@@ -25,10 +25,10 @@ function LoginContent() {
 	const error = searchParams.get("error");
 	const message = searchParams.get("message");
 
-	// Feature Toggle Check: If either is disabled, mark as logined and redirect
+	// Feature Toggle Check: If both are disabled, mark as logined and redirect
 	useEffect(() => {
 		if (
-			!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH ||
+			!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH &&
 			!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD
 		) {
 			router.push("/admin");
@@ -36,7 +36,7 @@ function LoginContent() {
 	}, [router]);
 
 	if (
-		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH ||
+		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH &&
 		!ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD
 	) {
 		return (

@@ -1,3 +1,10 @@
+# [0.63.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.62.0...v0.63.0) (2026-07-31)
+
+
+### Features
+
+* **utils:** align utility feature views with floating card design system and audit auth flow ([30ac2f9](https://github.com/plmtmbnn/personal-web-v2/commit/30ac2f98d89a7a95a2b22bec30b27d7cfccbc367))
+
 # [0.62.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.61.0...v0.62.0) (2026-07-31)
 
 

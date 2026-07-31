@@ -64,10 +64,12 @@ export default function CommandPalette() {
 			<div className="fixed bottom-6 right-6 z-40 hidden md:block">
 				<button
 					onClick={() => setOpen(true)}
-					className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 text-white/50 text-[10px] font-black uppercase tracking-widest border border-white/10 hover:border-white/20 hover:text-white transition-all shadow-lg backdrop-blur-md pointer-events-auto cursor-pointer"
+					className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 text-slate-300 text-xs font-extrabold uppercase tracking-wider border border-slate-700/80 hover:border-slate-500 hover:text-white transition-all shadow-xl backdrop-blur-md pointer-events-auto cursor-pointer"
 				>
 					<span>Search</span>
-					<kbd className="bg-white/10 px-1.5 py-0.5 rounded text-[9px]">⌘K</kbd>
+					<kbd className="bg-white/10 px-1.5 py-0.5 rounded text-[9px] font-mono text-slate-300">
+						⌘K
+					</kbd>
 				</button>
 			</div>
 
@@ -80,7 +82,7 @@ export default function CommandPalette() {
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							onClick={() => setOpen(false)}
-							className="absolute inset-0 bg-slate-950/40 backdrop-blur-md pointer-events-auto"
+							className="absolute inset-0 bg-slate-950/50 backdrop-blur-md pointer-events-auto"
 						/>
 
 						{/* Palette Container */}
@@ -98,13 +100,13 @@ export default function CommandPalette() {
 								label="Global Command Menu"
 							>
 								{/* Search Bar input */}
-								<div className="flex items-center gap-3 px-5 py-4 border-b border-slate-800/80">
-									<Search className="w-5 h-5 text-slate-400 flex-shrink-0" />
+								<div className="flex items-center gap-3 px-5 py-4 border-b border-slate-800">
+									<Search className="w-5 h-5 text-indigo-400 shrink-0" />
 									<Command.Input
 										value={search}
 										onValueChange={setSearch}
 										placeholder="Search pages, utilities, or actions..."
-										className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none w-full border-none p-0 focus:ring-0"
+										className="flex-1 bg-transparent text-sm font-semibold text-slate-100 placeholder-slate-500 outline-none w-full border-none p-0 focus:ring-0"
 									/>
 									<button
 										onClick={() => setOpen(false)}
@@ -116,18 +118,18 @@ export default function CommandPalette() {
 
 								{/* Content Sections */}
 								<Command.List className="max-h-[350px] overflow-y-auto p-3 space-y-4 no-scrollbar">
-									<Command.Empty className="py-8 text-center text-xs text-slate-500 font-bold uppercase tracking-widest">
+									<Command.Empty className="py-8 text-center text-xs font-bold uppercase tracking-wider text-slate-500">
 										No matches found.
 									</Command.Empty>
 
 									{/* Action commands */}
 									<Command.Group
 										heading="Actions"
-										className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-black [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.15em] [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-items]]:space-y-1"
+										className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:text-indigo-400 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-items]]:space-y-1"
 									>
 										<Command.Item
 											onSelect={copyCurrentUrl}
-											className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-slate-800 data-[selected=true]:text-white"
+											className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-indigo-600/20 data-[selected=true]:text-white"
 										>
 											<LinkIcon className="w-4 h-4 text-slate-400" />
 											<span>Copy Current URL</span>
@@ -137,7 +139,7 @@ export default function CommandPalette() {
 												setOpen(false);
 												window.location.reload();
 											}}
-											className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-slate-800 data-[selected=true]:text-white"
+											className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-indigo-600/20 data-[selected=true]:text-white"
 										>
 											<RotateCw className="w-4 h-4 text-slate-400" />
 											<span>Force Reload Page</span>
@@ -147,7 +149,7 @@ export default function CommandPalette() {
 									{/* Page Navigation links */}
 									<Command.Group
 										heading="Navigation"
-										className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-black [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.15em] [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-items]]:space-y-1"
+										className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:text-indigo-400 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-items]]:space-y-1"
 									>
 										{[
 											{ name: "Home Dashboard", path: "/", icon: Home },
@@ -177,7 +179,7 @@ export default function CommandPalette() {
 											<Command.Item
 												key={item.path}
 												onSelect={() => handleNavigate(item.path)}
-												className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-slate-800 data-[selected=true]:text-white"
+												className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-indigo-600/20 data-[selected=true]:text-white"
 											>
 												<item.icon className="w-4 h-4 text-slate-400" />
 												<span>{item.name}</span>
@@ -188,7 +190,7 @@ export default function CommandPalette() {
 									{/* Developer Utilities links */}
 									<Command.Group
 										heading="Developer Utilities"
-										className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-black [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.15em] [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-items]]:space-y-1"
+										className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:text-indigo-400 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-items]]:space-y-1"
 									>
 										{[
 											{ name: "Running Timer", slug: "timer", icon: Timer },
@@ -241,7 +243,7 @@ export default function CommandPalette() {
 											<Command.Item
 												key={item.slug}
 												onSelect={() => handleNavigate(`/utils/${item.slug}`)}
-												className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-slate-800 data-[selected=true]:text-white"
+												className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white cursor-pointer select-none text-xs font-bold transition-all outline-none data-[selected=true]:bg-indigo-600/20 data-[selected=true]:text-white"
 											>
 												<item.icon className="w-4 h-4 text-slate-400" />
 												<span>{item.name}</span>
@@ -251,17 +253,17 @@ export default function CommandPalette() {
 								</Command.List>
 
 								{/* Control Hints footer */}
-								<div className="flex items-center justify-between px-5 py-3 border-t border-slate-800/80 bg-slate-900/60 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+								<div className="flex items-center justify-between px-5 py-3 border-t border-slate-800 bg-slate-900/80 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
 									<div className="flex items-center gap-2">
 										<span>Use arrows</span>
-										<kbd className="bg-slate-800 px-1 py-0.5 rounded text-[8px] text-slate-400">
+										<kbd className="bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-[8px] text-slate-300 font-mono">
 											↑↓
 										</kbd>
 										<span>to navigate</span>
 									</div>
 									<div className="flex items-center gap-2">
 										<span>Press</span>
-										<kbd className="bg-slate-800 px-1.5 py-0.5 rounded text-[8px] text-slate-400">
+										<kbd className="bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-[8px] text-slate-300 font-mono">
 											Enter
 										</kbd>
 										<span>to select</span>

@@ -91,20 +91,17 @@ export default function ContactForm() {
 			transition={{ duration: 0.5, delay: 0.2 }}
 			className="relative w-full max-w-lg mx-auto lg:mx-0"
 		>
-			{/* Form Container Border & Subtle Glow */}
-			<div className="absolute -inset-0.5 bg-indigo-500/15 rounded-[2rem] blur-xl opacity-75 pointer-events-none" />
-
-			<div className="relative bg-white/70 backdrop-blur-xl border border-slate-200/50 p-6 sm:p-8 rounded-[2rem] shadow-xl shadow-slate-100/50">
-				<h2 className="text-xl font-black text-slate-800 tracking-tight mb-6">
+			<div className="relative bg-white border border-slate-200/80 p-6 sm:p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50">
+				<h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-6">
 					Send a Message
 				</h2>
 
-				<form onSubmit={handleSubmit} className="space-y-5">
+				<form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
 					{/* Name field */}
 					<div className="flex flex-col">
 						<label
 							htmlFor="name"
-							className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block"
+							className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block"
 						>
 							Your Name
 						</label>
@@ -116,10 +113,10 @@ export default function ContactForm() {
 							onChange={handleChange}
 							disabled={isPending}
 							placeholder="John Doe"
-							className={`w-full rounded-xl p-3.5 border bg-white/50 text-slate-800 text-sm outline-none transition-all duration-200 ${
+							className={`w-full rounded-xl p-3.5 border bg-slate-50/70 text-slate-900 font-medium text-sm outline-none transition-all duration-200 focus:bg-white ${
 								errors.name
-									? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-									: "border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+									? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10"
+									: "border-slate-200/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
 							}`}
 						/>
 						<AnimatePresence>
@@ -130,7 +127,7 @@ export default function ContactForm() {
 									exit={{ opacity: 0, height: 0 }}
 									className="text-xs text-rose-500 font-bold mt-1 flex items-center gap-1"
 								>
-									<AlertCircle className="w-3 h-3" />
+									<AlertCircle className="w-3.5 h-3.5" />
 									{errors.name[0]}
 								</motion.span>
 							)}
@@ -141,7 +138,7 @@ export default function ContactForm() {
 					<div className="flex flex-col">
 						<label
 							htmlFor="email"
-							className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block"
+							className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block"
 						>
 							Your Email
 						</label>
@@ -153,10 +150,10 @@ export default function ContactForm() {
 							onChange={handleChange}
 							disabled={isPending}
 							placeholder="john@example.com"
-							className={`w-full rounded-xl p-3.5 border bg-white/50 text-slate-800 text-sm outline-none transition-all duration-200 ${
+							className={`w-full rounded-xl p-3.5 border bg-slate-50/70 text-slate-900 font-medium text-sm outline-none transition-all duration-200 focus:bg-white ${
 								errors.email
-									? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-									: "border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+									? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10"
+									: "border-slate-200/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
 							}`}
 						/>
 						<AnimatePresence>
@@ -167,7 +164,7 @@ export default function ContactForm() {
 									exit={{ opacity: 0, height: 0 }}
 									className="text-xs text-rose-500 font-bold mt-1 flex items-center gap-1"
 								>
-									<AlertCircle className="w-3 h-3" />
+									<AlertCircle className="w-3.5 h-3.5" />
 									{errors.email[0]}
 								</motion.span>
 							)}
@@ -178,7 +175,7 @@ export default function ContactForm() {
 					<div className="flex flex-col">
 						<label
 							htmlFor="subject"
-							className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block"
+							className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block"
 						>
 							Subject / Reason
 						</label>
@@ -189,10 +186,10 @@ export default function ContactForm() {
 								value={formData.subject}
 								onChange={handleChange}
 								disabled={isPending}
-								className={`w-full rounded-xl p-3.5 border bg-white/50 text-slate-800 text-sm outline-none appearance-none transition-all duration-200 cursor-pointer ${
+								className={`w-full rounded-xl p-3.5 border bg-slate-50/70 text-slate-900 font-semibold text-sm outline-none appearance-none transition-all duration-200 cursor-pointer focus:bg-white ${
 									errors.subject
 										? "border-rose-400 focus:border-rose-500"
-										: "border-slate-200 focus:border-indigo-500"
+										: "border-slate-200/80 focus:border-indigo-500"
 								}`}
 							>
 								<option value="Collaboration">Collaboration / Project</option>
@@ -220,7 +217,7 @@ export default function ContactForm() {
 									exit={{ opacity: 0, height: 0 }}
 									className="text-xs text-rose-500 font-bold mt-1 flex items-center gap-1"
 								>
-									<AlertCircle className="w-3 h-3" />
+									<AlertCircle className="w-3.5 h-3.5" />
 									{errors.subject[0]}
 								</motion.span>
 							)}
@@ -231,7 +228,7 @@ export default function ContactForm() {
 					<div className="flex flex-col">
 						<label
 							htmlFor="message"
-							className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block"
+							className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block"
 						>
 							Your Message
 						</label>
@@ -244,10 +241,10 @@ export default function ContactForm() {
 							disabled={isPending}
 							placeholder="Tell me about your project or what you want to talk about..."
 							rows={4}
-							className={`w-full rounded-xl p-3.5 border bg-white/50 text-slate-800 text-sm outline-none resize-none transition-all duration-200 ${
+							className={`w-full rounded-xl p-3.5 border bg-slate-50/70 text-slate-900 font-medium text-sm outline-none resize-none transition-all duration-200 focus:bg-white ${
 								errors.message
-									? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-									: "border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+									? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10"
+									: "border-slate-200/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
 							}`}
 							style={{ minHeight: "100px", maxHeight: "300px" }}
 						/>
@@ -259,7 +256,7 @@ export default function ContactForm() {
 									exit={{ opacity: 0, height: 0 }}
 									className="text-xs text-rose-500 font-bold mt-1 flex items-center gap-1"
 								>
-									<AlertCircle className="w-3 h-3" />
+									<AlertCircle className="w-3.5 h-3.5" />
 									{errors.message[0]}
 								</motion.span>
 							)}
@@ -275,8 +272,8 @@ export default function ContactForm() {
 								exit={{ opacity: 0, y: -10 }}
 								className={`p-4 rounded-xl text-xs font-bold flex items-center gap-2.5 ${
 									status.type === "success"
-										? "bg-emerald-50 border border-emerald-100 text-emerald-800"
-										: "bg-rose-50 border border-rose-100 text-rose-850"
+										? "bg-emerald-50 border border-emerald-100 text-emerald-900"
+										: "bg-rose-50 border border-rose-100 text-rose-900"
 								}`}
 							>
 								{status.type === "success" ? (
@@ -294,7 +291,7 @@ export default function ContactForm() {
 						type="submit"
 						disabled={isPending}
 						whileTap={{ scale: 0.98 }}
-						className="relative w-full flex items-center justify-center gap-2 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-sm transition-all duration-200 shadow-md disabled:bg-slate-400 disabled:cursor-not-allowed overflow-hidden group cursor-pointer"
+						className="relative w-full flex items-center justify-center gap-2.5 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all duration-200 shadow-md hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed overflow-hidden group cursor-pointer"
 					>
 						{isPending ? (
 							<>

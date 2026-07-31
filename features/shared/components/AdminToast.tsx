@@ -97,21 +97,21 @@ function ToastItem({
 			animate={{ opacity: 1, y: 0, scale: 1 }}
 			exit={{ opacity: 0, y: -12, scale: 0.96 }}
 			transition={{ type: "spring", stiffness: 380, damping: 28 }}
-			className={`relative flex items-start gap-3 w-80 ${cfg.bg} border ${cfg.border} rounded-2xl shadow-xl shadow-slate-200/60 overflow-hidden`}
+			className={`relative flex items-start gap-3 w-80 ${cfg.bg} border ${cfg.border} rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden`}
 		>
 			{/* Left accent bar */}
 			<div
-				className={`absolute left-0 top-0 bottom-0 w-1 ${cfg.bar} rounded-l-2xl`}
+				className={`absolute left-0 top-0 bottom-0 w-1.5 ${cfg.bar} rounded-l-2xl`}
 			/>
 
 			<div className="flex items-start gap-3 px-4 py-3.5 pl-5 w-full">
-				<Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${cfg.iconColor}`} />
-				<p className="text-sm font-semibold text-slate-800 leading-snug flex-1 pr-2">
+				<Icon className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.iconColor}`} />
+				<p className="text-xs font-bold text-slate-900 leading-snug flex-1 pr-2">
 					{toast.message}
 				</p>
 				<button
 					onClick={() => onDismiss(toast.id)}
-					className="flex-shrink-0 p-0.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+					className="shrink-0 p-1 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
 				>
 					<X className="w-3.5 h-3.5" />
 				</button>

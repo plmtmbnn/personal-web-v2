@@ -98,7 +98,7 @@ export const destinations: Destination[] = [
 		type: "international",
 		isVisited: false,
 		imageUrl:
-			"https://images.unsplash.com/photo-1770631071130-3bb15995963a?q=80&w=2070&auto=format&fit=crop",
+			"https://images.unsplash.com/photo-1770631071130-3bb15995963a?q=80&w=1974&auto=format&fit=crop",
 		description:
 			"A pilgrimage to the home of The Beatles and the historic Royal Albert Dock.",
 	},

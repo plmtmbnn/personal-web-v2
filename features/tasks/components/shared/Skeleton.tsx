@@ -10,7 +10,7 @@ export function TaskListSkeleton() {
 			{[1, 2, 3].map((i) => (
 				<div
 					key={i}
-					className="flex items-start gap-3 sm:gap-4 p-4 bg-white border-2 border-slate-200 rounded-[1.5rem] sm:rounded-2xl shadow-sm"
+					className="flex items-start gap-3 sm:gap-4 p-4 bg-white border border-slate-200/80 rounded-2xl shadow-xs"
 				>
 					{/* Drag handle */}
 					<Skeleton
@@ -54,7 +54,7 @@ export function TaskListSkeleton() {
  */
 export function TaskFormSkeleton() {
 	return (
-		<div className="bg-white border-2 border-slate-200 rounded-[2rem] overflow-hidden shadow-sm">
+		<div className="bg-white border border-slate-200/80 rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/50">
 			{/* Header */}
 			<div className="p-6 md:p-8 space-y-6">
 				<div className="flex items-center justify-between mb-2">
@@ -147,7 +147,7 @@ export function AnalyticsDashboardSkeleton() {
 	return (
 		<div className="space-y-6 sm:space-y-8">
 			{/* General Report */}
-			<div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+			<div className="bg-white rounded-[2.5rem] border border-slate-200/80 shadow-xl shadow-slate-200/50 p-6 sm:p-8">
 				<div className="flex items-center justify-between mb-6">
 					<Skeleton width="8rem" height="1.25rem" />
 					<Skeleton width="6rem" height="1.25rem" />
@@ -180,7 +180,7 @@ export function AnalyticsDashboardSkeleton() {
 			</div>
 
 			{/* Heatmap */}
-			<div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+			<div className="bg-white rounded-[2.5rem] border border-slate-200/80 shadow-xl shadow-slate-200/50 p-6 sm:p-8">
 				<Skeleton width="100%" height="12rem" variant="rounded" />
 			</div>
 		</div>
@@ -192,11 +192,11 @@ export function AnalyticsDashboardSkeleton() {
  */
 export function TaskProgressSkeleton() {
 	return (
-		<div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm animate-pulse min-h-[142px]">
+		<div className="p-6 bg-white border border-slate-200/80 rounded-[2.5rem] shadow-xl shadow-slate-200/50 animate-pulse min-h-[142px]">
 			<div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
 				{/* Progress ring + status skeleton */}
-				<div className="flex items-center gap-6 flex-shrink-0 w-full lg:w-auto">
-					<div className="w-20 h-20 bg-slate-100 rounded-full flex-shrink-0" />
+				<div className="flex items-center gap-6 shrink-0 w-full lg:w-auto">
+					<div className="w-20 h-20 bg-slate-100 rounded-full shrink-0" />
 					<div className="space-y-2 flex-1 lg:w-48">
 						<Skeleton width="6rem" height="1rem" />
 						<Skeleton width="12rem" height="1.25rem" />
@@ -215,7 +215,7 @@ export function TaskProgressSkeleton() {
 					{[1, 2, 3, 4].map((i) => (
 						<div
 							key={i}
-							className="rounded-xl px-4 py-3 bg-slate-50 border border-slate-100 h-[68px] flex flex-col justify-between"
+							className="rounded-2xl px-4 py-3 bg-slate-50 border border-slate-100 h-[68px] flex flex-col justify-between"
 						>
 							<Skeleton width="100%" height="0.75rem" className="mb-1" />
 							<Skeleton width="60%" height="1.25rem" />

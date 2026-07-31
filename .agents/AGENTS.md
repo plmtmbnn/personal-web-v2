@@ -96,6 +96,7 @@ Strictly for routing and page definitions.
 - **Module Focus Pattern**: For side-by-side utility modules (e.g., Input/Output), provide `Minimize2` / `Maximize2` buttons to collapse/expand modules, allowing users to focus on specific panes. Use `framer-motion` for smooth layout transitions. Ensure Framer Motion transforms do not conflict with Tailwind transform classes (use `style={{ x: ... }}` directly).
 - **Mobile-First UX**:
   - **Strategic Grids**: Utilities transition from 1-column mobile to multi-column desktop/tablet.
+  - **Desktop Entry Screen Standard**: Single-page entry points (Home, Contact) utilize compact 100vh entry screens on desktop (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden`) to eliminate scrollbars, while providing fluid vertical scrolling on handheld mobile devices.
   - **Touch Targets**: Enhanced padding and `active:scale-90` feedback for handheld training tools.
 
 ## 🗺 Navigation

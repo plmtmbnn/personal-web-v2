@@ -78,27 +78,27 @@ export default function PortfolioView() {
 	const [expandedSection, setExpandedSection] = useState<string | null>("los");
 
 	return (
-		<main className="min-h-screen bg-background relative pb-32">
-			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 overflow-x-hidden">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
 				{/* Header Section */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.6 }}
-					className="text-center space-y-6 mb-20"
+					className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-4"
 				>
-					<div className="flex items-center justify-center gap-3 text-accent mb-4">
-						<PieIcon className="w-6 h-6" />
-						<span className="text-[10px] font-black uppercase tracking-[0.4em]">
-							Work Distribution
+					<div>
+						<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-xs">
+							<PieIcon className="w-4 h-4 text-indigo-600" />
+							Work Distribution & Platform Architecture
 						</span>
 					</div>
-					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground">
-						Project <span className="text-accent">Portfolio</span>
+					<h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]">
+						Project <span className="text-indigo-600">Portfolio</span>
 					</h1>
-					<p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium leading-relaxed">
-						A comprehensive look at the high-impact systems I've architected,
-						focused on fintech core operations and scalable platforms.
+					<p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
+						A comprehensive breakdown of high-impact fintech core engines,
+						digital platforms, and specialized tools I've architected.
 					</p>
 				</motion.div>
 
@@ -111,17 +111,17 @@ export default function PortfolioView() {
 						transition={{ duration: 0.8, delay: 0.2 }}
 						className="lg:col-span-5"
 					>
-						<div className="glass-card p-10 rounded-[2.5rem] border-2 border-white/5 shadow-2xl relative overflow-hidden h-full">
-							<div className="flex items-center gap-3 mb-10">
-								<div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-								<h3 className="text-sm font-black uppercase tracking-widest text-foreground">
-									Expertise Ratio
+						<div className="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 relative overflow-hidden h-full">
+							<div className="flex items-center gap-2.5 mb-8">
+								<div className="w-2.5 h-2.5 bg-indigo-600 rounded-full animate-pulse" />
+								<h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-900">
+									Expertise Distribution
 								</h3>
 							</div>
 
 							<div className="flex flex-col items-center">
 								{/* Visual SVG Chart */}
-								<div className="relative w-64 h-64 sm:w-72 sm:h-72 mb-12">
+								<div className="relative w-56 h-56 sm:w-64 sm:h-64 mb-8">
 									<svg
 										viewBox="0 0 200 200"
 										className="w-full h-full transform -rotate-90"
@@ -136,15 +136,15 @@ export default function PortfolioView() {
 											fill="none"
 											stroke="currentColor"
 											strokeWidth="32"
-											className="text-blue-500/80 cursor-pointer focus:outline-none focus-visible:stroke-blue-400"
+											className="text-indigo-600 cursor-pointer focus:outline-none focus-visible:stroke-indigo-400"
 											strokeDasharray="402 502"
 											role="button"
 											tabIndex={0}
 											aria-label="Show LOS & LMS systems (80%)"
 											animate={{
-												strokeWidth: activeSlice === 0 ? 40 : 32,
+												strokeWidth: activeSlice === 0 ? 38 : 32,
 												opacity:
-													activeSlice === null || activeSlice === 0 ? 1 : 0.3,
+													activeSlice === null || activeSlice === 0 ? 1 : 0.4,
 											}}
 											onClick={() => {
 												setActiveSlice(0);
@@ -168,16 +168,16 @@ export default function PortfolioView() {
 											fill="none"
 											stroke="currentColor"
 											strokeWidth="32"
-											className="text-purple-500/80 cursor-pointer focus:outline-none focus-visible:stroke-purple-400"
+											className="text-purple-600 cursor-pointer focus:outline-none focus-visible:stroke-purple-400"
 											strokeDasharray="100 502"
 											strokeDashoffset="-402"
 											role="button"
 											tabIndex={0}
 											aria-label="Show notable platforms (20%)"
 											animate={{
-												strokeWidth: activeSlice === 1 ? 40 : 32,
+												strokeWidth: activeSlice === 1 ? 38 : 32,
 												opacity:
-													activeSlice === null || activeSlice === 1 ? 1 : 0.3,
+													activeSlice === null || activeSlice === 1 ? 1 : 0.4,
 											}}
 											onClick={() => {
 												setActiveSlice(1);
@@ -197,25 +197,25 @@ export default function PortfolioView() {
 
 									{/* Center Content */}
 									<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-										<span className="text-5xl font-black text-foreground tracking-tighter">
+										<span className="text-4xl font-extrabold text-slate-900 tracking-tight">
 											{activeSlice === 0
 												? "80%"
 												: activeSlice === 1
 													? "20%"
-													: "11"}
+													: "11+"}
 										</span>
-										<span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">
+										<span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">
 											{activeSlice === 0
-												? "Fintech"
+												? "Fintech Core"
 												: activeSlice === 1
-													? "Platform"
+													? "Platforms"
 													: "Total Projects"}
 										</span>
 									</div>
 								</div>
 
 								{/* Legend */}
-								<div className="w-full space-y-3">
+								<div className="w-full space-y-2.5">
 									<button
 										onClick={() => {
 											setExpandedSection("los");
@@ -223,15 +223,21 @@ export default function PortfolioView() {
 										}}
 										onMouseEnter={() => setActiveSlice(0)}
 										onMouseLeave={() => setActiveSlice(null)}
-										className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${expandedSection === "los" ? "bg-blue-500/10 border-blue-500/20 text-blue-500" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"}`}
+										className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 ${
+											expandedSection === "los"
+												? "bg-indigo-50 border-indigo-200 text-indigo-900 shadow-xs"
+												: "bg-slate-50/80 border-slate-100 text-slate-600 hover:bg-slate-100/80"
+										}`}
 									>
 										<div className="flex items-center gap-3">
-											<div className="w-3 h-3 rounded-full bg-blue-500" />
-											<span className="text-xs font-black uppercase tracking-widest">
+											<div className="w-3 h-3 rounded-full bg-indigo-600" />
+											<span className="text-xs font-bold uppercase tracking-wider text-slate-900">
 												LOS & LMS Systems
 											</span>
 										</div>
-										<span className="text-xs font-bold">80%</span>
+										<span className="text-xs font-extrabold text-slate-900">
+											80%
+										</span>
 									</button>
 									<button
 										onClick={() => {
@@ -240,15 +246,21 @@ export default function PortfolioView() {
 										}}
 										onMouseEnter={() => setActiveSlice(1)}
 										onMouseLeave={() => setActiveSlice(null)}
-										className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${expandedSection === "other" ? "bg-purple-500/10 border-purple-500/20 text-purple-500" : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"}`}
+										className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 ${
+											expandedSection === "other"
+												? "bg-purple-50 border-purple-200 text-purple-900 shadow-xs"
+												: "bg-slate-50/80 border-slate-100 text-slate-600 hover:bg-slate-100/80"
+										}`}
 									>
 										<div className="flex items-center gap-3">
-											<div className="w-3 h-3 rounded-full bg-purple-500" />
-											<span className="text-xs font-black uppercase tracking-widest">
+											<div className="w-3 h-3 rounded-full bg-purple-600" />
+											<span className="text-xs font-bold uppercase tracking-wider text-slate-900">
 												Notable Platforms
 											</span>
 										</div>
-										<span className="text-xs font-bold">20%</span>
+										<span className="text-xs font-extrabold text-slate-900">
+											20%
+										</span>
 									</button>
 								</div>
 							</div>
@@ -262,7 +274,11 @@ export default function PortfolioView() {
 							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6, delay: 0.4 }}
-							className={`group glass-card rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${expandedSection === "los" ? "border-blue-500/30 ring-1 ring-blue-500/20" : "border-white/5"}`}
+							className={`group bg-white rounded-[2.5rem] border transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md ${
+								expandedSection === "los"
+									? "border-indigo-300 ring-2 ring-indigo-500/10 shadow-lg"
+									: "border-slate-200/80"
+							}`}
 						>
 							<button
 								onClick={() => {
@@ -272,26 +288,28 @@ export default function PortfolioView() {
 								onMouseEnter={() => setActiveSlice(0)}
 								onMouseLeave={() => setActiveSlice(null)}
 								aria-expanded={expandedSection === "los"}
-								className="w-full p-8 sm:p-10 flex items-center justify-between text-left"
+								className="w-full p-6 sm:p-8 flex items-center justify-between text-left"
 							>
-								<div className="flex items-center gap-6">
-									<div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
-										<Briefcase className="w-7 h-7" />
+								<div className="flex items-center gap-4 sm:gap-6">
+									<div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-50 border border-indigo-100/80 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
+										<Briefcase className="w-6 h-6 sm:w-7 sm:h-7" />
 									</div>
 									<div>
-										<h3 className="text-2xl font-black text-foreground tracking-tight">
+										<h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
 											Fintech Core Systems
 										</h3>
-										<p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+										<p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-0.5">
 											LOS & LMS Architectures
 										</p>
 									</div>
 								</div>
-								{expandedSection === "los" ? (
-									<ChevronUp className="w-6 h-6 text-muted-foreground" />
-								) : (
-									<ChevronDown className="w-6 h-6 text-muted-foreground" />
-								)}
+								<div className="p-1.5 rounded-full bg-slate-50 border border-slate-100 text-slate-600">
+									{expandedSection === "los" ? (
+										<ChevronUp className="w-5 h-5" />
+									) : (
+										<ChevronDown className="w-5 h-5" />
+									)}
+								</div>
 							</button>
 
 							<AnimatePresence>
@@ -303,25 +321,27 @@ export default function PortfolioView() {
 										transition={{ duration: 0.4, ease: "easeInOut" }}
 										style={{ overflow: "hidden" }}
 									>
-										<div className="px-8 sm:px-10 pb-10 space-y-8">
-											<p className="text-muted-foreground font-medium leading-relaxed">
+										<div className="px-6 sm:px-8 pb-8 space-y-6">
+											<p className="text-slate-600 font-medium leading-relaxed text-sm sm:text-base">
 												Scalable Loan Origination and Management engines capable
 												of handling high-volume transactions with integrated
 												compliance and automated decisioning.
 											</p>
-											<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+											<div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
 												{losModules.map((mod) => (
 													<div
 														key={mod.title}
-														className="p-5 bg-white/5 border border-white/5 rounded-2xl group/item hover:border-blue-500/30 transition-all duration-300"
+														className="p-4 bg-slate-50/70 border border-slate-200/60 rounded-2xl group/item hover:bg-white hover:border-indigo-200 hover:shadow-md transition-all duration-300"
 													>
-														<div className="flex items-center gap-4 mb-2">
-															<mod.icon className="w-5 h-5 text-blue-400 group-hover/item:scale-110 transition-transform" />
-															<span className="font-bold text-foreground text-sm">
+														<div className="flex items-center gap-3 mb-1.5">
+															<div className="p-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 group-hover/item:scale-110 transition-transform">
+																<mod.icon className="w-4 h-4" />
+															</div>
+															<span className="font-bold text-slate-900 text-sm">
 																{mod.title}
 															</span>
 														</div>
-														<p className="text-xs text-muted-foreground font-medium pl-9">
+														<p className="text-xs text-slate-500 font-semibold pl-8">
 															{mod.desc}
 														</p>
 													</div>
@@ -338,7 +358,11 @@ export default function PortfolioView() {
 							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6, delay: 0.5 }}
-							className={`group glass-card rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden ${expandedSection === "other" ? "border-purple-500/30 ring-1 ring-purple-500/20" : "border-white/5"}`}
+							className={`group bg-white rounded-[2.5rem] border transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md ${
+								expandedSection === "other"
+									? "border-purple-300 ring-2 ring-purple-500/10 shadow-lg"
+									: "border-slate-200/80"
+							}`}
 						>
 							<button
 								onClick={() => {
@@ -350,26 +374,28 @@ export default function PortfolioView() {
 								onMouseEnter={() => setActiveSlice(1)}
 								onMouseLeave={() => setActiveSlice(null)}
 								aria-expanded={expandedSection === "other"}
-								className="w-full p-8 sm:p-10 flex items-center justify-between text-left"
+								className="w-full p-6 sm:p-8 flex items-center justify-between text-left"
 							>
-								<div className="flex items-center gap-6">
-									<div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500">
-										<Rocket className="w-7 h-7" />
+								<div className="flex items-center gap-4 sm:gap-6">
+									<div className="w-12 h-12 sm:w-14 sm:h-14 bg-purple-50 border border-purple-100/80 rounded-2xl flex items-center justify-center text-purple-600 shrink-0">
+										<Rocket className="w-6 h-6 sm:w-7 sm:h-7" />
 									</div>
 									<div>
-										<h3 className="text-2xl font-black text-foreground tracking-tight">
+										<h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
 											Notable Platforms
 										</h3>
-										<p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+										<p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-0.5">
 											Specialized Ecosystems
 										</p>
 									</div>
 								</div>
-								{expandedSection === "other" ? (
-									<ChevronUp className="w-6 h-6 text-muted-foreground" />
-								) : (
-									<ChevronDown className="w-6 h-6 text-muted-foreground" />
-								)}
+								<div className="p-1.5 rounded-full bg-slate-50 border border-slate-100 text-slate-600">
+									{expandedSection === "other" ? (
+										<ChevronUp className="w-5 h-5" />
+									) : (
+										<ChevronDown className="w-5 h-5" />
+									)}
+								</div>
 							</button>
 
 							<AnimatePresence>
@@ -381,26 +407,26 @@ export default function PortfolioView() {
 										transition={{ duration: 0.4, ease: "easeInOut" }}
 										style={{ overflow: "hidden" }}
 									>
-										<div className="px-8 sm:px-10 pb-10 space-y-8">
-											<p className="text-muted-foreground font-medium leading-relaxed">
+										<div className="px-6 sm:px-8 pb-8 space-y-6">
+											<p className="text-slate-600 font-medium leading-relaxed text-sm sm:text-base">
 												Highly specialized digital products including InsurTech
 												cores, automated identity extraction tools, and
 												institutional membership portals.
 											</p>
-											<div className="space-y-4">
+											<div className="space-y-3">
 												{otherProjects.map((mod) => (
 													<div
 														key={mod.title}
-														className="p-6 bg-white/5 border border-white/5 rounded-3xl group/item hover:border-purple-500/30 transition-all duration-300 flex items-center gap-6"
+														className="p-4 sm:p-5 bg-slate-50/70 border border-slate-200/60 rounded-2xl group/item hover:bg-white hover:border-purple-200 hover:shadow-md transition-all duration-300 flex items-center gap-4"
 													>
-														<div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 group-hover/item:scale-110 transition-transform flex-shrink-0">
-															<mod.icon className="w-6 h-6" />
+														<div className="w-10 h-10 bg-purple-50 border border-purple-100 rounded-xl flex items-center justify-center text-purple-600 group-hover/item:scale-110 transition-transform shrink-0">
+															<mod.icon className="w-5 h-5" />
 														</div>
 														<div>
-															<h4 className="font-bold text-foreground mb-1">
+															<h4 className="font-bold text-slate-900 text-sm sm:text-base">
 																{mod.title}
 															</h4>
-															<p className="text-sm text-muted-foreground font-medium">
+															<p className="text-xs sm:text-sm text-slate-500 font-semibold mt-0.5">
 																{mod.desc}
 															</p>
 														</div>

@@ -47,24 +47,24 @@ export default function LoginButton({ user }: LoginButtonProps) {
 			<motion.div
 				initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
 				animate={{ opacity: 1, scale: 1 }}
-				className="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 shadow-sm rounded-3xl group transition-all"
+				className="flex items-center gap-4 p-3.5 bg-white border border-slate-200/80 shadow-xs hover:shadow-md rounded-2xl group transition-all"
 			>
 				{user.user_metadata?.avatar_url ? (
 					<img
 						src={user.user_metadata.avatar_url}
 						alt="Avatar"
-						className="w-12 h-12 rounded-2xl border-2 border-indigo-500/20 group-hover:border-indigo-500/50 transition-colors"
+						className="w-10 h-10 rounded-xl border-2 border-indigo-500/20 group-hover:border-indigo-500/50 transition-colors"
 					/>
 				) : (
-					<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-black">
+					<div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-extrabold text-sm">
 						{user.user_metadata?.full_name?.[0] || user.email?.[0] || "?"}
 					</div>
 				)}
 				<div className="hidden md:block text-left">
-					<p className="text-xs font-black uppercase tracking-tight text-slate-800">
+					<p className="text-xs font-extrabold text-slate-900 tracking-tight">
 						{user.user_metadata?.full_name || "Verified User"}
 					</p>
-					<p className="text-[10px] text-slate-400 font-bold tracking-tight">
+					<p className="text-[10px] text-slate-500 font-bold tracking-tight">
 						{user.email}
 					</p>
 				</div>
@@ -76,13 +76,13 @@ export default function LoginButton({ user }: LoginButtonProps) {
 						await logout();
 					}}
 					disabled={isLoading}
-					className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+					className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
 					title="Logout"
 				>
 					{isLoading ? (
-						<Loader2 className="w-5 h-5 animate-spin" />
+						<Loader2 className="w-4 h-4 animate-spin text-rose-600" />
 					) : (
-						<LogOut className="w-5 h-5" />
+						<LogOut className="w-4 h-4" />
 					)}
 				</motion.button>
 			</motion.div>
@@ -99,10 +99,10 @@ export default function LoginButton({ user }: LoginButtonProps) {
 					"0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
 			}}
 			whileTap={{ scale: 0.97 }}
-			className="flex items-center gap-4 px-8 py-4 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl font-black transition-all border border-slate-800 disabled:opacity-70 disabled:pointer-events-none group relative overflow-hidden"
+			className="flex items-center gap-3.5 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all border border-slate-800 shadow-md disabled:opacity-70 disabled:pointer-events-none group cursor-pointer"
 		>
 			{isLoading ? (
-				<Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+				<Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
 			) : (
 				<div className="w-5 h-5 bg-white rounded-lg flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform duration-300">
 					<svg

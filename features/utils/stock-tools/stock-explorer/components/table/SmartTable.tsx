@@ -57,7 +57,8 @@ export default function SmartTable({
 	};
 
 	const renderMomentumStars = (score: number) => {
-		const stars = Math.round(score / 20); // 0 to 5
+		const validScore = Number.isNaN(score) || score == null ? 0 : score;
+		const stars = Math.max(0, Math.min(5, Math.round(validScore / 20))); // Clamped strictly 0 to 5
 		return "★".repeat(stars) + "☆".repeat(5 - stars);
 	};
 

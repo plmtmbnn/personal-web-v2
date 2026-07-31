@@ -65,27 +65,27 @@ export default function VelocityBurndownCharts() {
 	return (
 		<div className="space-y-8">
 			{/* Header with Control */}
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 pb-4">
+			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
 				<div>
-					<h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-						<BarChart3 className="w-4 h-4 text-indigo-500" />
+					<h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+						<BarChart3 className="w-4 h-4 text-indigo-600" />
 						Execution Velocity & Burndown
 					</h3>
-					<p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+					<p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
 						Neutralization velocity vs. ideal trajectory
 					</p>
 				</div>
 
-				<div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
+				<div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 self-start sm:self-auto">
 					{(["week", "month"] as const).map((p) => (
 						<button
 							key={p}
 							type="button"
 							onClick={() => setPeriod(p)}
-							className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+							className={`px-3 py-1.5 rounded-xl text-[9.5px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
 								period === p
-									? "bg-white text-slate-800 shadow-sm border border-slate-200/50"
-									: "text-slate-400 hover:text-slate-600"
+									? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+									: "text-slate-600 hover:text-slate-950 hover:bg-slate-50"
 							}`}
 						>
 							{p === "week" ? "Last 7 Days" : "Last 30 Days"}
@@ -96,20 +96,20 @@ export default function VelocityBurndownCharts() {
 
 			{isPending || !data ? (
 				<div className="h-64 flex flex-col items-center justify-center gap-3 bg-slate-50/50 rounded-2xl border border-slate-100">
-					<Loader2 className="w-6 h-6 animate-spin text-slate-300" />
-					<p className="text-[9px] font-black text-slate-400 uppercase tracking-widest animate-pulse">
+					<Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+					<p className="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider animate-pulse">
 						Loading telemetry logs...
 					</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 					{/* Velocity Chart */}
-					<div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between">
+					<div className="bg-white border border-slate-200/80 rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 flex flex-col justify-between">
 						<div className="mb-4">
-							<h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">
+							<h4 className="text-[11px] font-extrabold text-slate-900 uppercase tracking-wider">
 								Operational Velocity
 							</h4>
-							<p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">
+							<p className="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
 								Objectives completed & active duration
 							</p>
 						</div>
@@ -137,13 +137,13 @@ export default function VelocityBurndownCharts() {
 									/>
 									<Recharts.XAxis
 										dataKey="date"
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+										tick={{ fontSize: 9, fontWeight: 700, fill: "#64748b" }}
 										axisLine={false}
 										tickLine={false}
 									/>
 									<Recharts.YAxis
 										yAxisId="left"
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+										tick={{ fontSize: 9, fontWeight: 700, fill: "#64748b" }}
 										axisLine={false}
 										tickLine={false}
 										allowDecimals={false}
@@ -151,7 +151,7 @@ export default function VelocityBurndownCharts() {
 									<Recharts.YAxis
 										yAxisId="right"
 										orientation="right"
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+										tick={{ fontSize: 9, fontWeight: 700, fill: "#64748b" }}
 										axisLine={false}
 										tickLine={false}
 										allowDecimals={false}
@@ -165,7 +165,7 @@ export default function VelocityBurndownCharts() {
 										height={36}
 										iconSize={8}
 										formatter={(value: string) => (
-											<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+											<span className="text-[9.5px] font-bold uppercase text-slate-600 tracking-wider">
 												{value}
 											</span>
 										)}
@@ -193,13 +193,13 @@ export default function VelocityBurndownCharts() {
 					</div>
 
 					{/* Burndown Chart */}
-					<div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between">
+					<div className="bg-white border border-slate-200/80 rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 flex flex-col justify-between">
 						<div className="mb-4">
-							<h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-								<TrendingDown className="w-4 h-4 text-emerald-500" />
+							<h4 className="text-[11px] font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+								<TrendingDown className="w-4 h-4 text-emerald-600" />
 								Task Burndown
 							</h4>
-							<p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">
+							<p className="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
 								Burn rate vs. ideal progression target ({data.totalScope} total)
 							</p>
 						</div>
@@ -217,12 +217,12 @@ export default function VelocityBurndownCharts() {
 									/>
 									<Recharts.XAxis
 										dataKey="date"
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+										tick={{ fontSize: 9, fontWeight: 700, fill: "#64748b" }}
 										axisLine={false}
 										tickLine={false}
 									/>
 									<Recharts.YAxis
-										tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
+										tick={{ fontSize: 9, fontWeight: 700, fill: "#64748b" }}
 										axisLine={false}
 										tickLine={false}
 										allowDecimals={false}
@@ -233,7 +233,7 @@ export default function VelocityBurndownCharts() {
 										height={36}
 										iconSize={8}
 										formatter={(value: string) => (
-											<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+											<span className="text-[9.5px] font-bold uppercase text-slate-600 tracking-wider">
 												{value}
 											</span>
 										)}

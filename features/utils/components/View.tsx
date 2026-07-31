@@ -128,26 +128,17 @@ export default function UtilsLanding() {
 	if (!mounted) return null;
 
 	return (
-		<main className="min-h-screen bg-background relative overflow-hidden pb-32">
-			{/* Aesthetic Background Elements */}
-			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-5%] right-[-10%] w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[120px] animate-pulse" />
-				<div
-					className="absolute bottom-[-10%] left-[-5%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse"
-					style={{ animationDelay: "2s" }}
-				/>
-			</div>
-
-			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
 				{/* Breadcrumb */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
 					animate={{ opacity: 1, x: 0 }}
-					className="mb-12"
+					className="mb-8"
 				>
 					<Link
 						href="/"
-						className="inline-flex items-center text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-blue-500 transition-colors gap-2 group"
+						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
 					>
 						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
 						Back to Home
@@ -159,62 +150,53 @@ export default function UtilsLanding() {
 					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.8 }}
-					className="text-center space-y-6 mb-20"
+					className="text-center max-w-3xl mx-auto mb-16 sm:mb-20 space-y-4"
 				>
-					<div className="flex items-center justify-center gap-3 text-blue-500 mb-4">
-						<Wrench className="w-6 h-6" />
-						<span className="text-[10px] font-black uppercase tracking-[0.4em]">
-							Operational Tools
+					<div>
+						<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-xs">
+							<Wrench className="w-4 h-4 text-indigo-600" />
+							Operational & Developer Utilities
 						</span>
 					</div>
-					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground leading-[0.9]">
-						Adventure <span className="text-blue-600">Utilities</span>
+					<h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]">
+						Developer & Tech <span className="text-indigo-600">Utilities</span>
 					</h1>
-					<p className="text-muted-foreground text-lg max-w-xl mx-auto font-medium leading-relaxed">
-						High-fidelity tools designed to optimize physical performance and
-						operational logistics during personal missions.
+					<p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-xl mx-auto">
+						High-fidelity developer tools, financial calculators, and
+						operational utilities designed for performance and logistics.
 					</p>
 				</motion.div>
 
 				{/* Selection Grid */}
-				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
 					{utilities.map((util, i) => (
 						<motion.div
 							key={util.slug}
 							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: i * 0.05, duration: 0.5 }}
+							transition={{ delay: i * 0.04, duration: 0.4 }}
 						>
 							<Link
 								href={util.path || `/utils/${util.slug}`}
-								className="group block relative p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 shadow-xl overflow-hidden h-28 !no-underline"
+								className="group flex flex-col justify-between p-6 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 !no-underline h-full"
 							>
-								{/* Glow effect on hover */}
-								<div
-									className={`absolute -right-12 -bottom-12 w-32 h-32 rounded-full ${util.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-300 blur-xl pointer-events-none`}
-								/>
-
-								<div className="relative z-10 h-full flex flex-col justify-center">
-									{/* Default view: Icon & Title centered */}
-									<div className="flex items-center gap-3 transition-all duration-300 group-hover:-translate-y-3 group-hover:blur-[2px] group-hover:opacity-20">
+								<div>
+									<div className="flex items-center justify-between gap-3 mb-4">
 										<div
-											className={`w-12 h-12 flex items-center justify-center rounded-xl flex-shrink-0 ${util.bg} ${util.color} shadow-md group-hover:scale-105 transition-transform duration-300 border border-white/5`}
+											className={`w-12 h-12 flex items-center justify-center rounded-xl shrink-0 ${util.bg} ${util.color} border border-slate-100 shadow-2xs group-hover:scale-110 transition-transform duration-300`}
 										>
 											<util.icon className="w-6 h-6" />
 										</div>
-										<div className="min-w-0">
-											<h3 className="text-sm font-black text-foreground tracking-tight leading-snug group-hover:text-blue-400 transition-colors">
-												{util.title}
-											</h3>
-										</div>
+										<span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+											Open Tool →
+										</span>
 									</div>
-
-									{/* Description: Hidden by default, slides & fades in on hover */}
-									<div className="absolute bottom-0 left-0 right-0 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
-										<p className="text-[10px] text-muted-foreground font-medium leading-normal line-clamp-2">
-											{util.description}
-										</p>
-									</div>
+									<h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-snug group-hover:text-indigo-600 transition-colors mb-2">
+										{util.title}
+									</h3>
+									<p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+										{util.description}
+									</p>
 								</div>
 							</Link>
 						</motion.div>

@@ -21,14 +21,8 @@ export default async function BlogPage() {
 	const allBlogs = await getBlogsStatic();
 
 	return (
-		<main className="min-h-screen bg-white relative overflow-x-hidden pb-32">
-			{/* Aesthetic Background Ambient */}
-			<div className="absolute inset-0 pointer-events-none -z-10">
-				<div className="absolute top-[-5%] right-[-10%] w-[80%] lg:w-[60%] h-[60%] bg-slate-100/50 rounded-full blur-[120px]" />
-				<div className="absolute bottom-[-5%] left-[-10%] w-[80%] lg:w-[60%] h-[60%] bg-blue-50/30 rounded-full blur-[120px]" />
-			</div>
-
-			<div className="max-w-7xl mx-auto px-6 pt-10 sm:pt-16">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<BlogView allBlogs={allBlogs} />
 			</div>
 		</main>

@@ -70,26 +70,26 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 			{/* ═══════════════════════════════════════
 		    LEFT COLUMN: Sticky Header & Filters
 		═══════════════════════════════════════ */}
-			<aside className="lg:col-span-3 space-y-6 sticky top-8 pb-8">
+			<aside className="lg:col-span-3 space-y-6 lg:sticky lg:top-28 pb-4">
 				{/* Title and Description */}
-				<div className="space-y-4 w-full">
-					<div className="flex items-center gap-2.5 text-slate-900">
-						<BookOpen className="w-4 h-4 text-slate-500" />
-						<span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">
+				<div className="space-y-3 w-full">
+					<div className="flex items-center gap-2">
+						<span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-xs">
+							<BookOpen className="w-3.5 h-3.5 text-indigo-600" />
 							Engineering Journal
 						</span>
 					</div>
-					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-slate-950 leading-[0.95]">
+					<h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-[1.12]">
 						The <span className="text-indigo-600">Pulse</span>
 					</h1>
-					<p className="text-slate-500 text-sm font-medium leading-relaxed max-w-sm">
+					<p className="text-slate-600 text-sm font-medium leading-relaxed max-w-sm">
 						High-fidelity insights on fintech architecture, distributed systems,
 						and modern engineering culture.
 					</p>
 				</div>
 
 				{/* Search & Category filter container */}
-				<div className="bg-slate-50 border border-slate-100 p-5 rounded-[2rem] space-y-5 w-full">
+				<div className="bg-white border border-slate-200/80 p-5 rounded-[2rem] space-y-5 w-full shadow-sm">
 					{/* Search Input */}
 					<div className="relative group">
 						<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
@@ -98,48 +98,37 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 							placeholder="Search entries..."
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full pl-10 pr-12 py-3 bg-white border border-slate-200 hover:border-slate-300 focus:border-slate-950 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none transition-all shadow-sm"
+							className="w-full pl-10 pr-10 py-3 bg-slate-50/70 border border-slate-200/80 focus:border-indigo-500 focus:bg-white rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none transition-all"
 						/>
 						{searchQuery && (
 							<button
 								onClick={() => setSearchQuery("")}
-								className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+								className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900 cursor-pointer"
 								aria-label="Clear search"
 							>
-								<X className="w-4 h-4" />
+								<X className="w-3.5 h-3.5" />
 							</button>
 						)}
 					</div>
 
 					{/* Category tabs */}
 					<div className="space-y-2">
-						<p className="text-[9px] font-black uppercase tracking-wider text-slate-450 px-1">
+						<p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 px-1">
 							Categories
 						</p>
-						<div className="flex flex-row overflow-x-auto gap-1.5 no-scrollbar pb-2">
+						<div className="flex flex-row flex-wrap lg:flex-col gap-1.5 no-scrollbar">
 							{CATEGORIES.map((category) => {
 								const isActive = activeCategory === category;
 								return (
 									<button
 										key={category}
 										onClick={() => setActiveCategory(category)}
-										className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 shrink-0 active:scale-[0.98] ${
+										className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
 											isActive
-												? "text-white bg-slate-950"
-												: "text-slate-500 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-100"
+												? "text-white bg-slate-900 shadow-sm"
+												: "text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/60"
 										}`}
 									>
-										{isActive && (
-											<motion.div
-												layoutId="activeCategoryBg"
-												className="absolute inset-0 bg-slate-950 rounded-xl"
-												transition={{
-													type: "spring",
-													stiffness: 380,
-													damping: 30,
-												}}
-											/>
-										)}
 										<div
 											className={`relative z-10 w-2 h-2 rounded-full ${getCategoryColor(category)}`}
 										/>
@@ -152,17 +141,17 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 				</div>
 
 				{/* Archive Stats Badge */}
-				<div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl max-w-sm w-full">
+				<div className="flex items-center justify-between p-4 bg-white border border-slate-200/80 rounded-2xl max-w-sm w-full shadow-xs">
 					<div className="flex items-center gap-3">
-						<div className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center border border-slate-800 shadow-sm text-white">
+						<div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs">
 							<Sparkles className="w-4 h-4" />
 						</div>
 						<div>
-							<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">
+							<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 leading-none mb-1">
 								Archive Size
 							</p>
-							<p className="text-xs font-black text-slate-900 leading-none">
-								{allBlogs.length} articles
+							<p className="text-xs font-extrabold text-slate-900 leading-none">
+								{allBlogs.length} articles published
 							</p>
 						</div>
 					</div>
@@ -190,11 +179,11 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ duration: 0.35, delay: i * 0.04 }}
 								>
-									<div className="relative flex flex-col h-full bg-white border border-slate-200 rounded-[2rem] overflow-hidden">
+									<div className="relative flex flex-col h-full bg-white border border-slate-200/80 rounded-[2.5rem] overflow-hidden shadow-xs">
 										{/* Image Skeleton */}
 										<Skeleton className="relative w-full h-48" />
 										{/* Content Skeleton */}
-										<div className="flex-1 flex flex-col justify-between p-4 space-y-4">
+										<div className="flex-1 flex flex-col justify-between p-6 space-y-4">
 											<div className="space-y-2.5">
 												<div className="flex items-center gap-3">
 													<Skeleton className="w-12 h-3 rounded-full" />
@@ -218,15 +207,15 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 							initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -15 }}
-							className="flex flex-col items-center justify-center text-center py-20 bg-slate-50 border border-dashed border-slate-200 rounded-[2.5rem] p-8"
+							className="flex flex-col items-center justify-center text-center py-20 bg-white border border-slate-200/80 rounded-[2.5rem] p-8 shadow-xs"
 						>
-							<div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-5">
-								<Sparkles className="w-5 h-5 text-slate-400" />
+							<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4 text-indigo-600">
+								<Sparkles className="w-5 h-5" />
 							</div>
-							<h3 className="text-lg font-black text-slate-900 tracking-tight mb-1.5">
+							<h3 className="text-lg font-extrabold text-slate-900 tracking-tight mb-1">
 								No stories found
 							</h3>
-							<p className="text-slate-400 text-xs max-w-xs">
+							<p className="text-slate-500 text-xs font-semibold max-w-xs">
 								We couldn't find any articles matching your search query or
 								selected category filter.
 							</p>
@@ -238,17 +227,17 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.25 }}
-							className="space-y-8"
+							className="space-y-6"
 						>
 							{/* Header for filtered results */}
 							{(searchQuery !== "" || activeCategory !== "All") && (
-								<div className="flex items-center gap-4 pt-4">
-									<h2 className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 whitespace-nowrap">
+								<div className="flex items-center gap-4 pt-2">
+									<h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
 										{activeCategory !== "All"
 											? `Filtered by: ${activeCategory}`
 											: "Search Results"}
 									</h2>
-									<div className="h-px w-full bg-slate-100" />
+									<div className="h-px w-full bg-slate-200/80" />
 								</div>
 							)}
 
@@ -266,7 +255,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 											className="group block !no-underline h-full"
 										>
 											<div
-												className={`relative flex flex-col h-full bg-white border border-slate-200 hover:border-slate-400 rounded-[2rem] overflow-hidden transition-all duration-500 group-hover:shadow-xl group-hover:-translate-y-1 ${
+												className={`relative flex flex-col h-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-[2.5rem] overflow-hidden transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 ${
 													post.is_headline ? "md:col-span-2" : ""
 												}`}
 											>
@@ -284,14 +273,14 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 														sizes="(max-width: 768px) 100vw, 50vw"
 													/>
 													{/* Category Badge */}
-													<div className="absolute top-3.5 left-3.5">
+													<div className="absolute top-3.5 left-3.5 flex items-center gap-2">
 														<span
-															className={`px-2.5 py-0.5 border text-[7.5px] font-black uppercase tracking-widest rounded-full backdrop-blur-md shadow-sm ${getCategoryStyles(post.category)}`}
+															className={`px-3 py-1 border text-[9px] font-extrabold uppercase tracking-wider rounded-full backdrop-blur-md shadow-xs ${getCategoryStyles(post.category)}`}
 														>
 															{post.category}
 														</span>
 														{post.is_headline && (
-															<span className="ml-2 px-2.5 py-0.5 bg-accent text-white text-[7.5px] font-black uppercase tracking-widest rounded-full shadow-md">
+															<span className="px-3 py-1 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider rounded-full shadow-xs">
 																Headline
 															</span>
 														)}
@@ -299,35 +288,38 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 												</div>
 
 												{/* Content Section */}
-												<div className="flex-1 flex flex-col justify-between p-4">
-													<div className="space-y-2.5">
-														<div className="flex items-center gap-3 text-slate-400 text-[7.5px] font-black uppercase tracking-widest">
-															<span className="flex items-center gap-1">
-																<Calendar className="w-2.5 h-2.5" />
+												<div className="flex-1 flex flex-col justify-between p-6">
+													<div className="space-y-3">
+														<div className="flex items-center gap-3 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+															<span className="flex items-center gap-1.5">
+																<Calendar className="w-3 h-3 text-indigo-600" />
 																{new Intl.DateTimeFormat("en-US", {
 																	dateStyle: "medium",
 																}).format(new Date(post.date))}
 															</span>
-															<span className="flex items-center gap-1">
-																<Clock className="w-2.5 h-2.5" />
+															<span>•</span>
+															<span className="flex items-center gap-1.5">
+																<Clock className="w-3 h-3 text-indigo-600" />
 																{getReadTime(post.content)}
 															</span>
 														</div>
 														<h3
-															className={`font-black text-slate-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 ${
-																post.is_headline ? "text-xl" : "text-base"
+															className={`font-extrabold text-slate-900 tracking-tight leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2 ${
+																post.is_headline
+																	? "text-xl sm:text-2xl"
+																	: "text-lg"
 															}`}
 														>
 															{post.title}
 														</h3>
-														<p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
+														<p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed line-clamp-2">
 															{post.description}
 														</p>
 													</div>
 
-													<div className="pt-4 flex items-center gap-1 text-slate-900 font-black text-[8.5px] uppercase tracking-[0.18em] group-hover:gap-2.5 transition-all">
+													<div className="pt-5 flex items-center gap-1.5 text-indigo-600 font-bold text-xs uppercase tracking-wider group-hover:gap-2.5 transition-all">
 														Read Article
-														<ArrowRight className="w-3 h-3 text-blue-600" />
+														<ArrowRight className="w-3.5 h-3.5 text-indigo-600" />
 													</div>
 												</div>
 											</div>

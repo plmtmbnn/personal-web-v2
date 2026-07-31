@@ -49,7 +49,7 @@ export default function RootLayout({
 		<html lang="en">
 			<SpeedInsights />
 			<body
-				className={`${varela.variable} ${jetbrainsMono.variable} antialiased`}
+				className={`${varela.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
 			>
 				<script
 					type="application/ld+json"

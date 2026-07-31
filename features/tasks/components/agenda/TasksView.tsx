@@ -157,7 +157,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 	return (
 		<TaskErrorBoundary>
 			<ToastProvider>
-				<main className="min-h-screen bg-slate-50/50 pb-32 relative">
+				<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
 					{/* Mobile-Only Drawer */}
 					<Suspense fallback={null}>
 						<div className="lg:hidden">
@@ -171,29 +171,29 @@ export default function TasksView({ tasks }: TasksViewProps) {
 					{/* Floating Navigation Switcher */}
 					<QuickNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-					{/* Structural Header - Optimized for Mobile Scaling */}
-					<div className="bg-white border-b border-slate-200 mb-6 sm:mb-8 pt-12">
-						<div className="max-w-4xl mx-auto px-6 py-8 sm:py-10">
-							<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-8">
-								<div className="space-y-1 sm:space-y-2 text-center sm:text-left">
-									<div className="flex items-center justify-center sm:justify-start gap-2 text-emerald-600 font-bold text-[10px] uppercase tracking-[0.2em]">
-										<Target className="w-3.5 h-3.5" />
+					{/* Structural Dark Hero Header */}
+					<div className="bg-slate-900 border-b border-slate-800 mb-10 pt-8 sm:pt-10 pb-10 sm:pb-12 text-white shadow-md">
+						<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+								<div className="space-y-2 text-center sm:text-left">
+									<div className="flex items-center justify-center sm:justify-start gap-2 text-emerald-400 font-extrabold text-xs uppercase tracking-wider">
+										<Target className="w-4 h-4 text-emerald-400" />
 										Operations Hub
 									</div>
-									<h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+									<h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
 										Daily Objectives
 									</h1>
-									<p className="text-slate-500 text-xs sm:text-sm font-medium">
+									<p className="text-slate-400 text-xs font-semibold">
 										Strategic task orchestration and execution tracking.
 									</p>
 								</div>
 
 								<div className="flex items-center justify-center gap-3">
-									<div className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center shadow-sm">
-										<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-0.5">
+									<div className="px-5 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl text-center shadow-xs">
+										<p className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-0.5">
 											Completion
 										</p>
-										<p className="text-sm font-black text-slate-900">
+										<p className="text-base font-extrabold text-white">
 											{todayStats.completed}/{todayStats.total}
 										</p>
 									</div>
@@ -202,7 +202,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 						</div>
 					</div>
 
-					<div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 relative z-10">
+					<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 relative z-10">
 						<AnimatePresence mode="wait">
 							{activeTab === "analytics" ? (
 								<motion.div
@@ -253,7 +253,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 
 									{/* Execution Engine (Task Management) */}
 									<section id="agenda-section">
-										<div className="bg-white rounded-[2rem] sm:rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">
+										<div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/80 shadow-xl shadow-slate-200/50 overflow-hidden">
 											{/* Input Form Area - Hidden on Mobile (moved to Drawer) */}
 											<div className="p-6 sm:p-8 bg-slate-50/50 border-b border-slate-100 hidden lg:block">
 												<Suspense fallback={<ComponentLoader height="120px" />}>
@@ -263,23 +263,23 @@ export default function TasksView({ tasks }: TasksViewProps) {
 
 											{/* List Area */}
 											<div className="p-6 sm:p-8">
-												<div className="flex items-center justify-between mb-6 sm:mb-8 border-b border-slate-50 pb-4">
+												<div className="flex items-center justify-between mb-6 sm:mb-8 border-b border-slate-100 pb-4">
 													<div className="flex items-center gap-3">
-														<div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-lg sm:rounded-xl flex items-center justify-center text-emerald-600">
-															<LayoutList className="w-4 h-4 sm:w-5 sm:h-5" />
+														<div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
+															<LayoutList className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
 														</div>
-														<h2 className="text-lg sm:text-xl font-black text-slate-900">
+														<h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
 															Active Agenda
 														</h2>
 													</div>
-													<div className="flex items-center gap-3 bg-slate-50 p-1 rounded-xl border border-slate-200">
+													<div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200/80">
 														<button
 															type="button"
 															onClick={() => setViewMode("list")}
-															className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+															className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
 																viewMode === "list"
-																	? "bg-white text-slate-800 shadow-sm border border-slate-200/50"
-																	: "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+																	? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+																	: "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
 															}`}
 														>
 															<LayoutList className="w-3.5 h-3.5" /> List
@@ -287,10 +287,10 @@ export default function TasksView({ tasks }: TasksViewProps) {
 														<button
 															type="button"
 															onClick={() => setViewMode("board")}
-															className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+															className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
 																viewMode === "board"
-																	? "bg-white text-slate-800 shadow-sm border border-slate-200/50"
-																	: "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+																	? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+																	: "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
 															}`}
 														>
 															<Kanban className="w-3.5 h-3.5" /> Board
@@ -331,9 +331,9 @@ export default function TasksView({ tasks }: TasksViewProps) {
 					{/* Mobile-Only FAB */}
 					<button
 						onClick={() => setIsFormOpen(true)}
-						className="fixed bottom-24 right-6 sm:right-8 z-40 w-16 h-16 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-2xl lg:hidden active:scale-90 transition-transform"
+						className="fixed bottom-24 right-6 sm:right-8 z-40 w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-xl lg:hidden active:scale-95 transition-transform cursor-pointer"
 					>
-						<Plus className="w-8 h-8" />
+						<Plus className="w-7 h-7" />
 					</button>
 				</main>
 			</ToastProvider>

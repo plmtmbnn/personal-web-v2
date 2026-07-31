@@ -139,7 +139,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 
 	return (
 		<div
-			className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-50/80 backdrop-blur-md p-4 overflow-hidden"
+			className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-50/80 bg-dot-pattern backdrop-blur-md p-4 overflow-hidden"
 			onClick={() => inputRef.current?.focus()}
 		>
 			{/* Ambient background accent */}
@@ -154,7 +154,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 					e.stopPropagation();
 					inputRef.current?.focus();
 				}}
-				className="bg-white border border-slate-200/80 shadow-[0_20px_50px_rgba(0,0,0,0.04)] w-full max-w-md rounded-3xl p-8 sm:p-10 relative z-10"
+				className="bg-white border border-slate-200/80 shadow-xl shadow-slate-200/50 w-full max-w-md rounded-[2.5rem] p-8 sm:p-10 relative z-10"
 			>
 				{/* Dark Header Accent Card - Contrast Mastery Pattern */}
 				<div className="bg-slate-900 text-white rounded-2xl p-6 text-center mb-8 relative overflow-hidden shadow-md">
@@ -169,17 +169,17 @@ export default function PinGuard({ children }: PinGuardProps) {
 						<Lock className="w-5 h-5 text-emerald-400" />
 					</motion.div>
 
-					<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full mb-3 border border-emerald-500/20">
-						<ShieldCheck className="w-3 h-3" />
-						<span className="text-[9px] font-black uppercase tracking-widest">
+					<div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full mb-3 border border-emerald-500/20">
+						<ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+						<span className="text-[10px] font-extrabold uppercase tracking-wider">
 							Secure Access
 						</span>
 					</div>
 
-					<h2 className="text-xl font-bold tracking-tight text-white mb-1.5">
+					<h2 className="text-xl font-extrabold tracking-tight text-white mb-1.5">
 						Protected Administration
 					</h2>
-					<p className="text-slate-400 text-xs max-w-[260px] mx-auto leading-relaxed">
+					<p className="text-slate-400 text-xs font-semibold max-w-[260px] mx-auto leading-relaxed">
 						Please supply your 6-digit Authenticator Code to authorize this
 						session.
 					</p>
@@ -217,12 +217,12 @@ export default function PinGuard({ children }: PinGuardProps) {
 										key={i}
 										whileHover={{ scale: 1.02 }}
 										whileTap={{ scale: 0.98 }}
-										className={`w-11 h-14 sm:w-12 sm:h-16 rounded-xl border flex items-center justify-center text-xl font-bold transition-all duration-200 relative ${
+										className={`w-11 h-14 sm:w-12 sm:h-16 rounded-xl border flex items-center justify-center text-xl font-extrabold transition-all duration-200 relative ${
 											isActive
-												? "border-emerald-500 bg-white shadow-[0_0_12px_rgba(16,185,129,0.1)] ring-1 ring-emerald-500/30"
+												? "border-emerald-500 bg-white shadow-[0_0_12px_rgba(16,185,129,0.15)] ring-2 ring-emerald-500/30"
 												: digit
 													? "border-slate-300 bg-slate-50 text-slate-900"
-													: "border-slate-200 bg-slate-50/50 text-slate-300"
+													: "border-slate-200/80 bg-slate-50/70 text-slate-300"
 										} ${
 											error
 												? "border-rose-500 bg-rose-50/30 text-rose-600 animate-shake"
@@ -233,7 +233,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 											<motion.span
 												initial={{ scale: 0 }}
 												animate={{ scale: 1 }}
-												className="w-2.5 h-2.5 rounded-full bg-slate-800"
+												className="w-2.5 h-2.5 rounded-full bg-slate-900"
 											/>
 										) : isActive ? (
 											<motion.div
@@ -256,8 +256,8 @@ export default function PinGuard({ children }: PinGuardProps) {
 										exit={{ opacity: 0 }}
 										className="absolute inset-0 text-center"
 									>
-										<p className="text-[10px] text-rose-600 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
-											<ShieldAlert className="w-3 h-3" />
+										<p className="text-[10px] text-rose-600 font-extrabold uppercase tracking-wider flex items-center justify-center gap-1">
+											<ShieldAlert className="w-3.5 h-3.5" />
 											{error}
 										</p>
 									</motion.div>
@@ -269,7 +269,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 					<button
 						type="submit"
 						disabled={pin.length !== 6 || isLoading}
-						className={`w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 ${
+						className={`w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
 							pin.length === 6 && !isLoading
 								? "bg-slate-900 text-white shadow-md hover:bg-slate-800 active:scale-[0.98]"
 								: "bg-slate-100 text-slate-400 cursor-not-allowed"
@@ -287,7 +287,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 				</form>
 
 				<div className="mt-6 text-center pt-5 border-t border-slate-100">
-					<small className="text-slate-400 text-[9px] uppercase tracking-[0.3em] font-medium">
+					<small className="text-slate-500 text-[10px] uppercase tracking-wider font-bold">
 						Encrypted Session • 12 Hours
 					</small>
 				</div>

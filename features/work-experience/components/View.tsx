@@ -137,36 +137,37 @@ const experiences: Experience[] = [
 export default function WorkExperience() {
 	const reduceMotion = useReducedMotion();
 	return (
-		<main className="min-h-screen bg-background relative pb-32">
-			<div className="max-w-6xl mx-auto px-6 pt-24 sm:pt-32">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 overflow-x-hidden">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
 				{/* Header Section */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.8 }}
-					className="text-center space-y-6 mb-24"
+					className="text-center max-w-3xl mx-auto mb-16 sm:mb-24 space-y-4"
 				>
-					<div className="flex items-center justify-center gap-3 text-accent mb-4">
-						<Briefcase className="w-6 h-6" />
-						<span className="text-[10px] font-black uppercase tracking-[0.4em]">
-							Career Milestones
+					<div>
+						<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-xs">
+							<Briefcase className="w-4 h-4 text-indigo-600" />
+							Career Milestones & Leadership
 						</span>
 					</div>
-					<h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground">
-						Professional <span className="text-accent">Experience</span>
+					<h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]">
+						Professional <span className="text-indigo-600">Experience</span>
 					</h1>
-					<p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium leading-relaxed">
-						{EXPERIENCE_YEAR}+ years architecting secure fintech ecosystems and
-						leading high-performance engineering cultures.
+					<p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
+						Over {EXPERIENCE_YEAR} years architecting secure fintech ecosystems,
+						scaling core lending platforms, and building high-performance
+						engineering cultures.
 					</p>
 				</motion.div>
 
 				{/* Enhanced Timeline */}
 				<div className="relative">
 					{/* Central Line */}
-					<div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-accent/20 md:-translate-x-1/2" />
+					<div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-slate-200/80 md:-translate-x-1/2" />
 
-					<div className="space-y-24">
+					<div className="space-y-16 sm:space-y-24">
 						{experiences.map((exp, idx) => {
 							const Icon = exp.icon;
 							return (
@@ -176,92 +177,89 @@ export default function WorkExperience() {
 									whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
 									viewport={{ once: true, margin: "-100px" }}
 									transition={{ duration: 0.7, delay: idx * 0.1 }}
-									className={`relative flex flex-col md:flex-row items-center ${idx % 2 === 0 ? "md:flex-row-reverse" : ""}`}
+									className={`relative flex flex-col md:flex-row items-center ${
+										idx % 2 === 0 ? "md:flex-row-reverse" : ""
+									}`}
 								>
 									{/* Timeline Node */}
-									<div className="absolute left-4 md:left-1/2 top-0 md:top-8 w-8 h-8 rounded-full bg-background border-4 border-accent shadow-[0_0_20px_rgba(15,23,42,0.3)] z-20 -translate-x-1/2 flex items-center justify-center">
-										<div className="w-2 h-2 rounded-full bg-accent animate-ping" />
+									<div className="absolute left-4 md:left-1/2 top-0 md:top-8 w-8 h-8 rounded-full bg-white border-4 border-indigo-600 shadow-md shadow-indigo-500/20 z-20 -translate-x-1/2 flex items-center justify-center">
+										<div className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
 									</div>
 
 									{/* Card Side */}
 									<div
-										className={`w-full md:w-1/2 pl-12 md:pl-0 ${idx % 2 === 0 ? "md:pl-16" : "md:pr-16"}`}
+										className={`w-full md:w-1/2 pl-10 md:pl-0 ${
+											idx % 2 === 0 ? "md:pl-14" : "md:pr-14"
+										}`}
 									>
 										<div className="group relative">
-											{/* Hover Glow */}
-											<div
-												className={`absolute -inset-0.5 ${exp.color} rounded-[2.5rem] opacity-0 group-hover:opacity-20 transition duration-500 blur-xl`}
-											/>
-
-											<div className="relative glass-card p-8 sm:p-10 rounded-[2.5rem] border-2 border-white/5 bg-white/5 backdrop-blur-xl hover:border-accent/30 transition-all duration-500 shadow-2xl">
+											<div className="relative bg-white p-6 sm:p-10 rounded-[2.5rem] border border-slate-200/80 transition-all duration-300 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-slate-200/80 hover:border-slate-300">
 												{/* Company Header */}
-												<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+												<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-6 border-b border-slate-100">
 													<div className="space-y-1">
 														<div className="flex items-center gap-3">
 															<div
-																className={`p-2 rounded-lg ${exp.color} text-white shadow-lg`}
+																className={`p-2 rounded-xl ${exp.color} text-white shadow-xs`}
 															>
 																<Icon className="w-5 h-5" />
 															</div>
-															<h3 className="text-2xl font-black text-foreground tracking-tight group-hover:text-accent transition-colors">
+															<h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
 																{exp.company}
 															</h3>
 														</div>
-														<p className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-10">
+														<p className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-11">
 															{exp.description}
 														</p>
 													</div>
-													<div className="flex flex-col items-start sm:items-end gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-														<div className="flex items-center gap-2">
-															<MapPin className="w-3 h-3" />
-															<span>{exp.location}</span>
-														</div>
+													<div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 pl-11 sm:pl-0">
+														<MapPin className="w-3.5 h-3.5 text-slate-400" />
+														<span>{exp.location}</span>
 													</div>
 												</div>
 
 												{/* Positions Sub-Timeline */}
-												<div className="space-y-10 relative">
+												<div className="space-y-8 relative">
 													{exp.positions.map((pos) => (
 														<div
 															key={pos.title}
-															className="relative pl-6 border-l border-white/10 last:border-transparent"
+															className="relative pl-5 border-l-2 border-slate-100 last:border-transparent"
 														>
 															{/* Position Indicator */}
-															<div className="absolute -left-[5px] top-2 w-[9px] h-[9px] rounded-full bg-white/20 border border-white/40" />
+															<div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-slate-300 border border-white" />
 
-															<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-																<h4 className="text-lg font-bold text-foreground">
+															<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+																<h4 className="text-base sm:text-lg font-extrabold text-slate-900">
 																	{pos.title}
 																</h4>
-																<span className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-accent">
-																	<Calendar className="w-3 h-3" />
+																<span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 border border-slate-200/80 rounded-full text-xs font-bold text-slate-700 shrink-0">
+																	<Calendar className="w-3.5 h-3.5 text-indigo-600" />
 																	{pos.period}
 																</span>
 															</div>
 
-															<ul className="space-y-3 mb-6">
+															<ul className="space-y-2.5 mb-5">
 																{pos.responsibilities.map((resp, rIdx) => (
 																	<li
 																		key={String(rIdx)}
-																		className="flex gap-3 text-sm text-muted-foreground leading-relaxed font-medium"
+																		className="flex gap-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium"
 																	>
-																		<CheckCircle2 className="w-4 h-4 mt-0.5 text-accent/40 flex-shrink-0" />
+																		<CheckCircle2 className="w-4 h-4 mt-0.5 text-indigo-600 shrink-0" />
 																		<span>{resp}</span>
 																	</li>
 																))}
 															</ul>
 
 															{pos.highlights && (
-																<div className="p-5 bg-accent/5 border border-accent/10 rounded-2xl space-y-3">
-																	<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-accent">
-																		<Award className="w-3 h-3" />
+																<div className="p-4 sm:p-5 bg-amber-50/80 border border-amber-200/80 rounded-2xl space-y-2.5 shadow-2xs">
+																	<div className="flex items-center gap-2 text-xs font-extrabold text-amber-900 uppercase tracking-wider">
+																		<Award className="w-4 h-4 text-amber-600" />
 																		<span>Key Achievements</span>
 																	</div>
-																	<ul className="space-y-2">
+																	<ul className="space-y-1.5">
 																		{pos.highlights.map((h, hIdx) => (
 																			<li
 																				key={String(hIdx)}
-																				className="text-xs font-bold text-foreground/80 leading-relaxed italic"
+																				className="text-xs font-semibold text-amber-950 leading-relaxed italic"
 																			>
 																				• {h}
 																			</li>
@@ -289,31 +287,49 @@ export default function WorkExperience() {
 					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
 					viewport={{ once: true }}
-					className="mt-32 grid grid-cols-2 md:grid-cols-4 gap-6"
+					className="mt-24 sm:mt-32 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6"
 				>
 					{[
 						{
 							num: `${EXPERIENCE_YEAR}+`,
 							label: "Years Experience",
 							icon: Briefcase,
+							color: "bg-indigo-50 text-indigo-600 border-indigo-100",
 						},
-						{ num: "4", label: "Companies", icon: Building2 },
-						{ num: "3", label: "Awards", icon: Award },
-						{ num: "5M+", label: "Users Impacted", icon: Users },
+						{
+							num: "4",
+							label: "Companies",
+							icon: Building2,
+							color: "bg-cyan-50 text-cyan-600 border-cyan-100",
+						},
+						{
+							num: "3",
+							label: "Awards Won",
+							icon: Award,
+							color: "bg-amber-50 text-amber-600 border-amber-100",
+						},
+						{
+							num: "5M+",
+							label: "Users Impacted",
+							icon: Users,
+							color: "bg-emerald-50 text-emerald-600 border-emerald-100",
+						},
 					].map((s) => {
 						const SIcon = s.icon;
 						return (
 							<div
 								key={s.label}
-								className="group p-6 glass-card border-2 border-white/5 rounded-3xl bg-white/5 backdrop-blur-md text-center hover:border-accent/30 transition-all duration-500"
+								className="group p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl text-center shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
 							>
-								<div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-accent mx-auto mb-4 group-hover:scale-110 transition-transform">
-									<SIcon className="w-5 h-5" />
+								<div
+									className={`w-10 h-10 sm:w-12 sm:h-12 border ${s.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3.5 group-hover:scale-110 transition-transform shadow-2xs`}
+								>
+									<SIcon className="w-5 h-5 sm:w-6 sm:h-6" />
 								</div>
-								<p className="text-3xl font-black text-foreground tracking-tighter">
+								<p className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
 									{s.num}
 								</p>
-								<p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">
+								<p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
 									{s.label}
 								</p>
 							</div>

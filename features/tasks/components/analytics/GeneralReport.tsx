@@ -158,29 +158,29 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 		subtext?: string;
 		description?: string;
 	}) => (
-		<div className="bg-white border border-slate-200/80 p-4 sm:p-5 lg:p-6 rounded-2xl sm:rounded-3xl shadow-xs hover:shadow-md hover:border-slate-300/80 transition-all duration-300 group flex flex-col justify-between min-w-0 hover:-translate-y-0.5 active:scale-[0.98]">
+		<div className="bg-white border border-slate-200/80 p-4 sm:p-5 lg:p-6 rounded-2xl sm:rounded-3xl shadow-xs hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between min-w-0">
 			<div>
 				<div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
 					<div
-						className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl ${colorClass} shadow-2xs group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}
+						className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl ${colorClass} shadow-2xs group-hover:scale-110 transition-transform duration-300 shrink-0`}
 					>
 						<Icon className="w-4 h-4 sm:w-5 sm:h-5" />
 					</div>
 					{subtext && (
-						<span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-100/60 flex-shrink-0">
+						<span className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-100 shrink-0">
 							{subtext}
 						</span>
 					)}
 				</div>
-				<p className="text-slate-400 text-[9px] sm:text-[10px] lg:text-[11px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1 sm:mb-1.5 truncate">
+				<p className="text-slate-500 text-[9.5px] sm:text-[10px] lg:text-[11px] font-bold uppercase tracking-wider mb-1 sm:mb-1.5 truncate">
 					{title}
 				</p>
-				<h4 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight break-words leading-none sm:leading-tight">
+				<h4 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight break-words leading-none sm:leading-tight">
 					{value}
 				</h4>
 			</div>
 			{description && (
-				<p className="text-[10px] sm:text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100 font-medium leading-relaxed break-words">
+				<p className="text-[10px] sm:text-xs text-slate-600 mt-3 pt-3 border-t border-slate-100 font-medium leading-relaxed break-words">
 					{description}
 				</p>
 			)}
@@ -193,28 +193,28 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 		<div className="space-y-10 pb-10">
 			<div className="flex flex-col md:flex-row md:items-center justify-between gap-8 py-4">
 				<div className="group flex items-center gap-6">
-					<div className="p-5 bg-slate-900 text-white rounded-[1.5rem] shadow-xl shadow-black/10 flex-shrink-0">
-						<BarChart3 className="w-7 h-7" />
+					<div className="p-5 bg-slate-900 text-white rounded-[1.5rem] shadow-xl shadow-black/10 shrink-0">
+						<BarChart3 className="w-7 h-7 text-indigo-400" />
 					</div>
 					<div>
-						<h2 className="text-2xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
+						<h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight">
 							Operational Intel
 						</h2>
-						<p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em]">
+						<p className="text-slate-500 text-xs font-bold uppercase tracking-wider mt-0.5">
 							Strategic Audit
 						</p>
 					</div>
 				</div>
 
-				<div className="flex items-center gap-2 bg-slate-100 p-2 rounded-[1.2rem] border border-slate-200 shadow-inner w-full md:w-auto">
+				<div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 w-full md:w-auto">
 					{(["today", "week", "month"] as const).map((p) => (
 						<button
 							key={p}
 							onClick={() => setPeriod(p)}
-							className={`flex-1 md:flex-none px-8 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+							className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
 								period === p
-									? "bg-white text-slate-900 shadow-xl"
-									: "text-slate-400 hover:text-slate-600"
+									? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+									: "text-slate-600 hover:text-slate-950 hover:bg-slate-50"
 							}`}
 						>
 							{p}

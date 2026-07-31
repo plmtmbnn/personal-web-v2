@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -11,7 +12,6 @@ import {
 	Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { motion, useReducedMotion } from "framer-motion";
 
 ChartJS.register(
 	CategoryScale,
@@ -30,6 +30,45 @@ interface SentimentCardProps {
 	delay?: number;
 }
 
+// Color mapping for different sentiment levels
+const CARD_COLORS = {
+	rose: {
+		base: "rgb(248, 113, 113)",
+		tailwind: "rose",
+		lightBg: "bg-rose-50",
+		border: "border-rose-100",
+		text: "text-rose-600",
+	},
+	orange: {
+		base: "rgb(249, 115, 22)",
+		tailwind: "orange",
+		lightBg: "bg-orange-50",
+		border: "border-orange-100",
+		text: "text-orange-600",
+	},
+	amber: {
+		base: "rgb(251, 191, 36)",
+		tailwind: "amber",
+		lightBg: "bg-amber-50",
+		border: "border-amber-100",
+		text: "text-amber-600",
+	},
+	emerald: {
+		base: "rgb(52, 211, 153)",
+		tailwind: "emerald",
+		lightBg: "bg-emerald-50",
+		border: "border-emerald-100",
+		text: "text-emerald-600",
+	},
+	teal: {
+		base: "rgb(45, 212, 191)",
+		tailwind: "teal",
+		lightBg: "bg-teal-50",
+		border: "border-teal-100",
+		text: "text-teal-600",
+	},
+};
+
 export default function SentimentCard({
 	title,
 	score,
@@ -42,14 +81,29 @@ export default function SentimentCard({
 		return data ? [...data].sort((a, b) => a.x - b.x) : [];
 	}, [data]);
 
+	// Determine card accent color based on score
+	const getCardColorKey = (s: number): keyof typeof CARD_COLORS => {
+		if (s < 25) return "rose";
+		if (s < 45) return "orange";
+		if (s <= 55) return "amber";
+		if (s <= 75) return "emerald";
+		return "teal";
+	};
+
+	const colorKey = getCardColorKey(score);
+	const color = CARD_COLORS[colorKey];
+
+	// Build chart data with dynamic colors
 	const chartData = {
-		labels: sortedData.map((_d) => ""),
+		labels: sortedData.map(() => ""),
 		datasets: [
 			{
 				data: sortedData.map((d) => d?.y ?? 0),
 				fill: true,
-				borderColor: "rgb(99, 102, 241)",
-				backgroundColor: "rgba(99, 102, 241, 0.03)",
+				borderColor: color.base,
+				backgroundColor: color.base
+					.replace("rgb", "rgba")
+					.replace(")", ", 0.05)"),
 				tension: 0.4,
 				pointRadius: 0,
 				borderWidth: 1.5,
@@ -67,11 +121,11 @@ export default function SentimentCard({
 				backgroundColor: "#1e293b",
 				padding: 8,
 				titleFont: { size: 0 },
-				bodyFont: { size: 9, weight: "bold" as any },
+				bodyFont: { size: 9, weight: 700 },
 				callbacks: {
 					label: (context: any) => {
 						const pointRating = sortedData[context.dataIndex]?.rating;
-						return ` ${context.parsed.y} (${pointRating})`;
+						return ` ${context.parsed.y.toFixed(1)} (${pointRating || ""})`;
 					},
 				},
 			},
@@ -82,46 +136,52 @@ export default function SentimentCard({
 		},
 	};
 
-	const getRatingColor = (r: string) => {
+	const getRatingBadge = (r: string) => {
 		const lower = r.toLowerCase();
 		if (lower.includes("extreme fear"))
-			return "text-rose-600 bg-rose-50 border-rose-100";
+			return "bg-rose-50 border-rose-100 text-rose-600";
 		if (lower.includes("fear"))
-			return "text-orange-600 bg-orange-50 border-orange-100";
+			return "bg-orange-50 border-orange-100 text-orange-600";
 		if (lower.includes("neutral"))
-			return "text-amber-600 bg-amber-50 border-amber-100";
+			return "bg-amber-50 border-amber-100 text-amber-600";
 		if (lower.includes("extreme greed"))
-			return "text-emerald-600 bg-emerald-50 border-emerald-100";
+			return "bg-emerald-50 border-emerald-100 text-emerald-600";
 		if (lower.includes("greed"))
-			return "text-green-600 bg-green-50 border-green-100";
-		return "text-slate-600 bg-slate-50 border-slate-100";
+			return "bg-green-50 border-green-100 text-green-600";
+		return "bg-slate-50 border-slate-100 text-slate-600";
 	};
 
 	return (
 		<motion.div
-			initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 			animate={{ opacity: 1, y: 0 }}
-			transition={{ delay }}
-			className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all group"
+			transition={{ delay, type: "spring", stiffness: 260, damping: 16 }}
+			className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all group cursor-pointer active:scale-[0.98]"
 		>
-			<div className="space-y-3">
+			<div className="p-4 space-y-3">
 				<div>
-					<h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-600 transition-colors leading-tight mb-2">
-						{title}
-					</h4>
-					<div className="flex items-center justify-between gap-2">
-						<span className="text-lg font-black text-slate-900 tracking-tighter">
-							{Math.round(score * 10) / 10}
-						</span>
+					<div className="flex items-start justify-between mb-2">
+						<h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-indigo-600 transition-colors leading-tight">
+							{title}
+						</h4>
 						<div
-							className={`px-2 py-0.5 rounded-lg border text-[8px] font-black uppercase tracking-widest ${getRatingColor(rating)}`}
+							className={`px-2 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider border ${getRatingBadge(
+								rating,
+							)} `}
 						>
 							{rating}
 						</div>
 					</div>
+
+					<div className="flex items-end gap-1">
+						<span className="text-xl font-bold text-slate-900 tracking-tighter">
+							{score.toFixed(1)}
+						</span>
+					</div>
 				</div>
 
-				<div className="h-8 w-full relative opacity-60 group-hover:opacity-100 transition-opacity">
+				{/* Micro-chart container with hover effect */}
+				<div className="relative h-16 w-full opacity-70 group-hover:opacity-100 transition-opacity duration-300">
 					<Line data={chartData} options={chartOptions} />
 				</div>
 			</div>

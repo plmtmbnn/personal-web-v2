@@ -103,17 +103,17 @@ export default function TaskProgress({ tasks }: TaskProgressProps) {
 
 	return (
 		<div
-			className={`p-5 bg-white border rounded-2xl transition-all duration-500 ${
+			className={`p-6 bg-white border rounded-[2.5rem] transition-all duration-300 ${
 				isComplete
-					? "border-emerald-200 bg-emerald-50/30 ring-2 ring-emerald-500/10"
-					: "border-slate-200 shadow-sm"
+					? "border-emerald-300 bg-emerald-50/20 ring-2 ring-emerald-500/20 shadow-xl shadow-slate-200/50"
+					: "border-slate-200/80 shadow-xl shadow-slate-200/50"
 			}`}
 		>
 			<div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
 				{/* Progress ring + status */}
-				<div className="flex items-center gap-6 flex-shrink-0">
+				<div className="flex items-center gap-6 shrink-0">
 					{/* Ring */}
-					<div className="relative w-20 h-20 flex-shrink-0">
+					<div className="relative w-20 h-20 shrink-0">
 						<svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
 							<circle
 								cx="40"
@@ -138,50 +138,50 @@ export default function TaskProgress({ tasks }: TaskProgressProps) {
 										"stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
 								}}
 								strokeLinecap="round"
-								className={isComplete ? "text-emerald-500" : "text-blue-500"}
+								className={isComplete ? "text-emerald-500" : "text-indigo-600"}
 							/>
 						</svg>
-						<div className="absolute inset-0 flex items-center justify-center text-[15px] font-black text-slate-900">
+						<div className="absolute inset-0 flex items-center justify-center text-[15px] font-extrabold text-slate-900">
 							{metrics.progress}%
 						</div>
 					</div>
 
 					{/* Status text + badges */}
 					<div className="text-left">
-						<p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+						<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
 							Mission Progress
 						</p>
 						<p
-							className={`text-lg font-black tracking-tight leading-tight mb-3 ${
-								isComplete ? "text-emerald-700" : "text-slate-900"
+							className={`text-lg font-extrabold tracking-tight leading-tight mb-3 ${
+								isComplete ? "text-emerald-800" : "text-slate-900"
 							}`}
 						>
 							{statusText}
 						</p>
 						<div className="flex items-center gap-2">
-							<span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
-								<CheckCircle2 className="w-3 h-3" />
+							<span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
+								<CheckCircle2 className="w-3 h-3 text-emerald-600" />
 								{metrics.verified} Verified
 							</span>
-							<span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 border border-slate-200">
-								<Circle className="w-3 h-3" />
+							<span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/80">
+								<Circle className="w-3 h-3 text-slate-500" />
 								{metrics.today} Pending
 							</span>
 						</div>
 						{metrics.todayEstimatedMinutes > 0 && (
-							<div className="mt-3 pt-3 border-t border-slate-100/50 space-y-1.5">
-								<div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-400">
+							<div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
+								<div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
 									<span className="flex items-center gap-1">
-										<Clock className="w-2.5 h-2.5" /> Effort today
+										<Clock className="w-3 h-3 text-indigo-600" /> Effort today
 									</span>
-									<span>
+									<span className="text-slate-900 font-extrabold">
 										{formatEstimatedTime(metrics.todayCompletedMinutes)} /{" "}
 										{formatEstimatedTime(metrics.todayEstimatedMinutes)}
 									</span>
 								</div>
 								<div className="w-48 h-1.5 bg-slate-100 rounded-full overflow-hidden">
 									<div
-										className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+										className="h-full bg-indigo-600 rounded-full transition-all duration-500"
 										style={{
 											width: `${Math.min(
 												100,
@@ -198,27 +198,27 @@ export default function TaskProgress({ tasks }: TaskProgressProps) {
 				</div>
 
 				{/* Divider */}
-				<div className="hidden lg:block w-px h-16 bg-slate-100 self-center" />
+				<div className="hidden lg:block w-px h-16 bg-slate-200/80 self-center" />
 
 				{/* Metric cards */}
-				<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 w-full">
+				<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0 flex-1 w-full">
 					{[
 						{
 							label: "Today",
 							value: metrics.today,
-							icon: <Clock className="w-3 h-3" />,
+							icon: <Clock className="w-3 h-3 text-indigo-600" />,
 							targetId: "today-section",
 						},
 						{
 							label: "This week",
 							value: metrics.week,
-							icon: <Calendar className="w-3 h-3" />,
+							icon: <Calendar className="w-3 h-3 text-indigo-600" />,
 							targetId: "upcoming-section",
 						},
 						{
 							label: "This month",
 							value: metrics.month,
-							icon: <BarChart3 className="w-3 h-3" />,
+							icon: <BarChart3 className="w-3 h-3 text-indigo-600" />,
 							targetId: "upcoming-section",
 						},
 					].map(({ label, value, icon, targetId }) => (
@@ -226,25 +226,25 @@ export default function TaskProgress({ tasks }: TaskProgressProps) {
 							key={label}
 							type="button"
 							onClick={() => scrollToSection(targetId)}
-							className="rounded-xl px-4 py-3 bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-slate-100/50 hover:shadow-sm text-left transition-all active:scale-95 duration-200 group"
+							className="rounded-2xl px-4 py-3 bg-slate-50/70 border border-slate-200/80 hover:border-indigo-300 hover:bg-white hover:shadow-xs text-left transition-all active:scale-95 duration-200 group cursor-pointer"
 						>
-							<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 flex items-center gap-1.5 group-hover:text-blue-500 transition-colors">
+							<p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mb-1 flex items-center gap-1.5 group-hover:text-indigo-600 transition-colors">
 								{icon}
 								{label}
 							</p>
-							<p className="text-xl font-black text-slate-900">{value}</p>
+							<p className="text-xl font-extrabold text-slate-900">{value}</p>
 						</button>
 					))}
 					{/* Total Pending Card (High Contrast) */}
 					<button
 						type="button"
 						onClick={() => scrollToSection("upcoming-section")}
-						className="rounded-xl px-4 py-3 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 hover:shadow-lg text-left transition-all active:scale-95 duration-200 group"
+						className="rounded-2xl px-4 py-3 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:shadow-md text-left transition-all active:scale-95 duration-200 group cursor-pointer"
 					>
-						<p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 !text-white opacity-80 group-hover:opacity-100 transition-opacity">
+						<p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">
 							Total Pending
 						</p>
-						<p className="text-xl font-black text-white !text-white">
+						<p className="text-xl font-extrabold text-white">
 							{metrics.allTime}
 						</p>
 					</button>

@@ -32,7 +32,7 @@ const TECH_PILLS = ["Node.js", "Next.js", "Go", "PostgreSQL", "MongoDB"];
 // ─── Memoized Components ───────────────────────────────────────────────────────
 
 const TechPill = memo(({ tech }: { tech: string }) => (
-	<span className="text-[10px] font-bold text-slate-400 px-2.5 py-1 bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:text-slate-800 hover:border-slate-200 rounded-full transition-all duration-200 cursor-default">
+	<span className="text-[11px] sm:text-xs font-semibold text-slate-600 px-3 py-1 bg-white border border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-sm hover:text-slate-900 rounded-full transition-all duration-200 cursor-default">
 		{tech}
 	</span>
 ));
@@ -49,20 +49,16 @@ const TechPillsList = memo(() => (
 
 TechPillsList.displayName = "TechPillsList";
 
-// Memoized Stat Card component
+// Memoized Stat Card component (High Contrast Floating Card Aesthetic)
 interface StatCardProps {
 	icon: React.ReactNode;
 	value: string;
 	label: string;
+	sublabel?: string;
 	href: string;
-	bgColor: string;
-	borderColor: string;
-	hoverBgColor: string;
-	hoverBorderColor: string;
-	shadowColor: string;
-	textColorClass: string;
-	iconColorClass: string;
-	labelTextColorClass: string;
+	badgeBgColor?: string;
+	accentBorderClass?: string;
+	topAccentClass?: string;
 }
 
 const StatCard = memo(
@@ -70,38 +66,45 @@ const StatCard = memo(
 		icon,
 		value,
 		label,
+		sublabel,
 		href,
-		bgColor,
-		borderColor,
-		hoverBgColor,
-		hoverBorderColor,
-		shadowColor,
-		textColorClass,
-		iconColorClass,
-		labelTextColorClass,
+		badgeBgColor = "bg-indigo-50 border-indigo-100 text-indigo-600",
+		accentBorderClass = "hover:border-indigo-300 hover:ring-2 hover:ring-indigo-500/10",
+		topAccentClass = "via-indigo-500",
 	}: StatCardProps) => (
 		<Link
 			href={href}
 			aria-label={`View ${label} details`}
-			className={`col-span-1 ${bgColor} ${borderColor} rounded-2xl p-4 sm:p-5 flex flex-col justify-between ${hoverBorderColor} ${hoverBgColor} hover:-translate-y-0.5 hover:shadow-md ${shadowColor} transition-all duration-200 cursor-pointer group/card relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2`}
+			className={`col-span-1 bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between hover:-translate-y-1.5 shadow-xs hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 cursor-pointer group/card relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${accentBorderClass}`}
 		>
-			<div className="flex justify-between items-start mb-3">
-				{icon}
-				<ArrowUpRight
-					className={`w-3.5 h-3.5 ${iconColorClass} opacity-0 group-hover/card:opacity-100 transition-opacity duration-200`}
-				/>
-			</div>
-			<div>
-				<p
-					className={`text-2xl sm:text-3xl font-black tracking-tighter leading-none ${textColorClass}`}
+			{/* Subtle top border accent line on hover */}
+			<div
+				className={`absolute top-0 inset-x-3.5 sm:inset-x-5 h-[2px] bg-gradient-to-r from-transparent ${topAccentClass} to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-300`}
+			/>
+
+			<div className="flex justify-between items-start mb-2.5 sm:mb-3.5 relative z-10">
+				<div
+					className={`p-1.5 sm:p-2.5 rounded-xl border ${badgeBgColor} flex items-center justify-center group-hover/card:scale-110 group-hover/card:rotate-3 transition-transform duration-300 shadow-2xs`}
 				>
+					{icon}
+				</div>
+				<div className="p-1 rounded-full bg-slate-50 group-hover/card:bg-slate-100 transition-colors duration-200 border border-slate-100">
+					<ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover/card:text-slate-900 group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5 transition-all duration-200" />
+				</div>
+			</div>
+
+			<div className="relative z-10">
+				<p className="text-xl sm:text-3xl font-extrabold tracking-tight leading-none text-slate-900 group-hover/card:text-slate-950 transition-colors">
 					{value}
 				</p>
-				<p
-					className={`text-[9px] font-black uppercase tracking-widest ${labelTextColorClass} mt-1.5`}
-				>
+				<p className="text-[11px] sm:text-xs font-bold text-slate-700 mt-1.5 sm:mt-2 truncate">
 					{label}
 				</p>
+				{sublabel && (
+					<p className="text-[9.5px] sm:text-[10px] font-semibold text-slate-500 mt-0.5 truncate hidden sm:block">
+						{sublabel}
+					</p>
+				)}
 			</div>
 		</Link>
 	),
@@ -164,8 +167,8 @@ export default function Home({
 	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1.2);
 
 	return (
-		<main className="min-h-screen bg-white relative flex items-center justify-center px-6 overflow-x-hidden py-24 lg:py-0">
-			<div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-20 items-center relative z-10">
+		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto lg:overflow-hidden py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
+			<div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10 my-auto">
 				{/* ── Right Column — Photo ── */}
 				<div className="lg:col-span-5 flex justify-center lg:justify-end order-1 lg:order-2">
 					<motion.div
@@ -174,13 +177,13 @@ export default function Home({
 						transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
 						className="relative group cursor-pointer"
 					>
-						{/* Photo frame — solid white border visible on light bg */}
-						<div className="relative w-60 h-60 sm:w-80 sm:h-80 xl:w-[22rem] xl:h-[22rem] rounded-[2.5rem] sm:rounded-[3rem] p-2.5 bg-white border border-slate-200 shadow-2xl shadow-slate-200/80 group-hover:shadow-slate-300/60 group-hover:scale-[1.02] transition-all duration-500">
-							<div className="w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden">
+						{/* Photo frame — Floating white card container */}
+						<div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-64 lg:h-64 xl:w-80 xl:h-80 rounded-[2.5rem] p-3 bg-white border border-slate-200/80 shadow-xl shadow-slate-200/50 group-hover:shadow-2xl group-hover:shadow-slate-300/60 group-hover:scale-[1.02] transition-all duration-500">
+							<div className="w-full h-full rounded-[2rem] overflow-hidden">
 								<Image
 									src="/profile.jpg"
 									alt={`${AUTHOR.name} — Software Engineer and Distance Runner`}
-									className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500"
+									className="w-full h-full object-cover grayscale-[15%] group-hover:grayscale-0 transition-all duration-500"
 									priority
 									width={400}
 									height={400}
@@ -190,26 +193,27 @@ export default function Home({
 
 						{/* Status badge — conditional on AUTHOR.available */}
 						{AUTHOR.available && (
-							<div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-md">
+							<div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 flex items-center gap-2 px-3 py-1.5 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-full shadow-sm">
 								<div className="relative">
-									<div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-									<div className="absolute inset-0 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+									<div className="w-2 h-2 bg-emerald-500 rounded-full" />
+									<div className="absolute inset-0 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
 								</div>
-								<span className="text-[9px] font-black uppercase tracking-widest text-slate-700">
+								<span className="text-[10.5px] font-bold text-slate-700">
 									Open to work
 								</span>
 							</div>
 						)}
-						{/* Tech stack pills — top right, simplified */}
+
+						{/* Tech stack pills — floating card top right */}
 						<div
-							className="absolute -top-5 -right-5 hidden lg:block group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-300"
+							className="absolute -top-3 -right-3 hidden lg:block group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300"
 							style={{ willChange: "transform" }}
 						>
-							<div className="flex flex-col gap-1.5 p-3 bg-white border border-slate-100 rounded-2xl shadow-lg shadow-slate-100/50">
+							<div className="flex flex-col gap-1.5 p-2.5 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-lg shadow-slate-200/50">
 								{TECH_PILLS.slice(0, 3).map((tech) => (
 									<span
 										key={tech}
-										className="text-[9px] font-black uppercase tracking-wider text-slate-500 px-2 py-0.5 bg-slate-50 rounded-lg border border-slate-100"
+										className="text-[9.5px] font-bold text-slate-700 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-200/80"
 									>
 										{tech}
 									</span>
@@ -217,21 +221,21 @@ export default function Home({
 							</div>
 						</div>
 
-						{/* Domain context pill — bottom left, simplified */}
+						{/* Domain context pill — floating card bottom left */}
 						<div
-							className="absolute -bottom-5 -left-5 hidden lg:block group-hover:-translate-x-2 group-hover:translate-y-2 transition-transform duration-300"
+							className="absolute -bottom-3 -left-3 hidden lg:block group-hover:-translate-x-1 group-hover:translate-y-1 transition-transform duration-300"
 							style={{ willChange: "transform" }}
 						>
-							<div className="p-3 bg-white border border-slate-100 rounded-2xl shadow-lg shadow-slate-100/50">
+							<div className="p-2.5 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-lg shadow-slate-200/50">
 								<div className="flex items-center gap-2 mb-1">
-									<div className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />
-									<span className="text-[9px] font-black uppercase tracking-wider text-slate-500">
+									<div className="w-2 h-2 rounded-full bg-cyan-500 shrink-0" />
+									<span className="text-[9.5px] font-bold text-slate-700">
 										Fintech
 									</span>
 								</div>
 								<div className="flex items-center gap-2">
-									<div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-									<span className="text-[9px] font-black uppercase tracking-wider text-slate-500">
+									<div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+									<span className="text-[9.5px] font-bold text-slate-700">
 										Running
 									</span>
 								</div>
@@ -242,117 +246,122 @@ export default function Home({
 
 				{/* ── Left Column — Content ── */}
 				<motion.div
-					className="lg:col-span-7 order-2 lg:order-1"
+					className="lg:col-span-7 order-2 lg:order-1 max-w-xl mx-auto lg:mx-0 w-full"
 					variants={container}
 					initial={reduceMotion ? false : "hidden"}
 					animate="visible"
 				>
 					{/* Role chip */}
-					<motion.div variants={item} className="mb-6">
-						<span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-							<span className="w-1.5 h-1.5 rounded-full bg-slate-900 inline-block" />
+					<motion.div variants={item} className="mb-3 sm:mb-4">
+						<span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs">
+							<span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
 							{AUTHOR.role} · Fintech
 						</span>
 					</motion.div>
 
+					{/* Headline */}
+					<motion.h1
+						variants={item}
+						className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.12] mb-3 sm:mb-4"
+					>
+						Building Scalable Fintech Systems & Enduring Code.
+					</motion.h1>
+
 					{/* Bio */}
 					<motion.p
 						variants={item}
-						className="text-base sm:text-lg text-slate-500 max-w-xl leading-relaxed font-medium mb-4"
+						className="text-xs sm:text-base text-slate-600 max-w-xl leading-relaxed font-semibold mb-4 sm:mb-5"
 					>
 						Hi, I'm{" "}
-						<span className="text-slate-900 font-bold">{AUTHOR.name}</span>. For
-						over {EXPERIENCE_YEAR} years, I've designed and scaled secure
-						fintech systems. When I'm not writing code, I'm training for
-						marathons and trail runs, applying the same discipline to the miles
-						as I do to the codebase.
+						<span className="text-slate-900 font-extrabold">{AUTHOR.name}</span>
+						. For over {EXPERIENCE_YEAR} years, I've designed and scaled secure
+						fintech architectures. When off-duty, I train for marathons and
+						trail runs, applying the same endurance to code as I do to the
+						trail.
 					</motion.p>
 
-					{/* Tech stack pills — concrete identity signal */}
-					<motion.div variants={item} className="flex flex-wrap gap-2 mb-8">
+					{/* Tech stack pills */}
+					<motion.div
+						variants={item}
+						className="flex flex-wrap gap-2 mb-4 sm:mb-5"
+					>
 						<TechPillsList />
 					</motion.div>
 
-					{/* Stats — 3 cards with intentionally different color treatments */}
+					{/* Stats — Floating Cards with Semantic Accents */}
 					<motion.div
 						variants={item}
-						className="grid grid-cols-3 gap-3 sm:gap-4 mb-8"
+						className="grid grid-cols-3 gap-2.5 sm:gap-3.5 mb-4 sm:mb-6"
 					>
 						<StatCard
-							icon={<Briefcase className="w-4 h-4 text-slate-500" />}
+							icon={
+								<Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />
+							}
 							value={`${yearsCount}+`}
 							label="Years Eng."
+							sublabel="Architecture & Systems"
 							href="/work-experience"
-							bgColor="bg-slate-50"
-							borderColor="border border-slate-100"
-							hoverBgColor="hover:bg-slate-100/50"
-							hoverBorderColor="hover:border-slate-200"
-							shadowColor="hover:shadow-slate-100/30"
-							textColorClass="text-slate-700"
-							iconColorClass="text-slate-600"
-							labelTextColorClass="text-slate-600"
+							badgeBgColor="bg-indigo-50 border-indigo-100 text-indigo-600"
+							accentBorderClass="hover:border-indigo-300 hover:ring-2 hover:ring-indigo-500/10"
+							topAccentClass="via-indigo-500"
 						/>
 
 						<StatCard
-							icon={<FaRunning className="w-4 h-4 text-emerald-500" />}
+							icon={
+								<FaRunning className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+							}
 							value={`${kmCount}+`}
-							label="KM this year"
+							label="KM / Year"
+							sublabel="Marathon & Trail"
 							href="/adventures/running"
-							bgColor="bg-emerald-50"
-							borderColor="border border-emerald-100"
-							hoverBgColor="hover:bg-emerald-100/50"
-							hoverBorderColor="hover:border-emerald-200"
-							shadowColor="hover:shadow-emerald-100/30"
-							textColorClass="text-emerald-700"
-							iconColorClass="text-emerald-600"
-							labelTextColorClass="text-emerald-600"
+							badgeBgColor="bg-emerald-50 border-emerald-100 text-emerald-600"
+							accentBorderClass="hover:border-emerald-300 hover:ring-2 hover:ring-emerald-500/10"
+							topAccentClass="via-emerald-500"
 						/>
 
 						<StatCard
-							icon={<Layers className="w-4 h-4 text-indigo-500" />}
+							icon={
+								<Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600" />
+							}
 							value={`${fintechCount}+`}
 							label="Fintech Sys."
+							sublabel="Core Apps & Infra"
 							href="/portfolio"
-							bgColor="bg-indigo-50"
-							borderColor="border border-indigo-100"
-							hoverBgColor="hover:bg-indigo-100/50"
-							hoverBorderColor="hover:border-indigo-200"
-							shadowColor="hover:shadow-indigo-100/30"
-							textColorClass="text-indigo-700"
-							iconColorClass="text-indigo-600"
-							labelTextColorClass="text-indigo-600"
+							badgeBgColor="bg-cyan-50 border-cyan-100 text-cyan-600"
+							accentBorderClass="hover:border-cyan-300 hover:ring-2 hover:ring-cyan-500/10"
+							topAccentClass="via-cyan-500"
 						/>
 					</motion.div>
 
 					{/* CTAs + Social links */}
 					<motion.div
 						variants={item}
-						className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4"
+						className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full"
 					>
 						<Link
 							href="/work-experience"
-							className="group/btn flex items-center gap-2 px-7 py-3.5 bg-slate-900 text-white !no-underline rounded-2xl font-black text-sm hover:bg-slate-800 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-slate-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-slate-900 text-white !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg shadow-slate-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 cursor-pointer"
 						>
 							<span className="text-white">Explore Work</span>
-							<ArrowRight className="w-4 h-4 text-white group-hover/btn:translate-x-1 transition-transform duration-200" />
+							<ArrowRight className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-1 transition-transform duration-200" />
 						</Link>
 
 						<a
 							href={`mailto:${AUTHOR.email}`}
-							className="group/btn flex items-center gap-2 px-7 py-3.5 bg-white border border-slate-200 text-slate-700 !no-underline rounded-2xl font-black text-sm hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
+							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-white border border-slate-200/80 text-slate-900 !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-all duration-200 shadow-xs hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
 						>
-							<Mail className="w-4 h-4 group-hover/btn:rotate-6 transition-transform duration-200 text-slate-700" />
-							<span className="text-slate-700">Get in Touch</span>
+							<Mail className="w-3.5 h-3.5 group-hover/btn:rotate-6 transition-transform duration-200 text-slate-700" />
+							<span className="text-slate-900">Get in Touch</span>
 						</a>
 
-						{/* Social icon links — from SOCIAL_LINKS constant */}
-						<div className="flex items-center gap-1 sm:ml-1">
+						{/* Social icon links */}
+						<div className="flex items-center justify-center gap-2 sm:ml-2 pt-1 sm:pt-0">
 							<a
 								href={SOCIAL_LINKS.github}
 								target="_blank"
 								rel="noopener noreferrer"
 								aria-label={`${AUTHOR.name}'s GitHub`}
-								className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
+								className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:shadow-sm hover:bg-slate-50 transition-all duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
 							>
 								<FaGithub className="w-4 h-4" />
 							</a>
@@ -361,21 +370,13 @@ export default function Home({
 								target="_blank"
 								rel="noopener noreferrer"
 								aria-label={`${AUTHOR.name}'s LinkedIn`}
-								className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
+								className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:shadow-sm hover:bg-slate-50 transition-all duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
 							>
 								<FaLinkedin className="w-4 h-4" />
 							</a>
 						</div>
 					</motion.div>
 				</motion.div>
-			</div>
-
-			{/* Scroll indicator — subtle, only on large screens */}
-			<div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-1 text-slate-300 pointer-events-none">
-				<span className="text-[8px] font-black uppercase tracking-[0.2em]">
-					Scroll
-				</span>
-				<ChevronDown className="w-3.5 h-3.5" />
 			</div>
 		</main>
 	);

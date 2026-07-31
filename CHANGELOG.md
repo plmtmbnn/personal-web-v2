@@ -1,3 +1,10 @@
+# [0.62.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.61.0...v0.62.0) (2026-07-31)
+
+
+### Features
+
+* **ui:** refactor floating card design system and desktop entry screen standard ([ec435aa](https://github.com/plmtmbnn/personal-web-v2/commit/ec435aa58728c112e79e88e82a78fc16c6d2a54c))
+
 # [0.61.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.60.0...v0.61.0) (2026-07-29)
 
 

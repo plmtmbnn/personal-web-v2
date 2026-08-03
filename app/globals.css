@@ -549,9 +549,7 @@ img {
 /* ============================================================================
    FORM & BUTTON STYLES
    ============================================================================ */
-input,
-textarea,
-select {
+.input-base {
 	width: 100%;
 	padding: 0.75rem 1rem;
 	border: 1px solid var(--border);
@@ -562,9 +560,7 @@ select {
 		border-color var(--fast),
 		box-shadow var(--fast);
 }
-input:focus,
-textarea:focus,
-select:focus {
+.input-base:focus {
 	outline: none;
 	border-color: var(--info);
 	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -598,9 +594,11 @@ select:focus {
 	html {
 		font-size: 14px;
 	}
+	.prose h1,
 	h1 {
 		font-size: clamp(1.75rem, 5vw, 2.25rem);
 	}
+	.prose h2,
 	h2 {
 		font-size: clamp(1.5rem, 4vw, 1.75rem);
 	}

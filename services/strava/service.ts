@@ -213,7 +213,7 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 			}));
 
 		try {
-			await redis.set("strava:activities", JSON.stringify(runs), { ex: 3600 }); // Cache 1 hour
+			await redis.set("strava:activities", JSON.stringify(runs), { ex: 43200 }); // Cache 12 hours
 		} catch (err) {
 			console.error("Error writing activities cache to Redis:", err);
 		}
@@ -309,7 +309,7 @@ export async function getAthleteStats(accessToken?: string | null): Promise<Stra
 		};
 
 		try {
-			await redis.set("strava:stats", JSON.stringify(runningStats), { ex: 3600 }); // Cache 1 hour
+			await redis.set("strava:stats", JSON.stringify(runningStats), { ex: 43200 }); // Cache 12 hours
 		} catch (err) {
 			console.error("Error writing stats cache to Redis:", err);
 		}

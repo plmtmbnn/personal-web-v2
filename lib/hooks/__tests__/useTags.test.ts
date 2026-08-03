@@ -14,18 +14,19 @@ describe("useTags", () => {
 		expect(result.current.tags).toEqual(["work", "urgent"]);
 	});
 
-	it("adds a new tag on Enter", () => {
+	it("adds a new tag on Enter key", () => {
 		const { result } = renderHook(() => useTags());
 		act(() => {
 			result.current.setTagInput("new-task");
 		});
 		act(() => {
-			const event = new KeyboardEvent("keydown", { key: "Enter" });
-			Object.defineProperty(event, "target", {
-				value: { value: "new-task" },
-			});
-			// Note: In a real test, you'd use fireEvent or simulate properly
+			const mockEvent = {
+				key: "Enter",
+				preventDefault: () => {},
+			} as React.KeyboardEvent<HTMLInputElement>;
+			result.current.handleTagKeyDown(mockEvent);
 		});
 		expect(result.current.tags).toContain("new-task");
+		expect(result.current.tagInput).toBe("");
 	});
 });

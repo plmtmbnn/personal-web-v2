@@ -32,9 +32,8 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
-		const { limit, offset } = parsedQuery.data;
-		// 1. Get cached data from Redis
-		let data = await getStockData();
+	// 1. Get cached data from Redis
+	let data = await getStockData();
 
 		// 2. Determine if we need to fetch fresh data from IDX
 		let shouldFetch = false;
@@ -102,14 +101,23 @@ export async function GET(request: NextRequest) {
 			}
 		}
 
-		if (!data || data.length === 0) {
-			return NextResponse.json(
-				{ error: "No stock data available and failed to fetch from IDX." },
-				{ status: 404 },
-			);
-		}
+	if (!data || data.length === 0) {
+		return NextResponse.json(
+			{ error: "No stock data available and failed to fetch from IDX." },
+			{ status: 404 },
+		);
+	}
 
-		return NextResponse.json({ data });
+	// Apply pagination if requested
+	const { limit, offset } = parsedQuery.data;
+	const paginatedData = limit ? data.slice(offset || 0, (offset || 0) + limit) : data;
+
+	return NextResponse.json({ 
+		data: paginatedData,
+		total: data.length,
+		limit,
+		offset 
+	});
 	} catch (error: any) {
 		console.error("Stock Data Retrieval Error:", error);
 		return NextResponse.json(

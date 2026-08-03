@@ -535,17 +535,17 @@ function AdminBlogListInner({
 					{/* Export CSV + New Blog */}
 					<div className="ml-auto flex items-center gap-2">
 						<Link
-							href="/admin/blog/editor/new"
-							className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm"
+							href="/admin/blog/editor"
+							className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 !text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer !no-underline"
 						>
-							<Plus className="w-3 h-3" />
-							<span className="hidden sm:inline">New Blog</span>
+							<Plus className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+							<span className="hidden sm:inline !text-white">New Blog</span>
 						</Link>
 						<button
 							onClick={handleExportCSV}
-							className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm"
+							className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-2xs active:scale-95 cursor-pointer"
 						>
-							<Download className="w-3 h-3" />
+							<Download className="w-3.5 h-3.5 text-slate-500" />
 							<span className="hidden sm:inline">Export CSV</span>
 						</button>
 					</div>
@@ -559,26 +559,26 @@ function AdminBlogListInner({
 				{/* Row 1: Search + Controls */}
 				<div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 sm:gap-4">
 					{/* Search */}
-					<div className="relative flex-1 w-full">
-						<Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+					<div className="relative flex-1 w-full group">
+						<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors pointer-events-none z-10" />
 						<input
 							ref={searchInputRef}
 							type="text"
 							placeholder="Search by title or description... (Press / to search)"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-14 py-2.5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-400 shadow-sm"
+							className="w-full pl-10 pr-14 py-2.5 bg-white border border-slate-200/80 focus:border-indigo-500 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none transition-all shadow-2xs"
 						/>
 						{searchQuery ? (
 							<button
 								onClick={() => setSearchQuery("")}
-								className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-slate-400 hover:text-slate-700 transition-colors"
+								className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-slate-700 transition-colors cursor-pointer z-10"
 								aria-label="Clear search"
 							>
 								<X className="w-3.5 h-3.5" />
 							</button>
 						) : (
-							<kbd className="hidden sm:inline-flex absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[9px] font-mono text-slate-400 bg-slate-100 border border-slate-200 rounded shadow-xs pointer-events-none">
+							<kbd className="hidden sm:inline-flex absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[9px] font-mono text-slate-400 bg-slate-100 border border-slate-200/80 rounded shadow-2xs pointer-events-none z-10">
 								/
 							</kbd>
 						)}

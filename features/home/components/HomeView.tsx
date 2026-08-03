@@ -20,7 +20,6 @@ import {
 	ArrowRight,
 	ArrowUpRight,
 	Mail,
-	ChevronDown,
 	Briefcase,
 	Layers,
 } from "lucide-react";

@@ -67,10 +67,10 @@ export default async function AdminBlogPage({
 						<div className="flex justify-center">
 							<Link
 								href="/admin/blog/editor"
-								className="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer !no-underline"
+								className="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 !text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer !no-underline"
 							>
-								<Plus className="w-4 h-4 text-white" />
-								<span className="text-white">Create New Post</span>
+								<Plus className="w-4 h-4 text-white stroke-[2.5]" />
+								<span className="!text-white">Create New Post</span>
 							</Link>
 						</div>
 					</div>

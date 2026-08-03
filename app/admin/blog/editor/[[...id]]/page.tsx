@@ -19,7 +19,8 @@ export default async function BlogEditorPage({ params }: EditorPageProps) {
 	}
 
 	const resolvedParams = await params;
-	const id = resolvedParams.id?.[0];
+	const rawId = resolvedParams.id?.[0];
+	const id = rawId === "new" ? undefined : rawId;
 
 	let initialData = null;
 

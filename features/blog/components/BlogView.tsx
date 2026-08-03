@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -12,6 +12,7 @@ import {
 	Sparkles,
 	Search,
 	X,
+	Loader2,
 } from "lucide-react";
 import type { Blog } from "@/features/blog/data";
 import {
@@ -25,6 +26,7 @@ interface BlogViewProps {
 	allBlogs: Blog[];
 }
 
+const PAGE_SIZE = 6;
 const CATEGORIES = ["All", "Tech", "Finance", "Running", "General"];
 
 const getCategoryColor = (category: string) => {
@@ -38,9 +40,12 @@ const getCategoryColor = (category: string) => {
 export default function BlogView({ allBlogs }: BlogViewProps) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [activeCategory, setActiveCategory] = useState("All");
+	const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+	const [isLoadingMore, setIsLoadingMore] = useState(false);
 	const reduceMotion = useReducedMotion();
+	const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-	// Check if a filter is actively applied (for skeleton loader)
+	// Check if a filter is actively applied
 	const hasActiveFilter = searchQuery !== "" || activeCategory !== "All";
 
 	// Filter blogs dynamically
@@ -65,6 +70,49 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 		});
 	}, [filteredBlogs]);
 
+	// Paginated blogs slice for infinite pagination
+	const displayedBlogs = useMemo(() => {
+		return sortedBlogs.slice(0, visibleCount);
+	}, [sortedBlogs, visibleCount]);
+
+	const hasMore = visibleCount < sortedBlogs.length;
+
+	// Reset pagination on filter or search change
+	const handleSearchChange = (query: string) => {
+		setSearchQuery(query);
+		setVisibleCount(PAGE_SIZE);
+	};
+
+	const handleCategoryChange = (category: string) => {
+		setActiveCategory(category);
+		setVisibleCount(PAGE_SIZE);
+	};
+
+	// IntersectionObserver for auto-infinite scrolling
+	useEffect(() => {
+		if (!hasMore || isLoadingMore) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && hasMore) {
+					setIsLoadingMore(true);
+					setTimeout(() => {
+						setVisibleCount((prev) => prev + PAGE_SIZE);
+						setIsLoadingMore(false);
+					}, 350);
+				}
+			},
+			{ rootMargin: "250px" },
+		);
+
+		const el = sentinelRef.current;
+		if (el) observer.observe(el);
+
+		return () => {
+			if (el) observer.unobserve(el);
+		};
+	}, [hasMore, isLoadingMore]);
+
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start transition-all duration-300">
 			{/* ═══════════════════════════════════════
@@ -74,7 +122,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 				{/* Title and Description */}
 				<div className="space-y-3 w-full">
 					<div className="flex items-center gap-2">
-						<span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-xs">
+						<span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-2xs">
 							<BookOpen className="w-3.5 h-3.5 text-indigo-600" />
 							Engineering Journal
 						</span>
@@ -92,18 +140,18 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 				<div className="bg-white border border-slate-200/80 p-5 rounded-[2rem] space-y-5 w-full shadow-sm">
 					{/* Search Input */}
 					<div className="relative group">
-						<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
+						<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors pointer-events-none z-10" />
 						<input
 							type="text"
 							placeholder="Search entries..."
 							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full pl-10 pr-10 py-3 bg-slate-50/70 border border-slate-200/80 focus:border-indigo-500 focus:bg-white rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none transition-all"
+							onChange={(e) => handleSearchChange(e.target.value)}
+							className="w-full pl-10 pr-10 py-3 bg-slate-50/70 border border-slate-200/80 focus:border-indigo-500 focus:bg-white rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none transition-all shadow-2xs"
 						/>
 						{searchQuery && (
 							<button
-								onClick={() => setSearchQuery("")}
-								className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900 cursor-pointer"
+								onClick={() => handleSearchChange("")}
+								className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900 cursor-pointer z-10"
 								aria-label="Clear search"
 							>
 								<X className="w-3.5 h-3.5" />
@@ -122,8 +170,8 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 								return (
 									<button
 										key={category}
-										onClick={() => setActiveCategory(category)}
-										className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
+										onClick={() => handleCategoryChange(category)}
+										className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer active:scale-95 ${
 											isActive
 												? "text-white bg-slate-900 shadow-sm"
 												: "text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/60"
@@ -141,7 +189,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 				</div>
 
 				{/* Archive Stats Badge */}
-				<div className="flex items-center justify-between p-4 bg-white border border-slate-200/80 rounded-2xl max-w-sm w-full shadow-xs">
+				<div className="flex items-center justify-between p-4 bg-white border border-slate-200/80 rounded-2xl max-w-sm w-full shadow-2xs">
 					<div className="flex items-center gap-3">
 						<div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs">
 							<Sparkles className="w-4 h-4" />
@@ -159,7 +207,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 			</aside>
 
 			{/* ═══════════════════════════════════════
-		    RIGHT COLUMN: Unified Grid
+		    RIGHT COLUMN: Unified Grid & Infinite Scroll
 		═══════════════════════════════════════ */}
 			<div className="lg:col-span-9 space-y-8">
 				<AnimatePresence mode="wait">
@@ -179,10 +227,8 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ duration: 0.35, delay: i * 0.04 }}
 								>
-									<div className="relative flex flex-col h-full bg-white border border-slate-200/80 rounded-[2.5rem] overflow-hidden shadow-xs">
-										{/* Image Skeleton */}
+									<div className="relative flex flex-col h-full bg-white border border-slate-200/80 rounded-[2.5rem] overflow-hidden shadow-2xs">
 										<Skeleton className="relative w-full h-48" />
-										{/* Content Skeleton */}
 										<div className="flex-1 flex flex-col justify-between p-6 space-y-4">
 											<div className="space-y-2.5">
 												<div className="flex items-center gap-3">
@@ -207,7 +253,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 							initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -15 }}
-							className="flex flex-col items-center justify-center text-center py-20 bg-white border border-slate-200/80 rounded-[2.5rem] p-8 shadow-xs"
+							className="flex flex-col items-center justify-center text-center py-20 bg-white border border-slate-200/80 rounded-[2.5rem] p-8 shadow-2xs"
 						>
 							<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4 text-indigo-600">
 								<Sparkles className="w-5 h-5" />
@@ -241,21 +287,24 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 								</div>
 							)}
 
-							{/* Unified Grid */}
+							{/* Unified Article Grid */}
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-								{sortedBlogs.map((post, index) => (
+								{displayedBlogs.map((post, index) => (
 									<motion.div
 										key={post.slug}
 										initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 										animate={{ opacity: 1, y: 0 }}
-										transition={{ duration: 0.35, delay: index * 0.04 }}
+										transition={{
+											duration: 0.35,
+											delay: (index % PAGE_SIZE) * 0.04,
+										}}
 									>
 										<Link
 											href={`/blog/${post.slug}`}
 											className="group block !no-underline h-full"
 										>
 											<div
-												className={`relative flex flex-col h-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-[2.5rem] overflow-hidden transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 ${
+												className={`relative flex flex-col h-full bg-white border border-slate-200/80 hover:border-indigo-200 rounded-[2.5rem] overflow-hidden transition-all duration-300 shadow-xs hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 ${
 													post.is_headline ? "md:col-span-2" : ""
 												}`}
 											>
@@ -275,12 +324,12 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 													{/* Category Badge */}
 													<div className="absolute top-3.5 left-3.5 flex items-center gap-2">
 														<span
-															className={`px-3 py-1 border text-[9px] font-extrabold uppercase tracking-wider rounded-full backdrop-blur-md shadow-xs ${getCategoryStyles(post.category)}`}
+															className={`px-3 py-1 border text-[9px] font-extrabold uppercase tracking-wider rounded-full backdrop-blur-md shadow-2xs ${getCategoryStyles(post.category)}`}
 														>
 															{post.category}
 														</span>
 														{post.is_headline && (
-															<span className="px-3 py-1 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider rounded-full shadow-xs">
+															<span className="px-3 py-1 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider rounded-full shadow-2xs">
 																Headline
 															</span>
 														)}
@@ -327,6 +376,72 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 									</motion.div>
 								))}
 							</div>
+
+							{/* Infinite Scroll Loaders & Trigger */}
+							{hasMore && (
+								<div className="pt-6 space-y-6 flex flex-col items-center">
+									{isLoadingMore && (
+										<div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+											{[1, 2].map((i) => (
+												<div
+													key={i}
+													className="relative flex flex-col h-full bg-white border border-slate-200/80 rounded-[2.5rem] overflow-hidden shadow-2xs"
+												>
+													<Skeleton className="relative w-full h-48" />
+													<div className="flex-1 flex flex-col justify-between p-6 space-y-4">
+														<div className="space-y-2.5">
+															<Skeleton className="w-20 h-3 rounded-full" />
+															<Skeleton className="w-full h-5 rounded-xl" />
+															<Skeleton className="w-3/4 h-3 rounded-full" />
+														</div>
+													</div>
+												</div>
+											))}
+										</div>
+									)}
+
+									{/* Observer Sentinel Element */}
+									<div ref={sentinelRef} className="h-4 w-full" />
+
+									{/* Manual Load Trigger fallback */}
+									<button
+										onClick={() => {
+											setIsLoadingMore(true);
+											setTimeout(() => {
+												setVisibleCount((prev) => prev + PAGE_SIZE);
+												setIsLoadingMore(false);
+											}, 300);
+										}}
+										disabled={isLoadingMore}
+										className="px-6 py-3 bg-white border border-slate-200/80 hover:border-indigo-300 hover:bg-indigo-50/50 text-slate-700 hover:text-indigo-600 text-xs font-extrabold uppercase tracking-wider rounded-2xl shadow-2xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+									>
+										{isLoadingMore ? (
+											<>
+												<Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+												Loading articles...
+											</>
+										) : (
+											<>
+												Load More Articles (
+												{sortedBlogs.length - displayedBlogs.length} remaining)
+											</>
+										)}
+									</button>
+								</div>
+							)}
+
+							{/* End of Archive Indicator */}
+							{!hasMore && sortedBlogs.length > 0 && (
+								<div className="pt-6 flex justify-center">
+									<div className="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200/80 rounded-2xl text-center shadow-2xs">
+										<Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+										<p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+											You've reached the end of the journal archive (
+											{sortedBlogs.length} articles)
+										</p>
+									</div>
+								</div>
+							)}
 						</motion.div>
 					)}
 				</AnimatePresence>

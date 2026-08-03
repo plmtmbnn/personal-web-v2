@@ -18,7 +18,8 @@ To prevent layout degradation, hardcoded specificity conflicts, and broken mobil
 
 * **No Aggressive Universal Resets:** Never define `* { margin: 0; padding: 0; }` in `globals.css`. Allow Tailwind CSS v4 Preflight to handle box resets naturally.
 * **Scoped Document Typography (`.prose`):** Document typography spacing (`h1`-`h6`, `p`, `ul`, `ol`, `li` margins) MUST be scoped under `.prose` for markdown or editorial pages. Never force global bottom margins on raw `<p>` or `<h1-h6>` elements, as this corrupts UI components like cards, badges, and modals.
-* **No Raw HTML Tag Overrides:** Never apply default padding or background colors to raw HTML elements (e.g., `button`, `input`). Utility classes (`.btn`, Tailwind classes) must be used explicitly.
+* **No Raw HTML Tag Overrides:** Never apply default padding or background colors to raw HTML elements (e.g., `button`, `input`). Utility classes (`.btn`, `.input-base`, Tailwind classes) must be used explicitly.
+* **Input & Search Icon Layering:** Search inputs featuring internal icons MUST position icons using `pointer-events-none z-10` with matching explicit left padding (`pl-10`) on the `<input>` element to prevent text and placeholder overlapping.
 * **Tailwind Utility First:** Component spacing must rely on Tailwind utility classes (`gap-4`, `p-4`, `mb-6`) rather than manual CSS rules in `globals.css`.
 
 ---
@@ -67,3 +68,14 @@ Animations are used purposefully to guide attention and provide feedback.
   * **Emerald/Teal:** Active states, running/endurance logs, success metrics.
   * **Cyan:** Fintech systems, interactive data cards, chart indicators.
   * **Rose:** Alerts, notifications, pending task counters.
+
+---
+
+## 8. Progressive Loading & Infinite Pagination Standards
+For content-heavy feeds, journals, and dynamic list views:
+
+* **Progressive Batch Slicing:** Render initial content in controlled batches (e.g. `PAGE_SIZE = 6`) to optimize DOM tree performance and initial rendering speed.
+* **IntersectionObserver Sentinel:** Use a sentinel element combined with `IntersectionObserver` at the bottom of lists for seamless auto-loading. Provide shimmering `Skeleton` placeholders during load transitions.
+* **Filter State Resets:** Automatically reset visible pagination counts to page 1 whenever category filters or search inputs change.
+* **End-of-Archive Indicator:** When all items are loaded (`!hasMore`), display a clean end-of-archive badge summarizing the total record count.
+

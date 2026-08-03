@@ -49,15 +49,6 @@ export default function FearAndGreedGauge({
 		return historicalData ? [...historicalData].sort((a, b) => a.x - b.x) : [];
 	}, [historicalData]);
 
-	// Determine ring color based on score
-	const getRingColor = (s: number) => {
-		if (s < 25) return "text-rose-500";
-		if (s < 45) return "text-orange-500";
-		if (s <= 55) return "text-amber-500";
-		if (s <= 75) return "text-emerald-500";
-		return "text-teal-500";
-	};
-
 	// Get badge style for rating
 	const getRatingBadge = (r: string) => {
 		const lower = r.toLowerCase();

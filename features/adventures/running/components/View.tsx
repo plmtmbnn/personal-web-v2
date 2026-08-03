@@ -16,7 +16,6 @@ import {
 	ExternalLink,
 	CheckCircle,
 	ShieldAlert,
-	Clock,
 	TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
@@ -127,27 +126,7 @@ function PaceRing({
 	);
 }
 
-function ProgressBar({
-	value,
-	max,
-	color,
-}: {
-	value: number;
-	max: number;
-	color: string;
-}) {
-	const percentage = Math.min((value / max) * 100, 100);
-	return (
-		<div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-			<motion.div
-				className={`h-full rounded-full ${color}`}
-				initial={{ width: 0 }}
-				animate={{ width: `${percentage}%` }}
-				transition={{ type: "spring", stiffness: 350, damping: 30 }}
-			/>
-		</div>
-	);
-}
+// Removed unused ProgressBar component - can be restored if needed for future visualizations
 
 export default function RunningView({
 	initialData,
@@ -233,38 +212,7 @@ export default function RunningView({
 		? Math.round(stats.ytd_run_totals.distance / 1000).toLocaleString()
 		: "1,000+";
 
-	// Loading skeleton for run cards
-	const RunCardSkeleton = () => (
-		<div className="p-6 glass-card border border-white/10 rounded-[2rem] bg-white/5 animate-pulse h-[280px] flex flex-col justify-between">
-			<div className="space-y-3">
-				<div className="flex justify-between items-start">
-					<div className="space-y-2">
-						<div className="h-4 w-32 bg-slate-200 rounded" />
-						<div className="h-3 w-20 bg-slate-100 rounded" />
-					</div>
-					<div className="h-9 w-9 bg-slate-100 rounded-xl" />
-				</div>
-				<div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/5">
-					<div className="space-y-1">
-						<div className="h-2 w-12 bg-slate-100 rounded" />
-						<div className="h-5 w-16 bg-slate-200 rounded" />
-					</div>
-					<div className="space-y-1 border-l border-white/5 pl-2">
-						<div className="h-2 w-10 bg-slate-100 rounded" />
-						<div className="h-5 w-14 bg-slate-200 rounded" />
-					</div>
-					<div className="space-y-1 border-l border-white/5 pl-2">
-						<div className="h-2 w-10 bg-slate-100 rounded" />
-						<div className="h-5 w-12 bg-slate-200 rounded" />
-					</div>
-				</div>
-			</div>
-			<div className="mt-4 pt-4 border-t border-white/5 flex justify-between">
-				<div className="h-3 w-16 bg-slate-100 rounded" />
-				<div className="h-3 w-12 bg-slate-100 rounded" />
-			</div>
-		</div>
-	);
+	// Removed unused RunCardSkeleton component - can be restored if loading states are needed
 
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">

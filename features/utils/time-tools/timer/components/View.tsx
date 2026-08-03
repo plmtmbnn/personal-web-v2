@@ -161,22 +161,30 @@ function PhaseTimeline({
 	currentIndex: number;
 }) {
 	const total = queue.reduce((a, p) => a + p.duration, 0);
+	const isSetup = currentIndex === -1;
+
 	return (
-		<div className="w-full max-w-2xl px-2">
-			<div className="flex h-3 rounded-full overflow-hidden gap-[2px]">
+		<div className="w-full max-w-2xl px-1">
+			<div className="flex h-3 rounded-full overflow-hidden gap-[2px] bg-slate-100/50 p-0.5 border border-slate-200/60">
 				{queue.map((phase, i) => {
 					const w = (phase.duration / total) * 100;
 					const colors = {
-						warmup: i <= currentIndex ? "bg-amber-400" : "bg-amber-900/50",
-						speed: i <= currentIndex ? "bg-rose-400" : "bg-rose-900/50",
-						rest: i <= currentIndex ? "bg-emerald-400" : "bg-emerald-900/50",
-						cooldown: i <= currentIndex ? "bg-blue-400" : "bg-blue-900/50",
+						warmup:
+							i <= currentIndex || isSetup ? "bg-amber-500" : "bg-amber-900/50",
+						speed:
+							i <= currentIndex || isSetup ? "bg-rose-500" : "bg-rose-900/50",
+						rest:
+							i <= currentIndex || isSetup
+								? "bg-emerald-500"
+								: "bg-emerald-900/50",
+						cooldown:
+							i <= currentIndex || isSetup ? "bg-blue-500" : "bg-blue-900/50",
 					};
 					return (
 						<div
-							key={`timeline-${phase.label}-${phase.duration}`}
+							key={`timeline-${phase.label}-${phase.duration}-${i}`}
 							className={`${colors[phase.type]} rounded-sm transition-all duration-500 ${
-								i === currentIndex ? "ring-1 ring-white/40" : ""
+								i === currentIndex ? "ring-1 ring-white" : ""
 							}`}
 							style={{ width: `${w}%` }}
 							title={phase.label}
@@ -184,7 +192,11 @@ function PhaseTimeline({
 					);
 				})}
 			</div>
-			<div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-widest opacity-40 text-white">
+			<div
+				className={`flex justify-between mt-2 text-[10px] font-extrabold uppercase tracking-wider ${
+					isSetup ? "text-slate-500" : "text-white/60"
+				}`}
+			>
 				<span>Start</span>
 				<span>{queue.length} phases</span>
 				<span>Finish</span>
@@ -325,6 +337,7 @@ function SetupCard({
 	label,
 	icon: Icon,
 	color,
+	bgColor,
 	min,
 	sec,
 	onMinChange,
@@ -333,23 +346,24 @@ function SetupCard({
 	label: string;
 	icon: any;
 	color: string;
+	bgColor: string;
 	min: number;
 	sec: number;
 	onMinChange: (v: number) => void;
 	onSecChange: (v: number) => void;
 }) {
 	return (
-		<div className="p-6 bg-white/5 border border-white/10 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-5 hover:bg-white/[0.08] transition-all">
-			<div className="flex items-center gap-4">
-				<div className={`p-3.5 rounded-2xl bg-white/10 ${color}`}>
-					<Icon className="w-7 h-7" />
+		<div className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+			<div className="flex items-center gap-3.5">
+				<div className={`p-3 rounded-2xl border ${bgColor} ${color}`}>
+					<Icon className="w-6 h-6" />
 				</div>
-				<span className="font-bold uppercase text-sm tracking-widest text-white">
+				<span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900">
 					{label}
 				</span>
 			</div>
-			<div className="flex items-center gap-3">
-				<div className="flex items-center bg-white/10 border border-white/20 rounded-2xl px-3 py-2 gap-1">
+			<div className="flex items-center gap-3 self-end sm:self-auto">
+				<div className="flex items-center bg-slate-50/80 border border-slate-200/80 rounded-xl px-3 py-2 gap-1 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/10 focus-within:border-indigo-500 transition-all">
 					<input
 						type="number"
 						inputMode="numeric"
@@ -358,10 +372,10 @@ function SetupCard({
 						onChange={(e) =>
 							onMinChange(Math.max(0, parseInt(e.target.value, 10) || 0))
 						}
-						className="w-12 bg-transparent text-center text-white text-xl focus:outline-none tabular-nums"
+						className="w-10 bg-transparent text-center text-slate-900 font-extrabold text-base focus:outline-none tabular-nums"
 					/>
-					<span className="text-[10px] text-white opacity-40">m</span>
-					<div className="w-px h-8 bg-white/15 mx-1" />
+					<span className="text-xs font-bold text-slate-400">m</span>
+					<div className="w-px h-6 bg-slate-200/80 mx-1" />
 					<input
 						type="number"
 						inputMode="numeric"
@@ -373,9 +387,9 @@ function SetupCard({
 								Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0)),
 							)
 						}
-						className="w-12 bg-transparent text-center text-white text-xl focus:outline-none tabular-nums"
+						className="w-10 bg-transparent text-center text-slate-900 font-extrabold text-base focus:outline-none tabular-nums"
 					/>
-					<span className="text-[10px] text-white opacity-40">s</span>
+					<span className="text-xs font-bold text-slate-400">s</span>
 				</div>
 			</div>
 		</div>
@@ -704,74 +718,122 @@ export default function TimerView() {
 	return (
 		<main
 			className={`min-h-screen transition-[background] duration-700 ${
-				isComplete ? "bg-emerald-950" : isActive ? theme.bg : "bg-slate-950"
-			} relative overflow-hidden font-sans`}
+				isComplete
+					? "bg-emerald-950"
+					: isActive
+						? theme.bg
+						: "bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8"
+			} font-sans`}
 		>
 			{isComplete && <Confetti />}
 
-			{/* Background texture */}
-			<div className="absolute inset-0 pointer-events-none">
-				<div
-					className="absolute inset-0 opacity-[0.03]"
-					style={{
-						backgroundImage:
-							"repeating-linear-gradient(0deg, #fff 0px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, #fff 0px, transparent 1px, transparent 40px)",
-					}}
-				/>
-				{isActive && currentPhase?.type === "speed" && <SpeedPulse />}
-				<div
-					className="absolute -top-1/4 -right-1/4 w-[80%] h-[80%] rounded-full blur-[160px] opacity-10 transition-colors duration-700"
-					style={{ background: isActive ? theme.accent : "#6366f1" }}
-				/>
-				<div
-					className="absolute -bottom-1/4 -left-1/4 w-[80%] h-[80%] rounded-full blur-[160px] opacity-10 transition-colors duration-700"
-					style={{ background: isActive ? theme.accent : "#3b82f6" }}
-				/>
-			</div>
+			{/* Background texture (active/complete modes) */}
+			{(isActive || isComplete) && (
+				<div className="absolute inset-0 pointer-events-none">
+					<div
+						className="absolute inset-0 opacity-[0.03]"
+						style={{
+							backgroundImage:
+								"repeating-linear-gradient(0deg, #fff 0px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, #fff 0px, transparent 1px, transparent 40px)",
+						}}
+					/>
+					{isActive && currentPhase?.type === "speed" && <SpeedPulse />}
+					<div
+						className="absolute -top-1/4 -right-1/4 w-[80%] h-[80%] rounded-full blur-[160px] opacity-10 transition-colors duration-700"
+						style={{ background: isActive ? theme.accent : "#6366f1" }}
+					/>
+					<div
+						className="absolute -bottom-1/4 -left-1/4 w-[80%] h-[80%] rounded-full blur-[160px] opacity-10 transition-colors duration-700"
+						style={{ background: isActive ? theme.accent : "#3b82f6" }}
+					/>
+				</div>
+			)}
 
-			<div className="max-w-xl mx-auto px-5 pt-10 pb-14 relative z-10 flex flex-col min-h-screen">
+			<div
+				className={`max-w-xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col ${isActive || isComplete ? "min-h-screen pt-10 pb-14" : ""}`}
+			>
 				{/* Header */}
-				<div className="flex items-center justify-between mb-8">
-					<Link
-						href="/utils"
-						className="p-3.5 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 hover:bg-white/20 transition-all active:scale-90 text-white"
-					>
-						<ArrowLeft className="w-5 h-5" />
-					</Link>
-
-					{!isActive && !isComplete && (
-						<div className="text-center">
-							<h1 className="text-xl text-white tracking-tighter text-white">
-								Interval Timer
-							</h1>
-							{queue.length > 0 && (
-								<p className="text-[11px] font-bold uppercase tracking-widest opacity-40 text-white">
-									{queue.length} phases · {formatTime(totalSessionSeconds)}
-								</p>
-							)}
+				{!isActive && !isComplete ? (
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+						<div className="space-y-3">
+							<Link
+								href="/utils"
+								className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
+							>
+								<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+								Back to Utilities
+							</Link>
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-md shrink-0">
+									<Activity className="w-5 h-5 text-indigo-400" />
+								</div>
+								<div>
+									<h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+										Running <span className="text-indigo-600">Timer</span>
+									</h1>
+									<p className="text-xs font-semibold text-slate-600 mt-0.5">
+										Interval workout timer with wake-lock & sound alerts.
+									</p>
+								</div>
+							</div>
 						</div>
-					)}
 
-					<div className="flex gap-2">
-						<button
-							onClick={() => setSoundEnabled((s) => !s)}
-							className="p-3.5 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 transition-all active:scale-90 text-white"
-						>
-							{soundEnabled ? (
-								<Volume2 className="w-5 h-5" />
-							) : (
-								<VolumeX className="w-5 h-5" />
-							)}
-						</button>
-						<div className="p-3.5 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 opacity-40 text-white">
-							{wakeLockActive ? (
-								<Lock className="w-5 h-5" />
-							) : (
-								<Unlock className="w-5 h-5" />
-							)}
+						<div className="flex items-center gap-2 self-start sm:self-auto">
+							<button
+								onClick={() => setSoundEnabled((s) => !s)}
+								className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 cursor-pointer"
+								title="Toggle Sound"
+							>
+								{soundEnabled ? (
+									<Volume2 className="w-4 h-4 text-indigo-600" />
+								) : (
+									<VolumeX className="w-4 h-4 text-slate-400" />
+								)}
+								<span>{soundEnabled ? "Audio ON" : "Muted"}</span>
+							</button>
+							<div
+								className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-xs"
+								title="Wake Lock Status"
+							>
+								{wakeLockActive ? (
+									<Lock className="w-4 h-4 text-emerald-600" />
+								) : (
+									<Unlock className="w-4 h-4 text-slate-400" />
+								)}
+								<span>{wakeLockActive ? "Screen Awake" : "Wake Lock"}</span>
+							</div>
 						</div>
 					</div>
-				</div>
+				) : (
+					<div className="flex items-center justify-between mb-8">
+						<Link
+							href="/utils"
+							className="p-3.5 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 hover:bg-white/20 transition-all active:scale-90 text-white"
+						>
+							<ArrowLeft className="w-5 h-5" />
+						</Link>
+
+						<div className="flex gap-2">
+							<button
+								onClick={() => setSoundEnabled((s) => !s)}
+								className="p-3.5 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 transition-all active:scale-90 text-white cursor-pointer"
+							>
+								{soundEnabled ? (
+									<Volume2 className="w-5 h-5" />
+								) : (
+									<VolumeX className="w-5 h-5" />
+								)}
+							</button>
+							<div className="p-3.5 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 opacity-40 text-white">
+								{wakeLockActive ? (
+									<Lock className="w-5 h-5" />
+								) : (
+									<Unlock className="w-5 h-5" />
+								)}
+							</div>
+						</div>
+					</div>
+				)}
 
 				{/* ── VIEWS ─────────────────────────────────────────────────────── */}
 				<AnimatePresence mode="wait">
@@ -795,34 +857,38 @@ export default function TimerView() {
 							</motion.div>
 
 							<div>
-								<h2 className="text-5xl text-white tracking-tighter text-white">
+								<h2 className="text-5xl tracking-tight text-white font-extrabold">
 									Session Done!
 								</h2>
-								<p className="text-xs font-bold uppercase tracking-[0.4em] mt-2 !text-white">
+								<p className="text-xs font-bold uppercase tracking-widest mt-2 text-emerald-300">
 									All intervals completed
 								</p>
 							</div>
 
 							<div className="w-full p-8 bg-black/20 backdrop-blur-xl rounded-3xl border border-white/10 space-y-5">
 								<div className="flex justify-between items-center text-white">
-									<span className="text-xs text-white uppercase tracking-widest opacity-50">
+									<span className="text-xs text-white uppercase tracking-widest opacity-60">
 										Total Time
 									</span>
-									<span className="text-3xl text-white tabular-nums">
+									<span className="text-3xl text-white font-extrabold tabular-nums">
 										{formatTime(totalSessionSeconds)}
 									</span>
 								</div>
 								<div className="flex justify-between items-center text-white">
-									<span className="text-xs text-white uppercase tracking-widest opacity-50">
+									<span className="text-xs text-white uppercase tracking-widest opacity-60">
 										Intervals
 									</span>
-									<span className="text-3xl text-white">{reps}×</span>
+									<span className="text-3xl text-white font-extrabold">
+										{reps}×
+									</span>
 								</div>
 								<div className="flex justify-between items-center text-white">
-									<span className="text-xs text-white uppercase tracking-widest opacity-50">
+									<span className="text-xs text-white uppercase tracking-widest opacity-60">
 										Phases Done
 									</span>
-									<span className="text-3xl text-white">{laps.length}</span>
+									<span className="text-3xl text-white font-extrabold">
+										{laps.length}
+									</span>
 								</div>
 							</div>
 
@@ -854,7 +920,7 @@ export default function TimerView() {
 
 							<button
 								onClick={resetTimer}
-								className="px-12 py-5 bg-white text-emerald-900 rounded-[2rem] text-black text-lg tracking-tight hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-3"
+								className="px-10 py-4 bg-white text-emerald-950 rounded-2xl text-base font-extrabold uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-3 cursor-pointer"
 							>
 								<RotateCcw className="w-5 h-5" /> New Session
 							</button>
@@ -869,12 +935,13 @@ export default function TimerView() {
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, scale: 0.96 }}
 							transition={{ duration: 0.35 }}
-							className="flex-1 space-y-5"
+							className="flex-1 space-y-4"
 						>
 							<SetupCard
 								label="Warmup"
 								icon={Flame}
-								color="text-amber-400"
+								color="text-amber-600"
+								bgColor="bg-amber-50 border-amber-100"
 								min={warmupMin}
 								sec={warmupSec}
 								onMinChange={setWarmupMin}
@@ -883,7 +950,8 @@ export default function TimerView() {
 							<SetupCard
 								label="Speed"
 								icon={Zap}
-								color="text-rose-400"
+								color="text-rose-600"
+								bgColor="bg-rose-50 border-rose-100"
 								min={speedMin}
 								sec={speedSec}
 								onMinChange={setSpeedMin}
@@ -892,7 +960,8 @@ export default function TimerView() {
 							<SetupCard
 								label="Rest"
 								icon={TimerReset}
-								color="text-emerald-400"
+								color="text-emerald-600"
+								bgColor="bg-emerald-50 border-emerald-100"
 								min={restMin}
 								sec={restSec}
 								onMinChange={setRestMin}
@@ -900,28 +969,28 @@ export default function TimerView() {
 							/>
 
 							{/* Reps */}
-							<div className="p-6 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-between hover:bg-white/[0.08] transition-all">
-								<div className="flex items-center gap-4">
-									<div className="p-3.5 rounded-2xl bg-white/10 text-blue-400">
-										<Dumbbell className="w-7 h-7" />
+							<div className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+								<div className="flex items-center gap-3.5">
+									<div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+										<Dumbbell className="w-6 h-6" />
 									</div>
-									<span className="text-white uppercase text-sm tracking-widest text-white">
+									<span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900">
 										Repetitions
 									</span>
 								</div>
 								<div className="flex items-center gap-2">
 									<button
 										onClick={() => setReps((r) => Math.max(1, r - 1))}
-										className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white text-white text-lg hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center"
+										className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-700 font-extrabold text-base hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
 									>
 										−
 									</button>
-									<span className="w-10 text-center text-white text-2xl text-white tabular-nums">
+									<span className="w-8 text-center text-slate-900 font-extrabold text-xl tabular-nums">
 										{reps}
 									</span>
 									<button
 										onClick={() => setReps((r) => r + 1)}
-										className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white text-white text-lg hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center"
+										className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-700 font-extrabold text-base hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
 									>
 										+
 									</button>
@@ -931,7 +1000,8 @@ export default function TimerView() {
 							<SetupCard
 								label="Cooldown"
 								icon={Activity}
-								color="text-blue-400"
+								color="text-blue-600"
+								bgColor="bg-blue-50 border-blue-100"
 								min={cooldownMin}
 								sec={cooldownSec}
 								onMinChange={setCooldownMin}
@@ -940,11 +1010,11 @@ export default function TimerView() {
 
 							{/* Session summary strip */}
 							{queue.length > 0 && (
-								<div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+								<div className="p-5 bg-white border border-slate-200/80 rounded-2xl sm:rounded-[2rem] shadow-sm space-y-2">
 									<PhaseTimeline queue={queue} currentIndex={-1} />
-									<p className="text-center text-xs text-white/30 font-bold mt-3 !text-white">
+									<p className="text-center text-xs font-bold text-slate-500 uppercase tracking-wider pt-1">
 										{queue.length} phases · {formatTime(totalSessionSeconds)}{" "}
-										total
+										total duration
 									</p>
 								</div>
 							)}
@@ -952,9 +1022,9 @@ export default function TimerView() {
 							<button
 								onClick={startTimer}
 								disabled={queue.length === 0}
-								className="w-full py-7 bg-white text-black rounded-[2.5rem] text-xl tracking-tighter hover:scale-[1.02] active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3 disabled:opacity-40"
+								className="w-full py-4 sm:py-5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-2xl sm:rounded-[2rem] text-sm sm:text-base font-extrabold tracking-wider uppercase transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-3 cursor-pointer"
 							>
-								<Play className="w-7 h-7 fill-current" /> Start Session
+								<Play className="w-5 h-5 fill-current" /> Start Workout Session
 							</button>
 						</motion.div>
 					)}

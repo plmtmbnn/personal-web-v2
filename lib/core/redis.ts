@@ -19,14 +19,14 @@ export const CACHE_KEYS = {
 };
 
 /**
- * Save stock data to Redis (Persistent).
+ * Save stock data to Redis (12 hours TTL).
  */
-export async function saveStockData(data: any[]) {
+export async function saveStockData(data: any[], ttlSeconds = 43200) {
 	try {
 		const key = CACHE_KEYS.STOCK_SUMMARY;
 		const value = JSON.stringify(data);
-		// Expire after 3 hours (10800 seconds)
-		await redis.set(key, value, { ex: 10800 });
+		// Expire after 12 hours (43200 seconds)
+		await redis.set(key, value, { ex: ttlSeconds });
 		return true;
 	} catch (error) {
 		console.error("Redis Save Stock Error:", error);

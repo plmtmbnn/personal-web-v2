@@ -3,14 +3,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
-	Trophy,
 	Zap,
 	Activity,
 	ArrowLeft,
-	Route,
 	Flame,
-	Milestone,
-	Gauge,
 	Mountain,
 	Calendar,
 	ExternalLink,
@@ -22,53 +18,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import type { StravaDataResult } from "@/services/strava/service";
-
-/**
- * Personal Bests Data - Updated with user performance
- */
-const personalBests = [
-	{
-		distance: "5K",
-		time: "25:45",
-		pace: "5:09/km",
-		icon: Flame,
-		color: "text-rose-400",
-		bg: "bg-rose-500/10 border-rose-500/20",
-	},
-	{
-		distance: "10K",
-		time: "54:42",
-		pace: "5:28/km",
-		icon: Zap,
-		color: "text-amber-400",
-		bg: "bg-amber-500/10 border-amber-500/20",
-	},
-	{
-		distance: "Half Marathon",
-		time: "2:05:37",
-		pace: "5:57/km",
-		icon: Milestone,
-		color: "text-emerald-400",
-		bg: "bg-emerald-500/10 border-emerald-500/20",
-	},
-	{
-		distance: "Marathon",
-		time: "4:30:29",
-		pace: "6:24/km",
-		icon: Trophy,
-		color: "text-blue-400",
-		bg: "bg-blue-500/10 border-blue-500/20",
-	},
-	{
-		distance: "Ultra Trail (65.9k)",
-		time: "19:40:28",
-		pace: "17:55/km",
-		elevation: "2,982 m",
-		icon: Mountain,
-		color: "text-purple-400",
-		bg: "bg-purple-500/10 border-purple-500/20",
-	},
-];
+import PersonalBestsSwipeCard from "./PersonalBestsSwipeCard";
 
 // ──────────────────────────────
 // SVG Components for Visualizations
@@ -344,75 +294,9 @@ export default function RunningView({
 						)}
 					</div>
 
-					{/* RIGHT COLUMN: Personal Bests */}
+					{/* RIGHT COLUMN: Personal Bests Swipe Card */}
 					<div className="lg:col-span-7 space-y-6">
-						<motion.h3
-							initial={safeReduceMotion ? false : { opacity: 0, y: 10 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.1 }}
-							className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2"
-						>
-							<Trophy className="w-4 h-4 text-emerald-600" /> Personal
-							Milestones
-						</motion.h3>
-
-						<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
-							{personalBests.map((pb, idx) => (
-								<motion.div
-									key={pb.distance}
-									initial={safeReduceMotion ? false : { opacity: 0, y: 15 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{ delay: 0.05 * idx, duration: 0.4 }}
-									className="p-4 sm:p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all group flex flex-col justify-between h-full cursor-default"
-								>
-									<div>
-										<div className="flex justify-between items-start mb-3">
-											<div
-												className={`w-9 h-9 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 group-hover:scale-110 transition-transform`}
-											>
-												<pb.icon className={`w-4.5 h-4.5 ${pb.color}`} />
-											</div>
-											<span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
-												Record
-											</span>
-										</div>
-										<p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-											{pb.distance}
-										</p>
-										<p className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none">
-											{pb.time}
-										</p>
-									</div>
-
-									<div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
-										<div className="flex items-center justify-between">
-											<div className="flex items-center gap-1.5">
-												<Gauge className="w-3.5 h-3.5 text-emerald-600" />
-												<span className="text-[11px] font-bold text-slate-800 leading-none">
-													{pb.pace}
-												</span>
-											</div>
-											<span className="text-[8px] font-bold uppercase text-slate-400">
-												Pace
-											</span>
-										</div>
-										{pb.elevation && (
-											<div className="flex items-center justify-between">
-												<div className="flex items-center gap-1.5">
-													<Route className="w-3.5 h-3.5 text-emerald-600" />
-													<span className="text-[11px] font-bold text-slate-800 leading-none">
-														{pb.elevation}
-													</span>
-												</div>
-												<span className="text-[8px] font-bold uppercase text-slate-400">
-													Gain
-												</span>
-											</div>
-										)}
-									</div>
-								</motion.div>
-							))}
-						</div>
+						<PersonalBestsSwipeCard />
 					</div>
 				</div>
 

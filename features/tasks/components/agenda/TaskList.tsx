@@ -19,7 +19,6 @@ import {
 } from "@hello-pangea/dnd";
 import type { Task } from "@/features/tasks/types";
 import {
-	toggleTask,
 	deleteTask,
 	reorderTasks,
 	updateTask,
@@ -273,27 +272,6 @@ export default function TaskList({
 		completedFilters,
 		applyFilters,
 	]);
-
-	const _handleToggle = async (taskId: string, currentStatus: boolean) => {
-		// Prevent duplicate requests for the same task
-		if (pendingRequests.current.has(`toggle-${taskId}`)) {
-			return;
-		}
-
-		const actionKey = `toggle-${taskId}`;
-		pendingRequests.current.add(actionKey);
-
-		startTransition(async () => {
-			addOptimisticAction({ action: "toggle", payload: { taskId } });
-			try {
-				await toggleTask(taskId, currentStatus);
-			} catch (error) {
-				console.error("Failed to toggle task:", error);
-			} finally {
-				pendingRequests.current.delete(actionKey);
-			}
-		});
-	};
 
 	const handleUpdate = async (taskId: string, updates: Partial<Task>) => {
 		// Prevent duplicate update requests for the same task

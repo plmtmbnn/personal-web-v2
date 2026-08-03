@@ -88,28 +88,29 @@ export default function FileRenamerView() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50 font-sans selection:bg-blue-100 text-slate-900 pb-20">
-			<div className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-10 sm:pt-16 relative z-10">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1400px] mx-auto space-y-8">
 				{/* Header */}
-				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 sm:mb-14">
-					<div className="space-y-6">
+				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8">
+					<div className="space-y-4">
 						<Link
 							href="/utils"
-							className="inline-flex items-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-blue-600 transition-colors gap-2 group"
+							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
 						>
 							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Operational Utilities
+							Back to Utilities
 						</Link>
-						<div className="flex items-center gap-5">
-							<div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20 active:scale-90 transition-transform">
-								<Files className="w-7 h-7 sm:w-8 sm:h-8" />
+						<div className="flex items-center gap-4">
+							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
+								<Files className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
 							</div>
 							<div>
-								<h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-slate-900 leading-none">
-									File <span className="text-blue-600">Renamer</span>
+								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
+									File <span className="text-indigo-600">Renamer</span>
 								</h1>
-								<p className="text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] mt-3">
-									Batch Kebab-Case Normalization
+								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
+									Batch kebab-case normalization for filenames with extension
+									preservation.
 								</p>
 							</div>
 						</div>
@@ -119,15 +120,16 @@ export default function FileRenamerView() {
 						<button
 							onClick={handleDownload}
 							disabled={renamedList.length === 0}
-							className="flex items-center gap-2.5 px-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+							className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							<Download className="w-4 h-4" /> Download .txt
 						</button>
 						<button
 							onClick={() => setInput("")}
-							className="flex items-center justify-center w-14 h-14 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all active:scale-95 shadow-sm"
+							className="flex items-center justify-center w-10 h-10 bg-white border border-slate-200/80 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-xs"
+							title="Clear Input"
 						>
-							<Trash2 className="w-5 h-5" />
+							<Trash2 className="w-4 h-4" />
 						</button>
 					</div>
 				</div>
@@ -135,48 +137,48 @@ export default function FileRenamerView() {
 				{/* Workspace */}
 				<div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-stretch">
 					{/* Input Pane */}
-					<div className="flex flex-col space-y-4">
-						<div className="flex items-center gap-2 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-							<Type className="w-3.5 h-3.5" /> Original List
+					<div className="flex flex-col space-y-3">
+						<div className="flex items-center gap-2 px-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+							<Type className="w-4 h-4 text-indigo-600" /> Original List
 						</div>
-						<div className="flex-1 relative bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:border-blue-500 transition-all">
+						<div className="flex-1 relative bg-white border border-slate-200/80 rounded-[2.5rem] shadow-xl shadow-slate-200/50 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/10 focus-within:border-indigo-500 transition-all">
 							<textarea
 								value={input}
 								onChange={(e) => setInput(e.target.value)}
 								placeholder="Enter file names, one per line..."
-								className="w-full h-full min-h-[500px] p-8 bg-transparent text-slate-900 font-mono text-sm leading-relaxed focus:outline-none resize-none placeholder:text-slate-200 scrollbar-hide"
+								className="w-full h-full min-h-[480px] p-6 sm:p-8 bg-transparent text-slate-900 font-mono text-xs sm:text-sm leading-relaxed focus:outline-none resize-none placeholder:text-slate-400"
 								spellCheck={false}
 							/>
 						</div>
 					</div>
 
 					{/* Output Pane */}
-					<div className="flex flex-col space-y-4">
-						<div className="flex items-center justify-between px-3">
-							<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-								<Zap className="w-3.5 h-3.5" /> Live Preview
+					<div className="flex flex-col space-y-3">
+						<div className="flex items-center justify-between px-2">
+							<div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+								<Zap className="w-4 h-4 text-indigo-600" /> Live Preview
 							</div>
 							{renamedList.length > 0 && (
 								<button
 									onClick={handleCopyAll}
-									className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+									className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
 										isCopied
-											? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
-											: "bg-slate-900 text-white hover:bg-slate-800"
+											? "bg-emerald-600 text-white shadow-md"
+											: "bg-slate-900 text-white hover:bg-slate-800 shadow-md"
 									}`}
 								>
 									{isCopied ? (
-										<Check className="w-3.5 h-3.5" />
+										<Check className="w-4 h-4" />
 									) : (
-										<Copy className="w-3.5 h-3.5" />
+										<Copy className="w-4 h-4" />
 									)}
 									{isCopied ? "Copied All" : "Copy All"}
 								</button>
 							)}
 						</div>
 
-						<div className="flex-1 relative bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col min-h-[500px]">
-							<div className="flex-1 overflow-auto p-8 scrollbar-hide">
+						<div className="flex-1 relative bg-white border border-slate-200/80 rounded-[2.5rem] shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col min-h-[480px]">
+							<div className="flex-1 overflow-auto p-6 sm:p-8 scrollbar-hide">
 								<AnimatePresence mode="popLayout">
 									{renamedList.length > 0 ? (
 										<div className="space-y-3">
@@ -191,20 +193,20 @@ export default function FileRenamerView() {
 														duration: 0.2,
 														delay: Math.min(idx * 0.05, 0.5),
 													}}
-													className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-blue-200 transition-colors"
+													className="flex items-center gap-3 p-4 bg-slate-50/80 border border-slate-200/80 rounded-2xl group hover:border-indigo-300 transition-colors"
 												>
-													<FileText className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
-													<span className="text-sm font-mono text-slate-600 flex-1 truncate">
+													<FileText className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+													<span className="text-xs sm:text-sm font-mono font-bold text-slate-700 flex-1 truncate">
 														{name}
 													</span>
-													<ArrowRight className="w-3.5 h-3.5 text-slate-200" />
+													<ArrowRight className="w-4 h-4 text-slate-300" />
 												</motion.div>
 											))}
 										</div>
 									) : (
 										<div className="h-full flex flex-col items-center justify-center opacity-10 space-y-4 py-20">
 											<Files className="w-20 h-20 text-slate-900" />
-											<p className="text-slate-900 font-black uppercase tracking-[0.5em] text-[10px]">
+											<p className="text-slate-900 font-extrabold uppercase tracking-widest text-xs">
 												Awaiting Input
 											</p>
 										</div>
@@ -216,20 +218,20 @@ export default function FileRenamerView() {
 				</div>
 
 				{/* Quick Info */}
-				<div className="mt-12 p-8 bg-blue-50/50 border border-blue-100 rounded-[2rem] flex flex-col sm:flex-row items-center gap-6">
-					<div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600 shrink-0">
-						<AlertCircle className="w-6 h-6" />
+				<div className="p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-[2rem] shadow-sm flex flex-col sm:flex-row items-center gap-5">
+					<div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0 border border-indigo-100">
+						<AlertCircle className="w-5 h-5" />
 					</div>
-					<div className="space-y-1">
-						<h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">
-							Ruleset
+					<div className="space-y-1 text-center sm:text-left">
+						<h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
+							Normalizing Ruleset
 						</h4>
-						<p className="text-xs text-slate-500 font-medium leading-relaxed">
-							Filename transformed to{" "}
-							<span className="text-blue-600 font-bold">lowercase</span>.
-							Non-alphanumeric chars replaced by{" "}
-							<span className="text-blue-600 font-bold">hyphens</span>.
-							Extensions are preserved exactly as provided.
+						<p className="text-xs text-slate-600 font-semibold leading-relaxed">
+							Filenames transformed to{" "}
+							<span className="text-indigo-600 font-extrabold">lowercase</span>.
+							Non-alphanumeric characters replaced by{" "}
+							<span className="text-indigo-600 font-extrabold">hyphens</span>.
+							File extensions preserved exactly as provided.
 						</p>
 					</div>
 				</div>

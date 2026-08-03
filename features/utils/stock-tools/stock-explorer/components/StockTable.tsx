@@ -55,7 +55,7 @@ const StockRow = ({ stock }: { stock: ProcessedStock }) => {
 	const reduceMotion = useReducedMotion();
 	const isGainer = stock.ChangePct > 0;
 	const isLoser = stock.ChangePct < 0;
-	const _isNeutral = stock.ChangePct === 0;
+
 	const isHighVolume = stock.IsHighVolume;
 
 	return (

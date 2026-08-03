@@ -4,7 +4,6 @@ import {
 	MapPin,
 	Calendar,
 	CheckCircle2,
-	Compass,
 	Star,
 	Heart,
 	Trash2,

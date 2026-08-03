@@ -27,8 +27,6 @@ const repairJson = (str: string) => {
 	const salvaged = str.trim();
 	if (!salvaged) return { data: null, status: "empty" as const };
 
-	const _isRepaired = false;
-
 	try {
 		// Try standard parse first
 		const data = JSON.parse(salvaged);

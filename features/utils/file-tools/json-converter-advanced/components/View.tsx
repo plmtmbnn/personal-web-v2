@@ -120,90 +120,92 @@ export default function JsonToSchemaView() {
 	];
 
 	return (
-		<main className="min-h-screen bg-slate-50 font-sans selection:bg-blue-100 text-slate-900 pb-20">
-			<div className="max-w-[1600px] mx-auto px-4 sm:px-8 pt-10 sm:pt-16 relative z-10">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1600px] mx-auto space-y-8">
 				{/* Header */}
-				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 sm:mb-14">
-					<div className="space-y-6">
+				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8">
+					<div className="space-y-4">
 						<Link
 							href="/utils"
-							className="inline-flex items-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-blue-600 transition-colors gap-2 group"
+							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
 						>
 							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Operational Utilities
+							Back to Utilities
 						</Link>
-						<div className="flex items-center gap-5">
-							<div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20 active:scale-90 transition-transform">
-								<Braces className="w-7 h-7 sm:w-8 sm:h-8" />
+						<div className="flex items-center gap-4">
+							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
+								<Braces className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
 							</div>
 							<div>
-								<h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-slate-900 leading-none">
-									Schema <span className="text-blue-600">Forge</span>
+								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
+									Schema <span className="text-indigo-600">Forge</span>
 								</h1>
-								<p className="text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] mt-3">
-									Advanced JSON to Multi-Target Converter
+								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
+									Advanced JSON to Multi-Target converter (TS, Go, Zod,
+									Mongoose, Joi).
 								</p>
 							</div>
 						</div>
 					</div>
 
-					<div className="flex items-center gap-4">
-						<div className="flex flex-col gap-1.5">
-							<span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+					<div className="flex items-center gap-3">
+						<div className="flex flex-col gap-1">
+							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-1">
 								Root Identifier
 							</span>
 							<input
 								type="text"
 								value={rootName}
 								onChange={(e) => setRootName(e.target.value)}
-								className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all w-48"
+								className="px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all w-44 shadow-xs"
 								placeholder="Root Name"
 							/>
 						</div>
 						<button
 							onClick={handleBeautify}
-							className="flex items-center gap-2 px-6 py-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all active:scale-95 shadow-sm mt-5"
+							className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all cursor-pointer shadow-xs mt-4"
 						>
-							<Code2 className="w-4 h-4" /> Beautify
+							<Code2 className="w-4 h-4 text-indigo-600" /> Beautify
 						</button>
 						<button
 							onClick={() => setInput("")}
-							className="flex items-center justify-center w-14 h-14 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all active:scale-95 shadow-sm mt-5"
+							className="flex items-center justify-center w-10 h-10 bg-white border border-slate-200/80 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-xs mt-4"
+							title="Clear Input"
 						>
-							<Trash2 className="w-5 h-5" />
+							<Trash2 className="w-4 h-4" />
 						</button>
 					</div>
 				</div>
 
 				{/* Workspace */}
-				<div className="grid grid-cols-1 xl:grid-cols-2 gap-8 flex-1 min-h-[700px]">
+				<div className="grid grid-cols-1 xl:grid-cols-2 gap-8 flex-1 min-h-[650px]">
 					{/* Input Module */}
-					<div className="flex flex-col space-y-4">
-						<div className="flex items-center gap-2 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-							<Type className="w-3.5 h-3.5" /> JSON Payload
+					<div className="flex flex-col space-y-3">
+						<div className="flex items-center gap-2 px-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+							<Type className="w-4 h-4 text-indigo-600" /> JSON Payload
 						</div>
-						<div className="flex-1 relative bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:border-blue-500 transition-all">
+						<div className="flex-1 relative bg-white border border-slate-200/80 rounded-[2.5rem] shadow-xl shadow-slate-200/50 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/10 focus-within:border-indigo-500 transition-all">
 							<textarea
 								value={input}
 								onChange={(e) => setInput(e.target.value)}
 								placeholder="Paste your JSON here..."
-								className="w-full h-full min-h-[600px] p-8 bg-transparent text-slate-900 font-mono text-sm leading-relaxed focus:outline-none resize-none placeholder:text-slate-200 scrollbar-hide"
+								className="w-full h-full min-h-[550px] p-6 sm:p-8 bg-transparent text-slate-900 font-mono text-xs sm:text-sm leading-relaxed focus:outline-none resize-none placeholder:text-slate-400"
 								spellCheck={false}
 							/>
 						</div>
 					</div>
 
 					{/* Output Module */}
-					<div className="flex flex-col space-y-4">
+					<div className="flex flex-col space-y-3">
 						<div className="flex flex-wrap items-center gap-2">
 							{tabs.map((tab) => (
 								<button
 									key={tab.id}
 									onClick={() => setActiveTab(tab.id)}
-									className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm border ${
+									className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
 										activeTab === tab.id
-											? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20"
-											: "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+											? "bg-slate-900 border-slate-900 text-white shadow-md"
+											: "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50 shadow-xs"
 									}`}
 								>
 									<tab.icon className="w-4 h-4" />
@@ -212,21 +214,21 @@ export default function JsonToSchemaView() {
 							))}
 						</div>
 
-						<div className="flex-1 relative bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col">
-							<div className="absolute top-6 right-6 z-30">
+						<div className="flex-1 relative bg-white border border-slate-200/80 rounded-[2.5rem] shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
+							<div className="absolute top-5 right-5 z-30">
 								{output && (
 									<button
 										onClick={handleCopy}
-										className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+										className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
 											isCopied
-												? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
-												: "bg-slate-900 text-white hover:bg-slate-800"
+												? "bg-emerald-600 text-white shadow-md"
+												: "bg-slate-900 text-white hover:bg-slate-800 shadow-md"
 										}`}
 									>
 										{isCopied ? (
-											<Check className="w-3.5 h-3.5" />
+											<Check className="w-4 h-4" />
 										) : (
-											<Copy className="w-3.5 h-3.5" />
+											<Copy className="w-4 h-4" />
 										)}
 										{isCopied ? "Copied" : "Copy Code"}
 									</button>

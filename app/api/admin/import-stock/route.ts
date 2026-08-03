@@ -56,8 +56,22 @@ export async function POST(req: Request) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const body = await req.json();
-		const { data } = body;
+		const body = await req.json().catch(() => ({}));
+		const { data, force } = body;
+
+		// Check if stock data already exists in Redis (12h TTL)
+		if (!force) {
+			const existingData = await getStockData();
+			if (existingData && existingData.length > 0) {
+				return NextResponse.json({
+					success: true,
+					cached: true,
+					message: `Stock data already cached in Redis (${existingData.length} instruments, 12h TTL). Skipping API call.`,
+					count: existingData.length,
+					lastDate: existingData[0]?.Date || null,
+				});
+			}
+		}
 
 		if (!data || !Array.isArray(data)) {
 			return NextResponse.json(
@@ -66,7 +80,7 @@ export async function POST(req: Request) {
 			);
 		}
 
-		const success = await saveStockData(data);
+		const success = await saveStockData(data, 43200);
 
 		if (!success) {
 			throw new Error("Failed to save to Redis");
@@ -74,7 +88,9 @@ export async function POST(req: Request) {
 
 		return NextResponse.json({
 			success: true,
-			message: `Successfully imported ${data.length} instruments to Redis.`,
+			cached: false,
+			message: `Successfully imported ${data.length} instruments to Redis (12h TTL).`,
+			count: data.length,
 		});
 	} catch (error: any) {
 		console.error("Stock Import API Error:", error);

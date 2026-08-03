@@ -1,12 +1,6 @@
 "use client";
 
-import {
-	useOptimistic,
-	useTransition,
-	useMemo,
-	useRef,
-	useCallback,
-} from "react";
+import { useOptimistic, useTransition, useMemo, useCallback } from "react";
 import {
 	DragDropContext,
 	Droppable,
@@ -17,7 +11,6 @@ import type { Task, TaskStatus } from "@/features/tasks/types";
 import {
 	updateTaskStatus,
 	updateTask,
-	toggleTask,
 	deleteTask,
 } from "@/features/tasks/actions/tasks";
 import TaskItem from "./TaskItem";
@@ -39,7 +32,6 @@ export default function TaskBoard({
 }: TaskBoardProps) {
 	const [_isPending, startTransition] = useTransition();
 	const { showSuccess, showError } = useToast();
-	const pendingRequests = useRef(new Set<string>());
 
 	// Modal State for Deletion
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
@@ -139,28 +131,6 @@ export default function TaskBoard({
 			showError("Failed to move task. Please try again.");
 		}
 	};
-
-	const _handleToggle = useCallback(
-		async (taskId: string, currentStatus: boolean) => {
-			if (pendingRequests.current.has(`toggle-${taskId}`)) return;
-			const actionKey = `toggle-${taskId}`;
-			pendingRequests.current.add(actionKey);
-
-			startTransition(() => {
-				addOptimisticAction({ action: "toggle", payload: { taskId } });
-			});
-
-			try {
-				await toggleTask(taskId, currentStatus);
-			} catch (error) {
-				console.error("Failed to toggle task:", error);
-				showError("Failed to update task. Please try again.");
-			} finally {
-				pendingRequests.current.delete(actionKey);
-			}
-		},
-		[addOptimisticAction, showError],
-	);
 
 	const handleDeleteRequest = useCallback((taskId: string) => {
 		setDeleteTaskId(taskId);

@@ -32,34 +32,19 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
-	// 1. Get cached data from Redis
-	let data = await getStockData();
+		// 1. Check query for force refresh
+		const forceRefresh = url.searchParams.get("refresh") === "true";
 
-		// 2. Determine if we need to fetch fresh data from IDX
-		let shouldFetch = false;
+		// 2. Get cached data from Redis
+		let data = await getStockData();
 
-		if (!data || data.length === 0) {
-			shouldFetch = true;
-		} else {
-			// Extract date from the first item (e.g., "2026-07-08T00:00:00" -> "2026-07-08")
-			const cachedDateStr = data[0]?.Date?.substring(0, 10);
-			const todayStr = new Date().toLocaleDateString("sv-SE", {
-				timeZone: "Asia/Jakarta",
-			});
+		// 3. Determine if external API call to IDX is needed
+		const shouldFetch = forceRefresh || !data || data.length === 0;
 
-			if (cachedDateStr && cachedDateStr < todayStr) {
-				// Cache is older than today. Check if we've already tried fetching recently.
-				const lastAttempt = await redis.get(FETCH_ATTEMPT_KEY);
-				if (!lastAttempt) {
-					shouldFetch = true;
-				}
-			}
-		}
-
-		// 3. Perform fetch from IDX if needed
+		// 4. Perform fetch from IDX only if Redis is empty or forceRefresh is true
 		if (shouldFetch) {
 			try {
-				console.log("Fetching fresh stock data from IDX using got-scraping...");
+				console.log("Redis cache empty or force refresh requested. Fetching stock data from IDX...");
 
 				const response = await gotScraping({
 					url: "https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
@@ -76,11 +61,11 @@ export async function GET(request: NextRequest) {
 				if (response.statusCode >= 200 && response.statusCode < 300) {
 					const body = response.body as any;
 					if (body && Array.isArray(body.data) && body.data.length > 0) {
-						// Store to Redis
-						await saveStockData(body.data);
+						// Store to Redis (12h TTL)
+						await saveStockData(body.data, 43200);
 						data = body.data;
 						console.log(
-							`Successfully fetched and cached ${body.data.length} stocks from IDX.`,
+							`Successfully fetched and cached ${body.data.length} stocks from IDX to Redis (12h TTL).`,
 						);
 					}
 				}

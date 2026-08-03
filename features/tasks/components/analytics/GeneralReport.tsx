@@ -33,8 +33,6 @@ import { AnalyticsDashboardSkeleton } from "../shared/Skeleton";
 
 import dynamic from "next/dynamic";
 
-const _ANALYTICS_EXPAND_KEY = "analytics_expanded_state_v6";
-
 const DynamicVelocityBurndownCharts = dynamic(
 	() => import("./VelocityBurndownCharts"),
 	{

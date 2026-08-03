@@ -210,11 +210,10 @@ export default function FearAndGreedGauge({
 // ──────────────────────────────
 function RingProgress({
 	score,
-	rating,
 	reduceMotion,
 }: {
 	score: number;
-	rating: string;
+	rating?: string;
 	reduceMotion: boolean;
 }) {
 	const radius = 24;

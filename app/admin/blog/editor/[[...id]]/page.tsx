@@ -59,19 +59,19 @@ export default async function BlogEditorPage({ params }: EditorPageProps) {
 							<div className="flex items-center justify-center md:justify-start gap-2 text-xs font-semibold text-slate-400">
 								<Link
 									href="/admin"
-									className="hover:text-indigo-300 transition-colors"
+									className="!text-slate-300 hover:!text-white transition-colors !no-underline"
 								>
 									Admin
 								</Link>
-								<ChevronRight className="w-3 h-3 opacity-40" />
+								<ChevronRight className="w-3 h-3 text-slate-500" />
 								<Link
 									href="/admin/blog"
-									className="hover:text-indigo-300 transition-colors"
+									className="!text-slate-300 hover:!text-white transition-colors !no-underline"
 								>
 									Manage Blog
 								</Link>
-								<ChevronRight className="w-3 h-3 opacity-40" />
-								<span className="text-slate-200 font-bold">
+								<ChevronRight className="w-3 h-3 text-slate-500" />
+								<span className="text-white font-extrabold">
 									{initialData ? "Edit" : "Draft"}
 								</span>
 							</div>

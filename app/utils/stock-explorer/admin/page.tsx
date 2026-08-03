@@ -240,7 +240,7 @@ export default function StockImportAdmin() {
 												<Clock className="w-3 h-3 text-indigo-600" /> Lifespan
 											</span>
 											<p className="text-xs font-extrabold text-indigo-600 mt-1">
-												3 Hours (Auto-purges)
+												12 Hours (Auto-purges)
 											</p>
 										</div>
 									</div>

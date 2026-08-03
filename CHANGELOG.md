@@ -1,3 +1,10 @@
+# [0.64.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.63.0...v0.64.0) (2026-08-03)
+
+
+### Features
+
+* **blog:** enhance blog ui/ux, pagination and strava caching ([d288a37](https://github.com/plmtmbnn/personal-web-v2/commit/d288a37454b2e599768f1912c965d9175023ace5))
+
 # [0.63.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.62.0...v0.63.0) (2026-07-31)
 
 

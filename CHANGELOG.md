@@ -1,3 +1,10 @@
+# [0.65.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.64.0...v0.65.0) (2026-08-03)
+
+
+### Features
+
+* **utils:** revamp developer utilities and optimize stock Redis caching ([b01e097](https://github.com/plmtmbnn/personal-web-v2/commit/b01e0977fffaf569148df238cb4cd1c261c118d3))
+
 # [0.64.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.63.0...v0.64.0) (2026-08-03)
 
 

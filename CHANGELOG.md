@@ -1,3 +1,10 @@
+## [0.65.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.65.0...v0.65.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* resolve linting issues and update biome configuration ([26ca2b7](https://github.com/plmtmbnn/personal-web-v2/commit/26ca2b7e46e6089e0acae00ef53598839cd04943))
+
 # [0.65.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.64.0...v0.65.0) (2026-08-03)
 
 

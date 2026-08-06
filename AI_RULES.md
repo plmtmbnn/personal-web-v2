@@ -73,10 +73,28 @@ Strictly for routing and page definitions.
   - Centralized verification via `checkAdmin()` in `features/auth/actions.ts`.
   - **Cron Security**: API routes for crons must check for `CRON_SECRET` via headers or params.
 - **TOTP / Authenticator Protection:** 
-  - `PinGuard.tsx` protects restricted sections (Admin, Tasks, Investment) using a 6-digit Google Authenticator code verified via `otplib` (utilizing `TOTP_SECRET` in server environment).
+  - `PinGuard.tsx` protects restricted sections (Admin, Tasks) using a 6-digit Google Authenticator code verified via `otplib` (utilizing `TOTP_SECRET` in server environment).
   - Designed for native device numeric keyboards (virtual keypad obsolete).
   - **Session Duration**: 12 hours.
-- **Auth Cookies**: Long-lived sessions (30 weeks).
+  - **Note**: Investment feature no longer uses PinGuard protection.
+- **Auth System Architecture**:
+  - **OAuth Provider**: Google OAuth with PKCE flow via Supabase
+  - **Automatic Token Refresh**: Multi-layer system prevents manual re-login
+    - **Server-Side**: `proxy.ts` (Next.js proxy convention) refreshes tokens on every request
+    - **Client-Side**: `AuthProvider` component monitors and refreshes proactively every 5 minutes
+    - **Redis Session Layer**: Custom 30-week sessions with automatic TTL extension
+    - **Session Sync**: `/api/auth/refresh-session` endpoint keeps Redis in sync with Supabase tokens
+  - **Auth Cookies**: Long-lived sessions (30 weeks), HTTP-only, secure in production
+  - **Auth Callback**: Enhanced with redirect path preservation and security whitelist for all admin routes
+  - **Components**:
+    - `proxy.ts`: Automatic Supabase token refresh on every request
+    - `features/auth/components/AuthProvider.tsx`: Client-side proactive refresh and state monitoring
+    - `features/auth/components/LoginButton.tsx`: Path-aware login with redirect preservation
+    - `lib/core/redis.ts`: Extended session management with metadata tracking
+    - `lib/core/auth-utils.ts`: Session synchronization utilities
+    - `app/api/auth/refresh-session/route.ts`: Redis session TTL extension endpoint
+  - **Session Lifecycle**: Users stay logged in indefinitely as long as active within 30 weeks
+  - **Documentation**: Complete technical docs in `docs/AUTH_TOKEN_REFRESH.md` and `docs/AUTH_INTEGRATION_SUMMARY.md`
 
 ## 🎨 UI/UX Patterns
 **CRITICAL MANDATE**: All new UI/UX development MUST adhere to the [UI/UX Engineering Guidelines](ui-uix-guideline.md). This encompasses our mobile-first responsive approaches, glassmorphism vs productivity aesthetics, animation physics, and typography standards.
@@ -91,6 +109,19 @@ Strictly for routing and page definitions.
   - All server transitions must provide high-fidelity feedback (e.g., **Synchronization Overlays**, loading spinners).
   - Global loading screens utilize a non-repeating progress crawl (e.g., 40% -> 70% -> 95%) with a translucent blurred backdrop (`bg-white/80 backdrop-blur-md`) to simulate realistic page readiness.
   - Page-level skeleton loading is preferred over redundant inline "Synchronizing Intel" indicators.
+- **Empty State Patterns**:
+  - **Intelligent Context Detection**: Empty states must distinguish between different scenarios (no data yet, no results from filter, sync error, connection required)
+  - **Action-Oriented**: Provide clear CTAs when user action is needed (e.g., "Connect Strava", "Clear Filters", "Refresh Page")
+  - **Visual Hierarchy**: Use floating cards with appropriate icons, titles, and descriptive text
+  - **Examples**:
+    - Running/Strava: Distinguish between "Connected & Ready" vs "Unable to Load" vs "Not Connected"
+    - Blog: "No Articles Yet" vs "No Stories Found" with conditional "Clear Filters" button
+    - Provide helpful guidance based on whether data exists in stats but not in activities list
+- **Error Pages**:
+  - **404 Not Found**: Simple, direct messaging with dual navigation (Go to Home + Go Back)
+  - **Client Component**: Error pages with interactivity require `"use client"` directive
+  - **Design**: Centered floating card, large 404 number, clear explanation, full-width action buttons
+  - **Color Semantics**: Primary action (indigo), secondary action (slate-100)
 - **Module Focus Pattern**: For side-by-side utility modules (e.g., Input/Output), provide `Minimize2` / `Maximize2` buttons to collapse/expand modules, allowing users to focus on specific panes. Use `framer-motion` for smooth layout transitions. Ensure Framer Motion transforms do not conflict with Tailwind transform classes (use `style={{ x: ... }}` directly).
 - **Mobile-First UX**:
   - **Strategic Grids**: Utilities transition from 1-column mobile to multi-column desktop/tablet.
@@ -118,6 +149,11 @@ Strictly for routing and page definitions.
 - **Post-Article UX**: 
   - Centered "Post Actions" footer replacing the legacy sidebar.
   - High-fidelity layout combining Share actions and interactive motion feedback.
+- **Empty State Handling**:
+  - Removed skeleton loading cards for filtering (causes confusion when no posts exist)
+  - Smart empty state distinguishes between "No Articles Yet" vs "No Stories Found"
+  - Conditional "Clear Filters" button when filters are active
+  - Single unified empty state component for better UX
 
 ### Task System
 - **Modular Directory Organization**: Task system UI components are organized into logical sub-directories under `components/`: `agenda/` (forms, lists, filters, items), `analytics/` (charts, graphs, reports), `health/` (system checks), and `shared/` (task-specific loading skeletons, toasts, errors).
@@ -139,6 +175,13 @@ Strictly for routing and page definitions.
 ### Adventures & Professional Showcase
 - **Adventures**: High-fidelity logs for Running and Travel missions, utilizing Glassmorphism and rich typography.
   - **Running Performance**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Supports dynamic grid scaling (up to 5 columns) for high-density performance visualization.
+  - **Strava Integration**: 
+    - OAuth-based connection with server-side token management
+    - Intelligent empty states distinguish between connection status and data availability
+    - Server-side and client-side debug logging for troubleshooting sync issues
+    - Smart empty states: "Connected & Ready" vs "Unable to Load Activities" vs "Activities Loading..."
+    - Shows total run count from stats when activities aren't loaded yet
+    - Provides actionable feedback with refresh buttons for sync failures
 - **Travel Bucket List Tracker**: 
   - **Architecture**: Domain-driven logic in `features/travel/`.
   - **Logic**: Dynamic `useMemo` filtering for "Completed Journeys" (sorted by date) vs. "Future Adventures".
@@ -215,7 +258,7 @@ pnpm run analyze         # Alias for build:analyze
 - **Custom Hooks:** `useTags()` in `lib/hooks/` for centralized tag management.
 - **Reusable Components:** `components/ui/Button.tsx` using base Tailwind variants (no external dependency).
 - **Centralized Constants:** `lib/constants/index.ts` exports all feature constants.
-- **Security Middleware:** `middleware.ts` with CSP headers (Content-Security-Policy), XSS Protection (`X-XSS-Protection`), `X-Frame-Options` (DENY), Referrer Policy (`strict-origin-when-cross-origin`), Permissions Policy.
+- **Security Middleware:** `proxy.ts` (Next.js 16+ convention, replaces deprecated `middleware.ts`) with CSP headers (Content-Security-Policy), XSS Protection (`X-XSS-Protection`), `X-Frame-Options` (DENY), Referrer Policy (`strict-origin-when-cross-origin`), Permissions Policy, and automatic Supabase token refresh.
 - **Input Sanitization:** `lib/utils/sanitize.ts` uses `DOMPurify` for user input (task descriptions, titles) before rendering.
 - **Unit Tests:** Basic vitest tests in `lib/hooks/__tests__/useTags.test.ts` and `features/tasks/constants.test.ts`.
 - **API Validation:** Zod validation (`z.coerce.number()`) added to `/api/utils/stock-data/route.ts`.

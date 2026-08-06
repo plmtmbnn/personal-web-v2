@@ -23,11 +23,25 @@ export default function LoginButton({ user }: LoginButtonProps) {
 	const handleLogin = async () => {
 		setIsLoading(true);
 		try {
+			// Capture current path to redirect back after auth
+			const currentPath =
+				typeof window !== "undefined" ? window.location.pathname : "/admin";
+			const isAdminPath =
+				currentPath.startsWith("/admin") ||
+				currentPath.startsWith("/tasks") ||
+				currentPath.startsWith("/adventures/running") ||
+				currentPath.includes("/admin");
+
+			// Build callback URL with next parameter for admin pages
+			const callbackUrl = isAdminPath
+				? `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}`
+				: `${window.location.origin}/auth/callback`;
+
 			const { error } = await SupabaseConn.auth.signInWithOAuth({
 				provider: "google",
 				options: {
 					// PKCE flow is triggered by redirecting to a server-side route
-					redirectTo: `${window.location.origin}/auth/callback`,
+					redirectTo: callbackUrl,
 					queryParams: {
 						access_type: "offline",
 						prompt: "consent",

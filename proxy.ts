@@ -1,60 +1,86 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+import { ENV_GLOBAL } from '@/lib/core/env';
 
-// Security headers for CSP, XSS protection, etc.
-const securityHeaders = {
-		// Content Security Policy
-		"Content-Security-Policy": `
-			default-src 'self';
-			script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://*.googletagmanager.com;
-			style-src 'self' 'unsafe-inline';
-			img-src 'self' data: blob: https://*.unsplash.com https://*.cloudinary.com https://*.pexels.com https://*.githubusercontent.com https://*.googleusercontent.com https://*.ibb.co https://*.pbrd.co;
-			connect-src 'self' https://*.supabase.co https://*.firebaseio.com https://*.googleapis.com wss://*.supabase.co https://o4511591853850625.ingest.us.sentry.io;
-			font-src 'self';
-			object-src 'none';
-			frame-src 'none';
-			base-uri 'self';
-			form-action 'self';
-			frame-ancestors 'none';
-		`,
-	// XSS Protection
-	"X-XSS-Protection": "1; mode=block",
-	// Prevent MIME-sniffing
-	"X-Content-Type-Options": "nosniff",
-	// Prevent clickjacking
-	"X-Frame-Options": "DENY",
-	// Referrer Policy
-	"Referrer-Policy": "strict-origin-when-cross-origin",
-	// Permissions Policy
-	"Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
-};
+/**
+ * Proxy for automatic Supabase session refresh
+ * Runs on every request to admin/protected routes
+ */
+export async function proxy(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
 
-// Paths to exclude from security headers (e.g., API routes that need custom headers)
-const excludedPaths = [
-	"/api/upload",
-	"/api/webhook",
-];
+  const supabase = createServerClient(
+    ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_URL!,
+    ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
 
-export function proxy(request: NextRequest) {
-	const pathname = request.nextUrl.pathname;
+  // IMPORTANT: This will refresh expired Auth tokens and store updated tokens in cookies
+  // Must be called before any auth-related operations
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-	// Skip security headers for excluded paths
-	if (excludedPaths.some((path) => pathname.startsWith(path))) {
-		return NextResponse.next();
-	}
+  // Log refresh status for debugging
+  if (user) {
+    console.log('[Middleware] Session active for user:', user.id);
+    
+    // Extend Redis session TTL when user is active
+    // This keeps the custom session in sync with Supabase tokens
+    const appSessionId = request.cookies.get('app_session')?.value;
+    if (appSessionId) {
+      // Fire and forget - don't block the response
+      fetch(`${request.nextUrl.origin}/api/auth/refresh-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': `app_session=${appSessionId}`,
+        },
+      }).catch((err) => {
+        console.error('[Middleware] Failed to refresh Redis session:', err);
+      });
+    }
+  } else if (error) {
+    console.warn('[Middleware] Auth error:', error.message);
+  }
 
-	// Clone the request headers and add security headers
-	const response = NextResponse.next();
-	Object.entries(securityHeaders).forEach(([key, value]) => {
-		response.headers.set(key, value.replace(/\s+/g, " "));
-	});
-
-	return response;
+  return supabaseResponse;
 }
 
+/**
+ * Configure which routes should trigger the middleware
+ * Apply to all admin and protected routes
+ */
 export const config = {
-	matcher: [
-		// Apply to all paths except static files
-		"/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
-	],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     * - api routes (they handle their own auth)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api).*)',
+  ],
 };

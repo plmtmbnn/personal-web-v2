@@ -7,14 +7,16 @@ import { ENV_GLOBAL } from '@/lib/core/env';
 /**
  * Auth Callback Route
  * Handles PKCE exchange, profile verification, and custom Redis session management.
+ * Supports flexible redirect to any admin page after successful authentication.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/tasks';
+  const next = searchParams.get('next') ?? '/admin';
   const siteUrl = ENV_GLOBAL?.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
   console.log('[Auth Callback] Request received with code:', code ? 'Exists' : 'Missing');
+  console.log('[Auth Callback] Intended redirect destination:', next);
 
   if (!code) {
     console.error('[Auth Callback] No code provided in URL');
@@ -36,12 +38,6 @@ export async function GET(request: Request) {
   if (error || !data?.user) {
     console.error('[Auth Callback] Code exchange failed:', error?.message || 'No user data');
     return NextResponse.redirect(new URL('/unauthorized?message=exchange_failed', siteUrl));
-  }
-
-  // Sanitize redirect target to prevent open redirect vulnerabilities
-  let safeNext = '/tasks';
-  if (next && next.startsWith('/') && !next.startsWith('//')) {
-    safeNext = next;
   }
 
   console.log('[Auth Callback] Session exchanged successfully for user:', data.user.id);
@@ -92,6 +88,54 @@ export async function GET(request: Request) {
     path: '/',
   });
 
+  // 5. Sanitize and validate redirect target
+  const safeNext = sanitizeRedirectPath(next);
+  
   console.log('[Auth Callback] Authentication complete. Redirecting to:', safeNext);
   return NextResponse.redirect(new URL(safeNext, siteUrl));
+}
+
+/**
+ * Sanitize redirect path to prevent open redirect vulnerabilities
+ * Allows only internal paths starting with / but not //
+ * Validates against known admin routes for additional security
+ */
+function sanitizeRedirectPath(path: string): string {
+  // Default fallback
+  const defaultPath = '/admin';
+  
+  // Must start with / but not //
+  if (!path || !path.startsWith('/') || path.startsWith('//')) {
+    console.warn('[Auth Callback] Invalid redirect path, using default:', path);
+    return defaultPath;
+  }
+
+  // Additional validation: check if path looks like a valid internal route
+  // This prevents malicious redirects like /%2F%2Fevil.com
+  try {
+    const url = new URL(path, 'http://localhost');
+    if (url.hostname !== 'localhost') {
+      console.warn('[Auth Callback] Redirect path contains external host, using default:', path);
+      return defaultPath;
+    }
+  } catch {
+    // Invalid URL format, use the path as-is if it passes basic checks
+  }
+
+  // Whitelist known admin route patterns for extra security
+  const adminRoutePatterns = [
+    /^\/admin(\/.*)?$/,           // /admin, /admin/blog, etc.
+    /^\/tasks(\/.*)?$/,            // /tasks, /tasks/123, etc.
+    /^\/adventures\/running$/,     // Running admin features
+    /^\/utils\/.*\/admin$/,        // Utility admin pages
+  ];
+
+  const isValidAdminRoute = adminRoutePatterns.some(pattern => pattern.test(path));
+  
+  if (!isValidAdminRoute) {
+    console.warn('[Auth Callback] Path not in admin whitelist, using default:', path);
+    return defaultPath;
+  }
+
+  return path;
 }

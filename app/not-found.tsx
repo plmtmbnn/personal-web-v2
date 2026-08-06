@@ -1,44 +1,42 @@
+"use client";
+
 import Link from "next/link";
-import { Compass, ArrowLeft } from "lucide-react";
+import { Home, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden flex items-center justify-center p-4 py-24 sm:py-32">
-			<div className="w-full max-w-xl mx-auto relative z-10">
-				<div className="bg-white border border-slate-200/80 rounded-[2.5rem] p-8 sm:p-12 shadow-xl shadow-slate-200/50 text-center space-y-8">
-					{/* Icon & 404 Badge */}
-					<div className="flex flex-col items-center gap-4">
-						<div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs">
-							<Compass className="w-8 h-8 text-indigo-600" />
-						</div>
-						<span className="text-6xl sm:text-8xl font-extrabold text-slate-900 tracking-tighter">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern flex items-center justify-center p-6">
+			<div className="max-w-md w-full">
+				<div className="bg-white border border-slate-200/80 rounded-3xl p-10 shadow-lg text-center space-y-6">
+					{/* 404 Number */}
+					<div className="space-y-3">
+						<div className="text-7xl sm:text-8xl font-extrabold text-slate-900 tracking-tighter">
 							404
-						</span>
-					</div>
-
-					{/* Message */}
-					<div className="space-y-2">
-						<div className="text-indigo-600 font-extrabold text-xs uppercase tracking-wider">
-							Route Not Found
 						</div>
-						<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-							Page Off the Radar
+						<h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+							Page Not Found
 						</h1>
-						<p className="text-slate-600 text-xs sm:text-sm font-medium max-w-md mx-auto leading-relaxed">
-							The requested location does not exist or has been relocated within
-							the intelligence platform.
+						<p className="text-sm text-slate-600 font-medium leading-relaxed">
+							The page you're looking for doesn't exist or has been moved.
 						</p>
 					</div>
 
-					{/* Action Button */}
-					<div className="pt-2 flex justify-center">
+					{/* Actions */}
+					<div className="pt-4 space-y-3">
 						<Link
 							href="/"
-							className="inline-flex items-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer !no-underline"
+							className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-sm hover:shadow-md transition-all duration-200 active:scale-95 !no-underline"
 						>
-							<ArrowLeft className="w-4 h-4 text-white" />
-							<span>Return to Command Dashboard</span>
+							<Home className="w-4 h-4 text-white" />
+							<span className="text-white">Go to Home</span>
 						</Link>
+						<button
+							onClick={() => window.history.back()}
+							className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-all duration-200 active:scale-95"
+						>
+							<ArrowLeft className="w-4 h-4" />
+							Go Back
+						</button>
 					</div>
 				</div>
 			</div>

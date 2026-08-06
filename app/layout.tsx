@@ -5,6 +5,7 @@ import "./globals.css";
 import CompactBottomBar from "@/features/shared/components/CompactBottomBar";
 import NavigationLoader from "@/features/shared/components/NavigationLoader";
 import CommandPalette from "@/features/shared/components/CommandPalette";
+import AuthProvider from "@/features/auth/components/AuthProvider";
 import { createMetadata } from "@/lib/shared/metadata";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = createMetadata();
@@ -55,12 +56,14 @@ export default function RootLayout({
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 				/>
-				<Suspense fallback={null}>
-					<NavigationLoader />
-				</Suspense>
-				{children}
-				<CommandPalette />
-				<CompactBottomBar />
+				<AuthProvider>
+					<Suspense fallback={null}>
+						<NavigationLoader />
+					</Suspense>
+					{children}
+					<CommandPalette />
+					<CompactBottomBar />
+				</AuthProvider>
 			</body>
 		</html>
 	);

@@ -15,6 +15,7 @@ export const redis = new Redis({
 export const CACHE_KEYS = {
 	STATS: (period: string) => `tasks:analytics:${period}`,
 	SESSION: (sessionId: string) => `session:${sessionId}`,
+	SESSION_META: (sessionId: string) => `session:meta:${sessionId}`,
 	STOCK_SUMMARY: "idx:stock-summary",
 };
 
@@ -62,14 +63,40 @@ export async function invalidateStatsCache() {
 }
 
 /**
- * Create a new user session in Redis (7 days TTL).
+ * Session metadata interface
+ */
+interface SessionMetadata {
+	userId: string;
+	createdAt: number;
+	lastRefreshedAt: number;
+	expiresAt: number;
+}
+
+/**
+ * Create a new user session in Redis (30 weeks TTL to match cookie).
+ * Also stores metadata for tracking session lifecycle.
  */
 export async function createSession(userId: string): Promise<string> {
 	const sessionId = crypto.randomUUID();
 	const key = CACHE_KEYS.SESSION(sessionId);
+	const metaKey = CACHE_KEYS.SESSION_META(sessionId);
 
-	// Store userId as value, TTL = 7 days (604800 seconds)
-	await redis.set(key, userId, { ex: 604800 });
+	const now = Date.now();
+	const ttlSeconds = 604800 * 30; // 30 weeks to match cookie
+
+	const metadata: SessionMetadata = {
+		userId,
+		createdAt: now,
+		lastRefreshedAt: now,
+		expiresAt: now + ttlSeconds * 1000,
+	};
+
+	// Store both userId and metadata with same TTL
+	await Promise.all([
+		redis.set(key, userId, { ex: ttlSeconds }),
+		redis.set(metaKey, JSON.stringify(metadata), { ex: ttlSeconds }),
+	]);
+
 	return sessionId;
 }
 
@@ -81,6 +108,82 @@ export async function getSession(sessionId: string): Promise<string | null> {
 		return await redis.get<string>(CACHE_KEYS.SESSION(sessionId));
 	} catch (err) {
 		console.error("Redis Get Session Error:", err);
+		return null;
+	}
+}
+
+/**
+ * Refresh session TTL to extend its lifetime (called on token refresh).
+ * Extends both session and metadata by 30 weeks from now.
+ */
+export async function refreshSession(sessionId: string): Promise<boolean> {
+	try {
+		const key = CACHE_KEYS.SESSION(sessionId);
+		const metaKey = CACHE_KEYS.SESSION_META(sessionId);
+
+		// Check if session exists
+		const userId = await redis.get<string>(key);
+		if (!userId) {
+			console.warn("[Redis] Cannot refresh non-existent session:", sessionId);
+			return false;
+		}
+
+		const now = Date.now();
+		const ttlSeconds = 604800 * 30; // 30 weeks
+
+		// Get existing metadata
+		const existingMeta = await redis.get<string>(metaKey);
+		let metadata: SessionMetadata;
+
+		if (existingMeta) {
+			const parsed =
+				typeof existingMeta === "string"
+					? JSON.parse(existingMeta)
+					: existingMeta;
+			metadata = {
+				...parsed,
+				lastRefreshedAt: now,
+				expiresAt: now + ttlSeconds * 1000,
+			};
+		} else {
+			// Recreate metadata if missing
+			metadata = {
+				userId,
+				createdAt: now,
+				lastRefreshedAt: now,
+				expiresAt: now + ttlSeconds * 1000,
+			};
+		}
+
+		// Extend TTL for both session and metadata
+		await Promise.all([
+			redis.expire(key, ttlSeconds),
+			redis.set(metaKey, JSON.stringify(metadata), { ex: ttlSeconds }),
+		]);
+
+		console.log("[Redis] Session refreshed:", sessionId);
+		return true;
+	} catch (err) {
+		console.error("Redis Refresh Session Error:", err);
+		return false;
+	}
+}
+
+/**
+ * Get session metadata for monitoring and debugging.
+ */
+export async function getSessionMetadata(
+	sessionId: string,
+): Promise<SessionMetadata | null> {
+	try {
+		const metaKey = CACHE_KEYS.SESSION_META(sessionId);
+		const data = await redis.get<string>(metaKey);
+
+		if (!data) return null;
+
+		return typeof data === "string" ? JSON.parse(data) : data;
+	} catch (err) {
+		console.error("Redis Get Session Metadata Error:", err);
 		return null;
 	}
 }

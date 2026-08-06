@@ -184,7 +184,6 @@ export default function FileRenamerView() {
 										<div className="space-y-3">
 											{renamedList.map((name, idx) => (
 												<motion.div
-													// biome-ignore lint/suspicious/noArrayIndexKey: List is purely decorative preview, index is stable for this usage
 													key={`${name}-${idx}`}
 													initial={reduceMotion ? false : { opacity: 0, x: 20 }}
 													animate={{ opacity: 1, x: 0 }}

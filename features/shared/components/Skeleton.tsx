@@ -56,11 +56,7 @@ export function Skeleton({
 		return (
 			<>
 				{Array.from({ length: count }).map((_, index) => (
-					<div
-						// biome-ignore lint/suspicious/noArrayIndexKey: simple list
-						key={index}
-						className={index < count - 1 ? "mb-2" : ""}
-					>
+					<div key={index} className={index < count - 1 ? "mb-2" : ""}>
 						{skeletonElement}
 					</div>
 				))}

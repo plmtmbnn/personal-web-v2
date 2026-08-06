@@ -350,6 +350,13 @@ export async function getStravaData(): Promise<StravaDataResult> {
 			getAthleteStats(accessToken),
 		]);
 
+		console.log('🏃 Strava Data Fetched:', {
+			hasToken,
+			runsCount: runs?.length ?? 0,
+			runsIsNull: runs === null,
+			statsAvailable: !!stats,
+		});
+
 		return {
 			isConfigured: true,
 			runs,

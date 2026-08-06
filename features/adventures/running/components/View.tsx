@@ -132,6 +132,37 @@ export default function RunningView({
 	const isConfigured = initialData?.isConfigured || false;
 	const hasToken = initialData?.hasToken || false;
 	const showConnectPrompt = isAdmin && isConfigured && !hasToken;
+	const isConnected = isConfigured && hasToken;
+	const runsIsNull = initialData?.runs === null;
+	const hasRunData = Array.isArray(runs) && runs.length > 0;
+	const hasStats = stats !== null && stats !== undefined;
+
+	// Debug logging (can be removed after verification)
+	useEffect(() => {
+		if (mounted) {
+			console.log("🏃 Running View Debug:", {
+				isConfigured,
+				hasToken,
+				isConnected,
+				runsIsNull,
+				runsLength: runs?.length,
+				hasRunData,
+				hasStats,
+				statsYTD: stats?.ytd_run_totals?.count,
+				statsAll: stats?.all_run_totals?.count,
+			});
+		}
+	}, [
+		mounted,
+		isConfigured,
+		hasToken,
+		isConnected,
+		runsIsNull,
+		runs?.length,
+		hasRunData,
+		hasStats,
+		stats,
+	]);
 
 	const oauthUrl =
 		initialData?.clientId && initialData?.siteUrl
@@ -156,11 +187,17 @@ export default function RunningView({
 
 	const totalRuns = stats?.all_run_totals?.count
 		? stats.all_run_totals.count.toLocaleString()
-		: "1,000+";
+		: hasRunData
+			? runs.length.toLocaleString()
+			: "—";
 
 	const kmPerYear = stats?.ytd_run_totals?.distance
 		? Math.round(stats.ytd_run_totals.distance / 1000).toLocaleString()
-		: "1,000+";
+		: hasRunData
+			? Math.round(
+					runs.reduce((acc, run) => acc + run.distance, 0) / 1000,
+				).toLocaleString()
+			: "—";
 
 	// Removed unused RunCardSkeleton component - can be restored if loading states are needed
 
@@ -335,9 +372,9 @@ export default function RunningView({
 				)}
 
 				{/* ═══════════════════════════════════════
-				    RECENT ACTIVITIES SECTION
-				═══════════════════════════════════════ */}
-				{runs && runs.length > 0 && (
+					    RECENT ACTIVITIES SECTION
+					═══════════════════════════════════════ */}
+				{hasRunData && (
 					<motion.div
 						initial={safeReduceMotion ? false : { opacity: 0, y: 30 }}
 						animate={{ opacity: 1, y: 0 }}
@@ -478,43 +515,99 @@ export default function RunningView({
 					</motion.div>
 				)}
 
-				{/* Empty State */}
-				{(!runs || runs.length === 0) && (
+				{/* Empty State - Connected but no data */}
+				{!hasRunData && isConnected && (
 					<motion.div
 						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
 						animate={{ opacity: 1, scale: 1 }}
-						className="mt-12 text-center py-16 bg-white border border-slate-200/80 rounded-3xl shadow-xs"
+						className="mt-12 text-center py-20 bg-gradient-to-br from-emerald-50/50 to-slate-50 border border-emerald-100/80 rounded-3xl shadow-sm"
 					>
-						<div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-							<Activity className="w-8 h-8 text-slate-400" />
+						<div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-slate-200/80">
+							{runsIsNull ? (
+								<ShieldAlert className="w-10 h-10 text-amber-600" />
+							) : (
+								<Activity className="w-10 h-10 text-emerald-600" />
+							)}
 						</div>
-						<p className="text-sm font-bold text-slate-800 mb-2">
-							No running data available
+						<p className="text-base font-extrabold text-slate-900 mb-2">
+							{runsIsNull
+								? "Unable to Load Activities"
+								: hasStats && stats.all_run_totals?.count > 0
+									? "Activities Loading..."
+									: "Connected & Ready!"}
 						</p>
-						<p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">
-							{isConfigured
-								? "Your Strava integration needs authorization. Connect your account to start tracking your endurance journey."
-								: "Strava integration is not yet configured. Connect your Strava account to display your running achievements."}
+						<p className="text-xs text-slate-600 max-w-md mx-auto font-medium leading-relaxed">
+							{runsIsNull
+								? "We couldn't fetch your activities from Strava. This might be a temporary API issue. Try refreshing the page in a moment."
+								: hasStats && stats.all_run_totals?.count > 0
+									? `Your Strava stats show ${stats.all_run_totals.count} total runs, but activities are still syncing. Refresh the page to see your latest runs.`
+									: "Your Strava account is connected successfully. Start running and your activities will automatically sync here. Every step counts towards your endurance journey."}
 						</p>
-						{showConnectPrompt && oauthUrl && (
-							<a
-								href={oauthUrl}
-								className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all duration-200"
+						<div className="mt-8 flex items-center justify-center gap-2">
+							{runsIsNull ? (
+								<>
+									<ShieldAlert className="w-4 h-4 text-amber-600" />
+									<span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+										Sync Issue Detected
+									</span>
+								</>
+							) : hasStats && stats.all_run_totals?.count > 0 ? (
+								<>
+									<TrendingUp className="w-4 h-4 text-cyan-600" />
+									<span className="text-[10px] font-bold uppercase tracking-wider text-cyan-700">
+										{stats.all_run_totals.count} Total Runs on Strava
+									</span>
+								</>
+							) : (
+								<>
+									<CheckCircle className="w-4 h-4 text-emerald-600" />
+									<span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+										Synced with Strava
+									</span>
+								</>
+							)}
+						</div>
+						{runsIsNull && (
+							<button
+								onClick={() => window.location.reload()}
+								className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 bg-white hover:bg-slate-50 active:scale-95 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200"
 							>
-								<CheckCircle className="w-4 h-4" />
-								Connect Strava Now
-							</a>
+								<Activity className="w-4 h-4" />
+								Refresh Page
+							</button>
 						)}
 					</motion.div>
 				)}
 
-				{/* Static fallback when no data */}
-				{(initialData?.isConfigured === false || !hasToken) &&
-					(!runs || runs.length === 0) && (
-						<div className="mt-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-							Displaying Static Milestones • Connect Strava for Live Data
+				{/* Not Connected State */}
+				{!hasRunData && !isConnected && (
+					<motion.div
+						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+						animate={{ opacity: 1, scale: 1 }}
+						className="mt-12 text-center py-20 bg-white border border-slate-200/80 rounded-3xl shadow-sm"
+					>
+						<div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-slate-200/60">
+							<Zap className="w-10 h-10 text-slate-400" />
 						</div>
-					)}
+						<p className="text-base font-extrabold text-slate-900 mb-2">
+							{isConfigured ? "Ready to Connect" : "Setup Required"}
+						</p>
+						<p className="text-xs text-slate-600 max-w-md mx-auto font-medium leading-relaxed mb-6">
+							{isConfigured
+								? "Connect your Strava account to automatically sync your running activities, track your progress, and visualize your endurance journey."
+								: "Strava integration is not yet configured. Set up your API credentials to start tracking your running achievements."}
+						</p>
+						{showConnectPrompt && oauthUrl && (
+							<a
+								href={oauthUrl}
+								className="inline-flex items-center gap-2 px-7 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 !no-underline"
+							>
+								<Zap className="w-4 h-4" />
+								Connect Strava Account
+							</a>
+						)}
+					</motion.div>
+				)}
 			</div>
 		</main>
 	);

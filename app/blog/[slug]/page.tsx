@@ -116,7 +116,6 @@ export default async function BlogDetailPage({
 	return (
 		<>
 			{/* JSON-LD Structured Data — Google Rich Results */}
-			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: controlled server-generated JSON */}
 			<script
 				type="application/ld+json"
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

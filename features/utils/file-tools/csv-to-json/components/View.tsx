@@ -340,13 +340,11 @@ export default function CsvToJsonView() {
 															.data.slice(0, 3)
 															.map((row: any, i) => (
 																<tr
-																	/* biome-ignore lint/suspicious/noArrayIndexKey: Static preview */
 																	key={`row-${i}`}
 																	className="border-b border-slate-50 last:border-0"
 																>
 																	{Object.values(row).map((val: any, j) => (
 																		<td
-																			/* biome-ignore lint/suspicious/noArrayIndexKey: Static preview */
 																			key={`cell-${j}`}
 																			className="py-3 px-3 text-slate-600 truncate max-w-[120px]"
 																		>

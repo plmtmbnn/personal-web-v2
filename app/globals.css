@@ -405,6 +405,12 @@ body {
 /* ============================================================================
    TYPOGRAPHY (Prose & Document Spacing)
    ============================================================================ */
+h1 {
+	font-size: clamp(1.75rem, 5vw, 2.25rem);
+}
+h2 {
+	font-size: clamp(1.5rem, 4vw, 1.75rem);
+}
 .prose h1,
 .prose h2,
 .prose h3,
@@ -593,14 +599,6 @@ img {
 @media (max-width: 768px) {
 	html {
 		font-size: 14px;
-	}
-	.prose h1,
-	h1 {
-		font-size: clamp(1.75rem, 5vw, 2.25rem);
-	}
-	.prose h2,
-	h2 {
-		font-size: clamp(1.5rem, 4vw, 1.75rem);
 	}
 }
 @media (prefers-reduced-motion: reduce) {

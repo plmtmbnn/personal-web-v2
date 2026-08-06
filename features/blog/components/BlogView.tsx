@@ -211,43 +211,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 		═══════════════════════════════════════ */}
 			<div className="lg:col-span-9 space-y-8">
 				<AnimatePresence mode="wait">
-					{hasActiveFilter && sortedBlogs.length === 0 ? (
-						<motion.div
-							key="filtering"
-							initial={reduceMotion ? false : { opacity: 0 }}
-							animate={{ opacity: 1 }}
-							exit={{ opacity: 0 }}
-							className="grid grid-cols-1 md:grid-cols-2 gap-6"
-						>
-							{/* Skeleton Cards for Filtering */}
-							{[1, 2, 3, 4].map((i) => (
-								<motion.div
-									key={i}
-									initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{ duration: 0.35, delay: i * 0.04 }}
-								>
-									<div className="relative flex flex-col h-full bg-white border border-slate-200/80 rounded-[2.5rem] overflow-hidden shadow-2xs">
-										<Skeleton className="relative w-full h-48" />
-										<div className="flex-1 flex flex-col justify-between p-6 space-y-4">
-											<div className="space-y-2.5">
-												<div className="flex items-center gap-3">
-													<Skeleton className="w-12 h-3 rounded-full" />
-													<Skeleton className="w-10 h-3 rounded-full" />
-												</div>
-												<Skeleton className="w-full h-5 rounded-xl" />
-												<Skeleton className="w-3/4 h-3 rounded-full" />
-												<Skeleton className="w-1/2 h-3 rounded-full" />
-											</div>
-											<div className="pt-4 flex items-center gap-1">
-												<Skeleton className="w-16 h-3 rounded-full" />
-											</div>
-										</div>
-									</div>
-								</motion.div>
-							))}
-						</motion.div>
-					) : sortedBlogs.length === 0 ? (
+					{sortedBlogs.length === 0 ? (
 						<motion.div
 							key="no-results"
 							initial={reduceMotion ? false : { opacity: 0, y: 15 }}
@@ -259,12 +223,25 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 								<Sparkles className="w-5 h-5" />
 							</div>
 							<h3 className="text-lg font-extrabold text-slate-900 tracking-tight mb-1">
-								No stories found
+								{allBlogs.length === 0 ? "No Articles Yet" : "No Stories Found"}
 							</h3>
 							<p className="text-slate-500 text-xs font-semibold max-w-xs">
-								We couldn't find any articles matching your search query or
-								selected category filter.
+								{allBlogs.length === 0
+									? "The blog archive is empty. Check back soon for engineering insights and technical articles."
+									: "We couldn't find any articles matching your search query or selected category filter."}
 							</p>
+							{hasActiveFilter && (
+								<button
+									onClick={() => {
+										setSearchQuery("");
+										setActiveCategory("All");
+										setVisibleCount(PAGE_SIZE);
+									}}
+									className="mt-6 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+								>
+									Clear Filters
+								</button>
+							)}
 						</motion.div>
 					) : (
 						<motion.div

@@ -13,6 +13,7 @@ import {
 	CheckCircle,
 	ShieldAlert,
 	TrendingUp,
+	RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -86,6 +87,10 @@ export default function RunningView({
 	isAdmin?: boolean;
 }) {
 	const [mounted, setMounted] = useState(false);
+	const [dataState, setDataState] = useState<StravaDataResult | undefined>(
+		initialData,
+	);
+	const [isSyncing, setIsSyncing] = useState(false);
 	const reduceMotion = useReducedMotion();
 	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const searchParams = useSearchParams();
@@ -94,9 +99,40 @@ export default function RunningView({
 		text: string;
 	} | null>(null);
 
+	const handleLiveSync = async () => {
+		setIsSyncing(true);
+		try {
+			const res = await fetch("/api/strava/sync", { method: "POST" });
+			const json = await res.json();
+			if (!res.ok) {
+				throw new Error(json.error || "Failed to sync Strava data.");
+			}
+			if (json.data) {
+				setDataState(json.data);
+			}
+			setStatusMessage({
+				type: "success",
+				text: "Strava activities live synced successfully!",
+			});
+		} catch (err: any) {
+			setStatusMessage({
+				type: "error",
+				text: err?.message || "Failed to sync Strava activities.",
+			});
+		} finally {
+			setIsSyncing(false);
+		}
+	};
+
 	useEffect(() => {
 		setMounted(true);
 	}, []);
+
+	useEffect(() => {
+		if (initialData) {
+			setDataState(initialData);
+		}
+	}, [initialData]);
 
 	useEffect(() => {
 		if (!mounted) return;
@@ -127,13 +163,13 @@ export default function RunningView({
 	}, [statusMessage]);
 
 	// Calculate derived values (must be before conditional return to maintain hook order)
-	const runs = initialData?.runs || [];
-	const stats = initialData?.stats;
-	const isConfigured = initialData?.isConfigured || false;
-	const hasToken = initialData?.hasToken || false;
+	const runs = dataState?.runs || [];
+	const stats = dataState?.stats;
+	const isConfigured = dataState?.isConfigured || false;
+	const hasToken = dataState?.hasToken || false;
 	const showConnectPrompt = isAdmin && isConfigured && !hasToken;
 	const isConnected = isConfigured && hasToken;
-	const runsIsNull = initialData?.runs === null;
+	const runsIsNull = dataState?.runs === null;
 	const hasRunData = Array.isArray(runs) && runs.length > 0;
 	const hasStats = stats !== null && stats !== undefined;
 
@@ -164,9 +200,11 @@ export default function RunningView({
 		stats,
 	]);
 
+	const currentClientId = dataState?.clientId || initialData?.clientId;
+	const currentSiteUrl = dataState?.siteUrl || initialData?.siteUrl;
 	const oauthUrl =
-		initialData?.clientId && initialData?.siteUrl
-			? `https://www.strava.com/oauth/authorize?client_id=${initialData.clientId}&redirect_uri=${initialData.siteUrl}/api/strava/callback&response_type=code&scope=activity:read_all`
+		currentClientId && currentSiteUrl
+			? `https://www.strava.com/oauth/authorize?client_id=${currentClientId}&redirect_uri=${currentSiteUrl}/api/strava/callback&response_type=code&scope=activity:read_all`
 			: null;
 
 	// Calculate average pace from recent runs
@@ -395,9 +433,25 @@ export default function RunningView({
 									</p>
 								</div>
 							</div>
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 hidden sm:block">
-								Real-Time Connection
-							</span>
+							<div className="flex items-center gap-3">
+								<button
+									type="button"
+									onClick={handleLiveSync}
+									disabled={isSyncing}
+									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
+									title="Sync live activities from Strava"
+								>
+									<RefreshCw
+										className={`w-3.5 h-3.5 text-emerald-600 ${
+											isSyncing ? "animate-spin" : ""
+										}`}
+									/>
+									<span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
+								</button>
+								<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 hidden sm:block">
+									Real-Time Connection
+								</span>
+							</div>
 						</div>
 
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -12,11 +12,11 @@ export async function GET(request: Request) {
 
   const CRON_SECRET = process.env.CRON_SECRET;
 
-  // Basic security check: Require secret if configured
-  if (CRON_SECRET && secret !== CRON_SECRET) {
-    console.warn('[API Cron] Unauthorized attempt blocked.');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+	// Security check: Fail shut if CRON_SECRET is not configured or secret is invalid
+	if (!CRON_SECRET || secret !== CRON_SECRET) {
+		console.warn('[API Cron] Unauthorized attempt blocked.');
+		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+	}
 
   try {
     await runTaskReminders();

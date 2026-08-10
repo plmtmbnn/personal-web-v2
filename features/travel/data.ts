@@ -163,4 +163,40 @@ export const destinations: Destination[] = [
 		description:
 			"Exploring the Great Wall, the Forbidden City, and the futuristic skyline of the Bund.",
 	},
+	{
+		id: "15",
+		name: "Malaysia",
+		location: "Kuala Lumpur & Sepang",
+		country: "Malaysia",
+		type: "international",
+		isVisited: false,
+		imageUrl:
+			"https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=2070&auto=format&fit=crop",
+		description:
+			"Exploring Kuala Lumpur's iconic skyline and experiencing the high-speed action of MotoGP live in Sepang.",
+	},
+	{
+		id: "16",
+		name: "Singapore",
+		location: "Marina Bay & Sentosa",
+		country: "Singapore",
+		type: "international",
+		isVisited: false,
+		imageUrl:
+			"https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=2070&auto=format&fit=crop",
+		description:
+			"Experiencing the futuristic Gardens by the Bay, iconic Marina Bay Sands, and vibrant city culture.",
+	},
+	{
+		id: "17",
+		name: "Chamonix-Mont-Blanc",
+		location: "Chamonix, Mont Blanc",
+		country: "France",
+		type: "international",
+		isVisited: false,
+		imageUrl:
+			"https://images.unsplash.com/photo-1600818596647-9d5318c20a8a?q=80&w=2070&auto=format&fit=crop",
+		description:
+			"The ultimate trail running bucket list destination: conquering the iconic UTMB routes amidst the majesty of the French Alps.",
+	},
 ];

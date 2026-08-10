@@ -309,9 +309,9 @@ export default function Home({
 							icon={
 								<FaRunning className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
 							}
-							value={`${kmCount}+`}
-							label="KM / Year"
-							sublabel="Marathon & Trail"
+							value={`${kmCount.toLocaleString()}+`}
+							label={`KM in ${new Date().getFullYear()}`}
+							sublabel="Running"
 							href="/adventures/running"
 							badgeBgColor="bg-emerald-50 border-emerald-100 text-emerald-600"
 							accentBorderClass="hover:border-emerald-300 hover:ring-2 hover:ring-emerald-500/10"
@@ -345,13 +345,13 @@ export default function Home({
 							<ArrowRight className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-1 transition-transform duration-200" />
 						</Link>
 
-						<a
-							href={`mailto:${AUTHOR.email}`}
+						<Link
+							href="/contact"
 							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-white border border-slate-200/80 text-slate-900 !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-all duration-200 shadow-xs hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
 						>
 							<Mail className="w-3.5 h-3.5 group-hover/btn:rotate-6 transition-transform duration-200 text-slate-700" />
 							<span className="text-slate-900">Get in Touch</span>
-						</a>
+						</Link>
 
 						{/* Social icon links */}
 						<div className="flex items-center justify-center gap-2 sm:ml-2 pt-1 sm:pt-0">

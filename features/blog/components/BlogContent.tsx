@@ -93,14 +93,15 @@ export default function BlogContent({ content }: BlogContentProps) {
 	return (
 		<div
 			className="prose prose-slate prose-lg max-w-none
-        prose-headings:font-black prose-headings:text-slate-900 prose-headings:tracking-tight
-        prose-p:text-slate-600 prose-p:leading-relaxed
-        prose-a:text-blue-600 prose-a:font-bold prose-a:no-underline hover:prose-a:underline
-        prose-strong:text-slate-900
-        prose-blockquote:border-l-4 prose-blockquote:border-blue-200 prose-blockquote:bg-blue-50/40 prose-blockquote:not-italic
-        prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:text-sm
+        prose-headings:font-black prose-headings:text-slate-950 prose-headings:tracking-tight
+        prose-p:text-slate-700 prose-p:leading-relaxed
+        prose-a:text-slate-900 prose-a:font-bold prose-a:underline prose-a:underline-offset-4 prose-a:decoration-slate-300 hover:prose-a:decoration-slate-900 hover:prose-a:text-indigo-600 transition-colors
+        prose-strong:text-slate-950 prose-strong:font-bold
+        prose-li:text-slate-700 prose-li:marker:text-slate-300
+        prose-blockquote:border-l-4 prose-blockquote:border-indigo-500/30 prose-blockquote:bg-indigo-50/30 prose-blockquote:px-6 prose-blockquote:py-2 prose-blockquote:rounded-r-2xl prose-blockquote:not-italic
+        prose-code:text-slate-800 prose-code:bg-slate-100/90 prose-code:border prose-code:border-slate-200/80 prose-code:px-2 prose-code:py-0.5 prose-code:rounded-lg prose-code:font-mono prose-code:text-xs sm:prose-code:text-sm prose-code:font-medium prose-code:before:content-none prose-code:after:content-none hover:prose-code:bg-slate-200/70 hover:prose-code:border-slate-300 transition-colors
         prose-pre:bg-transparent prose-pre:p-0
-        prose-img:rounded-[2.5rem] prose-img:border-4 prose-img:border-slate-50
+        prose-img:rounded-3xl prose-img:border border-slate-100 shadow-sm
         prose-h2:mt-12 prose-h2:scroll-mt-24
         prose-h3:mt-8 prose-h3:scroll-mt-24"
 		>

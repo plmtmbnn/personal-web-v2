@@ -2,12 +2,12 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import {
 	getBlogBySlug,
-	getBlogBySlugStatic,
 	getBlogsStatic,
 	getRelatedPosts,
 } from "@/features/blog/data";
 import BlogContent from "@/features/blog/components/BlogContent";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Lock } from "lucide-react";
+import PinGuard from "@/features/auth/PinGuard";
 import Link from "next/link";
 import {
 	div as motionDiv,
@@ -51,13 +51,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
 	const resolvedParams = await params;
 	const slug = decodeURIComponent(resolvedParams.slug);
-	// getBlogBySlugStatic is wrapped in React cache() — no second DB trip
-	const post = await getBlogBySlugStatic(slug);
+	// getBlogBySlug is wrapped in React cache() — no second DB trip
+	const post = await getBlogBySlug(slug);
 
 	if (!post) return { title: "Entry Not Found" };
 
 	return createBlogMetadata({
-		title: post.title,
+		title: post.published ? post.title : `[Draft] ${post.title}`,
 		description: post.description,
 		slug: post.slug,
 		image: post.image_url || undefined,
@@ -129,6 +129,16 @@ export default async function BlogDetailPage({
 				Skip to article content
 			</a>
 
+			{!post.published && (
+				<div className="bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider text-center py-2.5 px-4 sticky top-0 z-50 flex items-center justify-center gap-2 shadow-md">
+					<AlertTriangle className="w-4 h-4 text-slate-950 flex-shrink-0" />
+					<span>
+						Draft Preview Mode — This entry is currently unpublished and only
+						visible to authorized admins.
+					</span>
+				</div>
+			)}
+
 			<main
 				id="top"
 				className="min-h-screen bg-white relative overflow-x-hidden pb-32 print:overflow-visible print:pb-0"
@@ -165,7 +175,7 @@ export default async function BlogDetailPage({
 							initial={{ opacity: 0, y: 30 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.5, ease: "easeOut" }}
-							className="bg-white border border-slate-200 p-7 sm:p-14 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-2xl shadow-slate-200/60"
+							className="bg-white border border-slate-100 p-7 sm:p-14 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-xl shadow-slate-100/70"
 						>
 							{/* Breadcrumb + category */}
 							<div className="flex flex-wrap items-center gap-4 mb-6">
@@ -182,6 +192,12 @@ export default async function BlogDetailPage({
 								>
 									{post.category}
 								</span>
+								{post.is_private && (
+									<span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-xs">
+										<Lock className="w-3 h-3 text-white" />
+										PIN Protected
+									</span>
+								)}
 							</div>
 
 							{/* Title */}
@@ -259,16 +275,31 @@ export default async function BlogDetailPage({
 				═══════════════════════════════════════ */}
 				<section className="max-w-5xl mx-auto px-4 sm:px-6 relative mt-12 sm:mt-20">
 					{/* Article body */}
-					<motion.article
-						id="article-content"
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						transition={{ delay: 0.3 }}
-						className="w-full shadow-xl shadow-slate-100 print:shadow-none"
-						aria-label={`Article: ${post.title}`}
-					>
-						<BlogContent content={post.content} />
-					</motion.article>
+					{post.is_private ? (
+						<PinGuard>
+							<motion.article
+								id="article-content"
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								transition={{ delay: 0.3 }}
+								className="w-full print:shadow-none"
+								aria-label={`Article: ${post.title}`}
+							>
+								<BlogContent content={post.content} />
+							</motion.article>
+						</PinGuard>
+					) : (
+						<motion.article
+							id="article-content"
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							transition={{ delay: 0.3 }}
+							className="w-full print:shadow-none"
+							aria-label={`Article: ${post.title}`}
+						>
+							<BlogContent content={post.content} />
+						</motion.article>
+					)}
 
 					{/* ── Share Block ── */}
 					<motion.div

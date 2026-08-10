@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import type { Blog } from "@/features/blog/data";
 import { saveBlog } from "@/features/blog/actions";
@@ -25,6 +25,10 @@ import {
 	Code,
 	Link as LinkIcon,
 	List,
+	ChevronDown,
+	Check,
+	Plus,
+	Lock,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/prism-light";
@@ -45,6 +49,175 @@ SyntaxHighlighter.registerLanguage("sql", sql);
 SyntaxHighlighter.registerLanguage("css", css);
 SyntaxHighlighter.registerLanguage("bash", bash);
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { CATEGORIES, getCategoryStyles } from "@/features/blog/utils";
+
+// ─────────────────────────────────────────────
+// Form Category Select Component (Floating Card UI/UX)
+// ─────────────────────────────────────────────
+interface FormCategorySelectProps {
+	value: string;
+	onChange: (category: string) => void;
+}
+
+function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
+	const [isOpen, setIsOpen] = useState(false);
+	const [isCustom, setIsCustom] = useState(false);
+	const [customValue, setCustomValue] = useState("");
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const reduceMotion = useReducedMotion();
+
+	const currentCat = value || "General";
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const handleClickOutside = (e: MouseEvent) => {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(e.target as Node)
+			) {
+				setIsOpen(false);
+			}
+		};
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setIsOpen(false);
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		document.addEventListener("keydown", handleKeyDown);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+			document.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [isOpen]);
+
+	const dotColor =
+		currentCat === "Tech"
+			? "bg-blue-500"
+			: currentCat === "Running"
+				? "bg-rose-500"
+				: currentCat === "Finance" || currentCat === "Investment"
+					? "bg-emerald-500"
+					: "bg-slate-400";
+
+	return (
+		<div ref={dropdownRef} className="relative w-full text-left">
+			<button
+				type="button"
+				onClick={() => setIsOpen(!isOpen)}
+				aria-expanded={isOpen}
+				aria-haspopup="listbox"
+				className={`w-full flex items-center justify-between border font-black uppercase tracking-wider rounded-xl px-4 py-2.5 transition-all duration-200 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] ${getCategoryStyles(currentCat)}`}
+			>
+				<div className="flex items-center gap-2">
+					<span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
+					<span className="text-xs">{currentCat}</span>
+				</div>
+				<ChevronDown
+					className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${
+						isOpen ? "rotate-180" : ""
+					}`}
+				/>
+			</button>
+
+			<AnimatePresence>
+				{isOpen && (
+					<motion.div
+						initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: -4 }}
+						animate={{ opacity: 1, scale: 1, y: 4 }}
+						exit={{ opacity: 0, scale: 0.95, y: -4 }}
+						transition={{ type: "spring", stiffness: 400, damping: 28 }}
+						className="absolute left-0 right-0 top-full z-50 bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-xl shadow-slate-900/10 p-2 space-y-1 mt-1.5"
+						role="listbox"
+					>
+						<p className="px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
+							Select Category
+						</p>
+						{CATEGORIES.map((cat) => {
+							const isSelected = cat === currentCat;
+							const catDot =
+								cat === "Tech"
+									? "bg-blue-500"
+									: cat === "Running"
+										? "bg-rose-500"
+										: cat === "Finance" || cat === "Investment"
+											? "bg-emerald-500"
+											: "bg-slate-400";
+							return (
+								<button
+									key={cat}
+									type="button"
+									role="option"
+									aria-selected={isSelected}
+									onClick={() => {
+										onChange(cat);
+										setIsCustom(false);
+										setIsOpen(false);
+									}}
+									className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+										isSelected
+											? "bg-slate-900 text-white shadow-xs"
+											: "text-slate-700 hover:bg-slate-100/80 hover:text-slate-950 active:scale-[0.98]"
+									}`}
+								>
+									<div className="flex items-center gap-2.5">
+										<span className={`w-2 h-2 rounded-full ${catDot}`} />
+										<span>{cat}</span>
+									</div>
+									{isSelected && (
+										<Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+									)}
+								</button>
+							);
+						})}
+
+						{/* Custom Category Input Option */}
+						<div className="pt-1.5 border-t border-slate-100 mt-1">
+							{!isCustom ? (
+								<button
+									type="button"
+									onClick={() => setIsCustom(true)}
+									className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all cursor-pointer"
+								>
+									<Plus className="w-3.5 h-3.5 text-blue-500" />
+									<span>Custom Category...</span>
+								</button>
+							) : (
+								<div className="flex items-center gap-2 p-1">
+									<input
+										type="text"
+										value={customValue}
+										onChange={(e) => setCustomValue(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" && customValue.trim()) {
+												e.preventDefault();
+												onChange(customValue.trim());
+												setIsOpen(false);
+											}
+										}}
+										placeholder="Type custom name..."
+										autoFocus
+										className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-blue-500"
+									/>
+									<button
+										type="button"
+										onClick={() => {
+											if (customValue.trim()) {
+												onChange(customValue.trim());
+												setIsOpen(false);
+											}
+										}}
+										className="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-all cursor-pointer"
+									>
+										Save
+									</button>
+								</div>
+							)}
+						</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</div>
+	);
+}
 
 interface BlogFormProps {
 	initialData?: Blog | null;
@@ -83,6 +256,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 			category: "General",
 			image_url: "",
 			is_headline: false,
+			is_private: false,
 		},
 	});
 
@@ -124,6 +298,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 			date: watch("date"),
 			published: watch("published"),
 			is_headline: watch("is_headline"),
+			is_private: watch("is_private"),
 		};
 
 		if (title || content || description || imageUrl) {
@@ -280,8 +455,6 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 			);
 		}, 50);
 	};
-
-	const categories = ["Tech", "Running", "Finance", "Investment", "General"];
 
 	const renderEditorInputs = () => (
 		<div className="space-y-6">
@@ -529,18 +702,15 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 					>
 						<Tag className="w-3 h-3" /> Category
 					</label>
-					<input
-						id="category"
-						list="category-options"
-						{...register("category")}
-						placeholder="e.g. Fintech"
-						className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 font-bold text-xs text-slate-700 focus:outline-none focus:border-blue-500 transition-all"
+					<FormCategorySelect
+						value={watch("category") || "General"}
+						onChange={(newCategory) =>
+							setValue("category", newCategory, {
+								shouldValidate: true,
+								shouldDirty: true,
+							})
+						}
 					/>
-					<datalist id="category-options">
-						{categories.map((cat) => (
-							<option key={cat} value={cat} />
-						))}
-					</datalist>
 				</div>
 
 				{/* Cover Image URL Input */}
@@ -608,6 +778,30 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							className="sr-only peer"
 						/>
 						<div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+					</label>
+				</div>
+
+				{/* PIN Lock Protection Toggle */}
+				<div className="flex items-center justify-between p-4 bg-amber-50/50 border border-amber-100 rounded-xl group hover:border-amber-200 transition-colors">
+					<div className="space-y-0.5">
+						<label
+							htmlFor="is_private"
+							className="text-[10px] font-black uppercase text-amber-900 block tracking-tight flex items-center gap-1.5 text-left"
+						>
+							<Lock className="w-3 h-3 text-amber-600" /> PIN Protection
+						</label>
+						<span className="text-amber-600/80 uppercase font-bold text-[7px] block mt-0.5 text-left">
+							Requires Authenticator PIN
+						</span>
+					</div>
+					<label className="relative inline-flex items-center cursor-pointer scale-90 select-none">
+						<input
+							id="is_private"
+							type="checkbox"
+							{...register("is_private")}
+							className="sr-only peer"
+						/>
+						<div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
 					</label>
 				</div>
 
@@ -833,26 +1027,5 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 				</div>
 			</form>
 		</div>
-	);
-}
-
-// Sub-component for New Post icon logic
-function Plus(props: any) {
-	return (
-		<svg
-			{...props}
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-		>
-			<path d="M5 12h14" />
-			<path d="M12 5v14" />
-		</svg>
 	);
 }

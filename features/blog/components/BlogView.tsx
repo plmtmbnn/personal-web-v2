@@ -13,6 +13,7 @@ import {
 	Search,
 	X,
 	Loader2,
+	Lock,
 } from "lucide-react";
 import type { Blog } from "@/features/blog/data";
 import {
@@ -308,6 +309,12 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 														{post.is_headline && (
 															<span className="px-3 py-1 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider rounded-full shadow-2xs">
 																Headline
+															</span>
+														)}
+														{post.is_private && (
+															<span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/90 text-white text-[9px] font-extrabold uppercase tracking-wider rounded-full shadow-2xs backdrop-blur-md">
+																<Lock className="w-3 h-3 text-white" />
+																PIN Protected
 															</span>
 														)}
 													</div>

@@ -167,6 +167,7 @@ export async function saveBlog(
 		category: formData.category || "General",
 		image_url: formData.image_url || null,
 		is_headline: formData.is_headline ?? false,
+		is_private: formData.is_private ?? false,
 	};
 
 	try {

@@ -5,8 +5,16 @@
  */
 
 // ─────────────────────────────────────────────
-// Category Styles
+// Categories & Category Styles
 // ─────────────────────────────────────────────
+export const CATEGORIES = [
+	"Tech",
+	"Running",
+	"Finance",
+	"Investment",
+	"General",
+] as const;
+
 export const CATEGORY_STYLES: Record<string, string> = {
 	Finance: "bg-emerald-50 text-emerald-700 border-emerald-100",
 	Investment: "bg-emerald-50 text-emerald-700 border-emerald-100",
@@ -80,3 +88,37 @@ export const getBlogImage = (imageUrl: string | null, seed: string): string => {
 		.reduce((acc, char) => acc + char.charCodeAt(0), 0);
 	return PLACEHOLDERS[charSum % PLACEHOLDERS.length];
 };
+
+// ─────────────────────────────────────────────
+// Blog Filtering & Sorting
+// ─────────────────────────────────────────────
+
+export function filterBlogs<
+	T extends { title: string; description: string; category: string },
+>(blogs: T[], searchQuery: string, category: string): T[] {
+	const query = searchQuery.toLowerCase();
+	const cat = category.toLowerCase();
+	return blogs.filter((blog) => {
+		const matchesSearch =
+			!query ||
+			blog.title.toLowerCase().includes(query) ||
+			blog.description.toLowerCase().includes(query);
+		const matchesCategory =
+			category === "All" ||
+			cat === "all" ||
+			blog.category.toLowerCase() === cat;
+		return matchesSearch && matchesCategory;
+	});
+}
+
+export function sortBlogs<
+	T extends { is_headline?: boolean; publishedAt?: string; date?: string },
+>(blogs: T[]): T[] {
+	return [...blogs].sort((a, b) => {
+		if (a.is_headline && !b.is_headline) return -1;
+		if (!a.is_headline && b.is_headline) return 1;
+		const dateA = new Date(a.publishedAt || a.date || 0).getTime();
+		const dateB = new Date(b.publishedAt || b.date || 0).getTime();
+		return dateB - dateA;
+	});
+}

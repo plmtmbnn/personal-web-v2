@@ -2,6 +2,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/core/supabase-server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { ENV_GLOBAL } from "@/lib/core/env";
+import { checkAdmin } from "@/features/auth/actions";
 
 export interface Blog {
 	id: string;
@@ -14,6 +15,7 @@ export interface Blog {
 	category: string;
 	image_url: string | null;
 	is_headline: boolean;
+	is_private: boolean;
 }
 
 /**
@@ -106,20 +108,24 @@ export async function getBlogs(): Promise<Blog[]> {
 }
 
 /**
- * Fetch a single published blog by its unique slug. (Dynamic/Server-Side)
+ * Fetch a single blog by its unique slug. (Dynamic/Server-Side)
+ * Allows admins to fetch draft/unpublished posts for previewing.
  * Wrapped in React cache() to deduplicate concurrent calls within
  * the same request (e.g. generateMetadata + page render).
  */
 export const getBlogBySlug = cache(
 	async (slug: string): Promise<Blog | null> => {
 		const supabase = await createClient();
+		const isAdmin = await checkAdmin();
 		try {
-			const { data, error } = await supabase
-				.from("blogs")
-				.select("*")
-				.eq("slug", slug)
-				.eq("published", true)
-				.single();
+			let query = supabase.from("blogs").select("*").eq("slug", slug);
+
+			// Public users can only fetch published posts; admins can preview drafts.
+			if (!isAdmin) {
+				query = query.eq("published", true);
+			}
+
+			const { data, error } = await query.single();
 
 			if (error) {
 				console.warn(`Blog not found for slug: ${slug}`, error.message);
@@ -195,7 +201,7 @@ export async function getRelatedPosts(
 		const { data, error } = await supabase
 			.from("blogs")
 			.select(
-				"id, title, slug, description, date, category, image_url, is_headline, published, content",
+				"id, title, slug, description, date, category, image_url, is_headline, is_private, published, content",
 			)
 			.eq("published", true)
 			.eq("category", category)

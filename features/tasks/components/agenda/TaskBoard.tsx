@@ -172,7 +172,7 @@ export default function TaskBoard({
 		[addOptimisticAction, showError],
 	);
 
-	const columnKeys: TaskStatus[] = ["todo", "in_progress", "blocked", "done"];
+	const columnKeys: TaskStatus[] = ["todo", "in_progress", "done", "blocked"];
 
 	return (
 		<>

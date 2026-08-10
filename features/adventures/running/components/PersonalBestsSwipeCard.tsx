@@ -1,20 +1,25 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import {
+	motion,
+	useMotionValue,
+	useTransform,
+	useReducedMotion,
+	useAnimation,
+} from "framer-motion";
 import {
 	Trophy,
 	Zap,
 	Flame,
 	Milestone,
 	Mountain,
-	ChevronLeft,
-	ChevronRight,
 	Gauge,
 	Route,
 	Crown,
-	Sparkles,
 	Layers,
+	ThumbsUp,
+	RotateCcw,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -44,8 +49,8 @@ export const personalBests: PersonalBestItem[] = [
 		badge: "Speed Sprint",
 		icon: Flame,
 		color: "text-rose-500",
-		badgeBg: "bg-rose-50 text-rose-700 border-rose-200/80",
-		bgGlow: "from-rose-500/15 via-rose-500/5 to-transparent",
+		badgeBg: "bg-rose-50 text-rose-700",
+		bgGlow: "from-rose-500/10 via-rose-500/5 to-transparent",
 		borderAccent: "border-t-rose-500",
 	},
 	{
@@ -57,8 +62,8 @@ export const personalBests: PersonalBestItem[] = [
 		badge: "Tempo Benchmark",
 		icon: Zap,
 		color: "text-amber-500",
-		badgeBg: "bg-amber-50 text-amber-700 border-amber-200/80",
-		bgGlow: "from-amber-500/15 via-amber-500/5 to-transparent",
+		badgeBg: "bg-amber-50 text-amber-700",
+		bgGlow: "from-amber-500/10 via-amber-500/5 to-transparent",
 		borderAccent: "border-t-amber-500",
 	},
 	{
@@ -70,8 +75,8 @@ export const personalBests: PersonalBestItem[] = [
 		badge: "Endurance Milestone",
 		icon: Milestone,
 		color: "text-emerald-500",
-		badgeBg: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
-		bgGlow: "from-emerald-500/15 via-emerald-500/5 to-transparent",
+		badgeBg: "bg-emerald-50 text-emerald-700",
+		bgGlow: "from-emerald-500/10 via-emerald-500/5 to-transparent",
 		borderAccent: "border-t-emerald-500",
 	},
 	{
@@ -83,8 +88,8 @@ export const personalBests: PersonalBestItem[] = [
 		badge: "Classic 42.2K",
 		icon: Trophy,
 		color: "text-blue-500",
-		badgeBg: "bg-blue-50 text-blue-700 border-blue-200/80",
-		bgGlow: "from-blue-500/15 via-blue-500/5 to-transparent",
+		badgeBg: "bg-blue-50 text-blue-700",
+		bgGlow: "from-blue-500/10 via-blue-500/5 to-transparent",
 		borderAccent: "border-t-blue-500",
 	},
 	{
@@ -97,71 +102,85 @@ export const personalBests: PersonalBestItem[] = [
 		badge: "Pinnacle Achievement",
 		icon: Mountain,
 		color: "text-purple-500",
-		badgeBg: "bg-purple-50 text-purple-700 border-purple-200/80",
-		bgGlow: "from-purple-500/15 via-purple-500/5 to-transparent",
+		badgeBg: "bg-purple-50 text-purple-700",
+		bgGlow: "from-purple-500/10 via-purple-500/5 to-transparent",
 		borderAccent: "border-t-purple-500",
 		isHighest: true,
 	},
 ];
 
-// Default to highest achievement item (Ultra Trail) at the top of the stack
 const defaultHighestIndex = personalBests.findIndex((item) => item.isHighest);
 const INITIAL_TOP_INDEX =
 	defaultHighestIndex >= 0 ? defaultHighestIndex : personalBests.length - 1;
 
 export default function PersonalBestsSwipeCard() {
 	const reduceMotion = useReducedMotion();
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
+	const shouldReduceMotion = reduceMotion === true;
 
 	const [topIndex, setTopIndex] = useState<number>(INITIAL_TOP_INDEX);
-	const [exitDirection, setExitDirection] = useState<number>(0);
-	const [isSwiping, setIsSwiping] = useState(false);
+	const [isAnimating, setIsAnimating] = useState(false);
+
+	// Framer Motion controls for imperative exit animation
+	const controls = useAnimation();
+	const x = useMotionValue(0);
+
+	// Smooth tilt based on drag
+	const rotate = useTransform(x, [-250, 0, 250], [-12, 0, 12]);
+	// Stamp opacities
+	const stampNextOpacity = useTransform(x, [10, 100], [0, 1]);
+	const stampPrevOpacity = useTransform(x, [-100, -10], [1, 0]);
 
 	const TOTAL_ITEMS = personalBests.length;
 
-	// Cycle stack forward (moves current top to bottom)
-	const nextCard = useCallback(() => {
-		if (isSwiping) return;
-		setExitDirection(1);
-		setIsSwiping(true);
-		setTimeout(() => {
-			setTopIndex((prev) => (prev + 1) % TOTAL_ITEMS);
-			setIsSwiping(false);
-		}, 180);
-	}, [isSwiping, TOTAL_ITEMS]);
+	// Imperative fly-out animation avoiding layout/state lag
+	const flyOut = useCallback(
+		async (direction: "left" | "right") => {
+			if (isAnimating) return;
+			setIsAnimating(true);
 
-	// Cycle stack backward
-	const prevCard = useCallback(() => {
-		if (isSwiping) return;
-		setExitDirection(-1);
-		setIsSwiping(true);
-		setTimeout(() => {
-			setTopIndex((prev) => (prev - 1 + TOTAL_ITEMS) % TOTAL_ITEMS);
-			setIsSwiping(false);
-		}, 180);
-	}, [isSwiping, TOTAL_ITEMS]);
+			const exitX = direction === "right" ? 400 : -400;
+			const exitRotate = direction === "right" ? 20 : -20;
+			const offset = direction === "right" ? 1 : -1;
 
-	// Direct tab selection brings chosen card to top
-	const selectCard = useCallback((targetIndex: number) => {
-		setTopIndex(targetIndex);
-	}, []);
+			// Animate out instantly
+			await controls.start({
+				x: exitX,
+				rotate: exitRotate,
+				opacity: 0,
+				transition: { duration: 0.25, ease: "easeOut" },
+			});
 
-	// Handle card drag swipe end
+			// Update stack state
+			setTopIndex((prev) => (prev + offset + TOTAL_ITEMS) % TOTAL_ITEMS);
+
+			// Instantly reset the top card controls (it's now the *new* top card)
+			x.set(0);
+			controls.set({ x: 0, rotate: 0, opacity: 1 });
+
+			setIsAnimating(false);
+		},
+		[controls, isAnimating, TOTAL_ITEMS, x],
+	);
+
+	// Physics-based drag release
 	const handleDragEnd = (
 		_: unknown,
 		info: { offset: { x: number }; velocity: { x: number } },
 	) => {
-		const swipeThreshold = 60;
-		if (info.offset.x > swipeThreshold || info.velocity.x > 300) {
-			setExitDirection(1);
-			nextCard();
-		} else if (info.offset.x < -swipeThreshold || info.velocity.x < -300) {
-			setExitDirection(-1);
-			nextCard();
+		const swipeThreshold = 80;
+		const velocityThreshold = 400;
+
+		if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
+			flyOut("right");
+		} else if (
+			info.offset.x < -swipeThreshold ||
+			info.velocity.x < -velocityThreshold
+		) {
+			flyOut("left");
 		}
 	};
 
-	// Visible stack slots: top card (0), middle card (1), bottom card (2)
+	// We render the top 3 cards in the deck
 	const stackSlots = [0, 1, 2].map((slotOffset) => {
 		const itemIndex = (topIndex + slotOffset) % TOTAL_ITEMS;
 		return {
@@ -171,244 +190,197 @@ export default function PersonalBestsSwipeCard() {
 		};
 	});
 
-	const nextItem = personalBests[(topIndex + 1) % TOTAL_ITEMS];
-
 	return (
-		<div className="space-y-4 select-none">
-			{/* Header with Title and Stack Controls */}
+		<div className="w-full max-w-md mx-auto bg-white/50 backdrop-blur-xl border border-slate-200/60 p-5 sm:p-7 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-6 flex flex-col relative z-10 select-none">
+			{/* Header */}
 			<div className="flex items-center justify-between">
-				<motion.h3
-					initial={safeReduceMotion ? false : { opacity: 0, y: 10 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.1 }}
-					className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2"
+				<motion.div
+					initial={shouldReduceMotion ? false : { opacity: 0, x: -10 }}
+					animate={{ opacity: 1, x: 0 }}
+					className="flex items-center gap-3"
 				>
-					<Trophy className="w-4 h-4 text-emerald-600" /> Personal Milestones
-				</motion.h3>
-
-				{/* Arrow Controls & Counter */}
-				<div className="flex items-center gap-2">
-					<span className="text-[10px] font-extrabold text-slate-400 font-mono flex items-center gap-1">
-						<Layers className="w-3 h-3 text-slate-400" />
-						{topIndex + 1} / {TOTAL_ITEMS}
-					</span>
-					<div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-xl p-0.5 shadow-xs">
-						<button
-							type="button"
-							onClick={prevCard}
-							aria-label="Previous card in stack"
-							className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 hover:text-slate-900 transition-colors"
-						>
-							<ChevronLeft className="w-4 h-4" />
-						</button>
-						<div className="w-[1px] h-3 bg-slate-200" />
-						<button
-							type="button"
-							onClick={nextCard}
-							aria-label="Next card in stack"
-							className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 hover:text-slate-900 transition-colors"
-						>
-							<ChevronRight className="w-4 h-4" />
-						</button>
+					<div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200/50 shadow-inner">
+						<Trophy className="w-5 h-5" />
 					</div>
-				</div>
+					<div>
+						<h3 className="text-sm font-extrabold text-slate-900 leading-tight">
+							Personal Bests
+						</h3>
+						<p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+							Milestone Records
+						</p>
+					</div>
+				</motion.div>
+
+				<motion.span
+					initial={shouldReduceMotion ? false : { opacity: 0, x: 10 }}
+					animate={{ opacity: 1, x: 0 }}
+					className="text-[11px] font-bold text-slate-600 flex items-center gap-1.5 bg-white/80 backdrop-blur-md border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-sm"
+				>
+					<Layers className="w-4 h-4 text-slate-400" />
+					{topIndex + 1} / {TOTAL_ITEMS}
+				</motion.span>
 			</div>
 
-			{/* Filter / Pill Tab Selector */}
-			<div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-				{personalBests.map((item, idx) => {
-					const isActive = idx === topIndex;
-					return (
-						<button
-							type="button"
-							key={item.id}
-							onClick={() => selectCard(idx)}
-							className={`px-3 py-1.5 rounded-xl text-[10.5px] font-bold transition-all duration-200 shrink-0 flex items-center gap-1.5 border ${
-								isActive
-									? "bg-slate-900 text-white border-slate-900 shadow-sm scale-[1.02]"
-									: "bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300"
-							}`}
-						>
-							{item.isHighest && (
-								<Crown
-									className={`w-3 h-3 ${
-										isActive ? "text-amber-400" : "text-amber-500"
-									}`}
-								/>
-							)}
-							<span>{item.distance}</span>
-						</button>
-					);
-				})}
-			</div>
-
-			{/* 3D Card Stack Deck Container */}
-			<div className="relative pt-2 pb-6 min-h-[320px] flex items-center justify-center">
-				{/* Stack Deck Items rendered reversed so top card is rendered last (on top) */}
+			{/* Swipe Stack Container */}
+			<div className="relative h-[340px] sm:h-[360px] flex items-end justify-center perspective-1000 mt-2">
 				{stackSlots
 					.slice()
 					.reverse()
 					.map(({ slotOffset, item }) => {
 						const isTop = slotOffset === 0;
 
-						// Card Stack offset styling variables
-						const yOffset = slotOffset * 14;
+						// Under-card positioning
+						const yOffset = slotOffset * -14;
 						const scale = 1 - slotOffset * 0.05;
-						const opacity = 1 - slotOffset * 0.25;
+						const opacity = 1 - slotOffset * 0.15;
 						const zIndex = TOTAL_ITEMS - slotOffset;
 
 						return (
 							<motion.div
 								key={item.id}
-								layout
-								initial={
-									safeReduceMotion
-										? false
-										: { y: yOffset + 20, scale, opacity: 0 }
-								}
-								animate={{
-									y:
-										isTop && isSwiping
-											? exitDirection > 0
-												? -15
-												: 15
-											: yOffset,
-									scale,
-									opacity: isTop && isSwiping ? 0.3 : opacity,
+								style={{
+									x: isTop ? x : 0,
+									rotate: isTop && !shouldReduceMotion ? rotate : 0,
 									zIndex,
 								}}
+								animate={
+									isTop && isAnimating
+										? controls
+										: {
+												y: yOffset,
+												scale,
+												opacity,
+											}
+								}
 								transition={{
 									type: "spring",
-									stiffness: 320,
-									damping: 26,
+									stiffness: 400,
+									damping: 30,
 								}}
-								drag={isTop ? "x" : false}
+								drag={isTop && !isAnimating ? "x" : false}
 								dragConstraints={{ left: 0, right: 0 }}
-								dragElastic={0.5}
+								dragElastic={0.6}
 								onDragEnd={isTop ? handleDragEnd : undefined}
 								whileTap={
-									isTop
-										? { cursor: "grabbing", scale: scale * 0.98 }
-										: undefined
+									isTop && !isAnimating ? { cursor: "grabbing" } : undefined
 								}
-								className={`absolute inset-x-0 w-full overflow-hidden bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl flex flex-col justify-between min-h-[295px] border-t-4 ${
+								className={`absolute bottom-0 w-full bg-white border-x border-b border-slate-200/80 border-t-[6px] ${
 									item.borderAccent
-								} ${
+								} rounded-[2rem] p-6 sm:p-7 flex flex-col justify-between h-[320px] sm:h-[340px] ${
 									isTop
-										? "cursor-grab touch-pan-y shadow-2xl"
-										: "pointer-events-none shadow-md"
+										? "cursor-grab shadow-2xl shadow-slate-200/50 touch-pan-y"
+										: "pointer-events-none shadow-sm"
 								}`}
-								style={{
-									top: 0,
-								}}
 							>
-								{/* Background Ambient Glow */}
+								{/* Performance-Friendly Radial Glow (No blur filter) */}
 								<div
-									className={`aria-hidden:hidden absolute -top-12 -right-12 w-48 h-48 bg-radial ${item.bgGlow} rounded-full blur-2xl pointer-events-none opacity-90`}
+									className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${item.bgGlow} pointer-events-none rounded-[2rem] opacity-70`}
 								/>
 
-								{/* Card Header */}
-								<div className="relative z-10 flex items-start justify-between">
-									<div className="flex items-center gap-3">
-										<div className="w-11 h-11 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-xs">
-											<item.icon className={`w-5 h-5 ${item.color}`} />
-										</div>
-										<div>
-											<div className="flex items-center gap-1.5">
-												<p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-													Distance Record
-												</p>
-												{item.isHighest && (
-													<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[9px] font-black text-amber-700 uppercase tracking-wider">
-														<Crown className="w-2.5 h-2.5 text-amber-500" />{" "}
-														Highest
+								{/* Stamps (Visible during drag on Top Card) */}
+								{isTop && !shouldReduceMotion && (
+									<>
+										<motion.div
+											style={{ opacity: stampNextOpacity }}
+											className="absolute top-8 left-6 z-30 pointer-events-none border-2 border-emerald-500 text-emerald-600 bg-white/95 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest -rotate-12 shadow-sm flex items-center gap-1.5 backdrop-blur-sm"
+										>
+											<ThumbsUp className="w-4 h-4" /> Next
+										</motion.div>
+										<motion.div
+											style={{ opacity: stampPrevOpacity }}
+											className="absolute top-8 right-6 z-30 pointer-events-none border-2 border-amber-500 text-amber-600 bg-white/95 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest rotate-12 shadow-sm flex items-center gap-1.5 backdrop-blur-sm"
+										>
+											<RotateCcw className="w-4 h-4" /> Prev
+										</motion.div>
+									</>
+								)}
+
+								{/* Card Content */}
+								<div className="relative z-10 flex flex-col h-full">
+									{/* Header Area */}
+									<div className="flex items-start justify-between">
+										<div className="flex items-center gap-4">
+											<div
+												className={`w-14 h-14 rounded-2xl ${item.badgeBg} border border-white/50 flex items-center justify-center shadow-inner shrink-0`}
+											>
+												<item.icon className={`w-7 h-7 ${item.color}`} />
+											</div>
+											<div>
+												{item.isHighest ? (
+													<span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-[10px] font-black text-amber-700 uppercase tracking-wider mb-1 ring-1 ring-amber-500/20">
+														<Crown className="w-3 h-3 text-amber-500" /> Highest
+														Peak
 													</span>
+												) : (
+													<p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+														Distance Record
+													</p>
+												)}
+												<h4 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+													{item.distance}
+												</h4>
+											</div>
+										</div>
+									</div>
+
+									{/* Main Metric Area */}
+									<div className="mt-auto mb-6">
+										<span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">
+											Best Duration
+										</span>
+										<div className="flex items-end gap-3 flex-wrap">
+											<p className="text-5xl sm:text-6xl font-black text-slate-900 tracking-tighter leading-none font-mono">
+												{item.time}
+											</p>
+											<span
+												className={`mb-2 inline-flex items-center px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ring-1 ring-inset ring-black/5 shadow-sm ${item.badgeBg}`}
+											>
+												{item.badge}
+											</span>
+										</div>
+									</div>
+
+									{/* Footer Metrics Grid */}
+									<div className="grid grid-cols-2 gap-4 pt-5 border-t border-slate-100/80">
+										<div className="flex items-center gap-3">
+											<div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100 shrink-0 shadow-sm">
+												<Gauge className="w-4 h-4" />
+											</div>
+											<div className="flex flex-col">
+												<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+													Pace
+												</span>
+												<span className="text-sm font-bold text-slate-900">
+													{item.pace}
+												</span>
+											</div>
+										</div>
+
+										<div className="flex items-center gap-3">
+											<div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100 shrink-0 shadow-sm">
+												{item.elevation ? (
+													<Mountain className="w-4 h-4" />
+												) : (
+													<Route className="w-4 h-4" />
 												)}
 											</div>
-											<h4 className="text-xl font-black text-slate-900 tracking-tight">
-												{item.distance}
-											</h4>
+											<div className="flex flex-col">
+												<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+													{item.elevation ? "Elevation" : "Target"}
+												</span>
+												<span className="text-sm font-bold text-slate-900">
+													{item.elevation
+														? item.elevation
+														: `${item.distanceKm} km`}
+												</span>
+											</div>
 										</div>
 									</div>
-
-									<span
-										className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider shadow-2xs ${item.badgeBg}`}
-									>
-										{item.badge}
-									</span>
-								</div>
-
-								{/* Main Metric (Time) */}
-								<div className="relative z-10 my-4 space-y-1">
-									<span className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 block">
-										Best Duration
-									</span>
-									<p className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-none font-mono">
-										{item.time}
-									</p>
-								</div>
-
-								{/* Sub-Metrics Grid */}
-								<div className="relative z-10 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
-									<div className="flex items-center gap-2.5 p-2.5 bg-slate-50/80 rounded-2xl border border-slate-100">
-										<div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-2xs border border-slate-100 shrink-0">
-											<Gauge className="w-4 h-4" />
-										</div>
-										<div>
-											<span className="text-[8.5px] font-extrabold uppercase tracking-wider text-slate-400 block">
-												Pace
-											</span>
-											<span className="text-xs font-extrabold text-slate-900 leading-none">
-												{item.pace}
-											</span>
-										</div>
-									</div>
-
-									{item.elevation ? (
-										<div className="flex items-center gap-2.5 p-2.5 bg-slate-50/80 rounded-2xl border border-slate-100">
-											<div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-purple-600 shadow-2xs border border-slate-100 shrink-0">
-												<Mountain className="w-4 h-4" />
-											</div>
-											<div>
-												<span className="text-[8.5px] font-extrabold uppercase tracking-wider text-slate-400 block">
-													Elevation Gain
-												</span>
-												<span className="text-xs font-extrabold text-slate-900 leading-none">
-													{item.elevation}
-												</span>
-											</div>
-										</div>
-									) : (
-										<div className="flex items-center gap-2.5 p-2.5 bg-slate-50/80 rounded-2xl border border-slate-100">
-											<div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-blue-600 shadow-2xs border border-slate-100 shrink-0">
-												<Route className="w-4 h-4" />
-											</div>
-											<div>
-												<span className="text-[8.5px] font-extrabold uppercase tracking-wider text-slate-400 block">
-													Km Target
-												</span>
-												<span className="text-xs font-extrabold text-slate-900 leading-none">
-													{item.distanceKm} km
-												</span>
-											</div>
-										</div>
-									)}
 								</div>
 							</motion.div>
 						);
 					})}
-			</div>
-
-			{/* Stack Deck Footer Cues */}
-			<div className="flex items-center justify-between text-[10px] font-bold text-slate-400 px-1 pt-2">
-				<span className="flex items-center gap-1 text-slate-500">
-					<Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-					Drag top card left/right to pop off deck
-				</span>
-				<span className="text-slate-500 font-semibold">
-					Underneath:{" "}
-					<strong className="text-slate-800">{nextItem.distance}</strong>
-				</span>
 			</div>
 		</div>
 	);

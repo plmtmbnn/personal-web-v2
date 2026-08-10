@@ -44,6 +44,7 @@ import {
 	Plus,
 	Copy,
 	Check,
+	Lock,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -107,6 +108,139 @@ function useMediaQuery(query: string): boolean {
 	}, [query]);
 
 	return matches;
+}
+
+// ─────────────────────────────────────────────
+// Category Dropdown Component (Modern Floating Card UI/UX)
+// ─────────────────────────────────────────────
+interface CategoryDropdownProps {
+	value: string;
+	onChange: (newCategory: string) => void;
+	disabled?: boolean;
+	isLoading?: boolean;
+	size?: "sm" | "md";
+}
+
+function CategoryDropdown({
+	value,
+	onChange,
+	disabled = false,
+	isLoading = false,
+	size = "sm",
+}: CategoryDropdownProps) {
+	const [isOpen, setIsOpen] = useState(false);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const reduceMotion = useReducedMotion();
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const handleClickOutside = (e: MouseEvent) => {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(e.target as Node)
+			) {
+				setIsOpen(false);
+			}
+		};
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setIsOpen(false);
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		document.addEventListener("keydown", handleKeyDown);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+			document.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [isOpen]);
+
+	const currentCat = value || "General";
+
+	return (
+		<div ref={dropdownRef} className="relative inline-block text-left">
+			<button
+				type="button"
+				onClick={() => !disabled && !isLoading && setIsOpen(!isOpen)}
+				disabled={disabled || isLoading}
+				aria-expanded={isOpen}
+				aria-haspopup="listbox"
+				className={`group inline-flex items-center gap-1.5 border font-black uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${getCategoryStyles(currentCat)} ${
+					size === "sm" ? "px-2.5 py-1 text-[9px]" : "px-3 py-1.5 text-[10px]"
+				}`}
+			>
+				<span
+					className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+						currentCat === "Tech"
+							? "bg-blue-500"
+							: currentCat === "Running"
+								? "bg-rose-500"
+								: currentCat === "Finance" || currentCat === "Investment"
+									? "bg-emerald-500"
+									: "bg-slate-400"
+					}`}
+				/>
+				<span>{currentCat}</span>
+				{isLoading ? (
+					<Loader2 className="w-3 h-3 animate-spin text-current ml-0.5" />
+				) : (
+					<ChevronDown
+						className={`w-3 h-3 opacity-60 transition-transform duration-200 ${
+							isOpen ? "rotate-180" : ""
+						}`}
+					/>
+				)}
+			</button>
+
+			<AnimatePresence>
+				{isOpen && (
+					<motion.div
+						initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: -4 }}
+						animate={{ opacity: 1, scale: 1, y: 4 }}
+						exit={{ opacity: 0, scale: 0.95, y: -4 }}
+						transition={{ type: "spring", stiffness: 400, damping: 28 }}
+						className="absolute left-0 top-full z-50 min-w-[145px] bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-xl shadow-slate-900/10 p-1.5 space-y-0.5 mt-1"
+						role="listbox"
+					>
+						{CATEGORIES.map((cat) => {
+							const isSelected = cat === currentCat;
+							const dotColor =
+								cat === "Tech"
+									? "bg-blue-500"
+									: cat === "Running"
+										? "bg-rose-500"
+										: cat === "Finance" || cat === "Investment"
+											? "bg-emerald-500"
+											: "bg-slate-400";
+							return (
+								<button
+									key={cat}
+									type="button"
+									role="option"
+									aria-selected={isSelected}
+									onClick={() => {
+										onChange(cat);
+										setIsOpen(false);
+									}}
+									className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+										isSelected
+											? "bg-slate-900 text-white shadow-xs"
+											: "text-slate-700 hover:bg-slate-100/80 hover:text-slate-950 active:scale-[0.98]"
+									}`}
+								>
+									<div className="flex items-center gap-2">
+										<span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+										<span>{cat}</span>
+									</div>
+									{isSelected && (
+										<Check className="w-3 h-3 text-white stroke-[3]" />
+									)}
+								</button>
+							);
+						})}
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</div>
+	);
 }
 
 // ─────────────────────────────────────────────
@@ -720,22 +854,16 @@ function AdminBlogListInner({
 							</button>
 
 							{/* Bulk category */}
-							<div className="flex items-center gap-2 bg-white border border-blue-200 rounded-lg px-2 py-1">
-								<select
+							<div className="flex items-center gap-2 bg-white border border-blue-200 rounded-xl px-2.5 py-1 shadow-xs">
+								<CategoryDropdown
 									value={bulkCategoryValue}
-									onChange={(e) => setBulkCategoryValue(e.target.value)}
-									className="text-[10px] font-black uppercase tracking-widest text-slate-700 outline-none bg-transparent cursor-pointer"
-								>
-									{CATEGORIES.map((c) => (
-										<option key={c} value={c}>
-											{c}
-										</option>
-									))}
-								</select>
+									onChange={(newCategory) => setBulkCategoryValue(newCategory)}
+									disabled={isBulkLoading}
+								/>
 								<button
 									onClick={handleBulkCategory}
 									disabled={isBulkLoading}
-									className="px-2 py-0.5 bg-blue-600 text-white rounded text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50"
+									className="px-2.5 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
 								>
 									Apply
 								</button>
@@ -843,6 +971,7 @@ function AdminBlogListInner({
 									<th className="px-6 py-4">Knowledge Entry</th>
 									<th className="px-6 py-4">Category</th>
 									<th className="px-6 py-4 text-center">Headline</th>
+									<th className="px-6 py-4 text-center">PIN Lock</th>
 									<th className="px-6 py-4 text-center">Status</th>
 									<th className="px-6 py-4">Publication</th>
 									<th className="px-6 py-4 text-right sticky right-0 bg-slate-50 z-20 shadow-[-12px_0_20px_-12px_rgba(0,0,0,0.08)]">
@@ -922,31 +1051,16 @@ function AdminBlogListInner({
 
 												{/* Category select */}
 												<td className="px-6 py-5">
-													<div className="relative inline-block">
-														<select
-															disabled={!!updatingMetadataId}
-															value={blog.category || "General"}
-															onChange={(e) =>
-																handleUpdateMetadata(blog.id, {
-																	category: e.target.value,
-																})
-															}
-															aria-label={`Category for "${blog.title}"`}
-															className={`appearance-none px-3 py-1.5 pr-8 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)} disabled:opacity-50`}
-														>
-															{CATEGORIES.map((cat) => (
-																<option key={cat} value={cat}>
-																	{cat}
-																</option>
-															))}
-														</select>
-														<ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-40" />
-														{updatingMetadataId === blog.id && (
-															<div className="absolute -right-6 top-1/2 -translate-y-1/2">
-																<Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
-															</div>
-														)}
-													</div>
+													<CategoryDropdown
+														value={blog.category}
+														onChange={(newCategory) =>
+															handleUpdateMetadata(blog.id, {
+																category: newCategory,
+															})
+														}
+														disabled={!!updatingMetadataId}
+														isLoading={updatingMetadataId === blog.id}
+													/>
 												</td>
 
 												{/* Headline toggle */}
@@ -971,6 +1085,38 @@ function AdminBlogListInner({
 														>
 															<Sparkles
 																className={`w-4 h-4 ${blog.is_headline ? "fill-blue-600" : ""}`}
+															/>
+														</button>
+													</div>
+												</td>
+
+												{/* PIN Lock toggle */}
+												<td className="px-6 py-5">
+													<div className="flex justify-center">
+														<button
+															onClick={() =>
+																handleUpdateMetadata(blog.id, {
+																	is_private: !blog.is_private,
+																})
+															}
+															aria-label={
+																blog.is_private
+																	? `Remove PIN Lock from "${blog.title}"`
+																	: `Set "${blog.title}" as PIN Locked`
+															}
+															title={
+																blog.is_private
+																	? "PIN Protection Active"
+																	: "No PIN Protection"
+															}
+															className={`p-2 rounded-xl border transition-all duration-300 ${
+																blog.is_private
+																	? "bg-amber-50 border-amber-200 text-amber-600 shadow-sm"
+																	: "bg-white border-slate-100 text-slate-300 hover:text-amber-500 hover:bg-amber-50"
+															}`}
+														>
+															<Lock
+																className={`w-4 h-4 ${blog.is_private ? "text-amber-600 fill-amber-500/20" : ""}`}
 															/>
 														</button>
 													</div>
@@ -1055,8 +1201,16 @@ function AdminBlogListInner({
 														<Link
 															href={`/blog/${blog.slug}`}
 															target="_blank"
-															className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-															title="View Live"
+															className={`p-2 rounded-lg transition-all ${
+																blog.published
+																	? "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+																	: "text-amber-500 hover:text-amber-700 hover:bg-amber-50"
+															}`}
+															title={
+																blog.published
+																	? "View Live"
+																	: "Preview Draft Live"
+															}
 														>
 															<Eye className="w-4 h-4" />
 														</Link>
@@ -1226,22 +1380,16 @@ function AdminBlogListInner({
 
 									{/* Card Body: Meta chips */}
 									<div className="mt-3 flex flex-wrap items-center gap-2">
-										<select
-											disabled={!!updatingMetadataId}
-											value={blog.category || "General"}
-											onChange={(e) =>
+										<CategoryDropdown
+											value={blog.category}
+											onChange={(newCategory) =>
 												handleUpdateMetadata(blog.id, {
-													category: e.target.value,
+													category: newCategory,
 												})
 											}
-											className={`appearance-none px-2.5 py-1 pr-6 border text-[9px] font-black uppercase tracking-widest rounded-full cursor-pointer transition-all outline-none focus:ring-2 focus:ring-blue-500/20 ${getCategoryStyles(blog.category)} disabled:opacity-50`}
-										>
-											{CATEGORIES.map((cat) => (
-												<option key={cat} value={cat}>
-													{cat}
-												</option>
-											))}
-										</select>
+											disabled={!!updatingMetadataId}
+											isLoading={updatingMetadataId === blog.id}
+										/>
 										<span
 											className={`text-[9px] font-black uppercase tracking-widest ${blog.published ? "text-emerald-600" : "text-amber-600"}`}
 										>
@@ -1251,6 +1399,12 @@ function AdminBlogListInner({
 											<span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600">
 												<Sparkles className="w-3 h-3 fill-blue-600" />
 												Headline
+											</span>
+										)}
+										{blog.is_private && (
+											<span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-amber-600">
+												<Lock className="w-3 h-3 text-amber-600" />
+												PIN Locked
 											</span>
 										)}
 										<div className="flex items-center gap-1 text-[10px] text-slate-400 ml-auto">
@@ -1305,8 +1459,17 @@ function AdminBlogListInner({
 											<Link
 												href={`/blog/${blog.slug}`}
 												target="_blank"
-												className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
-												aria-label="View live"
+												className={`p-2.5 rounded-xl transition-all ${
+													blog.published
+														? "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+														: "text-amber-500 hover:text-amber-700 hover:bg-amber-50"
+												}`}
+												aria-label={
+													blog.published ? "View live" : "Preview draft live"
+												}
+												title={
+													blog.published ? "View Live" : "Preview Draft Live"
+												}
 											>
 												<Eye className="w-4 h-4" />
 											</Link>

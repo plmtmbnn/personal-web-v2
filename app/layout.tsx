@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Varela_Round, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CompactBottomBar from "@/features/shared/components/CompactBottomBar";
@@ -8,7 +8,16 @@ import CommandPalette from "@/features/shared/components/CommandPalette";
 import AuthProvider from "@/features/auth/components/AuthProvider";
 import { createMetadata } from "@/lib/shared/metadata";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { SITE, SOCIAL_LINKS } from "@/lib/shared/constants";
+
 export const metadata: Metadata = createMetadata();
+
+export const viewport: Viewport = {
+	themeColor: "#f8fafc",
+	width: "device-width",
+	initialScale: 1,
+	maximumScale: 1,
+};
 
 // Primary font - Varela Round
 const varela = Varela_Round({
@@ -25,8 +34,6 @@ const jetbrainsMono = JetBrains_Mono({
 	display: "swap",
 });
 
-import { SITE } from "@/lib/shared/constants";
-
 export default function RootLayout({
 	children,
 }: Readonly<{
@@ -39,23 +46,22 @@ export default function RootLayout({
 		url: SITE.url,
 		jobTitle: "Software Engineer",
 		description: SITE.description,
-		sameAs: [
-			"https://github.com/plmtmbnn",
-			"https://linkedin.com/in/polma-tambunan",
-			"https://x.com/LFC",
-		],
+		sameAs: [SOCIAL_LINKS.github, SOCIAL_LINKS.linkedin, SOCIAL_LINKS.twitter],
 	};
 
 	return (
-		<html lang="en">
-			<SpeedInsights />
-			<body
-				className={`${varela.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
-			>
+		<html lang="en" suppressHydrationWarning>
+			<head>
 				<script
+					id="schema-org"
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 				/>
+			</head>
+			<body
+				className={`${varela.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
+				suppressHydrationWarning
+			>
 				<AuthProvider>
 					<Suspense fallback={null}>
 						<NavigationLoader />
@@ -63,6 +69,7 @@ export default function RootLayout({
 					{children}
 					<CommandPalette />
 					<CompactBottomBar />
+					<SpeedInsights />
 				</AuthProvider>
 			</body>
 		</html>

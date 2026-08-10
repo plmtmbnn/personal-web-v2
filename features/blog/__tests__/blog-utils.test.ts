@@ -1,76 +1,61 @@
 import { describe, it, expect } from "vitest";
 import type { Blog } from "../data";
-
-// Helper function to filter blogs (extracted from BlogView logic)
-function filterBlogs(
-	blogs: Blog[],
-	searchQuery: string,
-	category: string,
-): Blog[] {
-	return blogs.filter((blog) => {
-		const matchesSearch =
-			blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			blog.description.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchesCategory =
-			category === "All" ||
-			blog.category.toLowerCase() === category.toLowerCase();
-		return matchesSearch && matchesCategory;
-	});
-}
-
-// Helper function to sort blogs (extracted from BlogView logic)
-function sortBlogs(blogs: Blog[]): Blog[] {
-	return [...blogs].sort((a, b) => {
-		if (a.is_headline && !b.is_headline) return -1;
-		if (!a.is_headline && b.is_headline) return 1;
-		return (
-			new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-		);
-	});
-}
+import { filterBlogs, sortBlogs } from "../utils";
 
 describe("Blog Filtering and Sorting", () => {
 	const mockBlogs: Blog[] = [
 		{
+			id: "1",
 			slug: "tech-article-1",
 			title: "Understanding React Hooks",
 			description: "A deep dive into React hooks and their use cases",
+			content: "Content for react hooks",
 			category: "Tech",
-			publishedAt: "2024-01-15",
-			readTime: 5,
+			date: "2024-01-15",
+			published: true,
+			image_url: null,
 			is_headline: false,
-			tags: ["react", "hooks"],
+			is_private: false,
 		},
 		{
+			id: "2",
 			slug: "finance-article-1",
 			title: "Investment Strategies for 2024",
 			description: "Learn about modern investment approaches",
+			content: "Content for finance",
 			category: "Finance",
-			publishedAt: "2024-01-20",
-			readTime: 8,
+			date: "2024-01-20",
+			published: true,
+			image_url: null,
 			is_headline: true,
-			tags: ["investment", "finance"],
+			is_private: false,
 		},
 		{
+			id: "3",
 			slug: "tech-article-2",
 			title: "TypeScript Best Practices",
 			description: "Essential TypeScript patterns for production code",
+			content: "Content for ts",
 			category: "Tech",
-			publishedAt: "2024-01-25",
-			readTime: 6,
+			date: "2024-01-25",
+			published: true,
+			image_url: null,
 			is_headline: false,
-			tags: ["typescript", "best-practices"],
+			is_private: false,
 		},
 		{
+			id: "4",
 			slug: "running-article-1",
 			title: "Marathon Training Guide",
 			description:
 				"Complete guide to marathon preparation and hooks for progress tracking",
+			content: "Content for marathon",
 			category: "Running",
-			publishedAt: "2024-01-10",
-			readTime: 10,
+			date: "2024-01-10",
+			published: true,
+			image_url: null,
 			is_headline: false,
-			tags: ["running", "marathon"],
+			is_private: false,
 		},
 	];
 
@@ -161,8 +146,8 @@ describe("Blog Filtering and Sorting", () => {
 
 		it("should maintain relative order of multiple headlines by date", () => {
 			const blogsWithMultipleHeadlines: Blog[] = [
-				{ ...mockBlogs[0], is_headline: true, publishedAt: "2024-01-15" },
-				{ ...mockBlogs[1], is_headline: true, publishedAt: "2024-01-20" },
+				{ ...mockBlogs[0], is_headline: true, date: "2024-01-15" },
+				{ ...mockBlogs[1], is_headline: true, date: "2024-01-20" },
 				mockBlogs[2],
 			];
 
@@ -170,8 +155,8 @@ describe("Blog Filtering and Sorting", () => {
 
 			expect(result[0].is_headline).toBe(true);
 			expect(result[1].is_headline).toBe(true);
-			expect(result[0].publishedAt).toBe("2024-01-20"); // Newer headline first
-			expect(result[1].publishedAt).toBe("2024-01-15");
+			expect(result[0].date).toBe("2024-01-20"); // Newer headline first
+			expect(result[1].date).toBe("2024-01-15");
 		});
 	});
 
@@ -181,7 +166,7 @@ describe("Blog Filtering and Sorting", () => {
 			const sorted = sortBlogs(filtered);
 
 			expect(sorted).toHaveLength(2);
-			expect(sorted[0].publishedAt).toBe("2024-01-25"); // Newer first
+			expect(sorted[0].date).toBe("2024-01-25"); // Newer first
 		});
 
 		it("should handle empty results after filtering", () => {
@@ -211,7 +196,6 @@ describe("Blog Filtering and Sorting", () => {
 			const result = filterBlogs(emptyBlogs, "", "All");
 
 			expect(result).toHaveLength(0);
-			// This scenario should show "No Articles Yet"
 		});
 
 		it("should detect no results from active filter", () => {
@@ -221,21 +205,18 @@ describe("Blog Filtering and Sorting", () => {
 
 			expect(result).toHaveLength(0);
 			expect(hasActiveFilter).toBe(true);
-			// This scenario should show "No Stories Found" with "Clear Filters" button
 		});
 
 		it("should detect no results from category filter", () => {
 			const result = filterBlogs(mockBlogs, "", "General");
 
 			expect(result).toHaveLength(0);
-			// This scenario should show "No Stories Found" with "Clear Filters" button
 		});
 
 		it("should detect valid results after filtering", () => {
 			const result = filterBlogs(mockBlogs, "React", "All");
 
 			expect(result).toHaveLength(1);
-			// This scenario should show the filtered blog cards
 		});
 	});
 });

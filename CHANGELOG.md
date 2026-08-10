@@ -1,3 +1,10 @@
+# [0.66.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.65.2...v0.66.0) (2026-08-10)
+
+
+### Features
+
+* **strava:** add live activity sync and harden cron security ([350d08d](https://github.com/plmtmbnn/personal-web-v2/commit/350d08db5f0d23433e912f58ff79a41c876ca719))
+
 ## [0.65.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.65.1...v0.65.2) (2026-08-10)
 
 ## [0.65.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.65.0...v0.65.1) (2026-08-06)

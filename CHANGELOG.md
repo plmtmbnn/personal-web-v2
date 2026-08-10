@@ -1,3 +1,5 @@
+## [0.65.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.65.1...v0.65.2) (2026-08-10)
+
 ## [0.65.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.65.0...v0.65.1) (2026-08-06)
 
 

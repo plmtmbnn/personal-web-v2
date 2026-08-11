@@ -1,3 +1,10 @@
+## [0.66.3](https://github.com/plmtmbnn/personal-web-v2/compare/v0.66.2...v0.66.3) (2026-08-11)
+
+
+### Bug Fixes
+
+* **running:** use inline type import for framer-motion controls in SwipeCard ([84fcf1c](https://github.com/plmtmbnn/personal-web-v2/commit/84fcf1c2f89c0eaa2b719ee0b0b6bda518061e92))
+
 ## [0.66.2](https://github.com/plmtmbnn/personal-web-v2/compare/v0.66.1...v0.66.2) (2026-08-11)
 
 ## [0.66.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.66.0...v0.66.1) (2026-08-11)

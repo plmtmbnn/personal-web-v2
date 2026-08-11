@@ -1,9 +1,5 @@
 import type { ReactNode } from "react";
-import {
-	motion,
-	type AnimationControls,
-	type MotionValue,
-} from "framer-motion";
+import { motion, type MotionValue, type useAnimation } from "framer-motion";
 import type { PersonalBestItem } from "../types/personal-bests";
 import { CardContent } from "./CardContent";
 
@@ -14,7 +10,7 @@ interface SwipeCardProps {
 	totalItems: number;
 	x: MotionValue<number>;
 	rotate: MotionValue<number>;
-	controls: AnimationControls;
+	controls: ReturnType<typeof useAnimation>;
 	isAnimating: boolean;
 	shouldReduceMotion: boolean;
 	onDragEnd: (

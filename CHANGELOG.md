@@ -1,3 +1,10 @@
+## [0.66.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.66.0...v0.66.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* **tasks:** correct status selector dropdown positioning and options display ([6227952](https://github.com/plmtmbnn/personal-web-v2/commit/62279523e865725eab249dd9b3d310851a2b3a47))
+
 # [0.66.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.65.2...v0.66.0) (2026-08-10)
 
 

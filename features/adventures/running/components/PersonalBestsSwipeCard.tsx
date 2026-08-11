@@ -9,7 +9,6 @@ import {
 	useAnimation,
 } from "framer-motion";
 import { Trophy, Layers } from "lucide-react";
-import type { PersonalBestItem } from "../types/personal-bests";
 import { personalBests } from "../data/personal-bests";
 import { SwipeCard } from "./SwipeCard";
 import { DragStamps } from "./DragStamps";

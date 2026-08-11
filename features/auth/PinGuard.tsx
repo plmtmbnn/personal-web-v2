@@ -73,6 +73,8 @@ export default function PinGuard({ children }: PinGuardProps) {
 						data.error || "Too many attempts. Locked out for 10 minutes.",
 					);
 					setPin("");
+					// Re-focus input after error
+					setTimeout(() => inputRef.current?.focus(), 100);
 				} else if (response.ok && data.authenticated) {
 					const session = {
 						timestamp: Date.now(),
@@ -83,9 +85,13 @@ export default function PinGuard({ children }: PinGuardProps) {
 				} else {
 					setError(data.error || "Incorrect Authenticator Code");
 					setPin(""); // Clear form on mismatch
+					// Re-focus input after error
+					setTimeout(() => inputRef.current?.focus(), 100);
 				}
 			} catch (_err) {
 				setError("Network error, please try again.");
+				// Re-focus input after error
+				setTimeout(() => inputRef.current?.focus(), 100);
 			} finally {
 				setIsLoading(false);
 			}

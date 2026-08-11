@@ -21,6 +21,7 @@ import {
 	Archive,
 } from "lucide-react";
 import type { Task, TaskStatus } from "@/features/tasks/types";
+import { StatusSelector } from "./StatusSelector";
 import {
 	motion,
 	AnimatePresence,
@@ -1711,45 +1712,18 @@ function TaskItem({
 									}`}
 								>
 									{/* Status Selector Dropdown */}
-									<div className="relative inline-block mr-1">
-										<select
-											value={optimisticStatus}
-											onChange={(e) => {
-												const nextStatus = e.target.value as TaskStatus;
-												setOptimisticStatus(nextStatus);
-												const isDone = nextStatus === "done";
-												onUpdate(task.id, {
-													status: nextStatus,
-													completed_at: isDone
-														? new Date().toISOString()
-														: null,
-												});
-											}}
-											className={`appearance-none border text-[9px] font-black uppercase tracking-wider rounded-xl pl-2.5 pr-7 py-1 focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all cursor-pointer ${
-												TASK_STATUS_CONFIG[optimisticStatus]?.color ||
-												"bg-white border-slate-200 text-slate-700"
-											}`}
-											title="Change Task Status"
-										>
-											{(
-												Object.entries(TASK_STATUS_CONFIG) as [
-													TaskStatus,
-													(typeof TASK_STATUS_CONFIG)[TaskStatus],
-												][]
-											).map(([key, cfg]) => (
-												<option
-													key={key}
-													value={key}
-													className="text-slate-750 bg-white font-bold uppercase tracking-wider"
-												>
-													{cfg.label.toUpperCase()}
-												</option>
-											))}
-										</select>
-										<div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-											<ChevronDown className="w-2.5 h-2.5" />
-										</div>
-									</div>
+									<StatusSelector
+										value={optimisticStatus}
+										onChange={(nextStatus) => {
+											setOptimisticStatus(nextStatus);
+											const isDone = nextStatus === "done";
+											onUpdate(task.id, {
+												status: nextStatus,
+												completed_at: isDone ? new Date().toISOString() : null,
+											});
+										}}
+										disabled={false}
+									/>
 
 									<button
 										type="button"

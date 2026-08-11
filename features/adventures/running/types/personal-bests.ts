@@ -1,0 +1,17 @@
+import type { LucideIcon } from "lucide-react";
+
+export interface PersonalBestItem {
+	id: string;
+	distance: string;
+	distanceKm: number;
+	time: string;
+	pace: string;
+	elevation?: string;
+	badge: string;
+	icon: LucideIcon;
+	color: string;
+	badgeBg: string;
+	bgGlow: string;
+	borderAccent: string;
+	isHighest?: boolean;
+}

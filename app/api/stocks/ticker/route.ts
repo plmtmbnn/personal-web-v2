@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { gotScraping } from "got-scraping";
 import { redis } from "@/lib/core/redis";
 
 export const dynamic = "force-dynamic";
@@ -54,21 +53,19 @@ const FALLBACK_STOCKS = [
 
 export async function GET() {
 	try {
-		// 1. Try server-side fetch from CNBC using got-scraping to avoid browser CORS
-		const response = await gotScraping({
-			url: CNBC_URL,
+		// 1. Try server-side fetch from CNBC using native fetch to avoid browser CORS
+		const response = await fetch(CNBC_URL, {
 			headers: {
 				Referer: "https://www.cnbc.com/",
 				"User-Agent":
 					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
 				Accept: "application/json, text/plain, */*",
 			},
-			timeout: { request: 8000 },
-			responseType: "json",
+			signal: AbortSignal.timeout(8000),
 		});
 
-		if (response.statusCode >= 200 && response.statusCode < 300) {
-			const body = response.body as any;
+		if (response.ok) {
+			const body = (await response.json()) as any;
 			const quotes = body?.FormattedQuoteResult?.FormattedQuote;
 
 			if (Array.isArray(quotes) && quotes.length > 0) {

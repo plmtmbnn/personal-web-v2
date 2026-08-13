@@ -75,8 +75,6 @@ const nextConfig: NextConfig = {
 
 	serverExternalPackages: [
 		"node-sql-parser",
-		"got-scraping",
-		"header-generator",
 		"jsdom",
 		"@mozilla/readability",
 		"turndown",

@@ -14,9 +14,31 @@ import {
 	Database,
 	Files,
 	Table as TableIcon,
+	Sparkles,
+	ShieldCheck,
 } from "lucide-react";
 
 const utilities = [
+	{
+		title: "URL Safety Inspector",
+		slug: "url-inspector",
+		description:
+			"Detect phishing links, IDN homographs, shorteners, raw IP hosts, and invalid URL characters.",
+		accent: "bg-emerald-600",
+		color: "text-emerald-600",
+		bg: "bg-emerald-600/5",
+		icon: ShieldCheck,
+	},
+	{
+		title: "Spinner Wheel",
+		slug: "spinner-wheel",
+		description:
+			"Interactive decision wheel & random name picker with audio feedback, presets, and physics.",
+		accent: "bg-purple-600",
+		color: "text-purple-600",
+		bg: "bg-purple-600/5",
+		icon: Sparkles,
+	},
 	{
 		title: "Running Timer",
 		slug: "timer",

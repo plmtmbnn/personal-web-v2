@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { type NextRequest, NextResponse } from "next/server";
 import { getStockData, saveStockData, redis } from "@/lib/core/redis";
-import { gotScraping } from "got-scraping";
 import { FALLBACK_IDX_STOCKS } from "@/features/utils/stock-tools/stock-explorer/data/fallbackData";
 
 export const dynamic = "force-dynamic";
@@ -50,20 +49,22 @@ export async function GET(request: NextRequest) {
 					"Redis cache empty or force refresh requested. Attempting fetch from IDX...",
 				);
 
-				const response = await gotScraping({
-					url: "https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
-					headers: {
-						Referer: "https://www.idx.co.id/",
-						"User-Agent":
-							"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-						Accept: "application/json, text/plain, */*",
+				const res = await fetch(
+					"https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
+					{
+						headers: {
+							Referer: "https://www.idx.co.id/",
+							"User-Agent":
+								"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+							Accept: "application/json, text/plain, */*",
+							"Accept-Language": "en-US,en;q=0.9,id;q=0.8",
+						},
+						signal: AbortSignal.timeout(8000),
 					},
-					timeout: { request: 8000 },
-					responseType: "json",
-				});
+				);
 
-				if (response.statusCode >= 200 && response.statusCode < 300) {
-					const body = response.body as any;
+				if (res.ok) {
+					const body = (await res.json()) as any;
 					if (body && Array.isArray(body.data) && body.data.length > 0) {
 						// Store to Redis (12h TTL + backup key)
 						await saveStockData(body.data, 43200);

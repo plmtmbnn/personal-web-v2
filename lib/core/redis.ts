@@ -17,17 +17,22 @@ export const CACHE_KEYS = {
 	SESSION: (sessionId: string) => `session:${sessionId}`,
 	SESSION_META: (sessionId: string) => `session:meta:${sessionId}`,
 	STOCK_SUMMARY: "idx:stock-summary",
+	STOCK_SUMMARY_BACKUP: "idx:stock-summary:backup",
 };
 
 /**
- * Save stock data to Redis (12 hours TTL).
+ * Save stock data to Redis (12 hours TTL + perpetual backup).
  */
 export async function saveStockData(data: any[], ttlSeconds = 43200) {
 	try {
 		const key = CACHE_KEYS.STOCK_SUMMARY;
+		const backupKey = CACHE_KEYS.STOCK_SUMMARY_BACKUP;
 		const value = JSON.stringify(data);
-		// Expire after 12 hours (43200 seconds)
-		await redis.set(key, value, { ex: ttlSeconds });
+		// Save primary with 12h TTL and backup key indefinitely
+		await Promise.all([
+			redis.set(key, value, { ex: ttlSeconds }),
+			redis.set(backupKey, value),
+		]);
 		return true;
 	} catch (error) {
 		console.error("Redis Save Stock Error:", error);
@@ -36,12 +41,16 @@ export async function saveStockData(data: any[], ttlSeconds = 43200) {
 }
 
 /**
- * Retrieve stock data from Redis.
+ * Retrieve stock data from Redis (checks primary cache first, then backup).
  */
 export async function getStockData(): Promise<any[] | null> {
 	try {
 		const key = CACHE_KEYS.STOCK_SUMMARY;
-		const data = await redis.get<string>(key);
+		const backupKey = CACHE_KEYS.STOCK_SUMMARY_BACKUP;
+		let data = await redis.get<string>(key);
+		if (!data) {
+			data = await redis.get<string>(backupKey);
+		}
 		if (!data) return null;
 		return typeof data === "string" ? JSON.parse(data) : data;
 	} catch (error) {

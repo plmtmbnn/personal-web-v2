@@ -87,6 +87,8 @@ export default function StockExplorerView() {
 		});
 	};
 
+	const [dataSource, setDataSource] = useState<string | null>(null);
+
 	const fetchData = useCallback(async () => {
 		setIsLoading(true);
 		setError(null);
@@ -103,6 +105,9 @@ export default function StockExplorerView() {
 			}
 
 			setRawStocks(json.data);
+			if (json.source) {
+				setDataSource(json.source);
+			}
 			if (json.metadata?.lastFetchAt) {
 				setLastSync(new Date(json.metadata.lastFetchAt).toLocaleTimeString());
 			} else {
@@ -136,7 +141,24 @@ export default function StockExplorerView() {
 						Advanced Trading & Volume Terminal
 					</p>
 				</div>
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-3 sm:gap-4">
+					{dataSource && (
+						<span
+							className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${
+								dataSource === "idx_live"
+									? "bg-emerald-50 text-emerald-700 border-emerald-200"
+									: dataSource === "redis"
+										? "bg-indigo-50 text-indigo-700 border-indigo-200"
+										: "bg-amber-50 text-amber-700 border-amber-200"
+							}`}
+						>
+							{dataSource === "idx_live"
+								? "● IDX Live"
+								: dataSource === "redis"
+									? "● Redis Cache"
+									: "○ Backup Payload"}
+						</span>
+					)}
 					{lastSync && (
 						<p className="hidden md:block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
 							Sync: {lastSync}

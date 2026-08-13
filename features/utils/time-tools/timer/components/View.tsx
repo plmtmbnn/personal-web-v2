@@ -17,8 +17,11 @@ import {
 	Unlock,
 	Trophy,
 	Activity,
-	CheckCircle2,
 	Zap,
+	Sparkles,
+	Clock,
+	Plus,
+	Minus,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -87,35 +90,52 @@ const PHASE_ICONS: Record<PhaseType, React.FC<{ className?: string }>> = {
 function CountdownRing({
 	progress,
 	color,
-	size = 320,
-	strokeWidth = 10,
+	size = 300,
+	strokeWidth = 9,
 	children,
+	onClick,
 }: {
 	progress: number; // 0–1
 	color: string;
 	size?: number;
 	strokeWidth?: number;
 	children?: React.ReactNode;
+	onClick?: () => void;
 }) {
 	const r = (size - strokeWidth * 2) / 2;
 	const circ = 2 * Math.PI * r;
 	const offset = circ * (1 - Math.max(0, Math.min(1, progress)));
 
 	return (
-		<div className="relative" style={{ width: size, height: size }}>
+		<div
+			className={`relative group ${onClick ? "cursor-pointer" : ""}`}
+			style={{ width: size, height: size }}
+			onClick={onClick}
+		>
 			<svg
 				width={size}
 				height={size}
 				viewBox={`0 0 ${size} ${size}`}
-				className="-rotate-90"
+				className="-rotate-90 transition-transform duration-500 group-hover:scale-[1.02]"
 			>
+				{/* Ambient back glow */}
+				<circle
+					cx={size / 2}
+					cy={size / 2}
+					r={r}
+					fill="none"
+					stroke={color}
+					strokeWidth={strokeWidth * 1.5}
+					strokeOpacity={0.15}
+					className="blur-xs"
+				/>
 				{/* Track */}
 				<circle
 					cx={size / 2}
 					cy={size / 2}
 					r={r}
 					fill="none"
-					stroke="rgba(255,255,255,0.07)"
+					stroke="rgba(255,255,255,0.08)"
 					strokeWidth={strokeWidth}
 				/>
 				{/* Progress arc */}
@@ -135,8 +155,8 @@ function CountdownRing({
 					filter="url(#glow)"
 				/>
 				<defs>
-					<filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-						<feGaussianBlur stdDeviation="6" result="blur" />
+					<filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+						<feGaussianBlur stdDeviation="8" result="blur" />
 						<feMerge>
 							<feMergeNode in="blur" />
 							<feMergeNode in="SourceGraphic" />
@@ -164,42 +184,55 @@ function PhaseTimeline({
 	const isSetup = currentIndex === -1;
 
 	return (
-		<div className="w-full max-w-2xl px-1">
-			<div className="flex h-3 rounded-full overflow-hidden gap-[2px] bg-slate-100/50 p-0.5 border border-slate-200/60">
+		<div className="w-full max-w-xl px-1 space-y-1.5">
+			<div className="flex h-3.5 rounded-2xl overflow-hidden gap-[3px] bg-black/30 p-1 border border-white/10 shadow-inner">
 				{queue.map((phase, i) => {
 					const w = (phase.duration / total) * 100;
 					const colors = {
 						warmup:
-							i <= currentIndex || isSetup ? "bg-amber-500" : "bg-amber-900/50",
+							i < currentIndex
+								? "bg-amber-500/50"
+								: i === currentIndex
+									? "bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.8)]"
+									: isSetup
+										? "bg-amber-500/80"
+										: "bg-amber-950/40",
 						speed:
-							i <= currentIndex || isSetup ? "bg-rose-500" : "bg-rose-900/50",
+							i < currentIndex
+								? "bg-rose-500/50"
+								: i === currentIndex
+									? "bg-rose-400 shadow-[0_0_12px_rgba(251,113,133,0.8)]"
+									: isSetup
+										? "bg-rose-500/80"
+										: "bg-rose-950/40",
 						rest:
-							i <= currentIndex || isSetup
-								? "bg-emerald-500"
-								: "bg-emerald-900/50",
+							i < currentIndex
+								? "bg-emerald-500/50"
+								: i === currentIndex
+									? "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+									: isSetup
+										? "bg-emerald-500/80"
+										: "bg-emerald-950/40",
 						cooldown:
-							i <= currentIndex || isSetup ? "bg-blue-500" : "bg-blue-900/50",
+							i < currentIndex
+								? "bg-blue-500/50"
+								: i === currentIndex
+									? "bg-blue-400 shadow-[0_0_12px_rgba(96,165,250,0.8)]"
+									: isSetup
+										? "bg-blue-500/80"
+										: "bg-blue-950/40",
 					};
 					return (
 						<div
 							key={`timeline-${phase.label}-${phase.duration}-${i}`}
-							className={`${colors[phase.type]} rounded-sm transition-all duration-500 ${
-								i === currentIndex ? "ring-1 ring-white" : ""
+							className={`${colors[phase.type]} rounded-xs transition-all duration-500 relative ${
+								i === currentIndex ? "scale-y-110 z-10" : ""
 							}`}
 							style={{ width: `${w}%` }}
-							title={phase.label}
+							title={`${phase.label} (${formatTime(phase.duration)})`}
 						/>
 					);
 				})}
-			</div>
-			<div
-				className={`flex justify-between mt-2 text-[10px] font-extrabold uppercase tracking-wider ${
-					isSetup ? "text-slate-500" : "text-white/60"
-				}`}
-			>
-				<span>Start</span>
-				<span>{queue.length} phases</span>
-				<span>Finish</span>
 			</div>
 		</div>
 	);
@@ -215,11 +248,17 @@ function NextPhasePreview({ phase }: { phase: Phase }) {
 		<motion.div
 			initial={reduceMotion ? false : { opacity: 0, y: 6 }}
 			animate={{ opacity: 1, y: 0 }}
-			className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-xl ${theme.pill} text-xs text-white uppercase tracking-widest`}
+			className={`flex items-center gap-2.5 px-4 py-1.5 rounded-full border backdrop-blur-2xl ${theme.pill} text-xs font-bold text-white tracking-wide shadow-lg`}
 		>
-			<span className="opacity-50">Next →</span>
+			<span className="text-[10px] uppercase font-black tracking-widest opacity-60">
+				Up Next
+			</span>
+			<div className="w-px h-3 bg-white/20" />
 			<Icon className="w-3.5 h-3.5" />
 			<span>{phase.label}</span>
+			<span className="text-[11px] font-mono opacity-80 tabular-nums">
+				({formatTime(phase.duration)})
+			</span>
 		</motion.div>
 	);
 }
@@ -230,25 +269,34 @@ function LapLog({ laps }: { laps: LapEntry[] }) {
 	const reduceMotion = useReducedMotion();
 	if (laps.length === 0) return null;
 	return (
-		<div className="w-full max-w-sm space-y-1.5 max-h-40 overflow-y-auto scrollbar-hide pr-1">
-			{[...laps].reverse().map((lap) => {
+		<div className="w-full max-w-md space-y-1.5 max-h-36 overflow-y-auto scrollbar-hide pr-1">
+			<div className="text-[10px] font-extrabold uppercase tracking-widest text-white/40 mb-1 text-left px-1">
+				Completed Laps ({laps.length})
+			</div>
+			{[...laps].reverse().map((lap, idx) => {
 				const theme = PHASE_THEME[lap.type];
+				const Icon = PHASE_ICONS[lap.type];
 				return (
 					<motion.div
-						key={`lap-${lap.completedAt}`}
+						key={`lap-${lap.completedAt}-${idx}`}
 						initial={reduceMotion ? false : { opacity: 0, x: -8 }}
 						animate={{ opacity: 1, x: 0 }}
-						className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/5 border border-white/5"
+						className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md"
 					>
 						<div className="flex items-center gap-2.5">
-							<CheckCircle2 className={`w-3.5 h-3.5 ${theme.text}`} />
-							<span className="text-xs font-bold opacity-70 text-white">
+							<Icon className={`w-3.5 h-3.5 ${theme.text}`} />
+							<span className="text-xs font-extrabold text-white/90">
 								{lap.label}
 							</span>
 						</div>
-						<span className="text-xs text-white tabular-nums opacity-50">
-							{formatTime(lap.duration)}
-						</span>
+						<div className="flex items-center gap-3">
+							<span className="text-[10px] font-semibold text-white/40 uppercase">
+								@ {formatTime(lap.completedAt)}
+							</span>
+							<span className="text-xs text-white font-mono font-bold tabular-nums">
+								{formatTime(lap.duration)}
+							</span>
+						</div>
 					</motion.div>
 				);
 			})}
@@ -331,6 +379,82 @@ function formatTime(seconds: number) {
 	return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
+// ─── Preset Configs ─────────────────────────────────────────────────────────
+
+interface WorkoutPreset {
+	id: string;
+	name: string;
+	desc: string;
+	warmupMin: number;
+	warmupSec: number;
+	speedMin: number;
+	speedSec: number;
+	restMin: number;
+	restSec: number;
+	reps: number;
+	cooldownMin: number;
+	cooldownSec: number;
+}
+
+const WORKOUT_PRESETS: WorkoutPreset[] = [
+	{
+		id: "hiit-20-10",
+		name: "HIIT 20/10",
+		desc: "8× 20s work / 10s rest",
+		warmupMin: 3,
+		warmupSec: 0,
+		speedMin: 0,
+		speedSec: 20,
+		restMin: 0,
+		restSec: 10,
+		reps: 8,
+		cooldownMin: 3,
+		cooldownSec: 0,
+	},
+	{
+		id: "track-400m",
+		name: "4×400m Repeats",
+		desc: "4× 1m30s speed / 1m rest",
+		warmupMin: 5,
+		warmupSec: 0,
+		speedMin: 1,
+		speedSec: 30,
+		restMin: 1,
+		restSec: 0,
+		reps: 4,
+		cooldownMin: 5,
+		cooldownSec: 0,
+	},
+	{
+		id: "sprint-30-30",
+		name: "30/30 Sprints",
+		desc: "10× 30s sprint / 30s rest",
+		warmupMin: 5,
+		warmupSec: 0,
+		speedMin: 0,
+		speedSec: 30,
+		restMin: 0,
+		restSec: 30,
+		reps: 10,
+		cooldownMin: 5,
+		cooldownSec: 0,
+	},
+	{
+		id: "tabata",
+		name: "Tabata Protocol",
+		desc: "Classic 4-min Tabata",
+		warmupMin: 2,
+		warmupSec: 0,
+		speedMin: 0,
+		speedSec: 20,
+		restMin: 0,
+		restSec: 10,
+		reps: 8,
+		cooldownMin: 2,
+		cooldownSec: 0,
+	},
+];
+
 // ─── Setup Input Card ────────────────────────────────────────────────────────
 
 function SetupCard({
@@ -352,18 +476,51 @@ function SetupCard({
 	onMinChange: (v: number) => void;
 	onSecChange: (v: number) => void;
 }) {
+	const stepTime = (deltaSec: number) => {
+		const currentTotal = min * 60 + sec;
+		const nextTotal = Math.max(0, currentTotal + deltaSec);
+		onMinChange(Math.floor(nextTotal / 60));
+		onSecChange(nextTotal % 60);
+	};
+
 	return (
-		<div className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+		<div className="p-4 sm:p-5 bg-white border border-slate-200/80 rounded-3xl shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
 			<div className="flex items-center gap-3.5">
 				<div className={`p-3 rounded-2xl border ${bgColor} ${color}`}>
-					<Icon className="w-6 h-6" />
+					<Icon className="w-5 h-5 sm:w-6 sm:h-6" />
 				</div>
-				<span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900">
-					{label}
-				</span>
+				<div>
+					<span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 block">
+						{label}
+					</span>
+					<span className="text-[11px] font-semibold text-slate-500">
+						{formatTime(min * 60 + sec)}
+					</span>
+				</div>
 			</div>
-			<div className="flex items-center gap-3 self-end sm:self-auto">
-				<div className="flex items-center bg-slate-50/80 border border-slate-200/80 rounded-xl px-3 py-2 gap-1 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/10 focus-within:border-indigo-500 transition-all">
+
+			<div className="flex items-center gap-2 self-end sm:self-auto">
+				{/* Quick steppers for mobile & touch accessibility */}
+				<div className="flex items-center gap-1">
+					<button
+						type="button"
+						onClick={() => stepTime(-15)}
+						className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-700 font-bold text-xs hover:bg-slate-200 active:scale-90 transition-all flex items-center justify-center cursor-pointer"
+						title="-15 seconds"
+					>
+						-15s
+					</button>
+					<button
+						type="button"
+						onClick={() => stepTime(15)}
+						className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-700 font-bold text-xs hover:bg-slate-200 active:scale-90 transition-all flex items-center justify-center cursor-pointer"
+						title="+15 seconds"
+					>
+						+15s
+					</button>
+				</div>
+
+				<div className="flex items-center bg-slate-50/80 border border-slate-200/80 rounded-xl px-2.5 py-1.5 gap-1 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/10 focus-within:border-indigo-500 transition-all">
 					<input
 						type="number"
 						inputMode="numeric"
@@ -372,10 +529,10 @@ function SetupCard({
 						onChange={(e) =>
 							onMinChange(Math.max(0, parseInt(e.target.value, 10) || 0))
 						}
-						className="w-10 bg-transparent text-center text-slate-900 font-extrabold text-base focus:outline-none tabular-nums"
+						className="w-9 bg-transparent text-center text-slate-900 font-black text-sm sm:text-base focus:outline-none tabular-nums"
 					/>
 					<span className="text-xs font-bold text-slate-400">m</span>
-					<div className="w-px h-6 bg-slate-200/80 mx-1" />
+					<div className="w-px h-5 bg-slate-200/80 mx-0.5" />
 					<input
 						type="number"
 						inputMode="numeric"
@@ -387,7 +544,7 @@ function SetupCard({
 								Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0)),
 							)
 						}
-						className="w-10 bg-transparent text-center text-slate-900 font-extrabold text-base focus:outline-none tabular-nums"
+						className="w-9 bg-transparent text-center text-slate-900 font-black text-sm sm:text-base focus:outline-none tabular-nums"
 					/>
 					<span className="text-xs font-bold text-slate-400">s</span>
 				</div>
@@ -470,6 +627,35 @@ export default function TimerView() {
 		() => queue.reduce((a, p) => a + p.duration, 0),
 		[queue],
 	);
+
+	const totalWorkSeconds = useMemo(
+		() => reps * (speedMin * 60 + speedSec),
+		[reps, speedMin, speedSec],
+	);
+
+	const totalRestSeconds = useMemo(
+		() => reps * (restMin * 60 + restSec),
+		[reps, restMin, restSec],
+	);
+
+	const workRestRatioLabel = useMemo(() => {
+		if (totalWorkSeconds === 0) return "Setup Workout";
+		if (totalRestSeconds === 0) return "100% Work";
+		const ratio = (totalWorkSeconds / totalRestSeconds).toFixed(1);
+		return `${ratio}:1 Work:Rest`;
+	}, [totalWorkSeconds, totalRestSeconds]);
+
+	const applyPreset = useCallback((preset: WorkoutPreset) => {
+		setWarmupMin(preset.warmupMin);
+		setWarmupSec(preset.warmupSec);
+		setSpeedMin(preset.speedMin);
+		setSpeedSec(preset.speedSec);
+		setRestMin(preset.restMin);
+		setRestSec(preset.restSec);
+		setReps(preset.reps);
+		setCooldownMin(preset.cooldownMin);
+		setCooldownSec(preset.cooldownSec);
+	}, []);
 
 	// ── Audio ────────────────────────────────────────────────────────────────
 
@@ -606,6 +792,29 @@ export default function TimerView() {
 		}
 	};
 
+	const adjustTime = useCallback(
+		(deltaSeconds: number) => {
+			if (!isActive || queue.length === 0) return;
+			const currentPhase = queue[currentPhaseIndex];
+			if (!currentPhase) return;
+
+			if (isPaused) {
+				const nextLeft = Math.max(0, pausedTimeLeftRef.current + deltaSeconds);
+				pausedTimeLeftRef.current = nextLeft;
+				setTimeLeft(nextLeft);
+			} else {
+				phaseStartTimeRef.current += deltaSeconds * 1000;
+				const now = Date.now();
+				const elapsedInPhase = Math.floor(
+					(now - phaseStartTimeRef.current) / 1000,
+				);
+				const newTimeLeft = Math.max(0, currentPhase.duration - elapsedInPhase);
+				setTimeLeft(newTimeLeft);
+			}
+		},
+		[isActive, isPaused, queue, currentPhaseIndex],
+	);
+
 	const handleComplete = useCallback(() => {
 		setIsActive(false);
 		setIsComplete(true);
@@ -698,6 +907,7 @@ export default function TimerView() {
 	// ── Derived ───────────────────────────────────────────────────────────────
 
 	const currentPhase = queue[currentPhaseIndex];
+	const PhaseIcon = currentPhase ? PHASE_ICONS[currentPhase.type] : null;
 	const nextPhase =
 		isActive && currentPhaseIndex < queue.length - 1
 			? queue[currentPhaseIndex + 1]
@@ -706,6 +916,16 @@ export default function TimerView() {
 	const phaseProgress = currentPhase ? 1 - timeLeft / currentPhase.duration : 0;
 	const overallProgress =
 		totalSessionSeconds > 0 ? totalElapsed / totalSessionSeconds : 0;
+
+	const finishEta = useMemo(() => {
+		if (!isActive || totalSessionSeconds === 0) return null;
+		const remainingSec = Math.max(0, totalSessionSeconds - totalElapsed);
+		const etaDate = new Date(Date.now() + remainingSec * 1000);
+		return etaDate.toLocaleTimeString([], {
+			hour: "2-digit",
+			minute: "2-digit",
+		});
+	}, [isActive, totalSessionSeconds, totalElapsed]);
 
 	const theme = isActive
 		? PHASE_THEME[currentPhase?.type ?? "warmup"]
@@ -845,71 +1065,86 @@ export default function TimerView() {
 							animate={{ opacity: 1, scale: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.4 }}
-							className="flex-1 flex flex-col items-center justify-center text-center gap-8"
+							className="flex-1 flex flex-col items-center justify-center text-center gap-6"
 						>
 							<motion.div
 								initial={{ scale: 0 }}
 								animate={{ scale: 1 }}
 								transition={{ type: "spring", stiffness: 180, delay: 0.2 }}
-								className="w-36 h-36 bg-white/10 rounded-full flex items-center justify-center border border-white/20"
+								className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center border border-white/20 shadow-2xl backdrop-blur-xl"
 							>
-								<Trophy className="w-16 h-16 text-white" />
+								<Trophy className="w-14 h-14 text-amber-300 drop-shadow-lg" />
 							</motion.div>
 
 							<div>
-								<h2 className="text-5xl tracking-tight text-white font-extrabold">
-									Session Done!
+								<h2 className="text-4xl sm:text-5xl tracking-tight text-white font-black">
+									Session Complete!
 								</h2>
-								<p className="text-xs font-bold uppercase tracking-widest mt-2 text-emerald-300">
-									All intervals completed
+								<p className="text-xs font-extrabold uppercase tracking-widest mt-2 text-emerald-300">
+									All interval phases finished
 								</p>
 							</div>
 
-							<div className="w-full p-8 bg-black/20 backdrop-blur-xl rounded-3xl border border-white/10 space-y-5">
-								<div className="flex justify-between items-center text-white">
-									<span className="text-xs text-white uppercase tracking-widest opacity-60">
-										Total Time
+							<div className="w-full p-6 bg-black/40 backdrop-blur-2xl rounded-3xl border border-white/10 space-y-4 shadow-2xl">
+								<div className="grid grid-cols-2 gap-3 pb-3 border-b border-white/10">
+									<div className="p-3 bg-white/5 rounded-2xl border border-white/5 text-left">
+										<span className="text-[10px] text-white uppercase tracking-widest opacity-60 font-bold block">
+											Total Time
+										</span>
+										<span className="text-2xl text-white font-black tabular-nums">
+											{formatTime(totalSessionSeconds)}
+										</span>
+									</div>
+									<div className="p-3 bg-white/5 rounded-2xl border border-white/5 text-left">
+										<span className="text-[10px] text-white uppercase tracking-widest opacity-60 font-bold block">
+											Work Time
+										</span>
+										<span className="text-2xl text-rose-300 font-black tabular-nums">
+											{formatTime(totalWorkSeconds)}
+										</span>
+									</div>
+								</div>
+
+								<div className="flex justify-between items-center text-white px-1">
+									<span className="text-xs uppercase tracking-widest opacity-60 font-bold">
+										Interval Reps
 									</span>
-									<span className="text-3xl text-white font-extrabold tabular-nums">
-										{formatTime(totalSessionSeconds)}
+									<span className="text-xl font-black">{reps}× cycles</span>
+								</div>
+								<div className="flex justify-between items-center text-white px-1">
+									<span className="text-xs uppercase tracking-widest opacity-60 font-bold">
+										Work:Rest Ratio
+									</span>
+									<span className="text-xs font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+										{workRestRatioLabel}
 									</span>
 								</div>
-								<div className="flex justify-between items-center text-white">
-									<span className="text-xs text-white uppercase tracking-widest opacity-60">
-										Intervals
+								<div className="flex justify-between items-center text-white px-1">
+									<span className="text-xs uppercase tracking-widest opacity-60 font-bold">
+										Phases Logged
 									</span>
-									<span className="text-3xl text-white font-extrabold">
-										{reps}×
-									</span>
-								</div>
-								<div className="flex justify-between items-center text-white">
-									<span className="text-xs text-white uppercase tracking-widest opacity-60">
-										Phases Done
-									</span>
-									<span className="text-3xl text-white font-extrabold">
-										{laps.length}
-									</span>
+									<span className="text-xl font-black">{laps.length}</span>
 								</div>
 							</div>
 
 							{/* Lap summary */}
 							{laps.length > 0 && (
-								<div className="w-full space-y-2 max-h-52 overflow-y-auto scrollbar-hide">
+								<div className="w-full space-y-2 max-h-48 overflow-y-auto scrollbar-hide">
 									{laps.map((lap, i) => {
 										const t = PHASE_THEME[lap.type];
 										const Icon = PHASE_ICONS[lap.type];
 										return (
 											<div
-												key={String(i)}
-												className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/5 text-white"
+												key={`lap-complete-${lap.completedAt}-${i}`}
+												className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/5 border border-white/5 text-white"
 											>
 												<div className="flex items-center gap-2.5">
 													<Icon className={`w-4 h-4 ${t.text}`} />
-													<span className="text-sm font-bold opacity-70">
+													<span className="text-xs font-extrabold opacity-80">
 														{lap.label}
 													</span>
 												</div>
-												<span className="text-sm text-white tabular-nums opacity-50">
+												<span className="text-xs text-white tabular-nums opacity-60 font-bold">
 													{formatTime(lap.duration)}
 												</span>
 											</div>
@@ -919,10 +1154,11 @@ export default function TimerView() {
 							)}
 
 							<button
+								type="button"
 								onClick={resetTimer}
-								className="px-10 py-4 bg-white text-emerald-950 rounded-2xl text-base font-extrabold uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-3 cursor-pointer"
+								className="w-full sm:w-auto px-10 py-4 bg-white text-emerald-950 rounded-2xl text-sm font-black uppercase tracking-wider hover:bg-slate-100 active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3 cursor-pointer"
 							>
-								<RotateCcw className="w-5 h-5" /> New Session
+								<RotateCcw className="w-5 h-5" /> Start New Workout Session
 							</button>
 						</motion.div>
 					)}
@@ -937,6 +1173,36 @@ export default function TimerView() {
 							transition={{ duration: 0.35 }}
 							className="flex-1 space-y-4"
 						>
+							{/* Quick Workout Presets */}
+							<div className="space-y-2 mb-2">
+								<div className="flex items-center justify-between px-1">
+									<span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+										<Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+										Quick Presets
+									</span>
+									<span className="text-[10px] font-bold text-slate-400">
+										Tap to load preset
+									</span>
+								</div>
+								<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+									{WORKOUT_PRESETS.map((preset) => (
+										<button
+											key={preset.id}
+											type="button"
+											onClick={() => applyPreset(preset)}
+											className="p-3 bg-white border border-slate-200/80 rounded-2xl text-left hover:border-indigo-300 hover:shadow-xs active:scale-95 transition-all group cursor-pointer"
+										>
+											<div className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+												{preset.name}
+											</div>
+											<div className="text-[10px] font-semibold text-slate-500 truncate mt-0.5">
+												{preset.desc}
+											</div>
+										</button>
+									))}
+								</div>
+							</div>
+
 							<SetupCard
 								label="Warmup"
 								icon={Flame}
@@ -969,30 +1235,39 @@ export default function TimerView() {
 							/>
 
 							{/* Reps */}
-							<div className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+							<div className="p-4 sm:p-5 bg-white border border-slate-200/80 rounded-3xl shadow-xs hover:shadow-md transition-all flex items-center justify-between">
 								<div className="flex items-center gap-3.5">
 									<div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
-										<Dumbbell className="w-6 h-6" />
+										<Dumbbell className="w-5 h-5 sm:w-6 sm:h-6" />
 									</div>
-									<span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900">
-										Repetitions
-									</span>
+									<div>
+										<span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 block">
+											Repetitions
+										</span>
+										<span className="text-[11px] font-semibold text-slate-500">
+											{reps} interval cycles
+										</span>
+									</div>
 								</div>
 								<div className="flex items-center gap-2">
 									<button
+										type="button"
 										onClick={() => setReps((r) => Math.max(1, r - 1))}
-										className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-700 font-extrabold text-base hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+										className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-700 font-extrabold text-base hover:bg-slate-200 active:scale-90 transition-all flex items-center justify-center cursor-pointer"
+										title="Decrease Reps"
 									>
-										−
+										<Minus className="w-4 h-4" />
 									</button>
-									<span className="w-8 text-center text-slate-900 font-extrabold text-xl tabular-nums">
+									<span className="w-8 text-center text-slate-900 font-black text-xl tabular-nums">
 										{reps}
 									</span>
 									<button
+										type="button"
 										onClick={() => setReps((r) => r + 1)}
-										className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-700 font-extrabold text-base hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+										className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-700 font-extrabold text-base hover:bg-slate-200 active:scale-90 transition-all flex items-center justify-center cursor-pointer"
+										title="Increase Reps"
 									>
-										+
+										<Plus className="w-4 h-4" />
 									</button>
 								</div>
 							</div>
@@ -1008,21 +1283,57 @@ export default function TimerView() {
 								onSecChange={setCooldownSec}
 							/>
 
-							{/* Session summary strip */}
+							{/* Workout Intelligence Summary */}
 							{queue.length > 0 && (
-								<div className="p-5 bg-white border border-slate-200/80 rounded-2xl sm:rounded-[2rem] shadow-sm space-y-2">
+								<div className="p-5 bg-white border border-slate-200/80 rounded-3xl shadow-xs space-y-3">
+									<div className="flex items-center justify-between border-b border-slate-100 pb-3">
+										<div className="flex items-center gap-2">
+											<Clock className="w-4 h-4 text-indigo-600" />
+											<span className="text-xs font-black uppercase tracking-wider text-slate-700">
+												Workout Intelligence
+											</span>
+										</div>
+										<span className="px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-extrabold text-indigo-600">
+											{workRestRatioLabel}
+										</span>
+									</div>
+
 									<PhaseTimeline queue={queue} currentIndex={-1} />
-									<p className="text-center text-xs font-bold text-slate-500 uppercase tracking-wider pt-1">
-										{queue.length} phases · {formatTime(totalSessionSeconds)}{" "}
-										total duration
-									</p>
+
+									<div className="grid grid-cols-3 gap-2 pt-1 text-center">
+										<div className="p-2 bg-slate-50/80 rounded-2xl border border-slate-100">
+											<span className="text-[10px] font-bold text-slate-400 block uppercase">
+												Total Time
+											</span>
+											<span className="text-sm font-black text-slate-900 tabular-nums">
+												{formatTime(totalSessionSeconds)}
+											</span>
+										</div>
+										<div className="p-2 bg-slate-50/80 rounded-2xl border border-slate-100">
+											<span className="text-[10px] font-bold text-slate-400 block uppercase">
+												Work Time
+											</span>
+											<span className="text-sm font-black text-rose-600 tabular-nums">
+												{formatTime(totalWorkSeconds)}
+											</span>
+										</div>
+										<div className="p-2 bg-slate-50/80 rounded-2xl border border-slate-100">
+											<span className="text-[10px] font-bold text-slate-400 block uppercase">
+												Rest Time
+											</span>
+											<span className="text-sm font-black text-emerald-600 tabular-nums">
+												{formatTime(totalRestSeconds)}
+											</span>
+										</div>
+									</div>
 								</div>
 							)}
 
 							<button
+								type="button"
 								onClick={startTimer}
 								disabled={queue.length === 0}
-								className="w-full py-4 sm:py-5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-2xl sm:rounded-[2rem] text-sm sm:text-base font-extrabold tracking-wider uppercase transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-3 cursor-pointer"
+								className="w-full py-4 sm:py-5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-3xl text-sm sm:text-base font-extrabold tracking-wider uppercase transition-all active:scale-[0.98] shadow-xl shadow-slate-900/20 flex items-center justify-center gap-3 cursor-pointer"
 							>
 								<Play className="w-5 h-5 fill-current" /> Start Workout Session
 							</button>
@@ -1033,58 +1344,112 @@ export default function TimerView() {
 					{isActive && (
 						<motion.div
 							key={`active-${currentPhaseIndex}`}
-							initial={reduceMotion ? false : { opacity: 0, scale: 1.04 }}
+							initial={reduceMotion ? false : { opacity: 0, scale: 1.02 }}
 							animate={{ opacity: 1, scale: 1 }}
-							exit={{ opacity: 0, scale: 0.96 }}
-							transition={{ duration: 0.45 }}
-							className="flex-1 flex flex-col items-center justify-between text-center gap-4"
+							exit={{ opacity: 0, scale: 0.98 }}
+							transition={{ duration: 0.4 }}
+							className="flex-1 flex flex-col items-center justify-between text-center gap-4 sm:gap-5 py-2"
 						>
-							{/* Phase label + step */}
+							{/* Top Bar: Status Badge + Controls */}
+							<div className="w-full flex items-center justify-between px-1">
+								<div className="flex items-center gap-2">
+									<div
+										className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-xl text-xs font-black uppercase tracking-wider ${
+											isPaused
+												? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+												: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+										}`}
+									>
+										<span
+											className={`w-2 h-2 rounded-full ${
+												isPaused
+													? "bg-amber-400"
+													: "bg-emerald-400 animate-ping"
+											}`}
+										/>
+										<span>{isPaused ? "Paused" : "Live Session"}</span>
+									</div>
+								</div>
+
+								<div className="flex items-center gap-2">
+									<button
+										type="button"
+										onClick={() => setSoundEnabled((s) => !s)}
+										className="p-2.5 bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 rounded-xl text-white transition-all cursor-pointer"
+										title="Toggle Audio Beeps"
+									>
+										{soundEnabled ? (
+											<Volume2 className="w-4 h-4 text-emerald-400" />
+										) : (
+											<VolumeX className="w-4 h-4 text-white/40" />
+										)}
+									</button>
+									<div
+										className="p-2.5 bg-white/10 border border-white/15 rounded-xl text-white/70"
+										title="Wake Lock (Screen Awake)"
+									>
+										{wakeLockActive ? (
+											<Lock className="w-4 h-4 text-emerald-400" />
+										) : (
+											<Unlock className="w-4 h-4 text-white/30" />
+										)}
+									</div>
+								</div>
+							</div>
+
+							{/* Phase label & Rep step pill */}
 							<div className="space-y-2">
-								<span
-									className={`inline-block px-5 py-1.5 rounded-full border text-xs text-white uppercase tracking-[0.3em] backdrop-blur-xl ${
-										theme.pill
-									}`}
-								>
-									{currentPhaseIndex + 1} / {queue.length}
-								</span>
+								<div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-black uppercase tracking-[0.25em] backdrop-blur-xl bg-white/10 border-white/15 text-white/90 shadow-md">
+									{PhaseIcon && (
+										<PhaseIcon className={`w-3.5 h-3.5 ${theme.text}`} />
+									)}
+									<span>
+										Phase {currentPhaseIndex + 1} of {queue.length}
+									</span>
+								</div>
 								<motion.h2
 									key={currentPhase.label}
 									initial={reduceMotion ? false : { opacity: 0, y: 8 }}
 									animate={{ opacity: 1, y: 0 }}
-									className="text-4xl text-white tracking-tighter text-white"
+									className="text-4xl sm:text-6xl font-black text-white tracking-tight drop-shadow-lg"
 								>
 									{currentPhase.label}
 								</motion.h2>
 							</div>
 
-							{/* Circular ring countdown */}
-							<div className="relative">
+							{/* Hero Ring & Countdown Display */}
+							<div className="relative my-1 flex flex-col items-center">
 								<CountdownRing
 									progress={phaseProgress}
 									color={theme.ring}
-									size={280}
-									strokeWidth={8}
+									size={290}
+									strokeWidth={9}
+									onClick={isPaused ? resumeTimer : pauseTimer}
 								>
+									<span
+										className={`text-[11px] font-black uppercase tracking-[0.3em] mb-1 px-3 py-0.5 rounded-full bg-white/10 border border-white/10 ${theme.text}`}
+									>
+										{isPaused ? "Paused" : `${currentPhase.type} mode`}
+									</span>
+
 									<motion.span
 										key={timeLeft}
 										initial={
-											reduceMotion ? false : { scale: 0.92, opacity: 0.5 }
+											reduceMotion ? false : { scale: 0.94, opacity: 0.7 }
 										}
 										animate={{ scale: 1, opacity: 1 }}
-										className="text-7xl text-white tabular-nums text-white drop-shadow-xl"
+										className="text-7xl sm:text-8xl font-black text-white tabular-nums drop-shadow-2xl font-mono"
 									>
 										{formatTime(timeLeft)}
 									</motion.span>
-									<span
-										className={`text-xs text-white uppercase tracking-widest mt-1 ${theme.text}`}
-									>
-										{isPaused ? "Paused" : currentPhase.type}
+
+									<span className="text-[11px] font-mono font-bold uppercase tracking-widest text-white/50 mt-1">
+										{Math.round(phaseProgress * 100)}% complete
 									</span>
 								</CountdownRing>
 							</div>
 
-							{/* Next phase preview */}
+							{/* Up Next Phase Preview */}
 							<div className="h-9 flex items-center justify-center">
 								<AnimatePresence>
 									{nextPhase && !isPaused && (
@@ -1093,51 +1458,115 @@ export default function TimerView() {
 								</AnimatePresence>
 							</div>
 
-							{/* Overall progress bar + timeline */}
-							<div className="w-full space-y-3 px-1">
+							{/* Session Intelligence Dashboard */}
+							<div className="w-full max-w-md bg-black/40 backdrop-blur-2xl rounded-3xl p-4 border border-white/10 space-y-3 shadow-2xl">
+								{/* Segmented Phase Timeline */}
 								<PhaseTimeline queue={queue} currentIndex={currentPhaseIndex} />
-								<div className="h-2 bg-white/10 rounded-full overflow-hidden border border-white/5">
-									<motion.div
-										className="h-full rounded-full"
-										style={{ background: theme.ring }}
-										animate={{ width: `${overallProgress * 100}%` }}
-										transition={{ duration: 1 }}
-									/>
+
+								{/* Session Progress Bar */}
+								<div className="space-y-1">
+									<div className="h-2 bg-white/10 rounded-full overflow-hidden border border-white/5">
+										<motion.div
+											className="h-full rounded-full"
+											style={{ background: theme.ring }}
+											animate={{ width: `${overallProgress * 100}%` }}
+											transition={{ duration: 1 }}
+										/>
+									</div>
+									<div className="flex justify-between text-[10px] font-extrabold uppercase tracking-widest text-white/50 px-0.5">
+										<span>{Math.round(overallProgress * 100)}% overall</span>
+										<span>
+											{formatTime(totalSessionSeconds - totalElapsed)} remaining
+										</span>
+									</div>
 								</div>
-								<div className="flex justify-between text-[10px] text-white uppercase tracking-widest text-white/40 px-1">
-									<span>{formatTime(totalElapsed)} elapsed</span>
-									<span>
-										{formatTime(totalSessionSeconds - totalElapsed)} left
-									</span>
+
+								{/* Metrics Grid */}
+								<div className="grid grid-cols-3 gap-2 pt-1 border-t border-white/10 text-center">
+									<div className="p-2 bg-white/5 rounded-2xl border border-white/5">
+										<span className="text-[9px] font-extrabold text-white/40 block uppercase tracking-wider">
+											Elapsed
+										</span>
+										<span className="text-xs font-black text-white tabular-nums">
+											{formatTime(totalElapsed)}
+										</span>
+									</div>
+									<div className="p-2 bg-white/5 rounded-2xl border border-white/5">
+										<span className="text-[9px] font-extrabold text-white/40 block uppercase tracking-wider">
+											Remaining
+										</span>
+										<span className="text-xs font-black text-rose-300 tabular-nums">
+											{formatTime(totalSessionSeconds - totalElapsed)}
+										</span>
+									</div>
+									<div className="p-2 bg-white/5 rounded-2xl border border-white/5">
+										<span className="text-[9px] font-extrabold text-white/40 block uppercase tracking-wider">
+											Finish ETA
+										</span>
+										<span className="text-xs font-black text-emerald-300 tabular-nums">
+											{finishEta || "--:--"}
+										</span>
+									</div>
 								</div>
 							</div>
 
-							{/* Lap log */}
+							{/* Lap Log */}
 							<LapLog laps={laps} />
 
-							{/* Controls */}
-							<div className="flex items-center gap-5 pb-2">
+							{/* Floating Ergonomic Control Dock */}
+							<div className="w-full max-w-md bg-white/10 backdrop-blur-2xl rounded-3xl p-3 border border-white/15 flex items-center justify-between shadow-2xl">
+								{/* Reset */}
 								<button
+									type="button"
 									onClick={resetTimer}
-									className="p-5 bg-white/10 backdrop-blur-xl rounded-[1.5rem] border border-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
+									className="p-3.5 bg-white/10 hover:bg-white/20 border border-white/15 rounded-2xl text-white active:scale-90 transition-all cursor-pointer"
+									title="Reset Workout Session"
 								>
-									<RotateCcw className="w-7 h-7" />
+									<RotateCcw className="w-5 h-5" />
 								</button>
+
+								{/* Quick Adjustment -10s */}
 								<button
+									type="button"
+									onClick={() => adjustTime(-10)}
+									className="px-3 py-3 bg-white/10 hover:bg-white/20 border border-white/15 rounded-2xl text-white text-xs font-black tracking-wider active:scale-90 transition-all cursor-pointer flex items-center gap-1"
+									title="Subtract 10 seconds from current phase"
+								>
+									-10s
+								</button>
+
+								{/* Primary Hero Play/Pause Button */}
+								<button
+									type="button"
 									onClick={isPaused ? resumeTimer : pauseTimer}
-									className="p-12 bg-white text-black rounded-[2.5rem] shadow-2xl hover:scale-105 transition-all active:scale-90"
+									className="p-6 bg-white text-slate-950 rounded-2xl shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+									title={isPaused ? "Resume Workout" : "Pause Workout"}
 								>
 									{isPaused ? (
-										<Play className="w-12 h-12 fill-current" />
+										<Play className="w-8 h-8 fill-current translate-x-0.5" />
 									) : (
-										<Pause className="w-12 h-12 fill-current" />
+										<Pause className="w-8 h-8 fill-current" />
 									)}
 								</button>
+
+								{/* Quick Adjustment +10s */}
 								<button
-									onClick={skipPhase}
-									className="p-5 bg-white/10 backdrop-blur-xl rounded-[1.5rem] border border-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
+									type="button"
+									onClick={() => adjustTime(10)}
+									className="px-3 py-3 bg-white/10 hover:bg-white/20 border border-white/15 rounded-2xl text-white text-xs font-black tracking-wider active:scale-90 transition-all cursor-pointer flex items-center gap-1"
+									title="Add 10 seconds to current phase"
 								>
-									<SkipForward className="w-7 h-7" />
+									+10s
+								</button>
+
+								{/* Skip Phase */}
+								<button
+									type="button"
+									onClick={skipPhase}
+									className="p-3.5 bg-white/10 hover:bg-white/20 border border-white/15 rounded-2xl text-white active:scale-90 transition-all cursor-pointer"
+									title="Skip to Next Phase"
+								>
+									<SkipForward className="w-5 h-5" />
 								</button>
 							</div>
 						</motion.div>

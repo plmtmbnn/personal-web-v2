@@ -1,3 +1,10 @@
+# [0.67.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.66.3...v0.67.0) (2026-08-13)
+
+
+### Features
+
+* **uiux:** revamp timer, login, global loading, running swipe card & fix stock data deployment ([b0ec2a7](https://github.com/plmtmbnn/personal-web-v2/commit/b0ec2a7686b60af8faca4d4bcdeeaeb672a74a9a))
+
 ## [0.66.3](https://github.com/plmtmbnn/personal-web-v2/compare/v0.66.2...v0.66.3) (2026-08-11)
 
 

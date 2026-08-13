@@ -1,3 +1,10 @@
+# [0.68.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.67.0...v0.68.0) (2026-08-13)
+
+
+### Features
+
+* **utils:** add Spinner Wheel and URL Safety & Threat Inspector utilities ([bd86b86](https://github.com/plmtmbnn/personal-web-v2/commit/bd86b861453ab2669584faa2d54717d317e9dd6d))
+
 # [0.67.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.66.3...v0.67.0) (2026-08-13)
 
 

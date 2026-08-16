@@ -24,6 +24,8 @@ import {
 	Link as LinkIcon,
 	RotateCw,
 	X,
+	QrCode,
+	ShieldCheck,
 } from "lucide-react";
 
 export default function CommandPalette() {
@@ -193,6 +195,16 @@ export default function CommandPalette() {
 										className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:text-indigo-400 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-items]]:space-y-1"
 									>
 										{[
+											{
+												name: "QR Code Generator",
+												slug: "qr-code-generator",
+												icon: QrCode,
+											},
+											{
+												name: "URL Safety Inspector",
+												slug: "url-inspector",
+												icon: ShieldCheck,
+											},
 											{ name: "Running Timer", slug: "timer", icon: Timer },
 											{
 												name: "Asset Averaging Calculator",

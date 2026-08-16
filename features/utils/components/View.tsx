@@ -16,9 +16,86 @@ import {
 	Table as TableIcon,
 	Sparkles,
 	ShieldCheck,
+	QrCode,
+	Image as ImageIcon,
+	KeyRound,
+	Clock,
+	GitCompare,
+	Gauge,
+	Camera,
 } from "lucide-react";
 
 const utilities = [
+	{
+		title: "Code Social Card Studio",
+		slug: "code-to-image",
+		description:
+			"Transform code snippets and text into high-resolution, gradient-backed aesthetic social cards.",
+		accent: "bg-fuchsia-600",
+		color: "text-fuchsia-600",
+		bg: "bg-fuchsia-600/5",
+		icon: Camera,
+	},
+	{
+		title: "Device & Speed Inspector",
+		slug: "device-inspector",
+		description:
+			"Internet speed test (Mbps/Ping/Jitter), hardware GPU telemetry, display refresh rate, and media codecs.",
+		accent: "bg-cyan-600",
+		color: "text-cyan-600",
+		bg: "bg-cyan-600/5",
+		icon: Gauge,
+	},
+	{
+		title: "Diff Comparator",
+		slug: "diff-viewer",
+		description:
+			"Side-by-side split & unified code diffing with word/character-level highlight and patch export.",
+		accent: "bg-blue-600",
+		color: "text-blue-600",
+		bg: "bg-blue-600/5",
+		icon: GitCompare,
+	},
+	{
+		title: "Cron Expression Studio",
+		slug: "cron-builder",
+		description:
+			"Visual cron schedule builder, plain-English humanizer, future executions timeline, and platform exporters.",
+		accent: "bg-purple-600",
+		color: "text-purple-600",
+		bg: "bg-purple-600/5",
+		icon: Clock,
+	},
+	{
+		title: "Security & Hash Studio",
+		slug: "hash-password-generator",
+		description:
+			"Cryptographic password & passphrase generator, multi-algorithm hasher (SHA-256, MD5, HMAC), and security formatter.",
+		accent: "bg-emerald-600",
+		color: "text-emerald-600",
+		bg: "bg-emerald-600/5",
+		icon: KeyRound,
+	},
+	{
+		title: "Image Converter",
+		slug: "image-converter",
+		description:
+			"Convert image extensions (WebP, PNG, JPG, AVIF, ICO, BMP) with binary validation and quality scaling.",
+		accent: "bg-indigo-600",
+		color: "text-indigo-600",
+		bg: "bg-indigo-600/5",
+		icon: ImageIcon,
+	},
+	{
+		title: "QR Code Generator",
+		slug: "qr-code-generator",
+		description:
+			"Generate high-resolution, customized vector and raster QR codes for URLs, text, Wi-Fi, vCard, and crypto.",
+		accent: "bg-indigo-600",
+		color: "text-indigo-600",
+		bg: "bg-indigo-600/5",
+		icon: QrCode,
+	},
 	{
 		title: "URL Safety Inspector",
 		slug: "url-inspector",

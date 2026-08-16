@@ -1,3 +1,10 @@
+# [0.70.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.69.0...v0.70.0) (2026-08-16)
+
+
+### Features
+
+* **adventures:** revamp running hub and organize utils landing by category ([c83e2f0](https://github.com/plmtmbnn/personal-web-v2/commit/c83e2f060efc36a240ba9a1e98ae90fb2c6f35fe))
+
 # [0.69.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.68.0...v0.69.0) (2026-08-16)
 
 

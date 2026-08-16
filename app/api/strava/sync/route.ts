@@ -32,9 +32,19 @@ export async function POST() {
 			return NextResponse.json(
 				{
 					error:
-						"Strava account is not connected. Please authorize account first.",
+						"Strava account is not connected. Please authorize your account first.",
 				},
 				{ status: 401 },
+			);
+		}
+
+		if (freshData.runs === null) {
+			return NextResponse.json(
+				{
+					error:
+						"Unable to retrieve activities from Strava API. Token may be expired or rate-limited. Please reconnect your account.",
+				},
+				{ status: 502 },
 			);
 		}
 

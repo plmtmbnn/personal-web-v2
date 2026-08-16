@@ -14,12 +14,41 @@ import {
 	ShieldAlert,
 	TrendingUp,
 	RefreshCw,
+	Search,
+	X,
+	Award,
+	Clock,
+	Route,
+	Sparkles,
+	ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import type { StravaDataResult } from "@/services/strava/service";
+import type {
+	StravaDataResult,
+	StravaRunActivity,
+} from "@/services/strava/service";
 import PersonalBestsSwipeCard from "./PersonalBestsSwipeCard";
+
+const PAGE_SIZE = 6;
+
+type DistanceFilter = "all" | "short" | "mid" | "long" | "ultra";
+type SortOption =
+	| "date-desc"
+	| "date-asc"
+	| "distance-desc"
+	| "pace-asc"
+	| "elevation-desc";
+
+const DISTANCE_FILTERS: { id: DistanceFilter; label: string; range: string }[] =
+	[
+		{ id: "all", label: "All Runs", range: "All" },
+		{ id: "short", label: "Short", range: "< 5K" },
+		{ id: "mid", label: "Mid", range: "5 - 10K" },
+		{ id: "long", label: "Long", range: "10 - 21K" },
+		{ id: "ultra", label: "Half & Beyond", range: "> 21K" },
+	];
 
 // ──────────────────────────────
 // SVG Components for Visualizations
@@ -77,8 +106,6 @@ function PaceRing({
 	);
 }
 
-// Removed unused ProgressBar component - can be restored if needed for future visualizations
-
 export default function RunningView({
 	initialData,
 	isAdmin = false,
@@ -91,6 +118,11 @@ export default function RunningView({
 		initialData,
 	);
 	const [isSyncing, setIsSyncing] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [distanceFilter, setDistanceFilter] = useState<DistanceFilter>("all");
+	const [sortBy, setSortBy] = useState<SortOption>("date-desc");
+	const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
 	const reduceMotion = useReducedMotion();
 	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const searchParams = useSearchParams();
@@ -109,6 +141,11 @@ export default function RunningView({
 			}
 			if (json.data) {
 				setDataState(json.data);
+			}
+			if (json.data?.runs === null) {
+				throw new Error(
+					"Could not load activities from Strava. Please reconnect your account.",
+				);
 			}
 			setStatusMessage({
 				type: "success",
@@ -162,43 +199,16 @@ export default function RunningView({
 		return () => clearTimeout(timer);
 	}, [statusMessage]);
 
-	// Calculate derived values (must be before conditional return to maintain hook order)
-	const runs = dataState?.runs || [];
+	// Calculate derived values
+	const rawRuns: StravaRunActivity[] = dataState?.runs || [];
 	const stats = dataState?.stats;
 	const isConfigured = dataState?.isConfigured || false;
 	const hasToken = dataState?.hasToken || false;
 	const showConnectPrompt = isAdmin && isConfigured && !hasToken;
 	const isConnected = isConfigured && hasToken;
 	const runsIsNull = dataState?.runs === null;
-	const hasRunData = Array.isArray(runs) && runs.length > 0;
+	const hasRunData = Array.isArray(rawRuns) && rawRuns.length > 0;
 	const hasStats = stats !== null && stats !== undefined;
-
-	// Debug logging (can be removed after verification)
-	useEffect(() => {
-		if (mounted) {
-			console.log("🏃 Running View Debug:", {
-				isConfigured,
-				hasToken,
-				isConnected,
-				runsIsNull,
-				runsLength: runs?.length,
-				hasRunData,
-				hasStats,
-				statsYTD: stats?.ytd_run_totals?.count,
-				statsAll: stats?.all_run_totals?.count,
-			});
-		}
-	}, [
-		mounted,
-		isConfigured,
-		hasToken,
-		isConnected,
-		runsIsNull,
-		runs?.length,
-		hasRunData,
-		hasStats,
-		stats,
-	]);
 
 	const currentClientId = dataState?.clientId || initialData?.clientId;
 	const currentSiteUrl = dataState?.siteUrl || initialData?.siteUrl;
@@ -207,11 +217,165 @@ export default function RunningView({
 			? `https://www.strava.com/oauth/authorize?client_id=${currentClientId}&redirect_uri=${currentSiteUrl}/api/strava/callback&response_type=code&scope=activity:read_all`
 			: null;
 
-	// Calculate average pace from recent runs
+	// Reset pagination on filter or search changes
+	const handleSearchChange = (query: string) => {
+		setSearchQuery(query);
+		setVisibleCount(PAGE_SIZE);
+	};
+
+	const handleFilterChange = (filter: DistanceFilter) => {
+		setDistanceFilter(filter);
+		setVisibleCount(PAGE_SIZE);
+	};
+
+	const handleSortChange = (sort: SortOption) => {
+		setSortBy(sort);
+		setVisibleCount(PAGE_SIZE);
+	};
+
+	const resetFilters = () => {
+		setSearchQuery("");
+		setDistanceFilter("all");
+		setSortBy("date-desc");
+		setVisibleCount(PAGE_SIZE);
+	};
+
+	// Distance Category Counts
+	const distanceCounts = useMemo(() => {
+		const counts: Record<DistanceFilter, number> = {
+			all: rawRuns.length,
+			short: 0,
+			mid: 0,
+			long: 0,
+			ultra: 0,
+		};
+
+		for (const run of rawRuns) {
+			const km = run.distance / 1000;
+			if (km < 5) counts.short++;
+			else if (km <= 10) counts.mid++;
+			else if (km <= 21) counts.long++;
+			else counts.ultra++;
+		}
+		return counts;
+	}, [rawRuns]);
+
+	// Filtered and Sorted Activities
+	const filteredAndSortedRuns = useMemo(() => {
+		const q = searchQuery.trim().toLowerCase();
+
+		const filtered = rawRuns.filter((run) => {
+			const km = run.distance / 1000;
+
+			// Distance Filter
+			let matchesDistance = true;
+			if (distanceFilter === "short") matchesDistance = km < 5;
+			else if (distanceFilter === "mid") matchesDistance = km >= 5 && km <= 10;
+			else if (distanceFilter === "long") matchesDistance = km > 10 && km <= 21;
+			else if (distanceFilter === "ultra") matchesDistance = km > 21;
+
+			if (!matchesDistance) return false;
+
+			// Search Query
+			if (!q) return true;
+			const formattedDate = format(
+				new Date(run.start_date_local),
+				"MMMM dd yyyy",
+			).toLowerCase();
+			return run.name.toLowerCase().includes(q) || formattedDate.includes(q);
+		});
+
+		// Sorting
+		return filtered.sort((a, b) => {
+			if (sortBy === "date-desc") {
+				return (
+					new Date(b.start_date_local).getTime() -
+					new Date(a.start_date_local).getTime()
+				);
+			}
+			if (sortBy === "date-asc") {
+				return (
+					new Date(a.start_date_local).getTime() -
+					new Date(b.start_date_local).getTime()
+				);
+			}
+			if (sortBy === "distance-desc") {
+				return b.distance - a.distance;
+			}
+			if (sortBy === "pace-asc") {
+				const paceA =
+					a.distance > 0 ? a.moving_time / (a.distance / 1000) : 9999;
+				const paceB =
+					b.distance > 0 ? b.moving_time / (b.distance / 1000) : 9999;
+				return paceA - paceB;
+			}
+			if (sortBy === "elevation-desc") {
+				return b.total_elevation_gain - a.total_elevation_gain;
+			}
+			return 0;
+		});
+	}, [rawRuns, distanceFilter, searchQuery, sortBy]);
+
+	// Paginated runs
+	const displayedRuns = useMemo(() => {
+		return filteredAndSortedRuns.slice(0, visibleCount);
+	}, [filteredAndSortedRuns, visibleCount]);
+
+	const hasMore = visibleCount < filteredAndSortedRuns.length;
+
+	// Performance Highlights Analytics
+	const performanceHighlights = useMemo(() => {
+		if (rawRuns.length === 0) return null;
+
+		let maxDistance = rawRuns[0];
+		let minPaceSeconds =
+			rawRuns[0].distance > 0
+				? rawRuns[0].moving_time / (rawRuns[0].distance / 1000)
+				: 9999;
+		let maxElevation = rawRuns[0];
+		let totalSeconds = 0;
+		let totalMeters = 0;
+
+		for (const run of rawRuns) {
+			totalSeconds += run.moving_time;
+			totalMeters += run.distance;
+
+			if (run.distance > maxDistance.distance) {
+				maxDistance = run;
+			}
+			if (run.total_elevation_gain > maxElevation.total_elevation_gain) {
+				maxElevation = run;
+			}
+
+			const paceSec =
+				run.distance > 0 ? run.moving_time / (run.distance / 1000) : 9999;
+			if (paceSec < minPaceSeconds) {
+				minPaceSeconds = paceSec;
+			}
+		}
+
+		const totalHours = Math.floor(totalSeconds / 3600);
+		const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+
+		const fastMin = Math.floor(minPaceSeconds / 60);
+		const fastSec = Math.floor(minPaceSeconds % 60)
+			.toString()
+			.padStart(2, "0");
+
+		return {
+			maxDistanceKm: (maxDistance.distance / 1000).toFixed(1),
+			fastestPace: `${fastMin}:${fastSec} /km`,
+			maxElevationM: `${maxElevation.total_elevation_gain} m`,
+			totalLoggedTime: `${totalHours}h ${totalMinutes}m`,
+			totalLoggedKm: (totalMeters / 1000).toFixed(1),
+		};
+	}, [rawRuns]);
+
+	// Average Pace from recent runs
 	const avgPaceMinutes = useMemo(() => {
-		if (runs.length === 0) return 5.5; // fallback
-		const totalMeters = runs.reduce((acc, run) => acc + run.distance, 0);
-		const totalTimeSeconds = runs.reduce(
+		if (rawRuns.length === 0) return 5.5;
+		const totalMeters = rawRuns.reduce((acc, run) => acc + run.distance, 0);
+		const totalTimeSeconds = rawRuns.reduce(
 			(acc, run) => acc + run.moving_time,
 			0,
 		);
@@ -219,25 +383,28 @@ export default function RunningView({
 		if (totalKm === 0) return 5.5;
 		const pacePerKm = totalTimeSeconds / totalKm;
 		return Math.round((pacePerKm / 60) * 10) / 10;
-	}, [runs]);
+	}, [rawRuns]);
 
 	if (!mounted) return null;
 
 	const totalRuns = stats?.all_run_totals?.count
 		? stats.all_run_totals.count.toLocaleString()
 		: hasRunData
-			? runs.length.toLocaleString()
+			? rawRuns.length.toLocaleString()
 			: "—";
 
 	const kmPerYear = stats?.ytd_run_totals?.distance
 		? Math.round(stats.ytd_run_totals.distance / 1000).toLocaleString()
 		: hasRunData
 			? Math.round(
-					runs.reduce((acc, run) => acc + run.distance, 0) / 1000,
+					rawRuns.reduce((acc, run) => acc + run.distance, 0) / 1000,
 				).toLocaleString()
 			: "—";
 
-	// Removed unused RunCardSkeleton component - can be restored if loading states are needed
+	const hasActiveFilters =
+		searchQuery.trim() !== "" ||
+		distanceFilter !== "all" ||
+		sortBy !== "date-desc";
 
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
@@ -334,7 +501,7 @@ export default function RunningView({
 						</motion.div>
 
 						{/* Average Pace Ring */}
-						{runs.length > 0 && (
+						{rawRuns.length > 0 && (
 							<motion.div
 								initial={safeReduceMotion ? false : { opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
@@ -361,7 +528,7 @@ export default function RunningView({
 									<div className="flex items-center gap-1 mt-1 text-emerald-600">
 										<TrendingUp className="w-3.5 h-3.5" />
 										<span className="text-[10px] font-semibold text-slate-600">
-											Based on {runs.length} recent runs
+											Based on {rawRuns.length} recent activities
 										</span>
 									</div>
 								</div>
@@ -369,11 +536,95 @@ export default function RunningView({
 						)}
 					</div>
 
-					{/* RIGHT COLUMN: Personal Bests Swipe Card */}
+					{/* RIGHT COLUMN: Personal Bests Showcase */}
 					<div className="lg:col-span-7 space-y-6">
 						<PersonalBestsSwipeCard />
 					</div>
 				</div>
+
+				{/* ═══════════════════════════════════════
+				    RECENT PERFORMANCE ANALYTICS HIGHLIGHTS
+				═══════════════════════════════════════ */}
+				{hasRunData && performanceHighlights && (
+					<motion.div
+						initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.25 }}
+						className="p-6 sm:p-7 bg-white border border-slate-200/80 rounded-3xl shadow-xs space-y-5"
+					>
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+							<div className="flex items-center gap-2.5">
+								<div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-2xs">
+									<Award className="w-4 h-4" />
+								</div>
+								<div>
+									<h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+										Recent Activity Intel
+									</h3>
+									<p className="text-[11px] text-slate-500 font-medium">
+										Key benchmarks across your latest {rawRuns.length} synced
+										sessions
+									</p>
+								</div>
+							</div>
+							<span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 self-start sm:self-auto">
+								{performanceHighlights.totalLoggedKm} km total logged
+							</span>
+						</div>
+
+						{/* 4 Intel Metric Cards */}
+						<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+							<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
+								<div className="flex items-center gap-1.5 text-slate-500 mb-1">
+									<Route className="w-3.5 h-3.5 text-blue-600" />
+									<span className="text-[10px] font-bold uppercase tracking-wider">
+										Longest Run
+									</span>
+								</div>
+								<p className="text-lg sm:text-xl font-black text-slate-900">
+									{performanceHighlights.maxDistanceKm}{" "}
+									<span className="text-xs font-bold text-slate-500">km</span>
+								</p>
+							</div>
+
+							<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
+								<div className="flex items-center gap-1.5 text-slate-500 mb-1">
+									<Zap className="w-3.5 h-3.5 text-amber-500" />
+									<span className="text-[10px] font-bold uppercase tracking-wider">
+										Fastest Pace
+									</span>
+								</div>
+								<p className="text-lg sm:text-xl font-black text-slate-900 font-mono">
+									{performanceHighlights.fastestPace}
+								</p>
+							</div>
+
+							<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
+								<div className="flex items-center gap-1.5 text-slate-500 mb-1">
+									<Mountain className="w-3.5 h-3.5 text-purple-600" />
+									<span className="text-[10px] font-bold uppercase tracking-wider">
+										Max Climb
+									</span>
+								</div>
+								<p className="text-lg sm:text-xl font-black text-slate-900">
+									{performanceHighlights.maxElevationM}
+								</p>
+							</div>
+
+							<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
+								<div className="flex items-center gap-1.5 text-slate-500 mb-1">
+									<Clock className="w-3.5 h-3.5 text-emerald-600" />
+									<span className="text-[10px] font-bold uppercase tracking-wider">
+										Total Time
+									</span>
+								</div>
+								<p className="text-lg sm:text-xl font-black text-slate-900 font-mono">
+									{performanceHighlights.totalLoggedTime}
+								</p>
+							</div>
+						</div>
+					</motion.div>
+				)}
 
 				{/* ═══════════════════════════════════════
 				    OAUTH CONNECTION PROMPT (ADMIN / DEV)
@@ -410,167 +661,307 @@ export default function RunningView({
 				)}
 
 				{/* ═══════════════════════════════════════
-					    RECENT ACTIVITIES SECTION
-					═══════════════════════════════════════ */}
-				{hasRunData && (
+				    RECENT ACTIVITIES FEED & CONTROLS
+				═══════════════════════════════════════ */}
+				{hasRunData ? (
 					<motion.div
 						initial={safeReduceMotion ? false : { opacity: 0, y: 30 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.3 }}
-						className="mt-16 space-y-6"
+						className="space-y-6"
 					>
-						<div className="flex items-center justify-between border-b border-slate-200/80 pb-4">
-							<div className="flex items-center gap-3">
-								<div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-									<Activity className="w-5 h-5" />
+						{/* Activities Section Header & Controls */}
+						<div className="space-y-4">
+							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
+								<div className="flex items-center gap-3">
+									<div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 shadow-2xs">
+										<Activity className="w-5 h-5" />
+									</div>
+									<div>
+										<h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
+											Running Activities
+										</h3>
+										<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+											Showing {displayedRuns.length} of{" "}
+											{filteredAndSortedRuns.length} matching activities
+										</p>
+									</div>
 								</div>
-								<div>
-									<h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
-										Recent Running Activities
-									</h3>
-									<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-										Latest {runs.length} activities from Strava
-									</p>
+
+								{/* Live Sync Action */}
+								<div className="flex items-center gap-3 self-end sm:self-center">
+									<button
+										type="button"
+										onClick={handleLiveSync}
+										disabled={isSyncing}
+										className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
+										title="Sync live activities from Strava"
+									>
+										<RefreshCw
+											className={`w-3.5 h-3.5 text-emerald-600 ${
+												isSyncing ? "animate-spin" : ""
+											}`}
+										/>
+										<span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
+									</button>
 								</div>
 							</div>
-							<div className="flex items-center gap-3">
+
+							{/* Search, Filter Pills & Sort Row */}
+							<div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+								{/* Search Input */}
+								<div className="relative max-w-xs w-full">
+									<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+									<input
+										type="text"
+										value={searchQuery}
+										onChange={(e) => handleSearchChange(e.target.value)}
+										placeholder="Search runs by title or date..."
+										className="w-full bg-white border border-slate-200/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+									/>
+									{searchQuery && (
+										<button
+											type="button"
+											onClick={() => handleSearchChange("")}
+											className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition-colors"
+											aria-label="Clear search"
+										>
+											<X className="w-3.5 h-3.5" />
+										</button>
+									)}
+								</div>
+
+								{/* Distance Filter Pills */}
+								<div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+									{DISTANCE_FILTERS.map((filter) => {
+										const isActive = distanceFilter === filter.id;
+										return (
+											<button
+												key={filter.id}
+												type="button"
+												onClick={() => handleFilterChange(filter.id)}
+												className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+													isActive
+														? "bg-slate-900 text-white shadow-xs shadow-slate-900/20"
+														: "bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300"
+												}`}
+											>
+												<span>{filter.label}</span>
+												<span
+													className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+														isActive
+															? "bg-slate-800 text-slate-200"
+															: "bg-slate-100 text-slate-600"
+													}`}
+												>
+													{distanceCounts[filter.id]}
+												</span>
+											</button>
+										);
+									})}
+								</div>
+
+								{/* Sort Selector & Reset Button */}
+								<div className="flex items-center gap-2 self-end md:self-auto shrink-0">
+									{hasActiveFilters && (
+										<button
+											type="button"
+											onClick={resetFilters}
+											className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl hover:border-slate-300 transition-all shadow-xs cursor-pointer"
+											title="Reset search and filters"
+										>
+											<X className="w-3.5 h-3.5" />
+											<span>Reset</span>
+										</button>
+									)}
+									<div className="relative">
+										<select
+											value={sortBy}
+											onChange={(e) =>
+												handleSortChange(e.target.value as SortOption)
+											}
+											className="appearance-none bg-white border border-slate-200/80 rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs cursor-pointer"
+										>
+											<option value="date-desc">Newest First</option>
+											<option value="date-asc">Oldest First</option>
+											<option value="distance-desc">Longest Distance</option>
+											<option value="pace-asc">Fastest Pace</option>
+											<option value="elevation-desc">Highest Climb</option>
+										</select>
+										<ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{/* Activities Grid */}
+						{displayedRuns.length > 0 ? (
+							<div className="space-y-8">
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+									{displayedRuns.map((run, idx) => {
+										const date = new Date(run.start_date_local);
+										const formattedDate = format(date, "MMM dd, yyyy");
+										const distanceKm = (run.distance / 1000).toFixed(2);
+
+										// Pace calculation
+										const paceSeconds =
+											run.distance > 0
+												? run.moving_time / (run.distance / 1000)
+												: 0;
+										const paceMin = Math.floor(paceSeconds / 60);
+										const paceSec = Math.floor(paceSeconds % 60)
+											.toString()
+											.padStart(2, "0");
+										const formattedPace =
+											run.distance > 0 ? `${paceMin}:${paceSec}/km` : "N/A";
+
+										// Duration formatting
+										const hrs = Math.floor(run.moving_time / 3600);
+										const mins = Math.floor((run.moving_time % 3600) / 60);
+										const secs = run.moving_time % 60;
+										const formattedDuration =
+											hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m ${secs}s`;
+
+										return (
+											<motion.div
+												key={run.id}
+												initial={
+													safeReduceMotion ? false : { opacity: 0, y: 15 }
+												}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ delay: 0.04 * idx, duration: 0.35 }}
+												className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl hover:border-slate-300 transition-all duration-300 group flex flex-col justify-between h-full shadow-xs hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 relative overflow-hidden"
+											>
+												<div className="space-y-4 relative z-10">
+													<div className="flex justify-between items-start gap-2">
+														<div className="space-y-1">
+															<p className="text-sm sm:text-base font-extrabold text-slate-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
+																{run.name}
+															</p>
+															<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+																<Calendar className="w-3.5 h-3.5 text-emerald-600" />
+																<span>{formattedDate}</span>
+															</div>
+														</div>
+														<a
+															href={`https://www.strava.com/activities/${run.id}`}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-900 transition-all duration-200 flex items-center justify-center border border-slate-200/60 cursor-pointer shrink-0 shadow-2xs"
+															title="View on Strava"
+														>
+															<ExternalLink className="w-3.5 h-3.5" />
+														</a>
+													</div>
+
+													<div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
+														<div className="space-y-0.5">
+															<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
+																Distance
+															</span>
+															<div className="flex items-baseline gap-0.5">
+																<span className="text-sm sm:text-base font-extrabold text-slate-900">
+																	{distanceKm}
+																</span>
+																<span className="text-[9px] font-bold text-slate-500">
+																	KM
+																</span>
+															</div>
+														</div>
+														<div className="space-y-0.5 border-l border-slate-100 pl-2">
+															<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
+																Pace
+															</span>
+															<div className="flex items-baseline gap-0.5">
+																<span className="text-sm sm:text-base font-extrabold text-slate-900 font-mono">
+																	{formattedPace}
+																</span>
+															</div>
+														</div>
+														<div className="space-y-0.5 border-l border-slate-100 pl-2">
+															<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
+																Duration
+															</span>
+															<div className="flex items-baseline gap-0.5">
+																<span className="text-sm sm:text-base font-extrabold text-slate-900 font-mono">
+																	{formattedDuration}
+																</span>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between relative z-10 text-xs">
+													<div className="flex items-center gap-1.5 text-slate-600 font-bold">
+														<Mountain className="w-3.5 h-3.5 text-emerald-600" />
+														<span>+{run.total_elevation_gain}m climb</span>
+													</div>
+													{run.has_heartrate && run.average_heartrate && (
+														<div className="flex items-center gap-1 text-slate-700 font-bold">
+															<Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+															<span>
+																{Math.round(run.average_heartrate)} bpm
+															</span>
+														</div>
+													)}
+												</div>
+											</motion.div>
+										);
+									})}
+								</div>
+
+								{/* Pagination / Load More */}
+								<div className="text-center pt-4">
+									{hasMore ? (
+										<button
+											type="button"
+											onClick={() =>
+												setVisibleCount((prev) => prev + PAGE_SIZE)
+											}
+											className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-slate-800 hover:text-emerald-700 text-xs font-extrabold transition-all shadow-xs hover:shadow-md active:scale-95 cursor-pointer"
+										>
+											<span>Load More Activities</span>
+											<span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">
+												+{filteredAndSortedRuns.length - visibleCount} remaining
+											</span>
+										</button>
+									) : (
+										<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200/60 text-[11px] font-bold text-slate-500">
+											<CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+											All {filteredAndSortedRuns.length} activities loaded
+										</span>
+									)}
+								</div>
+							</div>
+						) : (
+							/* Empty Search / Filter State (Guideline Section 9) */
+							<motion.div
+								initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+								animate={{ opacity: 1, scale: 1 }}
+								className="text-center py-16 px-6 bg-white border border-slate-200/80 rounded-3xl shadow-xs max-w-md mx-auto"
+							>
+								<div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+									<Sparkles className="w-6 h-6 text-emerald-600" />
+								</div>
+								<h3 className="text-base font-extrabold text-slate-900 mb-1">
+									No matching runs found
+								</h3>
+								<p className="text-xs text-slate-500 font-medium mb-6">
+									No running activities matched your search query or selected
+									distance filter.
+								</p>
 								<button
 									type="button"
-									onClick={handleLiveSync}
-									disabled={isSyncing}
-									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
-									title="Sync live activities from Strava"
+									onClick={resetFilters}
+									className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all active:scale-95 shadow-xs cursor-pointer"
 								>
-									<RefreshCw
-										className={`w-3.5 h-3.5 text-emerald-600 ${
-											isSyncing ? "animate-spin" : ""
-										}`}
-									/>
-									<span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
+									Reset Filters
 								</button>
-								<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 hidden sm:block">
-									Real-Time Connection
-								</span>
-							</div>
-						</div>
-
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{runs.map((run, idx) => {
-								const date = new Date(run.start_date_local);
-								const formattedDate = format(date, "MMM dd, yyyy");
-								const distanceKm = (run.distance / 1000).toFixed(2);
-
-								// Pace calculation
-								const paceSeconds =
-									run.distance > 0
-										? run.moving_time / (run.distance / 1000)
-										: 0;
-								const paceMin = Math.floor(paceSeconds / 60);
-								const paceSec = Math.floor(paceSeconds % 60)
-									.toString()
-									.padStart(2, "0");
-								const formattedPace =
-									run.distance > 0 ? `${paceMin}:${paceSec}/km` : "N/A";
-
-								// Duration formatting
-								const hrs = Math.floor(run.moving_time / 3600);
-								const mins = Math.floor((run.moving_time % 3600) / 60);
-								const secs = run.moving_time % 60;
-								const formattedDuration =
-									hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m ${secs}s`;
-
-								return (
-									<motion.div
-										key={run.id}
-										initial={safeReduceMotion ? false : { opacity: 0, y: 15 }}
-										animate={{ opacity: 1, y: 0 }}
-										transition={{ delay: 0.05 * idx, duration: 0.4 }}
-										className="p-5 bg-white border border-slate-200/80 rounded-2xl hover:border-slate-300 transition-all duration-300 group flex flex-col justify-between h-full shadow-xs hover:shadow-lg hover:-translate-y-1 relative overflow-hidden"
-									>
-										<div className="space-y-4 relative z-10">
-											<div className="flex justify-between items-start">
-												<div className="space-y-1">
-													<p className="text-sm font-extrabold text-slate-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
-														{run.name}
-													</p>
-													<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-														<Calendar className="w-3.5 h-3.5 text-indigo-600" />
-														<span>{formattedDate}</span>
-													</div>
-												</div>
-												<a
-													href={`https://www.strava.com/activities/${run.id}`}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-900 transition-all duration-200 flex items-center justify-center border border-slate-200/60 cursor-pointer"
-													title="View on Strava"
-												>
-													<ExternalLink className="w-3.5 h-3.5" />
-												</a>
-											</div>
-
-											<div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
-												<div className="space-y-0.5">
-													<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
-														Distance
-													</span>
-													<div className="flex items-baseline gap-0.5">
-														<span className="text-sm font-extrabold text-slate-900">
-															{distanceKm}
-														</span>
-														<span className="text-[8px] font-bold text-slate-500">
-															KM
-														</span>
-													</div>
-												</div>
-												<div className="space-y-0.5 border-l border-slate-100 pl-2">
-													<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
-														Pace
-													</span>
-													<div className="flex items-baseline gap-0.5">
-														<span className="text-sm font-extrabold text-slate-900">
-															{formattedPace}
-														</span>
-													</div>
-												</div>
-												<div className="space-y-0.5 border-l border-slate-100 pl-2">
-													<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
-														Duration
-													</span>
-													<div className="flex items-baseline gap-0.5">
-														<span className="text-sm font-extrabold text-slate-900">
-															{formattedDuration}
-														</span>
-													</div>
-												</div>
-											</div>
-										</div>
-
-										<div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between relative z-10">
-											<div className="flex items-center gap-1.5">
-												<Mountain className="w-3.5 h-3.5 text-emerald-600" />
-												<span className="text-xs font-bold text-slate-700 leading-none">
-													+{run.total_elevation_gain}m gain
-												</span>
-											</div>
-											{run.has_heartrate && run.average_heartrate && (
-												<div className="flex items-center gap-1">
-													<Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
-													<span className="text-xs font-bold text-slate-700 leading-none">
-														{Math.round(run.average_heartrate)} bpm
-													</span>
-												</div>
-											)}
-										</div>
-									</motion.div>
-								);
-							})}
-						</div>
+							</motion.div>
+						)}
 					</motion.div>
-				)}
-
-				{/* Not Connected State */}
-				{!hasRunData && !isConnected && (
+				) : !isConnected ? (
+					/* 2. Not Connected / Setup Required State */
 					<motion.div
 						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
 						animate={{ opacity: 1, scale: 1 }}
@@ -596,6 +987,86 @@ export default function RunningView({
 								Connect Strava Account
 							</a>
 						)}
+					</motion.div>
+				) : runsIsNull ? (
+					/* 3. API Sync Error State (Guideline Section 9) */
+					<motion.div
+						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+						animate={{ opacity: 1, scale: 1 }}
+						className="mt-12 text-center py-16 px-6 bg-white border border-amber-200/80 rounded-3xl shadow-xs max-w-md mx-auto"
+					>
+						<div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 border border-amber-100">
+							<ShieldAlert className="w-6 h-6" />
+						</div>
+						<h3 className="text-base font-extrabold text-slate-900 mb-1">
+							Unable to Load Activities
+						</h3>
+						<p className="text-xs text-slate-600 font-medium mb-6 leading-relaxed">
+							Temporary Strava API synchronization issue. Try refreshing in a
+							moment.
+						</p>
+						<button
+							type="button"
+							onClick={handleLiveSync}
+							disabled={isSyncing}
+							className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs cursor-pointer"
+						>
+							<RefreshCw
+								className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
+							/>
+							<span>{isSyncing ? "Syncing..." : "Retry Sync"}</span>
+						</button>
+					</motion.div>
+				) : hasStats && stats.all_run_totals?.count > 0 ? (
+					/* 4. Activities Loading / Syncing State */
+					<motion.div
+						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+						animate={{ opacity: 1, scale: 1 }}
+						className="mt-12 text-center py-16 px-6 bg-gradient-to-br from-emerald-50/50 to-slate-50 border border-emerald-100/80 rounded-3xl shadow-xs max-w-md mx-auto"
+					>
+						<div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4">
+							<Activity className="w-6 h-6 animate-pulse" />
+						</div>
+						<h3 className="text-base font-extrabold text-slate-900 mb-1">
+							Activities Syncing...
+						</h3>
+						<p className="text-xs text-slate-600 font-medium mb-4">
+							Your profile shows {stats.all_run_totals.count} total runs on
+							Strava. Activities are syncing.
+						</p>
+						<button
+							type="button"
+							onClick={handleLiveSync}
+							disabled={isSyncing}
+							className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+						>
+							<RefreshCw
+								className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
+							/>
+							<span>Sync Now</span>
+						</button>
+					</motion.div>
+				) : (
+					/* 5. Connected But No Runs Logged */
+					<motion.div
+						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+						animate={{ opacity: 1, scale: 1 }}
+						className="mt-12 text-center py-20 bg-gradient-to-br from-emerald-50/50 to-slate-50 border border-emerald-100/80 rounded-3xl shadow-sm max-w-md mx-auto"
+					>
+						<div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4">
+							<Activity className="w-6 h-6" />
+						</div>
+						<h3 className="text-base font-extrabold text-slate-900 mb-2">
+							Connected & Ready!
+						</h3>
+						<p className="text-xs text-slate-600 font-medium max-w-md mx-auto mb-4 leading-relaxed">
+							Your account is connected. Start running and activities will sync
+							automatically.
+						</p>
+						<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100/80 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
+							<CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+							Synced with Strava
+						</div>
 					</motion.div>
 				)}
 			</div>

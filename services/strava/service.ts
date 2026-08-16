@@ -180,8 +180,49 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 		);
 
 		if (response.status === 401) {
-			console.warn("Strava access token is unauthorized (401). Forcing token refresh in Redis...");
+			console.warn("Strava access token is unauthorized (401). Attempting immediate token refresh...");
 			await forceTokenRefresh();
+			const freshToken = await getAccessToken();
+			if (freshToken && freshToken !== token) {
+				const retryRes = await fetch(
+					"https://www.strava.com/api/v3/athlete/activities?per_page=50",
+					{
+						headers: {
+							Authorization: `Bearer ${freshToken}`,
+						},
+					},
+				);
+				if (retryRes.ok) {
+					const activities = await retryRes.json();
+					if (Array.isArray(activities)) {
+						const runs: StravaRunActivity[] = activities
+							.filter((act: any) => act.type === "Run" || act.sport_type === "Run")
+							.slice(0, limit)
+							.map((act: any) => ({
+								id: Number(act.id),
+								name: String(act.name || "Run"),
+								distance: Number(act.distance || 0),
+								moving_time: Number(act.moving_time || 0),
+								elapsed_time: Number(act.elapsed_time || 0),
+								total_elevation_gain: Number(act.total_elevation_gain || 0),
+								start_date_local: String(act.start_date_local || new Date().toISOString()),
+								average_speed: Number(act.average_speed || 0),
+								max_speed: Number(act.max_speed || 0),
+								has_heartrate: Boolean(act.has_heartrate),
+								average_heartrate: act.average_heartrate ? Number(act.average_heartrate) : undefined,
+								max_heartrate: act.max_heartrate ? Number(act.max_heartrate) : undefined,
+							}));
+
+						try {
+							await redis.set("strava:activities", JSON.stringify(runs), { ex: 43200 }); // Cache 12 hours
+						} catch (err) {
+							console.error("Error writing activities cache to Redis:", err);
+						}
+
+						return runs;
+					}
+				}
+			}
 			return null;
 		}
 
@@ -283,8 +324,40 @@ export async function getAthleteStats(accessToken?: string | null): Promise<Stra
 		);
 
 		if (statsResponse.status === 401) {
-			console.warn("Strava access token is unauthorized (401) during stats fetch. Forcing token refresh in Redis...");
+			console.warn("Strava access token is unauthorized (401) during stats fetch. Attempting immediate token refresh...");
 			await forceTokenRefresh();
+			const freshToken = await getAccessToken();
+			if (freshToken && freshToken !== token) {
+				const retryStatsResponse = await fetch(
+					`https://www.strava.com/api/v3/athletes/${athleteId}/stats`,
+					{
+						headers: { Authorization: `Bearer ${freshToken}` },
+					},
+				);
+				if (retryStatsResponse.ok) {
+					const stats = await retryStatsResponse.json();
+					const runningStats: StravaStats = {
+						ytd_run_totals: {
+							count: Number(stats.ytd_run_totals?.count || 0),
+							distance: Number(stats.ytd_run_totals?.distance || 0),
+							moving_time: Number(stats.ytd_run_totals?.moving_time || 0),
+							elevation_gain: Number(stats.ytd_run_totals?.elevation_gain || 0),
+						},
+						all_run_totals: {
+							count: Number(stats.all_run_totals?.count || 0),
+							distance: Number(stats.all_run_totals?.distance || 0),
+							moving_time: Number(stats.all_run_totals?.moving_time || 0),
+							elevation_gain: Number(stats.all_run_totals?.elevation_gain || 0),
+						},
+					};
+					try {
+						await redis.set("strava:stats", JSON.stringify(runningStats), { ex: 43200 });
+					} catch (err) {
+						console.error("Error writing stats cache to Redis:", err);
+					}
+					return runningStats;
+				}
+			}
 			return null;
 		}
 

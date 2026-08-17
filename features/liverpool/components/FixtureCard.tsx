@@ -28,6 +28,7 @@ interface FixtureCardProps {
 
 export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 	const reduceMotion = useReducedMotion();
+	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const { matchData } = fixture;
 	const isHome = isLiverpoolHome(matchData.homeTeam);
 	const dateInfo = useMemo(
@@ -43,17 +44,24 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 
 	return (
 		<motion.div
-			initial={reduceMotion ? false : { opacity: 0, y: 15 }}
+			initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{
-				duration: 0.25,
-				delay: Math.min(index * 0.03, 0.3),
-				ease: "easeOut",
+				delay: Math.min(index * 0.05, 0.3),
+				type: "spring",
+				stiffness: 260,
+				damping: 20,
 			}}
-			className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/70 p-5 shadow-sm hover:shadow-xl hover:border-red-500/40 dark:hover:border-red-500/40 transition-all backdrop-blur-sm"
+			whileHover={{
+				y: -4,
+				transition: { type: "spring", stiffness: 400, damping: 25 },
+			}}
+			className={`group flex flex-col justify-between bg-white border ${
+				isHome ? "border-red-200/70" : "border-slate-200/80"
+			} rounded-[2rem] p-6 shadow-sm hover:shadow-xl transition-all duration-300 relative`}
 		>
 			{/* Top Bar: Competition & Venue Tag */}
-			<div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+			<div className="flex items-center justify-between gap-2 pb-4 border-b border-slate-100">
 				<div className="flex items-center gap-2 min-w-0">
 					{compLogoUrl ? (
 						<div className="relative w-4 h-4 shrink-0">
@@ -68,36 +76,36 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 					) : (
 						<Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
 					)}
-					<span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+					<span className="text-xs font-bold text-slate-900 truncate">
 						{matchData.competition?.displayName || "Fixture"}
 					</span>
 				</div>
 
 				<div className="flex items-center gap-1.5 shrink-0">
 					<span
-						className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
+						className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
 							isHome
-								? "bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800/50"
-								: "bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+								? "bg-red-50 text-red-700 border border-red-100"
+								: "bg-slate-100 text-slate-700 border border-slate-200/80"
 						}`}
 					>
-						{isHome ? "Anfield (H)" : "Away (A)"}
+						{isHome ? "Anfield" : "Away"}
 					</span>
 				</div>
 			</div>
 
 			{/* Center: Teams & Crests Matchup */}
-			<div className="py-4 space-y-3">
+			<div className="py-5 space-y-3.5">
 				{/* Home Team Row */}
 				<div className="flex items-center justify-between gap-3">
 					<div className="flex items-center gap-3 min-w-0">
-						<div className="relative w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/80 p-1 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center shrink-0">
+						<div className="relative w-10 h-10 rounded-2xl bg-slate-50 p-2 border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
 							{homeLogoUrl ? (
 								<Image
 									src={homeLogoUrl}
 									alt={matchData.homeTeam}
-									width={28}
-									height={28}
+									width={32}
+									height={32}
 									className="object-contain max-h-full max-w-full"
 									unoptimized
 								/>
@@ -106,10 +114,10 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 							)}
 						</div>
 						<span
-							className={`text-sm font-bold truncate ${
+							className={`text-sm truncate ${
 								isLiverpoolHome(matchData.homeTeam)
-									? "text-red-600 dark:text-red-400 font-extrabold"
-									: "text-slate-900 dark:text-slate-100"
+									? "text-red-600 font-bold"
+									: "text-slate-900 font-semibold"
 							}`}
 						>
 							{matchData.homeTeam}
@@ -123,13 +131,13 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 				{/* Away Team Row */}
 				<div className="flex items-center justify-between gap-3">
 					<div className="flex items-center gap-3 min-w-0">
-						<div className="relative w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/80 p-1 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center shrink-0">
+						<div className="relative w-10 h-10 rounded-2xl bg-slate-50 p-2 border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
 							{awayLogoUrl ? (
 								<Image
 									src={awayLogoUrl}
 									alt={matchData.awayTeam}
-									width={28}
-									height={28}
+									width={32}
+									height={32}
 									className="object-contain max-h-full max-w-full"
 									unoptimized
 								/>
@@ -138,10 +146,10 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 							)}
 						</div>
 						<span
-							className={`text-sm font-bold truncate ${
+							className={`text-sm truncate ${
 								isLiverpoolHome(matchData.awayTeam)
-									? "text-red-600 dark:text-red-400 font-extrabold"
-									: "text-slate-900 dark:text-slate-100"
+									? "text-red-600 font-bold"
+									: "text-slate-900 font-semibold"
 							}`}
 						>
 							{matchData.awayTeam}
@@ -154,26 +162,26 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 			</div>
 
 			{/* Match Details: Date, Time & Stadium */}
-			<div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-				<div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
-					<div className="flex items-center gap-1.5 font-medium">
-						<Calendar className="w-3.5 h-3.5 text-red-500 shrink-0" />
+			<div className="pt-4 border-t border-slate-100 space-y-2.5">
+				<div className="flex items-center justify-between text-xs">
+					<div className="flex items-center gap-1.5 font-bold text-slate-900">
+						<Calendar className="w-3.5 h-3.5 text-red-600 shrink-0" />
 						<span>{dateInfo.formattedDate}</span>
 					</div>
-					<div className="flex items-center gap-1 font-bold text-slate-900 dark:text-white">
+					<div className="flex items-center gap-1 font-bold text-slate-900">
 						<Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
 						<span>{dateInfo.formattedTime}</span>
 					</div>
 				</div>
 
-				<div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+				<div className="flex items-center justify-between text-xs text-slate-500">
 					<div className="flex items-center gap-1.5 truncate">
-						<MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+						<MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 						<span className="truncate">{matchData.stadium}</span>
 					</div>
 
 					{/* Relative Time pill */}
-					<span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0">
+					<span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 shrink-0">
 						{dateInfo.relativeTime}
 					</span>
 				</div>
@@ -184,12 +192,12 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 						{fixture.broadcasters && fixture.broadcasters.length > 0 ? (
 							<div className="flex items-center gap-1">
 								<Tv className="w-3 h-3 text-slate-400 shrink-0" />
-								<span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate max-w-[120px]">
+								<span className="text-[11px] font-semibold text-slate-500 truncate max-w-[130px]">
 									{fixture.broadcasters.map((b) => b.name).join(", ")}
 								</span>
 							</div>
 						) : (
-							<span className="text-[10px] text-slate-400 italic">
+							<span className="text-[11px] text-slate-400 italic">
 								Broadcast TBC
 							</span>
 						)}
@@ -201,7 +209,7 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 							target="_blank"
 							rel="noopener noreferrer"
 							title="Add match to Google Calendar"
-							className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+							className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors active:scale-95 cursor-pointer shadow-xs"
 						>
 							<Plus className="w-3.5 h-3.5" />
 						</a>
@@ -211,7 +219,7 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 								target="_blank"
 								rel="noopener noreferrer"
 								title={fixture.link.label || "Match Report"}
-								className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 transition-colors"
+								className="p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600 transition-colors active:scale-95 cursor-pointer shadow-xs"
 							>
 								<ExternalLink className="w-3.5 h-3.5" />
 							</a>

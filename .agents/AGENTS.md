@@ -2,6 +2,14 @@
 
 This document provides foundational context for any AI coding assistant (e.g., Claude, GPT, Gemini, Grok, Mima, Copilot) to ensure architectural consistency, security, and efficiency across the codebase.
 
+> [!IMPORTANT]
+> **Strict UI/UX Guideline Compliance Mandate**:
+> Whenever creating a new page, revamping an existing page, or adjusting any UI component, agents **MUST** strictly follow the design principles, visual patterns, and architectural rules defined in [`ui-uix-guideline.md`](file:///c:/Work/Me/personal-web-v2/ui-uix-guideline.md).
+> - **Design Standard**: Modern Floating Card dashboard aesthetic (`bg-white`, `border border-slate-200/80`, `rounded-2xl` / `rounded-3xl` / `rounded-[2rem]`, `shadow-xs` to `shadow-xl`).
+> - **Canvas**: Light textured canvas (`bg-slate-50/80 bg-dot-pattern`) with airy hero layout (`pt-24 sm:pt-32`).
+> - **Mobile-First & Responsiveness**: Scaled grids (`grid-cols-1 md:grid-cols-2 lg/xl:grid-cols-3`), mobile touch targets, and proper floating bottom bar clearance (`pb-32 sm:pb-36`).
+> - **Form & Search Hygiene**: Explicit input icon layering (`pointer-events-none z-10` with `pl-10`/`pl-11`).
+
 ## 🛠 Tech Stack
 - **Framework:** Next.js 16.2.10 (App Router) & React 19.2.7
 - **Language:** TypeScript 5.9.3
@@ -41,6 +49,7 @@ Contains all business logic, components, and types for specific features.
 - `features/blog/`: Actions, data fetching, and all blog UI components.
 - `features/tasks/`: Actions, analytics, types, utils, and task UI components structured under logical `components/` subdirectories (`agenda/`, `analytics/`, `health/`, `shared/`).
 - `features/investment/`: Actions, types, and Fear & Greed visualization components.
+- `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureCard.tsx`, `PlayedCard.tsx`, `FixtureFilters.tsx`, `FixtureSkeleton.tsx`).
 - `features/travel/`: Components, types, and static data for the Travel Bucket List Tracker.
 - `features/shared/`: Global reusable UI components (e.g., `CustomModal.tsx`, `StockTicker.tsx`, `Skeleton.tsx`).
 
@@ -63,6 +72,7 @@ Strictly for routing and page definitions.
 - `app/blog/`: SSG-optimized blog system with dynamic routes.
 - `app/contact/`: User inquiry page and contact submission form.
 - `app/investment/`: Market sentiment and Fear & Greed visualizations.
+- `app/liverpool/`: Matchday Schedule & Fixtures Hub with live countdowns and matchday reports.
 - `app/login/`: Admin PIN login interface.
 - `app/portfolio/` & `app/work-experience/`: Professional showcase and career timeline.
 - `app/tasks/`: Personal task management and analytics agenda.
@@ -101,13 +111,19 @@ Strictly for routing and page definitions.
 
 ## 🗺 Navigation
 - **Data-Driven:** Driven by the `NAV_ITEMS` constant in `CompactBottomBar.tsx`.
-- **Sub-Menu Strategy**: "Insights" now contains Blog, Investment, and Utils.
+- **Sub-Menu Strategy**: "Insights" contains Blog, Investment, Liverpool FC, and Utils.
 - **Click Pass-through**: Outer `<motion.nav>` uses `pointer-events-none` and the inner bar uses `pointer-events-auto` to prevent the floating workspace container from blocking clicks on underlying page content.
 - **SSR & Hydration Strategy**: Avoids returning `null` before mounting. Default public navigation links render server-side (SSR) to preserve SEO internal links and prevent a visual pop-in layout shift, updating dynamically after client-side authentication checks.
 - **Optimized Queries**: Pending task count queries only fetch on auth status changes, rather than firing on every page navigation.
 - **Dynamic Hover Detection**: Attaches a media query listener to `window.matchMedia("(hover: hover)")` to dynamically adapt UI hover states in real-time.
 
 ## 📝 Content Systems
+### Liverpool FC Matchday Hub
+- **Architecture**: Domain-driven feature in `features/liverpool/` fetching from official REST API (`backend.liverpoolfc.com`) with 1-hour ISR revalidation and defensive data fallbacks.
+- **Dual-Tab Architecture**: Focuses on "Upcoming Matches" (with a live countdown Next Match hero and monthly schedule grouping) and isolates "Played Results" (displaying outcome pills `WIN`/`DRAW`/`LOSS`, final scores, and official match reports).
+- **Aesthetics & UI/UX**: Pure light model with Liverpool Red accents, dot pattern canvas (`bg-slate-50/80 bg-dot-pattern`), `rounded-[2rem]` floating cards, and pill badges matching `TravelPage()`.
+- **Integrations**: Google Calendar URL export and direct LFC match center links.
+
 ### Blog System
 - **Optimization**: Public routes use **Static Site Generation (SSG)** with absolute OG/Twitter metadata.
 - **Interactive Tools**: Built-in `ShareButton` leveraging native Web Share API.
@@ -206,6 +222,7 @@ pnpm run analyze         # Alias for build:analyze
 - `postcss.config.mjs`: Enhanced with autoprefixer
 
 ## 📏 Engineering Standards
+- **UI/UX Consistency**: All new or modified pages/components MUST strictly conform to [`ui-uix-guideline.md`](file:///c:/Work/Me/personal-web-v2/ui-uix-guideline.md) (Floating Cards, `bg-slate-50/80 bg-dot-pattern`, `bg-white` containers, `rounded-2xl` to `rounded-[2rem]`, pill badges, mobile-first responsive grids, and `pb-32 sm:pb-36` navigation clearance).
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.
 - **Defensive Data Handling**: Always implement safety fallbacks and type-casting (e.g., `String(val || "")`) when processing external API data to prevent runtime `TypeError` on missing fields.
 - **SEO & Metadata**: Every route must implement `generateMetadata` using `createMetadata` helper in `lib/shared/metadata.ts`.

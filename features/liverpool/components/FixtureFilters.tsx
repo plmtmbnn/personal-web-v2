@@ -49,18 +49,18 @@ export default function FixtureFilters({
 			<div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
 				{/* Search Input */}
 				<div className="relative flex-1">
-					<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+					<Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
 					<input
 						type="text"
 						value={search}
 						onChange={(e) => onSearchChange(e.target.value)}
-						placeholder="Search opponent or stadium (e.g. Real Madrid, Anfield)..."
-						className="w-full pl-10 pr-10 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all shadow-sm"
+						placeholder="Search opponent or stadium (e.g. Newcastle, Anfield, Arsenal)..."
+						className="w-full pl-11 pr-10 py-3 rounded-full bg-white border border-slate-200/80 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 transition-all shadow-xs"
 					/>
 					{search && (
 						<button
 							onClick={() => onSearchChange("")}
-							className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+							className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
 						>
 							<X className="w-3.5 h-3.5" />
 						</button>
@@ -68,33 +68,33 @@ export default function FixtureFilters({
 				</div>
 
 				{/* Venue Filter Pills */}
-				<div className="flex items-center rounded-2xl bg-slate-100 dark:bg-slate-800/80 p-1 border border-slate-200/60 dark:border-slate-700/60 self-start md:self-auto shrink-0">
+				<div className="flex items-center rounded-full bg-white p-1 border border-slate-200/80 shadow-xs self-start md:self-auto shrink-0 gap-1">
 					<button
 						onClick={() => onVenueChange("all")}
-						className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+						className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
 							venue === "all"
-								? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
-								: "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+								? "bg-slate-900 text-white shadow-xs"
+								: "text-slate-600 hover:text-slate-900"
 						}`}
 					>
 						All Venues
 					</button>
 					<button
 						onClick={() => onVenueChange("home")}
-						className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+						className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
 							venue === "home"
-								? "bg-red-600 text-white shadow-sm"
-								: "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+								? "bg-red-600 text-white shadow-xs"
+								: "text-slate-600 hover:text-slate-900"
 						}`}
 					>
 						Anfield Only
 					</button>
 					<button
 						onClick={() => onVenueChange("away")}
-						className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+						className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
 							venue === "away"
-								? "bg-slate-900 dark:bg-slate-700 text-white shadow-sm"
-								: "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+								? "bg-slate-800 text-white shadow-xs"
+								: "text-slate-600 hover:text-slate-900"
 						}`}
 					>
 						Away Only
@@ -106,10 +106,10 @@ export default function FixtureFilters({
 			<div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
 				<button
 					onClick={() => onCompetitionChange("all")}
-					className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all ${
+					className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
 						selectedCompetition === "all"
-							? "bg-red-600 text-white shadow-md shadow-red-600/20"
-							: "bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+							? "bg-red-600 text-white shadow-xs"
+							: "bg-white border border-slate-200/80 text-slate-700 hover:border-slate-300 shadow-xs"
 					}`}
 				>
 					All Competitions ({totalCount})
@@ -118,10 +118,10 @@ export default function FixtureFilters({
 					<button
 						key={comp}
 						onClick={() => onCompetitionChange(comp)}
-						className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all ${
+						className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
 							selectedCompetition === comp
-								? "bg-red-600 text-white shadow-md shadow-red-600/20"
-								: "bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+								? "bg-red-600 text-white shadow-xs"
+								: "bg-white border border-slate-200/80 text-slate-700 hover:border-slate-300 shadow-xs"
 						}`}
 					>
 						{comp}
@@ -131,16 +131,16 @@ export default function FixtureFilters({
 
 			{/* Month Filter Bar (if multiple months exist) */}
 			{months.length > 1 && (
-				<div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-1 border-t border-slate-100 dark:border-slate-800/60">
+				<div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-2 border-t border-slate-200/60">
 					<span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0 mr-1">
 						Month:
 					</span>
 					<button
 						onClick={() => onMonthChange("all")}
-						className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all ${
+						className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
 							selectedMonth === "all"
-								? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-								: "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+								? "bg-slate-900 text-white shadow-xs"
+								: "bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 shadow-xs"
 						}`}
 					>
 						All
@@ -149,21 +149,21 @@ export default function FixtureFilters({
 						<button
 							key={m.key}
 							onClick={() => onMonthChange(m.key)}
-							className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
+							className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
 								selectedMonth === m.key
-									? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-									: "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+									? "bg-slate-900 text-white shadow-xs"
+									: "bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 shadow-xs"
 							}`}
 						>
 							<span>{m.label}</span>
-							<span className="opacity-60 text-[9px]">({m.count})</span>
+							<span className="opacity-60 text-[10px]">({m.count})</span>
 						</button>
 					))}
 
 					{hasActiveFilters && (
 						<button
 							onClick={resetFilters}
-							className="ml-auto text-[11px] font-bold text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 underline shrink-0 cursor-pointer"
+							className="ml-auto text-xs font-bold text-red-600 hover:underline shrink-0 cursor-pointer"
 						>
 							Reset Filters
 						</button>

@@ -26,6 +26,7 @@ import {
 	X,
 	QrCode,
 	ShieldCheck,
+	Trophy,
 } from "lucide-react";
 
 export default function CommandPalette() {
@@ -165,6 +166,11 @@ export default function CommandPalette() {
 												name: "Fear & Greed Index / Investments",
 												path: "/investment",
 												icon: TrendingUp,
+											},
+											{
+												name: "Liverpool FC Fixtures & Matchdays",
+												path: "/liverpool",
+												icon: Trophy,
 											},
 											{
 												name: "Professional Showcase",

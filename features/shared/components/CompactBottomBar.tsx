@@ -23,6 +23,7 @@ import {
 	Sparkles,
 	Toolbox,
 	Database,
+	Trophy,
 } from "lucide-react";
 import {
 	motion,
@@ -77,6 +78,7 @@ const NAV_ITEMS: NavItem[] = [
 		subItems: [
 			{ label: "Blog Posts", href: "/blog", icon: BookOpen },
 			{ label: "Investments", href: "/investment", icon: TrendingUp },
+			{ label: "Liverpool FC", href: "/liverpool", icon: Trophy },
 			{ label: "Utils", href: "/utils", icon: Toolbox },
 		],
 	},

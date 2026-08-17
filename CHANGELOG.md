@@ -1,3 +1,10 @@
+# [0.72.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.71.0...v0.72.0) (2026-08-17)
+
+
+### Features
+
+* **liverpool:** revamp fixtures hub to pure light aesthetic and update ui-ux guidelines ([06be475](https://github.com/plmtmbnn/personal-web-v2/commit/06be475b4e1d8a60df0a655bea17ab2078b4b89d))
+
 # [0.71.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.70.0...v0.71.0) (2026-08-17)
 
 

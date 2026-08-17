@@ -1,3 +1,10 @@
+# [0.71.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.70.0...v0.71.0) (2026-08-17)
+
+
+### Features
+
+* **liverpool:** add Liverpool FC fixtures and results hub under Insights menu ([e2fef06](https://github.com/plmtmbnn/personal-web-v2/commit/e2fef068743523a2ad5ff0a1dc0825af952b74c6))
+
 # [0.70.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.69.0...v0.70.0) (2026-08-16)
 
 

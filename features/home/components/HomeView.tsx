@@ -26,7 +26,16 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const TECH_PILLS = ["Node.js", "Next.js", "Go", "PostgreSQL", "MongoDB"];
+const TECH_PILLS = [
+	"React",
+	"Next.js",
+	"React Native",
+	"Vite",
+	"Node.js",
+	"Go",
+	"PostgreSQL",
+	"MongoDB",
+];
 
 // ─── Memoized Components ───────────────────────────────────────────────────────
 

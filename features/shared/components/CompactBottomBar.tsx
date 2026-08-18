@@ -73,9 +73,10 @@ const NAV_ITEMS: NavItem[] = [
 	},
 	{
 		label: "Insights",
-		href: "/blog",
+		href: "/insights",
 		icon: BookOpen,
 		subItems: [
+			{ label: "Overview", href: "/insights", icon: Sparkles },
 			{ label: "Blog Posts", href: "/blog", icon: BookOpen },
 			{ label: "Investments", href: "/investment", icon: TrendingUp },
 			{ label: "Liverpool FC", href: "/liverpool", icon: Trophy },

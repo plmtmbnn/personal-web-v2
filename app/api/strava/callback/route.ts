@@ -77,7 +77,8 @@ export async function GET(request: Request) {
 		await redis.del("strava:activities");
 		await redis.del("strava:stats");
 
-		console.log("Strava token exchange successfully stored in Redis.");
+		console.log("✅ Strava token exchange successfully stored in Redis.");
+		console.log("👉 New STRAVA_REFRESH_TOKEN for .env:", tokenData.refresh_token);
 		return NextResponse.redirect(
 			new URL("/adventures/running?success=true", siteUrl),
 		);

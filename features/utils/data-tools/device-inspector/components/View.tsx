@@ -24,6 +24,11 @@ import {
 	Battery,
 	Play,
 	Sliders,
+	Tv,
+	Gamepad2,
+	Video,
+	CloudUpload,
+	Award,
 } from "lucide-react";
 import type {
 	CodecItem,
@@ -47,6 +52,8 @@ import {
 	measurePingAndJitter,
 	measureUploadSpeed,
 } from "../utils/speed-test";
+import { calculateConnectionSuitability } from "../utils/suitability";
+import PeripheralsStudio from "./PeripheralsStudio";
 
 export default function DeviceInspectorView() {
 	const reduceMotion = useReducedMotion();
@@ -91,9 +98,13 @@ export default function DeviceInspectorView() {
 		downloadMbps: 0,
 		uploadMbps: 0,
 		progressPercent: 0,
+		throughputHistory: [],
 	});
 
+	const [throughputHistory, setThroughputHistory] = useState<number[]>([]);
 	const [isReportCopied, setIsReportCopied] = useState(false);
+
+	const suitability = calculateConnectionSuitability(speedMetrics);
 
 	// Load initial telemetry
 	useEffect(() => {
@@ -117,6 +128,7 @@ export default function DeviceInspectorView() {
 
 	// Run full speed test suite
 	const handleRunSpeedTest = useCallback(async () => {
+		setThroughputHistory([]);
 		setSpeedMetrics({
 			phase: "ping",
 			pingMs: 0,
@@ -124,11 +136,12 @@ export default function DeviceInspectorView() {
 			downloadMbps: 0,
 			uploadMbps: 0,
 			progressPercent: 10,
+			throughputHistory: [],
 		});
 
 		try {
 			// Phase 1: Ping & Jitter
-			const { pingMs, jitterMs } = await measurePingAndJitter(5);
+			const { pingMs, jitterMs } = await measurePingAndJitter(6);
 			setSpeedMetrics((prev) => ({
 				...prev,
 				pingMs,
@@ -139,6 +152,7 @@ export default function DeviceInspectorView() {
 
 			// Phase 2: Download Speed
 			const downloadMbps = await measureDownloadSpeed((currentMbps, ratio) => {
+				setThroughputHistory((prev) => [...prev.slice(-24), currentMbps]);
 				setSpeedMetrics((prev) => ({
 					...prev,
 					downloadMbps: currentMbps,
@@ -155,6 +169,7 @@ export default function DeviceInspectorView() {
 
 			// Phase 3: Upload Speed
 			const uploadMbps = await measureUploadSpeed((currentMbps, ratio) => {
+				setThroughputHistory((prev) => [...prev.slice(-24), currentMbps]);
 				setSpeedMetrics((prev) => ({
 					...prev,
 					uploadMbps: currentMbps,
@@ -168,6 +183,7 @@ export default function DeviceInspectorView() {
 				uploadMbps,
 				phase: "completed",
 				progressPercent: 100,
+				throughputHistory,
 			}));
 		} catch (err) {
 			setSpeedMetrics((prev) => ({
@@ -176,7 +192,7 @@ export default function DeviceInspectorView() {
 				error: err instanceof Error ? err.message : "Speed test interrupted.",
 			}));
 		}
-	}, []);
+	}, [throughputHistory]);
 
 	// Copy full diagnostic report
 	const handleCopyReport = () => {
@@ -187,6 +203,7 @@ export default function DeviceInspectorView() {
 			displayInfo,
 			codecs,
 			webApis,
+			suitability,
 		);
 		navigator.clipboard.writeText(JSON.stringify(report, null, 2));
 		setIsReportCopied(true);
@@ -202,6 +219,7 @@ export default function DeviceInspectorView() {
 			displayInfo,
 			codecs,
 			webApis,
+			suitability,
 		);
 		const blob = new Blob([JSON.stringify(report, null, 2)], {
 			type: "application/json",
@@ -298,9 +316,14 @@ export default function DeviceInspectorView() {
 					className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6"
 				>
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-						<div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-700">
-							<Wifi className="w-4 h-4 text-indigo-600" />
-							<span>Internet Speed & Latency Telemetry</span>
+						<div className="space-y-0.5">
+							<div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-700">
+								<Wifi className="w-4 h-4 text-indigo-600" />
+								<span>Internet Speed & Latency Telemetry</span>
+							</div>
+							<p className="text-[11px] font-medium text-slate-500">
+								Bandwidth measured in Megabits per second (Mbps)
+							</p>
 						</div>
 						<button
 							type="button"
@@ -338,12 +361,17 @@ export default function DeviceInspectorView() {
 									<ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
 									Download
 								</span>
-								<span className="text-[10px] font-mono">Mbps</span>
+								<span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-100/70 px-1.5 py-0.5 rounded">
+									Mbps
+								</span>
 							</div>
 							<p className="font-mono text-3xl sm:text-4xl font-extrabold text-slate-900">
 								{speedMetrics.downloadMbps > 0
 									? speedMetrics.downloadMbps
 									: "--"}
+							</p>
+							<p className="text-[10px] font-semibold text-slate-500">
+								Megabits per second
 							</p>
 						</div>
 
@@ -354,10 +382,15 @@ export default function DeviceInspectorView() {
 									<ArrowUp className="w-3.5 h-3.5 text-emerald-600" />
 									Upload
 								</span>
-								<span className="text-[10px] font-mono">Mbps</span>
+								<span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+									Mbps
+								</span>
 							</div>
 							<p className="font-mono text-3xl sm:text-4xl font-extrabold text-slate-900">
 								{speedMetrics.uploadMbps > 0 ? speedMetrics.uploadMbps : "--"}
+							</p>
+							<p className="text-[10px] font-semibold text-slate-500">
+								Megabits per second
 							</p>
 						</div>
 
@@ -368,10 +401,15 @@ export default function DeviceInspectorView() {
 									<Radio className="w-3.5 h-3.5 text-amber-600" />
 									Ping (RTT)
 								</span>
-								<span className="text-[10px] font-mono">ms</span>
+								<span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100/70 px-1.5 py-0.5 rounded">
+									ms
+								</span>
 							</div>
 							<p className="font-mono text-3xl sm:text-4xl font-extrabold text-slate-900">
 								{speedMetrics.pingMs > 0 ? speedMetrics.pingMs : "--"}
+							</p>
+							<p className="text-[10px] font-semibold text-slate-500">
+								Milliseconds
 							</p>
 						</div>
 
@@ -382,34 +420,141 @@ export default function DeviceInspectorView() {
 									<Sliders className="w-3.5 h-3.5 text-purple-600" />
 									Jitter
 								</span>
-								<span className="text-[10px] font-mono">ms</span>
+								<span className="text-[10px] font-mono font-bold text-purple-700 bg-purple-100/70 px-1.5 py-0.5 rounded">
+									ms
+								</span>
 							</div>
 							<p className="font-mono text-3xl sm:text-4xl font-extrabold text-slate-900">
 								{speedMetrics.jitterMs > 0 ? speedMetrics.jitterMs : "--"}
 							</p>
+							<p className="text-[10px] font-semibold text-slate-500">
+								Variation (ms)
+							</p>
 						</div>
 					</div>
 
-					{/* Progress Bar (when testing) */}
+					{/* Progress Bar & Real-time Throughput Sparkline (when testing) */}
 					{speedMetrics.phase !== "idle" &&
 						speedMetrics.phase !== "completed" && (
-							<div className="space-y-2">
-								<div className="flex items-center justify-between text-xs font-bold text-slate-500">
-									<span className="uppercase tracking-wider">
-										Testing: {speedMetrics.phase.toUpperCase()}
+							<div className="space-y-2.5 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
+								<div className="flex items-center justify-between text-xs font-bold text-slate-700">
+									<span className="uppercase tracking-wider flex items-center gap-2">
+										<RefreshCw className="w-3.5 h-3.5 text-indigo-600 animate-spin" />
+										Active Phase: {speedMetrics.phase.toUpperCase()}
 									</span>
-									<span className="font-mono">
-										{speedMetrics.progressPercent}%
+									<span className="font-mono text-indigo-600 font-extrabold">
+										{speedMetrics.progressPercent}% Completed
 									</span>
 								</div>
-								<div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+
+								<div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
 									<div
-										className="h-full bg-indigo-600 transition-all duration-300"
+										className="h-full bg-indigo-600 transition-all duration-200"
 										style={{ width: `${speedMetrics.progressPercent}%` }}
 									/>
 								</div>
+
+								{/* Live Throughput Sparkline */}
+								{throughputHistory.length > 2 && (
+									<div className="pt-2 flex items-center justify-between gap-4 text-[10px] text-slate-400 font-mono">
+										<span>Real-time Stream Fluctuation:</span>
+										<div className="flex items-end gap-1 h-5 flex-1 max-w-[200px]">
+											{throughputHistory.map((val, idx) => {
+												const maxVal = Math.max(...throughputHistory, 1);
+												const barHeight = Math.max(
+													15,
+													Math.round((val / maxVal) * 100),
+												);
+												return (
+													<div
+														key={`sparkline-${idx}`}
+														className="w-full bg-indigo-500 rounded-t-xs transition-all duration-75"
+														style={{ height: `${barHeight}%` }}
+													/>
+												);
+											})}
+										</div>
+										<span className="font-bold text-slate-700">
+											{throughputHistory[throughputHistory.length - 1]} Mbps
+										</span>
+									</div>
+								)}
 							</div>
 						)}
+
+					{/* ─── Connection Suitability Matrix (Completed) ─────────────── */}
+					{speedMetrics.phase === "completed" && (
+						<motion.div
+							initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
+							animate={{ opacity: 1, scale: 1 }}
+							className="p-5 bg-gradient-to-br from-indigo-50/70 via-slate-50 to-white border border-indigo-100 rounded-2xl space-y-4 shadow-2xs"
+						>
+							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100/60 pb-3">
+								<div className="flex items-center gap-2">
+									<Award className="w-4 h-4 text-indigo-600" />
+									<span className="text-xs font-extrabold uppercase tracking-wider text-slate-800">
+										Real-World Connection Suitability Matrix
+									</span>
+								</div>
+								<div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-indigo-200 rounded-full text-xs font-bold text-indigo-950 shadow-2xs">
+									<span className="w-2 h-2 rounded-full bg-emerald-500" />
+									<span className="font-mono font-extrabold text-indigo-600">
+										Grade {suitability.grade}
+									</span>
+									<span className="text-slate-400">•</span>
+									<span className="text-slate-600">
+										{suitability.gradeLabel}
+									</span>
+								</div>
+							</div>
+
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+								{suitability.metrics.map((item) => (
+									<div
+										key={item.title}
+										className="p-3.5 bg-white border border-slate-200/80 rounded-xl space-y-1.5 shadow-2xs"
+									>
+										<div className="flex items-center justify-between">
+											<span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase">
+												{item.iconName === "tv" && (
+													<Tv className="w-3.5 h-3.5 text-indigo-600" />
+												)}
+												{item.iconName === "gamepad" && (
+													<Gamepad2 className="w-3.5 h-3.5 text-purple-600" />
+												)}
+												{item.iconName === "video" && (
+													<Video className="w-3.5 h-3.5 text-emerald-600" />
+												)}
+												{item.iconName === "cloud-upload" && (
+													<CloudUpload className="w-3.5 h-3.5 text-cyan-600" />
+												)}
+												{item.title}
+											</span>
+											<span
+												className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+													item.status === "optimal"
+														? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+														: item.status === "good"
+															? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+															: item.status === "moderate"
+																? "bg-amber-50 text-amber-700 border border-amber-200"
+																: "bg-rose-50 text-rose-700 border border-rose-200"
+												}`}
+											>
+												{item.status}
+											</span>
+										</div>
+										<p className="text-xs font-extrabold text-slate-900">
+											{item.verdict}
+										</p>
+										<p className="text-[10px] text-slate-500 leading-tight">
+											{item.details}
+										</p>
+									</div>
+								))}
+							</div>
+						</motion.div>
+					)}
 
 					{/* Connection Meta Badges */}
 					<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100 text-xs">
@@ -426,31 +571,38 @@ export default function DeviceInspectorView() {
 								Network Downlink
 							</span>
 							<span className="font-mono font-bold text-slate-800">
-								~{networkInfo.downlinkMbps} Mbps
+								~{networkInfo.downlinkMbps} Megabits per second
 							</span>
 						</div>
 						<div>
 							<span className="text-slate-400 block text-[10px] font-bold uppercase">
-								Public IP Address
+								Public IP & Geo
 							</span>
-							<span className="font-mono font-bold text-slate-800">
+							<span className="font-mono font-bold text-slate-800 truncate block">
 								{networkInfo.publicIp || "127.0.0.1"}
+								{networkInfo.city
+									? ` • ${networkInfo.city}, ${networkInfo.countryCode || networkInfo.country}`
+									: ""}
 							</span>
 						</div>
 						<div>
 							<span className="text-slate-400 block text-[10px] font-bold uppercase">
-								Network State
+								ISP & Organization
 							</span>
-							<span className="inline-flex items-center gap-1 font-bold text-emerald-600">
-								<span className="w-2 h-2 rounded-full bg-emerald-500" />
-								Online
+							<span className="font-mono font-bold text-slate-800 truncate block">
+								{networkInfo.isp || networkInfo.org || "Detecting..."}
 							</span>
 						</div>
 					</div>
 				</motion.div>
 
 				{/* ═══════════════════════════════════════════════════════════════════ */}
-				{/* SECTION 2 & 3: HARDWARE & DISPLAY TELEMETRY                         */}
+				{/* SECTION 2: PERIPHERALS & MEDIA HARDWARE DIAGNOSTICS                 */}
+				{/* ═══════════════════════════════════════════════════════════════════ */}
+				<PeripheralsStudio reduceMotion={reduceMotion} />
+
+				{/* ═══════════════════════════════════════════════════════════════════ */}
+				{/* SECTION 3 & 4: HARDWARE & DISPLAY TELEMETRY                         */}
 				{/* ═══════════════════════════════════════════════════════════════════ */}
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
 					{/* Hardware Diagnostics Card */}

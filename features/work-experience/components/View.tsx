@@ -47,7 +47,7 @@ const experiences: Experience[] = [
 				responsibilities: [
 					"Define and execute engineering strategy across multiple fintech platforms",
 					"Lead architecture and scalability of LOS & LMS across holding subsidiaries",
-					"Oversee development of RELIID super-app integrating multiple products",
+					"Oversee development of RELIID super-app (React Native) integrating multiple products",
 				],
 				highlights: [
 					"Architected Relipay group payment system (QRIS, top-up, bank transfer)",

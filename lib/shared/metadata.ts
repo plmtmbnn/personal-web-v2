@@ -45,7 +45,10 @@ export function createMetadata({
 		"fintech",
 		"jakarta",
 		"typescript",
+		"react",
 		"next.js",
+		"react native",
+		"vite",
 		"polma tambunan",
 		"intentional running",
 	].join(", ");

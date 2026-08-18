@@ -6,7 +6,7 @@ export const metadata: Metadata = createMetadata({
 	title:
 		"Device, Internet Speed Test & Browser Diagnostics Inspector - Live Network & Hardware Telemetry",
 	description:
-		"Real-time internet speed test (download, upload, ping, jitter), hardware telemetry (CPU, RAM, GPU WebGL renderer), display and refresh rate analysis, and media codec audit.",
+		"Real-time internet speed test in Megabits per second (download, upload, ping, jitter), hardware telemetry (CPU, RAM, GPU WebGL renderer), display and refresh rate analysis, and media codec audit.",
 	path: "/utils/device-inspector",
 	keywords: [
 		"Speed Test",

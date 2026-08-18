@@ -183,7 +183,7 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 			console.warn("Strava access token is unauthorized (401). Attempting immediate token refresh...");
 			await forceTokenRefresh();
 			const freshToken = await getAccessToken();
-			if (freshToken && freshToken !== token) {
+			if (freshToken) {
 				const retryRes = await fetch(
 					"https://www.strava.com/api/v3/athlete/activities?per_page=50",
 					{
@@ -221,13 +221,31 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 
 						return runs;
 					}
+				} else {
+					const retryErr = await retryRes.text();
+					if (retryErr.includes("activity:read_permission") || retryErr.includes("Authorization Error")) {
+						console.warn("[Strava API] Missing 'activity:read_all' permission. Reconnection required via /adventures/running.");
+					} else {
+						console.error(`[Strava API] Retry activities failed with status ${retryRes.status}:`, retryErr);
+					}
+					if (retryRes.status === 401 || retryRes.status === 403) {
+						try {
+							await redis.del("strava:token_data");
+						} catch (delErr) {
+							console.error("Failed to delete expired token data from Redis:", delErr);
+						}
+					}
 				}
+			} else {
+				console.warn("[Strava API] No valid token available after refresh attempt.");
 			}
 			return null;
 		}
 
 		if (!response.ok) {
-			throw new Error(`Failed to fetch Strava activities: ${response.status}`);
+			const errBody = await response.text();
+			console.warn(`[Strava API] Activities request returned status ${response.status}:`, errBody);
+			return null;
 		}
 
 		const activities = await response.json();
@@ -423,8 +441,11 @@ export async function getStravaData(): Promise<StravaDataResult> {
 			getAthleteStats(accessToken),
 		]);
 
+		const activeToken = await getAccessToken();
+		const hasValidToken = Boolean(activeToken);
+
 		console.log('🏃 Strava Data Fetched:', {
-			hasToken,
+			hasToken: hasValidToken,
 			runsCount: runs?.length ?? 0,
 			runsIsNull: runs === null,
 			statsAvailable: !!stats,
@@ -436,7 +457,7 @@ export async function getStravaData(): Promise<StravaDataResult> {
 			stats,
 			clientId: ENV_GLOBAL.STRAVA_CLIENT_ID,
 			siteUrl: ENV_GLOBAL.NEXT_PUBLIC_SITE_URL,
-			hasToken,
+			hasToken: hasValidToken,
 		};
 	} catch (error) {
 		console.error("Error fetching aggregated Strava data:", error);

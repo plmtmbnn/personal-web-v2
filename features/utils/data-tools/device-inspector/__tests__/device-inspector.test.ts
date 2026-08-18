@@ -6,6 +6,7 @@ import {
 	getHardwareDiagnostics,
 	generateDiagnosticReport,
 } from "../utils/diagnostics";
+import { calculateConnectionSuitability } from "../utils/suitability";
 import type {
 	DisplayInfo,
 	HardwareInfo,
@@ -59,6 +60,46 @@ describe("getDisplayDiagnostics & getHardwareDiagnostics", () => {
 	});
 });
 
+describe("calculateConnectionSuitability", () => {
+	it("grades ultra-fast broadband as Grade A+ with optimal gaming and 4K streaming", () => {
+		const metrics: SpeedTestMetrics = {
+			phase: "completed",
+			pingMs: 12,
+			jitterMs: 1.5,
+			downloadMbps: 150,
+			uploadMbps: 50,
+			progressPercent: 100,
+		};
+
+		const suitability = calculateConnectionSuitability(metrics);
+		expect(suitability.grade).toBe("A+");
+		expect(suitability.metrics.length).toBe(4);
+
+		const streaming = suitability.metrics.find((m) =>
+			m.title.includes("Streaming"),
+		);
+		const gaming = suitability.metrics.find((m) => m.title.includes("Gaming"));
+		expect(streaming?.status).toBe("optimal");
+		expect(gaming?.status).toBe("optimal");
+	});
+
+	it("correctly identifies moderate latency for casual gaming and 1080p streaming", () => {
+		const metrics: SpeedTestMetrics = {
+			phase: "completed",
+			pingMs: 75,
+			jitterMs: 10,
+			downloadMbps: 18,
+			uploadMbps: 6,
+			progressPercent: 100,
+		};
+
+		const suitability = calculateConnectionSuitability(metrics);
+		expect(suitability.grade).toBe("B");
+		const gaming = suitability.metrics.find((m) => m.title.includes("Gaming"));
+		expect(gaming?.status).toBe("moderate");
+	});
+});
+
 describe("generateDiagnosticReport", () => {
 	it("bundles all diagnostics into a valid structured report", () => {
 		const network: NetworkInfo = {
@@ -68,6 +109,9 @@ describe("generateDiagnosticReport", () => {
 			rttMs: 12,
 			saveData: false,
 			publicIp: "1.1.1.1",
+			isp: "Telkom Indonesia",
+			city: "Jakarta",
+			country: "Indonesia",
 		};
 
 		const speedTest: SpeedTestMetrics = {
@@ -102,6 +146,8 @@ describe("generateDiagnosticReport", () => {
 			orientation: "landscape-primary",
 		};
 
+		const suitability = calculateConnectionSuitability(speedTest);
+
 		const report = generateDiagnosticReport(
 			network,
 			speedTest,
@@ -109,10 +155,13 @@ describe("generateDiagnosticReport", () => {
 			display,
 			[],
 			[],
+			suitability,
 		);
 
 		expect(report.timestamp).toBeDefined();
 		expect(report.network.publicIp).toBe("1.1.1.1");
+		expect(report.network.isp).toBe("Telkom Indonesia");
+		expect(report.suitability?.grade).toBe("A+");
 		expect(report.speedTest.downloadMbps).toBe(120.5);
 		expect(report.hardware.gpuRenderer).toContain("RTX 4090");
 		expect(report.display.estimatedHz).toBe(144);

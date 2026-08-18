@@ -1,5 +1,6 @@
 import type {
 	CodecItem,
+	ConnectionSuitability,
 	DeviceDiagnosticReport,
 	DisplayInfo,
 	HardwareInfo,
@@ -370,12 +371,14 @@ export function generateDiagnosticReport(
 	display: DisplayInfo,
 	codecs: CodecItem[],
 	webApis: WebApiItem[],
+	suitability?: ConnectionSuitability,
 ): DeviceDiagnosticReport {
 	return {
 		timestamp: new Date().toISOString(),
 		userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "N/A",
 		network,
 		speedTest,
+		suitability,
 		hardware,
 		display,
 		codecs,

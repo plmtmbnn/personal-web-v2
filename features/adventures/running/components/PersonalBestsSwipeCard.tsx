@@ -192,37 +192,39 @@ export default function PersonalBestsSwipeCard() {
 			    INTERACTIVE MILESTONE TRACK SELECTOR
 			═══════════════════════════════════════ */}
 			<div className="relative z-10">
-				<div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-1">
+				<div className="grid grid-cols-5 gap-1.5 sm:gap-2 py-1">
 					{personalBests.map((item, idx) => {
 						const isActive = idx === currentIndex;
 						const ItemIcon = item.icon;
+						const label =
+							item.shortLabel || item.distance.replace(" (65.9k)", "");
 						return (
 							<button
 								key={item.id}
 								type="button"
 								onClick={() => goToIndex(idx)}
-								className={`group relative flex-1 min-w-[72px] sm:min-w-[84px] py-2 px-2.5 rounded-xl text-center transition-all duration-300 cursor-pointer border flex flex-col items-center gap-1 ${
+								className={`group relative h-[52px] sm:h-[58px] px-1 sm:px-2 rounded-xl text-center transition-all duration-300 cursor-pointer border flex flex-col items-center justify-center gap-0.5 sm:gap-1 overflow-hidden min-w-0 ${
 									isActive
 										? "bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/15"
 										: "bg-slate-50/90 text-slate-600 hover:text-slate-900 border-slate-200/70 hover:border-slate-300 hover:bg-white"
 								}`}
 							>
-								<div className="flex items-center gap-1">
+								<div className="flex items-center justify-center gap-1 w-full min-w-0">
 									{item.isHighest ? (
 										<Crown
-											className={`w-3 h-3 ${isActive ? "text-amber-400" : "text-amber-500"}`}
+											className={`w-3 h-3 shrink-0 ${isActive ? "text-amber-400" : "text-amber-500"}`}
 										/>
 									) : (
 										<ItemIcon
-											className={`w-3 h-3 ${isActive ? "text-white" : item.color}`}
+											className={`w-3 h-3 shrink-0 ${isActive ? "text-white" : item.color}`}
 										/>
 									)}
-									<span className="text-[11px] font-extrabold tracking-tight">
-										{item.distance.replace(" (65.9k)", "")}
+									<span className="text-[10.5px] sm:text-[11px] font-extrabold tracking-tight truncate whitespace-nowrap">
+										{label}
 									</span>
 								</div>
 								<span
-									className={`text-[9px] font-bold uppercase tracking-wider ${
+									className={`text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider truncate whitespace-nowrap ${
 										isActive ? "text-slate-300" : "text-slate-400"
 									}`}
 								>

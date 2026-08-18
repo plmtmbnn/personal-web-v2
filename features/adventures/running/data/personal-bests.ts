@@ -5,6 +5,7 @@ export const personalBests: PersonalBestItem[] = [
 	{
 		id: "5k",
 		distance: "5K",
+		shortLabel: "5K",
 		distanceKm: 5,
 		time: "25:45",
 		pace: "5:09/km",
@@ -18,6 +19,7 @@ export const personalBests: PersonalBestItem[] = [
 	{
 		id: "10k",
 		distance: "10K",
+		shortLabel: "10K",
 		distanceKm: 10,
 		time: "54:42",
 		pace: "5:28/km",
@@ -31,6 +33,7 @@ export const personalBests: PersonalBestItem[] = [
 	{
 		id: "hm",
 		distance: "Half Marathon",
+		shortLabel: "Half",
 		distanceKm: 21.1,
 		time: "2:05:37",
 		pace: "5:57/km",
@@ -44,6 +47,7 @@ export const personalBests: PersonalBestItem[] = [
 	{
 		id: "fm",
 		distance: "Marathon",
+		shortLabel: "Full",
 		distanceKm: 42.2,
 		time: "4:30:29",
 		pace: "6:24/km",
@@ -57,6 +61,7 @@ export const personalBests: PersonalBestItem[] = [
 	{
 		id: "ultra",
 		distance: "Ultra Trail (65.9k)",
+		shortLabel: "Ultra",
 		distanceKm: 65.9,
 		time: "19:40:28",
 		pace: "17:55/km",

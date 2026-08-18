@@ -1005,17 +1005,29 @@ export default function RunningView({
 							Temporary Strava API synchronization issue. Try refreshing in a
 							moment.
 						</p>
-						<button
-							type="button"
-							onClick={handleLiveSync}
-							disabled={isSyncing}
-							className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs cursor-pointer"
-						>
-							<RefreshCw
-								className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
-							/>
-							<span>{isSyncing ? "Syncing..." : "Retry Sync"}</span>
-						</button>
+						<div className="flex items-center justify-center gap-3 flex-wrap">
+							<button
+								type="button"
+								onClick={handleLiveSync}
+								disabled={isSyncing}
+								className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs cursor-pointer"
+							>
+								<RefreshCw
+									className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
+								/>
+								<span>{isSyncing ? "Syncing..." : "Retry Sync"}</span>
+							</button>
+
+							{oauthUrl && (
+								<a
+									href={oauthUrl}
+									className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs !no-underline"
+								>
+									<Zap className="w-3.5 h-3.5" />
+									<span>Reconnect Strava</span>
+								</a>
+							)}
+						</div>
 					</motion.div>
 				) : hasStats && stats.all_run_totals?.count > 0 ? (
 					/* 4. Activities Loading / Syncing State */

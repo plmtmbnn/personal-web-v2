@@ -249,7 +249,7 @@ const utilities: UtilityItem[] = [
 		slug: "device-inspector",
 		categoryId: "security",
 		description:
-			"Internet speed test (Mbps/Ping/Jitter), hardware GPU telemetry, display refresh rate, and media codecs.",
+			"Internet speed test in Megabits per second (Mbps), ping, jitter, hardware GPU telemetry, display refresh rate, and media codecs.",
 		accent: "bg-cyan-600",
 		color: "text-cyan-600",
 		bg: "bg-cyan-600/5",

@@ -1,3 +1,10 @@
+# [0.73.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.72.0...v0.73.0) (2026-08-18)
+
+
+### Features
+
+* **insights:** add Insights hub page, update skills stack, and refine personal bests layout ([b64f693](https://github.com/plmtmbnn/personal-web-v2/commit/b64f6934311da842a11b7fb09eff6a57a4db29b5))
+
 # [0.72.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.71.0...v0.72.0) (2026-08-17)
 
 

@@ -1,3 +1,10 @@
+## [0.73.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.73.0...v0.73.1) (2026-08-18)
+
+
+### Bug Fixes
+
+* resolve type-checking and unused variable build errors ([a104ff1](https://github.com/plmtmbnn/personal-web-v2/commit/a104ff1346b0a7f06240c8c8f88c9a6099882f38))
+
 # [0.73.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.72.0...v0.73.0) (2026-08-18)
 
 

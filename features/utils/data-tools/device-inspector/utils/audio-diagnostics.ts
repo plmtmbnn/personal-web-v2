@@ -52,7 +52,7 @@ export async function playSpeakerTestTone(
 		}
 
 		// Panning
-		if ("createStereoPanner" in ctx) {
+		if (typeof ctx.createStereoPanner === "function") {
 			const panner = ctx.createStereoPanner();
 			const panValue =
 				channel === "left" ? -1.0 : channel === "right" ? 1.0 : 0.0;

@@ -434,7 +434,6 @@ export async function getStravaData(): Promise<StravaDataResult> {
 	try {
 		// Fetch token once, then pass it to both functions to avoid redundant Redis reads
 		const accessToken = await getAccessToken();
-		const hasToken = Boolean(accessToken);
 
 		const [runs, stats] = await Promise.all([
 			getRecentRuns(10, accessToken),

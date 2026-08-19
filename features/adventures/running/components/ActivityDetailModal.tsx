@@ -8,20 +8,25 @@ import {
 	Route,
 	Zap,
 	Clock,
-	Mountain,
 	Flame,
-	Gauge,
 	ExternalLink,
-	Timer,
 	BarChart3,
-	LayoutGrid,
 	Check,
 	ImageIcon,
 	Loader2,
+	Activity as ActivityIcon,
+	Mountain,
 } from "lucide-react";
 import { format } from "date-fns";
-import type { StravaRunActivity } from "@/services/strava/service";
-import { calculateActivitySplits, type ActivitySplit } from "../utils/splits";
+import type {
+	StravaRunActivity,
+	StravaSplitMetric,
+} from "@/services/strava/service";
+import {
+	calculateActivitySplits,
+	formatStravaSplits,
+	type ActivitySplit,
+} from "../utils/splits";
 
 interface ActivityDetailModalProps {
 	activity: StravaRunActivity | null;
@@ -53,7 +58,36 @@ function drawCanvasRoundedRect(
 }
 
 // ──────────────────────────────────────────────
-// Canvas Exporter: Overview Social Image Card
+// Helper: Draw Transparent-Backdrop White Card
+// ──────────────────────────────────────────────
+function drawCanvasCard(
+	ctx: CanvasRenderingContext2D,
+	x: number,
+	y: number,
+	w: number,
+	h: number,
+	radius = 24,
+) {
+	ctx.save();
+	// Ambient shadow
+	ctx.shadowColor = "rgba(15, 23, 42, 0.1)";
+	ctx.shadowBlur = 20;
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 10;
+	drawCanvasRoundedRect(ctx, x, y, w, h, radius);
+	ctx.fillStyle = "#ffffff";
+	ctx.fill();
+	ctx.restore();
+
+	// Crisp border
+	ctx.strokeStyle = "rgba(226, 232, 240, 0.9)";
+	ctx.lineWidth = 1.5;
+	drawCanvasRoundedRect(ctx, x, y, w, h, radius);
+	ctx.stroke();
+}
+
+// ──────────────────────────────────────────────
+// Canvas Exporter: Overview Social Image Card (Transparent BG)
 // ──────────────────────────────────────────────
 function renderOverviewImageToCanvas(
 	activity: StravaRunActivity,
@@ -63,15 +97,17 @@ function renderOverviewImageToCanvas(
 		distanceKm: string;
 		formattedPace: string;
 		formattedMovingDuration: string;
-		formattedElapsedDuration: string;
-		avgSpeedKmh: string;
 		hasElevation: boolean;
 		hasHeartRate: boolean;
 	},
+	splits: ActivitySplit[],
 	scale = 2,
 ): HTMLCanvasElement {
-	const width = 560;
-	const height = 400;
+	const cardW = 520;
+	const cardH = 320;
+	const pad = 16;
+	const width = cardW + pad * 2;
+	const height = cardH + pad * 2;
 
 	const canvas = document.createElement("canvas");
 	canvas.width = width * scale;
@@ -80,222 +116,155 @@ function renderOverviewImageToCanvas(
 	if (!ctx) throw new Error("Canvas context unavailable");
 
 	ctx.scale(scale, scale);
+	ctx.clearRect(0, 0, width, height);
 
-	// 1. Base Outer Card Background with Gradient & Rounded Corners
-	drawCanvasRoundedRect(ctx, 0, 0, width, height, 28);
-	ctx.fillStyle = "#ffffff";
+	const cardX = pad;
+	const cardY = pad;
+
+	// 1. White Floating Card
+	drawCanvasCard(ctx, cardX, cardY, cardW, cardH, 24);
+
+	// 2. Header
+	drawCanvasRoundedRect(ctx, cardX + 20, cardY + 20, 38, 38, 12);
+	ctx.fillStyle = "rgba(16, 185, 129, 0.12)";
 	ctx.fill();
+	ctx.fillStyle = "#059669";
+	ctx.font = "900 16px sans-serif";
+	ctx.fillText("⚡", cardX + 31, cardY + 44);
 
-	// Ambient subtle top emerald gradient
-	const topGrad = ctx.createLinearGradient(0, 0, width, 180);
-	topGrad.addColorStop(0, "rgba(236, 253, 245, 0.9)"); // emerald-50
-	topGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
-	drawCanvasRoundedRect(ctx, 0, 0, width, height, 28);
-	ctx.fillStyle = topGrad;
-	ctx.fill();
-
-	// Outer Border
-	ctx.strokeStyle = "#e2e8f0"; // slate-200
-	ctx.lineWidth = 1.5;
-	drawCanvasRoundedRect(ctx, 0, 0, width, height, 28);
-	ctx.stroke();
-
-	// 2. Header: Tag & Title & Date
-	const padX = 28;
-	let curY = 32;
-
-	// Tag Pill
-	drawCanvasRoundedRect(ctx, padX, curY, 142, 22, 11);
-	ctx.fillStyle = "#dcfce7"; // emerald-100
-	ctx.fill();
-	ctx.strokeStyle = "#86efac"; // emerald-300
-	ctx.lineWidth = 1;
-	drawCanvasRoundedRect(ctx, padX, curY, 142, 22, 11);
-	ctx.stroke();
-
-	// Tag Dot
-	ctx.beginPath();
-	ctx.arc(padX + 11, curY + 11, 3.5, 0, Math.PI * 2);
-	ctx.fillStyle = "#059669"; // emerald-600
-	ctx.fill();
-
-	// Tag Text
-	ctx.fillStyle = "#065f46"; // emerald-800
+	// Activity Title & Date
+	ctx.fillStyle = "#64748b";
 	ctx.font =
 		"800 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText("RUNNING ACTIVITY", padX + 20, curY + 14.5);
-
-	// Date on Right
-	ctx.fillStyle = "#64748b"; // slate-500
-	ctx.font =
-		"700 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.textAlign = "right";
 	ctx.fillText(
-		`${derived.formattedDate} · ${derived.formattedTime}`,
-		width - padX,
-		curY + 15,
+		`RUNNING · ${derived.formattedDate} · ${derived.formattedTime}`,
+		cardX + 68,
+		cardY + 34,
 	);
+
+	ctx.fillStyle = "#0f172a";
+	ctx.font =
+		"900 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+	const titleText =
+		activity.name.length > 30
+			? `${activity.name.slice(0, 28)}...`
+			: activity.name;
+	ctx.fillText(titleText, cardX + 68, cardY + 54);
+
+	// 3. Hero Distance & Moving Duration
+	const heroY = cardY + 76;
+	drawCanvasRoundedRect(ctx, cardX + 20, heroY, cardW - 40, 96, 18);
+	ctx.fillStyle = "#f8fafc";
+	ctx.fill();
+	ctx.strokeStyle = "#e2e8f0";
+	ctx.lineWidth = 1;
+	ctx.stroke();
+
+	// Distance
+	ctx.fillStyle = "#64748b";
+	ctx.font =
+		"800 9.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+	ctx.fillText("TOTAL DISTANCE", cardX + 36, heroY + 26);
+
+	ctx.fillStyle = "#0f172a";
+	ctx.font = "900 36px 'JetBrains Mono', monospace";
+	ctx.fillText(derived.distanceKm, cardX + 36, heroY + 66);
+	const distW = ctx.measureText(derived.distanceKm).width;
+	ctx.fillStyle = "#059669";
+	ctx.font = "900 14px 'JetBrains Mono', monospace";
+	ctx.fillText("KM", cardX + 40 + distW, heroY + 60);
+
+	// Moving Time
+	ctx.textAlign = "right";
+	ctx.fillStyle = "#64748b";
+	ctx.font =
+		"800 9.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+	ctx.fillText("MOVING TIME", cardX + cardW - 36, heroY + 26);
+
+	ctx.fillStyle = "#0f172a";
+	ctx.font = "900 24px 'JetBrains Mono', monospace";
+	ctx.fillText(derived.formattedMovingDuration, cardX + cardW - 36, heroY + 62);
 	ctx.textAlign = "left";
 
-	curY += 34;
-
-	// Activity Title
-	ctx.fillStyle = "#0f172a"; // slate-900
-	ctx.font =
-		"900 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	const titleText =
-		activity.name.length > 34
-			? `${activity.name.slice(0, 32)}...`
-			: activity.name;
-	ctx.fillText(titleText, padX, curY + 16);
-
-	curY += 32;
-
-	// 3. Highlight Strip (Distance, Pace, Time)
-	const stripH = 92;
-	const stripW = width - padX * 2;
-	drawCanvasRoundedRect(ctx, padX, curY, stripW, stripH, 20);
-	const stripGrad = ctx.createLinearGradient(
-		padX,
-		curY,
-		padX + stripW,
-		curY + stripH,
-	);
-	stripGrad.addColorStop(0, "#ecfdf5"); // emerald-50
-	stripGrad.addColorStop(1, "#f0fdf4");
-	ctx.fillStyle = stripGrad;
+	// Highlight Alert Badge
+	const fastest = splits.find((s) => s.isFastest);
+	const badgeY = heroY + 108;
+	drawCanvasRoundedRect(ctx, cardX + 20, badgeY, cardW - 40, 30, 10);
+	ctx.fillStyle = "rgba(245, 158, 11, 0.08)";
 	ctx.fill();
-	ctx.strokeStyle = "#a7f3d0"; // emerald-200
-	ctx.lineWidth = 1.2;
-	drawCanvasRoundedRect(ctx, padX, curY, stripW, stripH, 20);
+	ctx.strokeStyle = "rgba(245, 158, 11, 0.25)";
 	ctx.stroke();
 
-	const colW = stripW / 3;
-
-	// Col 1: Distance
-	ctx.fillStyle = "#047857"; // emerald-700
+	ctx.fillStyle = "#b45309";
 	ctx.font =
 		"800 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText("DISTANCE", padX + 16, curY + 28);
-	ctx.fillStyle = "#064e3b"; // emerald-950
-	ctx.font = "900 28px 'JetBrains Mono', monospace";
-	ctx.fillText(derived.distanceKm, padX + 16, curY + 64);
-	const distWidth = ctx.measureText(derived.distanceKm).width;
-	ctx.fillStyle = "#047857";
-	ctx.font = "800 12px 'JetBrains Mono', monospace";
-	ctx.fillText("KM", padX + 18 + distWidth, curY + 62);
+	const badgeText = fastest
+		? `⚡ Top Pace: KM ${fastest.split} at ${fastest.paceFormatted}/km  ·  Avg Pace ${derived.formattedPace}`
+		: `⚡ Target Distance Completed · Avg Pace ${derived.formattedPace}`;
+	ctx.fillText(badgeText, cardX + 32, badgeY + 19);
 
-	// Divider 1
-	ctx.strokeStyle = "#cbd5e1";
-	ctx.lineWidth = 1;
-	ctx.beginPath();
-	ctx.moveTo(padX + colW, curY + 18);
-	ctx.lineTo(padX + colW, curY + stripH - 18);
-	ctx.stroke();
-
-	// Col 2: Pace
-	ctx.fillStyle = "#b45309"; // amber-700
-	ctx.font =
-		"800 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText("AVG PACE", padX + colW + 16, curY + 28);
-	ctx.fillStyle = "#064e3b";
-	ctx.font = "900 22px 'JetBrains Mono', monospace";
-	ctx.fillText(derived.formattedPace, padX + colW + 16, curY + 62);
-
-	// Divider 2
-	ctx.beginPath();
-	ctx.moveTo(padX + colW * 2, curY + 18);
-	ctx.lineTo(padX + colW * 2, curY + stripH - 18);
-	ctx.stroke();
-
-	// Col 3: Time
-	ctx.fillStyle = "#1d4ed8"; // blue-700
-	ctx.font =
-		"800 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText("MOVING TIME", padX + colW * 2 + 16, curY + 28);
-	ctx.fillStyle = "#064e3b";
-	ctx.font = "900 22px 'JetBrains Mono', monospace";
-	ctx.fillText(
-		derived.formattedMovingDuration,
-		padX + colW * 2 + 16,
-		curY + 62,
-	);
-
-	curY += stripH + 16;
-
-	// 4. Secondary Metric Grid (4 Boxes)
-	const secGridY = curY;
-	const secBoxW = (stripW - 12 * 3) / 4;
-	const secBoxH = 68;
-
-	const secondaryStats = [
+	// 4. Core Stats (Avg Pace, Elevation, and HR if available)
+	const statsY = cardY + 226;
+	const statsList: Array<{ val: string; label: string }> = [
+		{ val: derived.formattedPace, label: "Avg Pace" },
 		{
-			label: "AVG SPEED",
-			val: `${derived.avgSpeedKmh} km/h`,
-			labelColor: "#0f766e",
-		},
-		{
-			label: "ELAPSED",
-			val: derived.formattedElapsedDuration,
-			labelColor: "#475569",
-		},
-		{
-			label: "CLIMB",
-			val: derived.hasElevation ? `+${activity.total_elevation_gain} m` : "0 m",
-			labelColor: "#6b21a8",
-		},
-		{
-			label: "AVG HR",
-			val: derived.hasHeartRate
-				? `${Math.round(activity.average_heartrate!)} bpm`
-				: "—",
-			labelColor: "#be123c",
+			val: derived.hasElevation
+				? `+${activity.total_elevation_gain} m`
+				: "Flat",
+			label: "Elevation",
 		},
 	];
 
-	secondaryStats.forEach((stat, idx) => {
-		const bx = padX + idx * (secBoxW + 12);
-		drawCanvasRoundedRect(ctx, bx, secGridY, secBoxW, secBoxH, 14);
+	if (derived.hasHeartRate && activity.average_heartrate) {
+		statsList.push({
+			val: `${Math.round(activity.average_heartrate)} bpm`,
+			label: "Avg HR",
+		});
+	}
+
+	const colW = (cardW - 40) / statsList.length;
+
+	statsList.forEach((stat, idx) => {
+		const cx = cardX + 20 + idx * colW;
+		drawCanvasRoundedRect(ctx, cx, statsY, colW - 6, 52, 12);
 		ctx.fillStyle = "#f8fafc";
 		ctx.fill();
-		ctx.strokeStyle = "#e2e8f0";
-		ctx.lineWidth = 1;
-		drawCanvasRoundedRect(ctx, bx, secGridY, secBoxW, secBoxH, 14);
+		ctx.strokeStyle = "#f1f5f9";
 		ctx.stroke();
 
-		ctx.fillStyle = stat.labelColor;
+		ctx.fillStyle = "#0f172a";
+		ctx.font = "900 14px 'JetBrains Mono', monospace";
+		ctx.fillText(stat.val, cx + 12, statsY + 25);
+
+		ctx.fillStyle = "#94a3b8";
 		ctx.font =
 			"800 9px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-		ctx.fillText(stat.label, bx + 10, secGridY + 22);
-
-		ctx.fillStyle = "#0f172a";
-		ctx.font = "800 13px 'JetBrains Mono', monospace";
-		ctx.fillText(stat.val, bx + 10, secGridY + 48);
+		ctx.fillText(stat.label.toUpperCase(), cx + 12, statsY + 41);
 	});
 
-	// 5. Watermark Footer
-	ctx.fillStyle = "#94a3b8"; // slate-400
+	// Footer watermark
+	ctx.fillStyle = "#cbd5e1";
 	ctx.font =
-		"700 10.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText("Strava Verified Activity", padX, height - 20);
-
-	ctx.fillStyle = "#059669"; // emerald-600
-	ctx.font =
-		"800 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.textAlign = "right";
-	ctx.fillText("polmatambunan.com", width - padX, height - 20);
+		"600 9px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+	ctx.textAlign = "center";
+	ctx.fillText(
+		"polmatambunan.com · Strava",
+		cardX + cardW / 2,
+		cardY + cardH - 10,
+	);
 	ctx.textAlign = "left";
 
 	return canvas;
 }
 
 // ──────────────────────────────────────────────
-// Canvas Exporter: Splits Social Image Card
+// Canvas Exporter: Splits Social Image Card (Transparent BG)
 // ──────────────────────────────────────────────
 function renderSplitsImageToCanvas(
 	activity: StravaRunActivity,
 	derived: {
 		formattedDate: string;
+		formattedTime: string;
 		distanceKm: string;
 		formattedPace: string;
 		formattedMovingDuration: string;
@@ -303,11 +272,14 @@ function renderSplitsImageToCanvas(
 	splits: ActivitySplit[],
 	scale = 2,
 ): HTMLCanvasElement {
-	const width = 560;
+	const cardW = 540;
 	const splitRowH = 28;
-	const maxSplitsToShow = Math.min(splits.length, 25);
+	const maxSplitsToShow = Math.min(splits.length, 20);
 	const splitsListH = maxSplitsToShow * splitRowH;
-	const height = Math.max(380, 160 + splitsListH + 48);
+	const cardH = Math.max(300, 76 + 50 + splitsListH + 42);
+	const pad = 16;
+	const width = cardW + pad * 2;
+	const height = cardH + pad * 2;
 
 	const canvas = document.createElement("canvas");
 	canvas.width = width * scale;
@@ -316,82 +288,66 @@ function renderSplitsImageToCanvas(
 	if (!ctx) throw new Error("Canvas context unavailable");
 
 	ctx.scale(scale, scale);
+	ctx.clearRect(0, 0, width, height);
 
-	// 1. Outer Card Background
-	drawCanvasRoundedRect(ctx, 0, 0, width, height, 28);
-	ctx.fillStyle = "#ffffff";
+	const cardX = pad;
+	const cardY = pad;
+
+	// 1. White Floating Card
+	drawCanvasCard(ctx, cardX, cardY, cardW, cardH, 24);
+
+	// 2. Header
+	drawCanvasRoundedRect(ctx, cardX + 20, cardY + 20, 38, 38, 12);
+	ctx.fillStyle = "rgba(139, 92, 246, 0.12)";
 	ctx.fill();
-
-	// Top Gradient
-	const topGrad = ctx.createLinearGradient(0, 0, width, 160);
-	topGrad.addColorStop(0, "rgba(236, 253, 245, 0.8)");
-	topGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
-	drawCanvasRoundedRect(ctx, 0, 0, width, height, 28);
-	ctx.fillStyle = topGrad;
-	ctx.fill();
-
-	// Outer Border
-	ctx.strokeStyle = "#e2e8f0";
-	ctx.lineWidth = 1.5;
-	drawCanvasRoundedRect(ctx, 0, 0, width, height, 28);
-	ctx.stroke();
-
-	const padX = 28;
-	let curY = 28;
-
-	// Title & Date Header
-	ctx.fillStyle = "#0f172a";
-	ctx.font =
-		"900 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	const titleText =
-		activity.name.length > 28
-			? `${activity.name.slice(0, 26)}...`
-			: activity.name;
-	ctx.fillText(`${titleText} — Splits`, padX, curY + 14);
+	ctx.fillStyle = "#7c3aed";
+	ctx.font = "900 16px sans-serif";
+	ctx.fillText("📊", cardX + 31, cardY + 44);
 
 	ctx.fillStyle = "#64748b";
 	ctx.font =
-		"700 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.textAlign = "right";
-	ctx.fillText(derived.formattedDate, width - padX, curY + 14);
-	ctx.textAlign = "left";
+		"800 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+	ctx.fillText(`SPLITS · ${derived.formattedDate}`, cardX + 68, cardY + 34);
 
-	curY += 28;
+	ctx.fillStyle = "#0f172a";
+	ctx.font =
+		"900 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+	const titleText =
+		activity.name.length > 30
+			? `${activity.name.slice(0, 28)}...`
+			: activity.name;
+	ctx.fillText(titleText, cardX + 68, cardY + 54);
 
-	// Summary Banner
-	const sumW = width - padX * 2;
-	drawCanvasRoundedRect(ctx, padX, curY, sumW, 36, 12);
-	ctx.fillStyle = "#ecfdf5";
+	// Summary bar
+	const summaryY = cardY + 70;
+	drawCanvasRoundedRect(ctx, cardX + 20, summaryY, cardW - 40, 36, 12);
+	ctx.fillStyle = "#f8fafc";
 	ctx.fill();
-	ctx.strokeStyle = "#a7f3d0";
-	ctx.lineWidth = 1;
-	drawCanvasRoundedRect(ctx, padX, curY, sumW, 36, 12);
+	ctx.strokeStyle = "#e2e8f0";
 	ctx.stroke();
 
-	ctx.fillStyle = "#065f46";
-	ctx.font = "800 11.5px 'JetBrains Mono', monospace";
+	ctx.fillStyle = "#0f172a";
+	ctx.font = "800 11px 'JetBrains Mono', monospace";
 	ctx.fillText(
-		`TOTAL: ${derived.distanceKm} KM @ ${derived.formattedPace} (${derived.formattedMovingDuration})`,
-		padX + 14,
-		curY + 22.5,
+		`${derived.distanceKm} KM TOTAL  ·  AVG ${derived.formattedPace}  ·  ${derived.formattedMovingDuration}`,
+		cardX + 32,
+		summaryY + 22,
 	);
 
-	const fastestSplit = splits.find((s) => s.isFastest);
-	if (fastestSplit) {
-		ctx.fillStyle = "#047857";
-		ctx.font = "800 10.5px 'JetBrains Mono', monospace";
+	const fastest = splits.find((s) => s.isFastest);
+	if (fastest) {
 		ctx.textAlign = "right";
+		ctx.fillStyle = "#059669";
+		ctx.font = "800 10.5px 'JetBrains Mono', monospace";
 		ctx.fillText(
-			`⚡ FASTEST: KM ${fastestSplit.split} (${fastestSplit.paceFormatted})`,
-			width - padX - 14,
-			curY + 22.5,
+			`⚡ Best: KM ${fastest.split} (${fastest.paceFormatted})`,
+			cardX + cardW - 32,
+			summaryY + 22,
 		);
 		ctx.textAlign = "left";
 	}
 
-	curY += 48;
-
-	// Splits Calculations
+	// 3. Splits list
 	const splitPaces = splits.map((s) => s.paceSeconds);
 	const minPace = splitPaces.length > 0 ? Math.min(...splitPaces) : 0;
 	const maxPace = splitPaces.length > 0 ? Math.max(...splitPaces) : 0;
@@ -401,79 +357,90 @@ function renderSplitsImageToCanvas(
 			? activity.moving_time / (activity.distance / 1000)
 			: 0;
 
-	// Render Splits Rows
-	splits.slice(0, maxSplitsToShow).forEach((item) => {
-		const rowY = curY;
+	const splitsInnerX = cardX + 20;
+	const splitsInnerW = cardW - 40;
+	let splitY = summaryY + 48;
 
-		// KM Label
-		ctx.fillStyle = "#334155";
-		ctx.font = "800 11px 'JetBrains Mono', monospace";
+	splits.slice(0, maxSplitsToShow).forEach((item) => {
+		const rowY = splitY;
+
+		// KM label
+		ctx.fillStyle = "#475569";
+		ctx.font = "800 10.5px 'JetBrains Mono', monospace";
 		ctx.fillText(
 			`KM ${item.split}${item.distanceKm < 1 ? ` (${item.distanceKm}k)` : ""}`,
-			padX,
+			splitsInnerX,
 			rowY + 15,
 		);
 
-		// Bar Track
-		const barStartX = padX + 76;
-		const barMaxW = sumW - 146;
+		// Bar
+		const barStartX = splitsInnerX + 64;
+		const barMaxW = splitsInnerW - 148;
 		const paceRatio = 1 - (item.paceSeconds - minPace) / paceSpread;
 		const barWidth = Math.max(
 			barMaxW * 0.45,
 			Math.min(barMaxW, barMaxW * (0.45 + paceRatio * 0.55)),
 		);
 
-		// Bar Fill
+		drawCanvasRoundedRect(ctx, barStartX, rowY + 3, barMaxW, 18, 6);
+		ctx.fillStyle = "#f1f5f9";
+		ctx.fill();
+
 		drawCanvasRoundedRect(ctx, barStartX, rowY + 3, barWidth, 18, 6);
 		if (item.isFastest) {
-			ctx.fillStyle = "#10b981"; // emerald-500
+			ctx.fillStyle = "#10b981";
 		} else if (item.paceSeconds <= avgPaceSec) {
-			ctx.fillStyle = "#34d399"; // emerald-400
+			ctx.fillStyle = "#8b5cf6";
 		} else {
-			ctx.fillStyle = "#fbbf24"; // amber-400
+			ctx.fillStyle = "#f59e0b";
 		}
 		ctx.fill();
 
-		// Pace text inside bar
-		ctx.fillStyle = "#0f172a";
-		ctx.font = "900 10.5px 'JetBrains Mono', monospace";
+		ctx.fillStyle = "#ffffff";
+		ctx.font = "900 10px 'JetBrains Mono', monospace";
 		ctx.fillText(`${item.paceFormatted}/km`, barStartX + 8, rowY + 16);
 
 		if (item.isFastest) {
-			ctx.fillStyle = "#064e3b";
-			ctx.font = "900 8.5px sans-serif";
-			ctx.fillText("★ TOP", barStartX + barWidth - 36, rowY + 15.5);
+			ctx.fillStyle = "#ffffff";
+			ctx.font = "800 8.5px sans-serif";
+			ctx.fillText("⚡ TOP", barStartX + barWidth - 36, rowY + 15.5);
 		}
 
-		// HR or Time on Right
 		if (item.heartrate) {
-			ctx.fillStyle = "#e11d48"; // rose-600
-			ctx.font = "800 10.5px 'JetBrains Mono', monospace";
+			ctx.fillStyle = "#e11d48";
+			ctx.font = "800 10px 'JetBrains Mono', monospace";
 			ctx.textAlign = "right";
-			ctx.fillText(`${item.heartrate} bpm`, width - padX, rowY + 15);
+			ctx.fillText(
+				`${item.heartrate} bpm`,
+				splitsInnerX + splitsInnerW,
+				rowY + 15,
+			);
 			ctx.textAlign = "left";
 		} else {
 			ctx.fillStyle = "#64748b";
-			ctx.font = "700 10.5px 'JetBrains Mono', monospace";
+			ctx.font = "700 10px 'JetBrains Mono', monospace";
 			ctx.textAlign = "right";
-			ctx.fillText(item.movingTimeFormatted, width - padX, rowY + 15);
+			ctx.fillText(
+				item.movingTimeFormatted,
+				splitsInnerX + splitsInnerW,
+				rowY + 15,
+			);
 			ctx.textAlign = "left";
 		}
 
-		curY += splitRowH;
+		splitY += splitRowH;
 	});
 
-	// Watermark Footer
-	ctx.fillStyle = "#94a3b8";
+	// Footer watermark
+	ctx.fillStyle = "#cbd5e1";
 	ctx.font =
-		"700 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText("Strava Verified Activity", padX, height - 16);
-
-	ctx.fillStyle = "#059669";
-	ctx.font =
-		"800 10.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.textAlign = "right";
-	ctx.fillText("polmatambunan.com", width - padX, height - 16);
+		"600 9.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+	ctx.textAlign = "center";
+	ctx.fillText(
+		"polmatambunan.com · Strava Splits",
+		cardX + cardW / 2,
+		cardY + cardH - 12,
+	);
 	ctx.textAlign = "left";
 
 	return canvas;
@@ -488,14 +455,45 @@ export default function ActivityDetailModal({
 		null,
 	);
 	const [isCopying, setIsCopying] = useState(false);
+	const [rawSplits, setRawSplits] = useState<StravaSplitMetric[] | null>(null);
+	const [isLoadingSplits, setIsLoadingSplits] = useState(false);
 	const reduceMotion = useReducedMotion();
 	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 
-	// Reset tab and feedback on activity change
+	// Reset & fetch real Strava splits when activity opens
 	useEffect(() => {
 		setActiveTab("overview");
 		setCopiedTab(null);
 		setIsCopying(false);
+		setRawSplits(null);
+
+		if (!activity?.id) return;
+
+		let isMounted = true;
+		setIsLoadingSplits(true);
+
+		fetch(`/api/strava/activity/${activity.id}/splits`)
+			.then((res) => (res.ok ? res.json() : null))
+			.then((data) => {
+				if (
+					isMounted &&
+					data?.splits &&
+					Array.isArray(data.splits) &&
+					data.splits.length > 0
+				) {
+					setRawSplits(data.splits);
+				}
+			})
+			.catch((err) => {
+				console.warn("Could not fetch real Strava activity splits:", err);
+			})
+			.finally(() => {
+				if (isMounted) setIsLoadingSplits(false);
+			});
+
+		return () => {
+			isMounted = false;
+		};
 	}, [activity?.id]);
 
 	// Escape key listener & body scroll lock
@@ -517,18 +515,22 @@ export default function ActivityDetailModal({
 		};
 	}, [activity, onClose]);
 
+	// Real splits from Strava API or fallback proportional splits
 	const splits = useMemo(() => {
 		if (!activity) return [];
+		if (rawSplits && rawSplits.length > 0) {
+			return formatStravaSplits(rawSplits);
+		}
 		return calculateActivitySplits(activity);
-	}, [activity]);
+	}, [activity, rawSplits]);
 
-	// Formatters & calculations
+	// Derived metrics formatting
 	const derivedData = useMemo(() => {
 		if (!activity) return null;
 
 		const localDateStr = activity.start_date_local.replace(/Z$/, "");
 		const date = new Date(localDateStr);
-		const formattedDate = format(date, "EEE, MMM d, yyyy");
+		const formattedDate = format(date, "EEEE, MMMM d, yyyy");
 		const formattedTime = format(date, "h:mm a");
 		const distanceKm = (activity.distance / 1000).toFixed(2);
 
@@ -549,19 +551,6 @@ export default function ActivityDetailModal({
 		const formattedMovingDuration =
 			moveHrs > 0 ? `${moveHrs}h ${moveMins}m` : `${moveMins}m ${moveSecs}s`;
 
-		const elapsedHrs = Math.floor(activity.elapsed_time / 3600);
-		const elapsedMins = Math.floor((activity.elapsed_time % 3600) / 60);
-		const elapsedSecs = activity.elapsed_time % 60;
-		const formattedElapsedDuration =
-			elapsedHrs > 0
-				? `${elapsedHrs}h ${elapsedMins}m`
-				: `${elapsedMins}m ${elapsedSecs}s`;
-
-		const avgSpeedKmh =
-			activity.average_speed > 0
-				? (activity.average_speed * 3.6).toFixed(1)
-				: "—";
-
 		const hasElevation =
 			typeof activity.total_elevation_gain === "number" &&
 			activity.total_elevation_gain > 0;
@@ -578,8 +567,6 @@ export default function ActivityDetailModal({
 			paceSeconds,
 			formattedPace,
 			formattedMovingDuration,
-			formattedElapsedDuration,
-			avgSpeedKmh,
 			hasElevation,
 			hasHeartRate,
 		};
@@ -591,7 +578,7 @@ export default function ActivityDetailModal({
 	const maxSplitPaceSec = splitPaces.length > 0 ? Math.max(...splitPaces) : 0;
 	const fastestSplit = useMemo(() => splits.find((s) => s.isFastest), [splits]);
 
-	// Copy to clipboard as a rendered visual PNG IMAGE
+	// Copy to clipboard as a rendered visual PNG IMAGE with transparent background
 	const handleCopyImage = useCallback(
 		async (type: "overview" | "splits") => {
 			if (!activity || !derivedData || isCopying) return;
@@ -600,7 +587,7 @@ export default function ActivityDetailModal({
 			try {
 				const canvas =
 					type === "overview"
-						? renderOverviewImageToCanvas(activity, derivedData, 2)
+						? renderOverviewImageToCanvas(activity, derivedData, splits, 2)
 						: renderSplitsImageToCanvas(activity, derivedData, splits, 2);
 
 				await new Promise<void>((resolve, reject) => {
@@ -622,7 +609,6 @@ export default function ActivityDetailModal({
 								setTimeout(() => setCopiedTab(null), 2200);
 								resolve();
 							} else {
-								// Fallback: Download image if clipboard image writing is not supported
 								const link = document.createElement("a");
 								link.download = `strava-run-${type}-${Date.now()}.png`;
 								link.href = canvas.toDataURL("image/png");
@@ -632,7 +618,6 @@ export default function ActivityDetailModal({
 								resolve();
 							}
 						} catch (_clipErr) {
-							// Clipboard write fallback to download
 							const link = document.createElement("a");
 							link.download = `strava-run-${type}-${Date.now()}.png`;
 							link.href = canvas.toDataURL("image/png");
@@ -661,8 +646,6 @@ export default function ActivityDetailModal({
 		paceSeconds,
 		formattedPace,
 		formattedMovingDuration,
-		formattedElapsedDuration,
-		avgSpeedKmh,
 		hasElevation,
 		hasHeartRate,
 	} = derivedData;
@@ -670,45 +653,52 @@ export default function ActivityDetailModal({
 	return (
 		<AnimatePresence>
 			<div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
-				{/* Backdrop */}
+				{/* Backdrop with ambient blur */}
 				<motion.div
 					initial={safeReduceMotion ? false : { opacity: 0 }}
 					animate={{ opacity: 1 }}
 					exit={{ opacity: 0 }}
 					onClick={onClose}
-					className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+					className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm transition-opacity"
 				/>
 
-				{/* Pure Light Glassmorphic Floating Card */}
+				{/* Floating Modal Frame */}
 				<motion.div
 					initial={
-						safeReduceMotion ? false : { opacity: 0, scale: 0.96, y: 12 }
+						safeReduceMotion ? false : { opacity: 0, scale: 0.95, y: 16 }
 					}
 					animate={{ opacity: 1, scale: 1, y: 0 }}
-					exit={{ opacity: 0, scale: 0.96, y: 12 }}
-					transition={{ type: "spring", damping: 26, stiffness: 340 }}
-					className="relative w-full max-w-md bg-white/95 rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden z-10 text-slate-900 backdrop-blur-2xl"
+					exit={{ opacity: 0, scale: 0.95, y: 16 }}
+					transition={{ type: "spring", damping: 28, stiffness: 350 }}
+					className="relative w-full max-w-md sm:max-w-lg bg-[#FAFBFD] rounded-[32px] border border-slate-200/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] overflow-hidden z-10 text-slate-900"
 					onClick={(e) => e.stopPropagation()}
 				>
-					{/* Header */}
-					<div className="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/70 space-y-2.5 backdrop-blur-md">
+					{/* ── TOP HEADER ── */}
+					<div className="p-5 pb-3.5 border-b border-slate-100/90 bg-white/70 backdrop-blur-md">
 						<div className="flex items-start justify-between gap-3">
-							<div className="min-w-0 space-y-0.5">
-								<div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
-									<Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-									<span>
-										{formattedDate} · {formattedTime}
-									</span>
+							<div className="flex items-center gap-3 min-w-0">
+								{/* Icon Badge */}
+								<div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center ring-4 ring-emerald-50 shrink-0 shadow-2xs">
+									<ActivityIcon className="w-5 h-5 stroke-[2.5]" />
 								</div>
-								<h3 className="text-base sm:text-lg font-black text-slate-900 truncate leading-snug tracking-tight">
-									{activity.name}
-								</h3>
+
+								<div className="min-w-0 space-y-0.5">
+									<div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
+										<Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+										<span className="truncate">
+											{formattedDate} · {formattedTime}
+										</span>
+									</div>
+									<h3 className="text-base font-black text-slate-900 truncate leading-tight tracking-tight">
+										{activity.name}
+									</h3>
+								</div>
 							</div>
 
 							<button
 								type="button"
 								onClick={onClose}
-								className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer shrink-0"
+								className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 active:scale-95"
 								aria-label="Close modal"
 							>
 								<X className="w-4 h-4" />
@@ -716,67 +706,63 @@ export default function ActivityDetailModal({
 						</div>
 
 						{/* Segmented Tab Controls & Copy Image Button */}
-						<div className="flex items-center justify-between gap-2">
-							{/* Tab Switcher */}
-							<div className="flex items-center gap-1 p-0.5 bg-slate-200/60 rounded-xl border border-slate-200/60 w-fit backdrop-blur-md">
+						<div className="flex items-center justify-between gap-2 mt-3.5 pt-0.5">
+							{/* Segmented Pill Tabs */}
+							<div className="flex items-center gap-1 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60 shadow-2xs">
 								<button
 									type="button"
 									onClick={() => setActiveTab("overview")}
-									className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-extrabold transition-all cursor-pointer ${
+									className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
 										activeTab === "overview"
-											? "bg-white text-slate-900 shadow-2xs"
-											: "text-slate-600 hover:text-slate-900"
+											? "bg-white text-slate-900 shadow-xs ring-1 ring-slate-900/5"
+											: "text-slate-500 hover:text-slate-800"
 									}`}
 								>
-									<LayoutGrid className="w-3 h-3" />
+									<BarChart3 className="w-3.5 h-3.5" />
 									<span>Overview</span>
 								</button>
 
 								<button
 									type="button"
 									onClick={() => setActiveTab("splits")}
-									className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-extrabold transition-all cursor-pointer ${
+									className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
 										activeTab === "splits"
-											? "bg-emerald-600 text-white shadow-2xs"
-											: "text-slate-600 hover:text-slate-900"
+											? "bg-slate-900 text-white shadow-xs"
+											: "text-slate-500 hover:text-slate-800"
 									}`}
 								>
-									<BarChart3 className="w-3 h-3" />
-									<span>Splits ({splits.length} KM)</span>
+									<BarChart3 className="w-3.5 h-3.5" />
+									<span>Splits ({splits.length} km)</span>
 								</button>
 							</div>
 
-							{/* Copy as Image Action Button */}
+							{/* Copy Transparent PNG Image Button */}
 							<button
 								type="button"
 								disabled={isCopying}
 								onClick={() => handleCopyImage(activeTab)}
-								className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-[10.5px] font-extrabold transition-all active:scale-95 shadow-2xs cursor-pointer disabled:opacity-60"
-								title={
-									activeTab === "overview"
-										? "Copy overview as PNG image"
-										: "Copy splits breakdown as PNG image"
-								}
+								className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 hover:text-slate-900 text-xs font-bold transition-all active:scale-95 shadow-2xs cursor-pointer disabled:opacity-60"
+								title="Copy transparent PNG sticker to clipboard"
 							>
 								{isCopying ? (
 									<>
-										<Loader2 className="w-3 h-3 text-emerald-600 animate-spin" />
-										<span className="text-emerald-700">Exporting...</span>
+										<Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+										<span className="text-emerald-700 font-extrabold text-[11px]">
+											Generating...
+										</span>
 									</>
 								) : copiedTab === activeTab ? (
 									<>
-										<Check className="w-3 h-3 text-emerald-600" />
-										<span className="text-emerald-700 font-bold">
-											Copied Image!
+										<Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+										<span className="text-emerald-700 font-black text-[11px]">
+											Copied!
 										</span>
 									</>
 								) : (
 									<>
-										<ImageIcon className="w-3 h-3 text-slate-500" />
-										<span>
-											{activeTab === "overview"
-												? "Copy Image"
-												: "Copy Splits Image"}
+										<ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+										<span className="text-[11px] font-extrabold">
+											{activeTab === "overview" ? "Share Card" : "Share Splits"}
 										</span>
 									</>
 								)}
@@ -784,107 +770,97 @@ export default function ActivityDetailModal({
 						</div>
 					</div>
 
-					{/* Body Content */}
-					<div className="p-4 sm:p-5">
+					{/* ── BODY CONTENT ── */}
+					<div className="p-5 space-y-3.5 max-h-[calc(85vh-150px)] overflow-y-auto">
 						{activeTab === "overview" ? (
-							/* ── TAB 1: OVERVIEW METRICS (LIGHT GLASSMORPHISM) ── */
+							/* ── TAB 1: OVERVIEW METRICS (SIMPLE & STRAIGHT TO THE POINT) ── */
 							<div className="space-y-3">
-								{/* Top Highlight Strip (3 Core Metrics) */}
-								<div className="grid grid-cols-3 gap-2 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-slate-50 border border-emerald-200/80 shadow-2xs">
-									<div className="space-y-0.5 min-w-0">
-										<span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
-											<Route className="w-3 h-3 text-emerald-600 shrink-0" />
-											Distance
-										</span>
-										<div className="flex items-baseline gap-0.5">
-											<span className="text-xl sm:text-2xl font-black text-emerald-950 font-mono leading-tight">
-												{distanceKm}
+								{/* 1. Floating Hero Card (Distance & Moving Duration) */}
+								<div className="relative rounded-3xl bg-white p-5 border border-slate-200/80 shadow-[0_10px_24px_-6px_rgba(0,0,0,0.05),0_2px_6px_rgba(0,0,0,0.03)] space-y-3">
+									<div className="flex items-start justify-between gap-4">
+										<div className="space-y-1">
+											<span className="text-[10.5px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+												<Route className="w-3.5 h-3.5 text-emerald-500" />
+												Total Distance
 											</span>
-											<span className="text-[10px] font-black text-emerald-700">
-												KM
+											<div className="flex items-baseline gap-1.5">
+												<span className="text-4xl font-black text-slate-950 font-mono tracking-tight leading-none">
+													{distanceKm}
+												</span>
+												<span className="text-sm font-black text-emerald-600 font-mono">
+													km
+												</span>
+											</div>
+										</div>
+
+										<div className="text-right space-y-1">
+											<span className="text-[10.5px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-end gap-1.5">
+												<Clock className="w-3.5 h-3.5 text-blue-500" />
+												Moving Time
 											</span>
+											<p className="text-2xl font-black text-slate-900 font-mono tracking-tight leading-none">
+												{formattedMovingDuration}
+											</p>
 										</div>
 									</div>
 
-									<div className="space-y-0.5 min-w-0 border-l border-emerald-200/70 pl-2.5">
-										<span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
-											<Zap className="w-3 h-3 text-amber-500 shrink-0" />
-											Pace
+									{/* Alert / Highlight Badge */}
+									<div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+										<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200/70 shadow-2xs">
+											<Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+											<span>
+												{fastestSplit
+													? `Best Split: KM ${fastestSplit.split} at ${fastestSplit.paceFormatted}/km`
+													: "Pace Consistency: Stable"}
+											</span>
+										</div>
+
+										<div className="text-[11px] font-bold text-slate-400 font-mono">
+											Avg {formattedPace}
+										</div>
+									</div>
+								</div>
+
+								{/* 2. Clean Core Metrics Grid */}
+								<div
+									className={`grid ${
+										hasHeartRate ? "grid-cols-3" : "grid-cols-2"
+									} gap-2.5`}
+								>
+									{/* Average Pace */}
+									<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+											<Zap className="w-3.5 h-3.5 text-amber-500" />
+											Avg Pace
 										</span>
-										<p className="text-sm sm:text-base font-black text-emerald-950 font-mono leading-tight truncate">
+										<p className="text-base sm:text-lg font-black text-slate-900 font-mono">
 											{formattedPace}
 										</p>
 									</div>
 
-									<div className="space-y-0.5 min-w-0 border-l border-emerald-200/70 pl-2.5">
-										<span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
-											<Clock className="w-3 h-3 text-blue-600 shrink-0" />
-											Time
+									{/* Elevation Gain */}
+									<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+											<Mountain className="w-3.5 h-3.5 text-purple-500" />
+											Elevation
 										</span>
-										<p className="text-sm sm:text-base font-black text-emerald-950 font-mono leading-tight truncate">
-											{formattedMovingDuration}
-										</p>
-									</div>
-								</div>
-
-								{/* Secondary Metrics Grid */}
-								<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-									{/* Speed */}
-									<div className="p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 shadow-2xs">
-										<span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-											<Gauge className="w-3 h-3 text-emerald-600 shrink-0" />
-											Avg Speed
-										</span>
-										<p className="text-xs sm:text-sm font-extrabold text-slate-900 mt-0.5 font-mono">
-											{avgSpeedKmh}{" "}
-											<span className="text-[9px] font-bold text-slate-500">
-												km/h
-											</span>
+										<p className="text-base sm:text-lg font-black text-purple-900 font-mono">
+											{hasElevation
+												? `+${activity.total_elevation_gain} m`
+												: "Flat"}
 										</p>
 									</div>
 
-									{/* Elapsed Time */}
-									<div className="p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 shadow-2xs">
-										<span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-											<Timer className="w-3 h-3 text-slate-500 shrink-0" />
-											Elapsed
-										</span>
-										<p className="text-xs sm:text-sm font-extrabold text-slate-900 mt-0.5 font-mono truncate">
-											{formattedElapsedDuration}
-										</p>
-									</div>
-
-									{/* Elevation (if > 0) */}
-									{hasElevation && (
-										<div className="p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 shadow-2xs">
-											<span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-												<Mountain className="w-3 h-3 text-purple-600 shrink-0" />
-												Climb
-											</span>
-											<p className="text-xs sm:text-sm font-extrabold text-purple-900 mt-0.5 font-mono">
-												+{activity.total_elevation_gain}
-												<span className="text-[9px] font-bold text-slate-500">
-													{" "}
-													m
-												</span>
-											</p>
-										</div>
-									)}
-
-									{/* Heart Rate (if present) */}
+									{/* Heart Rate (if available) */}
 									{hasHeartRate && (
-										<div
-											className={`p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 shadow-2xs ${
-												!hasElevation ? "col-span-2 sm:col-span-1" : ""
-											}`}
-										>
-											<span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-												<Flame className="w-3 h-3 text-rose-500 animate-pulse shrink-0" />
-												Heart Rate
+										<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+											<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+												<Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+												Avg HR
 											</span>
-											<p className="text-xs sm:text-sm font-extrabold text-rose-900 mt-0.5 font-mono">
+											<p className="text-base sm:text-lg font-black text-rose-900 font-mono">
 												{Math.round(activity.average_heartrate!)}{" "}
-												<span className="text-[9px] font-bold text-slate-500">
+												<span className="text-xs font-normal text-slate-400">
 													bpm
 												</span>
 											</p>
@@ -893,164 +869,143 @@ export default function ActivityDetailModal({
 								</div>
 							</div>
 						) : (
-							/* ── TAB 2: SPLITS BAR CHART (LIGHT GLASSMORPHISM) ── */
-							<div className="space-y-2.5">
-								{/* Splits Summary Pill */}
-								<div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50/80 border border-emerald-100/90 text-[10px] shadow-2xs">
-									<div className="flex items-center gap-1 font-bold text-slate-700">
-										<span>Fastest:</span>
-										<span className="text-emerald-800 font-extrabold font-mono">
+							/* ── TAB 2: SPLITS BREAKDOWN (REAL STRAVA SPLITS) ── */
+							<div className="space-y-3">
+								{/* Summary Header Card */}
+								<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-between gap-2 text-xs">
+									<div className="flex items-center gap-1.5">
+										<span className="w-2 h-2 rounded-full bg-emerald-500" />
+										<span className="font-bold text-slate-500">Fastest:</span>
+										<span className="font-mono font-black text-emerald-700">
 											{fastestSplit
 												? `KM ${fastestSplit.split} (${fastestSplit.paceFormatted}/km)`
 												: "—"}
 										</span>
 									</div>
-									<div className="flex items-center gap-1 font-bold text-slate-700">
+									<div className="flex items-center gap-1.5 font-bold text-slate-500">
 										<span>Avg:</span>
-										<span className="text-slate-900 font-extrabold font-mono">
+										<span className="font-mono font-black text-slate-900">
 											{formattedPace}
 										</span>
 									</div>
 								</div>
 
-								{/* Splits Horizontal Bar Chart */}
-								<div className="space-y-1.5 max-h-[185px] overflow-y-auto pr-1">
-									{splits.map((item) => {
-										const paceSpread = Math.max(
-											maxSplitPaceSec - minSplitPaceSec,
-											1,
-										);
-										const paceRatio =
-											1 - (item.paceSeconds - minSplitPaceSec) / paceSpread;
-										const barWidthPercent = Math.max(
-											45,
-											Math.min(100, 48 + paceRatio * 52),
-										);
+								{/* Splits Vertical List */}
+								{isLoadingSplits && splits.length === 0 ? (
+									<div className="py-8 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs font-bold">
+										<Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
+										<span>Loading real Strava splits...</span>
+									</div>
+								) : (
+									<div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
+										{splits.map((item) => {
+											const paceSpread = Math.max(
+												maxSplitPaceSec - minSplitPaceSec,
+												1,
+											);
+											const paceRatio =
+												1 - (item.paceSeconds - minSplitPaceSec) / paceSpread;
+											const barWidthPercent = Math.max(
+												42,
+												Math.min(100, 45 + paceRatio * 55),
+											);
 
-										const isFasterThanAvg = item.paceSeconds <= paceSeconds;
-										const barColorClass = item.isFastest
-											? "bg-emerald-500 shadow-2xs"
-											: isFasterThanAvg
-												? "bg-emerald-400/90"
-												: "bg-amber-400/90";
+											const isFasterThanAvg = item.paceSeconds <= paceSeconds;
+											const barBg = item.isFastest
+												? "bg-emerald-500 text-white shadow-xs"
+												: isFasterThanAvg
+													? "bg-purple-500 text-white"
+													: "bg-amber-400 text-slate-950";
 
-										return (
-											<div
-												key={item.split}
-												className="flex items-center gap-2 py-0.5 text-xs group"
-											>
-												{/* KM Number */}
-												<div className="w-7 shrink-0 text-left">
-													<span className="font-extrabold text-slate-700 text-[11px] font-mono">
-														{item.split}
-													</span>
-													<span className="text-[8.5px] text-slate-400 font-bold uppercase ml-0.5">
-														k
-													</span>
-												</div>
-
-												{/* Horizontal Bar Container */}
-												<div className="flex-1 bg-slate-100 rounded-lg h-5.5 relative overflow-hidden flex items-center px-2 border border-slate-200/50">
-													<motion.div
-														initial={{ width: 0 }}
-														animate={{ width: `${barWidthPercent}%` }}
-														transition={{
-															duration: 0.4,
-															delay: item.split * 0.02,
-														}}
-														className={`absolute left-0 top-0 bottom-0 rounded-lg ${barColorClass}`}
-													/>
-
-													{/* Pace info overlaid */}
-													<div className="relative z-10 flex items-center justify-between w-full text-[10.5px] font-extrabold font-mono px-0.5">
-														<span className="text-slate-950 flex items-center gap-1 drop-shadow-2xs">
-															<span>{item.paceFormatted}</span>
-															<span className="text-[8.5px] text-slate-700 font-bold">
-																/km
-															</span>
-															{item.isFastest && (
-																<span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-emerald-900 text-white text-[7px] font-black uppercase tracking-wider shadow-2xs">
-																	<Zap className="w-2 h-2 text-amber-300" /> Top
-																</span>
-															)}
+											return (
+												<div
+													key={item.split}
+													className="p-2.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3"
+												>
+													{/* KM Badge */}
+													<div className="w-10 shrink-0 text-left">
+														<span className="font-black text-slate-900 text-xs font-mono">
+															KM {item.split}
 														</span>
 														{item.distanceKm < 1.0 && (
-															<span className="text-[8.5px] text-slate-600 font-semibold">
-																({item.distanceKm}k)
+															<span className="text-[9px] text-slate-400 font-bold block">
+																{item.distanceKm}k
 															</span>
 														)}
 													</div>
-												</div>
 
-												{/* Heart Rate on Split */}
-												{item.heartrate ? (
-													<div className="w-14 shrink-0 flex items-center justify-end gap-1 text-[10.5px] font-black text-rose-600 font-mono">
-														<Flame className="w-3 h-3 text-rose-500 shrink-0" />
-														<span>{item.heartrate}</span>
+													{/* Pill Progress Bar Container */}
+													<div className="flex-1 bg-slate-100 rounded-xl h-7 relative overflow-hidden flex items-center px-2.5 border border-slate-200/60">
+														<motion.div
+															initial={{ width: 0 }}
+															animate={{ width: `${barWidthPercent}%` }}
+															transition={{
+																duration: 0.35,
+																delay: item.split * 0.02,
+															}}
+															className={`absolute left-0 top-0 bottom-0 rounded-xl ${barBg}`}
+														/>
+
+														{/* Overlaid Pace Info */}
+														<div className="relative z-10 flex items-center justify-between w-full text-[11px] font-black font-mono">
+															<span className="flex items-center gap-1.5 drop-shadow-2xs">
+																<span>{item.paceFormatted}</span>
+																<span className="text-[9px] opacity-80 font-bold">
+																	/km
+																</span>
+																{item.isFastest && (
+																	<span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-slate-950 text-amber-300 text-[8px] font-black uppercase tracking-wider shadow-xs">
+																		<Zap className="w-2.5 h-2.5 fill-amber-300" />{" "}
+																		Top
+																	</span>
+																)}
+															</span>
+														</div>
 													</div>
-												) : (
-													<div className="w-12 shrink-0 text-right text-[10px] font-bold text-slate-500 font-mono">
-														{item.movingTimeFormatted}
-													</div>
-												)}
-											</div>
-										);
-									})}
-								</div>
+
+													{/* Right Metric: HR or Moving Duration */}
+													{item.heartrate ? (
+														<div className="w-16 shrink-0 flex items-center justify-end gap-1 text-[11px] font-black text-rose-600 font-mono">
+															<Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500 shrink-0" />
+															<span>{item.heartrate}</span>
+															<span className="text-[9px] text-slate-400 font-normal">
+																bpm
+															</span>
+														</div>
+													) : (
+														<div className="w-14 shrink-0 text-right text-[11px] font-bold text-slate-500 font-mono">
+															{item.movingTimeFormatted}
+														</div>
+													)}
+												</div>
+											);
+										})}
+									</div>
+								)}
 							</div>
 						)}
 					</div>
 
-					{/* Footer */}
-					<div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between gap-3 backdrop-blur-md">
+					{/* ── FOOTER ACTIONS ── */}
+					<div className="p-4 border-t border-slate-100 bg-white/80 backdrop-blur-md flex items-center justify-between gap-3">
 						<button
 							type="button"
 							onClick={onClose}
-							className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors cursor-pointer"
+							className="px-4 py-2 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer active:scale-95"
 						>
 							Close
 						</button>
 
 						<div className="flex items-center gap-2">
-							{/* Copy Image Button */}
-							<button
-								type="button"
-								disabled={isCopying}
-								onClick={() => handleCopyImage(activeTab)}
-								className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-emerald-300 text-slate-800 hover:text-emerald-700 text-xs font-extrabold shadow-2xs active:scale-95 transition-all cursor-pointer disabled:opacity-60"
-							>
-								{isCopying ? (
-									<>
-										<Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-										<span>Generating Image...</span>
-									</>
-								) : copiedTab === activeTab ? (
-									<>
-										<Check className="w-3.5 h-3.5 text-emerald-600" />
-										<span className="text-emerald-700 font-bold">
-											Copied Image!
-										</span>
-									</>
-								) : (
-									<>
-										<ImageIcon className="w-3.5 h-3.5 text-slate-500" />
-										<span>
-											{activeTab === "overview"
-												? "Copy Image"
-												: "Copy Splits Image"}
-										</span>
-									</>
-								)}
-							</button>
-
+							{/* Direct Strava Link */}
 							<a
 								href={`https://www.strava.com/activities/${activity.id}`}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer !no-underline"
+								className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-[#FC5200] hover:bg-[#E04800] text-white text-xs font-black shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer !no-underline"
 							>
-								<span>View on Strava</span>
-								<ExternalLink className="w-3 h-3" />
+								<span>Strava</span>
+								<ExternalLink className="w-3.5 h-3.5" />
 							</a>
 						</div>
 					</div>

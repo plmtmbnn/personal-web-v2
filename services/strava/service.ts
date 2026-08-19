@@ -23,6 +23,17 @@ export interface StravaRunActivity {
 	max_heartrate?: number;
 }
 
+export interface StravaSplitMetric {
+	distance: number; // meters
+	elapsed_time: number; // seconds
+	elevation_difference?: number; // meters
+	moving_time: number; // seconds
+	split: number;
+	average_speed: number; // m/s
+	average_heartrate?: number;
+	pace_zone?: number;
+}
+
 export interface StravaStats {
 	ytd_run_totals: {
 		count: number;
@@ -469,5 +480,136 @@ export async function getStravaData(): Promise<StravaDataResult> {
 			siteUrl: ENV_GLOBAL.NEXT_PUBLIC_SITE_URL,
 			hasToken: false,
 		};
+	}
+}
+
+/**
+ * Fetch detailed per-kilometer split metrics for a specific Strava activity.
+ * Results are cached in Redis for 7 days to preserve Strava API rate limits.
+ */
+export async function getActivitySplits(
+	activityId: number,
+	accessToken?: string | null,
+): Promise<StravaSplitMetric[] | null> {
+	if (!activityId || typeof activityId !== "number") return null;
+
+	const token = accessToken ?? (await getAccessToken());
+	if (!token) return null;
+
+	const cacheKey = `strava:activity:${activityId}:splits`;
+	try {
+		const cached = await redis.get<any>(cacheKey);
+		if (cached) {
+			return typeof cached === "string" ? JSON.parse(cached) : cached;
+		}
+	} catch (err) {
+		console.error("Error retrieving cached activity splits from Redis:", err);
+	}
+
+	try {
+		const response = await fetch(
+			`https://www.strava.com/api/v3/activities/${activityId}`,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			},
+		);
+
+		if (response.status === 401) {
+			console.warn(`[Strava API] Activity ${activityId} splits unauthorized (401). Refreshing token...`);
+			await forceTokenRefresh();
+			const freshToken = await getAccessToken();
+			if (freshToken) {
+				const retryRes = await fetch(
+					`https://www.strava.com/api/v3/activities/${activityId}`,
+					{
+						headers: {
+							Authorization: `Bearer ${freshToken}`,
+						},
+					},
+				);
+				if (retryRes.ok) {
+					const data = await retryRes.json();
+					const splitsMetric: StravaSplitMetric[] = Array.isArray(data.splits_metric)
+						? data.splits_metric.map((s: any) => ({
+								distance: Number(s.distance || 0),
+								elapsed_time: Number(s.elapsed_time || 0),
+								elevation_difference:
+									typeof s.elevation_difference === "number"
+										? s.elevation_difference
+										: undefined,
+								moving_time: Number(s.moving_time || 0),
+								split: Number(s.split || 0),
+								average_speed: Number(s.average_speed || 0),
+								average_heartrate:
+									typeof s.average_heartrate === "number"
+										? s.average_heartrate
+										: undefined,
+								pace_zone:
+									typeof s.pace_zone === "number"
+										? s.pace_zone
+										: undefined,
+						  }))
+						: [];
+
+					if (splitsMetric.length > 0) {
+						try {
+							await redis.set(cacheKey, JSON.stringify(splitsMetric), {
+								ex: 60 * 60 * 24 * 7,
+							});
+						} catch (cacheErr) {
+							console.error("Error caching splits to Redis:", cacheErr);
+						}
+					}
+
+					return splitsMetric;
+				}
+			}
+			return null;
+		}
+
+		if (!response.ok) {
+			console.warn(
+				`[Strava API] Activity ${activityId} splits request returned status ${response.status}`,
+			);
+			return null;
+		}
+
+		const data = await response.json();
+		const splitsMetric: StravaSplitMetric[] = Array.isArray(data.splits_metric)
+			? data.splits_metric.map((s: any) => ({
+					distance: Number(s.distance || 0),
+					elapsed_time: Number(s.elapsed_time || 0),
+					elevation_difference:
+						typeof s.elevation_difference === "number"
+							? s.elevation_difference
+							: undefined,
+					moving_time: Number(s.moving_time || 0),
+					split: Number(s.split || 0),
+					average_speed: Number(s.average_speed || 0),
+					average_heartrate:
+						typeof s.average_heartrate === "number"
+							? s.average_heartrate
+							: undefined,
+					pace_zone:
+						typeof s.pace_zone === "number" ? s.pace_zone : undefined,
+			  }))
+			: [];
+
+		if (splitsMetric.length > 0) {
+			try {
+				await redis.set(cacheKey, JSON.stringify(splitsMetric), {
+					ex: 60 * 60 * 24 * 7,
+				});
+			} catch (cacheErr) {
+				console.error("Error caching splits to Redis:", cacheErr);
+			}
+		}
+
+		return splitsMetric;
+	} catch (error) {
+		console.error(`Error fetching splits for activity ${activityId}:`, error);
+		return null;
 	}
 }

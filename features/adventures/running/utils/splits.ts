@@ -1,4 +1,7 @@
-import type { StravaRunActivity } from "@/services/strava/service";
+import type {
+	StravaRunActivity,
+	StravaSplitMetric,
+} from "@/services/strava/service";
 
 export interface ActivitySplit {
 	split: number;
@@ -11,6 +14,60 @@ export interface ActivitySplit {
 	elevationDiff?: number;
 	isFastest?: boolean;
 	isSlowest?: boolean;
+}
+
+/**
+ * Format real Strava API splits_metric objects into ActivitySplit items
+ */
+export function formatStravaSplits(
+	splitsMetric: StravaSplitMetric[],
+): ActivitySplit[] {
+	if (!splitsMetric || splitsMetric.length === 0) return [];
+
+	let minPace = Infinity;
+	let maxPace = -Infinity;
+
+	const splits: ActivitySplit[] = splitsMetric.map((s) => {
+		const distanceKm = Number((s.distance / 1000).toFixed(2));
+		// Calculate pace: seconds per kilometer
+		const paceSeconds =
+			s.average_speed > 0
+				? 1000 / s.average_speed
+				: s.moving_time / Math.max(distanceKm, 0.05);
+
+		if (paceSeconds < minPace) minPace = paceSeconds;
+		if (paceSeconds > maxPace) maxPace = paceSeconds;
+
+		const paceMin = Math.floor(paceSeconds / 60);
+		const paceSec = Math.round(paceSeconds % 60)
+			.toString()
+			.padStart(2, "0");
+
+		const durMin = Math.floor(s.moving_time / 60);
+		const durSec = Math.round(s.moving_time % 60)
+			.toString()
+			.padStart(2, "0");
+
+		return {
+			split: s.split,
+			distanceKm,
+			paceSeconds,
+			paceFormatted: `${paceMin}:${paceSec}`,
+			movingTimeSeconds: s.moving_time,
+			movingTimeFormatted: `${durMin}:${durSec}`,
+			heartrate: s.average_heartrate
+				? Math.round(s.average_heartrate)
+				: undefined,
+			elevationDiff: s.elevation_difference,
+		};
+	});
+
+	for (const split of splits) {
+		split.isFastest = split.paceSeconds === minPace && splits.length > 1;
+		split.isSlowest = split.paceSeconds === maxPace && splits.length > 1;
+	}
+
+	return splits;
 }
 
 export function calculateActivitySplits(

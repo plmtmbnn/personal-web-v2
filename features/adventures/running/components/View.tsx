@@ -30,6 +30,7 @@ import type {
 	StravaRunActivity,
 } from "@/services/strava/service";
 import PersonalBestsSwipeCard from "./PersonalBestsSwipeCard";
+import ActivityDetailModal from "./ActivityDetailModal";
 
 const PAGE_SIZE = 6;
 
@@ -57,26 +58,33 @@ const DISTANCE_FILTERS: { id: DistanceFilter; label: string; range: string }[] =
 function PaceRing({
 	pace,
 	maxPace = 8,
-	size = 120,
+	size = 56,
+	strokeWidth = 5,
 }: {
 	pace: number;
 	maxPace?: number;
 	size?: number;
+	strokeWidth?: number;
 }) {
-	const radius = (size - 12) / 2;
+	const radius = (size - strokeWidth * 2) / 2;
 	const circumference = 2 * Math.PI * radius;
-	const progress = Math.min(pace / maxPace, 1);
+	const progress = Math.min(Math.max(pace / maxPace, 0), 1);
 	const dashOffset = circumference * (1 - progress);
 
 	return (
-		<svg width={size} height={size} className="transform -rotate-90">
+		<svg
+			width={size}
+			height={size}
+			viewBox={`0 0 ${size} ${size}`}
+			className="transform -rotate-90 shrink-0"
+		>
 			<circle
 				cx={size / 2}
 				cy={size / 2}
 				r={radius}
 				fill="none"
 				stroke="currentColor"
-				strokeWidth={8}
+				strokeWidth={strokeWidth}
 				className="text-slate-100"
 			/>
 			<motion.circle
@@ -84,10 +92,10 @@ function PaceRing({
 				cy={size / 2}
 				r={radius}
 				fill="none"
-				strokeWidth={8}
+				strokeWidth={strokeWidth}
 				strokeLinecap="round"
+				strokeDasharray={circumference}
 				initial={{
-					strokeDasharray: circumference,
 					strokeDashoffset: circumference,
 				}}
 				animate={{ strokeDashoffset: dashOffset }}
@@ -122,6 +130,8 @@ export default function RunningView({
 	const [distanceFilter, setDistanceFilter] = useState<DistanceFilter>("all");
 	const [sortBy, setSortBy] = useState<SortOption>("date-desc");
 	const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+	const [selectedActivity, setSelectedActivity] =
+		useState<StravaRunActivity | null>(null);
 
 	const reduceMotion = useReducedMotion();
 	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
@@ -279,7 +289,7 @@ export default function RunningView({
 			// Search Query
 			if (!q) return true;
 			const formattedDate = format(
-				new Date(run.start_date_local),
+				new Date(run.start_date_local.replace(/Z$/, "")),
 				"MMMM dd yyyy",
 			).toLowerCase();
 			return run.name.toLowerCase().includes(q) || formattedDate.includes(q);
@@ -372,17 +382,25 @@ export default function RunningView({
 	}, [rawRuns]);
 
 	// Average Pace from recent runs
-	const avgPaceMinutes = useMemo(() => {
-		if (rawRuns.length === 0) return 5.5;
+	const avgPaceData = useMemo(() => {
+		if (rawRuns.length === 0) return { paceMinutes: 5.5, formatted: "5:30" };
 		const totalMeters = rawRuns.reduce((acc, run) => acc + run.distance, 0);
 		const totalTimeSeconds = rawRuns.reduce(
 			(acc, run) => acc + run.moving_time,
 			0,
 		);
 		const totalKm = totalMeters / 1000;
-		if (totalKm === 0) return 5.5;
-		const pacePerKm = totalTimeSeconds / totalKm;
-		return Math.round((pacePerKm / 60) * 10) / 10;
+		if (totalKm === 0) return { paceMinutes: 5.5, formatted: "5:30" };
+		const paceSecondsPerKm = totalTimeSeconds / totalKm;
+		const paceMinutes = paceSecondsPerKm / 60;
+		const min = Math.floor(paceSecondsPerKm / 60);
+		const sec = Math.round(paceSecondsPerKm % 60)
+			.toString()
+			.padStart(2, "0");
+		return {
+			paceMinutes,
+			formatted: `${min}:${sec}`,
+		};
 	}, [rawRuns]);
 
 	if (!mounted) return null;
@@ -506,28 +524,41 @@ export default function RunningView({
 								initial={safeReduceMotion ? false : { opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: 0.2 }}
-								className="flex items-center gap-4 p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs"
+								className="flex items-center gap-4 p-5 bg-white border border-slate-200/80 rounded-[1.5rem] max-w-sm shadow-xs"
 							>
-								<div className="relative w-16 h-16">
-									<PaceRing pace={avgPaceMinutes} />
-									<div className="absolute inset-0 flex items-center justify-center">
-										<span className="text-[10px] font-bold text-slate-500">
-											km
-										</span>
+								<div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
+									<PaceRing
+										pace={avgPaceData.paceMinutes}
+										size={56}
+										strokeWidth={5}
+									/>
+									<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+										<Zap
+											className={`w-4 h-4 ${
+												avgPaceData.paceMinutes < 5
+													? "text-emerald-500"
+													: avgPaceData.paceMinutes < 6
+														? "text-blue-500"
+														: avgPaceData.paceMinutes < 7
+															? "text-amber-500"
+															: "text-rose-500"
+											}`}
+										/>
 									</div>
 								</div>
-								<div className="flex-1">
-									<p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
+								<div className="flex-1 min-w-0">
+									<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
 										Average Pace
 									</p>
-									<p className="text-lg font-extrabold text-slate-900">
-										{Math.floor(avgPaceMinutes)}:
-										{((avgPaceMinutes % 1) * 60).toFixed(0).padStart(2, "0")}{" "}
-										min/km
+									<p className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+										{avgPaceData.formatted}{" "}
+										<span className="text-xs font-bold text-slate-500">
+											min/km
+										</span>
 									</p>
-									<div className="flex items-center gap-1 mt-1 text-emerald-600">
-										<TrendingUp className="w-3.5 h-3.5" />
-										<span className="text-[10px] font-semibold text-slate-600">
+									<div className="flex items-center gap-1.5 mt-1 text-emerald-600">
+										<TrendingUp className="w-3.5 h-3.5 shrink-0" />
+										<span className="text-[10.5px] font-semibold text-slate-600 truncate">
 											Based on {rawRuns.length} recent activities
 										</span>
 									</div>
@@ -799,7 +830,9 @@ export default function RunningView({
 							<div className="space-y-8">
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
 									{displayedRuns.map((run, idx) => {
-										const date = new Date(run.start_date_local);
+										const date = new Date(
+											run.start_date_local.replace(/Z$/, ""),
+										);
 										const formattedDate = format(date, "MMM dd, yyyy");
 										const distanceKm = (run.distance / 1000).toFixed(2);
 
@@ -822,6 +855,15 @@ export default function RunningView({
 										const formattedDuration =
 											hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m ${secs}s`;
 
+										const hasElevation =
+											typeof run.total_elevation_gain === "number" &&
+											run.total_elevation_gain > 0;
+										const hasHeartRate = Boolean(
+											run.has_heartrate &&
+												run.average_heartrate &&
+												run.average_heartrate > 0,
+										);
+
 										return (
 											<motion.div
 												key={run.id}
@@ -830,7 +872,16 @@ export default function RunningView({
 												}
 												animate={{ opacity: 1, y: 0 }}
 												transition={{ delay: 0.04 * idx, duration: 0.35 }}
-												className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl hover:border-slate-300 transition-all duration-300 group flex flex-col justify-between h-full shadow-xs hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 relative overflow-hidden"
+												onClick={() => setSelectedActivity(run)}
+												role="button"
+												tabIndex={0}
+												onKeyDown={(e) => {
+													if (e.key === "Enter" || e.key === " ") {
+														e.preventDefault();
+														setSelectedActivity(run);
+													}
+												}}
+												className="p-5 sm:p-6 bg-white border border-slate-200/80 hover:border-emerald-300 rounded-2xl transition-all duration-300 group flex flex-col justify-between h-full shadow-xs hover:shadow-xl hover:shadow-emerald-950/5 hover:-translate-y-1 relative overflow-hidden cursor-pointer text-left focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
 											>
 												<div className="space-y-4 relative z-10">
 													<div className="flex justify-between items-start gap-2">
@@ -847,7 +898,8 @@ export default function RunningView({
 															href={`https://www.strava.com/activities/${run.id}`}
 															target="_blank"
 															rel="noopener noreferrer"
-															className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-900 transition-all duration-200 flex items-center justify-center border border-slate-200/60 cursor-pointer shrink-0 shadow-2xs"
+															onClick={(e) => e.stopPropagation()}
+															className="p-2 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl text-slate-500 transition-all duration-200 flex items-center justify-center border border-slate-200/60 cursor-pointer shrink-0 shadow-2xs"
 															title="View on Strava"
 														>
 															<ExternalLink className="w-3.5 h-3.5" />
@@ -891,20 +943,28 @@ export default function RunningView({
 													</div>
 												</div>
 
-												<div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between relative z-10 text-xs">
-													<div className="flex items-center gap-1.5 text-slate-600 font-bold">
-														<Mountain className="w-3.5 h-3.5 text-emerald-600" />
-														<span>+{run.total_elevation_gain}m climb</span>
+												{(hasElevation || hasHeartRate) && (
+													<div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between relative z-10 text-xs">
+														{hasElevation && (
+															<div className="flex items-center gap-1.5 text-slate-600 font-bold">
+																<Mountain className="w-3.5 h-3.5 text-emerald-600" />
+																<span>+{run.total_elevation_gain}m climb</span>
+															</div>
+														)}
+														{hasHeartRate && (
+															<div
+																className={`flex items-center gap-1 text-slate-700 font-bold ${
+																	!hasElevation ? "ml-auto" : ""
+																}`}
+															>
+																<Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+																<span>
+																	{Math.round(run.average_heartrate!)} bpm
+																</span>
+															</div>
+														)}
 													</div>
-													{run.has_heartrate && run.average_heartrate && (
-														<div className="flex items-center gap-1 text-slate-700 font-bold">
-															<Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
-															<span>
-																{Math.round(run.average_heartrate)} bpm
-															</span>
-														</div>
-													)}
-												</div>
+												)}
 											</motion.div>
 										);
 									})}
@@ -1082,6 +1142,12 @@ export default function RunningView({
 					</motion.div>
 				)}
 			</div>
+
+			{/* Focused Activity Detail Modal */}
+			<ActivityDetailModal
+				activity={selectedActivity}
+				onClose={() => setSelectedActivity(null)}
+			/>
 		</main>
 	);
 }

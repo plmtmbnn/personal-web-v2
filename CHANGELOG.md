@@ -1,3 +1,10 @@
+# [0.75.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.74.0...v0.75.0) (2026-08-19)
+
+
+### Features
+
+* **running:** revamp activity detail modal with real strava splits and transparent image export ([ee45407](https://github.com/plmtmbnn/personal-web-v2/commit/ee45407fddc75f5972f9e423f4334f8799d3a9e1))
+
 # [0.74.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.73.1...v0.74.0) (2026-08-19)
 
 

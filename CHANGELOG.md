@@ -1,3 +1,10 @@
+# [0.74.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.73.1...v0.74.0) (2026-08-19)
+
+
+### Features
+
+* **running:** add light theme activity detail modal with clipboard image export ([ab1118f](https://github.com/plmtmbnn/personal-web-v2/commit/ab1118fc1bda039a930d03ce734cbdaad8938f5d))
+
 ## [0.73.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.73.0...v0.73.1) (2026-08-18)
 
 

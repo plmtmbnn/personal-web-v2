@@ -29,6 +29,7 @@ import {
 	Search,
 	X,
 	Layers,
+	FileText,
 } from "lucide-react";
 
 export interface UtilityCategory {
@@ -96,6 +97,17 @@ const CATEGORIES: UtilityCategory[] = [
 
 const utilities: UtilityItem[] = [
 	// Development & Code
+	{
+		title: "Text Compare Studio",
+		slug: "text-compare",
+		categoryId: "development",
+		description:
+			"Compare 2 texts with real-time similarity metrics, Levenshtein edit distance, vocabulary matrix, and side-by-side highlighting.",
+		accent: "bg-indigo-600",
+		color: "text-indigo-600",
+		bg: "bg-indigo-600/5",
+		icon: FileText,
+	},
 	{
 		title: "Schema Forge",
 		slug: "json-converter-advanced",

@@ -16,6 +16,8 @@ import {
 	Loader2,
 	Activity as ActivityIcon,
 	Mountain,
+	Sun,
+	Moon,
 } from "lucide-react";
 import { format } from "date-fns";
 import type {
@@ -58,36 +60,66 @@ function drawCanvasRoundedRect(
 }
 
 // ──────────────────────────────────────────────
-// Helper: Draw Transparent-Backdrop White Card
+// Shared Canvas Typography Constants
 // ──────────────────────────────────────────────
-function drawCanvasCard(
-	ctx: CanvasRenderingContext2D,
-	x: number,
-	y: number,
-	w: number,
-	h: number,
-	radius = 24,
-) {
-	ctx.save();
-	// Ambient shadow
-	ctx.shadowColor = "rgba(15, 23, 42, 0.1)";
-	ctx.shadowBlur = 20;
-	ctx.shadowOffsetX = 0;
-	ctx.shadowOffsetY = 10;
-	drawCanvasRoundedRect(ctx, x, y, w, h, radius);
-	ctx.fillStyle = "#ffffff";
-	ctx.fill();
-	ctx.restore();
+const FONT = {
+	hero: "900 72px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+	heroUnit: "700 24px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+	title: "800 18px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+	subtitle: "700 11px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+	label: "800 9px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+	statValue: "900 22px 'SF Mono', 'JetBrains Mono', monospace",
+	statLabel: "700 9px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+	splitKm: "900 12px 'SF Mono', 'JetBrains Mono', monospace",
+	splitPace: "800 10px 'SF Mono', 'JetBrains Mono', monospace",
+	splitBarPace: "800 9px 'SF Mono', 'JetBrains Mono', monospace",
+	watermark: "600 9px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+	summaryBold: "900 13px 'SF Mono', 'JetBrains Mono', monospace",
+	summaryAccent: "900 12px 'SF Mono', 'JetBrains Mono', monospace",
+	badge: "900 10px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+};
 
-	// Crisp border
-	ctx.strokeStyle = "rgba(226, 232, 240, 0.9)";
-	ctx.lineWidth = 1.5;
-	drawCanvasRoundedRect(ctx, x, y, w, h, radius);
-	ctx.stroke();
+type CanvasTheme = "light" | "dark";
+
+const THEME_COLORS = {
+	light: {
+		black: "#0a0a0a",
+		dark: "#18181b",
+		mid: "#71717a",
+		light: "#a1a1aa",
+		faint: "#d4d4d8",
+		accent: "#10b981",
+		accentDark: "#059669",
+		fastest: "#10b981",
+		aboveAvg: "#8b5cf6",
+		belowAvg: "#f59e0b",
+		heart: "#ef4444",
+		white: "#ffffff",
+		barTrack: "rgba(0, 0, 0, 0.04)",
+	},
+	dark: {
+		black: "#f5f5f5",
+		dark: "#e4e4e7",
+		mid: "#a1a1aa",
+		light: "#71717a",
+		faint: "#3f3f46",
+		accent: "#34d399",
+		accentDark: "#6ee7b7",
+		fastest: "#34d399",
+		aboveAvg: "#a78bfa",
+		belowAvg: "#fbbf24",
+		heart: "#f87171",
+		white: "#18181b",
+		barTrack: "rgba(255, 255, 255, 0.08)",
+	},
+} as const;
+
+function getColors(theme: CanvasTheme) {
+	return THEME_COLORS[theme];
 }
 
 // ──────────────────────────────────────────────
-// Canvas Exporter: Overview Social Image Card (Transparent BG)
+// Canvas Exporter: Overview — Bold Minimal Instagram Sticker
 // ──────────────────────────────────────────────
 function renderOverviewImageToCanvas(
 	activity: StravaRunActivity,
@@ -101,164 +133,163 @@ function renderOverviewImageToCanvas(
 		hasHeartRate: boolean;
 	},
 	splits: ActivitySplit[],
+	theme: CanvasTheme = "light",
 	scale = 2,
 ): HTMLCanvasElement {
-	const cardW = 520;
-	const cardH = 320;
-	const pad = 16;
-	const width = cardW + pad * 2;
-	const height = cardH + pad * 2;
+	const W = 420;
+	const pad = 28;
+	const innerW = W - pad * 2;
+
+	// Dynamic height calculation
+	let contentH = 0;
+	contentH += 14; // top label
+	contentH += 8; // gap
+	contentH += 68; // hero distance
+	contentH += 6; // gap
+	contentH += 16; // unit "KILOMETERS"
+	contentH += 24; // divider gap
+	contentH += 1; // divider line
+	contentH += 20; // gap below divider
+	// Stats row (pace + time + optionally elevation/HR)
+	contentH += 38; // stat block height
+	contentH += 20; // gap
+	contentH += 1; // second divider
+	contentH += 16; // gap below divider
+	contentH += 14; // title line
+	contentH += 6; // gap
+	contentH += 12; // date line
+	contentH += 20; // bottom spacing
+	contentH += 10; // watermark
+
+	const H = contentH + pad * 2;
 
 	const canvas = document.createElement("canvas");
-	canvas.width = width * scale;
-	canvas.height = height * scale;
+	canvas.width = W * scale;
+	canvas.height = H * scale;
 	const ctx = canvas.getContext("2d");
 	if (!ctx) throw new Error("Canvas context unavailable");
 
+	const C = getColors(theme);
+
 	ctx.scale(scale, scale);
-	ctx.clearRect(0, 0, width, height);
+	ctx.clearRect(0, 0, W, H);
 
-	const cardX = pad;
-	const cardY = pad;
+	let y = pad;
 
-	// 1. White Floating Card
-	drawCanvasCard(ctx, cardX, cardY, cardW, cardH, 24);
+	// ── 1. Top Label: "RUN"
+	ctx.fillStyle = C.accent;
+	ctx.font = FONT.label;
+	ctx.letterSpacing = "3px";
+	ctx.fillText("RUN", pad, y + 9);
+	ctx.letterSpacing = "0px";
+	y += 14 + 8;
 
-	// 2. Header
-	drawCanvasRoundedRect(ctx, cardX + 20, cardY + 20, 38, 38, 12);
-	ctx.fillStyle = "rgba(16, 185, 129, 0.12)";
-	ctx.fill();
-	ctx.fillStyle = "#059669";
-	ctx.font = "900 16px sans-serif";
-	ctx.fillText("⚡", cardX + 31, cardY + 44);
+	// ── 2. Hero Distance (massive)
+	ctx.fillStyle = C.black;
+	ctx.font = FONT.hero;
+	ctx.fillText(derived.distanceKm, pad - 4, y + 62);
+	y += 68 + 6;
 
-	// Activity Title & Date
-	ctx.fillStyle = "#64748b";
-	ctx.font =
-		"800 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText(
-		`RUNNING · ${derived.formattedDate} · ${derived.formattedTime}`,
-		cardX + 68,
-		cardY + 34,
-	);
+	// ── 3. Unit label
+	ctx.fillStyle = C.mid;
+	ctx.font = FONT.heroUnit;
+	ctx.letterSpacing = "6px";
+	ctx.fillText("KILOMETERS", pad, y + 14);
+	ctx.letterSpacing = "0px";
+	y += 16 + 24;
 
-	ctx.fillStyle = "#0f172a";
-	ctx.font =
-		"900 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	const titleText =
-		activity.name.length > 30
-			? `${activity.name.slice(0, 28)}...`
-			: activity.name;
-	ctx.fillText(titleText, cardX + 68, cardY + 54);
-
-	// 3. Hero Distance & Moving Duration
-	const heroY = cardY + 76;
-	drawCanvasRoundedRect(ctx, cardX + 20, heroY, cardW - 40, 96, 18);
-	ctx.fillStyle = "#f8fafc";
-	ctx.fill();
-	ctx.strokeStyle = "#e2e8f0";
+	// ── 4. Horizontal divider
+	ctx.strokeStyle = C.faint;
 	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(pad, y);
+	ctx.lineTo(pad + innerW, y);
 	ctx.stroke();
+	y += 1 + 20;
 
-	// Distance
-	ctx.fillStyle = "#64748b";
-	ctx.font =
-		"800 9.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText("TOTAL DISTANCE", cardX + 36, heroY + 26);
-
-	ctx.fillStyle = "#0f172a";
-	ctx.font = "900 36px 'JetBrains Mono', monospace";
-	ctx.fillText(derived.distanceKm, cardX + 36, heroY + 66);
-	const distW = ctx.measureText(derived.distanceKm).width;
-	ctx.fillStyle = "#059669";
-	ctx.font = "900 14px 'JetBrains Mono', monospace";
-	ctx.fillText("KM", cardX + 40 + distW, heroY + 60);
-
-	// Moving Time
-	ctx.textAlign = "right";
-	ctx.fillStyle = "#64748b";
-	ctx.font =
-		"800 9.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText("MOVING TIME", cardX + cardW - 36, heroY + 26);
-
-	ctx.fillStyle = "#0f172a";
-	ctx.font = "900 24px 'JetBrains Mono', monospace";
-	ctx.fillText(derived.formattedMovingDuration, cardX + cardW - 36, heroY + 62);
-	ctx.textAlign = "left";
-
-	// Highlight Alert Badge
-	const fastest = splits.find((s) => s.isFastest);
-	const badgeY = heroY + 108;
-	drawCanvasRoundedRect(ctx, cardX + 20, badgeY, cardW - 40, 30, 10);
-	ctx.fillStyle = "rgba(245, 158, 11, 0.08)";
-	ctx.fill();
-	ctx.strokeStyle = "rgba(245, 158, 11, 0.25)";
-	ctx.stroke();
-
-	ctx.fillStyle = "#b45309";
-	ctx.font =
-		"800 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	const badgeText = fastest
-		? `⚡ Top Pace: KM ${fastest.split} at ${fastest.paceFormatted}/km  ·  Avg Pace ${derived.formattedPace}`
-		: `⚡ Target Distance Completed · Avg Pace ${derived.formattedPace}`;
-	ctx.fillText(badgeText, cardX + 32, badgeY + 19);
-
-	// 4. Core Stats (Avg Pace, Elevation, and HR if available)
-	const statsY = cardY + 226;
-	const statsList: Array<{ val: string; label: string }> = [
-		{ val: derived.formattedPace, label: "Avg Pace" },
-		{
-			val: derived.hasElevation
-				? `+${activity.total_elevation_gain} m`
-				: "Flat",
-			label: "Elevation",
-		},
+	// ── 5. Stats Row
+	const stats: Array<{ value: string; label: string; color?: string }> = [
+		{ value: derived.formattedPace, label: "PACE" },
+		{ value: derived.formattedMovingDuration, label: "TIME" },
 	];
 
+	if (derived.hasElevation) {
+		stats.push({
+			value: `+${activity.total_elevation_gain}m`,
+			label: "ELEV",
+		});
+	}
 	if (derived.hasHeartRate && activity.average_heartrate) {
-		statsList.push({
-			val: `${Math.round(activity.average_heartrate)} bpm`,
-			label: "Avg HR",
+		stats.push({
+			value: `${Math.round(activity.average_heartrate)}`,
+			label: "AVG HR",
+			color: C.heart,
 		});
 	}
 
-	const colW = (cardW - 40) / statsList.length;
-
-	statsList.forEach((stat, idx) => {
-		const cx = cardX + 20 + idx * colW;
-		drawCanvasRoundedRect(ctx, cx, statsY, colW - 6, 52, 12);
-		ctx.fillStyle = "#f8fafc";
-		ctx.fill();
-		ctx.strokeStyle = "#f1f5f9";
-		ctx.stroke();
-
-		ctx.fillStyle = "#0f172a";
-		ctx.font = "900 14px 'JetBrains Mono', monospace";
-		ctx.fillText(stat.val, cx + 12, statsY + 25);
-
-		ctx.fillStyle = "#94a3b8";
-		ctx.font =
-			"800 9px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-		ctx.fillText(stat.label.toUpperCase(), cx + 12, statsY + 41);
+	const statColW = innerW / stats.length;
+	stats.forEach((stat, i) => {
+		const sx = pad + i * statColW;
+		// Value
+		ctx.fillStyle = stat.color || C.dark;
+		ctx.font = FONT.statValue;
+		ctx.fillText(stat.value, sx, y + 18);
+		// Label
+		ctx.fillStyle = C.light;
+		ctx.font = FONT.statLabel;
+		ctx.letterSpacing = "1.5px";
+		ctx.fillText(stat.label, sx, y + 34);
+		ctx.letterSpacing = "0px";
 	});
+	y += 38 + 20;
 
-	// Footer watermark
-	ctx.fillStyle = "#cbd5e1";
-	ctx.font =
-		"600 9px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.textAlign = "center";
-	ctx.fillText(
-		"polmatambunan.com · Strava",
-		cardX + cardW / 2,
-		cardY + cardH - 10,
-	);
+	// ── 6. Second divider
+	ctx.strokeStyle = C.faint;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(pad, y);
+	ctx.lineTo(pad + innerW, y);
+	ctx.stroke();
+	y += 1 + 16;
+
+	// ── 7. Activity Title
+	ctx.fillStyle = C.dark;
+	ctx.font = FONT.title;
+	const titleText =
+		activity.name.length > 30
+			? `${activity.name.slice(0, 28)}…`
+			: activity.name;
+	ctx.fillText(titleText, pad, y + 12);
+	y += 14 + 6;
+
+	// ── 8. Date & Best Split
+	const fastest = splits.find((s) => s.isFastest);
+	ctx.fillStyle = C.mid;
+	ctx.font = FONT.subtitle;
+	const dateLine = `${derived.formattedDate} · ${derived.formattedTime}`;
+	ctx.fillText(dateLine, pad, y + 10);
+
+	if (fastest) {
+		ctx.textAlign = "right";
+		ctx.fillStyle = C.accentDark;
+		ctx.font = FONT.badge;
+		ctx.fillText(`⚡ ${fastest.paceFormatted}/km`, pad + innerW, y + 10);
+		ctx.textAlign = "left";
+	}
+	y += 12 + 20;
+
+	// ── 9. Watermark
+	ctx.textAlign = "right";
+	ctx.fillStyle = C.light;
+	ctx.font = FONT.watermark;
+	ctx.fillText("polmatambunan.my.id", pad + innerW, y + 8);
 	ctx.textAlign = "left";
 
 	return canvas;
 }
 
 // ──────────────────────────────────────────────
-// Canvas Exporter: Splits Social Image Card (Transparent BG)
+// Canvas Exporter: Splits — Bold Chart-Style Instagram Sticker
 // ──────────────────────────────────────────────
 function renderSplitsImageToCanvas(
 	activity: StravaRunActivity,
@@ -270,84 +301,99 @@ function renderSplitsImageToCanvas(
 		formattedMovingDuration: string;
 	},
 	splits: ActivitySplit[],
+	theme: CanvasTheme = "light",
 	scale = 2,
 ): HTMLCanvasElement {
-	const cardW = 540;
-	const splitRowH = 28;
+	const W = 420;
+	const pad = 28;
+	const innerW = W - pad * 2;
 	const maxSplitsToShow = Math.min(splits.length, 20);
-	const splitsListH = maxSplitsToShow * splitRowH;
-	const cardH = Math.max(300, 76 + 50 + splitsListH + 42);
-	const pad = 16;
-	const width = cardW + pad * 2;
-	const height = cardH + pad * 2;
+	const splitRowH = 28;
+
+	// Dynamic height
+	let contentH = 0;
+	contentH += 9; // label
+	contentH += 8; // gap
+	contentH += 18; // title
+	contentH += 14; // gap
+	contentH += 14; // summary line
+	contentH += 18; // gap
+	contentH += 1; // divider
+	contentH += 14; // gap below divider
+	contentH += maxSplitsToShow * splitRowH; // split rows
+	contentH += 16; // gap
+	contentH += 1; // bottom divider
+	contentH += 14; // gap
+	contentH += 10; // watermark
+
+	const H = contentH + pad * 2;
 
 	const canvas = document.createElement("canvas");
-	canvas.width = width * scale;
-	canvas.height = height * scale;
+	canvas.width = W * scale;
+	canvas.height = H * scale;
 	const ctx = canvas.getContext("2d");
 	if (!ctx) throw new Error("Canvas context unavailable");
 
+	const C = getColors(theme);
+
 	ctx.scale(scale, scale);
-	ctx.clearRect(0, 0, width, height);
+	ctx.clearRect(0, 0, W, H);
 
-	const cardX = pad;
-	const cardY = pad;
+	let y = pad;
 
-	// 1. White Floating Card
-	drawCanvasCard(ctx, cardX, cardY, cardW, cardH, 24);
+	// ── 1. Label "KM SPLITS"
+	ctx.fillStyle = C.accent;
+	ctx.font = FONT.label;
+	ctx.letterSpacing = "3px";
+	ctx.fillText("KM SPLITS", pad, y + 9);
+	ctx.letterSpacing = "0px";
+	y += 9 + 8;
 
-	// 2. Header
-	drawCanvasRoundedRect(ctx, cardX + 20, cardY + 20, 38, 38, 12);
-	ctx.fillStyle = "rgba(139, 92, 246, 0.12)";
-	ctx.fill();
-	ctx.fillStyle = "#7c3aed";
-	ctx.font = "900 16px sans-serif";
-	ctx.fillText("📊", cardX + 31, cardY + 44);
-
-	ctx.fillStyle = "#64748b";
-	ctx.font =
-		"800 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.fillText(`SPLITS · ${derived.formattedDate}`, cardX + 68, cardY + 34);
-
-	ctx.fillStyle = "#0f172a";
-	ctx.font =
-		"900 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+	// ── 2. Activity Title
+	ctx.fillStyle = C.dark;
+	ctx.font = FONT.title;
 	const titleText =
-		activity.name.length > 30
-			? `${activity.name.slice(0, 28)}...`
+		activity.name.length > 34
+			? `${activity.name.slice(0, 32)}…`
 			: activity.name;
-	ctx.fillText(titleText, cardX + 68, cardY + 54);
+	ctx.fillText(titleText, pad, y + 14);
+	y += 18 + 14;
 
-	// Summary bar
-	const summaryY = cardY + 70;
-	drawCanvasRoundedRect(ctx, cardX + 20, summaryY, cardW - 40, 36, 12);
-	ctx.fillStyle = "#f8fafc";
-	ctx.fill();
-	ctx.strokeStyle = "#e2e8f0";
-	ctx.stroke();
+	// ── 3. Summary Line: distance · avg pace · time
+	ctx.fillStyle = C.dark;
+	ctx.font = FONT.summaryBold;
+	ctx.fillText(`${derived.distanceKm} km`, pad, y + 11);
+	const distMetricW = ctx.measureText(`${derived.distanceKm} km`).width;
 
-	ctx.fillStyle = "#0f172a";
-	ctx.font = "800 11px 'JetBrains Mono', monospace";
+	ctx.fillStyle = C.mid;
+	ctx.font = FONT.subtitle;
 	ctx.fillText(
-		`${derived.distanceKm} KM TOTAL  ·  AVG ${derived.formattedPace}  ·  ${derived.formattedMovingDuration}`,
-		cardX + 32,
-		summaryY + 22,
+		`  ·  ${derived.formattedPace}  ·  ${derived.formattedMovingDuration}`,
+		pad + distMetricW,
+		y + 11,
 	);
 
+	// Best split on right
 	const fastest = splits.find((s) => s.isFastest);
 	if (fastest) {
 		ctx.textAlign = "right";
-		ctx.fillStyle = "#059669";
-		ctx.font = "800 10.5px 'JetBrains Mono', monospace";
-		ctx.fillText(
-			`⚡ Best: KM ${fastest.split} (${fastest.paceFormatted})`,
-			cardX + cardW - 32,
-			summaryY + 22,
-		);
+		ctx.fillStyle = C.accentDark;
+		ctx.font = FONT.summaryAccent;
+		ctx.fillText(`⚡ ${fastest.paceFormatted}/km`, pad + innerW, y + 11);
 		ctx.textAlign = "left";
 	}
+	y += 14 + 18;
 
-	// 3. Splits list
+	// ── 4. Divider
+	ctx.strokeStyle = C.faint;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(pad, y);
+	ctx.lineTo(pad + innerW, y);
+	ctx.stroke();
+	y += 1 + 14;
+
+	// ── 5. Splits List
 	const splitPaces = splits.map((s) => s.paceSeconds);
 	const minPace = splitPaces.length > 0 ? Math.min(...splitPaces) : 0;
 	const maxPace = splitPaces.length > 0 ? Math.max(...splitPaces) : 0;
@@ -357,90 +403,100 @@ function renderSplitsImageToCanvas(
 			? activity.moving_time / (activity.distance / 1000)
 			: 0;
 
-	const splitsInnerX = cardX + 20;
-	const splitsInnerW = cardW - 40;
-	let splitY = summaryY + 48;
+	const kmLabelW = 42;
+	const paceTextW = 56;
+	const rightMetricW = 58;
+	const barGap = 8;
+	const barMaxW = innerW - kmLabelW - paceTextW - rightMetricW - barGap * 3;
+	const barH = 18;
 
 	splits.slice(0, maxSplitsToShow).forEach((item) => {
-		const rowY = splitY;
+		const rowY = y;
+		const barCenterY = rowY + (splitRowH - barH) / 2;
 
-		// KM label
-		ctx.fillStyle = "#475569";
-		ctx.font = "800 10.5px 'JetBrains Mono', monospace";
-		ctx.fillText(
-			`KM ${item.split}${item.distanceKm < 1 ? ` (${item.distanceKm}k)` : ""}`,
-			splitsInnerX,
-			rowY + 15,
-		);
+		// KM number (left-aligned, monospace)
+		ctx.fillStyle = C.mid;
+		ctx.font = FONT.splitKm;
+		const kmText = item.distanceKm < 1 ? `${item.split}*` : `${item.split}`;
+		ctx.fillText(kmText, pad, rowY + splitRowH / 2 + 4);
+
+		// Pace text
+		const paceX = pad + kmLabelW + barGap;
+		ctx.fillStyle = item.isFastest ? C.fastest : C.dark;
+		ctx.font = FONT.splitPace;
+		ctx.fillText(item.paceFormatted, paceX, rowY + splitRowH / 2 + 4);
 
 		// Bar
-		const barStartX = splitsInnerX + 64;
-		const barMaxW = splitsInnerW - 148;
+		const barX = paceX + paceTextW;
 		const paceRatio = 1 - (item.paceSeconds - minPace) / paceSpread;
 		const barWidth = Math.max(
-			barMaxW * 0.45,
-			Math.min(barMaxW, barMaxW * (0.45 + paceRatio * 0.55)),
+			barMaxW * 0.35,
+			Math.min(barMaxW, barMaxW * (0.35 + paceRatio * 0.65)),
 		);
 
-		drawCanvasRoundedRect(ctx, barStartX, rowY + 3, barMaxW, 18, 6);
-		ctx.fillStyle = "#f1f5f9";
+		// Background track
+		drawCanvasRoundedRect(ctx, barX, barCenterY, barMaxW, barH, 4);
+		ctx.fillStyle = C.barTrack;
 		ctx.fill();
 
-		drawCanvasRoundedRect(ctx, barStartX, rowY + 3, barWidth, 18, 6);
+		// Active bar
+		drawCanvasRoundedRect(ctx, barX, barCenterY, barWidth, barH, 4);
 		if (item.isFastest) {
-			ctx.fillStyle = "#10b981";
+			ctx.fillStyle = C.fastest;
 		} else if (item.paceSeconds <= avgPaceSec) {
-			ctx.fillStyle = "#8b5cf6";
+			ctx.fillStyle = C.aboveAvg;
 		} else {
-			ctx.fillStyle = "#f59e0b";
+			ctx.fillStyle = C.belowAvg;
 		}
 		ctx.fill();
 
-		ctx.fillStyle = "#ffffff";
-		ctx.font = "900 10px 'JetBrains Mono', monospace";
-		ctx.fillText(`${item.paceFormatted}/km`, barStartX + 8, rowY + 16);
-
-		if (item.isFastest) {
-			ctx.fillStyle = "#ffffff";
-			ctx.font = "800 8.5px sans-serif";
-			ctx.fillText("⚡ TOP", barStartX + barWidth - 36, rowY + 15.5);
+		// "⚡" badge inside bar for fastest
+		if (item.isFastest && barWidth > 30) {
+			ctx.fillStyle = C.white;
+			ctx.font = "800 8px sans-serif";
+			ctx.textAlign = "right";
+			ctx.fillText("⚡", barX + barWidth - 4, barCenterY + 12);
+			ctx.textAlign = "left";
 		}
 
+		// Right metric: HR or duration
+		ctx.textAlign = "right";
 		if (item.heartrate) {
-			ctx.fillStyle = "#e11d48";
-			ctx.font = "800 10px 'JetBrains Mono', monospace";
-			ctx.textAlign = "right";
-			ctx.fillText(
-				`${item.heartrate} bpm`,
-				splitsInnerX + splitsInnerW,
-				rowY + 15,
-			);
-			ctx.textAlign = "left";
+			ctx.fillStyle = C.heart;
+			ctx.font = FONT.splitPace;
+			ctx.fillText(`${item.heartrate}`, pad + innerW, rowY + splitRowH / 2 + 4);
 		} else {
-			ctx.fillStyle = "#64748b";
-			ctx.font = "700 10px 'JetBrains Mono', monospace";
-			ctx.textAlign = "right";
+			ctx.fillStyle = C.light;
+			ctx.font = FONT.splitPace;
 			ctx.fillText(
 				item.movingTimeFormatted,
-				splitsInnerX + splitsInnerW,
-				rowY + 15,
+				pad + innerW,
+				rowY + splitRowH / 2 + 4,
 			);
-			ctx.textAlign = "left";
 		}
+		ctx.textAlign = "left";
 
-		splitY += splitRowH;
+		y += splitRowH;
 	});
 
-	// Footer watermark
-	ctx.fillStyle = "#cbd5e1";
-	ctx.font =
-		"600 9.5px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-	ctx.textAlign = "center";
-	ctx.fillText(
-		"polmatambunan.com · Strava Splits",
-		cardX + cardW / 2,
-		cardY + cardH - 12,
-	);
+	y += 16;
+
+	// ── 6. Bottom divider
+	ctx.strokeStyle = C.faint;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(pad, y);
+	ctx.lineTo(pad + innerW, y);
+	ctx.stroke();
+	y += 1 + 14;
+
+	// ── 7. Watermark + date
+	ctx.fillStyle = C.light;
+	ctx.font = FONT.watermark;
+	ctx.fillText(derived.formattedDate, pad, y + 8);
+
+	ctx.textAlign = "right";
+	ctx.fillText("polmatambunan.my.id", pad + innerW, y + 8);
 	ctx.textAlign = "left";
 
 	return canvas;
@@ -455,6 +511,7 @@ export default function ActivityDetailModal({
 		null,
 	);
 	const [isCopying, setIsCopying] = useState(false);
+	const [exportTheme, setExportTheme] = useState<CanvasTheme>("light");
 	const [rawSplits, setRawSplits] = useState<StravaSplitMetric[] | null>(null);
 	const [isLoadingSplits, setIsLoadingSplits] = useState(false);
 	const reduceMotion = useReducedMotion();
@@ -587,8 +644,20 @@ export default function ActivityDetailModal({
 			try {
 				const canvas =
 					type === "overview"
-						? renderOverviewImageToCanvas(activity, derivedData, splits, 2)
-						: renderSplitsImageToCanvas(activity, derivedData, splits, 2);
+						? renderOverviewImageToCanvas(
+								activity,
+								derivedData,
+								splits,
+								exportTheme,
+								2,
+							)
+						: renderSplitsImageToCanvas(
+								activity,
+								derivedData,
+								splits,
+								exportTheme,
+								2,
+							);
 
 				await new Promise<void>((resolve, reject) => {
 					canvas.toBlob(async (blob) => {
@@ -634,7 +703,7 @@ export default function ActivityDetailModal({
 				setIsCopying(false);
 			}
 		},
-		[activity, derivedData, splits, isCopying],
+		[activity, derivedData, splits, isCopying, exportTheme],
 	);
 
 	if (!activity || !derivedData) return null;
@@ -736,37 +805,62 @@ export default function ActivityDetailModal({
 								</button>
 							</div>
 
-							{/* Copy Transparent PNG Image Button */}
-							<button
-								type="button"
-								disabled={isCopying}
-								onClick={() => handleCopyImage(activeTab)}
-								className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 hover:text-slate-900 text-xs font-bold transition-all active:scale-95 shadow-2xs cursor-pointer disabled:opacity-60"
-								title="Copy transparent PNG sticker to clipboard"
-							>
-								{isCopying ? (
-									<>
-										<Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-										<span className="text-emerald-700 font-extrabold text-[11px]">
-											Generating...
-										</span>
-									</>
-								) : copiedTab === activeTab ? (
-									<>
-										<Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-										<span className="text-emerald-700 font-black text-[11px]">
-											Copied!
-										</span>
-									</>
-								) : (
-									<>
-										<ImageIcon className="w-3.5 h-3.5 text-slate-400" />
-										<span className="text-[11px] font-extrabold">
-											{activeTab === "overview" ? "Share Card" : "Share Splits"}
-										</span>
-									</>
-								)}
-							</button>
+							{/* Theme Toggle + Copy Image */}
+							<div className="flex items-center gap-1">
+								{/* Light/Dark Theme Toggle */}
+								<button
+									type="button"
+									onClick={() =>
+										setExportTheme((t) => (t === "light" ? "dark" : "light"))
+									}
+									className={`p-1.5 rounded-xl transition-all active:scale-90 cursor-pointer ${
+										exportTheme === "dark"
+											? "bg-slate-800 text-amber-300 shadow-xs"
+											: "bg-transparent text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+									}`}
+									title={`Export as ${exportTheme === "light" ? "dark" : "light"} theme`}
+								>
+									{exportTheme === "dark" ? (
+										<Moon className="w-3.5 h-3.5" />
+									) : (
+										<Sun className="w-3.5 h-3.5" />
+									)}
+								</button>
+
+								{/* Copy Transparent PNG Image Button */}
+								<button
+									type="button"
+									disabled={isCopying}
+									onClick={() => handleCopyImage(activeTab)}
+									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-transparent hover:bg-slate-100 text-slate-900 hover:text-indigo-600 text-xs font-black transition-all active:scale-95 cursor-pointer disabled:opacity-50 group"
+									title="Copy transparent PNG sticker to clipboard"
+								>
+									{isCopying ? (
+										<>
+											<Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+											<span className="text-emerald-700 font-black text-xs">
+												Generating...
+											</span>
+										</>
+									) : copiedTab === activeTab ? (
+										<>
+											<Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+											<span className="text-emerald-700 font-black text-xs">
+												Copied Sticker!
+											</span>
+										</>
+									) : (
+										<>
+											<ImageIcon className="w-3.5 h-3.5 text-slate-800 group-hover:text-indigo-600 transition-colors stroke-[2.5]" />
+											<span className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+												{activeTab === "overview"
+													? "Copy Sticker"
+													: "Copy Splits"}
+											</span>
+										</>
+									)}
+								</button>
+							</div>
 						</div>
 					</div>
 

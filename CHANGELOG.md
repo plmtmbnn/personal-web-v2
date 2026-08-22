@@ -1,3 +1,10 @@
+# [0.76.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.75.0...v0.76.0) (2026-08-22)
+
+
+### Features
+
+* **running,utils:** add text compare tool and revamp run canvas exports ([3f56bc7](https://github.com/plmtmbnn/personal-web-v2/commit/3f56bc78087276989a8f5e37d17c031631007c19))
+
 # [0.75.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.74.0...v0.75.0) (2026-08-19)
 
 

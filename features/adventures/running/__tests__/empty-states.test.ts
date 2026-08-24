@@ -40,7 +40,7 @@ function getEmptyStateType(data: StravaDataResult) {
 
 	if (
 		hasStats &&
-		data.stats.all_run_totals &&
+		data.stats?.all_run_totals &&
 		data.stats.all_run_totals.count > 0
 	) {
 		return "LOADING_ACTIVITIES";

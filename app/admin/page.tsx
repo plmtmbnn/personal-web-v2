@@ -7,6 +7,7 @@ import {
 	ShieldCheck,
 	ChevronRight,
 	Database,
+	Bell,
 } from "lucide-react";
 import { logout, checkAdmin } from "@/features/auth/actions";
 
@@ -52,6 +53,16 @@ export default async function AdminDashboardPage() {
 			color: "text-indigo-600",
 			bg: "bg-indigo-50",
 			border: "hover:border-indigo-200",
+		},
+		{
+			title: "Quick Reminders",
+			description:
+				"Jot down short time reminders and daily notes with automatic expiration.",
+			href: "/admin/reminders",
+			icon: Bell,
+			color: "text-amber-600",
+			bg: "bg-amber-50",
+			border: "hover:border-amber-200",
 		},
 	];
 

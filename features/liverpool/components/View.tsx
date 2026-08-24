@@ -28,7 +28,6 @@ type ActiveTab = "upcoming" | "played";
 
 export default function LiverpoolView() {
 	const reduceMotion = useReducedMotion();
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const [activeTab, setActiveTab] = useState<ActiveTab>("upcoming");
 	const [upcomingFixtures, setUpcomingFixtures] = useState<
 		LfcFixtureResponse[]
@@ -263,7 +262,7 @@ export default function LiverpoolView() {
 
 				{/* ── Hero Section (TravelPage style) ───────────────────── */}
 				<motion.div
-					initial={safeReduceMotion ? false : { opacity: 0, y: 30 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 30 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.8 }}
 					className="mb-12 text-center max-w-3xl mx-auto space-y-4"
@@ -287,7 +286,7 @@ export default function LiverpoolView() {
 
 				{/* ── Quick Stats Pills (TravelPage style) ──────────────── */}
 				<motion.div
-					initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.2 }}
 					className="flex flex-wrap justify-center gap-3 mb-10"
@@ -376,9 +375,7 @@ export default function LiverpoolView() {
 								{nextMatch && (
 									<section>
 										<motion.div
-											initial={
-												safeReduceMotion ? false : { opacity: 0, x: -20 }
-											}
+											initial={reduceMotion ? false : { opacity: 0, x: -20 }}
 											animate={{ opacity: 1, x: 0 }}
 											transition={{ delay: 0.3 }}
 											className="flex items-center gap-4 mb-8"
@@ -404,7 +401,7 @@ export default function LiverpoolView() {
 								{/* All Upcoming Schedule Section */}
 								<section>
 									<motion.div
-										initial={safeReduceMotion ? false : { opacity: 0, x: -20 }}
+										initial={reduceMotion ? false : { opacity: 0, x: -20 }}
 										animate={{ opacity: 1, x: 0 }}
 										transition={{ delay: 0.4 }}
 										className="flex items-center gap-4 mb-8"
@@ -504,7 +501,7 @@ export default function LiverpoolView() {
 						{activeTab === "played" && (
 							<section>
 								<motion.div
-									initial={safeReduceMotion ? false : { opacity: 0, x: -20 }}
+									initial={reduceMotion ? false : { opacity: 0, x: -20 }}
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ delay: 0.3 }}
 									className="flex items-center gap-4 mb-8"

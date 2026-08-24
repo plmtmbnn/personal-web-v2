@@ -101,7 +101,7 @@ Strictly for routing and page definitions.
 - **Custom Modal System**: Use `features/shared/components/CustomModal.tsx` for high-fidelity alerts and confirmations.
 - **Interactive Feedback**: 
   - All server transitions must provide high-fidelity feedback (e.g., **Synchronization Overlays**, loading spinners).
-  - Global loading screens utilize a non-repeating progress crawl (e.g., 40% -> 70% -> 95%) with a translucent blurred backdrop (`bg-white/80 backdrop-blur-md`) to simulate realistic page readiness.
+  - Global loading screens utilize a non-repeating progress crawl (e.g., 40% -> 70% -> 95%) presented within a **Modern Floating Card Dashboard Aesthetic** (`bg-white rounded-3xl border-slate-200/80 shadow-2xl`) to simulate realistic page readiness.
   - Page-level skeleton loading is preferred over redundant inline "Synchronizing Intel" indicators.
 - **Module Focus Pattern**: For side-by-side utility modules (e.g., Input/Output), provide `Minimize2` / `Maximize2` buttons to collapse/expand modules, allowing users to focus on specific panes. Use `framer-motion` for smooth layout transitions. Ensure Framer Motion transforms do not conflict with Tailwind transform classes (use `style={{ x: ... }}` directly).
 - **Mobile-First UX**:
@@ -142,7 +142,7 @@ Strictly for routing and page definitions.
 - **Modular Directory Organization**: Task system UI components are organized into logical sub-directories under `components/`: `agenda/` (forms, lists, filters, items), `analytics/` (charts, graphs, reports), `health/` (system checks), and `shared/` (task-specific loading skeletons, toasts, errors).
 - **Tabbed Architecture**:
   - **Agenda**: Prominent `TaskProgress` (independent fetch) and collapsible `HealthCheck`.
-  - **Analytics**: Displays a permanently visible `GeneralReport` panel with period filters (Today, Week, Month), using `AnalyticsDashboardSkeleton` as its loading state. The stats grid is enriched with Velocity (average completion rate) and Trend metrics (percentage change vs previous period, color-coded dynamically). Displays a clean "Awaiting Data" fallback and placeholder formatting for reliability metrics when there are zero completed tasks in the selected period.
+  - **Analytics**: Displays a permanently visible `GeneralReport` panel with period filters (Today, Week, Month, All Time), using `AnalyticsDashboardSkeleton` as its loading state. The stats grid is enriched with Velocity (average completion rate) and Trend metrics (percentage change vs previous period, color-coded dynamically). Displays a clean "Awaiting Data" fallback and placeholder formatting for reliability metrics when there are zero completed tasks in the selected period.
 - **Task Layout & Actions**: `TaskItem` separates title and description with clear vertical breathing room. A status selector dropdown is positioned in the bottom-right actions bar; selecting "DONE" automatically completes the task (setting `status = "done"` with a timestamp), and selecting other options resets it.
 - **Kanban Board Optimization**: Transitions the item card to a vertical layout with dedicated top header handles and stacks controls at the bottom to maintain touch target usability in narrow columns.
 - **Dynamic Initialization**: `TaskForm` utilizes an auto-expanding `textarea` triggered by content changes to support multi-line batch entry without layout shifting.
@@ -157,7 +157,7 @@ Strictly for routing and page definitions.
 
 ### Adventures & Professional Showcase
 - **Adventures**: High-fidelity logs for Running and Travel missions, utilizing Glassmorphism and rich typography.
-  - **Running Performance**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Supports dynamic grid scaling (up to 5 columns) for high-density performance visualization.
+  - **Running Performance**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Supports dynamic grid scaling (up to 5 columns) for high-density performance visualization. Features a high-fidelity **Activity Detail Modal** with real Strava splits and run canvas image exports (supporting light themes, transparent backgrounds, and clipboard copying).
 - **Travel Bucket List Tracker**: 
   - **Architecture**: Domain-driven logic in `features/travel/`.
   - **Logic**: Dynamic `useMemo` filtering for "Completed Journeys" (sorted by date) vs. "Future Adventures".
@@ -169,6 +169,7 @@ Strictly for routing and page definitions.
 - **System Integrity**: Uses **Wake Lock API** and **Web Audio API** beeps.
 - **Advanced Tools**: 
   - **Market Intelligence (Stock Explorer)**: Premium-grade IDX dashboard (`/utils/stock-explorer`) featuring a dynamic composite scoring engine with custom weights (price, volume, foreign net flow, frequency, stability), range sliders, strategy presets (Whale, Momentum, Value), interactive star-watchlist, sector rotation visualizations, opportunity scanner, volume heatmap, and a high-fidelity AI Analyst Drawer.
+  - **Text Compare Tool**: High-performance side-by-side diff utility (`/utils/text-compare`) with a custom comparator engine.
   - **Mock API Engine**: Path-based dynamic mocking (`/api/mock/*`) with Redis persistence and 1-month TTL. Supports JSON validation with `CustomModal` feedback.
   - **Schema Forge**: Advanced JSON to Multi-Target converter (TS, Go, Zod, Mongoose, Joi).
   - **Asset Averaging**: Weighted average cost analysis for stock and crypto investments.

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { SupabaseConn } from "@/lib/core/supabase";
 import { logout } from "@/features/auth/actions";
+import { getReminderCount } from "@/features/reminders/actions";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import {
 	Home,
@@ -166,6 +167,7 @@ export default function CompactBottomBar() {
 	const [isAdmin, setIsAdmin] = useState(false);
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [pendingTasksCount, setPendingTasksCount] = useState(0);
+	const [pendingRemindersCount, setPendingRemindersCount] = useState(0);
 	const [hasHover, setHasHover] = useState(false);
 	const navRef = useRef<HTMLElement>(null);
 	const reduceMotion = useReducedMotion();
@@ -227,6 +229,7 @@ export default function CompactBottomBar() {
 				setIsLoggedIn(false);
 				setIsAdmin(false);
 				setPendingTasksCount(0);
+				setPendingRemindersCount(0);
 			}
 		});
 		return () => subscription.unsubscribe();
@@ -244,15 +247,20 @@ export default function CompactBottomBar() {
 						.neq("status", "cancelled")
 						.eq("due_date", todayStr);
 					setPendingTasksCount(count || 0);
+
+					// Fetch reminders count
+					const rCount = await getReminderCount();
+					setPendingRemindersCount(rCount);
 				} catch (err) {
-					console.error("Error fetching tasks count:", err);
+					console.error("Error fetching admin counts:", err);
 				}
 			};
 			fetchPendingCount();
 		} else {
 			setPendingTasksCount(0);
+			setPendingRemindersCount(0);
 		}
-	}, [isLoggedIn, isAdmin]);
+	}, [isLoggedIn, isAdmin, pathname]);
 
 	const toggleSubMenu = (
 		e: React.MouseEvent,
@@ -323,40 +331,59 @@ export default function CompactBottomBar() {
 												const SubIcon = sub.icon;
 												const isSubActive = pathname === sub.href;
 
+												const commonClasses = `flex w-full text-left items-center gap-3 px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 !no-underline ${
+													isSubActive
+														? "bg-slate-900 !text-white shadow-sm"
+														: "text-slate-700 hover:text-slate-950 hover:bg-slate-100/80"
+												}`;
+
+												const content = (
+													<>
+														<SubIcon
+															className={`w-4 h-4 ${
+																isSubActive ? "!text-white" : "text-slate-500"
+															}`}
+														/>
+														<span
+															className={
+																isSubActive ? "!text-white" : "text-slate-700"
+															}
+														>
+															{sub.label}
+														</span>
+														{isSubActive && (
+															<div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+														)}
+													</>
+												);
+
 												return (
 													<motion.div key={sub.label} variants={itemVariants}>
-														<Link
-															href={sub.href || "#"}
-															onClick={(e) => {
-																if (!sub.href || sub.href === "#") {
-																	e.preventDefault();
-																}
-																sub.onClick?.();
-																setExpandedItem(null);
-															}}
-															className={`flex items-center gap-3 px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 !no-underline ${
-																isSubActive
-																	? "bg-slate-900 !text-white shadow-sm"
-																	: "text-slate-700 hover:text-slate-950 hover:bg-slate-100/80"
-															}`}
-															role="menuitem"
-														>
-															<SubIcon
-																className={`w-4 h-4 ${
-																	isSubActive ? "!text-white" : "text-slate-500"
-																}`}
-															/>
-															<span
-																className={
-																	isSubActive ? "!text-white" : "text-slate-700"
-																}
+														{sub.href ? (
+															<Link
+																href={sub.href}
+																onClick={() => {
+																	sub.onClick?.();
+																	setExpandedItem(null);
+																}}
+																className={commonClasses}
+																role="menuitem"
 															>
-																{sub.label}
-															</span>
-															{isSubActive && (
-																<div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
-															)}
-														</Link>
+																{content}
+															</Link>
+														) : (
+															<button
+																type="button"
+																onClick={() => {
+																	sub.onClick?.();
+																	setExpandedItem(null);
+																}}
+																className={commonClasses}
+																role="menuitem"
+															>
+																{content}
+															</button>
+														)}
 													</motion.div>
 												);
 											})}
@@ -397,11 +424,12 @@ export default function CompactBottomBar() {
 										}`}
 									>
 										<Icon className="w-4 h-4 shrink-0 !text-current" />
-										{item.label === "Admin" && pendingTasksCount > 0 && (
-											<span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold !text-white ring-2 ring-white shadow-xs animate-pulse">
-												{pendingTasksCount}
-											</span>
-										)}
+										{item.label === "Admin" &&
+											(pendingTasksCount > 0 || pendingRemindersCount > 0) && (
+												<span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold !text-white ring-2 ring-white shadow-xs animate-pulse">
+													{pendingTasksCount + pendingRemindersCount}
+												</span>
+											)}
 										<span className="hidden sm:inline text-xs sm:text-sm font-extrabold whitespace-nowrap !text-current">
 											{item.label}
 										</span>

@@ -1,3 +1,10 @@
+# [0.77.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.76.0...v0.77.0) (2026-08-24)
+
+
+### Features
+
+* **admin,utils:** add admin reminders system, fix hydration mismatch and expand unit test coverage ([0ed9ee4](https://github.com/plmtmbnn/personal-web-v2/commit/0ed9ee4966d1cfdf234950b9fb27a35215f6af7c))
+
 # [0.76.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.75.0...v0.76.0) (2026-08-22)
 
 

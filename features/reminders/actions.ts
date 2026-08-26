@@ -76,3 +76,34 @@ export async function getReminderCount(): Promise<number> {
 	const keys = await redis.keys(`${KEY_PREFIX}*`);
 	return keys.length;
 }
+
+export async function extendReminder(id: string, extendBy: ReminderTTL) {
+	const isAdmin = await checkAdmin();
+	if (!isAdmin) throw new Error("Unauthorized");
+
+	const key = `${KEY_PREFIX}${id}`;
+	const rawReminder = await redis.get(key);
+	if (!rawReminder) throw new Error("Reminder not found");
+
+	const reminder: Reminder =
+		typeof rawReminder === "string" ? JSON.parse(rawReminder) : rawReminder;
+
+	const now = Date.now();
+	// Base the extension on the current expiresAt if it's in the future,
+	// otherwise base it on now.
+	const currentExpiresAt = new Date(reminder.expiresAt).getTime();
+	const baseTime = Math.max(now, currentExpiresAt);
+
+	const newExpiresAt = baseTime + TTL_SECONDS[extendBy] * 1000;
+	const secondsDiff = Math.max(1, Math.floor((newExpiresAt - now) / 1000));
+
+	const updatedReminder: Reminder = {
+		...reminder,
+		expiresAt: new Date(newExpiresAt).toISOString(),
+	};
+
+	await redis.set(key, JSON.stringify(updatedReminder), { ex: secondsDiff });
+
+	revalidatePath("/admin/reminders");
+	return { success: true, reminder: updatedReminder };
+}

@@ -25,6 +25,7 @@ import {
 	Toolbox,
 	Database,
 	Trophy,
+	Bell,
 } from "lucide-react";
 import {
 	motion,
@@ -99,6 +100,7 @@ const NAV_ITEMS: NavItem[] = [
 		href: "/login",
 		icon: LogIn,
 		hideIfLoggedIn: true,
+		toggle: "NEXT_PUBLIC_ENABLE_GOOGLE_AUTH",
 	},
 	{
 		label: "Admin",
@@ -113,6 +115,11 @@ const NAV_ITEMS: NavItem[] = [
 				label: "Manage Stocks",
 				href: "/utils/stock-explorer/admin",
 				icon: Database,
+			},
+			{
+				label: "Quick Reminders",
+				href: "/admin/reminders",
+				icon: Bell,
 			},
 			{ label: "Logout", icon: LogOut, onClick: () => logout() },
 		],
@@ -163,8 +170,9 @@ const itemVariants: Variants = {
 
 export default function CompactBottomBar() {
 	const pathname = usePathname();
+	const isGoogleAuthEnabled = ENV_GLOBAL.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH;
 	const [expandedItem, setExpandedItem] = useState<string | null>(null);
-	const [isAdmin, setIsAdmin] = useState(false);
+	const [isAdmin, setIsAdmin] = useState(!isGoogleAuthEnabled);
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [pendingTasksCount, setPendingTasksCount] = useState(0);
 	const [pendingRemindersCount, setPendingRemindersCount] = useState(0);
@@ -202,6 +210,11 @@ export default function CompactBottomBar() {
 	}, []);
 
 	useEffect(() => {
+		if (!isGoogleAuthEnabled) {
+			setIsAdmin(true);
+			return;
+		}
+
 		const checkUser = async () => {
 			const {
 				data: { user },
@@ -233,11 +246,11 @@ export default function CompactBottomBar() {
 			}
 		});
 		return () => subscription.unsubscribe();
-	}, []);
+	}, [isGoogleAuthEnabled]);
 
 	// Fetch pending tasks count on auth state changes
 	useEffect(() => {
-		if (isLoggedIn && isAdmin) {
+		if (!isGoogleAuthEnabled || (isLoggedIn && isAdmin)) {
 			const fetchPendingCount = async () => {
 				try {
 					const todayStr = new Date().toISOString().split("T")[0];
@@ -260,7 +273,7 @@ export default function CompactBottomBar() {
 			setPendingTasksCount(0);
 			setPendingRemindersCount(0);
 		}
-	}, [isLoggedIn, isAdmin, pathname]);
+	}, [isLoggedIn, isAdmin, pathname, isGoogleAuthEnabled]);
 
 	const toggleSubMenu = (
 		e: React.MouseEvent,
@@ -277,10 +290,21 @@ export default function CompactBottomBar() {
 
 	const visibleItems = NAV_ITEMS.filter((item) => {
 		if (item.toggle && !ENV_GLOBAL[item.toggle]) return false;
-		if (item.adminOnly && !isAdmin) return false;
-		if (item.hideIfLoggedIn && isLoggedIn) return false;
+		if (item.adminOnly && !isAdmin && isGoogleAuthEnabled) return false;
+		if (item.hideIfLoggedIn && (isLoggedIn || !isGoogleAuthEnabled))
+			return false;
 		return true;
 	});
+
+	const getSubItemBadge = (subLabel: string) => {
+		if (subLabel === "Manage Tasks" && pendingTasksCount > 0) {
+			return pendingTasksCount;
+		}
+		if (subLabel === "Quick Reminders" && pendingRemindersCount > 0) {
+			return pendingRemindersCount;
+		}
+		return null;
+	};
 
 	return (
 		<motion.nav
@@ -295,11 +319,14 @@ export default function CompactBottomBar() {
 				<div className="flex items-center gap-0.5 sm:gap-1">
 					{visibleItems.map((item) => {
 						const Icon = item.icon;
+						const subItems = item.subItems?.filter(
+							(sub) => isGoogleAuthEnabled || sub.label !== "Logout",
+						);
 						const isActive =
 							pathname === item.href ||
-							item.subItems?.some((sub) => pathname === sub.href);
+							subItems?.some((sub) => pathname === sub.href);
 						const isExpanded = expandedItem === item.label;
-						const hasSubItems = item.subItems && item.subItems.length > 0;
+						const hasSubItems = subItems && subItems.length > 0;
 
 						return (
 							<div
@@ -327,9 +354,10 @@ export default function CompactBottomBar() {
 											className="absolute bottom-[calc(100%+14px)] left-1/2 -translate-x-1/2 w-48 sm:w-52 bg-white/95 backdrop-blur-2xl rounded-2xl overflow-hidden shadow-2xl border border-slate-200/90 p-1.5 z-50 origin-bottom ring-1 ring-slate-900/5"
 											role="menu"
 										>
-											{item.subItems?.map((sub) => {
+											{subItems.map((sub) => {
 												const SubIcon = sub.icon;
 												const isSubActive = pathname === sub.href;
+												const badgeCount = getSubItemBadge(sub.label);
 
 												const commonClasses = `flex w-full text-left items-center gap-3 px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 !no-underline ${
 													isSubActive
@@ -340,18 +368,29 @@ export default function CompactBottomBar() {
 												const content = (
 													<>
 														<SubIcon
-															className={`w-4 h-4 ${
+															className={`w-4 h-4 shrink-0 ${
 																isSubActive ? "!text-white" : "text-slate-500"
 															}`}
 														/>
 														<span
-															className={
+															className={`truncate ${
 																isSubActive ? "!text-white" : "text-slate-700"
-															}
+															}`}
 														>
 															{sub.label}
 														</span>
-														{isSubActive && (
+														{badgeCount !== null && (
+															<span
+																className={`ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black ${
+																	isSubActive
+																		? "bg-rose-500 text-white"
+																		: "bg-rose-50 text-rose-600 border border-rose-200/80"
+																}`}
+															>
+																{badgeCount}
+															</span>
+														)}
+														{isSubActive && badgeCount === null && (
 															<div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
 														)}
 													</>
@@ -425,6 +464,7 @@ export default function CompactBottomBar() {
 									>
 										<Icon className="w-4 h-4 shrink-0 !text-current" />
 										{item.label === "Admin" &&
+											!isExpanded &&
 											(pendingTasksCount > 0 || pendingRemindersCount > 0) && (
 												<span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold !text-white ring-2 ring-white shadow-xs animate-pulse">
 													{pendingTasksCount + pendingRemindersCount}

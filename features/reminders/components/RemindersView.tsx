@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import type { Reminder, ReminderTTL } from "../types";
-import { addReminder, deleteReminder } from "../actions";
+import { addReminder, deleteReminder, extendReminder } from "../actions";
 import {
 	Bell,
 	Trash2,
@@ -12,8 +12,96 @@ import {
 	Calendar,
 	CalendarDays,
 	AlertCircle,
+	Copy,
+	Check,
+	ExternalLink,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+
+/**
+ * Regex to detect URLs in text (http, https, or bare www.)
+ */
+const URL_REGEX = /(https?:\/\/[^\s<]+|www\.[^\s<]+\.[^\s<]+)/gi;
+
+/**
+ * Extracts a short display label from a URL (hostname + truncated path).
+ */
+function shortenUrl(raw: string): string {
+	try {
+		const url = new URL(raw.startsWith("www.") ? `https://${raw}` : raw);
+		const host = url.hostname.replace(/^www\./, "");
+		const path = url.pathname === "/" ? "" : url.pathname;
+		const display = host + path;
+		return display.length > 32 ? `${display.slice(0, 30)}…` : display;
+	} catch {
+		return raw.length > 32 ? `${raw.slice(0, 30)}…` : raw;
+	}
+}
+
+/**
+ * Renders text with detected URLs as shortened, clickable, copiable link pills.
+ */
+function LinkifiedText({ text }: { text: string }) {
+	const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+	const handleCopy = useCallback(async (e: React.MouseEvent, url: string) => {
+		e.preventDefault();
+		e.stopPropagation();
+		try {
+			const fullUrl = url.startsWith("www.") ? `https://${url}` : url;
+			await navigator.clipboard.writeText(fullUrl);
+			setCopiedUrl(url);
+			setTimeout(() => setCopiedUrl(null), 1500);
+		} catch {
+			/* clipboard not available */
+		}
+	}, []);
+
+	const parts = text.split(URL_REGEX);
+
+	return (
+		<>
+			{parts.map((part, i) => {
+				if (URL_REGEX.test(part)) {
+					URL_REGEX.lastIndex = 0;
+					const href = part.startsWith("www.") ? `https://${part}` : part;
+					const isCopied = copiedUrl === part;
+
+					return (
+						<span
+							key={`${part}-${i}`}
+							className="inline-flex items-center gap-1 my-0.5"
+						>
+							<a
+								href={href}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-700 text-xs font-semibold rounded-lg border border-indigo-100 hover:border-indigo-200 transition-all !no-underline"
+								title={href}
+							>
+								<ExternalLink className="w-3 h-3 shrink-0" />
+								{shortenUrl(part)}
+							</a>
+							<button
+								type="button"
+								onClick={(e) => handleCopy(e, part)}
+								className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-90"
+								title="Copy link"
+							>
+								{isCopied ? (
+									<Check className="w-3 h-3 text-emerald-500" />
+								) : (
+									<Copy className="w-3 h-3" />
+								)}
+							</button>
+						</span>
+					);
+				}
+				return part;
+			})}
+		</>
+	);
+}
 
 export default function RemindersView({
 	initialReminders,
@@ -30,6 +118,7 @@ export default function RemindersView({
 
 	const handleAdd = () => {
 		if (!text.trim() || isOverLimit || isPending) return;
+
 		startTransition(async () => {
 			try {
 				const { success, reminder } = await addReminder(text, ttl);
@@ -60,6 +149,28 @@ export default function RemindersView({
 				}
 			} catch (error) {
 				console.error("Failed to delete reminder", error);
+			}
+		});
+	};
+
+	const handleExtend = (id: string, extendBy: ReminderTTL) => {
+		if (isPending) return;
+		startTransition(async () => {
+			try {
+				const { success, reminder } = await extendReminder(id, extendBy);
+				if (success && reminder) {
+					setReminders((prev) =>
+						prev
+							.map((r) => (r.id === id ? reminder : r))
+							.sort(
+								(a, b) =>
+									new Date(a.expiresAt).getTime() -
+									new Date(b.expiresAt).getTime(),
+							),
+					);
+				}
+			} catch (error) {
+				console.error("Failed to extend reminder", error);
 			}
 		});
 	};
@@ -110,8 +221,8 @@ export default function RemindersView({
 						</div>
 					</div>
 
-					<div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-						<div className="flex bg-slate-50 p-1 rounded-full border border-slate-200/80 self-start sm:self-auto w-full sm:w-auto">
+					<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+						<div className="flex flex-wrap sm:flex-nowrap bg-slate-50 p-1 rounded-2xl sm:rounded-full border border-slate-200/80 w-full sm:w-auto gap-1 sm:gap-0">
 							{ttlOptions.map((opt) => {
 								const Icon = opt.icon;
 								const isActive = ttl === opt.value;
@@ -120,7 +231,7 @@ export default function RemindersView({
 										key={opt.value}
 										type="button"
 										onClick={() => setTtl(opt.value)}
-										className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all ${
+										className={`grow sm:grow-0 basis-[48%] sm:basis-auto flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 rounded-xl sm:rounded-full text-[11px] sm:text-xs font-bold transition-all ${
 											isActive
 												? "bg-white text-indigo-600 shadow-sm border border-slate-200/60"
 												: "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
@@ -182,11 +293,11 @@ export default function RemindersView({
 										<div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-rose-400 opacity-80" />
 									)}
 
-									<p className="text-sm font-medium text-slate-800 mb-6 leading-relaxed whitespace-pre-wrap">
-										{reminder.text}
+									<p className="text-sm font-medium text-slate-800 mb-6 leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+										<LinkifiedText text={reminder.text} />
 									</p>
 
-									<div className="flex items-center justify-between mt-auto">
+									<div className="flex flex-wrap items-center justify-between mt-auto gap-3 pt-2">
 										<div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400">
 											{isExpiringSoon ? (
 												<AlertCircle className="w-3.5 h-3.5 text-amber-500" />
@@ -198,14 +309,42 @@ export default function RemindersView({
 											</span>
 										</div>
 
-										<button
-											onClick={() => handleDelete(reminder.id)}
-											disabled={isPending}
-											className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-											title="Delete reminder"
-										>
-											<Trash2 className="w-4 h-4" />
-										</button>
+										<div className="flex items-center gap-1">
+											<div className="flex items-center gap-0.5 bg-slate-50 border border-slate-100 rounded-lg p-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+												<button
+													onClick={() => handleExtend(reminder.id, "day")}
+													disabled={isPending}
+													className="px-2 py-1 text-[10px] font-extrabold text-slate-500 hover:text-indigo-600 hover:bg-indigo-100 rounded transition-colors"
+													title="Extend 1 Day"
+												>
+													+1D
+												</button>
+												<button
+													onClick={() => handleExtend(reminder.id, "week")}
+													disabled={isPending}
+													className="px-2 py-1 text-[10px] font-extrabold text-slate-500 hover:text-indigo-600 hover:bg-indigo-100 rounded transition-colors"
+													title="Extend 1 Week"
+												>
+													+1W
+												</button>
+												<button
+													onClick={() => handleExtend(reminder.id, "month")}
+													disabled={isPending}
+													className="px-2 py-1 text-[10px] font-extrabold text-slate-500 hover:text-indigo-600 hover:bg-indigo-100 rounded transition-colors"
+													title="Extend 1 Month"
+												>
+													+1M
+												</button>
+											</div>
+											<button
+												onClick={() => handleDelete(reminder.id)}
+												disabled={isPending}
+												className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+												title="Delete reminder"
+											>
+												<Trash2 className="w-4 h-4" />
+											</button>
+										</div>
 									</div>
 								</div>
 							);

@@ -15,7 +15,6 @@ import {
 import { Sparkles } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import pkg from "@/package.json";
-import ContactForm from "./ContactForm";
 
 export default function ContactView() {
 	const reduceMotion = useReducedMotion();
@@ -102,196 +101,184 @@ export default function ContactView() {
 
 	return (
 		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
-			<div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10 my-auto">
-				{/* ── Left Column: Personal Context & Channels ── */}
-				<div className="lg:col-span-6 space-y-5 sm:space-y-6">
-					{/* Micro-Interaction Top Badge */}
-					<motion.div
-						initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.4 }}
-						className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs"
-					>
-						<Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
-						<span>Let's Connect & Collaborate</span>
-					</motion.div>
+			<div className="max-w-2xl w-full space-y-5 sm:space-y-6 relative z-10 my-auto">
+				{/* Micro-Interaction Top Badge */}
+				<motion.div
+					initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.4 }}
+					className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs"
+				>
+					<Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+					<span>Let's Connect & Collaborate</span>
+				</motion.div>
 
-					{/* Title Section */}
-					<motion.div
-						initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.05 }}
-						className="space-y-2 sm:space-y-3"
-					>
-						<h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
-							Get in <span className="text-indigo-600">Touch.</span>
-						</h1>
-						<p className="text-xs sm:text-base text-slate-600 font-semibold leading-relaxed max-w-lg">
-							Have an interesting project, collaboration proposal, or just want
-							to chat about engineering and fintech? Drop me a line through the
-							form or reach out via any preferred channel.
-						</p>
-					</motion.div>
+				{/* Title Section */}
+				<motion.div
+					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.5, delay: 0.05 }}
+					className="space-y-2 sm:space-y-3"
+				>
+					<h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
+						Get in <span className="text-indigo-600">Touch.</span>
+					</h1>
+					<p className="text-xs sm:text-base text-slate-600 font-semibold leading-relaxed max-w-xl">
+						Have an interesting project, collaboration proposal, or just want to
+						chat about engineering and fintech? Reach out via any preferred
+						channel below.
+					</p>
+				</motion.div>
 
-					{/* Interactive Status & Time Panel */}
-					<motion.div
-						initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.1 }}
-						className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs"
-					>
-						<div className="flex items-center gap-2.5">
-							<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
-								<FaGlobeAsia className="text-xs text-indigo-600" />
-							</div>
-							<div>
-								<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-									Location
-								</p>
-								<p className="text-xs font-extrabold text-slate-900">
-									Toba, ID
-								</p>
-							</div>
+				{/* Interactive Status & Time Panel */}
+				<motion.div
+					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.5, delay: 0.1 }}
+					className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs"
+				>
+					<div className="flex items-center gap-2.5">
+						<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
+							<FaGlobeAsia className="text-xs text-indigo-600" />
 						</div>
-
-						<div className="flex items-center gap-2.5">
-							<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
-								<FaClock className="text-xs text-indigo-600 animate-spin-slow" />
-							</div>
-							<div>
-								<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-									Local Time
-								</p>
-								<p className="font-mono text-xs font-extrabold text-slate-900 truncate">
-									{localTime || "--:--:--"}
-								</p>
-							</div>
+						<div>
+							<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+								Location
+							</p>
+							<p className="text-xs font-extrabold text-slate-900">Toba, ID</p>
 						</div>
-
-						<div className="col-span-2 sm:col-span-1 flex items-center gap-2.5">
-							<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0 relative">
-								<div className={`w-2 h-2 rounded-full ${statusChip.color}`} />
-								<div
-									className={`absolute w-2 h-2 rounded-full ${statusChip.color} animate-ping opacity-75`}
-								/>
-							</div>
-							<div>
-								<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-									Current Status
-								</p>
-								<p className="text-xs font-extrabold text-slate-900 truncate">
-									{statusChip.label}
-								</p>
-							</div>
-						</div>
-					</motion.div>
-
-					{/* Flat Sleek Contact Links (Observer grid layout) */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-						{contactLinks.map((item, index) => (
-							<motion.div
-								key={item.label}
-								initial={reduceMotion ? false : { opacity: 0, scale: 0.97 }}
-								animate={{ opacity: 1, scale: 1 }}
-								transition={{ delay: 0.15 + index * 0.05, duration: 0.4 }}
-								className="group relative"
-							>
-								<div className="relative bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200/80 flex flex-col justify-between h-full hover:border-slate-300 hover:shadow-xs transition-all duration-300">
-									<div className="flex justify-between items-start mb-2">
-										<div
-											className={`p-1.5 rounded-lg border ${item.color} shrink-0`}
-										>
-											<item.icon className="text-xs" />
-										</div>
-
-										{item.isCopyable ? (
-											<button
-												onClick={handleCopyEmail}
-												className="p-1 text-slate-400 hover:text-slate-900 transition-colors hover:bg-slate-100 rounded-md cursor-pointer"
-												title="Copy Email"
-												aria-label="Copy email address to clipboard"
-											>
-												{copied ? (
-													<FaCheck className="w-3.5 h-3.5 text-emerald-600" />
-												) : (
-													<FaRegCopy className="w-3.5 h-3.5" />
-												)}
-											</button>
-										) : (
-											<a
-												href={item.href}
-												target="_blank"
-												rel="noopener noreferrer"
-												className="p-1 text-slate-400 hover:text-slate-900 transition-colors hover:bg-slate-100 rounded-md flex items-center justify-center cursor-pointer"
-												aria-label={`Open ${item.label} profile in a new tab`}
-											>
-												<svg
-													className="w-3.5 h-3.5"
-													fill="none"
-													viewBox="0 0 24 24"
-													stroke="currentColor"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														strokeWidth={2.5}
-														d="M14 5l7 7m0 0l-7 7m7-7H3"
-													/>
-												</svg>
-											</a>
-										)}
-									</div>
-
-									<div>
-										<h3 className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
-											{item.label}
-										</h3>
-										{item.isCopyable ? (
-											<button
-												onClick={handleCopyEmail}
-												className="text-xs font-extrabold text-slate-900 hover:text-indigo-600 transition-colors block truncate w-full text-left cursor-pointer"
-											>
-												{item.value}
-											</button>
-										) : (
-											<a
-												href={item.href}
-												target="_blank"
-												rel="noopener noreferrer"
-												className="text-xs font-extrabold text-slate-900 hover:text-indigo-600 transition-colors block truncate !no-underline cursor-pointer"
-											>
-												{item.value}
-											</a>
-										)}
-									</div>
-								</div>
-							</motion.div>
-						))}
 					</div>
 
-					{/* Version Info */}
-					<motion.div
-						initial={reduceMotion ? false : { opacity: 0 }}
-						animate={{ opacity: 1 }}
-						transition={{ delay: 0.4 }}
-						className="pt-0.5 flex justify-start"
-					>
-						<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs">
-							<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-							<span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-								System Version{" "}
-								<span className="text-slate-900 font-extrabold">
-									v{version}
-								</span>
-							</span>
+					<div className="flex items-center gap-2.5">
+						<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
+							<FaClock className="text-xs text-indigo-600 animate-spin-slow" />
 						</div>
-					</motion.div>
+						<div>
+							<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+								Local Time
+							</p>
+							<p className="font-mono text-xs font-extrabold text-slate-900 truncate">
+								{localTime || "--:--:--"}
+							</p>
+						</div>
+					</div>
+
+					<div className="col-span-2 sm:col-span-1 flex items-center gap-2.5">
+						<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0 relative">
+							<div className={`w-2 h-2 rounded-full ${statusChip.color}`} />
+							<div
+								className={`absolute w-2 h-2 rounded-full ${statusChip.color} animate-ping opacity-75`}
+							/>
+						</div>
+						<div>
+							<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+								Current Status
+							</p>
+							<p className="text-xs font-extrabold text-slate-900 truncate">
+								{statusChip.label}
+							</p>
+						</div>
+					</div>
+				</motion.div>
+
+				{/* Flat Sleek Contact Links */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+					{contactLinks.map((item, index) => (
+						<motion.div
+							key={item.label}
+							initial={reduceMotion ? false : { opacity: 0, scale: 0.97 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ delay: 0.15 + index * 0.05, duration: 0.4 }}
+							className="group relative"
+						>
+							<div className="relative bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 flex flex-col justify-between h-full hover:border-slate-300 hover:shadow-xs transition-all duration-300">
+								<div className="flex justify-between items-start mb-2.5">
+									<div
+										className={`p-2 rounded-xl border ${item.color} shrink-0`}
+									>
+										<item.icon className="text-sm" />
+									</div>
+
+									{item.isCopyable ? (
+										<button
+											onClick={handleCopyEmail}
+											className="p-1.5 text-slate-400 hover:text-slate-900 transition-colors hover:bg-slate-100 rounded-lg cursor-pointer active:scale-95"
+											title="Copy Email"
+											aria-label="Copy email address to clipboard"
+										>
+											{copied ? (
+												<FaCheck className="w-3.5 h-3.5 text-emerald-600" />
+											) : (
+												<FaRegCopy className="w-3.5 h-3.5" />
+											)}
+										</button>
+									) : (
+										<a
+											href={item.href}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="p-1.5 text-slate-400 hover:text-slate-900 transition-colors hover:bg-slate-100 rounded-lg flex items-center justify-center cursor-pointer active:scale-95"
+											aria-label={`Open ${item.label} profile in a new tab`}
+										>
+											<svg
+												className="w-3.5 h-3.5"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2.5}
+													d="M14 5l7 7m0 0l-7 7m7-7H3"
+												/>
+											</svg>
+										</a>
+									)}
+								</div>
+
+								<div>
+									<h3 className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
+										{item.label}
+									</h3>
+									{item.isCopyable ? (
+										<button
+											onClick={handleCopyEmail}
+											className="text-xs sm:text-sm font-extrabold text-slate-900 hover:text-indigo-600 transition-colors block truncate w-full text-left cursor-pointer"
+										>
+											{item.value}
+										</button>
+									) : (
+										<a
+											href={item.href}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="text-xs sm:text-sm font-extrabold text-slate-900 hover:text-indigo-600 transition-colors block truncate !no-underline cursor-pointer"
+										>
+											{item.value}
+										</a>
+									)}
+								</div>
+							</div>
+						</motion.div>
+					))}
 				</div>
 
-				{/* ── Right Column: Interactive Form ── */}
-				<div className="lg:col-span-6 flex justify-center lg:justify-end">
-					<ContactForm />
-				</div>
+				{/* Version Info */}
+				<motion.div
+					initial={reduceMotion ? false : { opacity: 0 }}
+					animate={{ opacity: 1 }}
+					transition={{ delay: 0.35 }}
+					className="pt-1 flex justify-start"
+				>
+					<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs">
+						<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+						<span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+							System Version{" "}
+							<span className="text-slate-900 font-extrabold">v{version}</span>
+						</span>
+					</div>
+				</motion.div>
 			</div>
 
 			{/* Copy Toast Alert */}

@@ -32,10 +32,10 @@ export default async function AdminRemindersPage() {
 							<h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
 								Quick Reminders
 							</h1>
-							<div className="flex items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-slate-400">
+							<div className="flex items-center justify-center sm:justify-start gap-2 text-xs font-semibold !text-white">
 								<Link
 									href="/admin"
-									className="hover:text-white transition-colors"
+									className="!text-white hover:!text-white text-white/80 transition-colors"
 								>
 									System Root
 								</Link>

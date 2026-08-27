@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
-import { Varela_Round, JetBrains_Mono } from "next/font/google";
+import { Varela_Round, JetBrains_Mono, Montserrat } from "next/font/google";
 import "./globals.css";
 import CompactBottomBar from "@/features/shared/components/CompactBottomBar";
 import NavigationLoader from "@/features/shared/components/NavigationLoader";
@@ -34,6 +34,13 @@ const jetbrainsMono = JetBrains_Mono({
 	display: "swap",
 });
 
+// Display font - Montserrat
+const montserrat = Montserrat({
+	subsets: ["latin"],
+	variable: "--font-montserrat",
+	display: "swap",
+});
+
 export default function RootLayout({
 	children,
 }: Readonly<{
@@ -59,7 +66,7 @@ export default function RootLayout({
 				/>
 			</head>
 			<body
-				className={`${varela.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
+				className={`${varela.variable} ${jetbrainsMono.variable} ${montserrat.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
 				suppressHydrationWarning
 			>
 				<AuthProvider>

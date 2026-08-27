@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@theme {
+	--font-montserrat: var(--font-montserrat), "Montserrat", sans-serif;
+}
+
 /* ============================================================================
    THEME VARIABLES (Light & Dark Mode)
    ============================================================================ */

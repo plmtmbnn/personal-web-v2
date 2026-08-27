@@ -9,7 +9,6 @@ import {
 	Flame,
 	Mountain,
 	Calendar,
-	ExternalLink,
 	CheckCircle,
 	ShieldAlert,
 	TrendingUp,
@@ -226,6 +225,37 @@ export default function RunningView({
 		currentClientId && currentSiteUrl
 			? `https://www.strava.com/oauth/authorize?client_id=${currentClientId}&redirect_uri=${currentSiteUrl}/api/strava/callback&response_type=code&scope=activity:read_all`
 			: null;
+
+	// Deep link auto-open when URL has ?activity=<id>
+	useEffect(() => {
+		if (!mounted) return;
+		const activityId = searchParams.get("activity");
+		if (activityId && rawRuns.length > 0) {
+			const found = rawRuns.find((r) => String(r.id) === String(activityId));
+			if (found) {
+				setSelectedActivity(found);
+			}
+		}
+	}, [searchParams, mounted, rawRuns]);
+
+	const handleOpenActivity = (run: StravaRunActivity) => {
+		setSelectedActivity(run);
+		if (typeof window !== "undefined") {
+			const url = new URL(window.location.href);
+			url.searchParams.set("activity", String(run.id));
+			window.history.replaceState({}, "", url.toString());
+		}
+	};
+
+	const handleCloseActivity = () => {
+		setSelectedActivity(null);
+		if (typeof window !== "undefined") {
+			const url = new URL(window.location.href);
+			url.searchParams.delete("activity");
+			const newUrl = url.pathname + (url.search ? url.search : "");
+			window.history.replaceState({}, "", newUrl);
+		}
+	};
 
 	// Reset pagination on filter or search changes
 	const handleSearchChange = (query: string) => {
@@ -872,38 +902,26 @@ export default function RunningView({
 												}
 												animate={{ opacity: 1, y: 0 }}
 												transition={{ delay: 0.04 * idx, duration: 0.35 }}
-												onClick={() => setSelectedActivity(run)}
+												onClick={() => handleOpenActivity(run)}
 												role="button"
 												tabIndex={0}
 												onKeyDown={(e) => {
 													if (e.key === "Enter" || e.key === " ") {
 														e.preventDefault();
-														setSelectedActivity(run);
+														handleOpenActivity(run);
 													}
 												}}
 												className="p-5 sm:p-6 bg-white border border-slate-200/80 hover:border-emerald-300 rounded-2xl transition-all duration-300 group flex flex-col justify-between h-full shadow-xs hover:shadow-xl hover:shadow-emerald-950/5 hover:-translate-y-1 relative overflow-hidden cursor-pointer text-left focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
 											>
 												<div className="space-y-4 relative z-10">
-													<div className="flex justify-between items-start gap-2">
-														<div className="space-y-1">
-															<p className="text-sm sm:text-base font-extrabold text-slate-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
-																{run.name}
-															</p>
-															<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-																<Calendar className="w-3.5 h-3.5 text-emerald-600" />
-																<span>{formattedDate}</span>
-															</div>
+													<div className="space-y-1">
+														<p className="text-sm sm:text-base font-extrabold text-slate-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
+															{run.name}
+														</p>
+														<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+															<Calendar className="w-3.5 h-3.5 text-emerald-600" />
+															<span>{formattedDate}</span>
 														</div>
-														<a
-															href={`https://www.strava.com/activities/${run.id}`}
-															target="_blank"
-															rel="noopener noreferrer"
-															onClick={(e) => e.stopPropagation()}
-															className="p-2 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl text-slate-500 transition-all duration-200 flex items-center justify-center border border-slate-200/60 cursor-pointer shrink-0 shadow-2xs"
-															title="View on Strava"
-														>
-															<ExternalLink className="w-3.5 h-3.5" />
-														</a>
 													</div>
 
 													<div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
@@ -1146,7 +1164,7 @@ export default function RunningView({
 			{/* Focused Activity Detail Modal */}
 			<ActivityDetailModal
 				activity={selectedActivity}
-				onClose={() => setSelectedActivity(null)}
+				onClose={handleCloseActivity}
 			/>
 		</main>
 	);

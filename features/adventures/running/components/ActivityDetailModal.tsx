@@ -9,7 +9,6 @@ import {
 	Zap,
 	Clock,
 	Flame,
-	ExternalLink,
 	BarChart3,
 	Check,
 	ImageIcon,
@@ -18,6 +17,7 @@ import {
 	Mountain,
 	Sun,
 	Moon,
+	Share2,
 } from "lucide-react";
 import { format } from "date-fns";
 import type {
@@ -39,19 +39,19 @@ interface ActivityDetailModalProps {
 // Shared Canvas Typography Constants
 // ──────────────────────────────────────────────
 const FONT = {
-	hero: "900 72px 'SF Pro Display', 'Inter', system-ui, sans-serif",
-	heroUnit: "700 20px 'SF Pro Display', 'Inter', system-ui, sans-serif",
-	title: "800 16px 'SF Pro Display', 'Inter', system-ui, sans-serif",
-	subtitle: "700 11px 'SF Pro Display', 'Inter', system-ui, sans-serif",
-	label: "800 9px 'SF Pro Display', 'Inter', system-ui, sans-serif",
-	statValue: "900 22px 'SF Mono', 'JetBrains Mono', monospace",
-	statLabel: "700 9px 'SF Pro Display', 'Inter', system-ui, sans-serif",
-	splitKm: "900 11px 'SF Mono', 'JetBrains Mono', monospace",
-	splitPace: "800 10px 'SF Mono', 'JetBrains Mono', monospace",
-	splitHr: "700 9px 'SF Mono', 'JetBrains Mono', monospace",
-	watermark: "600 9px 'SF Pro Display', 'Inter', system-ui, sans-serif",
-	summaryBold: "900 13px 'SF Mono', 'JetBrains Mono', monospace",
-	badge: "900 10px 'SF Pro Display', 'Inter', system-ui, sans-serif",
+	hero: "900 72px 'Montserrat', sans-serif",
+	heroUnit: "700 20px 'Montserrat', sans-serif",
+	title: "800 16px 'Montserrat', sans-serif",
+	subtitle: "700 11px 'Montserrat', sans-serif",
+	label: "800 9px 'Montserrat', sans-serif",
+	statValue: "900 22px 'Montserrat', sans-serif",
+	statLabel: "700 9px 'Montserrat', sans-serif",
+	splitKm: "900 11px 'Montserrat', sans-serif",
+	splitPace: "800 10px 'Montserrat', sans-serif",
+	splitHr: "700 9px 'Montserrat', sans-serif",
+	watermark: "600 9px 'Montserrat', sans-serif",
+	summaryBold: "900 13px 'Montserrat', sans-serif",
+	badge: "900 10px 'Montserrat', sans-serif",
 };
 
 type CanvasTheme = "light" | "dark";
@@ -61,54 +61,18 @@ type CanvasTheme = "light" | "dark";
 // ──────────────────────────────────────────────
 const THEME_COLORS = {
 	light: {
-		primary: "#0a0a0a",
-		muted: "#a1a1aa",
-		divider: "#d4d4d8",
-		barTrack: "rgba(0, 0, 0, 0.06)",
-		barFill: "#0a0a0a",
+		primary: "#000000",
+		divider: "#000000",
+		barTrack: "rgba(0, 0, 0, 0.08)",
+		barFill: "#000000",
 	},
 	dark: {
-		primary: "#f5f5f5",
-		muted: "#71717a",
-		divider: "#3f3f46",
-		barTrack: "rgba(255, 255, 255, 0.08)",
-		barFill: "#f5f5f5",
+		primary: "#ffffff",
+		divider: "#ffffff",
+		barTrack: "rgba(255, 255, 255, 0.12)",
+		barFill: "#ffffff",
 	},
 } as const;
-
-// ──────────────────────────────────────────────
-// Heart Rate Zone Colors (age 30 → max HR 190 bpm)
-// Zone 1: <114 (Recovery)  — gray/muted
-// Zone 2: 114–133 (Endurance) — blue
-// Zone 3: 133–152 (Tempo) — green
-// Zone 4: 152–171 (Threshold) — orange
-// Zone 5: >171 (VO2 Max) — red
-// ──────────────────────────────────────────────
-const HR_ZONES = {
-	light: {
-		z1: "#94a3b8", // gray
-		z2: "#3b82f6", // blue
-		z3: "#22c55e", // green
-		z4: "#f97316", // orange
-		z5: "#ef4444", // red
-	},
-	dark: {
-		z1: "#94a3b8",
-		z2: "#60a5fa",
-		z3: "#4ade80",
-		z4: "#fb923c",
-		z5: "#f87171",
-	},
-} as const;
-
-function getHrColor(hr: number, theme: CanvasTheme): string {
-	const z = HR_ZONES[theme];
-	if (hr < 114) return z.z1;
-	if (hr < 133) return z.z2;
-	if (hr < 152) return z.z3;
-	if (hr < 171) return z.z4;
-	return z.z5;
-}
 
 function getColors(theme: CanvasTheme) {
 	return THEME_COLORS[theme];
@@ -139,7 +103,7 @@ function drawCanvasRoundedRect(
 }
 
 // ──────────────────────────────────────────────
-// Canvas Exporter: Overview — Minimal 2-Color Instagram Sticker
+// Canvas Exporter: Overview — High-Contrast Flat Sticker
 // ──────────────────────────────────────────────
 function renderOverviewImageToCanvas(
 	activity: StravaRunActivity,
@@ -178,10 +142,6 @@ function renderOverviewImageToCanvas(
 		contentH += 12; // gap between stat rows
 		contentH += 38; // stat row 2 (elev + HR)
 	}
-	contentH += 20; // gap
-	contentH += 1; // second divider
-	contentH += 16; // gap below divider
-	contentH += 14; // title line
 
 	const H = contentH + pad * 2;
 
@@ -198,14 +158,14 @@ function renderOverviewImageToCanvas(
 
 	let y = pad;
 
-	// ── 1. Hero Distance (massive, no label)
+	// ── 1. Hero Distance
 	ctx.fillStyle = C.primary;
 	ctx.font = FONT.hero;
 	ctx.fillText(derived.distanceKm, pad - 4, y + 62);
 	y += 68 + 6;
 
 	// ── 2. Unit label
-	ctx.fillStyle = C.muted;
+	ctx.fillStyle = C.primary;
 	ctx.font = FONT.heroUnit;
 	ctx.letterSpacing = "6px";
 	ctx.fillText("KILOMETERS", pad, y + 14);
@@ -214,14 +174,14 @@ function renderOverviewImageToCanvas(
 
 	// ── 3. Horizontal divider
 	ctx.strokeStyle = C.divider;
-	ctx.lineWidth = 1;
+	ctx.lineWidth = 1.5;
 	ctx.beginPath();
 	ctx.moveTo(pad, y);
 	ctx.lineTo(pad + innerW, y);
 	ctx.stroke();
 	y += 1 + 20;
 
-	// ── 4. Stats Row 1: Pace + Time (always 2 columns, well spaced)
+	// ── 4. Stats Row 1: Pace + Time (always 2 columns)
 	const row1ColW = innerW / 2;
 	const row1Stats = [
 		{ value: derived.formattedPace, label: "PACE" },
@@ -232,7 +192,7 @@ function renderOverviewImageToCanvas(
 		ctx.fillStyle = C.primary;
 		ctx.font = FONT.statValue;
 		ctx.fillText(stat.value, sx, y + 18);
-		ctx.fillStyle = C.muted;
+		ctx.fillStyle = C.primary;
 		ctx.font = FONT.statLabel;
 		ctx.letterSpacing = "1.5px";
 		ctx.fillText(stat.label, sx, y + 34);
@@ -240,11 +200,10 @@ function renderOverviewImageToCanvas(
 	});
 	y += 38;
 
-	// ── 5. Stats Row 2: Elevation + HR (if available, separate row)
+	// ── 5. Stats Row 2: Elevation + HR (if available)
 	if (hasRow2) {
 		y += 12;
-		const row2Stats: Array<{ value: string; label: string; color?: string }> =
-			[];
+		const row2Stats: Array<{ value: string; label: string }> = [];
 
 		if (derived.hasElevation) {
 			row2Stats.push({
@@ -257,17 +216,16 @@ function renderOverviewImageToCanvas(
 			row2Stats.push({
 				value: `${avgHr}`,
 				label: "AVG HR",
-				color: getHrColor(avgHr, theme),
 			});
 		}
 
 		const row2ColW = innerW / Math.max(row2Stats.length, 1);
 		row2Stats.forEach((stat, i) => {
 			const sx = pad + i * row2ColW;
-			ctx.fillStyle = stat.color || C.primary;
+			ctx.fillStyle = C.primary;
 			ctx.font = FONT.statValue;
 			ctx.fillText(stat.value, sx, y + 18);
-			ctx.fillStyle = C.muted;
+			ctx.fillStyle = C.primary;
 			ctx.font = FONT.statLabel;
 			ctx.letterSpacing = "1.5px";
 			ctx.fillText(stat.label, sx, y + 34);
@@ -276,31 +234,11 @@ function renderOverviewImageToCanvas(
 		y += 38;
 	}
 
-	y += 20;
-
-	// ── 6. Second divider
-	ctx.strokeStyle = C.divider;
-	ctx.lineWidth = 1;
-	ctx.beginPath();
-	ctx.moveTo(pad, y);
-	ctx.lineTo(pad + innerW, y);
-	ctx.stroke();
-	y += 1 + 16;
-
-	// ── 7. Activity Title
-	ctx.fillStyle = C.primary;
-	ctx.font = FONT.title;
-	const titleText =
-		activity.name.length > 30
-			? `${activity.name.slice(0, 28)}…`
-			: activity.name;
-	ctx.fillText(titleText, pad, y + 12);
-
 	return canvas;
 }
 
 // ──────────────────────────────────────────────
-// Canvas Exporter: Splits — Multi-Column Pace Bars
+// Canvas Exporter: Splits — High-Contrast Multi-Column Pace Bars
 // ──────────────────────────────────────────────
 function renderSplitsImageToCanvas(
 	_activity: StravaRunActivity,
@@ -336,9 +274,10 @@ function renderSplitsImageToCanvas(
 	const innerW = colCount * colW + (colCount - 1) * colGap;
 	const W = innerW + pad * 2;
 
-	// Height: just splits block
+	// Header height & layout
+	const headerH = 14 + 8 + 1 + 12; // header text (14) + gap (8) + divider (1) + gap (12)
 	const splitsBlockH = rowsPerCol * splitRowH;
-	const H = pad * 2 + splitsBlockH;
+	const H = pad * 2 + headerH + splitsBlockH;
 
 	const canvas = document.createElement("canvas");
 	canvas.width = W * scale;
@@ -351,14 +290,51 @@ function renderSplitsImageToCanvas(
 	ctx.scale(scale, scale);
 	ctx.clearRect(0, 0, W, H);
 
+	let y = pad;
+
+	// ── 1. Column Headers (KM, Pace, HR/Time)
+	const hasHr = splitsToRender.some((s) => Boolean(s.heartrate));
+	ctx.fillStyle = C.primary;
+	ctx.font = FONT.statLabel;
+
+	for (let col = 0; col < colCount; col++) {
+		const colX = pad + col * (colW + colGap);
+		const barX = colX + kmW + 4;
+		const paceX = barX + barMaxW + 6;
+		const rightX = colX + colW;
+
+		// KM header
+		ctx.letterSpacing = "1.5px";
+		ctx.fillText("KM", colX, y + 11);
+
+		// Pace header
+		ctx.fillText("PACE", paceX, y + 11);
+
+		// HR / Time header
+		ctx.textAlign = "right";
+		ctx.fillText(hasHr ? "HR" : "TIME", rightX, y + 11);
+		ctx.textAlign = "left";
+		ctx.letterSpacing = "0px";
+	}
+	y += 14 + 8;
+
+	// ── 2. Horizontal Divider
+	ctx.strokeStyle = C.divider;
+	ctx.lineWidth = 1.5;
+	ctx.beginPath();
+	ctx.moveTo(pad, y);
+	ctx.lineTo(pad + innerW, y);
+	ctx.stroke();
+	y += 1 + 12;
+
 	// Compute pace range for bar scaling
 	const splitPaces = splitsToRender.map((s) => s.paceSeconds);
 	const minPace = splitPaces.length > 0 ? Math.min(...splitPaces) : 0;
 	const maxPace = splitPaces.length > 0 ? Math.max(...splitPaces) : 0;
 	const paceSpread = Math.max(maxPace - minPace, 1);
 
-	// ── Splits — multi-column layout with bars
-	const splitStartY = pad;
+	// ── 3. Splits — multi-column layout with bars
+	const splitStartY = y;
 
 	for (let col = 0; col < colCount; col++) {
 		const colX = pad + col * (colW + colGap);
@@ -372,7 +348,7 @@ function renderSplitsImageToCanvas(
 			const barCenterY = rowY + (splitRowH - barH) / 2;
 
 			// KM number
-			ctx.fillStyle = C.muted;
+			ctx.fillStyle = C.primary;
 			ctx.font = FONT.splitKm;
 			const kmLabel = item.distanceKm < 1 ? `${item.split}*` : `${item.split}`;
 			ctx.fillText(kmLabel, colX, rowY + splitRowH / 2 + 4);
@@ -401,16 +377,14 @@ function renderSplitsImageToCanvas(
 			ctx.font = FONT.splitPace;
 			ctx.fillText(item.paceFormatted, paceX, rowY + splitRowH / 2 + 4);
 
-			// HR (zone-colored) or moving time
+			// HR or moving time
 			ctx.textAlign = "right";
 			const rightX = colX + colW;
+			ctx.fillStyle = C.primary;
+			ctx.font = FONT.splitHr;
 			if (item.heartrate) {
-				ctx.fillStyle = getHrColor(item.heartrate, theme);
-				ctx.font = FONT.splitHr;
 				ctx.fillText(`${item.heartrate}`, rightX, rowY + splitRowH / 2 + 4);
 			} else {
-				ctx.fillStyle = C.muted;
-				ctx.font = FONT.splitHr;
 				ctx.fillText(
 					item.movingTimeFormatted,
 					rightX,
@@ -432,6 +406,7 @@ export default function ActivityDetailModal({
 	const [copiedTab, setCopiedTab] = useState<"overview" | "splits" | null>(
 		null,
 	);
+	const [copiedLink, setCopiedLink] = useState(false);
 	const [isCopying, setIsCopying] = useState(false);
 	const [exportTheme, setExportTheme] = useState<CanvasTheme>("light");
 	const [rawSplits, setRawSplits] = useState<StravaSplitMetric[] | null>(null);
@@ -628,6 +603,35 @@ export default function ActivityDetailModal({
 		[activity, derivedData, splits, isCopying, exportTheme],
 	);
 
+	// Copy direct activity deep-link URL to clipboard (without opening new page or tab)
+	const handleShare = useCallback(async () => {
+		if (!activity) return;
+
+		const shareUrl =
+			typeof window !== "undefined"
+				? `${window.location.origin}/adventures/running?activity=${activity.id}`
+				: `https://poltak.dev/adventures/running?activity=${activity.id}`;
+
+		try {
+			if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+				await navigator.clipboard.writeText(shareUrl);
+			} else {
+				const textarea = document.createElement("textarea");
+				textarea.value = shareUrl;
+				textarea.style.position = "fixed";
+				textarea.style.opacity = "0";
+				document.body.appendChild(textarea);
+				textarea.select();
+				document.execCommand("copy");
+				document.body.removeChild(textarea);
+			}
+			setCopiedLink(true);
+			setTimeout(() => setCopiedLink(false), 2200);
+		} catch (err) {
+			console.error("Failed to copy activity link:", err);
+		}
+	}, [activity]);
+
 	if (!activity || !derivedData) return null;
 
 	const {
@@ -686,14 +690,30 @@ export default function ActivityDetailModal({
 								</div>
 							</div>
 
-							<button
-								type="button"
-								onClick={onClose}
-								className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 active:scale-95"
-								aria-label="Close modal"
-							>
-								<X className="w-4 h-4" />
-							</button>
+							<div className="flex items-center gap-1 shrink-0">
+								<button
+									type="button"
+									onClick={handleShare}
+									className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 active:scale-95"
+									aria-label="Share activity"
+									title={copiedLink ? "Link Copied!" : "Share activity"}
+								>
+									{copiedLink ? (
+										<Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+									) : (
+										<Share2 className="w-4 h-4" />
+									)}
+								</button>
+
+								<button
+									type="button"
+									onClick={onClose}
+									className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 active:scale-95"
+									aria-label="Close modal"
+								>
+									<X className="w-4 h-4" />
+								</button>
+							</div>
 						</div>
 
 						{/* Segmented Tab Controls & Copy Image Button */}
@@ -1013,16 +1033,25 @@ export default function ActivityDetailModal({
 						</button>
 
 						<div className="flex items-center gap-2">
-							{/* Direct Strava Link */}
-							<a
-								href={`https://www.strava.com/activities/${activity.id}`}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-[#FC5200] hover:bg-[#E04800] !text-white text-xs font-black shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer !no-underline"
+							{/* Direct Copy Activity Link Button */}
+							<button
+								type="button"
+								onClick={handleShare}
+								className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer"
+								title="Copy direct link to this activity"
 							>
-								<span>Strava</span>
-								<ExternalLink className="w-3.5 h-3.5" />
-							</a>
+								{copiedLink ? (
+									<>
+										<Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
+										<span className="text-emerald-400">Link Copied!</span>
+									</>
+								) : (
+									<>
+										<Share2 className="w-3.5 h-3.5" />
+										<span>Copy Link</span>
+									</>
+								)}
+							</button>
 						</div>
 					</div>
 				</motion.div>

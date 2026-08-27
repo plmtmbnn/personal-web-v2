@@ -1,3 +1,10 @@
+# [0.79.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.78.0...v0.79.0) (2026-08-27)
+
+
+### Features
+
+* **running,contact:** update canvas stickers and streamline contact view ([6a560e4](https://github.com/plmtmbnn/personal-web-v2/commit/6a560e46d4d97a6bdeda94a774d7593f21854496))
+
 # [0.78.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.77.0...v0.78.0) (2026-08-26)
 
 

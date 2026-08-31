@@ -1,3 +1,10 @@
+# [0.80.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.79.0...v0.80.0) (2026-08-31)
+
+
+### Features
+
+* **travel,tasks:** add postcard sticker modal and enhance task progress ([e290fe7](https://github.com/plmtmbnn/personal-web-v2/commit/e290fe7ff9b8fdea5e35a4c88dfa5b32e99e3d23)), closes [hi#res](https://github.com/hi/issues/res)
+
 # [0.79.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.78.0...v0.79.0) (2026-08-27)
 
 

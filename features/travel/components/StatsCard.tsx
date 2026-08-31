@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { CheckCircle2, Compass, Sparkles, Star } from "lucide-react";
 
 interface StatsCardProps {
 	visited: number;
@@ -9,157 +10,154 @@ interface StatsCardProps {
 
 export default function StatsCard({ visited, total }: StatsCardProps) {
 	const reduceMotion = useReducedMotion();
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const percentage = total > 0 ? Math.round((visited / total) * 100) : 0;
+	const remaining = Math.max(0, total - visited);
 
-	// SVG ring calculations
-	const radius = 45;
+	// Ring calculations
+	const radius = 32;
 	const circumference = 2 * Math.PI * radius;
 	const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-	const getRingColor = (pct: number) => {
-		if (pct >= 80) return "stroke-emerald-500";
-		if (pct >= 50) return "stroke-blue-500";
-		if (pct >= 30) return "stroke-amber-500";
-		return "stroke-slate-400";
-	};
-
 	return (
 		<motion.div
-			initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ type: "spring", stiffness: 350, damping: 30 }}
-			className="bg-white border border-slate-200 rounded-[2.5rem] p-8 sm:p-10 shadow-sm"
+			className="bg-white border border-slate-200/80 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 lg:p-7 shadow-xl shadow-slate-200/40 relative overflow-hidden"
 		>
-			<div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-				{/* Left: Ring Progress Visualization */}
-				<div className="relative w-40 h-40 flex-shrink-0">
-					<svg
-						width="160"
-						height="160"
-						viewBox="0 0 120 120"
-						className="transform -rotate-90"
-					>
-						{/* Background circle */}
-						<circle
-							cx="60"
-							cy="60"
-							r={radius}
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="10"
-							className="text-slate-100"
-						/>
-						{/* Progress arc */}
-						<motion.circle
-							cx="60"
-							cy="60"
-							r={radius}
-							fill="none"
-							strokeWidth="10"
-							strokeLinecap="round"
-							initial={{
-								strokeDasharray: circumference,
-								strokeDashoffset: circumference,
-							}}
-							animate={{ strokeDashoffset: strokeDashoffset }}
-							transition={{
-								type: "spring",
-								stiffness: 350,
-								damping: 30,
-								duration: 1.5,
-							}}
-							className={getRingColor(percentage)}
-							style={{
-								strokeDasharray: circumference,
-								strokeDashoffset: strokeDashoffset,
-							}}
-						/>
-					</svg>
-					{/* Center content */}
-					<div className="absolute inset-0 flex flex-col items-center justify-center">
-						<span className="text-3xl font-black text-slate-900">
-							{visited}
-						</span>
-						<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-							exploded
-						</span>
+			<div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 lg:gap-8">
+				{/* Left: Compact Ring + Milestone Narrative */}
+				<div className="flex items-center gap-5 sm:gap-6 w-full lg:w-auto min-w-0">
+					{/* Precision Progress Ring */}
+					<div className="relative w-20 h-20 shrink-0">
+						<svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
+							<circle
+								cx="40"
+								cy="40"
+								r={radius}
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="6"
+								className="text-slate-100"
+							/>
+							<motion.circle
+								cx="40"
+								cy="40"
+								r={radius}
+								fill="none"
+								strokeWidth="6"
+								strokeLinecap="round"
+								initial={
+									reduceMotion
+										? false
+										: {
+												strokeDasharray: circumference,
+												strokeDashoffset: circumference,
+											}
+								}
+								animate={{ strokeDashoffset }}
+								transition={{
+									type: "spring",
+									stiffness: 300,
+									damping: 30,
+									delay: 0.2,
+								}}
+								className="text-emerald-600"
+								style={{
+									strokeDasharray: circumference,
+									strokeDashoffset,
+								}}
+							/>
+						</svg>
+						<div className="absolute inset-0 flex flex-col items-center justify-center">
+							<span className="text-base font-black text-slate-900 leading-none">
+								{percentage}%
+							</span>
+							<span className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400 mt-0.5">
+								Done
+							</span>
+						</div>
+					</div>
+
+					{/* Title & Description */}
+					<div className="space-y-1 min-w-0">
+						<div className="flex items-center gap-2">
+							<span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1">
+								<Sparkles className="w-3 h-3 text-emerald-600" />
+								Exploration Progress
+							</span>
+						</div>
+						<h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+							{visited}{" "}
+							<span className="text-slate-400 font-bold text-base sm:text-lg">
+								/ {total} destinations explored
+							</span>
+						</h3>
+						<p className="text-xs text-slate-500 font-medium line-clamp-1">
+							{remaining === 0
+								? "All bucket list destinations achieved! World unlocked."
+								: `${remaining} more planned adventures waiting to be charted.`}
+						</p>
 					</div>
 				</div>
 
-				{/* Right: Stats Grid */}
-				<div className="flex-1 w-full space-y-6">
-					<div className="space-y-2">
-						<h3 className="text-slate-500 text-sm font-bold uppercase tracking-widest">
-							Adventure Progress
-						</h3>
-						<div className="flex items-baseline gap-2">
-							<span className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter">
+				{/* Divider for Desktop */}
+				<div className="hidden lg:block w-px self-stretch bg-slate-200/80 my-1 shrink-0" />
+
+				{/* Right: Classy Metric Tiles & Progress bar */}
+				<div className="w-full lg:w-auto lg:min-w-[340px] xl:min-w-[380px] space-y-3">
+					{/* Stat Tiles */}
+					<div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+						<div className="p-3 bg-emerald-50/70 border border-emerald-100/80 rounded-2xl min-w-0">
+							<div className="flex items-center gap-1 text-emerald-700 mb-1 truncate">
+								<CheckCircle2 className="w-3 h-3 text-emerald-600 stroke-[2.5] shrink-0" />
+								<span className="text-[9px] font-extrabold uppercase tracking-wider truncate">
+									Explored
+								</span>
+							</div>
+							<p className="text-lg sm:text-xl font-black text-emerald-900 leading-none">
 								{visited}
-							</span>
-							<span className="text-slate-400 font-bold text-lg">
-								/ {total} places explored
-							</span>
+							</p>
 						</div>
-					</div>
 
-					{/* Progress bar */}
-					<div className="space-y-2">
-						<div className="flex justify-between text-sm font-bold">
-							<span className="text-slate-600">Completion Rate</span>
-							<span
-								className={`font-black ${
-									percentage >= 80
-										? "text-emerald-600"
-										: percentage >= 50
-											? "text-blue-600"
-											: percentage >= 30
-												? "text-amber-600"
-												: "text-slate-600"
-								}`}
-							>
+						<div className="p-3 bg-amber-50/70 border border-amber-100/80 rounded-2xl min-w-0">
+							<div className="flex items-center gap-1 text-amber-700 mb-1 truncate">
+								<Star className="w-3 h-3 text-amber-600 fill-amber-600 shrink-0" />
+								<span className="text-[9px] font-extrabold uppercase tracking-wider truncate">
+									Wishlist
+								</span>
+							</div>
+							<p className="text-lg sm:text-xl font-black text-amber-900 leading-none">
+								{remaining}
+							</p>
+						</div>
+
+						<div className="p-3 bg-slate-900 border border-slate-800 rounded-2xl min-w-0">
+							<div className="flex items-center gap-1 text-slate-300 mb-1 truncate">
+								<Compass className="w-3 h-3 text-emerald-400 shrink-0" />
+								<span className="text-[9px] font-extrabold uppercase tracking-wider truncate">
+									Rate
+								</span>
+							</div>
+							<p className="text-lg sm:text-xl font-black text-white leading-none">
 								{percentage}%
-							</span>
-						</div>
-						<div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-							<motion.div
-								initial={safeReduceMotion ? false : { width: 0 }}
-								animate={{ width: `${percentage}%` }}
-								transition={{
-									type: "spring",
-									stiffness: 350,
-									damping: 30,
-									delay: 0.3,
-								}}
-								className={`h-full rounded-full ${
-									percentage >= 80
-										? "bg-emerald-500"
-										: percentage >= 50
-											? "bg-blue-500"
-											: percentage >= 30
-												? "bg-amber-500"
-												: "bg-slate-400"
-								}`}
-							/>
+							</p>
 						</div>
 					</div>
 
-					{/* Stats pills */}
-					<div className="grid grid-cols-2 gap-3">
-						<div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
-							<p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-1">
-								Visited
-							</p>
-							<p className="text-lg font-black text-emerald-700">{visited}</p>
-						</div>
-						<div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-							<p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">
-								Remaining
-							</p>
-							<p className="text-lg font-black text-slate-700">
-								{total - visited}
-							</p>
-						</div>
+					{/* Sleek Gradient Progress Bar */}
+					<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+						<motion.div
+							initial={reduceMotion ? false : { width: 0 }}
+							animate={{ width: `${percentage}%` }}
+							transition={{
+								type: "spring",
+								stiffness: 300,
+								damping: 30,
+								delay: 0.3,
+							}}
+							className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500 rounded-full"
+						/>
 					</div>
 				</div>
 			</div>

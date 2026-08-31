@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import {
+	startOfMonth,
+	endOfMonth,
+	subMonths,
+	addMonths,
+	format,
+} from "date-fns";
 import PinGuard from "@/features/auth/PinGuard";
 import TasksView from "@/features/tasks/components/agenda/TasksView";
 import { getTasks } from "@/features/tasks/actions/tasks";
@@ -52,12 +58,13 @@ export default async function TasksPage({ searchParams }: PageProps) {
 	const priority = params.priority as TaskPriority | undefined;
 
 	// 2. Data Fetching
+	// Fetch from past month (for execution history) through future months (for upcoming awareness)
 	const today = new Date();
-	const monthStart = startOfMonth(today);
-	const monthEnd = endOfMonth(today);
+	const rangeStart = startOfMonth(subMonths(today, 1));
+	const rangeEnd = endOfMonth(addMonths(today, 6));
 
-	const startDate = date || format(monthStart, "yyyy-MM-dd");
-	const endDate = date || format(monthEnd, "yyyy-MM-dd");
+	const startDate = date || format(rangeStart, "yyyy-MM-dd");
+	const endDate = date || format(rangeEnd, "yyyy-MM-dd");
 
 	const tasks = await getTasks({
 		startDate,

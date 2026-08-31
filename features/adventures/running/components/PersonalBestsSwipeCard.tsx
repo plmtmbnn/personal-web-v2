@@ -17,11 +17,12 @@ import {
 	Mountain,
 	Route,
 	Activity,
+	CheckCircle,
 } from "lucide-react";
 import { personalBests } from "../data/personal-bests";
 
-const SWIPE_THRESHOLD = 50;
-const VELOCITY_THRESHOLD = 300;
+const SWIPE_THRESHOLD = 40;
+const VELOCITY_THRESHOLD = 250;
 
 const getInitialIndex = () => {
 	const highestIndex = personalBests.findIndex((item) => item.isHighest);
@@ -44,7 +45,7 @@ function calculateSpeed(timeStr: string, distanceKm: number): string {
 
 export default function PersonalBestsSwipeCard() {
 	const reduceMotion = useReducedMotion();
-	const shouldReduceMotion = reduceMotion === true;
+	const shouldReduceMotion = Boolean(reduceMotion);
 
 	const [currentIndex, setCurrentIndex] = useState<number>(getInitialIndex());
 	const [direction, setDirection] = useState<number>(0);
@@ -104,9 +105,9 @@ export default function PersonalBestsSwipeCard() {
 
 	const slideVariants = {
 		enter: (dir: number) => ({
-			x: shouldReduceMotion ? 0 : dir > 0 ? 80 : -80,
+			x: shouldReduceMotion ? 0 : dir > 0 ? 60 : -60,
 			opacity: 0,
-			scale: shouldReduceMotion ? 1 : 0.96,
+			scale: shouldReduceMotion ? 1 : 0.98,
 		}),
 		center: {
 			x: 0,
@@ -119,21 +120,21 @@ export default function PersonalBestsSwipeCard() {
 			},
 		},
 		exit: (dir: number) => ({
-			x: shouldReduceMotion ? 0 : dir > 0 ? -80 : 80,
+			x: shouldReduceMotion ? 0 : dir > 0 ? -60 : 60,
 			opacity: 0,
-			scale: shouldReduceMotion ? 1 : 0.96,
+			scale: shouldReduceMotion ? 1 : 0.98,
 			transition: {
-				duration: 0.2,
+				duration: 0.18,
 				ease: "easeInOut" as const,
 			},
 		}),
 	};
 
 	return (
-		<div className="w-full bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 shadow-xs hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 space-y-6 select-none relative overflow-hidden">
+		<div className="w-full bg-white border border-slate-200/80 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-7 shadow-xl shadow-slate-200/40 space-y-6 select-none relative overflow-hidden">
 			{/* Ambient Glowing Backdrop Accent */}
 			<div
-				className={`absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br ${currentItem.bgGlow} rounded-full blur-3xl pointer-events-none opacity-60 transition-all duration-700`}
+				className={`absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br ${currentItem.bgGlow} rounded-full blur-3xl pointer-events-none opacity-50 transition-all duration-700`}
 			/>
 
 			{/* ═══════════════════════════════════════
@@ -141,19 +142,19 @@ export default function PersonalBestsSwipeCard() {
 			═══════════════════════════════════════ */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10 pb-4 border-b border-slate-100">
 				<div className="flex items-center gap-3">
-					<div className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 border border-amber-500/20 shadow-xs">
+					<div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">
 						<Trophy className="w-5 h-5 text-amber-500" />
 					</div>
 					<div>
 						<div className="flex items-center gap-2">
-							<h3 className="text-base font-extrabold text-slate-900 leading-tight">
+							<h3 className="text-base font-black text-slate-900 leading-tight tracking-tight">
 								Personal Bests
 							</h3>
-							<span className="px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
+							<span className="px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 text-[10px] font-black text-amber-700 uppercase tracking-wider">
 								All-Time Records
 							</span>
 						</div>
-						<p className="text-xs text-slate-500 font-medium">
+						<p className="text-xs text-slate-500 font-medium mt-0.5">
 							Key distance benchmarks & endurance milestones
 						</p>
 					</div>
@@ -165,7 +166,7 @@ export default function PersonalBestsSwipeCard() {
 						<button
 							type="button"
 							onClick={() => paginate(-1)}
-							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-xs"
+							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-2xs"
 							title="Previous Record (← Arrow Key)"
 							aria-label="Previous record"
 						>
@@ -174,7 +175,7 @@ export default function PersonalBestsSwipeCard() {
 						<button
 							type="button"
 							onClick={() => paginate(1)}
-							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-xs"
+							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-2xs"
 							title="Next Record (→ Arrow Key)"
 							aria-label="Next record"
 						>
@@ -182,7 +183,7 @@ export default function PersonalBestsSwipeCard() {
 						</button>
 					</div>
 
-					<span className="text-xs font-extrabold text-slate-700 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-xs tabular-nums">
+					<span className="text-xs font-black text-slate-700 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-2xs tabular-nums">
 						{currentIndex + 1} / {totalItems}
 					</span>
 				</div>
@@ -192,7 +193,7 @@ export default function PersonalBestsSwipeCard() {
 			    INTERACTIVE MILESTONE TRACK SELECTOR
 			═══════════════════════════════════════ */}
 			<div className="relative z-10">
-				<div className="grid grid-cols-5 gap-1.5 sm:gap-2 py-1">
+				<div className="grid grid-cols-5 gap-1.5 sm:gap-2">
 					{personalBests.map((item, idx) => {
 						const isActive = idx === currentIndex;
 						const ItemIcon = item.icon;
@@ -203,28 +204,28 @@ export default function PersonalBestsSwipeCard() {
 								key={item.id}
 								type="button"
 								onClick={() => goToIndex(idx)}
-								className={`group relative h-[52px] sm:h-[58px] px-1 sm:px-2 rounded-xl text-center transition-all duration-300 cursor-pointer border flex flex-col items-center justify-center gap-0.5 sm:gap-1 overflow-hidden min-w-0 ${
+								className={`group relative h-[54px] sm:h-[60px] px-1 sm:px-2 rounded-2xl text-center transition-all duration-300 cursor-pointer border flex flex-col items-center justify-center gap-0.5 sm:gap-1 overflow-hidden min-w-0 active:scale-95 ${
 									isActive
 										? "bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/15"
-										: "bg-slate-50/90 text-slate-600 hover:text-slate-900 border-slate-200/70 hover:border-slate-300 hover:bg-white"
+										: "bg-slate-50/80 text-slate-600 hover:text-slate-900 border-slate-200/70 hover:border-slate-300 hover:bg-white"
 								}`}
 							>
 								<div className="flex items-center justify-center gap-1 w-full min-w-0">
 									{item.isHighest ? (
 										<Crown
-											className={`w-3 h-3 shrink-0 ${isActive ? "text-amber-400" : "text-amber-500"}`}
+											className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-amber-400" : "text-amber-500"}`}
 										/>
 									) : (
 										<ItemIcon
-											className={`w-3 h-3 shrink-0 ${isActive ? "text-white" : item.color}`}
+											className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-white" : item.color}`}
 										/>
 									)}
-									<span className="text-[10.5px] sm:text-[11px] font-extrabold tracking-tight truncate whitespace-nowrap">
+									<span className="text-[10.5px] sm:text-xs font-black tracking-tight truncate whitespace-nowrap">
 										{label}
 									</span>
 								</div>
 								<span
-									className={`text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider truncate whitespace-nowrap ${
+									className={`text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider truncate whitespace-nowrap ${
 										isActive ? "text-slate-300" : "text-slate-400"
 									}`}
 								>
@@ -239,7 +240,7 @@ export default function PersonalBestsSwipeCard() {
 			{/* ═══════════════════════════════════════
 			    MAIN SHOWCASE CARD (SWIPE / SLIDE STAGE)
 			═══════════════════════════════════════ */}
-			<div className="relative z-10 min-h-[290px] sm:min-h-[300px]">
+			<div className="relative z-10 min-h-[280px] sm:min-h-[290px]">
 				<AnimatePresence initial={false} custom={direction} mode="wait">
 					<motion.div
 						key={currentItem.id}
@@ -250,10 +251,10 @@ export default function PersonalBestsSwipeCard() {
 						exit="exit"
 						drag="x"
 						dragConstraints={{ left: 0, right: 0 }}
-						dragElastic={0.3}
+						dragElastic={0.25}
 						onDragStart={() => setIsDragging(true)}
 						onDragEnd={handleDragEnd}
-						className={`w-full rounded-2xl p-6 sm:p-7 bg-gradient-to-br from-white to-slate-50/70 border border-slate-200/90 shadow-sm relative overflow-hidden touch-pan-y ${
+						className={`w-full rounded-[2rem] p-5 sm:p-7 bg-gradient-to-br from-white via-slate-50/50 to-slate-50 border border-slate-200/90 shadow-sm relative overflow-hidden touch-pan-y ${
 							isDragging ? "cursor-grabbing" : "cursor-grab"
 						}`}
 					>
@@ -263,10 +264,10 @@ export default function PersonalBestsSwipeCard() {
 						/>
 
 						{/* Top Row: Category Badge & Distance Title */}
-						<div className="flex items-start justify-between gap-4 mb-6">
+						<div className="flex items-start justify-between gap-4 mb-5">
 							<div className="flex items-center gap-3.5">
 								<div
-									className={`w-13 h-13 rounded-2xl ${currentItem.badgeBg} border border-white flex items-center justify-center shadow-xs shrink-0`}
+									className={`w-12 h-12 sm:w-13 sm:h-13 rounded-2xl ${currentItem.badgeBg} border border-white flex items-center justify-center shadow-xs shrink-0`}
 								>
 									<currentItem.icon
 										className={`w-6 h-6 ${currentItem.color}`}
@@ -281,7 +282,7 @@ export default function PersonalBestsSwipeCard() {
 											</span>
 										) : (
 											<span
-												className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${currentItem.badgeBg} border border-current/10`}
+												className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${currentItem.badgeBg} border border-current/10`}
 											>
 												{currentItem.badge}
 											</span>
@@ -294,7 +295,7 @@ export default function PersonalBestsSwipeCard() {
 							</div>
 
 							<div className="text-right hidden sm:block">
-								<span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-0.5">
+								<span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-0.5">
 									Pace Split
 								</span>
 								<span className="text-sm font-black text-slate-700 font-mono">
@@ -304,8 +305,8 @@ export default function PersonalBestsSwipeCard() {
 						</div>
 
 						{/* Primary Metric: Duration */}
-						<div className="mb-6 pb-6 border-b border-slate-100">
-							<span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-1">
+						<div className="mb-5 pb-5 border-b border-slate-100">
+							<span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
 								Official Personal Best Time
 							</span>
 							<div className="flex items-baseline gap-3 flex-wrap">
@@ -319,55 +320,55 @@ export default function PersonalBestsSwipeCard() {
 						</div>
 
 						{/* 4-Metric Grid */}
-						<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+						<div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
 							{/* Pace */}
-							<div className="p-3.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+							<div className="p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs min-w-0">
 								<div className="flex items-center gap-1.5 text-slate-400 mb-1">
-									<Gauge className="w-3.5 h-3.5 text-emerald-600" />
-									<span className="text-[10px] font-bold uppercase tracking-wider">
+									<Gauge className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+									<span className="text-[10px] font-extrabold uppercase tracking-wider truncate">
 										Avg Pace
 									</span>
 								</div>
-								<p className="text-sm sm:text-base font-extrabold text-slate-900 font-mono">
+								<p className="text-sm sm:text-base font-black text-slate-900 font-mono truncate">
 									{currentItem.pace}
 								</p>
 							</div>
 
 							{/* Distance */}
-							<div className="p-3.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+							<div className="p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs min-w-0">
 								<div className="flex items-center gap-1.5 text-slate-400 mb-1">
-									<Route className="w-3.5 h-3.5 text-blue-600" />
-									<span className="text-[10px] font-bold uppercase tracking-wider">
+									<Route className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+									<span className="text-[10px] font-extrabold uppercase tracking-wider truncate">
 										Distance
 									</span>
 								</div>
-								<p className="text-sm sm:text-base font-extrabold text-slate-900">
+								<p className="text-sm sm:text-base font-black text-slate-900 truncate">
 									{currentItem.distanceKm} km
 								</p>
 							</div>
 
 							{/* Elevation / Terrain */}
-							<div className="p-3.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+							<div className="p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs min-w-0">
 								<div className="flex items-center gap-1.5 text-slate-400 mb-1">
-									<Mountain className="w-3.5 h-3.5 text-purple-600" />
-									<span className="text-[10px] font-bold uppercase tracking-wider">
+									<Mountain className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+									<span className="text-[10px] font-extrabold uppercase tracking-wider truncate">
 										Elevation
 									</span>
 								</div>
-								<p className="text-sm sm:text-base font-extrabold text-slate-900">
+								<p className="text-sm sm:text-base font-black text-slate-900 truncate">
 									{currentItem.elevation || "Road Flat"}
 								</p>
 							</div>
 
 							{/* Speed */}
-							<div className="p-3.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+							<div className="p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs min-w-0">
 								<div className="flex items-center gap-1.5 text-slate-400 mb-1">
-									<Activity className="w-3.5 h-3.5 text-rose-500" />
-									<span className="text-[10px] font-bold uppercase tracking-wider">
+									<Activity className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+									<span className="text-[10px] font-extrabold uppercase tracking-wider truncate">
 										Avg Speed
 									</span>
 								</div>
-								<p className="text-sm sm:text-base font-extrabold text-slate-900 font-mono">
+								<p className="text-sm sm:text-base font-black text-slate-900 font-mono truncate">
 									{speedKmH}
 								</p>
 							</div>
@@ -379,14 +380,17 @@ export default function PersonalBestsSwipeCard() {
 			{/* ═══════════════════════════════════════
 			    FOOTER HINT
 			═══════════════════════════════════════ */}
-			<div className="flex items-center justify-between pt-2 text-[11px] text-slate-400 font-semibold relative z-10">
+			<div className="flex items-center justify-between pt-1 text-[11px] text-slate-400 font-semibold relative z-10">
 				<div className="flex items-center gap-1.5">
-					<Sparkles className="w-3.5 h-3.5 text-amber-500" />
-					<span>Swipe card, click milestones, or use ← → arrow keys</span>
+					<Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+					<span className="truncate">
+						Swipe card, select milestone, or press ← → keys
+					</span>
 				</div>
 
-				<div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-					<span>Benchmark record</span>
+				<div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-500 shrink-0">
+					<CheckCircle className="w-3 h-3 text-emerald-500" />
+					<span>Verified PB</span>
 				</div>
 			</div>
 		</div>

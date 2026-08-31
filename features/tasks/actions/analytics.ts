@@ -10,6 +10,7 @@ import {
 	parseISO,
 	isSameDay,
 	addDays,
+	addMonths,
 } from "date-fns";
 
 export interface AnalyticsStats {
@@ -264,14 +265,6 @@ export async function getTaskProgressMetrics() {
 	const today = startOfToday();
 	const todayStr = format(today, "yyyy-MM-dd");
 
-	// Start of week (Sunday)
-	const weekStart = subDays(today, today.getDay());
-	const weekStartStr = format(weekStart, "yyyy-MM-dd");
-
-	// Start of month
-	const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-	const monthStartStr = format(monthStart, "yyyy-MM-dd");
-
 	const { data: pendingTasks, error: pendingError } = await SupabaseConn.from(
 		"tasks",
 	)
@@ -310,13 +303,16 @@ export async function getTaskProgressMetrics() {
 		(t) => (t.status || "todo") !== "cancelled",
 	);
 
+	const next7DaysStr = format(addDays(today, 7), "yyyy-MM-dd");
+	const next30DaysStr = format(addMonths(today, 1), "yyyy-MM-dd");
+
 	const pendingToday = activePending.filter((t) => t.due_date === todayStr);
 	const pendingTodayCount = pendingToday.length;
 	const pendingWeek = activePending.filter(
-		(t) => t.due_date >= weekStartStr,
+		(t) => t.due_date >= todayStr && t.due_date <= next7DaysStr,
 	).length;
 	const pendingMonth = activePending.filter(
-		(t) => t.due_date >= monthStartStr,
+		(t) => t.due_date >= todayStr && t.due_date <= next30DaysStr,
 	).length;
 	const allTimePending = activePending.length;
 

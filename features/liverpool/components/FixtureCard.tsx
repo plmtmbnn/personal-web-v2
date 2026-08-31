@@ -28,7 +28,6 @@ interface FixtureCardProps {
 
 export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 	const reduceMotion = useReducedMotion();
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const { matchData } = fixture;
 	const isHome = isLiverpoolHome(matchData.homeTeam);
 	const dateInfo = useMemo(
@@ -44,7 +43,7 @@ export default function FixtureCard({ fixture, index = 0 }: FixtureCardProps) {
 
 	return (
 		<motion.div
-			initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{
 				delay: Math.min(index * 0.05, 0.3),

@@ -5,8 +5,8 @@ import {
 	Calendar,
 	CheckCircle2,
 	Star,
-	Heart,
 	Trash2,
+	Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
@@ -18,6 +18,7 @@ interface DestinationCardProps {
 	destination: Destination;
 	index: number;
 	variant?: Variant;
+	onSelect?: (destination: Destination) => void;
 	onMarkVisited?: (id: string) => void;
 	onRemove?: (id: string) => void;
 	isAdmin?: boolean;
@@ -56,16 +57,23 @@ export default function DestinationCard({
 	destination,
 	index,
 	variant = "visited",
+	onSelect,
 	onMarkVisited,
 	onRemove,
 	isAdmin = false,
 }: DestinationCardProps) {
 	const reduceMotion = useReducedMotion();
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const style = VARIANTS[variant];
 	const BadgeIcon = style.badgeIcon;
 
-	const handleVisitToggle = () => {
+	const handleClick = () => {
+		if (onSelect) {
+			onSelect(destination);
+		}
+	};
+
+	const handleVisitToggle = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		if (onMarkVisited && variant === "wishlist") {
 			onMarkVisited(destination.id);
 		}
@@ -80,7 +88,7 @@ export default function DestinationCard({
 
 	return (
 		<motion.div
-			initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
+			initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{
 				delay: index * 0.08,
@@ -93,7 +101,7 @@ export default function DestinationCard({
 				transition: { type: "spring", stiffness: 400, damping: 25 },
 			}}
 			className={`group bg-white border ${style.cardBorder} rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer active:scale-[0.98] relative`}
-			onClick={handleVisitToggle}
+			onClick={handleClick}
 		>
 			{/* Image Container */}
 			<div className="aspect-[4/3] relative overflow-hidden">
@@ -103,7 +111,11 @@ export default function DestinationCard({
 						.replace(/h=\d+/, "h=600")}
 					alt={`${destination.name}, ${destination.location}, ${destination.country}`}
 					fill
-					className="object-cover transition-transform duration-700 group-hover:scale-110"
+					className={`object-cover transition-all duration-700 group-hover:scale-110 ${
+						variant === "wishlist"
+							? "grayscale contrast-105 brightness-95 group-hover:grayscale-0"
+							: ""
+					}`}
 					loading="lazy"
 				/>
 
@@ -124,6 +136,7 @@ export default function DestinationCard({
 				<div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
 					{variant === "wishlist" && onMarkVisited && (
 						<button
+							type="button"
 							onClick={handleVisitToggle}
 							className="p-2 bg-white/90 backdrop-blur-md rounded-full hover:bg-emerald-500 hover:text-white transition-colors"
 							title="Mark as visited"
@@ -134,6 +147,7 @@ export default function DestinationCard({
 					)}
 					{isAdmin && onRemove && (
 						<button
+							type="button"
 							onClick={handleRemove}
 							className="p-2 bg-white/90 backdrop-blur-md rounded-full hover:bg-rose-500 hover:text-white transition-colors"
 							title="Remove destination"
@@ -144,15 +158,13 @@ export default function DestinationCard({
 					)}
 				</div>
 
-				{/* Visit Hint (for wishlist items) */}
-				{variant === "wishlist" && !isAdmin && (
-					<div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-						<span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black text-slate-700">
-							<Heart className="w-3 h-3 text-rose-500" />
-							Tap to mark as visited
-						</span>
-					</div>
-				)}
+				{/* Postcard Hint on Card Hover */}
+				<div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+					<span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-full text-[10px] font-black text-slate-800 shadow-sm">
+						<Sparkles className="w-3 h-3 text-amber-500" />
+						Open Postcard & Sticker
+					</span>
+				</div>
 			</div>
 
 			{/* Content */}
@@ -209,7 +221,7 @@ export default function DestinationCard({
 					<span
 						className={`${style.accentColor} text-[9px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity`}
 					>
-						{variant === "visited" ? "✓ Visited" : "→ Mark visited"}
+						✉ View Postcard
 					</span>
 				</div>
 			</div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
 	Tag,
@@ -13,6 +13,7 @@ import {
 	ChevronDown,
 	ChevronUp,
 	RotateCcw,
+	Loader2,
 } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
 import { format, startOfWeek, endOfWeek, addDays, startOfDay } from "date-fns";
@@ -35,7 +36,9 @@ export default function TaskFilters({
 }: TaskFiltersProps) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const [isPending, startTransition] = useTransition();
 	const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+	const [isDebouncing, setIsDebouncing] = useState(false);
 
 	// Keys with prefix
 	const KEY_PRIORITY = `${paramPrefix}_priority`;
@@ -54,68 +57,118 @@ export default function TaskFilters({
 	const weekOffset = Number(searchParams.get(KEY_WEEK_OFFSET) || "0");
 	const currentStatus = searchParams.get(KEY_STATUS) || "all";
 
-	// Weekly date range calculation for Completed navigator
-	const todayRef = startOfDay(new Date());
-	const selectedWeekStart = addDays(
-		startOfWeek(todayRef, { weekStartsOn: 1 }),
-		weekOffset * 7,
-	);
-	const selectedWeekEnd = endOfWeek(selectedWeekStart, { weekStartsOn: 1 });
-
-	// Local state for debounced search input
+	// Optimistic local state for instantaneous 0ms UI feedback
+	const [localPriority, setLocalPriority] = useState(currentPriority);
+	const [localCategory, setLocalCategory] = useState(currentCategory);
+	const [localRange, setLocalRange] = useState(currentRange);
+	const [localWeekOffset, setLocalWeekOffset] = useState(weekOffset);
+	const [localStatus, setLocalStatus] = useState(currentStatus);
 	const [searchValue, setSearchValue] = useState(currentSearch);
 
-	// Sync local input with URL param changes (e.g. on reset or back navigation)
+	// Sync local state whenever URL searchParams change
 	useEffect(() => {
+		setLocalPriority(currentPriority);
+		setLocalCategory(currentCategory);
+		setLocalRange(currentRange);
+		setLocalWeekOffset(weekOffset);
+		setLocalStatus(currentStatus);
 		setSearchValue(currentSearch);
-	}, [currentSearch]);
+	}, [
+		currentPriority,
+		currentCategory,
+		currentRange,
+		weekOffset,
+		currentStatus,
+		currentSearch,
+	]);
+
+	// Weekly date range calculation for Completed navigator
+	const todayRef = useMemo(() => startOfDay(new Date()), []);
+	const selectedWeekStart = useMemo(
+		() =>
+			addDays(startOfWeek(todayRef, { weekStartsOn: 1 }), localWeekOffset * 7),
+		[todayRef, localWeekOffset],
+	);
+	const selectedWeekEnd = useMemo(
+		() => endOfWeek(selectedWeekStart, { weekStartsOn: 1 }),
+		[selectedWeekStart],
+	);
+
+	// Combined loading state for background navigation or debouncing
+	const isLoading = isPending || isDebouncing;
 
 	// Debounce search URL update to avoid rate-limiting routing changes on keypresses
 	useEffect(() => {
+		if (searchValue !== currentSearch) {
+			setIsDebouncing(true);
+		}
 		const delayDebounce = setTimeout(() => {
 			if (searchValue !== currentSearch) {
-				const params = new URLSearchParams(searchParams.toString());
-				if (!searchValue) {
-					params.delete(KEY_SEARCH);
-				} else {
-					params.set(KEY_SEARCH, searchValue);
-				}
-				router.push(`?${params.toString()}`, { scroll: false });
+				startTransition(() => {
+					const params = new URLSearchParams(searchParams.toString());
+					if (!searchValue.trim()) {
+						params.delete(KEY_SEARCH);
+					} else {
+						params.set(KEY_SEARCH, searchValue.trim());
+					}
+					router.replace(`?${params.toString()}`, { scroll: false });
+				});
 			}
+			setIsDebouncing(false);
 		}, SEARCH_DEBOUNCE_MS);
 
 		return () => clearTimeout(delayDebounce);
 	}, [searchValue, currentSearch, KEY_SEARCH, searchParams, router]);
 
 	const setFilter = (key: string, value: string | null) => {
-		const params = new URLSearchParams(searchParams.toString());
-		if (
-			!value ||
-			value === "all" ||
-			value === "false" ||
-			(key === KEY_RANGE && value === "week") ||
-			(key === KEY_WEEK_OFFSET && value === "0")
-		) {
-			params.delete(key);
-		} else {
-			params.set(key, value);
-		}
-		router.push(`?${params.toString()}`, { scroll: false });
+		// 1. Optimistically update local state for immediate feedback
+		if (key === KEY_PRIORITY) setLocalPriority(value || "all");
+		if (key === KEY_CATEGORY) setLocalCategory(value || "all");
+		if (key === KEY_STATUS) setLocalStatus(value || "all");
+		if (key === KEY_RANGE) setLocalRange(value || "week");
+		if (key === KEY_WEEK_OFFSET) setLocalWeekOffset(Number(value || "0"));
+
+		// 2. Perform smooth concurrent router transition
+		startTransition(() => {
+			const params = new URLSearchParams(searchParams.toString());
+			if (
+				!value ||
+				value === "all" ||
+				value === "false" ||
+				(key === KEY_RANGE && value === "week") ||
+				(key === KEY_WEEK_OFFSET && value === "0")
+			) {
+				params.delete(key);
+			} else {
+				params.set(key, value);
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
+		});
 	};
 
 	const clearAllFilters = () => {
-		const params = new URLSearchParams(searchParams.toString());
-		params.delete(KEY_PRIORITY);
-		params.delete(KEY_CATEGORY);
-		params.delete(KEY_COMPLETED);
-		params.delete(KEY_SEARCH);
-		params.delete(KEY_STATUS);
-		if (showRangeFilter) {
-			params.delete(KEY_RANGE);
-			params.delete(KEY_WEEK_OFFSET);
-		}
+		// 1. Optimistic reset
+		setLocalPriority("all");
+		setLocalCategory("all");
+		setLocalStatus("all");
+		setLocalRange("week");
+		setLocalWeekOffset(0);
 		setSearchValue("");
-		router.push(`?${params.toString()}`, { scroll: false });
+
+		// 2. Clear query parameters concurrently
+		startTransition(() => {
+			const params = new URLSearchParams(searchParams.toString());
+			params.delete(KEY_PRIORITY);
+			params.delete(KEY_CATEGORY);
+			params.delete(KEY_COMPLETED);
+			params.delete(KEY_SEARCH);
+			params.delete(KEY_STATUS);
+			if (showRangeFilter) {
+				params.delete(KEY_RANGE);
+				params.delete(KEY_WEEK_OFFSET);
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
+		});
 	};
 
 	const priorities = [
@@ -136,18 +189,26 @@ export default function TaskFilters({
 		[tasks],
 	);
 
-	// Count calculators for badges
-	const getPriorityCount = (priorityVal: string) => {
-		const items = tasks || [];
-		if (priorityVal === "all") return items.length;
-		return items.filter((t) => t.priority === priorityVal).length;
-	};
+	// Precomputed Count Lookups for O(1) performance
+	const priorityCounts = useMemo(() => {
+		const counts: Record<string, number> = { all: tasks?.length || 0 };
+		for (const t of tasks || []) {
+			if (t?.priority) {
+				counts[t.priority] = (counts[t.priority] || 0) + 1;
+			}
+		}
+		return counts;
+	}, [tasks]);
 
-	const getCategoryCount = (catVal: string) => {
-		const items = tasks || [];
-		if (catVal === "all") return items.length;
-		return items.filter((t) => t.category === catVal).length;
-	};
+	const categoryCounts = useMemo(() => {
+		const counts: Record<string, number> = { all: tasks?.length || 0 };
+		for (const t of tasks || []) {
+			if (t?.category) {
+				counts[t.category] = (counts[t.category] || 0) + 1;
+			}
+		}
+		return counts;
+	}, [tasks]);
 
 	const statusOptions = useMemo(
 		() => [
@@ -161,51 +222,86 @@ export default function TaskFilters({
 		[],
 	);
 
-	const getStatusCount = (statusVal: string) => {
-		const items = tasks || [];
-		if (statusVal === "all") return items.length;
-		return items.filter((t) => (t.status || "todo") === statusVal).length;
-	};
+	const statusCounts = useMemo(() => {
+		const counts: Record<string, number> = { all: tasks?.length || 0 };
+		for (const t of tasks || []) {
+			const s = t?.status || "todo";
+			counts[s] = (counts[s] || 0) + 1;
+		}
+		return counts;
+	}, [tasks]);
 
 	const activeFilterCount = useMemo(() => {
 		let count = 0;
-		if (currentPriority !== "all") count++;
-		if (currentCategory !== "all") count++;
-		if (currentStatus !== "all") count++;
+		if (localPriority !== "all") count++;
+		if (localCategory !== "all") count++;
+		if (localStatus !== "all") count++;
 		if (showCompleted) count++;
-		if (currentSearch.trim() !== "") count++;
+		if (searchValue.trim() !== "") count++;
 		if (showRangeFilter) {
-			if (paramPrefix === "completed" && weekOffset !== 0) count++;
-			if (paramPrefix !== "completed" && currentRange !== "week") count++;
+			if (paramPrefix === "completed" && localWeekOffset !== 0) count++;
+			if (paramPrefix !== "completed" && localRange !== "week") count++;
 		}
 		return count;
 	}, [
-		currentPriority,
-		currentCategory,
-		currentStatus,
+		localPriority,
+		localCategory,
+		localStatus,
 		showCompleted,
-		currentSearch,
+		searchValue,
 		showRangeFilter,
 		paramPrefix,
-		weekOffset,
-		currentRange,
+		localWeekOffset,
+		localRange,
 	]);
 
 	const hasActiveFilters = activeFilterCount > 0;
 
 	return (
-		<div className="flex flex-col gap-3 py-1 w-full max-w-full">
+		<div
+			className="flex flex-col gap-2.5 py-1 w-full max-w-full relative"
+			aria-busy={isLoading}
+		>
+			{/* ─── ULTRA-SMOOTH INDETERMINATE PROGRESS BEAM ─────────────────── */}
+			<div className="h-0.5 w-full overflow-hidden rounded-full bg-transparent relative -my-0.5">
+				<AnimatePresence>
+					{isLoading && (
+						<motion.div
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							transition={{ duration: 0.15 }}
+							className="w-full h-full bg-slate-100 rounded-full relative overflow-hidden"
+						>
+							<motion.div
+								className="absolute top-0 bottom-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 rounded-full w-1/3 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+								animate={{ x: ["-100%", "300%"] }}
+								transition={{
+									repeat: Infinity,
+									duration: 1,
+									ease: "easeInOut",
+								}}
+							/>
+						</motion.div>
+					)}
+				</AnimatePresence>
+			</div>
+
 			{/* ─── MOBILE BAR (< 640px) ────────────────────────────────────────── */}
 			<div className="flex sm:hidden flex-col gap-2.5 w-full">
 				<div className="flex items-center gap-2 w-full">
 					{/* Mobile Search Input */}
-					<div className="relative flex-1 flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-400 transition-all">
-						<Search className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
+					<div className="relative flex-1 flex items-center bg-white border border-slate-200/90 rounded-xl px-3 py-2 shadow-xs focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-400 transition-all">
+						{isLoading ? (
+							<Loader2 className="w-4 h-4 text-blue-500 animate-spin mr-2 flex-shrink-0" />
+						) : (
+							<Search className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
+						)}
 						<input
 							type="text"
 							value={searchValue}
 							onChange={(e) => setSearchValue(e.target.value)}
-							placeholder="Search..."
+							placeholder="Search tasks..."
 							className="bg-transparent border-none text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none w-full p-0"
 						/>
 						{searchValue && (
@@ -224,13 +320,17 @@ export default function TaskFilters({
 					<button
 						type="button"
 						onClick={() => setIsMobilePanelOpen((prev) => !prev)}
-						className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border shadow-sm cursor-pointer min-h-[38px] ${
+						className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border shadow-xs cursor-pointer min-h-[38px] active:scale-95 ${
 							isMobilePanelOpen || hasActiveFilters
 								? "bg-slate-900 text-white border-slate-900"
 								: "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
 						}`}
 					>
-						<SlidersHorizontal className="w-3.5 h-3.5" />
+						{isLoading ? (
+							<Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
+						) : (
+							<SlidersHorizontal className="w-3.5 h-3.5" />
+						)}
 						<span>Filter</span>
 						{activeFilterCount > 0 && (
 							<span className="ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-500 text-white leading-none">
@@ -253,9 +353,9 @@ export default function TaskFilters({
 								<button
 									type="button"
 									onClick={() =>
-										setFilter(KEY_WEEK_OFFSET, (weekOffset - 1).toString())
+										setFilter(KEY_WEEK_OFFSET, (localWeekOffset - 1).toString())
 									}
-									className="p-1.5 hover:bg-white rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+									className="p-1.5 hover:bg-white rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer active:scale-90"
 									aria-label="Previous week"
 								>
 									<ChevronLeft className="w-4 h-4 stroke-[2.5]" />
@@ -267,10 +367,10 @@ export default function TaskFilters({
 								<button
 									type="button"
 									onClick={() =>
-										setFilter(KEY_WEEK_OFFSET, (weekOffset + 1).toString())
+										setFilter(KEY_WEEK_OFFSET, (localWeekOffset + 1).toString())
 									}
-									disabled={weekOffset >= 0}
-									className="p-1.5 hover:bg-white rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent"
+									disabled={localWeekOffset >= 0}
+									className="p-1.5 hover:bg-white rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"
 									aria-label="Next week"
 								>
 									<ChevronRight className="w-4 h-4 stroke-[2.5]" />
@@ -281,24 +381,24 @@ export default function TaskFilters({
 								<button
 									type="button"
 									onClick={() => setFilter(KEY_RANGE, "week")}
-									className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center ${
-										currentRange === "week"
+									className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center active:scale-95 ${
+										localRange === "week"
 											? "bg-slate-900 text-white shadow-xs"
 											: "text-slate-500 hover:text-slate-700 bg-white/50"
 									}`}
 								>
-									This Week
+									Next 7 Days
 								</button>
 								<button
 									type="button"
 									onClick={() => setFilter(KEY_RANGE, "month")}
-									className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center ${
-										currentRange === "month"
+									className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center active:scale-95 ${
+										localRange === "month"
 											? "bg-slate-900 text-white shadow-xs"
 											: "text-slate-500 hover:text-slate-700 bg-white/50"
 									}`}
 								>
-									This Month
+									Next 1 Month
 								</button>
 							</div>
 						)}
@@ -315,7 +415,7 @@ export default function TaskFilters({
 							transition={{ duration: 0.2, ease: "easeInOut" }}
 							className="overflow-hidden"
 						>
-							<div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-3.5 space-y-3.5 shadow-sm">
+							<div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-3.5 space-y-3.5 shadow-sm">
 								{/* Priority Section */}
 								<div>
 									<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
@@ -327,8 +427,8 @@ export default function TaskFilters({
 												key={p.value}
 												type="button"
 												onClick={() => setFilter(KEY_PRIORITY, p.value)}
-												className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border flex flex-col items-center justify-center gap-0.5 min-h-[42px] cursor-pointer ${
-													currentPriority === p.value
+												className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border flex flex-col items-center justify-center gap-0.5 min-h-[42px] cursor-pointer active:scale-95 ${
+													localPriority === p.value
 														? "bg-slate-900 text-white border-slate-900 shadow-xs"
 														: "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
 												}`}
@@ -336,12 +436,12 @@ export default function TaskFilters({
 												<span>{p.label}</span>
 												<span
 													className={`text-[8px] font-bold px-1.5 py-0.2 rounded-full ${
-														currentPriority === p.value
+														localPriority === p.value
 															? "bg-white/20 text-white"
 															: "bg-slate-100 text-slate-500"
 													}`}
 												>
-													{getPriorityCount(p.value)}
+													{priorityCounts[p.value] || 0}
 												</span>
 											</button>
 										))}
@@ -362,8 +462,8 @@ export default function TaskFilters({
 												key={cat}
 												type="button"
 												onClick={() => setFilter(KEY_CATEGORY, cat)}
-												className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border flex items-center gap-1 cursor-pointer min-h-[34px] ${
-													currentCategory === cat
+												className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border flex items-center gap-1 cursor-pointer min-h-[34px] active:scale-95 ${
+													localCategory === cat
 														? "bg-blue-600 text-white border-blue-600 shadow-xs"
 														: "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
 												}`}
@@ -371,12 +471,12 @@ export default function TaskFilters({
 												<span>{cat}</span>
 												<span
 													className={`px-1.5 py-0.2 rounded-full text-[8px] font-bold ${
-														currentCategory === cat
+														localCategory === cat
 															? "bg-white/20 text-white"
 															: "bg-slate-100 text-slate-500"
 													}`}
 												>
-													{getCategoryCount(cat)}
+													{categoryCounts[cat] || 0}
 												</span>
 											</button>
 										))}
@@ -397,8 +497,8 @@ export default function TaskFilters({
 												key={s.value}
 												type="button"
 												onClick={() => setFilter(KEY_STATUS, s.value)}
-												className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border flex items-center gap-1 cursor-pointer min-h-[34px] ${
-													currentStatus === s.value
+												className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border flex items-center gap-1 cursor-pointer min-h-[34px] active:scale-95 ${
+													localStatus === s.value
 														? "bg-slate-900 text-white border-slate-900 shadow-xs"
 														: "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
 												}`}
@@ -406,12 +506,12 @@ export default function TaskFilters({
 												<span>{s.label}</span>
 												<span
 													className={`px-1.5 py-0.2 rounded-full text-[8px] font-bold ${
-														currentStatus === s.value
+														localStatus === s.value
 															? "bg-white/20 text-white"
 															: "bg-slate-100 text-slate-500"
 													}`}
 												>
-													{getStatusCount(s.value)}
+													{statusCounts[s.value] || 0}
 												</span>
 											</button>
 										))}
@@ -423,7 +523,7 @@ export default function TaskFilters({
 									<button
 										type="button"
 										onClick={clearAllFilters}
-										className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer mt-2"
+										className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer mt-2 active:scale-95"
 									>
 										<RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
 										Reset All Filters
@@ -436,12 +536,16 @@ export default function TaskFilters({
 			</div>
 
 			{/* ─── DESKTOP / TABLET BAR (>= 640px) ────────────────────────────── */}
-			<div className="hidden sm:flex flex-col gap-3 w-full">
-				{/* Primary Row: Search, Range, Priority, Clear */}
+			<div className="hidden sm:flex flex-col gap-2.5 w-full">
+				{/* Primary Row: Search, Range, Priority, Status Badge, Clear */}
 				<div className="flex flex-wrap items-center gap-2">
 					{/* Desktop Search Input */}
-					<div className="relative flex items-center bg-white border border-slate-200 rounded-full px-3 py-1.5 shadow-xs focus-within:ring-4 focus-within:ring-slate-900/5 focus-within:border-slate-400 transition-all max-w-[200px] w-full">
-						<Search className="w-3.5 h-3.5 text-slate-400 mr-1.5 flex-shrink-0" />
+					<div className="relative flex items-center bg-white border border-slate-200/90 rounded-full px-3 py-1.5 shadow-xs focus-within:ring-4 focus-within:ring-slate-900/5 focus-within:border-slate-400 transition-all max-w-[200px] w-full">
+						{isLoading ? (
+							<Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin mr-1.5 flex-shrink-0" />
+						) : (
+							<Search className="w-3.5 h-3.5 text-slate-400 mr-1.5 flex-shrink-0" />
+						)}
 						<input
 							type="text"
 							value={searchValue}
@@ -464,13 +568,13 @@ export default function TaskFilters({
 					{/* Range Toggle or Weekly Date Range Navigator */}
 					{showRangeFilter &&
 						(paramPrefix === "completed" ? (
-							<div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-xs select-none">
+							<div className="flex items-center gap-1 bg-white border border-slate-200/90 rounded-xl p-1 shadow-xs select-none">
 								<button
 									type="button"
 									onClick={() =>
-										setFilter(KEY_WEEK_OFFSET, (weekOffset - 1).toString())
+										setFilter(KEY_WEEK_OFFSET, (localWeekOffset - 1).toString())
 									}
-									className="p-1 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+									className="p-1 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-700 transition-colors cursor-pointer active:scale-90"
 									aria-label="Previous week"
 								>
 									<ChevronLeft className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -482,43 +586,43 @@ export default function TaskFilters({
 								<button
 									type="button"
 									onClick={() =>
-										setFilter(KEY_WEEK_OFFSET, (weekOffset + 1).toString())
+										setFilter(KEY_WEEK_OFFSET, (localWeekOffset + 1).toString())
 									}
-									disabled={weekOffset >= 0}
-									className="p-1 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent"
+									disabled={localWeekOffset >= 0}
+									className="p-1 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"
 									aria-label="Next week"
 								>
 									<ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
 								</button>
 							</div>
 						) : (
-							<div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+							<div className="flex items-center gap-1 bg-white border border-slate-200/90 rounded-xl p-1 shadow-xs">
 								<button
 									type="button"
 									onClick={() => setFilter(KEY_RANGE, "week")}
-									className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all cursor-pointer ${
-										currentRange === "week"
+									className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all cursor-pointer active:scale-95 ${
+										localRange === "week"
 											? "bg-slate-900 text-white shadow-xs"
 											: "text-slate-400 hover:text-slate-600"
 									}`}
 								>
-									Week
+									7 Days
 								</button>
 								<button
 									type="button"
 									onClick={() => setFilter(KEY_RANGE, "month")}
-									className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all cursor-pointer ${
-										currentRange === "month"
+									className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all cursor-pointer active:scale-95 ${
+										localRange === "month"
 											? "bg-slate-900 text-white shadow-xs"
 											: "text-slate-400 hover:text-slate-600"
 									}`}
 								>
-									Month
+									1 Month
 								</button>
 							</div>
 						))}
 
-					<div className="w-px h-4 bg-slate-200 mx-1" />
+					<div className="w-px h-4 bg-slate-200 mx-0.5" />
 
 					{/* Priority Pills */}
 					<div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
@@ -527,8 +631,8 @@ export default function TaskFilters({
 								key={p.value}
 								type="button"
 								onClick={() => setFilter(KEY_PRIORITY, p.value)}
-								className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap cursor-pointer flex items-center ${
-									currentPriority === p.value
+								className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap cursor-pointer flex items-center active:scale-95 ${
+									localPriority === p.value
 										? "bg-slate-900 text-white border-slate-900 shadow-xs"
 										: "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
 								}`}
@@ -536,23 +640,39 @@ export default function TaskFilters({
 								{p.label}
 								<span
 									className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
-										currentPriority === p.value
+										localPriority === p.value
 											? "bg-white/20 text-white"
 											: "bg-slate-100 text-slate-500"
 									}`}
 								>
-									{getPriorityCount(p.value)}
+									{priorityCounts[p.value] || 0}
 								</span>
 							</button>
 						))}
 					</div>
+
+					{/* Live Updating Badge Indicator */}
+					<AnimatePresence>
+						{isLoading && (
+							<motion.div
+								initial={{ opacity: 0, scale: 0.8, x: -4 }}
+								animate={{ opacity: 1, scale: 1, x: 0 }}
+								exit={{ opacity: 0, scale: 0.8, x: -4 }}
+								transition={{ duration: 0.15 }}
+								className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-200/70 shadow-xs"
+							>
+								<Loader2 className="w-2.5 h-2.5 animate-spin text-blue-600" />
+								<span>Updating</span>
+							</motion.div>
+						)}
+					</AnimatePresence>
 
 					{/* Clear Filters Button */}
 					{hasActiveFilters && (
 						<button
 							type="button"
 							onClick={clearAllFilters}
-							className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all border border-rose-100 hover:border-rose-200 cursor-pointer ml-auto"
+							className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all border border-rose-100 hover:border-rose-200 cursor-pointer ml-auto active:scale-95"
 						>
 							<X className="w-3 h-3 stroke-[3]" />
 							Clear All
@@ -568,8 +688,8 @@ export default function TaskFilters({
 							key={cat}
 							type="button"
 							onClick={() => setFilter(KEY_CATEGORY, cat)}
-							className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all border flex-shrink-0 cursor-pointer flex items-center ${
-								currentCategory === cat
+							className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all border flex-shrink-0 cursor-pointer flex items-center active:scale-95 ${
+								localCategory === cat
 									? "bg-blue-50 text-blue-600 border-blue-200 shadow-xs"
 									: "bg-white text-slate-500 border-slate-100 hover:border-slate-200"
 							}`}
@@ -577,12 +697,12 @@ export default function TaskFilters({
 							{cat}
 							<span
 								className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
-									currentCategory === cat
+									localCategory === cat
 										? "bg-blue-200/50 text-blue-600"
 										: "bg-slate-100 text-slate-400"
 								}`}
 							>
-								{getCategoryCount(cat)}
+								{categoryCounts[cat] || 0}
 							</span>
 						</button>
 					))}
@@ -596,8 +716,8 @@ export default function TaskFilters({
 							key={s.value}
 							type="button"
 							onClick={() => setFilter(KEY_STATUS, s.value)}
-							className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all border flex-shrink-0 cursor-pointer flex items-center gap-1 ${
-								currentStatus === s.value
+							className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all border flex-shrink-0 cursor-pointer flex items-center gap-1 active:scale-95 ${
+								localStatus === s.value
 									? "bg-slate-900 text-white border-slate-900 shadow-xs"
 									: "bg-white text-slate-500 border-slate-100 hover:border-slate-200"
 							}`}
@@ -605,12 +725,12 @@ export default function TaskFilters({
 							{s.label}
 							<span
 								className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
-									currentStatus === s.value
+									localStatus === s.value
 										? "bg-white/20 text-white"
 										: "bg-slate-100 text-slate-400"
 								}`}
 							>
-								{getStatusCount(s.value)}
+								{statusCounts[s.value] || 0}
 							</span>
 						</button>
 					))}

@@ -133,7 +133,7 @@ export default function RunningView({
 		useState<StravaRunActivity | null>(null);
 
 	const reduceMotion = useReducedMotion();
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
+	const safeReduceMotion = Boolean(reduceMotion);
 	const searchParams = useSearchParams();
 	const [statusMessage, setStatusMessage] = useState<{
 		type: "success" | "error";

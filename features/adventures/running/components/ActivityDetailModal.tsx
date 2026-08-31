@@ -412,7 +412,7 @@ export default function ActivityDetailModal({
 	const [rawSplits, setRawSplits] = useState<StravaSplitMetric[] | null>(null);
 	const [isLoadingSplits, setIsLoadingSplits] = useState(false);
 	const reduceMotion = useReducedMotion();
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
+	const safeReduceMotion = Boolean(reduceMotion);
 
 	// Reset & fetch real Strava splits when activity opens
 	useEffect(() => {

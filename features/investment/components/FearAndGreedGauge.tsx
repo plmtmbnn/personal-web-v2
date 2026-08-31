@@ -35,8 +35,6 @@ export default function FearAndGreedGauge({
 	historicalData,
 }: FearAndGreedGaugeProps) {
 	const reduceMotion = useReducedMotion();
-	// Ensure reduceMotion is a boolean (handle null case from useReducedMotion)
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const [mounted, setMounted] = useState(false);
 
 	// Effect to handle DOM readiness for SVG calculations
@@ -103,7 +101,7 @@ export default function FearAndGreedGauge({
 
 	return (
 		<motion.div
-			initial={safeReduceMotion ? false : { opacity: 0, scale: 0.98 }}
+			initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
 			animate={{ opacity: 1, scale: 1 }}
 			className="w-full"
 		>
@@ -114,7 +112,7 @@ export default function FearAndGreedGauge({
 						<RingProgress
 							score={score}
 							rating={rating}
-							reduceMotion={safeReduceMotion}
+							reduceMotion={Boolean(reduceMotion)}
 						/>
 					</div>
 

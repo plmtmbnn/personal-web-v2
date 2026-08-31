@@ -1,23 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Compass, MapPin, Globe, CheckCircle2, Star } from "lucide-react";
 import { destinations } from "@/features/travel/data";
 import useDestinations from "@/features/travel/hooks/useDestinations";
 import StatsCard from "@/features/travel/components/StatsCard";
 import DestinationCard from "@/features/travel/components/DestinationCard";
+import PostcardModal from "@/features/travel/components/PostcardModal";
+import type { Destination } from "@/features/travel/types";
 
 export default function TravelPage() {
 	const reduceMotion = useReducedMotion();
-	const safeReduceMotion = reduceMotion !== null && reduceMotion !== undefined;
 	const { visitedDestinations, wishlistDestinations } = useDestinations();
+	const [selectedDestination, setSelectedDestination] =
+		useState<Destination | null>(null);
 
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
 				{/* ── Hero Section ─────────────────────────────────────── */}
 				<motion.div
-					initial={safeReduceMotion ? false : { opacity: 0, y: 30 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 30 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.8 }}
 					className="mb-14 text-center max-w-3xl mx-auto space-y-4"
@@ -42,7 +46,7 @@ export default function TravelPage() {
 
 				{/* ── Quick Stats Pills ──────────────────────────────────── */}
 				<motion.div
-					initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.2 }}
 					className="flex flex-wrap justify-center gap-3 mb-12"
@@ -100,7 +104,7 @@ export default function TravelPage() {
 
 				{/* ── Stats Card ───────────────────────────────────────── */}
 				<motion.div
-					initial={safeReduceMotion ? false : { opacity: 0, scale: 0.98 }}
+					initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
 					animate={{ opacity: 1, scale: 1 }}
 					transition={{ delay: 0.3 }}
 					className="mb-16"
@@ -114,7 +118,7 @@ export default function TravelPage() {
 				{/* ── Completed Journeys Section ───────────────────────── */}
 				<section className="mb-20">
 					<motion.div
-						initial={safeReduceMotion ? false : { opacity: 0, x: -20 }}
+						initial={reduceMotion ? false : { opacity: 0, x: -20 }}
 						animate={{ opacity: 1, x: 0 }}
 						transition={{ delay: 0.4 }}
 						className="flex items-center gap-4 mb-8"
@@ -153,6 +157,7 @@ export default function TravelPage() {
 									destination={dest}
 									index={i}
 									variant="visited"
+									onSelect={setSelectedDestination}
 								/>
 							))}
 						</div>
@@ -162,7 +167,7 @@ export default function TravelPage() {
 				{/* ── Future Adventures Section ────────────────────────── */}
 				<section>
 					<motion.div
-						initial={safeReduceMotion ? false : { opacity: 0, x: 20 }}
+						initial={reduceMotion ? false : { opacity: 0, x: 20 }}
 						animate={{ opacity: 1, x: 0 }}
 						transition={{ delay: 0.5 }}
 						className="flex items-center gap-4 mb-8"
@@ -201,12 +206,19 @@ export default function TravelPage() {
 									destination={dest}
 									index={i}
 									variant="wishlist"
+									onSelect={setSelectedDestination}
 								/>
 							))}
 						</div>
 					)}
 				</section>
 			</div>
+
+			{/* ── Postcard & Sticker Modal ──────────────────────────── */}
+			<PostcardModal
+				destination={selectedDestination}
+				onClose={() => setSelectedDestination(null)}
+			/>
 		</main>
 	);
 }

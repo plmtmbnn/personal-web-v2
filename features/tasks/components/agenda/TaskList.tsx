@@ -9,8 +9,8 @@ import {
 	useRef,
 	useEffect,
 } from "react";
-import { useSearchParams } from "next/navigation";
-import { Inbox, Flame, Calendar, CheckCircle2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Inbox, Flame, Calendar, CheckCircle2, RotateCcw } from "lucide-react";
 import {
 	DragDropContext,
 	Droppable,
@@ -30,7 +30,9 @@ import { UNDO_TOAST_DURATION_MS } from "@/features/tasks/constants";
 import {
 	format,
 	addDays,
+	addMonths,
 	isBefore,
+	isAfter,
 	startOfDay,
 	parseISO,
 	startOfWeek,
@@ -50,6 +52,7 @@ export default function TaskList({
 	upcomingTasks,
 	completedTasks,
 }: TaskListProps) {
+	const router = useRouter();
 	const [_isPending, startTransition] = useTransition();
 	const searchParams = useSearchParams();
 	const { showSuccess, showError } = useToast();
@@ -76,13 +79,16 @@ export default function TaskList({
 	const pendingRequests = useRef(new Set<string>());
 
 	// Section-specific filter extraction
-	const getFilters = (prefix: string) => ({
-		priority: searchParams.get(`${prefix}_priority`) || "all",
-		category: searchParams.get(`${prefix}_category`) || "all",
-		range: searchParams.get(`${prefix}_range`) || "week",
-		search: searchParams.get(`${prefix}_search`) || "",
-		status: searchParams.get(`${prefix}_status`) || "all",
-	});
+	const getFilters = useCallback(
+		(prefix: string) => ({
+			priority: searchParams.get(`${prefix}_priority`) || "all",
+			category: searchParams.get(`${prefix}_category`) || "all",
+			range: searchParams.get(`${prefix}_range`) || "week",
+			search: searchParams.get(`${prefix}_search`) || "",
+			status: searchParams.get(`${prefix}_status`) || "all",
+		}),
+		[searchParams],
+	);
 
 	const todayFilters = getFilters("today");
 	const upcomingFilters = getFilters("upcoming");
@@ -209,11 +215,24 @@ export default function TaskList({
 			}
 
 			// 4. Date Range (For Upcoming & Completed)
-			if (isUpcoming && filters.range === "week") {
-				const nextWeek = addDays(todayRef, 8); // 7 days from today
-				result = result.filter(
-					(t) => t.due_date && isBefore(parseISO(t.due_date), nextWeek),
-				);
+			if (isUpcoming) {
+				if (filters.range === "week") {
+					// WEEK: today until next 7 days
+					const maxWeek = addDays(todayRef, 7);
+					result = result.filter((t) => {
+						if (!t.due_date) return false;
+						const d = parseISO(t.due_date);
+						return !isBefore(d, todayRef) && !isAfter(d, maxWeek);
+					});
+				} else if (filters.range === "month") {
+					// MONTH: today until next 1 month
+					const maxMonth = addMonths(todayRef, 1);
+					result = result.filter((t) => {
+						if (!t.due_date) return false;
+						const d = parseISO(t.due_date);
+						return !isBefore(d, todayRef) && !isAfter(d, maxMonth);
+					});
+				}
 			}
 
 			if (isCompleted) {
@@ -272,6 +291,25 @@ export default function TaskList({
 		completedFilters,
 		applyFilters,
 	]);
+
+	const resetSectionFilters = (prefix: string) => {
+		startTransition(() => {
+			const params = new URLSearchParams(searchParams.toString());
+			params.delete(`${prefix}_priority`);
+			params.delete(`${prefix}_category`);
+			params.delete(`${prefix}_status`);
+			params.delete(`${prefix}_search`);
+			params.delete(`${prefix}_completed`);
+			if (prefix === "upcoming") {
+				params.delete(`${prefix}_range`);
+			}
+			if (prefix === "completed") {
+				params.delete(`${prefix}_range`);
+				params.delete(`${prefix}_week_offset`);
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
+		});
+	};
 
 	const handleUpdate = async (taskId: string, updates: Partial<Task>) => {
 		// Prevent duplicate update requests for the same task
@@ -504,22 +542,30 @@ export default function TaskList({
 
 				{/* Today Section */}
 				<section id="today-section">
-					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+					<div className="flex flex-col gap-3.5 mb-6 border-b border-slate-100 pb-4">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-200/50">
 								<Flame className="w-5 h-5 fill-orange-600" />
 							</div>
 							<div>
-								<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
-									Focus (Today)
-								</h3>
+								<div className="flex items-center gap-2">
+									<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
+										Focus (Today)
+									</h3>
+									<span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200/60">
+										{displayTodayTasks.length}{" "}
+										{displayTodayTasks.length === 1 ? "task" : "tasks"}
+									</span>
+								</div>
 								<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
 									High-priority execution
 								</p>
 							</div>
 						</div>
 						{/* Today Filters */}
-						<TaskFilters tasks={todayTasks} paramPrefix="today" />
+						<div className="w-full pt-1">
+							<TaskFilters tasks={todayTasks} paramPrefix="today" />
+						</div>
 					</div>
 
 					<Droppable droppableId="today-list">
@@ -549,13 +595,32 @@ export default function TaskList({
 											)}
 										</Draggable>
 									))
+								) : hasActiveFilters(todayFilters) ? (
+									<div className="text-center py-12 bg-white border border-slate-200/80 rounded-[2rem] shadow-xs flex flex-col items-center justify-center p-6">
+										<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-2.5 opacity-40" />
+										<p className="text-xs text-slate-700 font-bold uppercase tracking-wider mb-1">
+											No tasks match your filters
+										</p>
+										<p className="text-[11px] text-slate-400 font-medium mb-3">
+											Try adjusting or resetting your filter criteria
+										</p>
+										<button
+											type="button"
+											onClick={() => resetSectionFilters("today")}
+											className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 active:scale-95 transition-all shadow-xs cursor-pointer"
+										>
+											<RotateCcw className="w-3.5 h-3.5" />
+											Reset Filters
+										</button>
+									</div>
 								) : (
-									<div className="text-center py-16 bg-emerald-50/50 border border-emerald-100 rounded-[2.5rem] border-dashed">
-										<CheckCircle2 className="w-10 h-10 text-emerald-300 mx-auto mb-3 opacity-40" />
-										<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
-											{hasActiveFilters(todayFilters)
-												? "No tasks match your filters"
-												: "All caught up for today!"}
+									<div className="text-center py-14 bg-emerald-50/40 border border-emerald-100 rounded-[2rem] border-dashed p-6">
+										<CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-2.5 opacity-60" />
+										<p className="text-xs text-emerald-800 font-extrabold uppercase tracking-[0.15em]">
+											All caught up for today!
+										</p>
+										<p className="text-[11px] text-emerald-600/80 font-semibold mt-1">
+											Great work! You have completed all scheduled tasks.
 										</p>
 									</div>
 								)}
@@ -567,26 +632,34 @@ export default function TaskList({
 
 				{/* Upcoming Section */}
 				<section id="upcoming-section">
-					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+					<div className="flex flex-col gap-3.5 mb-6 border-b border-slate-100 pb-4">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200/50">
 								<Calendar className="w-5 h-5" />
 							</div>
 							<div>
-								<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
-									Upcoming Awareness
-								</h3>
+								<div className="flex items-center gap-2">
+									<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
+										Upcoming Awareness
+									</h3>
+									<span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-200/60">
+										{displayUpcomingTasks.length}{" "}
+										{displayUpcomingTasks.length === 1 ? "task" : "tasks"}
+									</span>
+								</div>
 								<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
 									Strategic foresight
 								</p>
 							</div>
 						</div>
 						{/* Upcoming Filters with Range Toggle */}
-						<TaskFilters
-							tasks={upcomingTasks}
-							paramPrefix="upcoming"
-							showRangeFilter={true}
-						/>
+						<div className="w-full pt-1">
+							<TaskFilters
+								tasks={upcomingTasks}
+								paramPrefix="upcoming"
+								showRangeFilter={true}
+							/>
+						</div>
 					</div>
 
 					<Droppable droppableId="upcoming-list">
@@ -616,13 +689,33 @@ export default function TaskList({
 											)}
 										</Draggable>
 									))
+								) : hasActiveFilters(upcomingFilters) ? (
+									<div className="text-center py-12 bg-white border border-slate-200/80 rounded-[2rem] shadow-xs flex flex-col items-center justify-center p-6">
+										<Inbox className="w-10 h-10 text-slate-300 mx-auto mb-2.5 opacity-40" />
+										<p className="text-xs text-slate-700 font-bold uppercase tracking-wider mb-1">
+											No upcoming tasks match your filters
+										</p>
+										<p className="text-[11px] text-slate-400 font-medium mb-3">
+											Try adjusting your range or search keywords
+										</p>
+										<button
+											type="button"
+											onClick={() => resetSectionFilters("upcoming")}
+											className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 active:scale-95 transition-all shadow-xs cursor-pointer"
+										>
+											<RotateCcw className="w-3.5 h-3.5" />
+											Reset Filters
+										</button>
+									</div>
 								) : (
-									<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
-										<Inbox className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
-										<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
-											{hasActiveFilters(upcomingFilters)
-												? "No tasks match your filters"
-												: "No upcoming objectives detected."}
+									<div className="text-center py-14 bg-slate-50/70 border border-slate-200 rounded-[2rem] border-dashed p-6">
+										<Inbox className="w-10 h-10 text-slate-300 mx-auto mb-2.5 opacity-40" />
+										<p className="text-xs text-slate-500 font-bold uppercase tracking-[0.15em]">
+											No upcoming objectives detected
+										</p>
+										<p className="text-[11px] text-slate-400 font-medium mt-1">
+											Schedule future milestones to keep track of strategic
+											goals.
 										</p>
 									</div>
 								)}
@@ -637,15 +730,23 @@ export default function TaskList({
 					id="completed-section"
 					className="pt-4 border-t border-slate-100"
 				>
-					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+					<div className="flex flex-col gap-3.5 mb-6 border-b border-slate-100 pb-4">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200/50">
 								<CheckCircle2 className="w-5 h-5 fill-emerald-600 text-white stroke-[3]" />
 							</div>
 							<div>
-								<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
-									Completed Tasks
-								</h3>
+								<div className="flex items-center gap-2">
+									<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
+										Completed Tasks
+									</h3>
+									{isCompletedLoaded && (
+										<span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200/60">
+											{displayCompletedTasks.length}{" "}
+											{displayCompletedTasks.length === 1 ? "task" : "tasks"}
+										</span>
+									)}
+								</div>
 								<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
 									Execution History
 								</p>
@@ -653,11 +754,13 @@ export default function TaskList({
 						</div>
 						{/* Completed Filters with Range Toggle */}
 						{isCompletedLoaded && (
-							<TaskFilters
-								tasks={completedTasks}
-								paramPrefix="completed"
-								showRangeFilter={true}
-							/>
+							<div className="w-full pt-1">
+								<TaskFilters
+									tasks={completedTasks}
+									paramPrefix="completed"
+									showRangeFilter={true}
+								/>
+							</div>
 						)}
 					</div>
 
@@ -687,6 +790,24 @@ export default function TaskList({
 										onDelete={handleDeleteRequest}
 									/>
 								))
+							) : hasActiveFilters(completedFilters) ? (
+								<div className="text-center py-12 bg-white border border-slate-200/80 rounded-[2rem] shadow-xs flex flex-col items-center justify-center p-6">
+									<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-2.5 opacity-40" />
+									<p className="text-xs text-slate-700 font-bold uppercase tracking-wider mb-1">
+										No completed tasks found in this period
+									</p>
+									<p className="text-[11px] text-slate-400 font-medium mb-3">
+										Navigate to different weeks or reset filters to see history
+									</p>
+									<button
+										type="button"
+										onClick={() => resetSectionFilters("completed")}
+										className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 active:scale-95 transition-all shadow-xs cursor-pointer"
+									>
+										<RotateCcw className="w-3.5 h-3.5" />
+										Reset Filters
+									</button>
+								</div>
 							) : (
 								<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
 									<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />

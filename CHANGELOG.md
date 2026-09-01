@@ -1,3 +1,10 @@
+# [0.82.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.81.0...v0.82.0) (2026-09-01)
+
+
+### Features
+
+* **travel:** refine postcard stamp sticker with scalloped edges and country flag ([b283931](https://github.com/plmtmbnn/personal-web-v2/commit/b2839317f5cbbc64e703c7b3677ee964d96e3b4e))
+
 # [0.81.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.80.0...v0.81.0) (2026-09-01)
 
 

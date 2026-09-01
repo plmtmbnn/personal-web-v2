@@ -14,19 +14,6 @@ import { usePostcardActions } from "../hooks/usePostcardActions";
 
 const SPRING_MODAL = { type: "spring" as const, stiffness: 320, damping: 28 };
 
-/**
- * Classic airmail diagonal stripe border — CSS repeating-linear-gradient
- */
-const AIRMAIL_BORDER_STYLE = {
-	backgroundImage: `repeating-linear-gradient(
-		-45deg,
-		#1E3A8A 0px, #1E3A8A 10px,
-		#FAF5EC 10px, #FAF5EC 20px,
-		#BE123C 20px, #BE123C 30px,
-		#FAF5EC 30px, #FAF5EC 40px
-	)`,
-} as const;
-
 /** Format visit date for display */
 function formatVisitDate(visitedDate: string): string {
 	const [year, month] = visitedDate.split("-");
@@ -45,6 +32,24 @@ function formatVisitDate(visitedDate: string): string {
 		"Dec",
 	];
 	return `${monthNames[parseInt(month, 10) - 1]} ${year}`;
+}
+
+/** Get 2-letter ISO country code for flag CDN */
+function getCountryCode(country: string): string | null {
+	const codes: Record<string, string> = {
+		Indonesia: "id",
+		Thailand: "th",
+		Vietnam: "vn",
+		Japan: "jp",
+		"United Kingdom": "gb",
+		Netherlands: "nl",
+		Iceland: "is",
+		China: "cn",
+		Malaysia: "my",
+		Singapore: "sg",
+		France: "fr",
+	};
+	return codes[country] || null;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -157,11 +162,8 @@ export default function PostcardModal({
 					transition={SPRING_MODAL}
 					className="relative w-full max-w-4xl z-10 my-auto flex flex-col items-center gap-5 sm:gap-6"
 				>
-					{/* 1. The Postcard (Airmail border + full-bleed photo hero) */}
-					<div
-						className="w-full rounded-xl sm:rounded-2xl p-2.5 sm:p-3 shadow-2xl shadow-black/50"
-						style={AIRMAIL_BORDER_STYLE}
-					>
+					{/* 1. The Postcard (White border + full-bleed photo hero) */}
+					<div className="w-full bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xl shadow-black/50">
 						{/* Inner photo card */}
 						<div className="relative aspect-[8/5] rounded-md sm:rounded-lg overflow-hidden group">
 							{/* Photo Background */}
@@ -195,18 +197,18 @@ export default function PostcardModal({
 								className="absolute top-3 sm:top-5 left-3 sm:left-5 pointer-events-none"
 							>
 								<div
-									className={`border-[2.5px] sm:border-[3px] p-[2px] sm:p-[3px] select-none ${
-										isVisited ? "border-emerald-500" : "border-amber-500"
+									className={`bg-white shadow-xl shadow-black/20 border-[2.5px] sm:border-[3px] p-[2px] sm:p-[3px] select-none ${
+										isVisited ? "border-emerald-600" : "border-amber-600"
 									}`}
 								>
 									<div
 										className={`border px-3 sm:px-4 py-0.5 sm:py-1 text-center ${
-											isVisited ? "border-emerald-500" : "border-amber-500"
+											isVisited ? "border-emerald-600" : "border-amber-600"
 										}`}
 									>
 										<p
 											className={`text-base sm:text-xl font-black uppercase tracking-[0.12em] leading-tight ${
-												isVisited ? "text-emerald-500" : "text-amber-500"
+												isVisited ? "text-emerald-700" : "text-amber-700"
 											}`}
 										>
 											{isVisited ? "VISITED" : "WISHLIST"}
@@ -215,7 +217,7 @@ export default function PostcardModal({
 								</div>
 							</motion.div>
 
-							{/* Top Right — Bold "VIA AIR MAIL" Stamp */}
+							{/* Top Right — Bold "TRAVEL POSTCARD" Stamp */}
 							<motion.div
 								initial={
 									reduceMotion ? false : { opacity: 0, scale: 0.6, rotate: 10 }
@@ -229,19 +231,43 @@ export default function PostcardModal({
 								}}
 								className="absolute top-3 sm:top-5 right-3 sm:right-5 pointer-events-none"
 							>
-								<div className="border-[2.5px] sm:border-[3px] border-[#F2F2F2] p-[3px] sm:p-1 select-none">
-									<div className="border border-[#F2F2F2] px-3 sm:px-5 py-1.5 sm:py-2.5 text-center">
-										<p className="text-[9px] sm:text-xs font-black text-[#F2F2F2] tracking-[0.15em] leading-none">
-											VIA
-										</p>
-										<p className="text-sm sm:text-xl font-black text-[#F2F2F2] tracking-wider leading-tight mt-0.5">
-											AIR MAIL
-										</p>
-										{/* Decorative horizontal lines */}
-										<div className="flex flex-col items-center gap-[2px] mt-1 sm:mt-1.5">
-											<div className="w-14 sm:w-20 h-[2px] bg-[#F2F2F2]" />
-											<div className="w-10 sm:w-14 h-[2px] bg-[#F2F2F2]" />
-											<div className="w-6 sm:w-8 h-[2px] bg-[#F2F2F2]" />
+								<div
+									style={{ filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.3))" }}
+								>
+									<div
+										className="bg-white p-2 sm:p-3 select-none"
+										style={{
+											WebkitMask:
+												"linear-gradient(#000 0 0) 50% 50% / calc(100% - 6px) calc(100% - 6px) no-repeat, radial-gradient(circle at 0 0, transparent 3px, #000 3.5px) 0 0 / 12px 12px",
+										}}
+									>
+										<div className="border-[2.5px] sm:border-[3px] border-slate-800 p-[2px] sm:p-1">
+											<div className="border border-slate-800 px-3 sm:px-5 py-1.5 sm:py-2.5 text-center flex flex-col items-center">
+												<p className="text-[9px] sm:text-xs font-black text-slate-800 tracking-[0.15em] leading-none">
+													TRAVEL
+												</p>
+												<p className="text-sm sm:text-xl font-black text-slate-800 tracking-wider leading-tight mt-0.5">
+													POSTCARD
+												</p>
+												{/* Decorative horizontal lines with Flag */}
+												<div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-1 sm:mt-1.5">
+													<div className="w-3 sm:w-5 h-[2px] bg-slate-800" />
+													{getCountryCode(destination.country) ? (
+														<img
+															src={`https://flagcdn.com/w40/${getCountryCode(
+																destination.country,
+															)}.png`}
+															alt={destination.country}
+															className="w-4 sm:w-5 h-auto object-cover rounded-[1px] shadow-[0_0_1px_rgba(0,0,0,0.5)]"
+														/>
+													) : (
+														<span className="text-[10px] sm:text-[14px] leading-none block transform translate-y-[1px]">
+															🌍
+														</span>
+													)}
+													<div className="w-3 sm:w-5 h-[2px] bg-slate-800" />
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>

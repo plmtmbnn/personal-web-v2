@@ -9,16 +9,14 @@ import type { Destination } from "../types";
 const CANVAS_W = 800;
 const CANVAS_H = 500;
 
-/** Airmail border stripe config */
-const AIRMAIL_BORDER = 12;
-const AIRMAIL_STRIPE_W = 18;
-const AIRMAIL_COLORS = ["#1E3A8A", "#FAF5EC", "#ffffffff", "#FAF5EC"] as const;
+/** Border config */
+const BORDER_WIDTH = 16;
 
 /** Inner content area (photo zone) */
-const INNER_X = AIRMAIL_BORDER;
-const INNER_Y = AIRMAIL_BORDER;
-const INNER_W = CANVAS_W - AIRMAIL_BORDER * 2;
-const INNER_H = CANVAS_H - AIRMAIL_BORDER * 2;
+const INNER_X = BORDER_WIDTH;
+const INNER_Y = BORDER_WIDTH;
+const INNER_W = CANVAS_W - BORDER_WIDTH * 2;
+const INNER_H = CANVAS_H - BORDER_WIDTH * 2;
 const INNER_RADIUS = 6;
 
 /** Colors */
@@ -91,6 +89,24 @@ function formatDate(visitedDate: string | undefined): string {
 	return `${mn[parseInt(mo, 10) - 1]} ${yr}`;
 }
 
+/** Get 2-letter ISO country code for flag CDN */
+function getCountryCode(country: string): string | null {
+	const codes: Record<string, string> = {
+		Indonesia: "id",
+		Thailand: "th",
+		Vietnam: "vn",
+		Japan: "jp",
+		"United Kingdom": "gb",
+		Netherlands: "nl",
+		Iceland: "is",
+		China: "cn",
+		Malaysia: "my",
+		Singapore: "sg",
+		France: "fr",
+	};
+	return codes[country] || null;
+}
+
 /** Word-wrap text */
 function wrapText(
 	ctx: CanvasRenderingContext2D,
@@ -119,92 +135,11 @@ function wrapText(
  * Section renderers
  * ═══════════════════════════════════════════════════════════════════ */
 
-/** Classic airmail diagonal stripe border around the entire canvas */
-function drawAirmailBorder(ctx: CanvasRenderingContext2D) {
+/** Plain white border around the entire canvas */
+function drawPlainBorder(ctx: CanvasRenderingContext2D) {
 	ctx.save();
-
-	const totalStripes = Math.ceil(
-		((CANVAS_W + CANVAS_H) * 2) / AIRMAIL_STRIPE_W,
-	);
-
-	// Top border
-	ctx.save();
-	ctx.beginPath();
-	ctx.rect(0, 0, CANVAS_W, AIRMAIL_BORDER);
-	ctx.clip();
-	for (let i = -10; i < totalStripes; i++) {
-		ctx.fillStyle = AIRMAIL_COLORS[((i % 4) + 4) % 4];
-		ctx.beginPath();
-		const x = i * AIRMAIL_STRIPE_W;
-		ctx.moveTo(x, 0);
-		ctx.lineTo(x + AIRMAIL_STRIPE_W, 0);
-		ctx.lineTo(x + AIRMAIL_STRIPE_W - AIRMAIL_BORDER, AIRMAIL_BORDER);
-		ctx.lineTo(x - AIRMAIL_BORDER, AIRMAIL_BORDER);
-		ctx.closePath();
-		ctx.fill();
-	}
-	ctx.restore();
-
-	// Bottom border
-	ctx.save();
-	ctx.beginPath();
-	ctx.rect(0, CANVAS_H - AIRMAIL_BORDER, CANVAS_W, AIRMAIL_BORDER);
-	ctx.clip();
-	for (let i = -10; i < totalStripes; i++) {
-		ctx.fillStyle = AIRMAIL_COLORS[((i % 4) + 4) % 4];
-		ctx.beginPath();
-		const x = i * AIRMAIL_STRIPE_W;
-		ctx.moveTo(x - AIRMAIL_BORDER, CANVAS_H - AIRMAIL_BORDER);
-		ctx.lineTo(
-			x + AIRMAIL_STRIPE_W - AIRMAIL_BORDER,
-			CANVAS_H - AIRMAIL_BORDER,
-		);
-		ctx.lineTo(x + AIRMAIL_STRIPE_W, CANVAS_H);
-		ctx.lineTo(x, CANVAS_H);
-		ctx.closePath();
-		ctx.fill();
-	}
-	ctx.restore();
-
-	// Left border
-	ctx.save();
-	ctx.beginPath();
-	ctx.rect(0, 0, AIRMAIL_BORDER, CANVAS_H);
-	ctx.clip();
-	for (let i = -10; i < totalStripes; i++) {
-		ctx.fillStyle = AIRMAIL_COLORS[((i % 4) + 4) % 4];
-		ctx.beginPath();
-		const y = i * AIRMAIL_STRIPE_W;
-		ctx.moveTo(0, y);
-		ctx.lineTo(AIRMAIL_BORDER, y - AIRMAIL_BORDER);
-		ctx.lineTo(AIRMAIL_BORDER, y + AIRMAIL_STRIPE_W - AIRMAIL_BORDER);
-		ctx.lineTo(0, y + AIRMAIL_STRIPE_W);
-		ctx.closePath();
-		ctx.fill();
-	}
-	ctx.restore();
-
-	// Right border
-	ctx.save();
-	ctx.beginPath();
-	ctx.rect(CANVAS_W - AIRMAIL_BORDER, 0, AIRMAIL_BORDER, CANVAS_H);
-	ctx.clip();
-	for (let i = -10; i < totalStripes; i++) {
-		ctx.fillStyle = AIRMAIL_COLORS[((i % 4) + 4) % 4];
-		ctx.beginPath();
-		const y = i * AIRMAIL_STRIPE_W;
-		ctx.moveTo(CANVAS_W - AIRMAIL_BORDER, y - AIRMAIL_BORDER);
-		ctx.lineTo(CANVAS_W, y);
-		ctx.lineTo(CANVAS_W, y + AIRMAIL_STRIPE_W);
-		ctx.lineTo(
-			CANVAS_W - AIRMAIL_BORDER,
-			y + AIRMAIL_STRIPE_W - AIRMAIL_BORDER,
-		);
-		ctx.closePath();
-		ctx.fill();
-	}
-	ctx.restore();
-
+	ctx.fillStyle = "#FFFFFF";
+	ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 	ctx.restore();
 }
 
@@ -274,7 +209,9 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, isVisited: boolean) {
 	ctx.save();
 
 	const label = isVisited ? "VISITED" : "WISHLIST";
-	const color = isVisited ? "#059669" : "#D97706";
+	const borderColor = isVisited ? "#059669" : "#D97706";
+	const textColor = isVisited ? "#047857" : "#B45309";
+	const bgColor = "#FFFFFF";
 
 	ctx.font = "900 20px 'Montserrat', sans-serif";
 	const tw = ctx.measureText(label).width;
@@ -288,9 +225,20 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, isVisited: boolean) {
 	ctx.translate(stampX + stampW / 2, stampY + stampH / 2);
 	ctx.rotate(-0.06);
 
-	ctx.strokeStyle = color;
+	// Drop shadow for sticker effect
+	ctx.shadowColor = "rgba(0, 0, 0, 0.25)";
+	ctx.shadowBlur = 12;
+	ctx.shadowOffsetY = 4;
+
+	// Solid background
+	ctx.fillStyle = bgColor;
+	ctx.fillRect(-stampW / 2, -stampH / 2, stampW, stampH);
+
+	// Remove shadow for borders and text
+	ctx.shadowColor = "transparent";
 
 	// Outer border (thick)
+	ctx.strokeStyle = borderColor;
 	ctx.lineWidth = 3;
 	ctx.strokeRect(-stampW / 2, -stampH / 2, stampW, stampH);
 
@@ -299,7 +247,7 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, isVisited: boolean) {
 	ctx.strokeRect(-stampW / 2 + 4, -stampH / 2 + 4, stampW - 8, stampH - 8);
 
 	// Bold label
-	ctx.fillStyle = color;
+	ctx.fillStyle = textColor;
 	ctx.textAlign = "center";
 	ctx.textBaseline = "middle";
 	ctx.fillText(label, 0, 1);
@@ -307,48 +255,125 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, isVisited: boolean) {
 	ctx.restore();
 }
 
-/** Draw bold "VIA AIR MAIL" rubber stamp — iconic postcard signature */
-function drawAirMailStamp(ctx: CanvasRenderingContext2D) {
+/** Draw bold "TRAVEL POSTCARD" rubber stamp */
+async function drawAirMailStamp(
+	ctx: CanvasRenderingContext2D,
+	country: string,
+) {
 	ctx.save();
 
-	const stampW = 140;
-	const stampH = 72;
-	const stampX = INNER_X + INNER_W - stampW - 24;
-	const stampY = INNER_Y + 20;
+	const innerW = 140;
+	const innerH = 76;
+	const pad = 12; // white padding
+	const stampW = innerW + pad * 2;
+	const stampH = innerH + pad * 2;
+
+	const stampX = INNER_X + INNER_W - stampW - 16;
+	const stampY = INNER_Y + 16;
 
 	ctx.translate(stampX + stampW / 2, stampY + stampH / 2);
 	ctx.rotate(-0.06);
 
-	// Outer red border rectangle
-	ctx.strokeStyle = "#F2F2F2";
+	// Create offscreen canvas for scalloped edge
+	const offscreen = document.createElement("canvas");
+	offscreen.width = stampW;
+	offscreen.height = stampH;
+	const octx = offscreen.getContext("2d");
+	if (octx) {
+		octx.fillStyle = "#FFFFFF";
+		octx.fillRect(0, 0, stampW, stampH);
+
+		octx.globalCompositeOperation = "destination-out";
+		octx.fillStyle = "#000000";
+		const radius = 3.5;
+		const spacing = 12;
+		for (let x = 0; x <= stampW; x += spacing) {
+			octx.beginPath();
+			octx.arc(x, 0, radius, 0, Math.PI * 2);
+			octx.fill();
+			octx.beginPath();
+			octx.arc(x, stampH, radius, 0, Math.PI * 2);
+			octx.fill();
+		}
+		for (let y = 0; y <= stampH; y += spacing) {
+			octx.beginPath();
+			octx.arc(0, y, radius, 0, Math.PI * 2);
+			octx.fill();
+			octx.beginPath();
+			octx.arc(stampW, y, radius, 0, Math.PI * 2);
+			octx.fill();
+		}
+	}
+
+	// Drop shadow for sticker effect
+	ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+	ctx.shadowBlur = 12;
+	ctx.shadowOffsetY = 6;
+	ctx.drawImage(offscreen, -stampW / 2, -stampH / 2);
+
+	// Remove shadow for borders and text
+	ctx.shadowColor = "transparent";
+
+	// Outer red border rectangle (slate-800)
+	ctx.strokeStyle = "#1E293B";
 	ctx.lineWidth = 3;
-	ctx.strokeRect(-stampW / 2, -stampH / 2, stampW, stampH);
+	ctx.strokeRect(-innerW / 2, -innerH / 2, innerW, innerH);
 
-	// Inner red border
+	// Inner red border (slate-800)
 	ctx.lineWidth = 1;
-	ctx.strokeRect(-stampW / 2 + 4, -stampH / 2 + 4, stampW - 8, stampH - 8);
+	ctx.strokeRect(-innerW / 2 + 4, -innerH / 2 + 4, innerW - 8, innerH - 8);
 
-	// "VIA" text
-	ctx.fillStyle = "#F2F2F2";
+	// "TRAVEL" text
+	ctx.fillStyle = "#1E293B";
 	ctx.font = "900 14px 'Montserrat', sans-serif";
 	ctx.textAlign = "center";
-	ctx.fillText("VIA", 0, -14);
+	ctx.fillText("TRAVEL", 0, -14);
 
-	// "AIR MAIL" text — big and bold
-	ctx.font = "900 22px 'Montserrat', sans-serif";
-	ctx.fillText("AIR MAIL", 0, 10);
+	// "POSTCARD" text — big and bold
+	ctx.font = "900 20px 'Montserrat', sans-serif";
+	ctx.fillText("POSTCARD", 0, 10);
 
-	// Horizontal lines below (classic postal lines)
-	ctx.strokeStyle = "#F2F2F2";
-	ctx.lineWidth = 2;
-	for (let i = 0; i < 3; i++) {
-		const lineY = 20 + i * 5;
-		const lineHalfW = 52 - i * 8;
-		ctx.beginPath();
-		ctx.moveTo(-lineHalfW, lineY);
-		ctx.lineTo(lineHalfW, lineY);
-		ctx.stroke();
+	// Flag with horizontal lines
+	const countryCode = getCountryCode(country);
+
+	const lineW = 20;
+	const gap = 6;
+	const bottomY = 26;
+
+	let flagW = 14;
+
+	if (countryCode) {
+		const flagImg = await loadImage(
+			`https://flagcdn.com/w40/${countryCode}.png`,
+		);
+		if (flagImg) {
+			const imgW = 20;
+			const imgH = (flagImg.height / flagImg.width) * imgW;
+			flagW = imgW;
+			// Draw shadow for flag to match DOM
+			ctx.shadowColor = "rgba(0,0,0,0.3)";
+			ctx.shadowBlur = 2;
+			ctx.shadowOffsetY = 1;
+			ctx.drawImage(flagImg, -imgW / 2, bottomY - imgH / 2, imgW, imgH);
+			ctx.shadowColor = "transparent";
+		}
+	} else {
+		ctx.font = "14px sans-serif";
+		flagW = ctx.measureText("🌍").width;
+		ctx.fillText("🌍", 0, bottomY + 5);
 	}
+
+	// Lines
+	ctx.strokeStyle = "#1E293B";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	// Left line
+	ctx.moveTo(-flagW / 2 - gap - lineW, bottomY);
+	ctx.lineTo(-flagW / 2 - gap, bottomY);
+	// Right line
+	ctx.moveTo(flagW / 2 + gap, bottomY);
+	ctx.lineTo(flagW / 2 + gap + lineW, bottomY);
+	ctx.stroke();
 
 	ctx.restore();
 }
@@ -433,8 +458,8 @@ export async function renderPostcardToCanvas(
 
 	ctx.scale(scale, scale);
 
-	// 1. Airmail border (fills edges)
-	drawAirmailBorder(ctx);
+	// 1. Plain border (fills edges)
+	drawPlainBorder(ctx);
 
 	// 2. Photo background (inside border)
 	await drawPhotoBackground(ctx, destination);
@@ -442,7 +467,7 @@ export async function renderPostcardToCanvas(
 	// 3. Gradient + content overlays
 	drawGradientOverlay(ctx);
 	drawStatusBadge(ctx, destination.isVisited);
-	drawAirMailStamp(ctx);
+	await drawAirMailStamp(ctx, destination.country);
 	drawTextContent(ctx, destination);
 
 	return canvas;

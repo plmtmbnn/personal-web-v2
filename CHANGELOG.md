@@ -1,3 +1,10 @@
+# [0.81.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.80.0...v0.81.0) (2026-09-01)
+
+
+### Features
+
+* **travel:** revamp postcard modal with iconic airmail border and bold stamps ([857380e](https://github.com/plmtmbnn/personal-web-v2/commit/857380e0de95632bfff6b82ca77de520e2fb0f73))
+
 # [0.80.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.79.0...v0.80.0) (2026-08-31)
 
 

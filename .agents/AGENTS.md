@@ -22,8 +22,9 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Styling:** Tailwind CSS v4.3.2 + Framer Motion
 - **Icons:** Lucide-React + React-Icons/Fa
 - **Linter/Formatter:** Biome
-- **Utilities Integration:** PapaParse (CSV), node-sql-parser, sql-formatter, otplib (TOTP)
-- **Advanced APIs:** Wake Lock API (Utilities), Web Audio API (Timer beeps)
+- **Utilities Integration:** PapaParse (CSV), node-sql-parser, sql-formatter, otplib (TOTP), HTML5 Canvas API (Postcard/Run stickers & Code-to-Image), Clipboard API
+- **Advanced APIs:** Wake Lock API (Running Timer), Web Audio API (Timer beeps & Spinner clicks), MediaDevices & WebGL (Device Inspector)
+- **External Integrations:** Strava API (`services/strava/`), Liverpool FC API (`backend.liverpoolfc.com`)
 - **Workflow:** Semantic Release + Commitlint + Husky
 - **Optimizations:** Cross-platform environment variables, filesystem caching, bundle analysis
 - **Build Tools:** cross-env, autoprefixer, @next/bundle-analyzer
@@ -45,41 +46,52 @@ The project follows a modular, domain-driven structure to ensure scalability and
 
 ### 1. `features/` (Domain Layer)
 Contains all business logic, components, and types for specific features.
+- `features/adventures/`: Running logs & Strava activity hub (`ActivityDetailModal`, `PersonalBestsSwipeCard`, run canvas exports, split pacing breakdown).
 - `features/auth/`: Actions, `PinGuard.tsx`, and auth-specific components.
 - `features/blog/`: Actions, data fetching, and all blog UI components.
-- `features/tasks/`: Actions, analytics, types, utils, and task UI components structured under logical `components/` subdirectories (`agenda/`, `analytics/`, `health/`, `shared/`).
-- `features/investment/`: Actions, types, and Fear & Greed visualization components.
+- `features/contact/`: Compact single-page contact view with real-time Jakarta clock & active status chip.
+- `features/home/`: Landing hero, dynamic greetings, quick link cards, and zero-scrollbar desktop entry layout.
+- `features/insights/`: Insights hub module aggregator (Blog, Investment, Liverpool FC, Utils).
+- `features/investment/`: Actions, types, Fear & Greed market sentiment telemetry, and historical trends.
 - `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureCard.tsx`, `PlayedCard.tsx`, `FixtureFilters.tsx`, `FixtureSkeleton.tsx`).
-- `features/travel/`: Components, types, and static data for the Travel Bucket List Tracker.
-- `features/shared/`: Global reusable UI components (e.g., `CustomModal.tsx`, `StockTicker.tsx`, `Skeleton.tsx`).
+- `features/portfolio/` & `features/work-experience/`: Professional showcases, career timeline, interactive project cards, skills radar/metrics.
+- `features/reminders/`: Quick Reminders actions, types, linkified text pills, and duration extensions backed by Upstash Redis.
+- `features/tasks/`: Actions, analytics, types, utils, 6-month date horizon, optimized `TaskProgress`, and task UI components structured under logical `components/` subdirectories (`agenda/`, `analytics/`, `health/`, `shared/`).
+- `features/travel/`: Components, types, static destinations data, and `PostcardModal` vintage airmail canvas generator for the Travel Bucket List Tracker.
+- `features/utils/`: High-fidelity developer utilities organized across 7 functional categories (`data-tools/`, `file-tools/`, `fun-tools/`, `security-tools/`, `stock-tools/`, `text-tools/`, `time-tools/`).
+- `features/shared/`: Global reusable UI components (e.g., `CustomModal.tsx`, `StockTicker.tsx`, `Skeleton.tsx`, `JsonValue.tsx`, `CommandPalette.tsx`, `AdminToast.tsx`, `CompactBottomBar.tsx`).
 
 ### 2. `services/` (Infrastructure Layer)
 Reserved for cross-cutting infrastructure logic and pluggable systems.
 - `services/notifications/`: Modular dispatcher with `Telegram` and `Browser` channels.
 - `services/config/`: Remote Config management with Firebase and local fallbacks.
+- `services/strava/`: Strava API integration, OAuth token exchange, activity caching with Redis, split metrics calculation.
 
 ### 3. `lib/` (Global Layer)
 Reserved for feature-agnostic, shared logic.
-- `lib/core/`: System clients (Supabase, Redis, Firebase) and environment validation (`env.ts`).
-- `lib/shared/`: Global constants, metadata, and SEO utilities.
+- `lib/core/`: System clients (Supabase, Redis, Firebase), environment validation (`env.ts`), and auth utilities (`auth-utils.ts`).
+- `lib/shared/`: Global constants (`constants.ts`), metadata, and SEO utilities (`metadata.ts`, `seo.ts`).
 - `lib/hooks/`: Generic reusable React hooks.
 
 ### 4. `app/` (Routing Layer)
 Strictly for routing and page definitions.
-- `app/admin/`: Centralized management dashboard.
-- `app/adventures/`: Aesthetic content pages for Running and Travel logs.
+- `app/admin/`: Centralized management dashboard and `/admin/reminders` Quick Reminders portal.
+- `app/adventures/`: Aesthetic content pages for Running (`/adventures/running`) and Travel (`/adventures/travel`) logs.
 - `app/auth/`: Callback route for Supabase authentication.
-- `app/blog/`: SSG-optimized blog system with dynamic routes.
-- `app/contact/`: User inquiry page and contact submission form.
+- `app/blog/`: SSG-optimized blog system with dynamic routes (`[slug]`).
+- `app/contact/`: Compact single-screen contact inquiry page with live Jakarta timezone status.
+- `app/insights/`: Analytical insights aggregator hub page.
 - `app/investment/`: Market sentiment and Fear & Greed visualizations.
 - `app/liverpool/`: Matchday Schedule & Fixtures Hub with live countdowns and matchday reports.
 - `app/login/`: Admin PIN login interface.
 - `app/portfolio/` & `app/work-experience/`: Professional showcase and career timeline.
-- `app/tasks/`: Personal task management and analytics agenda.
+- `app/tasks/`: Personal task management, 6-month horizon, and analytics agenda.
 - `app/unauthorized/`: Fallback access-denied page.
-- `app/utils/`: High-fidelity developer utilities index.
+- `app/utils/`: High-fidelity developer utilities index across 7 functional categories.
 - `app/api/tasks/cron/`: Secure API endpoint for scheduled task reminders.
 - `app/api/mock/`: Dynamic path-based mocking engine endpoints.
+- `app/api/strava/`: Strava OAuth callback, sync, and split routes.
+- `app/api/auth/refresh-session/`: Proactive Redis session & Supabase token synchronizer.
 
 ## 🔑 Security & Authorization
 - **Environment Variables:** Always use `ENV_GLOBAL` from `@/lib/core/env`.
@@ -87,7 +99,7 @@ Strictly for routing and page definitions.
   - Centralized verification via `checkAdmin()` in `features/auth/actions.ts`.
   - **Cron Security**: API routes for crons must check for `CRON_SECRET` via headers or params.
 - **TOTP / Authenticator Protection:** 
-  - `PinGuard.tsx` protects restricted sections (Admin, Tasks, Investment) using a 6-digit Google Authenticator code verified via `otplib` (utilizing `TOTP_SECRET` in server environment).
+  - `PinGuard.tsx` protects restricted sections (Admin, Tasks) using a 6-digit Google Authenticator code verified via `otplib` (utilizing `TOTP_SECRET` in server environment).
   - Designed for native device numeric keyboards (virtual keypad obsolete).
   - **Session Duration**: 12 hours.
 - **Auth Cookies**: Long-lived sessions (30 weeks).
@@ -105,19 +117,22 @@ Strictly for routing and page definitions.
   - Page-level skeleton loading is preferred over redundant inline "Synchronizing Intel" indicators.
 - **Module Focus Pattern**: For side-by-side utility modules (e.g., Input/Output), provide `Minimize2` / `Maximize2` buttons to collapse/expand modules, allowing users to focus on specific panes. Use `framer-motion` for smooth layout transitions. Ensure Framer Motion transforms do not conflict with Tailwind transform classes (use `style={{ x: ... }}` directly).
 - **Mobile-First UX**:
-  - **Strategic Grids**: Utilities transition from 1-column mobile to multi-column desktop/tablet.
+  - **Strategic Grids**: Utilities transition from 1-column mobile to multi-column desktop/tablet (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`).
   - **Desktop Entry Screen Standard**: Single-page entry points (Home, Contact) utilize compact 100vh entry screens on desktop (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden`) to eliminate scrollbars, while providing fluid vertical scrolling on handheld mobile devices.
   - **Touch Targets**: Enhanced padding and `active:scale-90` feedback for handheld training tools.
 
 ## 🗺 Navigation
 - **Data-Driven:** Driven by the `NAV_ITEMS` constant in `CompactBottomBar.tsx`.
-- **Sub-Menu Strategy**: "Insights" contains Blog, Investment, Liverpool FC, and Utils.
+- **Sub-Menu Strategy**: 
+  - "Insights" contains Blog, Investment, Liverpool FC, and Utils.
+  - "Admin" contains Tasks, Blog Editor, Stock Manager, and Quick Reminders with dynamic count badges.
 - **Click Pass-through**: Outer `<motion.nav>` uses `pointer-events-none` and the inner bar uses `pointer-events-auto` to prevent the floating workspace container from blocking clicks on underlying page content.
 - **SSR & Hydration Strategy**: Avoids returning `null` before mounting. Default public navigation links render server-side (SSR) to preserve SEO internal links and prevent a visual pop-in layout shift, updating dynamically after client-side authentication checks.
 - **Optimized Queries**: Pending task count queries only fetch on auth status changes, rather than firing on every page navigation.
 - **Dynamic Hover Detection**: Attaches a media query listener to `window.matchMedia("(hover: hover)")` to dynamically adapt UI hover states in real-time.
 
 ## 📝 Content Systems
+
 ### Liverpool FC Matchday Hub
 - **Architecture**: Domain-driven feature in `features/liverpool/` fetching from official REST API (`backend.liverpoolfc.com`) with 1-hour ISR revalidation and defensive data fallbacks.
 - **Dual-Tab Architecture**: Focuses on "Upcoming Matches" (with a live countdown Next Match hero and monthly schedule grouping) and isolates "Played Results" (displaying outcome pills `WIN`/`DRAW`/`LOSS`, final scores, and official match reports).
@@ -134,19 +149,28 @@ Strictly for routing and page definitions.
   - **Scrolling**: Mandate `overflow-auto` for both horizontal and vertical scrolling.
   - **Formatting**: Use `white-space: pre` to prevent line wrapping, preserving original code structure.
   - **Height Constraints**: Set `max-h-[32rem]` to keep extremely long snippets manageable.
-- **Post-Article UX**: 
-  - Centered "Post Actions" footer replacing the legacy sidebar.
-  - High-fidelity layout combining Share actions and interactive motion feedback.
+- **Post-Article UX**: Centered "Post Actions" footer replacing legacy sidebar with high-fidelity share actions.
 
 ### Task System
 - **Modular Directory Organization**: Task system UI components are organized into logical sub-directories under `components/`: `agenda/` (forms, lists, filters, items), `analytics/` (charts, graphs, reports), `health/` (system checks), and `shared/` (task-specific loading skeletons, toasts, errors).
 - **Tabbed Architecture**:
-  - **Agenda**: Prominent `TaskProgress` (independent fetch) and collapsible `HealthCheck`.
-  - **Analytics**: Displays a permanently visible `GeneralReport` panel with period filters (Today, Week, Month, All Time), using `AnalyticsDashboardSkeleton` as its loading state. The stats grid is enriched with Velocity (average completion rate) and Trend metrics (percentage change vs previous period, color-coded dynamically). Displays a clean "Awaiting Data" fallback and placeholder formatting for reliability metrics when there are zero completed tasks in the selected period.
+  - **Agenda**: Prominent `TaskProgress` (independent fetch, dynamic completion rates) and collapsible `HealthCheck`.
+  - **Analytics**: Displays a permanently visible `GeneralReport` panel with period filters (Today, Week, Month, 6 Months, All Time), using `AnalyticsDashboardSkeleton` as its loading state. The stats grid is enriched with Velocity (average completion rate) and Trend metrics (percentage change vs previous period, color-coded dynamically). Displays a clean "Awaiting Data" fallback when there are zero completed tasks.
 - **Task Layout & Actions**: `TaskItem` separates title and description with clear vertical breathing room. A status selector dropdown is positioned in the bottom-right actions bar; selecting "DONE" automatically completes the task (setting `status = "done"` with a timestamp), and selecting other options resets it.
 - **Kanban Board Optimization**: Transitions the item card to a vertical layout with dedicated top header handles and stacks controls at the bottom to maintain touch target usability in narrow columns.
 - **Dynamic Initialization**: `TaskForm` utilizes an auto-expanding `textarea` triggered by content changes to support multi-line batch entry without layout shifting.
 - **Notifier System**: Pluggable dispatcher delivering alerts via Telegram Bot and Browser API.
+
+### Quick Reminders System
+- **Architecture**: Domain-driven feature in `features/reminders/` and management portal at `/admin/reminders`.
+- **Redis TTL Lifespan**: Backed by Upstash Redis with selectable expiration lifespans (1 Day, 1 Week, 1 Month) and automatic key expiration.
+- **Interactive Links**: Automatic URL detection with clickable pill buttons and one-click copy-to-clipboard functionality.
+- **Rapid Time Extensions**: Provides one-click TTL extension badges (`+1D`, `+1W`, `+1M`) without re-entering reminder text.
+- **Navigation Badge**: Displays dynamic pending reminder counts in `CompactBottomBar.tsx` Admin submenu.
+
+### Insights Hub
+- **Architecture**: Centralized aggregator at `/insights` (`features/insights/`) consolidating Blog, Investment sentiment, Liverpool FC Matchday Hub, and Developer Utilities.
+- **Curated Modules**: Floating cards with category pills, topic tags, high-contrast linkout arrows (`ArrowUpRight`), and organic spring hover interactions (`whileHover={{ y: -4 }}`).
 
 ### Second Brain / Knowledge Graph
 - **Architecture**: Local filesystem-backed (`content/brain/*.md`) knowledge management system.
@@ -157,36 +181,31 @@ Strictly for routing and page definitions.
 
 ### Adventures & Professional Showcase
 - **Adventures**: High-fidelity logs for Running and Travel missions, utilizing Glassmorphism and rich typography.
-  - **Running Performance**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Supports dynamic grid scaling (up to 5 columns) for high-density performance visualization. Features a high-fidelity **Activity Detail Modal** with real Strava splits and run canvas image exports (supporting light themes, transparent backgrounds, and clipboard copying).
+  - **Running Performance**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Supports dynamic grid scaling for high-density performance visualization. Features a high-fidelity **Activity Detail Modal** with real Strava splits, light/dark themes, transparent canvas background export, and clipboard image copying. Includes an overhauled **PersonalBestsSwipeCard** built on modern Floating Card patterns.
 - **Travel Bucket List Tracker**: 
   - **Architecture**: Domain-driven logic in `features/travel/`.
   - **Logic**: Dynamic `useMemo` filtering for "Completed Journeys" (sorted by date) vs. "Future Adventures".
-  - **Components**: High-fidelity `StatsCard` for progress visualization and `DestinationCard` with status badges.
+  - **Components**: High-fidelity `StatsCard` for progress visualization, `DestinationCard` with status badges, and `PostcardModal` vintage airmail high-res PNG sticker export with polaroid frames and postal ephemera stamps.
   - **Aesthetics**: Solid Productivity Pattern (`bg-slate-50`) with Emerald accents.
 - **Professional Showcase**: Career milestones and project portfolio featuring interactive timelines and impact statistics.
 
-### Adventure Utilities
-- **System Integrity**: Uses **Wake Lock API** and **Web Audio API** beeps.
-- **Advanced Tools**: 
-  - **Market Intelligence (Stock Explorer)**: Premium-grade IDX dashboard (`/utils/stock-explorer`) featuring a dynamic composite scoring engine with custom weights (price, volume, foreign net flow, frequency, stability), range sliders, strategy presets (Whale, Momentum, Value), interactive star-watchlist, sector rotation visualizations, opportunity scanner, volume heatmap, and a high-fidelity AI Analyst Drawer.
-  - **Text Compare Tool**: High-performance side-by-side diff utility (`/utils/text-compare`) with a custom comparator engine.
-  - **Mock API Engine**: Path-based dynamic mocking (`/api/mock/*`) with Redis persistence and 1-month TTL. Supports JSON validation with `CustomModal` feedback.
-  - **Schema Forge**: Advanced JSON to Multi-Target converter (TS, Go, Zod, Mongoose, Joi).
-  - **Asset Averaging**: Weighted average cost analysis for stock and crypto investments.
-  - **Formatters**: Developer-centric SQL and JSON beautifiers with syntax validation.
-  - **Converters**: Universal Case and CSV-to-JSON recursive parsers.
-  - **File Renamer**: SEO-friendly kebab-case normalization for batch file operations.
-  - **Running Timer**: High-precision interval timer with automated transitions and wake-lock.
-  - **Web Archiver**: Read-It-Later utility (`/utils/web-archiver`) that scrapes articles from URLs using `got-scraping`, extracts clean core content with `@mozilla/readability`, converts it to Markdown using `turndown`, and archives it directly into the local Second Brain.
+### Developer Utilities Ecosystem (20+ Tools across 7 Categories)
+- **Suite Categorization**:
+  1. **Text Tools**: Text Compare (`/utils/text-compare` with custom comparator engine, character diffs, and synchronized scrolling), Diff Viewer (`/utils/diff-viewer`), Case Converter (`/utils/case-converter`), QR Code Generator (`/utils/qr-code-generator` with multi-format support and SVG/PNG export).
+  2. **Data Tools**: Device Inspector (`/utils/device-inspector` with hardware diagnostics, audio/video studio, and network speed test), Mock API Engine (`/utils/mock-api` & `/api/mock/*` with Redis persistence), SQL Formatter (`/utils/sql-formatter`).
+  3. **File Tools**: Code to Image (`/utils/code-to-image`), CSV to JSON (`/utils/csv-to-json`), File Renamer (`/utils/file-renamer`), Image Converter (`/utils/image-converter`), Schema Forge / Advanced JSON Converter (`/utils/json-converter-advanced`), JSON Formatter (`/utils/json-formatter`).
+  4. **Fun Tools**: Spinner Wheel (`/utils/spinner-wheel` with Web Audio API clicks and confetti).
+  5. **Security Tools**: Hash & Password Generator (`/utils/hash-password-generator`), URL Safety & Threat Inspector (`/utils/url-inspector`).
+  6. **Stock Tools**: Stock Explorer (`/utils/stock-explorer` with composite scoring engine, whale/momentum/value presets, foreign flow tracking, sector heatmaps, and AI Analyst Drawer), Stock/Crypto Average Calculator (`/utils/stock-crypto-calculator`).
+  7. **Time Tools**: Cron Expression Builder (`/utils/cron-builder` with natural language summaries), Running Interval Timer (`/utils/timer` with Web Audio synthesized beeps and Wake Lock API).
 - **JSON Tree View**: Standardized `JsonValue` component for interactive exploration of parsed data, supporting nested expansion, item counts, and value-level copying.
-- **Architecture**: Redis-backed with automatic IDX synchronization via `got-scraping` (configured as an external server package to resolve static TLS files) and an **Admin Portal** (`/utils/stock-explorer/admin`) for cache management and status monitoring.
-- **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity. 
-  - **Logic Decoupling**: Heavy business logic (e.g., schema generation, formatters, string transformations) is decoupled from the `View.tsx` component into dedicated `utils/` (e.g., `generators.ts`, `transform.ts`) and `types.ts` files within each specific utility's feature directory.
+- **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity.
+- **Logic Decoupling**: Heavy business logic (e.g., schema generation, formatters, string transformations, comparator engine) is decoupled from the `View.tsx` component into dedicated `utils/` and `types.ts` files within each utility's feature directory.
 
 ### Administrative Ecosystem
-- **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, and Stock Registry.
-- **Stock Manager**: Re-engineered portal (`/utils/stock-explorer/admin`) providing live cache status statistics (instruments count, trading date, 3-hour lifespan info), a programmatic "Purge Cache" action, and manual override form validation as a fallback synchronization protocol.
-- **Navigation**: "Manage Stocks" integrated into `CompactBottomBar.tsx` Admin sub-menu.
+- **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, Stock Registry, and Quick Reminders (`/admin/reminders`).
+- **Stock Manager**: Re-engineered portal (`/utils/stock-explorer/admin`) providing live cache status statistics (instruments count, trading date, 3-hour lifespan info), a programmatic "Purge Cache" action, and manual override form validation.
+- **Navigation**: "Manage Stocks" and "Quick Reminders" integrated into `CompactBottomBar.tsx` Admin sub-menu with pending counts.
 
 ## 🚀 Development & Build Optimization
 

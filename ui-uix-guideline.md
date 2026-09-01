@@ -274,3 +274,85 @@ Authentication flows must be seamless, secure, and user-friendly with automatic 
 * **Documentation:** Complete technical details in `docs/AUTH_TOKEN_REFRESH.md`
 
 ---
+
+## 12. HTML5 Canvas Export & Sticker Generation Standards
+Dynamic image and sticker generation provides engaging, shareable visual summaries across adventures, utilities, and travel.
+
+### Canvas Rendering Principles
+* **High-DPI Retina Scaling:** Canvas dimensions MUST be scaled by `window.devicePixelRatio` or a minimum of `2x` (e.g. `800x500` rendered at `1600x1000`) before rendering to prevent blurry text and pixelated artifacts on high-density displays.
+* **Font Pre-loading & Fallbacks:** Always load and verify custom web fonts (such as `Montserrat`, `Georgia`, or system serif/sans-serif fonts) before initiating canvas drawing routines.
+* **CORS-Safe Asset Loading:** External images (e.g., Strava profile pictures, destination photos) must be loaded using `img.crossOrigin = "anonymous"` to avoid tainting the canvas and blocking image export.
+* **Export Action Ergonomics:**
+  - **Clipboard API First:** Provide a primary "Copy to Clipboard" button utilizing `navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])` with immediate tactile feedback (`Check` icon and "Copied!" state).
+  - **Fallback PNG Download:** Provide a secondary "Download PNG" button that generates an anchor download link (`a.download = filename.png`).
+
+### Specialized Export Formats
+* **Vintage Airmail Travel Postcard (`postcardCanvas.ts`):**
+  - **Border Pattern:** Diagonal striped airmail border (`#1E3A8A`, `#FAF5EC`, `#BE123C`) with rounded inner cream backing (`#FAF5EC`).
+  - **Polaroid Photo Frame:** Left-aligned framed photo with white padding, subtle drop shadow, and handwritten-style caption.
+  - **Postal Ephemera:** Right-aligned postmark stamp circle, vintage airmail badge, destination coordinates, completed dates, and memo lines.
+* **Strava Running Activity Canvas (`ActivityDetailModal.tsx`):**
+  - **Theme Adaptability:** Dual-theme engine supporting clean light canvas (`#FFFFFF` with `#0F172A` metrics) and high-contrast dark canvas (`#0F172A` with `#FFFFFF` metrics).
+  - **Transparent Mode:** Support a transparent background toggle for sticker overlays on Instagram Stories or photo collages.
+  - **Telemetry Typography:** Large hero distance (`72px font-black`), pace, elevation gain, moving time, heart rate, and split pacing breakdown bars.
+
+---
+
+## 13. Developer Utilities UI/UX & Module Focus Patterns
+Utilities must balance high data density with focused productivity and clear mental models.
+
+### Categorized Utility Architecture
+Utilities are structured into 7 distinct domains for easy discovery and mental categorization:
+1. **Text Tools:** Text Compare, Diff Viewer, Case Converter, QR Code Generator.
+2. **Data Tools:** Device Inspector, Mock API Engine, SQL Formatter.
+3. **File Tools:** Code to Image, CSV to JSON, File Renamer, Image Converter, Schema Forge (Advanced JSON Converter), JSON Formatter.
+4. **Fun Tools:** Spinner Wheel decision maker.
+5. **Security Tools:** Hash & Password Generator, URL Safety & Threat Inspector.
+6. **Stock Tools:** Stock Explorer, Stock/Crypto Average Calculator.
+7. **Time Tools:** Cron Expression Builder, Running Interval Timer.
+
+### Module Focus & Split-View Pattern
+For side-by-side split utilities (e.g. Input vs Output, Side-by-Side Text Compare):
+* **Pane Collapse/Expand:** Include `Minimize2` and `Maximize2` action buttons in pane headers to collapse the complementary pane, giving 100% width to the active pane.
+* **Framer Motion Layout Transitions:** Smoothly animate pane expansion using `framer-motion` layout animations without CSS transform conflicts.
+* **Synchronized Scrolling:** Side-by-side comparators (e.g., `TextCompare`) must synchronize scroll positions between source and modified panes with matching line heights.
+* **Interactive Tree Explorer (`JsonValue`):** Standardize JSON payloads and tree representations with recursive collapsibility, type color coding (string, number, boolean, null), and value-level copy triggers.
+
+---
+
+## 14. System Audio & Hardware Integration Standards
+When utilizing native browser and device APIs for real-time utilities:
+
+* **Web Audio API (Synthesized Audio):**
+  - Synthesize sounds programmatically using `AudioContext` and `OscillatorNode` (e.g., countdown beeps in `timer`, ticker clicks in `spinner-wheel`) instead of relying on heavy external audio files.
+  - Initialize the `AudioContext` only after explicit user interaction (click or start button) to adhere to browser autoplay policies.
+* **Screen Wake Lock API:**
+  - For continuous operations (e.g. Running Interval Timer, Device Benchmarks), acquire a wake lock via `navigator.wakeLock.request("screen")`.
+  - Automatically re-acquire the wake lock if the page visibility changes from hidden back to visible (`document.addEventListener("visibilitychange", ...)`).
+* **Hardware Diagnostics & Studio:**
+  - Provide visual live meters (frequency visualizers, decibel meters, canvas frame rate benchmarks) with clear permission prompts and graceful error fallbacks when hardware access (microphone/camera) is denied.
+
+---
+
+## 15. Admin & Operational Productivity Patterns
+Operational views (e.g., Admin Dashboard, Task Agenda, Quick Reminders) emphasize speed, clarity, and zero cognitive friction.
+
+### Quick Reminders Standard (`/admin/reminders`)
+* **Time-to-Live (TTL) Hierarchy:** Backed by Redis with selectable lifespans:
+  - `1 Day` (Transient / Day-specific reminders)
+  - `1 Week` (Short-term deliverables)
+  - `1 Month` (Monthly review items)
+* **Automatic Linkification:** Detect URLs in reminder text and render them as interactive, clickable pill buttons (`bg-indigo-50 text-indigo-700 hover:bg-indigo-100`) accompanied by one-click copy buttons.
+* **One-Click Lifespan Extensions:** Provide rapid duration extension badges (`+1D`, `+1W`, `+1M`) on each card to extend TTL without re-entering reminder text.
+* **Navigation Integration:** Display live count badges in `CompactBottomBar` under the Admin submenu so pending administrative items are immediately visible.
+
+---
+
+## 16. Insights & Aggregation Hub Standards
+Hub and aggregator pages (e.g., `/insights`) provide curated entry points into the platform's analytical subsystems.
+
+* **Module Cards:** Encapsulated in `rounded-[2rem]` floating cards with category badges, high-contrast linkout arrows (`ArrowUpRight`), descriptive body text, and thematic topic tags.
+* **Spring Hover Physics:** Cards lift organically on hover (`whileHover={{ y: -4 }}`) with subtle shadow expansion (`shadow-md`).
+* **Thematic Accents:** Use distinct badge color pairings to reinforce domain boundaries (Indigo for Architecture/Blog, Emerald for Financial/Investments, Red for Liverpool FC, Amber for Developer Utilities).
+
+---

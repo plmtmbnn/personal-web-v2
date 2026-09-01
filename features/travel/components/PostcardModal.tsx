@@ -2,17 +2,9 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import {
-	X,
-	CheckCircle2,
-	Star,
-	Copy,
-	Check,
-	Download,
-	Loader2,
-	MapPin,
-} from "lucide-react";
+import { X, Copy, Check, Download, Loader2, Link2 } from "lucide-react";
 import Image from "next/image";
+import { AUTHOR } from "@/lib/shared/constants";
 import type { Destination } from "../types";
 import { usePostcardActions } from "../hooks/usePostcardActions";
 
@@ -21,11 +13,9 @@ import { usePostcardActions } from "../hooks/usePostcardActions";
  * ═══════════════════════════════════════════════════════════════════ */
 
 const SPRING_MODAL = { type: "spring" as const, stiffness: 320, damping: 28 };
-const SPRING_SNAPPY = { type: "spring" as const, stiffness: 400, damping: 30 };
 
 /**
  * Classic airmail diagonal stripe border — CSS repeating-linear-gradient
- * that produces the navy/red/cream chevron pattern.
  */
 const AIRMAIL_BORDER_STYLE = {
 	backgroundImage: `repeating-linear-gradient(
@@ -37,243 +27,24 @@ const AIRMAIL_BORDER_STYLE = {
 	)`,
 } as const;
 
-/* ═══════════════════════════════════════════════════════════════════════
- * Sub-components (co-located, not exported)
- * ═══════════════════════════════════════════════════════════════════ */
-
-/** Compact Polaroid photo with tilt + tape */
-function PolaroidPhoto({ destination }: { destination: Destination }) {
-	const isVisited = destination.isVisited;
-	const reduceMotion = useReducedMotion();
-
-	return (
-		<motion.div
-			initial={reduceMotion ? false : { opacity: 0, rotate: -4, y: 8 }}
-			animate={{ opacity: 1, rotate: -1.5, y: 0 }}
-			transition={{ delay: 0.15, ...SPRING_SNAPPY }}
-			className="relative"
-		>
-			{/* Tape accent */}
-			<div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 w-14 h-4 bg-amber-100/60 border border-amber-200/40 rounded-sm shadow-2xs rotate-1" />
-
-			{/* Polaroid frame */}
-			<div className="bg-white p-2.5 sm:p-3 rounded-md shadow-lg shadow-amber-900/8 border border-amber-200/30">
-				<div className="aspect-[4/3] relative rounded-sm overflow-hidden bg-amber-50">
-					<Image
-						src={destination.imageUrl
-							.replace(/w=\d+/, "w=800")
-							.replace(/h=\d+/, "h=600")}
-						alt={`${destination.name}, ${destination.location}`}
-						fill
-						className={`object-cover ${
-							!isVisited ? "grayscale contrast-105 brightness-95" : ""
-						}`}
-					/>
-					<div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-				</div>
-
-				{/* Polaroid caption */}
-				<div className="mt-2.5 px-0.5 space-y-0.5">
-					<h4 className="text-[13px] sm:text-[15px] font-black text-slate-900 tracking-tight font-serif truncate">
-						{destination.name}
-					</h4>
-					<div className="flex items-center justify-between gap-1">
-						<div className="flex items-center gap-1 text-amber-800/50 text-[9px] sm:text-[10px] font-semibold truncate">
-							<MapPin className="w-2.5 h-2.5 text-[#C2703E] shrink-0" />
-							<span className="truncate">
-								{destination.location}, {destination.country}
-							</span>
-						</div>
-						{destination.visitedDate && (
-							<div className="shrink-0 px-1.5 py-0.5 border border-[#C2703E]/25 rounded-sm bg-[#FFF8F0]">
-								<span className="text-[7px] sm:text-[8px] font-black text-[#C2703E] uppercase tracking-wider font-mono">
-									{(() => {
-										const [year, month] = destination.visitedDate.split("-");
-										const monthNames = [
-											"Jan",
-											"Feb",
-											"Mar",
-											"Apr",
-											"May",
-											"Jun",
-											"Jul",
-											"Aug",
-											"Sep",
-											"Oct",
-											"Nov",
-											"Dec",
-										];
-										return `${monthNames[parseInt(month, 10) - 1]} ${year}`;
-									})()}
-								</span>
-							</div>
-						)}
-					</div>
-				</div>
-			</div>
-
-			{/* Status badge on photo */}
-			<motion.div
-				initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
-				animate={{ opacity: 1, scale: 1 }}
-				transition={{ delay: 0.25, ...SPRING_SNAPPY }}
-				className="absolute top-3.5 left-4 z-10"
-			>
-				<span
-					className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider border shadow-sm backdrop-blur-md ${
-						isVisited
-							? "bg-emerald-500/90 text-white border-emerald-400/30"
-							: "bg-amber-500/90 text-white border-amber-400/30"
-					}`}
-				>
-					{isVisited ? (
-						<>
-							<CheckCircle2 className="w-2.5 h-2.5 stroke-[2.5]" />
-							Visited
-						</>
-					) : (
-						<>
-							<Star className="w-2.5 h-2.5 fill-current" />
-							Wishlist
-						</>
-					)}
-				</span>
-			</motion.div>
-		</motion.div>
-	);
-}
-
-/** Compact journal content (Right Side) */
-function JournalContent({ destination }: { destination: Destination }) {
-	const isVisited = destination.isVisited;
-	const reduceMotion = useReducedMotion();
-
-	return (
-		<div className="flex flex-col justify-between h-full space-y-4">
-			{/* Destination headline */}
-			<div>
-				<span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.1em] text-[#C2703E]/60 inline-flex items-center gap-1">
-					{destination.type === "domestic" ? "✦ DOMESTIC" : "✦ INTERNATIONAL"}
-				</span>
-				<h4 className="text-xl sm:text-2xl font-black text-[#3D2B1F] tracking-tight font-serif leading-none mt-1">
-					{destination.name}
-				</h4>
-				<p className="text-[10px] sm:text-[11px] text-[#C2703E]/70 font-semibold mt-1">
-					{destination.location}, {destination.country}
-				</p>
-				<p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.1em] text-amber-800/40 mt-1">
-					Expedition #{destination.id.padStart(4, "0")}
-				</p>
-			</div>
-
-			{/* Description quote */}
-			<div className="py-2.5 px-3 bg-white/40 border border-amber-900/10 rounded-lg">
-				<p className="text-[11px] sm:text-xs text-[#5C4033] font-serif italic leading-[1.7]">
-					&ldquo;{destination.description}&rdquo;
-				</p>
-			</div>
-
-			{/* Field Notes */}
-			<div className="space-y-1">
-				<p className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.1em] text-amber-800/35 flex items-center gap-1.5">
-					<span className="inline-block w-4 h-px bg-amber-800/15" />
-					Field Notes
-					<span className="inline-block flex-1 h-px bg-amber-800/8" />
-				</p>
-				<div className="space-y-0 mt-1">
-					{[
-						{ label: "Traveler", value: "Fellow World Explorer" },
-						{ label: "Via", value: destination.location },
-						{ label: "Country", value: destination.country },
-					].map((line) => (
-						<div
-							key={line.label}
-							className="flex items-baseline gap-1.5 border-b border-amber-900/10 py-1.5"
-						>
-							<span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-800/40 shrink-0 w-12 sm:w-16">
-								{line.label}
-							</span>
-							<span className="text-[11px] sm:text-xs font-semibold text-[#3D2B1F] truncate">
-								{line.value}
-							</span>
-						</div>
-					))}
-				</div>
-			</div>
-
-			{/* Visa Stamp + Postmark */}
-			<div className="flex items-end justify-between gap-2 pt-1 relative">
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, rotate: 8, scale: 0.8 }}
-					animate={{ opacity: 1, rotate: -3, scale: 1 }}
-					transition={{
-						delay: 0.5,
-						type: "spring",
-						stiffness: 220,
-						damping: 18,
-					}}
-				>
-					<div
-						className={`px-3 py-1.5 rounded-md border-[1.5px] border-dashed text-center select-none ${
-							isVisited
-								? "bg-emerald-50/60 border-emerald-600/35 text-emerald-800"
-								: "bg-amber-50/60 border-amber-600/35 text-amber-800"
-						}`}
-					>
-						<p className="text-[6px] sm:text-[7px] font-black uppercase tracking-[0.08em]">
-							★ Passport Control ★
-						</p>
-						<p className="text-[10px] sm:text-[11px] font-black tracking-tight mt-0.5">
-							{isVisited ? "Entry Granted" : "On Radar"}
-						</p>
-						<p className="text-[6px] sm:text-[7px] font-semibold uppercase tracking-wider opacity-60 mt-0.5">
-							{destination.visitedDate || "Pending"}
-						</p>
-					</div>
-				</motion.div>
-
-				<motion.div
-					initial={
-						reduceMotion ? false : { opacity: 0, scale: 0.5, rotate: -30 }
-					}
-					animate={{ opacity: 0.45, scale: 1, rotate: -15 }}
-					transition={{
-						delay: 0.6,
-						type: "spring",
-						stiffness: 180,
-						damping: 16,
-					}}
-					className="shrink-0"
-				>
-					<div
-						className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[1.5px] flex flex-col items-center justify-center text-center select-none ${
-							isVisited
-								? "border-emerald-700/35 text-emerald-800"
-								: "border-amber-700/35 text-amber-800"
-						}`}
-					>
-						<div
-							className={`w-[44px] h-[44px] sm:w-[50px] sm:h-[50px] rounded-full border flex flex-col items-center justify-center ${
-								isVisited ? "border-emerald-700/20" : "border-amber-700/20"
-							}`}
-						>
-							<span className="text-[5px] sm:text-[6px] font-black uppercase tracking-[0.08em]">
-								{destination.country.length > 9
-									? destination.country.slice(0, 9)
-									: destination.country}
-							</span>
-							<span className="text-[7px] sm:text-[8px] font-black leading-tight mt-0.5">
-								{destination.visitedDate || "2026"}
-							</span>
-							<span className="text-[4.5px] sm:text-[5px] font-extrabold uppercase tracking-[0.1em] opacity-50 mt-0.5">
-								Air Mail
-							</span>
-						</div>
-					</div>
-				</motion.div>
-			</div>
-		</div>
-	);
+/** Format visit date for display */
+function formatVisitDate(visitedDate: string): string {
+	const [year, month] = visitedDate.split("-");
+	const monthNames = [
+		"Jan",
+		"Feb",
+		"Mar",
+		"Apr",
+		"May",
+		"Jun",
+		"Jul",
+		"Aug",
+		"Sep",
+		"Oct",
+		"Nov",
+		"Dec",
+	];
+	return `${monthNames[parseInt(month, 10) - 1]} ${year}`;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -291,8 +62,15 @@ export default function PostcardModal({
 }: PostcardModalProps) {
 	const reduceMotion = useReducedMotion();
 	const modalRef = useRef<HTMLDivElement>(null);
-	const { handleCopy, handleDownload, isCopying, isDownloading, isCopied } =
-		usePostcardActions(destination);
+	const {
+		handleCopy,
+		handleDownload,
+		handleCopyLink,
+		isCopying,
+		isDownloading,
+		isCopied,
+		isLinkCopied,
+	} = usePostcardActions(destination);
 
 	// ── Body scroll lock ──
 	useEffect(() => {
@@ -337,6 +115,8 @@ export default function PostcardModal({
 
 	if (!destination) return null;
 
+	const isVisited = destination.isVisited;
+
 	return (
 		<AnimatePresence>
 			<div
@@ -353,10 +133,10 @@ export default function PostcardModal({
 					animate={{ opacity: 1 }}
 					exit={{ opacity: 0 }}
 					onClick={onClose}
-					className="fixed inset-0 bg-amber-950/70 backdrop-blur-sm"
+					className="fixed inset-0 bg-black/70 backdrop-blur-sm"
 				/>
 
-				{/* Floating Close Button (Outside Postcard) */}
+				{/* Floating Close Button */}
 				<motion.button
 					initial={{ opacity: 0, y: -10 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -375,35 +155,166 @@ export default function PostcardModal({
 					animate={{ opacity: 1, scale: 1, y: 0 }}
 					exit={reduceMotion ? undefined : { opacity: 0, scale: 0.93, y: 12 }}
 					transition={SPRING_MODAL}
-					className="relative w-full max-w-3xl z-10 my-auto flex flex-col items-center gap-6"
+					className="relative w-full max-w-4xl z-10 my-auto flex flex-col items-center gap-5 sm:gap-6"
 				>
-					{/* 1. The Postcard Itself (Clean, No UI Buttons Inside) */}
+					{/* 1. The Postcard (Airmail border + full-bleed photo hero) */}
 					<div
-						className="w-full rounded-2xl sm:rounded-[1.25rem] p-[7px] sm:p-2.5 shadow-2xl shadow-amber-950/40"
+						className="w-full rounded-xl sm:rounded-2xl p-2.5 sm:p-3 shadow-2xl shadow-black/50"
 						style={AIRMAIL_BORDER_STYLE}
 					>
-						{/* Inner paper card */}
-						<div
-							className="bg-[#FAF5EC] rounded-xl sm:rounded-[14px] overflow-hidden border border-amber-200/40 p-4 sm:p-6"
-							style={{
-								backgroundImage:
-									"url(\"data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 5h1v1H1V5zm2-2h1v1H3V3zm2-2h1v1H5V1z' fill='%239C8874' fill-opacity='0.03'/%3E%3C/svg%3E\")",
-							}}
-						>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
-								<PolaroidPhoto destination={destination} />
-								<JournalContent destination={destination} />
+						{/* Inner photo card */}
+						<div className="relative aspect-[8/5] rounded-md sm:rounded-lg overflow-hidden group">
+							{/* Photo Background */}
+							<Image
+								src={destination.imageUrl
+									.replace(/w=\d+/, "w=1600")
+									.replace(/h=\d+/, "h=1000")}
+								alt={`${destination.name}, ${destination.location}`}
+								fill
+								priority
+								className={`object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.02] ${
+									!isVisited ? "grayscale contrast-105 brightness-95" : ""
+								}`}
+							/>
+
+							{/* Dark Gradient Overlay */}
+							<div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
+
+							{/* Top Left — Bold Status Stamp */}
+							<motion.div
+								initial={
+									reduceMotion ? false : { opacity: 0, scale: 0.5, rotate: 20 }
+								}
+								animate={{ opacity: 1, scale: 1, rotate: -3.5 }}
+								transition={{
+									delay: 0.3,
+									type: "spring",
+									stiffness: 250,
+									damping: 18,
+								}}
+								className="absolute top-3 sm:top-5 left-3 sm:left-5 pointer-events-none"
+							>
+								<div
+									className={`border-[2.5px] sm:border-[3px] p-[2px] sm:p-[3px] select-none ${
+										isVisited ? "border-emerald-500" : "border-amber-500"
+									}`}
+								>
+									<div
+										className={`border px-3 sm:px-4 py-0.5 sm:py-1 text-center ${
+											isVisited ? "border-emerald-500" : "border-amber-500"
+										}`}
+									>
+										<p
+											className={`text-base sm:text-xl font-black uppercase tracking-[0.12em] leading-tight ${
+												isVisited ? "text-emerald-500" : "text-amber-500"
+											}`}
+										>
+											{isVisited ? "VISITED" : "WISHLIST"}
+										</p>
+									</div>
+								</div>
+							</motion.div>
+
+							{/* Top Right — Bold "VIA AIR MAIL" Stamp */}
+							<motion.div
+								initial={
+									reduceMotion ? false : { opacity: 0, scale: 0.6, rotate: 10 }
+								}
+								animate={{ opacity: 1, scale: 1, rotate: -3 }}
+								transition={{
+									delay: 0.35,
+									type: "spring",
+									stiffness: 200,
+									damping: 18,
+								}}
+								className="absolute top-3 sm:top-5 right-3 sm:right-5 pointer-events-none"
+							>
+								<div className="border-[2.5px] sm:border-[3px] border-[#F2F2F2] p-[3px] sm:p-1 select-none">
+									<div className="border border-[#F2F2F2] px-3 sm:px-5 py-1.5 sm:py-2.5 text-center">
+										<p className="text-[9px] sm:text-xs font-black text-[#F2F2F2] tracking-[0.15em] leading-none">
+											VIA
+										</p>
+										<p className="text-sm sm:text-xl font-black text-[#F2F2F2] tracking-wider leading-tight mt-0.5">
+											AIR MAIL
+										</p>
+										{/* Decorative horizontal lines */}
+										<div className="flex flex-col items-center gap-[2px] mt-1 sm:mt-1.5">
+											<div className="w-14 sm:w-20 h-[2px] bg-[#F2F2F2]" />
+											<div className="w-10 sm:w-14 h-[2px] bg-[#F2F2F2]" />
+											<div className="w-6 sm:w-8 h-[2px] bg-[#F2F2F2]" />
+										</div>
+									</div>
+								</div>
+							</motion.div>
+
+							{/* Bottom Editorial Content */}
+							<div className="absolute bottom-0 left-0 right-0 p-4 sm:p-7 lg:p-9 flex flex-col items-start text-left">
+								{/* Route + Expedition */}
+								<div className="text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] text-white/60 mb-2 sm:mb-3">
+									<span className="text-white/80">
+										{destination.type === "domestic"
+											? "✦ DOMESTIC"
+											: "✦ INTERNATIONAL"}
+									</span>
+									<span className="mx-2">·</span>
+									<span>Expedition #{destination.id.padStart(4, "0")}</span>
+								</div>
+
+								{/* Destination Name */}
+								<h3 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight font-serif leading-none mb-1 sm:mb-2 drop-shadow-md">
+									{destination.name}
+								</h3>
+
+								{/* Location Subtitle */}
+								<p className="text-[11px] sm:text-sm md:text-base text-white/85 font-semibold mb-3 sm:mb-5">
+									{destination.location}, {destination.country}
+								</p>
+
+								{/* Quote Description */}
+								<p className="text-[11px] sm:text-[14px] md:text-lg text-white font-serif italic leading-relaxed max-w-2xl mb-5 sm:mb-8 drop-shadow-sm">
+									&ldquo;{destination.description}&rdquo;
+								</p>
+
+								{/* Footer Line */}
+								<div className="w-full pt-3 sm:pt-4 border-t border-white/15">
+									<p className="text-[8px] sm:text-[9px] md:text-[10px] font-extrabold uppercase tracking-[0.15em] text-white/60">
+										{AUTHOR.name}
+										<span className="mx-2">·</span>
+										{destination.visitedDate
+											? formatVisitDate(destination.visitedDate).toUpperCase()
+											: "PENDING"}
+									</p>
+								</div>
 							</div>
 						</div>
 					</div>
 
-					{/* 2. Floating Action Bar (Outside Postcard) */}
+					{/* 2. Floating Action Bar */}
 					<motion.div
 						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.3 }}
-						className="flex items-center gap-3 w-full sm:w-auto"
+						className="flex items-center gap-3 w-full sm:w-auto flex-wrap justify-center"
 					>
+						<button
+							type="button"
+							onClick={handleCopyLink}
+							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md"
+							title="Copy Share Link"
+						>
+							{isLinkCopied ? (
+								<>
+									<Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+									<span className="text-emerald-700">Link Copied!</span>
+								</>
+							) : (
+								<>
+									<Link2 className="w-4 h-4 text-[#C2703E]" />
+									<span>Copy Share Link</span>
+								</>
+							)}
+						</button>
+
 						<button
 							type="button"
 							onClick={handleDownload}

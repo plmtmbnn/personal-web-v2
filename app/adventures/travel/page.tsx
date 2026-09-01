@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { Compass, MapPin, Globe, CheckCircle2, Star } from "lucide-react";
 import { destinations } from "@/features/travel/data";
@@ -10,11 +11,56 @@ import DestinationCard from "@/features/travel/components/DestinationCard";
 import PostcardModal from "@/features/travel/components/PostcardModal";
 import type { Destination } from "@/features/travel/types";
 
-export default function TravelPage() {
+function TravelContent() {
 	const reduceMotion = useReducedMotion();
+	const searchParams = useSearchParams();
 	const { visitedDestinations, wishlistDestinations } = useDestinations();
 	const [selectedDestination, setSelectedDestination] =
 		useState<Destination | null>(null);
+
+	// Automatically open postcard modal when ?postcard=<id> or ?destination=<id> is present
+	useEffect(() => {
+		const postcardId =
+			searchParams.get("postcard") || searchParams.get("destination");
+		if (postcardId) {
+			const matched = destinations.find(
+				(d) =>
+					d.id.toLowerCase() === postcardId.toLowerCase() ||
+					d.name.toLowerCase() === postcardId.toLowerCase(),
+			);
+			if (matched) {
+				setSelectedDestination(matched);
+			}
+		}
+	}, [searchParams]);
+
+	const handleSelectDestination = (dest: Destination) => {
+		setSelectedDestination(dest);
+		if (typeof window !== "undefined") {
+			const url = new URL(window.location.href);
+			url.searchParams.set("postcard", dest.id);
+			window.history.replaceState({}, "", url.pathname + url.search);
+		}
+	};
+
+	const handleCloseModal = () => {
+		setSelectedDestination(null);
+		if (typeof window !== "undefined") {
+			const url = new URL(window.location.href);
+			if (
+				url.searchParams.has("postcard") ||
+				url.searchParams.has("destination")
+			) {
+				url.searchParams.delete("postcard");
+				url.searchParams.delete("destination");
+				window.history.replaceState(
+					{},
+					"",
+					url.pathname + (url.search ? url.search : ""),
+				);
+			}
+		}
+	};
 
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
@@ -157,7 +203,7 @@ export default function TravelPage() {
 									destination={dest}
 									index={i}
 									variant="visited"
-									onSelect={setSelectedDestination}
+									onSelect={handleSelectDestination}
 								/>
 							))}
 						</div>
@@ -206,7 +252,7 @@ export default function TravelPage() {
 									destination={dest}
 									index={i}
 									variant="wishlist"
-									onSelect={setSelectedDestination}
+									onSelect={handleSelectDestination}
 								/>
 							))}
 						</div>
@@ -217,8 +263,16 @@ export default function TravelPage() {
 			{/* ── Postcard & Sticker Modal ──────────────────────────── */}
 			<PostcardModal
 				destination={selectedDestination}
-				onClose={() => setSelectedDestination(null)}
+				onClose={handleCloseModal}
 			/>
 		</main>
+	);
+}
+
+export default function TravelPage() {
+	return (
+		<Suspense fallback={null}>
+			<TravelContent />
+		</Suspense>
 	);
 }

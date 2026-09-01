@@ -1,53 +1,37 @@
+import { AUTHOR } from "@/lib/shared/constants";
 import type { Destination } from "../types";
 
 /* ═══════════════════════════════════════════════════════════════════════
- * Layout Constants — Compact Vintage Postcard with Airmail Border
+ * Layout Constants — Full-Bleed Photo with Airmail Border
  * ═══════════════════════════════════════════════════════════════════ */
 
-/** Canvas logical dimensions (compact) */
+/** Canvas logical dimensions */
 const CANVAS_W = 800;
 const CANVAS_H = 500;
 
 /** Airmail border stripe config */
-const AIRMAIL_BORDER = 9;
-const AIRMAIL_STRIPE_W = 16;
-const AIRMAIL_COLORS = ["#1E3A8A", "#FAF5EC", "#BE123C", "#FAF5EC"] as const;
+const AIRMAIL_BORDER = 12;
+const AIRMAIL_STRIPE_W = 18;
+const AIRMAIL_COLORS = ["#1E3A8A", "#FAF5EC", "#ffffffff", "#FAF5EC"] as const;
 
-/** Inner card */
+/** Inner content area (photo zone) */
 const INNER_X = AIRMAIL_BORDER;
 const INNER_Y = AIRMAIL_BORDER;
 const INNER_W = CANVAS_W - AIRMAIL_BORDER * 2;
 const INNER_H = CANVAS_H - AIRMAIL_BORDER * 2;
-const INNER_RADIUS = 14;
-const CARD_BG = "#FAF5EC";
-const CARD_BORDER = "rgba(180, 140, 80, 0.22)";
-
-/** Polaroid photo */
-const POLAROID_X = INNER_X + 24;
-const POLAROID_Y = INNER_Y + 30;
-const POLAROID_W = 330;
-const POLAROID_H = 400;
-const POLAROID_PAD = 12;
-const POLAROID_PHOTO_H = 295;
-
-/** Right-side content */
-const CONTENT_X = POLAROID_X + POLAROID_W + 28;
-const CONTENT_W = INNER_X + INNER_W - CONTENT_X - 20;
+const INNER_RADIUS = 6;
 
 /** Colors */
-const TERRACOTTA = "#C2703E";
-const BROWN_DARK = "#3D2B1F";
-const BROWN_TEXT = "#5C4033";
-const BROWN_LIGHT = "rgba(139, 69, 19, 0.35)";
-const PAPER_LINE = "rgba(139, 69, 19, 0.08)";
+const TEXT_WHITE = "#FFFFFF";
+const TEXT_SUBTITLE = "rgba(255, 255, 255, 0.85)";
+const TEXT_MUTED = "rgba(255, 255, 255, 0.6)";
 
 /** Typography */
-const FONT_SERIF_LG = "900 18px 'Georgia', serif";
-const FONT_SERIF_MD = "900 15px 'Georgia', serif";
-const FONT_SERIF_ITALIC = "italic 11.5px 'Georgia', serif";
-const FONT_LABEL = "bold 8px 'Montserrat', sans-serif";
-const FONT_BODY = "bold 10px 'Montserrat', sans-serif";
-const FONT_TINY = "bold 7px 'Montserrat', sans-serif";
+const FONT_SERIF_HUGE = "900 46px 'Georgia', serif";
+const FONT_SERIF_ITALIC = "italic 15px 'Georgia', serif";
+const FONT_SANS_BOLD = "bold 15px 'Montserrat', sans-serif";
+const FONT_SANS_CAPS = "bold 11px 'Montserrat', sans-serif";
+const FONT_SANS_TINY = "800 10px 'Montserrat', sans-serif";
 
 /* ═══════════════════════════════════════════════════════════════════════
  * Drawing helpers
@@ -82,8 +66,29 @@ async function loadImage(url: string): Promise<HTMLImageElement | null> {
 		img.crossOrigin = "anonymous";
 		img.onload = () => resolve(img);
 		img.onerror = () => resolve(null);
-		img.src = url.replace(/w=\d+/, "w=800").replace(/h=\d+/, "h=600");
+		img.src = url.replace(/w=\d+/, "w=1600").replace(/h=\d+/, "h=1000");
 	});
+}
+
+/** Format visit date for display */
+function formatDate(visitedDate: string | undefined): string {
+	if (!visitedDate) return "Pending";
+	const [yr, mo] = visitedDate.split("-");
+	const mn = [
+		"Jan",
+		"Feb",
+		"Mar",
+		"Apr",
+		"May",
+		"Jun",
+		"Jul",
+		"Aug",
+		"Sep",
+		"Oct",
+		"Nov",
+		"Dec",
+	];
+	return `${mn[parseInt(mo, 10) - 1]} ${yr}`;
 }
 
 /** Word-wrap text */
@@ -118,7 +123,6 @@ function wrapText(
 function drawAirmailBorder(ctx: CanvasRenderingContext2D) {
 	ctx.save();
 
-	// Full canvas with stripe pattern
 	const totalStripes = Math.ceil(
 		((CANVAS_W + CANVAS_H) * 2) / AIRMAIL_STRIPE_W,
 	);
@@ -204,367 +208,209 @@ function drawAirmailBorder(ctx: CanvasRenderingContext2D) {
 	ctx.restore();
 }
 
-/** Inner card background */
-function drawCardBackground(ctx: CanvasRenderingContext2D) {
-	ctx.fillStyle = CARD_BG;
-	drawRoundedRect(ctx, INNER_X, INNER_Y, INNER_W, INNER_H, INNER_RADIUS);
-	ctx.fill();
-
-	ctx.strokeStyle = CARD_BORDER;
-	ctx.lineWidth = 1;
-	drawRoundedRect(ctx, INNER_X, INNER_Y, INNER_W, INNER_H, INNER_RADIUS);
-	ctx.stroke();
-
-	// Subtle texture dots
-	ctx.fillStyle = "rgba(156, 136, 116, 0.02)";
-	for (let x = INNER_X; x < INNER_X + INNER_W; x += 6) {
-		for (let y = INNER_Y; y < INNER_Y + INNER_H; y += 6) {
-			if ((x / 6 + y / 6) % 3 === 0) ctx.fillRect(x, y, 1, 1);
-		}
-	}
-}
-
-/** Tilted Polaroid photo with tape accent */
-async function drawPolaroidPhoto(
+/** Draw full-bleed photo inside the inner area */
+async function drawPhotoBackground(
 	ctx: CanvasRenderingContext2D,
 	destination: Destination,
 ) {
-	ctx.save();
-
-	// Slight tilt
-	const cx = POLAROID_X + POLAROID_W / 2;
-	const cy = POLAROID_Y + POLAROID_H / 2;
-	ctx.translate(cx, cy);
-	ctx.rotate(-0.02);
-	ctx.translate(-cx, -cy);
-
-	// Shadow
-	ctx.shadowColor = "rgba(139, 69, 19, 0.08)";
-	ctx.shadowBlur = 14;
-	ctx.shadowOffsetY = 5;
-	ctx.fillStyle = "#FFFFFF";
-	drawRoundedRect(ctx, POLAROID_X, POLAROID_Y, POLAROID_W, POLAROID_H, 6);
-	ctx.fill();
-	ctx.shadowBlur = 0;
-	ctx.shadowOffsetY = 0;
-
-	// Border
-	ctx.strokeStyle = "rgba(180, 140, 80, 0.2)";
-	ctx.lineWidth = 1;
-	drawRoundedRect(ctx, POLAROID_X, POLAROID_Y, POLAROID_W, POLAROID_H, 6);
-	ctx.stroke();
-
-	// Photo
-	const px = POLAROID_X + POLAROID_PAD;
-	const py = POLAROID_Y + POLAROID_PAD;
-	const pw = POLAROID_W - POLAROID_PAD * 2;
-	const ph = POLAROID_PHOTO_H;
-
 	const img = await loadImage(destination.imageUrl);
+
 	ctx.save();
-	ctx.beginPath();
-	ctx.rect(px, py, pw, ph);
+	drawRoundedRect(ctx, INNER_X, INNER_Y, INNER_W, INNER_H, INNER_RADIUS);
 	ctx.clip();
 
 	if (img) {
 		if (!destination.isVisited)
 			ctx.filter = "grayscale(100%) contrast(105%) brightness(95%)";
+
 		const ir = img.width / img.height;
-		const pr = pw / ph;
+		const cr = INNER_W / INNER_H;
 		let sx: number, sy: number, sw: number, sh: number;
-		if (ir > pr) {
+
+		if (ir > cr) {
 			sh = img.height;
-			sw = sh * pr;
+			sw = sh * cr;
 			sx = (img.width - sw) / 2;
 			sy = 0;
 		} else {
 			sw = img.width;
-			sh = sw / pr;
+			sh = sw / cr;
 			sx = 0;
 			sy = (img.height - sh) / 2;
 		}
-		ctx.drawImage(img, sx, sy, sw, sh, px, py, pw, ph);
+
+		ctx.drawImage(img, sx, sy, sw, sh, INNER_X, INNER_Y, INNER_W, INNER_H);
 		ctx.filter = "none";
 	} else {
 		ctx.fillStyle = destination.isVisited ? "#059669" : "#D97706";
-		ctx.fillRect(px, py, pw, ph);
-		ctx.fillStyle = "#FFF";
-		ctx.font = "bold 16px 'Montserrat', sans-serif";
-		ctx.textAlign = "center";
-		ctx.fillText(destination.name, px + pw / 2, py + ph / 2);
-		ctx.textAlign = "left";
+		ctx.fillRect(INNER_X, INNER_Y, INNER_W, INNER_H);
 	}
-
-	// Bottom gradient
-	const g = ctx.createLinearGradient(px, py + ph - 60, px, py + ph);
-	g.addColorStop(0, "rgba(0,0,0,0)");
-	g.addColorStop(1, "rgba(0,0,0,0.15)");
-	ctx.fillStyle = g;
-	ctx.fillRect(px, py + ph - 60, pw, 60);
 	ctx.restore();
-
-	// Status badge
-	const badgeBg = destination.isVisited
-		? "rgba(16, 185, 129, 0.9)"
-		: "rgba(245, 158, 11, 0.9)";
-	ctx.save();
-	ctx.fillStyle = badgeBg;
-	drawRoundedRect(ctx, px + 8, py + 8, 80, 20, 10);
-	ctx.fill();
-	ctx.fillStyle = "#FFF";
-	ctx.font = "900 8px 'Montserrat', sans-serif";
-	ctx.textAlign = "center";
-	ctx.fillText(
-		destination.isVisited ? "✓ VISITED" : "★ WISHLIST",
-		px + 48,
-		py + 22,
-	);
-	ctx.textAlign = "left";
-	ctx.restore();
-
-	// Caption
-	const capY = py + ph + 14;
-	ctx.fillStyle = BROWN_DARK;
-	ctx.font = FONT_SERIF_MD;
-	ctx.fillText(destination.name, px + 2, capY);
-
-	ctx.fillStyle = `${TERRACOTTA}80`;
-	ctx.font = "600 9px 'Montserrat', sans-serif";
-	ctx.fillText(
-		`📍 ${destination.location}, ${destination.country}`,
-		px + 2,
-		capY + 15,
-	);
-
-	// Date stamp
-	if (destination.visitedDate) {
-		const [yr, mo] = destination.visitedDate.split("-");
-		const mn = [
-			"Jan",
-			"Feb",
-			"Mar",
-			"Apr",
-			"May",
-			"Jun",
-			"Jul",
-			"Aug",
-			"Sep",
-			"Oct",
-			"Nov",
-			"Dec",
-		];
-		const ds = `${mn[parseInt(mo, 10) - 1]} ${yr}`.toUpperCase();
-		const dsW = 60;
-		const dsH = 16;
-		const dsX = POLAROID_X + POLAROID_W - POLAROID_PAD - dsW - 2;
-		const dsY = capY + 2;
-		ctx.strokeStyle = `${TERRACOTTA}30`;
-		ctx.lineWidth = 1;
-		ctx.strokeRect(dsX, dsY, dsW, dsH);
-		ctx.fillStyle = "#FFF8F0";
-		ctx.fillRect(dsX + 0.5, dsY + 0.5, dsW - 1, dsH - 1);
-		ctx.fillStyle = TERRACOTTA;
-		ctx.font = "900 7px 'Courier New', monospace";
-		ctx.textAlign = "center";
-		ctx.fillText(ds, dsX + dsW / 2, dsY + 12);
-		ctx.textAlign = "left";
-	}
-
-	// Tape accent
-	ctx.save();
-	const tw = 60;
-	const th = 18;
-	const tx = POLAROID_X + (POLAROID_W - tw) / 2;
-	const ty = POLAROID_Y - 8;
-	ctx.translate(tx + tw / 2, ty + th / 2);
-	ctx.rotate(0.015);
-	ctx.translate(-(tx + tw / 2), -(ty + th / 2));
-	ctx.fillStyle = "rgba(218, 195, 150, 0.5)";
-	ctx.fillRect(tx, ty, tw, th);
-	ctx.strokeStyle = "rgba(180, 150, 100, 0.3)";
-	ctx.lineWidth = 0.5;
-	ctx.strokeRect(tx, ty, tw, th);
-	ctx.restore();
-
-	ctx.restore(); // tilt
 }
 
-/** Right-side journal content */
-function drawJournalContent(
+/** Draw dramatic dark gradient at the bottom */
+function drawGradientOverlay(ctx: CanvasRenderingContext2D) {
+	ctx.save();
+	drawRoundedRect(ctx, INNER_X, INNER_Y, INNER_W, INNER_H, INNER_RADIUS);
+	ctx.clip();
+
+	const gradient = ctx.createLinearGradient(
+		0,
+		INNER_Y + INNER_H * 0.35,
+		0,
+		INNER_Y + INNER_H,
+	);
+	gradient.addColorStop(0, "rgba(0,0,0,0)");
+	gradient.addColorStop(0.4, "rgba(0,0,0,0.6)");
+	gradient.addColorStop(1, "rgba(10,10,10,0.95)");
+
+	ctx.fillStyle = gradient;
+	ctx.fillRect(INNER_X, INNER_Y, INNER_W, INNER_H);
+	ctx.restore();
+}
+
+/** Draw bold single-word status stamp top-left */
+function drawStatusBadge(ctx: CanvasRenderingContext2D, isVisited: boolean) {
+	ctx.save();
+
+	const label = isVisited ? "VISITED" : "WISHLIST";
+	const color = isVisited ? "#059669" : "#D97706";
+
+	ctx.font = "900 20px 'Montserrat', sans-serif";
+	const tw = ctx.measureText(label).width;
+	const padX = 14;
+	const padY = 8;
+	const stampW = tw + padX * 2;
+	const stampH = 20 + padY * 2;
+	const stampX = INNER_X + 22;
+	const stampY = INNER_Y + 18;
+
+	ctx.translate(stampX + stampW / 2, stampY + stampH / 2);
+	ctx.rotate(-0.06);
+
+	ctx.strokeStyle = color;
+
+	// Outer border (thick)
+	ctx.lineWidth = 3;
+	ctx.strokeRect(-stampW / 2, -stampH / 2, stampW, stampH);
+
+	// Inner border
+	ctx.lineWidth = 1;
+	ctx.strokeRect(-stampW / 2 + 4, -stampH / 2 + 4, stampW - 8, stampH - 8);
+
+	// Bold label
+	ctx.fillStyle = color;
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	ctx.fillText(label, 0, 1);
+
+	ctx.restore();
+}
+
+/** Draw bold "VIA AIR MAIL" rubber stamp — iconic postcard signature */
+function drawAirMailStamp(ctx: CanvasRenderingContext2D) {
+	ctx.save();
+
+	const stampW = 140;
+	const stampH = 72;
+	const stampX = INNER_X + INNER_W - stampW - 24;
+	const stampY = INNER_Y + 20;
+
+	ctx.translate(stampX + stampW / 2, stampY + stampH / 2);
+	ctx.rotate(-0.06);
+
+	// Outer red border rectangle
+	ctx.strokeStyle = "#F2F2F2";
+	ctx.lineWidth = 3;
+	ctx.strokeRect(-stampW / 2, -stampH / 2, stampW, stampH);
+
+	// Inner red border
+	ctx.lineWidth = 1;
+	ctx.strokeRect(-stampW / 2 + 4, -stampH / 2 + 4, stampW - 8, stampH - 8);
+
+	// "VIA" text
+	ctx.fillStyle = "#F2F2F2";
+	ctx.font = "900 14px 'Montserrat', sans-serif";
+	ctx.textAlign = "center";
+	ctx.fillText("VIA", 0, -14);
+
+	// "AIR MAIL" text — big and bold
+	ctx.font = "900 22px 'Montserrat', sans-serif";
+	ctx.fillText("AIR MAIL", 0, 10);
+
+	// Horizontal lines below (classic postal lines)
+	ctx.strokeStyle = "#F2F2F2";
+	ctx.lineWidth = 2;
+	for (let i = 0; i < 3; i++) {
+		const lineY = 20 + i * 5;
+		const lineHalfW = 52 - i * 8;
+		ctx.beginPath();
+		ctx.moveTo(-lineHalfW, lineY);
+		ctx.lineTo(lineHalfW, lineY);
+		ctx.stroke();
+	}
+
+	ctx.restore();
+}
+
+/** Draw editorial text overlay on the gradient */
+function drawTextContent(
 	ctx: CanvasRenderingContext2D,
 	destination: Destination,
 ) {
-	const isVisited = destination.isVisited;
-	let curY = INNER_Y + 40;
+	const padX = INNER_X + 28;
+	let curY = INNER_Y + INNER_H - 170;
 
-	// Route type
-	ctx.fillStyle = `${TERRACOTTA}70`;
-	ctx.font = FONT_LABEL;
-	ctx.letterSpacing = "1px";
-	ctx.fillText(
-		destination.type === "domestic" ? "✦ DOMESTIC" : "✦ INTERNATIONAL",
-		CONTENT_X,
-		curY,
-	);
+	ctx.textAlign = "left";
+
+	// 1. Route type + Expedition
+	ctx.fillStyle = TEXT_MUTED;
+	ctx.font = FONT_SANS_CAPS;
+	ctx.letterSpacing = "2px";
+	const routeTag =
+		destination.type === "domestic" ? "✦ DOMESTIC" : "✦ INTERNATIONAL";
+	const expText = ` · EXPEDITION #${destination.id.padStart(4, "0")}`;
+	ctx.fillText(routeTag + expText, padX, curY);
 	ctx.letterSpacing = "0px";
 
-	// Destination name
-	curY += 20;
-	ctx.fillStyle = BROWN_DARK;
-	ctx.font = FONT_SERIF_LG;
-	ctx.fillText(destination.name, CONTENT_X, curY);
+	// 2. Destination name
+	curY += 52;
+	ctx.fillStyle = TEXT_WHITE;
+	ctx.font = FONT_SERIF_HUGE;
+	ctx.fillText(destination.name, padX, curY);
 
-	// Location
-	curY += 15;
-	ctx.fillStyle = `${TERRACOTTA}60`;
-	ctx.font = "600 9px 'Montserrat', sans-serif";
-	ctx.fillText(
-		`${destination.location}, ${destination.country}`,
-		CONTENT_X,
-		curY,
-	);
+	// 3. Location subtitle
+	curY += 26;
+	ctx.fillStyle = TEXT_SUBTITLE;
+	ctx.font = FONT_SANS_BOLD;
+	ctx.fillText(`${destination.location}, ${destination.country}`, padX, curY);
 
-	// Expedition #
-	curY += 14;
-	ctx.fillStyle = BROWN_LIGHT;
-	ctx.font = FONT_TINY;
-	ctx.letterSpacing = "1px";
-	ctx.fillText(
-		`EXPEDITION #${destination.id.padStart(4, "0")}`,
-		CONTENT_X,
-		curY,
-	);
-	ctx.letterSpacing = "0px";
-
-	// Quote card
-	curY += 16;
-	const qH = 62;
-	ctx.fillStyle = "rgba(255,255,255,0.4)";
-	drawRoundedRect(ctx, CONTENT_X - 2, curY, CONTENT_W + 4, qH, 8);
-	ctx.fill();
-	ctx.strokeStyle = PAPER_LINE;
-	ctx.lineWidth = 1;
-	drawRoundedRect(ctx, CONTENT_X - 2, curY, CONTENT_W + 4, qH, 8);
-	ctx.stroke();
-
-	ctx.fillStyle = BROWN_TEXT;
+	// 4. Description quote
+	curY += 30;
+	ctx.fillStyle = TEXT_WHITE;
 	ctx.font = FONT_SERIF_ITALIC;
-	const lines = wrapText(
-		ctx,
-		`"${destination.description}"`,
-		CONTENT_W - 12,
-		3,
-	);
+	const maxWidth = INNER_W - 56;
+	const lines = wrapText(ctx, `"${destination.description}"`, maxWidth, 2);
 	for (let i = 0; i < lines.length; i++) {
-		ctx.fillText(lines[i], CONTENT_X + 6, curY + 17 + i * 18);
+		ctx.fillText(lines[i], padX, curY + i * 22);
 	}
 
-	// Field Notes
-	curY += qH + 14;
-	ctx.strokeStyle = "rgba(139, 69, 19, 0.1)";
-	ctx.beginPath();
-	ctx.moveTo(CONTENT_X, curY);
-	ctx.lineTo(CONTENT_X + 16, curY);
-	ctx.stroke();
-	ctx.fillStyle = BROWN_LIGHT;
-	ctx.font = FONT_LABEL;
-	ctx.letterSpacing = "1px";
-	ctx.fillText("FIELD NOTES", CONTENT_X + 20, curY + 3);
-	ctx.letterSpacing = "0px";
-	ctx.beginPath();
-	ctx.moveTo(CONTENT_X + 88, curY);
-	ctx.lineTo(CONTENT_X + CONTENT_W, curY);
-	ctx.stroke();
+	// 5. Footer
+	curY = INNER_Y + INNER_H - 26;
 
-	curY += 12;
-	const fields = [
-		{ label: "TRAVELER", value: "Fellow World Explorer" },
-		{ label: "VIA", value: destination.location },
-		{ label: "COUNTRY", value: destination.country },
-	];
-	for (const f of fields) {
-		ctx.strokeStyle = PAPER_LINE;
-		ctx.beginPath();
-		ctx.moveTo(CONTENT_X, curY + 14);
-		ctx.lineTo(CONTENT_X + CONTENT_W, curY + 14);
-		ctx.stroke();
-		ctx.fillStyle = BROWN_LIGHT;
-		ctx.font = "bold 7px 'Montserrat', sans-serif";
-		ctx.letterSpacing = "0.5px";
-		ctx.fillText(f.label, CONTENT_X, curY + 10);
-		ctx.letterSpacing = "0px";
-		ctx.fillStyle = BROWN_DARK;
-		ctx.font = FONT_BODY;
-		ctx.fillText(f.value, CONTENT_X + 58, curY + 10);
-		curY += 20;
-	}
-
-	// Visa stamp
-	curY += 4;
-	ctx.save();
-	const vW = 110;
-	const vH = 50;
-	ctx.translate(CONTENT_X + vW / 2, curY + vH / 2);
-	ctx.rotate(-0.03);
-	const vBg = isVisited ? "rgba(236,253,245,0.6)" : "rgba(255,251,235,0.6)";
-	const vBd = isVisited ? "rgba(5,150,105,0.4)" : "rgba(217,119,6,0.4)";
-	const vTx = isVisited ? "#065F46" : "#92400E";
-	ctx.fillStyle = vBg;
-	drawRoundedRect(ctx, -vW / 2, -vH / 2, vW, vH, 6);
-	ctx.fill();
-	ctx.strokeStyle = vBd;
-	ctx.lineWidth = 1.5;
-	ctx.setLineDash([4, 3]);
-	drawRoundedRect(ctx, -vW / 2, -vH / 2, vW, vH, 6);
-	ctx.stroke();
-	ctx.setLineDash([]);
-	ctx.fillStyle = vTx;
-	ctx.font = "900 6px 'Montserrat', sans-serif";
-	ctx.textAlign = "center";
-	ctx.fillText("★ PASSPORT CONTROL ★", 0, -12);
-	ctx.font = "900 10px 'Montserrat', sans-serif";
-	ctx.fillText(isVisited ? "ENTRY GRANTED" : "ON RADAR", 0, 2);
-	ctx.font = FONT_TINY;
-	ctx.globalAlpha = 0.55;
-	ctx.fillText(destination.visitedDate || "Pending", 0, 14);
-	ctx.globalAlpha = 1;
-	ctx.textAlign = "left";
-	ctx.restore();
-
-	// Circular postmark
-	ctx.save();
-	const pmX = CONTENT_X + CONTENT_W - 32;
-	const pmY = curY + 25;
-	const pmR = 22;
-	const pmC = isVisited ? "rgba(5,150,105,0.3)" : "rgba(217,119,6,0.3)";
-	const pmT = isVisited ? "#065F46" : "#92400E";
-	ctx.translate(pmX, pmY);
-	ctx.rotate(-0.2);
-	ctx.globalAlpha = 0.5;
-	ctx.strokeStyle = pmC;
-	ctx.lineWidth = 1.5;
-	ctx.beginPath();
-	ctx.arc(0, 0, pmR, 0, Math.PI * 2);
-	ctx.stroke();
+	ctx.strokeStyle = "rgba(255,255,255,0.15)";
 	ctx.lineWidth = 1;
 	ctx.beginPath();
-	ctx.arc(0, 0, pmR - 4, 0, Math.PI * 2);
+	ctx.moveTo(padX, curY - 14);
+	ctx.lineTo(INNER_X + INNER_W - 28, curY - 14);
 	ctx.stroke();
-	ctx.fillStyle = pmT;
-	ctx.font = "900 5px 'Montserrat', sans-serif";
-	ctx.textAlign = "center";
-	const cl =
-		destination.country.length > 9
-			? destination.country.slice(0, 9)
-			: destination.country;
-	ctx.fillText(cl.toUpperCase(), 0, -6);
-	ctx.font = "bold 7px 'Montserrat', sans-serif";
-	ctx.fillText(destination.visitedDate || "2026", 0, 4);
-	ctx.font = "800 4px 'Montserrat', sans-serif";
-	ctx.fillText("AIR MAIL", 0, 11);
-	ctx.textAlign = "left";
-	ctx.globalAlpha = 1;
-	ctx.restore();
+
+	ctx.fillStyle = TEXT_MUTED;
+	ctx.font = FONT_SANS_TINY;
+	ctx.letterSpacing = "1.5px";
+	const dateStr = formatDate(destination.visitedDate).toUpperCase();
+	ctx.fillText(`${AUTHOR.name.toUpperCase()} · ${dateStr}`, padX, curY);
+	ctx.letterSpacing = "0px";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -572,7 +418,7 @@ function drawJournalContent(
  * ═══════════════════════════════════════════════════════════════════ */
 
 /**
- * Render the compact vintage postcard with airmail border to canvas
+ * Render the editorial postcard with airmail border to canvas
  * for high-resolution PNG sticker export.
  */
 export async function renderPostcardToCanvas(
@@ -587,10 +433,17 @@ export async function renderPostcardToCanvas(
 
 	ctx.scale(scale, scale);
 
+	// 1. Airmail border (fills edges)
 	drawAirmailBorder(ctx);
-	drawCardBackground(ctx);
-	await drawPolaroidPhoto(ctx, destination);
-	drawJournalContent(ctx, destination);
+
+	// 2. Photo background (inside border)
+	await drawPhotoBackground(ctx, destination);
+
+	// 3. Gradient + content overlays
+	drawGradientOverlay(ctx);
+	drawStatusBadge(ctx, destination.isVisited);
+	drawAirMailStamp(ctx);
+	drawTextContent(ctx, destination);
 
 	return canvas;
 }

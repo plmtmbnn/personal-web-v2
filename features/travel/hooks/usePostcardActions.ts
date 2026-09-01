@@ -11,12 +11,41 @@ export function usePostcardActions(destination: Destination | null) {
 	const [isCopying, setIsCopying] = useState(false);
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [isCopied, setIsCopied] = useState(false);
+	const [isLinkCopied, setIsLinkCopied] = useState(false);
 
 	const buildFilename = useCallback(
 		(dest: Destination) =>
 			`passport-${dest.name.toLowerCase().replace(/\s+/g, "-")}.png`,
 		[],
 	);
+
+	/** Copy direct share URL for this postcard to clipboard */
+	const handleCopyLink = useCallback(async () => {
+		if (!destination || isLinkCopied) return;
+		if (typeof window === "undefined") return;
+
+		const url = `${window.location.origin}/adventures/travel?postcard=${destination.id}`;
+
+		try {
+			if (navigator.clipboard?.writeText) {
+				await navigator.clipboard.writeText(url);
+			} else {
+				const textarea = document.createElement("textarea");
+				textarea.value = url;
+				textarea.style.position = "fixed";
+				textarea.style.opacity = "0";
+				document.body.appendChild(textarea);
+				textarea.focus();
+				textarea.select();
+				document.execCommand("copy");
+				document.body.removeChild(textarea);
+			}
+			setIsLinkCopied(true);
+			setTimeout(() => setIsLinkCopied(false), 2400);
+		} catch (err) {
+			console.error("Failed to copy postcard share link:", err);
+		}
+	}, [destination, isLinkCopied]);
 
 	/** Copy rendered postcard to clipboard as PNG, fallback to download */
 	const handleCopy = useCallback(async () => {
@@ -91,5 +120,13 @@ export function usePostcardActions(destination: Destination | null) {
 		}
 	}, [destination, isDownloading, buildFilename]);
 
-	return { handleCopy, handleDownload, isCopying, isDownloading, isCopied };
+	return {
+		handleCopy,
+		handleDownload,
+		handleCopyLink,
+		isCopying,
+		isDownloading,
+		isCopied,
+		isLinkCopied,
+	};
 }

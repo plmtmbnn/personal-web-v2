@@ -1,3 +1,10 @@
+# [0.83.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.82.0...v0.83.0) (2026-09-02)
+
+
+### Features
+
+* **ui:** implement solid productivity pattern, jwt inspector, and telemetry enhancements ([dbcc406](https://github.com/plmtmbnn/personal-web-v2/commit/dbcc4062aa5480561a3d001f37d0871ee4065e19))
+
 # [0.82.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.81.0...v0.82.0) (2026-09-01)
 
 

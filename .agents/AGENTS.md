@@ -9,6 +9,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 > - **Canvas**: Light textured canvas (`bg-slate-50/80 bg-dot-pattern`) with airy hero layout (`pt-24 sm:pt-32`).
 > - **Mobile-First & Responsiveness**: Scaled grids (`grid-cols-1 md:grid-cols-2 lg/xl:grid-cols-3`), mobile touch targets, and proper floating bottom bar clearance (`pb-32 sm:pb-36`).
 > - **Form & Search Hygiene**: Explicit input icon layering (`pointer-events-none z-10` with `pl-10`/`pl-11`).
+> - **Strict Anti-Gradient & Anti-Emoji Mandates**: Zero gradient headers, zero gradient modals, zero multi-color gradient typography, zero ambient blur orbs (`blur-3xl`), and zero raw unicode emojis.
 
 ## 🛠 Tech Stack
 - **Framework:** Next.js 16.2.10 (App Router) & React 19.2.7
@@ -23,7 +24,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Icons:** Lucide-React + React-Icons/Fa
 - **Linter/Formatter:** Biome
 - **Utilities Integration:** PapaParse (CSV), node-sql-parser, sql-formatter, otplib (TOTP), HTML5 Canvas API (Postcard/Run stickers & Code-to-Image), Clipboard API
-- **Advanced APIs:** Wake Lock API (Running Timer), Web Audio API (Timer beeps & Spinner clicks), MediaDevices & WebGL (Device Inspector)
+- **Advanced APIs:** Web Share API (Rich Run Activity & Blog Sharing), Wake Lock API (Running Timer), Web Audio API (Timer beeps & Spinner clicks), MediaDevices & WebGL (Device Inspector)
 - **External Integrations:** Strava API (`services/strava/`), Liverpool FC API (`backend.liverpoolfc.com`)
 - **Workflow:** Semantic Release + Commitlint + Husky
 - **Optimizations:** Cross-platform environment variables, filesystem caching, bundle analysis
@@ -46,16 +47,16 @@ The project follows a modular, domain-driven structure to ensure scalability and
 
 ### 1. `features/` (Domain Layer)
 Contains all business logic, components, and types for specific features.
-- `features/adventures/`: Running logs & Strava activity hub (`ActivityDetailModal`, `PersonalBestsSwipeCard`, run canvas exports, split pacing breakdown).
+- `features/adventures/`: Running logs & Strava activity hub (`ActivityDetailModal` with Web Share API, `PersonalBestsSwipeCard` with solid accents, run canvas exports, split pacing breakdown).
 - `features/auth/`: Actions, `PinGuard.tsx`, and auth-specific components.
-- `features/blog/`: Actions, data fetching, and all blog UI components.
+- `features/blog/`: Actions, data fetching, dynamic category counts, sort controls, and all blog UI components.
 - `features/contact/`: Compact single-page contact view with real-time Jakarta clock & active status chip.
 - `features/home/`: Landing hero, dynamic greetings, quick link cards, and zero-scrollbar desktop entry layout.
-- `features/insights/`: Insights hub module aggregator (Blog, Investment, Liverpool FC, Utils).
+- `features/insights/`: Insights hub module aggregator (Blog, Investment, Liverpool FC, Utils) with top telemetry summary strip.
 - `features/investment/`: Actions, types, Fear & Greed market sentiment telemetry, and historical trends.
 - `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureCard.tsx`, `PlayedCard.tsx`, `FixtureFilters.tsx`, `FixtureSkeleton.tsx`).
 - `features/portfolio/` & `features/work-experience/`: Professional showcases, career timeline, interactive project cards, skills radar/metrics.
-- `features/reminders/`: Quick Reminders actions, types, linkified text pills, and duration extensions backed by Upstash Redis.
+- `features/reminders/`: Quick Reminders actions, types, linkified text pills, keyboard shortcuts (<kbd>⌘/Ctrl+Enter</kbd>), one-click note copying, and duration extensions backed by Upstash Redis.
 - `features/tasks/`: Actions, analytics, types, utils, 6-month date horizon, optimized `TaskProgress`, and task UI components structured under logical `components/` subdirectories (`agenda/`, `analytics/`, `health/`, `shared/`).
 - `features/travel/`: Components, types, static destinations data, and `PostcardModal` vintage airmail canvas generator for the Travel Bucket List Tracker.
 - `features/utils/`: High-fidelity developer utilities organized across 7 functional categories (`data-tools/`, `file-tools/`, `fun-tools/`, `security-tools/`, `stock-tools/`, `text-tools/`, `time-tools/`).
@@ -106,7 +107,6 @@ Strictly for routing and page definitions.
 
 ## 🎨 UI/UX Patterns
 - **Solid Productivity Pattern**: For admin, operational, and utility pages, use solid white containers, `slate-50` backgrounds, and defined borders.
-- **Glassmorphism**: Reserved for public aesthetic pages (Home, Blog, Travel, Running) using `bg-white/5` and `backdrop-blur-xl`.
 - **Contrast Mastery**: 
   - **Headlines**: Use dark-themed solid backing cards behind white headline text.
   - **Details**: Metadata and titles anchored in high-contrast white cards overlapping hero banners.
@@ -141,6 +141,7 @@ Strictly for routing and page definitions.
 
 ### Blog System
 - **Optimization**: Public routes use **Static Site Generation (SSG)** with absolute OG/Twitter metadata.
+- **Dynamic Filtering & Sorting**: Real-time article counters on category pills (*All, Tech, Finance, Running, General*) and 4-mode article sort selector (*Newest First, Oldest First, Quickest Read, Deepest Read*).
 - **Interactive Tools**: Built-in `ShareButton` leveraging native Web Share API.
 - **Syntax Highlighting**: 
   - Use **One Dark** Prism style for high-contrast and vibrant technical snippets.
@@ -163,6 +164,9 @@ Strictly for routing and page definitions.
 
 ### Quick Reminders System
 - **Architecture**: Domain-driven feature in `features/reminders/` and management portal at `/admin/reminders`.
+- **Keyboard Ergonomics**: Instant note submission via <kbd>⌘ + Enter</kbd> (Mac) or <kbd>Ctrl + Enter</kbd> (Windows).
+- **One-Click Actions**: Dedicated `Copy Note` action on each card with visual checkmark feedback.
+- **Search & TTL Filter Strip**: Live search bar paired with duration category filters (*All, Expiring Soon, 1 Day, 1 Week, 1 Month*).
 - **Redis TTL Lifespan**: Backed by Upstash Redis with selectable expiration lifespans (1 Day, 1 Week, 1 Month) and automatic key expiration.
 - **Interactive Links**: Automatic URL detection with clickable pill buttons and one-click copy-to-clipboard functionality.
 - **Rapid Time Extensions**: Provides one-click TTL extension badges (`+1D`, `+1W`, `+1M`) without re-entering reminder text.
@@ -170,6 +174,7 @@ Strictly for routing and page definitions.
 
 ### Insights Hub
 - **Architecture**: Centralized aggregator at `/insights` (`features/insights/`) consolidating Blog, Investment sentiment, Liverpool FC Matchday Hub, and Developer Utilities.
+- **Global Intelligence Telemetry**: Top 4-stat telemetry strip previewing core platform domains (Engineering Blueprints, Market Sentiment, Matchday Center, Developer Toolkits).
 - **Curated Modules**: Floating cards with category pills, topic tags, high-contrast linkout arrows (`ArrowUpRight`), and organic spring hover interactions (`whileHover={{ y: -4 }}`).
 
 ### Second Brain / Knowledge Graph
@@ -180,14 +185,14 @@ Strictly for routing and page definitions.
 - **Access Control**: Write operations (create, update, delete) are strictly protected by `checkAdmin()` in `features/auth/actions.ts`.
 
 ### Adventures & Professional Showcase
-- **Adventures**: High-fidelity logs for Running and Travel missions, utilizing Glassmorphism and rich typography.
-  - **Running Performance**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Supports dynamic grid scaling for high-density performance visualization. Features a high-fidelity **Activity Detail Modal** with real Strava splits, light/dark themes, transparent canvas background export, and clipboard image copying. Includes an overhauled **PersonalBestsSwipeCard** built on modern Floating Card patterns.
-- **Travel Bucket List Tracker**: 
-  - **Architecture**: Domain-driven logic in `features/travel/`.
-  - **Logic**: Dynamic `useMemo` filtering for "Completed Journeys" (sorted by date) vs. "Future Adventures".
-  - **Components**: High-fidelity `StatsCard` for progress visualization, `DestinationCard` with status badges, and `PostcardModal` vintage airmail high-res PNG sticker export with polaroid frames and postal ephemera stamps.
-  - **Aesthetics**: Solid Productivity Pattern (`bg-slate-50`) with Emerald accents.
-- **Professional Showcase**: Career milestones and project portfolio featuring interactive timelines and impact statistics.
+- **Adventures**: High-fidelity logs for Running and Travel missions, utilizing solid floating card aesthetics and rich typography.
+  - **Adventures Landing Hub (`/adventures`)**: Global telemetry stats strip (`65.9 km` Max Distance, `2,982 m` Peak Elevation, `10+` Destinations, `2` Canvas Engines) previewing Running and Travel ecosystems with milestone snapshots.
+  - **Running Performance (`/adventures/running`)**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Features a high-fidelity **Activity Detail Modal** with real Strava splits, light/dark themes, transparent canvas background export, and native **Web Share API** integration (`navigator.share` with rich summary text: `🏃 Morning Run • 10.02 km in 52m 14s`). Includes a **PersonalBestsSwipeCard** built on pure solid surfaces (zero blur glow orbs, zero gradient backgrounds) and one-click record copy actions.
+  - **Travel Bucket List Tracker (`/adventures/travel`)**: Domain-driven logic in `features/travel/` featuring dynamic filtering ("Completed" vs. "Future Adventures"), high-fidelity `StatsCard`, `DestinationCard`, and `PostcardModal` 3D flipping card (polaroid front & handwritten postcard back with postmark/stamp) with high-res PNG sticker export (`postcardCanvas.ts` with Next.js dynamic font-face extraction).
+- **Professional Showcase**:
+  - **Portfolio Core Engines (`/portfolio`)**: Interactive SVG Expertise Distribution visualizer with accordion modules, staggered floating cards, and `PortfolioDetailModal` showcasing deep-dive architectures, capabilities, tech stack matrices, and measurable impact metrics across LOS/LMS and specialized platforms.
+  - **Work Experience Timeline (`/work-experience`)**: Chronological career milestones featuring clean brand/legal entity hierarchy, inline technology chips, bottom impact statistics, and `ExperienceDetailModal` delivering comprehensive organizational impact and role breakdowns.
+  - **Solid Aesthetic Policy**: Strictly avoids multi-color gradient text, ambient blur glow orbs, and fuzzy glow drop shadows in favor of crisp solid productivity surfaces, semantic badge tints, and high-contrast typography.
 
 ### Developer Utilities Ecosystem (20+ Tools across 7 Categories)
 - **Suite Categorization**:
@@ -195,7 +200,7 @@ Strictly for routing and page definitions.
   2. **Data Tools**: Device Inspector (`/utils/device-inspector` with hardware diagnostics, audio/video studio, and network speed test), Mock API Engine (`/utils/mock-api` & `/api/mock/*` with Redis persistence), SQL Formatter (`/utils/sql-formatter`).
   3. **File Tools**: Code to Image (`/utils/code-to-image`), CSV to JSON (`/utils/csv-to-json`), File Renamer (`/utils/file-renamer`), Image Converter (`/utils/image-converter`), Schema Forge / Advanced JSON Converter (`/utils/json-converter-advanced`), JSON Formatter (`/utils/json-formatter`).
   4. **Fun Tools**: Spinner Wheel (`/utils/spinner-wheel` with Web Audio API clicks and confetti).
-  5. **Security Tools**: Hash & Password Generator (`/utils/hash-password-generator`), URL Safety & Threat Inspector (`/utils/url-inspector`).
+  5. **Security Tools**: JWT & API Token Inspector (`/utils/jwt-inspector` with 100% in-browser decoding, live countdown telemetry, RFC claims dictionary, and Web Crypto HMAC verification sandbox), Hash & Password Generator (`/utils/hash-password-generator`), URL Safety & Threat Inspector (`/utils/url-inspector`).
   6. **Stock Tools**: Stock Explorer (`/utils/stock-explorer` with composite scoring engine, whale/momentum/value presets, foreign flow tracking, sector heatmaps, and AI Analyst Drawer), Stock/Crypto Average Calculator (`/utils/stock-crypto-calculator`).
   7. **Time Tools**: Cron Expression Builder (`/utils/cron-builder` with natural language summaries), Running Interval Timer (`/utils/timer` with Web Audio synthesized beeps and Wake Lock API).
 - **JSON Tree View**: Standardized `JsonValue` component for interactive exploration of parsed data, supporting nested expansion, item counts, and value-level copying.
@@ -204,7 +209,7 @@ Strictly for routing and page definitions.
 
 ### Administrative Ecosystem
 - **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, Stock Registry, and Quick Reminders (`/admin/reminders`).
-- **Stock Manager**: Re-engineered portal (`/utils/stock-explorer/admin`) providing live cache status statistics (instruments count, trading date, 3-hour lifespan info), a programmatic "Purge Cache" action, and manual override form validation.
+- **Stock Manager**: Re-engineered portal (`/utils/stock-explorer/admin`) providing live cache status statistics (instruments count, trading date, 3-hour lifespan info), a programmatic "Purge Cache" action, direct JSON file upload (`<input type="file" accept=".json" />`), JSON formatting utility, sample template loader (`BBCA`, `BBRI`, `BMRI`), <kbd>⌘/Ctrl+Enter</kbd> shortcut, and strict TypeScript types.
 - **Navigation**: "Manage Stocks" and "Quick Reminders" integrated into `CompactBottomBar.tsx` Admin sub-menu with pending counts.
 
 ## 🚀 Development & Build Optimization
@@ -243,6 +248,7 @@ pnpm run analyze         # Alias for build:analyze
 
 ## 📏 Engineering Standards
 - **UI/UX Consistency**: All new or modified pages/components MUST strictly conform to [`ui-uix-guideline.md`](file:///c:/Work/Me/personal-web-v2/ui-uix-guideline.md) (Floating Cards, `bg-slate-50/80 bg-dot-pattern`, `bg-white` containers, `rounded-2xl` to `rounded-[2rem]`, pill badges, mobile-first responsive grids, and `pb-32 sm:pb-36` navigation clearance).
+- **Strict Anti-Gradient & Anti-Emoji Mandates**: NEVER use gradient headers, gradient modal dialogs, multi-color gradient text, or ambient blur glow orbs. NEVER use raw unicode emojis in UI components, headers, or cards (always use scalable SVG icons from `lucide-react` or `react-icons`).
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.
 - **Defensive Data Handling**: Always implement safety fallbacks and type-casting (e.g., `String(val || "")`) when processing external API data to prevent runtime `TypeError` on missing fields.
 - **SEO & Metadata**: Every route must implement `generateMetadata` using `createMetadata` helper in `lib/shared/metadata.ts`.

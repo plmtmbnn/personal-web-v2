@@ -224,6 +224,17 @@ const utilities: UtilityItem[] = [
 
 	// Security & Diagnostics
 	{
+		title: "JWT & API Token Inspector",
+		slug: "jwt-inspector",
+		categoryId: "security",
+		description:
+			"Decode JSON Web Tokens, inspect RFC 7519 claims, monitor live expiration countdowns, and verify HMAC signatures locally.",
+		accent: "bg-indigo-600",
+		color: "text-indigo-600",
+		bg: "bg-indigo-600/5",
+		icon: ShieldCheck,
+	},
+	{
 		title: "Security & Hash Studio",
 		slug: "hash-password-generator",
 		categoryId: "security",

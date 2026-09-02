@@ -40,7 +40,7 @@ const TECH_PILLS = [
 // ─── Memoized Components ───────────────────────────────────────────────────────
 
 const TechPill = memo(({ tech }: { tech: string }) => (
-	<span className="text-[11px] sm:text-xs font-semibold text-slate-600 px-3 py-1 bg-white border border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-sm hover:text-slate-900 rounded-full transition-all duration-200 cursor-default">
+	<span className="text-[11px] sm:text-xs font-semibold text-slate-600 px-3 py-1 bg-white border border-slate-200/80 shadow-xs hover:border-slate-300 hover:text-slate-900 rounded-full transition-all duration-200 cursor-default">
 		{tech}
 	</span>
 ));
@@ -77,22 +77,22 @@ const StatCard = memo(
 		sublabel,
 		href,
 		badgeBgColor = "bg-indigo-50 border-indigo-100 text-indigo-600",
-		accentBorderClass = "hover:border-indigo-300 hover:ring-2 hover:ring-indigo-500/10",
-		topAccentClass = "via-indigo-500",
+		accentBorderClass = "hover:border-indigo-300 hover:ring-1 hover:ring-indigo-500/20",
+		topAccentClass = "bg-indigo-500",
 	}: StatCardProps) => (
 		<Link
 			href={href}
 			aria-label={`View ${label} details`}
-			className={`col-span-1 bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between hover:-translate-y-1.5 shadow-xs hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 cursor-pointer group/card relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${accentBorderClass}`}
+			className={`col-span-1 bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between hover:-translate-y-1.5 shadow-xs hover:shadow-md transition-all duration-300 cursor-pointer group/card relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${accentBorderClass}`}
 		>
-			{/* Subtle top border accent line on hover */}
+			{/* Solid top border accent line on hover */}
 			<div
-				className={`absolute top-0 inset-x-3.5 sm:inset-x-5 h-[2px] bg-gradient-to-r from-transparent ${topAccentClass} to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-300`}
+				className={`absolute top-0 inset-x-3.5 sm:inset-x-5 h-[2px] ${topAccentClass} opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full`}
 			/>
 
 			<div className="flex justify-between items-start mb-2.5 sm:mb-3.5 relative z-10">
 				<div
-					className={`p-1.5 sm:p-2.5 rounded-xl border ${badgeBgColor} flex items-center justify-center group-hover/card:scale-110 group-hover/card:rotate-3 transition-transform duration-300 shadow-2xs`}
+					className={`p-1.5 sm:p-2.5 rounded-xl border ${badgeBgColor} flex items-center justify-center group-hover/card:scale-110 group-hover/card:rotate-3 transition-transform duration-300 shadow-xs`}
 				>
 					{icon}
 				</div>
@@ -186,8 +186,8 @@ export default function Home({
 						className="relative group cursor-pointer"
 					>
 						{/* Photo frame — Floating white card container */}
-						<div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-64 lg:h-64 xl:w-80 xl:h-80 rounded-[2.5rem] p-3 bg-white border border-slate-200/80 shadow-xl shadow-slate-200/50 group-hover:shadow-2xl group-hover:shadow-slate-300/60 group-hover:scale-[1.02] transition-all duration-500">
-							<div className="w-full h-full rounded-[2rem] overflow-hidden">
+						<div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-64 lg:h-64 xl:w-80 xl:h-80 rounded-[2rem] p-3 bg-white border border-slate-200/80 shadow-xs group-hover:shadow-md group-hover:scale-[1.01] transition-all duration-500">
+							<div className="w-full h-full rounded-[1.5rem] overflow-hidden">
 								<Image
 									src="/profile.jpg"
 									alt={`${AUTHOR.name} — Software Engineer and Distance Runner`}
@@ -201,7 +201,7 @@ export default function Home({
 
 						{/* Status badge — conditional on AUTHOR.available */}
 						{AUTHOR.available && (
-							<div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 flex items-center gap-2 px-3 py-1.5 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-full shadow-sm">
+							<div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200/80 rounded-full shadow-xs">
 								<div className="relative">
 									<div className="w-2 h-2 bg-emerald-500 rounded-full" />
 									<div className="absolute inset-0 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
@@ -217,7 +217,7 @@ export default function Home({
 							className="absolute -top-3 -right-3 hidden lg:block group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300"
 							style={{ willChange: "transform" }}
 						>
-							<div className="flex flex-col gap-1.5 p-2.5 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-lg shadow-slate-200/50">
+							<div className="flex flex-col gap-1.5 p-2.5 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
 								{TECH_PILLS.slice(0, 3).map((tech) => (
 									<span
 										key={tech}
@@ -234,7 +234,7 @@ export default function Home({
 							className="absolute -bottom-3 -left-3 hidden lg:block group-hover:-translate-x-1 group-hover:translate-y-1 transition-transform duration-300"
 							style={{ willChange: "transform" }}
 						>
-							<div className="p-2.5 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-lg shadow-slate-200/50">
+							<div className="p-2.5 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
 								<div className="flex items-center gap-2 mb-1">
 									<div className="w-2 h-2 rounded-full bg-cyan-500 shrink-0" />
 									<span className="text-[9.5px] font-bold text-slate-700">
@@ -310,8 +310,8 @@ export default function Home({
 							sublabel="Architecture & Systems"
 							href="/work-experience"
 							badgeBgColor="bg-indigo-50 border-indigo-100 text-indigo-600"
-							accentBorderClass="hover:border-indigo-300 hover:ring-2 hover:ring-indigo-500/10"
-							topAccentClass="via-indigo-500"
+							accentBorderClass="hover:border-indigo-300 hover:ring-1 hover:ring-indigo-500/20"
+							topAccentClass="bg-indigo-500"
 						/>
 
 						<StatCard
@@ -323,8 +323,8 @@ export default function Home({
 							sublabel="Running"
 							href="/adventures/running"
 							badgeBgColor="bg-emerald-50 border-emerald-100 text-emerald-600"
-							accentBorderClass="hover:border-emerald-300 hover:ring-2 hover:ring-emerald-500/10"
-							topAccentClass="via-emerald-500"
+							accentBorderClass="hover:border-emerald-300 hover:ring-1 hover:ring-emerald-500/20"
+							topAccentClass="bg-emerald-500"
 						/>
 
 						<StatCard
@@ -336,8 +336,8 @@ export default function Home({
 							sublabel="Core Apps & Infra"
 							href="/portfolio"
 							badgeBgColor="bg-cyan-50 border-cyan-100 text-cyan-600"
-							accentBorderClass="hover:border-cyan-300 hover:ring-2 hover:ring-cyan-500/10"
-							topAccentClass="via-cyan-500"
+							accentBorderClass="hover:border-cyan-300 hover:ring-1 hover:ring-cyan-500/20"
+							topAccentClass="bg-cyan-500"
 						/>
 					</motion.div>
 
@@ -348,7 +348,7 @@ export default function Home({
 					>
 						<Link
 							href="/work-experience"
-							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-slate-900 text-white !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg shadow-slate-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 cursor-pointer"
+							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-slate-900 text-white !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-xs hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 cursor-pointer"
 						>
 							<span className="text-white">Explore Work</span>
 							<ArrowRight className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-1 transition-transform duration-200" />

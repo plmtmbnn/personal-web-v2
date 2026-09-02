@@ -10,6 +10,9 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
 * **Floating Cards:** The core architectural unit is the "Floating Card." Components are encapsulated within panels featuring large border radii (e.g., `rounded-2xl`, `rounded-3xl`, or `rounded-[2rem]`), subtle border rings (`border border-slate-200/80`), and soft drop shadows (`shadow-xs` to `shadow-xl`) to create a distinct layering effect over the canvas.
 * **Subtle Textures:** The global background utilizes an off-white or very light gray canvas (`bg-slate-50/80`) enhanced with a subtle dot-grid pattern (`bg-dot-pattern`), providing tactile depth without distracting from content.
 * **Contrast Mastery:** Standard panels rely on pure white containers (`bg-white`), while high-priority metrics or visualizations may utilize dark slate panels (`bg-slate-900`) to create stark visual breaks and guide user attention.
+* **Strict Anti-Gradient Mandate (Headers, Modals & Surfaces):** NEVER use gradient headers, gradient modal dialogs, multi-color gradient text (`bg-clip-text text-transparent bg-gradient-to-*`), colored drop-shadow glow filters (`filter: drop-shadow(...)`), or large ambient blurred orbs (`blur-3xl`, `blur-[100px]`). All page headers, modal containers, cards, and interactive components MUST strictly use clean solid surfaces (`bg-white`, `bg-slate-50`), solid borders (`border border-slate-200/80`), solid semantic badge tints (`bg-indigo-50`, `bg-purple-50`, `bg-blue-50`, `bg-amber-50`, `bg-emerald-50`, `bg-rose-50`), and high-contrast solid typography (`text-slate-900`, `text-indigo-600`).
+* **Strict Iconography Standard (Anti-Emoji Mandate):** NEVER use raw unicode emojis (e.g., 🤝, 💼, 🚀, ☕, ⚡, 🏆, 🌍) in UI components, topic selectors, headers, or cards. Always use dedicated, scalable SVG icons from `lucide-react` or `react-icons` (e.g., `Handshake`, `Briefcase`, `Cpu`, `Coffee`, `Zap`, `Award`, `Globe`). Emojis render inconsistently across operating systems and degrade the clean, professional engineering aesthetic.
+* **Global Telemetry Summary Strip Pattern:** Domain entry points (such as Adventures Landing Hub and Insights Hub) employ a prominent 4-column desktop / 2-column mobile telemetry strip (`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4`) directly beneath the hero header. Each telemetry item is housed in a `bg-white rounded-2xl border border-slate-200/80 shadow-xs` card with a solid semantic squircle icon badge, uppercase tracking label, bold metric value, and descriptive subtext.
 * **Pure Light Explorer & Matchday Hub Standard:** Aesthetic hubs (such as Travel Bucket List Tracker and Liverpool FC Matchday Hub) employ an airy centered hero (`pt-24 sm:pt-32`), quick stat pill rows (`px-4 py-2.5 bg-white border border-slate-200/80 rounded-full shadow-xs`), segmented pill tab switchers, and `rounded-[2rem]` floating cards with organic spring hover interactions (`whileHover={{ y: -4 }}`).
 
 ---
@@ -31,6 +34,7 @@ A mobile-first mindset is strictly enforced across the codebase. Layouts gracefu
 * **Responsive Grids:** Complex layouts start stacked on mobile (`grid-cols-1`) and expand to multi-column grid layouts on larger screens (`md:grid-cols-2`, `lg:grid-cols-3` or `xl:grid-cols-3`).
 * **Nested & Side-by-Side Grid Column Sizing:** When embedding card grids inside side-by-side split layouts (e.g., `lg:flex-row`, multi-column parent panes), NEVER use high column counts like `grid-cols-4` in a half-width container. A split pane only has ~350px-450px available width. In split containers, use a 2x2 grid (`grid-cols-2`) so each card maintains a minimum comfortable width ($\ge 160\text{px}-200\text{px}$). Full 4-column grids (`grid-cols-4`) are strictly reserved for standalone, full-width rows.
 * **Defensive Card Layout Hygiene:** All nested grid items, stat buttons, and flex containers MUST include `min-w-0` to prevent flex blowout. Card header labels and subtexts must use `truncate` with `shrink-0` on icons to guarantee text never breaks into awkward vertical stacks or overlaps adjacent cards.
+* **Card Header & Spatial Alignment Hygiene:** Never use arbitrary hardcoded left padding offsets (like `pl-11`) to manually align subheaders beneath an icon; this causes text and badges to wrap awkwardly on narrow mobile viewports. Instead, structure headers using flex columns/rows with direct icon containers (`w-11 h-11 shrink-0`), placing brand names, legal entity subtitles, domain badges, and right-aligned location pills into distinct, dedicated flex groups.
 * **Desktop Entry Screen Standard:** Primary single-page entry points (e.g., `HomeView`, `ContactView`) utilize a compact 100vh entry screen layout on desktop (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden lg:py-0 lg:pb-0`) to eliminate unnecessary vertical or horizontal scrollbars entirely.
 * **Mobile-First Scrolling:** On handheld and tablet devices (`< lg`), views revert to fluid vertical scrolling (`min-h-screen overflow-y-auto py-20 pb-32 sm:py-24 sm:pb-36`) to accommodate the floating bottom navigation bar (`CompactBottomBar`).
 * **Fluid Spacing & Typography:** Margins, padding, and font sizes scale smoothly based on breakpoints (e.g., `pt-24 sm:pt-32`, `text-3xl sm:text-5xl lg:text-6xl`, `px-3 sm:px-4`).
@@ -43,7 +47,7 @@ The primary application navigation utilizes a floating glassmorphic pill bar pos
 
 * **Glassmorphic Surface:** Enclosed in `bg-white/90 backdrop-blur-2xl` with a subtle inner ring (`ring-1 ring-slate-900/5`) and soft ambient drop shadow (`shadow-[0_16px_48px_-12px_rgba(15,23,42,0.15)]`).
 * **Active Tab Contrast:** Active tabs feature an animated dark slate spring pill background (`bg-slate-900`). Active text and icons MUST enforce explicit high contrast (`!text-white`) to prevent global `a` element styles from bleeding through.
-* **Submenu Affordances:** Submenu popovers feature a `ChevronUp` indicator visible on both mobile and desktop to provide clear visual affordance for expandable navigation items. "Insights" sub-menu hosts Blog, Investments, Liverpool FC, and Utils.
+* **Submenu Affordances:** Submenu popovers feature a `ChevronUp` indicator visible on both mobile and desktop to provide clear visual affordance for expandable navigation items. "Insights" sub-menu hosts Blog, Investments, Liverpool FC, and Utils. "Admin" sub-menu hosts Tasks, Blog Editor, Stock Manager, and Quick Reminders with pending count badges.
 
 ---
 
@@ -80,108 +84,19 @@ Animations are used purposefully to guide attention and provide feedback.
 For content-heavy feeds, journals, and dynamic list views:
 
 * **Progressive Batch Slicing:** Render initial content in controlled batches (e.g. `PAGE_SIZE = 6`) to optimize DOM tree performance and initial rendering speed.
+* **Dynamic Category Count Pills:** Category selectors MUST compute and display dynamic count badges next to category labels (e.g., `All (12)`, `Tech (6)`, `Finance (3)`) to communicate dataset scale.
+* **Sorting Standard:** Provide clean, accessible sorting dropdowns with standardized modes: `date-desc` (Newest First), `date-asc` (Oldest First), `read-asc` (Quickest Read), `read-desc` (Deepest Read).
 * **IntersectionObserver Sentinel:** Use a sentinel element combined with `IntersectionObserver` at the bottom of lists for seamless auto-loading. Provide shimmering `Skeleton` placeholders during load transitions.
 * **Filter State Resets:** Automatically reset visible pagination counts to page 1 whenever category filters or search inputs change.
 * **End-of-Archive Indicator:** When all items are loaded (`!hasMore`), display a clean end-of-archive badge summarizing the total record count.
-* **Skeleton Loading Best Practices:**
-  - Use skeletons only for actual loading states, not for filter results
-  - Remove skeletons immediately when data arrives or when empty state is confirmed
-  - Never show indefinite skeleton loading when no data exists
-  - Prefer immediate empty states over prolonged skeleton loading
 
 ---
 
 ## 9. Empty State Design Patterns
 Empty states are critical UX moments that guide users when no data is available. They must be contextual, actionable, and visually consistent.
 
-### Core Principles
-* **Context-Aware Messaging:** Distinguish between different empty scenarios
-  - No data exists yet (first-time user)
-  - No results match current filters
-  - Data failed to load (API error)
-  - Connection required (authentication/integration)
-  - Data exists elsewhere but not in current view
-* **Visual Hierarchy:** 
-  - Floating card container (`bg-white`, `rounded-3xl`, `border border-slate-200/80`)
-  - Icon or visual indicator (large, centered, colored based on context)
-  - Bold headline (concise, state what's missing)
-  - Descriptive text (explain why it's empty and what to do)
-  - Action button(s) when user action is needed
-* **Color Semantics:**
-  - Success/Ready: Emerald gradient background (`from-emerald-50/50 to-slate-50`)
-  - Error/Warning: Amber accents (`text-amber-600`, `ShieldAlert` icon)
-  - Neutral/No Data: Slate accents (`text-slate-600`)
-  - Info/Loading: Cyan/Indigo accents
-
-### Implementation Examples
-
-#### Connected But No Data (Strava Running)
-```tsx
-{!hasRunData && isConnected && (
-  <div className="mt-12 text-center py-20 bg-gradient-to-br from-emerald-50/50 to-slate-50 border border-emerald-100/80 rounded-3xl shadow-sm">
-    <Activity className="w-10 h-10 text-emerald-600" />
-    <p className="text-base font-extrabold text-slate-900 mb-2">
-      Connected & Ready!
-    </p>
-    <p className="text-xs text-slate-600">
-      Your account is connected. Start running and activities will sync automatically.
-    </p>
-    <CheckCircle className="w-4 h-4 text-emerald-600" />
-    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
-      Synced with Strava
-    </span>
-  </div>
-)}
-```
-
-#### API Sync Error
-```tsx
-{runsIsNull && (
-  <div>
-    <ShieldAlert className="w-10 h-10 text-amber-600" />
-    <p className="text-base font-extrabold text-slate-900">
-      Unable to Load Activities
-    </p>
-    <p className="text-xs text-slate-600">
-      Temporary API issue. Try refreshing the page in a moment.
-    </p>
-    <button onClick={() => window.location.reload()}>
-      <Activity className="w-4 h-4" />
-      Refresh Page
-    </button>
-  </div>
-)}
-```
-
-#### Filter Results Empty (Blog)
-```tsx
-{sortedBlogs.length === 0 && hasActiveFilter && (
-  <div>
-    <Sparkles className="w-5 h-5 text-indigo-600" />
-    <h3>No Stories Found</h3>
-    <p>No articles matching your search query or selected category.</p>
-    <button onClick={clearFilters}>Clear Filters</button>
-  </div>
-)}
-```
-
-#### Stats Show Data But Activities Not Loaded
-```tsx
-{hasStats && stats.all_run_totals?.count > 0 && (
-  <div>
-    <p>Activities Loading...</p>
-    <p>Your stats show {stats.all_run_totals.count} total runs, but activities are syncing.</p>
-    <TrendingUp className="w-4 h-4 text-cyan-600" />
-    <span>{stats.all_run_totals.count} Total Runs on Strava</span>
-  </div>
-)}
-```
-
-### Guidelines
-* **No Skeleton Loading for Empty States:** Replace skeleton loading with immediate empty state display when data doesn't exist
-* **Actionable CTAs:** Always provide a clear action when the user can fix the empty state (connect account, clear filters, refresh, etc.)
-* **Progressive Disclosure:** Show different levels of detail based on whether the user can take action
-* **Micro-copy Matters:** Use friendly, direct language that explains the situation clearly
+* **Floating Card Container:** Use solid white surfaces (`bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl shadow-xs`).
+* **Actionable CTAs:** Always provide a clear action when the user can fix the empty state (connect account, clear filters, refresh, etc.).
 * **Icon Selection:** 
   - `CheckCircle` = Success/Ready
   - `ShieldAlert` = Warning/Error
@@ -194,105 +109,46 @@ Empty states are critical UX moments that guide users when no data is available.
 ## 10. Error Page Standards
 Error pages (404, 500, etc.) must be simple, direct, and provide clear navigation options.
 
-### 404 Not Found Pattern
-* **Structure:**
+* **404 Not Found Pattern:**
   - Large, bold 404 number (7xl-8xl font size)
   - Clear headline: "Page Not Found"
   - Brief explanation: One sentence maximum
   - Dual action buttons: Primary (Go Home) + Secondary (Go Back)
-* **Design:**
-  - Centered floating card (`max-w-md`)
-  - White background with subtle border
-  - Full-width buttons for better mobile UX
-  - Proper color contrast on all text
-* **Interactivity:**
-  - Must use `"use client"` directive for interactive buttons
-  - Primary action: Link to home page (indigo button)
-  - Secondary action: Browser back (`window.history.back()`)
-* **Button Colors:**
-  - Primary: `bg-indigo-600 hover:bg-indigo-700 text-white`
-  - Secondary: `bg-slate-100 hover:bg-slate-200 text-slate-700`
-  - Always explicitly set icon and text colors (e.g., `text-white` on both icon and span)
+  - Centered floating card (`max-w-md bg-white border border-slate-200/80 rounded-3xl shadow-xs`)
 
 ---
 
 ## 11. Authentication & Session Management UX
 Authentication flows must be seamless, secure, and user-friendly with automatic session maintenance.
 
-### Token Refresh Architecture
-* **Multi-Layer Refresh System:**
-  - **Server-Side (proxy.ts):** Automatic token refresh on every page request via Next.js proxy convention
-  - **Client-Side (AuthProvider):** Proactive monitoring and refresh every 5 minutes
-  - **Redis Session Layer:** 30-week sessions with automatic TTL extension on activity
-  - **API Endpoint:** `/api/auth/refresh-session` synchronizes Redis with Supabase tokens
-* **User Experience Goals:**
-  - Zero manual re-logins for active users
-  - Seamless background refresh without UI interruption
-  - Clear feedback only when action is required (re-login after 30 weeks inactivity)
-* **Session Lifecycle:**
-  - Active users stay logged in indefinitely
-  - Inactive for < 30 weeks: Still logged in when they return
-  - Inactive > 30 weeks: Must re-authenticate (security measure)
-
-### Login Flow UX
-* **Path Preservation:** Login button captures current path and redirects back after authentication
-* **OAuth Provider:** Google OAuth with PKCE flow and visual branding
-* **Loading States:** 
-  - Button text changes: "Continue with Google" → "Connecting..."
-  - Disabled state during OAuth redirect
-* **Redirect Security:** Whitelist-based validation for admin route patterns prevents open redirect attacks
-* **Smart Defaults:** Callback redirects to `/admin` if no specific path, not hardcoded `/tasks`
-
-### Protected Route Patterns
-* **Admin Routes:** `/admin/*`, `/tasks/*`, `/adventures/running`, `/utils/*/admin`
-* **Callback Handling:** Enhanced auth callback (`/auth/callback`) with smart redirect to intended destination
-* **Session Indicators:** Minimal, non-intrusive session status (no constant "logged in" badges)
-* **PinGuard Usage:** Removed from Investment feature; now used selectively for high-security areas only
-
-### Error Handling
-* **Session Expiration:** Redirect to `/login` with clear message
-* **Auth Failure:** Show error banner with actionable guidance
-* **Token Refresh Failure:** Silent retry, then prompt for re-login if persistent
-* **Unauthorized Access:** Redirect to `/unauthorized` with explanation
-
-### Debug-Friendly Architecture
-* **Console Logging:** Structured logs for debugging:
-  ```
-  [Middleware] Session active for user: <id>
-  [AuthProvider] Token refreshed proactively
-  [AuthProvider] Redis session synced
-  [Redis] Session refreshed: <session-id>
-  ```
-* **Session Metadata:** Track creation time, last refresh, expiration for monitoring via `getSessionMetadata()`
-* **Environment Toggles:** Feature flags for auth system components (Google OAuth, PinGuard)
-
-### Technical Implementation
-* **File Convention:** Use `proxy.ts` (Next.js 16+), not deprecated `middleware.ts`
-* **Function Export:** Must export as `export async function proxy(request: NextRequest)`
-* **Auth Provider Integration:** Wrap root layout with `<AuthProvider>` in `app/layout.tsx`
-* **Client Components:** Auth-related interactivity requires `"use client"` directive
-* **Documentation:** Complete technical details in `docs/AUTH_TOKEN_REFRESH.md`
+* **TOTP Authenticator Protection (`PinGuard.tsx`):** Protects restricted sections (Admin, Tasks) using a 6-digit Google Authenticator code verified via `otplib`. Optimized for device numeric keypads with 12-hour session lifetime.
+* **Multi-Layer Token Refresh System:**
+  - Server-side token refresh on every page request via `proxy.ts`.
+  - Client-side proactive monitoring every 5 minutes (`AuthProvider`).
+  - Redis session layer maintaining 30-week sessions with automatic TTL extension on activity.
 
 ---
 
-## 12. HTML5 Canvas Export & Sticker Generation Standards
+## 12. HTML5 Canvas Export & Web Share Standards
 Dynamic image and sticker generation provides engaging, shareable visual summaries across adventures, utilities, and travel.
 
 ### Canvas Rendering Principles
 * **High-DPI Retina Scaling:** Canvas dimensions MUST be scaled by `window.devicePixelRatio` or a minimum of `2x` (e.g. `800x500` rendered at `1600x1000`) before rendering to prevent blurry text and pixelated artifacts on high-density displays.
-* **Font Pre-loading & Fallbacks:** Always load and verify custom web fonts (such as `Montserrat`, `Georgia`, or system serif/sans-serif fonts) before initiating canvas drawing routines.
-* **CORS-Safe Asset Loading:** External images (e.g., Strava profile pictures, destination photos) must be loaded using `img.crossOrigin = "anonymous"` to avoid tainting the canvas and blocking image export.
-* **Export Action Ergonomics:**
-  - **Clipboard API First:** Provide a primary "Copy to Clipboard" button utilizing `navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])` with immediate tactile feedback (`Check` icon and "Copied!" state).
-  - **Fallback PNG Download:** Provide a secondary "Download PNG" button that generates an anchor download link (`a.download = filename.png`).
+* **Next.js CSS Variable Font Extraction:** Canvas 2D contexts do not parse CSS variables (like `var(--font-caveat)`). When rendering custom Next.js fonts on Canvas, dynamically resolve the true computed font-family name from a temporary DOM element (`window.getComputedStyle(dummy).fontFamily`) and await `document.fonts.ready` before drawing.
+* **CORS-Safe Asset Loading:** External images must be loaded using `img.crossOrigin = "anonymous"` to avoid tainting the canvas and blocking image export.
+
+### Web Share API & Export Action Ergonomics
+* **Native Web Share Sheet (`navigator.share`):** On supported devices (iOS Safari, Android Chrome, macOS Safari), integrate `navigator.share({ title, text, url })` formatting rich activity summaries (*"🏃 Morning Run • 10.02 km in 52m 14s (Avg 5:13/km)"*) to open native system share dialogs (WhatsApp, Telegram, AirDrop, Messages).
+* **Direct Sticker / File Sharing:** When supported (`navigator.canShare({ files: [file] })`), allow direct sharing of generated transparent PNG stickers to Instagram Stories and messaging apps.
+* **Clipboard API Fallback:** When Web Share API is unavailable or cancelled, copy the payload to clipboard (`navigator.clipboard.writeText` for URLs, `navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])` for stickers) with tactile visual confirmation (`Check` icon and toast alert).
 
 ### Specialized Export Formats
-* **Vintage Airmail Travel Postcard (`postcardCanvas.ts`):**
+* **Vintage Airmail Travel Postcard (`postcardCanvas.ts` & `PostcardModal.tsx`):**
+  - **3D Card Flip Experience:** Postcard modal utilizes CSS 3D perspective with `preserve-3d` and `backface-visibility: hidden` to allow users to interactively flip between the front polaroid sticker and the back handwritten postcard.
   - **Border Pattern:** Diagonal striped airmail border (`#1E3A8A`, `#FAF5EC`, `#BE123C`) with rounded inner cream backing (`#FAF5EC`).
-  - **Polaroid Photo Frame:** Left-aligned framed photo with white padding, subtle drop shadow, and handwritten-style caption.
-  - **Postal Ephemera:** Right-aligned postmark stamp circle, vintage airmail badge, destination coordinates, completed dates, and memo lines.
+  - **Postal Ephemera:** High-accuracy stamp rendering, overlapping postmark stamp circle with wavy cancellation lines, and handwritten address lines with randomized organic line rotations.
 * **Strava Running Activity Canvas (`ActivityDetailModal.tsx`):**
-  - **Theme Adaptability:** Dual-theme engine supporting clean light canvas (`#FFFFFF` with `#0F172A` metrics) and high-contrast dark canvas (`#0F172A` with `#FFFFFF` metrics).
+  - **Theme Adaptability:** Dual-theme engine supporting clean light canvas (`#000000` text) and high-contrast dark canvas (`#FFFFFF` text).
   - **Transparent Mode:** Support a transparent background toggle for sticker overlays on Instagram Stories or photo collages.
   - **Telemetry Typography:** Large hero distance (`72px font-black`), pace, elevation gain, moving time, heart rate, and split pacing breakdown bars.
 
@@ -307,7 +163,7 @@ Utilities are structured into 7 distinct domains for easy discovery and mental c
 2. **Data Tools:** Device Inspector, Mock API Engine, SQL Formatter.
 3. **File Tools:** Code to Image, CSV to JSON, File Renamer, Image Converter, Schema Forge (Advanced JSON Converter), JSON Formatter.
 4. **Fun Tools:** Spinner Wheel decision maker.
-5. **Security Tools:** Hash & Password Generator, URL Safety & Threat Inspector.
+5. **Security Tools:** JWT & API Token Inspector, Hash & Password Generator, URL Safety & Threat Inspector.
 6. **Stock Tools:** Stock Explorer, Stock/Crypto Average Calculator.
 7. **Time Tools:** Cron Expression Builder, Running Interval Timer.
 
@@ -329,30 +185,36 @@ When utilizing native browser and device APIs for real-time utilities:
 * **Screen Wake Lock API:**
   - For continuous operations (e.g. Running Interval Timer, Device Benchmarks), acquire a wake lock via `navigator.wakeLock.request("screen")`.
   - Automatically re-acquire the wake lock if the page visibility changes from hidden back to visible (`document.addEventListener("visibilitychange", ...)`).
-* **Hardware Diagnostics & Studio:**
-  - Provide visual live meters (frequency visualizers, decibel meters, canvas frame rate benchmarks) with clear permission prompts and graceful error fallbacks when hardware access (microphone/camera) is denied.
 
 ---
 
 ## 15. Admin & Operational Productivity Patterns
-Operational views (e.g., Admin Dashboard, Task Agenda, Quick Reminders) emphasize speed, clarity, and zero cognitive friction.
+Operational views (e.g., Admin Dashboard, Task Agenda, Quick Reminders, Stock Manager) emphasize speed, clarity, and zero cognitive friction.
+
+### Keyboard Shortcuts Standard
+* **Instant Submission:** All administrative forms and text entry tools (Quick Reminders note area, Stock Admin JSON input) MUST support <kbd>⌘ + Enter</kbd> (Mac) and <kbd>Ctrl + Enter</kbd> (Windows/Linux) to immediately submit or import data without clicking the button.
 
 ### Quick Reminders Standard (`/admin/reminders`)
-* **Time-to-Live (TTL) Hierarchy:** Backed by Redis with selectable lifespans:
-  - `1 Day` (Transient / Day-specific reminders)
-  - `1 Week` (Short-term deliverables)
-  - `1 Month` (Monthly review items)
+* **Time-to-Live (TTL) Hierarchy:** Backed by Redis with selectable lifespans: `1 Day`, `1 Week`, `1 Month`.
 * **Automatic Linkification:** Detect URLs in reminder text and render them as interactive, clickable pill buttons (`bg-indigo-50 text-indigo-700 hover:bg-indigo-100`) accompanied by one-click copy buttons.
 * **One-Click Lifespan Extensions:** Provide rapid duration extension badges (`+1D`, `+1W`, `+1M`) on each card to extend TTL without re-entering reminder text.
-* **Navigation Integration:** Display live count badges in `CompactBottomBar` under the Admin submenu so pending administrative items are immediately visible.
+* **Card-Level Note Copying:** Dedicated `Copy` button on each card with visual checkmark feedback.
+* **Search & TTL Filter Strip:** Live search input combined with category pills (*All, Expiring Soon, 1 Day, 1 Week, 1 Month*).
+
+### Stock Manager Import Protocol (`/utils/stock-explorer/admin`)
+* **JSON File Upload:** Provide a direct `.json` file upload reader (`<input type="file" accept=".json" />`) to load large dataset files directly from disk without manual copy-paste overhead.
+* **JSON Formatting Tool:** One-click syntax validator and prettifier.
+* **Sample Template Generator:** One-click "Load Sample" button prefilling valid IDX payload structure (`BBCA`, `BBRI`, `BMRI`).
 
 ---
 
 ## 16. Insights & Aggregation Hub Standards
-Hub and aggregator pages (e.g., `/insights`) provide curated entry points into the platform's analytical subsystems.
+Hub and aggregator pages (e.g., `/insights`, `/adventures`) provide curated entry points into the platform's analytical subsystems.
 
+* **Global Intelligence Telemetry Strip:** Top 4-stat telemetry strip previewing core platform domains with solid icon squircles and high-contrast numbers.
 * **Module Cards:** Encapsulated in `rounded-[2rem]` floating cards with category badges, high-contrast linkout arrows (`ArrowUpRight`), descriptive body text, and thematic topic tags.
 * **Spring Hover Physics:** Cards lift organically on hover (`whileHover={{ y: -4 }}`) with subtle shadow expansion (`shadow-md`).
-* **Thematic Accents:** Use distinct badge color pairings to reinforce domain boundaries (Indigo for Architecture/Blog, Emerald for Financial/Investments, Red for Liverpool FC, Amber for Developer Utilities).
+* **Thematic Accents:** Use distinct badge color pairings to reinforce domain boundaries (Indigo for Architecture/Blog, Emerald for Financial/Investments, Rose for Liverpool FC, Cyan for Developer Utilities).
+* **Navigation Clearance:** Standardize bottom padding clearance to `pb-32 sm:pb-36` to ensure comfortable clearance above `CompactBottomBar`.
 
 ---

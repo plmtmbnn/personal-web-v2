@@ -12,7 +12,8 @@ export interface PersonalBestItem {
 	icon: LucideIcon;
 	color: string;
 	badgeBg: string;
-	bgGlow: string;
-	borderAccent: string;
+	solidAccent?: string;
+	bgGlow?: string;
+	borderAccent?: string;
 	isHighest?: boolean;
 }

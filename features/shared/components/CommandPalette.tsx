@@ -208,6 +208,11 @@ export default function CommandPalette() {
 									>
 										{[
 											{
+												name: "JWT & API Token Inspector",
+												slug: "jwt-inspector",
+												icon: ShieldCheck,
+											},
+											{
 												name: "QR Code Generator",
 												slug: "qr-code-generator",
 												icon: QrCode,

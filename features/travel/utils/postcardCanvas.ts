@@ -2,38 +2,29 @@ import { AUTHOR } from "@/lib/shared/constants";
 import type { Destination } from "../types";
 
 /* ═══════════════════════════════════════════════════════════════════════
- * Layout Constants — Full-Bleed Photo with Airmail Border
- * ═══════════════════════════════════════════════════════════════════ */
+ * Layout Constants
+ * ═══════════════════════════════════════════════════════════════════════ */
 
 /** Canvas logical dimensions */
 const CANVAS_W = 800;
 const CANVAS_H = 500;
 
-/** Border config */
-const BORDER_WIDTH = 16;
+/** Border config (Front) */
+const BORDER_TOP = 18;
+const BORDER_SIDES = 18;
+const BORDER_BOTTOM = 34; // slightly wider bottom for caption
 
-/** Inner content area (photo zone) */
-const INNER_X = BORDER_WIDTH;
-const INNER_Y = BORDER_WIDTH;
-const INNER_W = CANVAS_W - BORDER_WIDTH * 2;
-const INNER_H = CANVAS_H - BORDER_WIDTH * 2;
-const INNER_RADIUS = 6;
+const INNER_X = BORDER_SIDES;
+const INNER_Y = BORDER_TOP;
+const INNER_W = CANVAS_W - BORDER_SIDES * 2;
+const INNER_H = CANVAS_H - BORDER_TOP - BORDER_BOTTOM;
+const INNER_RADIUS = 2; // sharper corners for vintage feel
 
-/** Colors */
-const TEXT_WHITE = "#FFFFFF";
-const TEXT_SUBTITLE = "rgba(255, 255, 255, 0.85)";
-const TEXT_MUTED = "rgba(255, 255, 255, 0.6)";
-
-/** Typography */
-const FONT_SERIF_HUGE = "900 46px 'Georgia', serif";
-const FONT_SERIF_ITALIC = "italic 15px 'Georgia', serif";
-const FONT_SANS_BOLD = "bold 15px 'Montserrat', sans-serif";
-const FONT_SANS_CAPS = "bold 11px 'Montserrat', sans-serif";
-const FONT_SANS_TINY = "800 10px 'Montserrat', sans-serif";
+const VINTAGE_CREAM = "#FDFBF7";
 
 /* ═══════════════════════════════════════════════════════════════════════
  * Drawing helpers
- * ═══════════════════════════════════════════════════════════════════ */
+ * ═══════════════════════════════════════════════════════════════════════ */
 
 /** Rounded rectangle path */
 function drawRoundedRect(
@@ -133,15 +124,7 @@ function wrapText(
 
 /* ═══════════════════════════════════════════════════════════════════════
  * Section renderers
- * ═══════════════════════════════════════════════════════════════════ */
-
-/** Plain white border around the entire canvas */
-function drawPlainBorder(ctx: CanvasRenderingContext2D) {
-	ctx.save();
-	ctx.fillStyle = "#FFFFFF";
-	ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-	ctx.restore();
-}
+ * ═══════════════════════════════════════════════════════════════════════ */
 
 /** Draw full-bleed photo inside the inner area */
 async function drawPhotoBackground(
@@ -183,96 +166,23 @@ async function drawPhotoBackground(
 	ctx.restore();
 }
 
-/** Draw dramatic dark gradient at the bottom */
-function drawGradientOverlay(ctx: CanvasRenderingContext2D) {
-	ctx.save();
-	drawRoundedRect(ctx, INNER_X, INNER_Y, INNER_W, INNER_H, INNER_RADIUS);
-	ctx.clip();
-
-	const gradient = ctx.createLinearGradient(
-		0,
-		INNER_Y + INNER_H * 0.35,
-		0,
-		INNER_Y + INNER_H,
-	);
-	gradient.addColorStop(0, "rgba(0,0,0,0)");
-	gradient.addColorStop(0.4, "rgba(0,0,0,0.6)");
-	gradient.addColorStop(1, "rgba(10,10,10,0.95)");
-
-	ctx.fillStyle = gradient;
-	ctx.fillRect(INNER_X, INNER_Y, INNER_W, INNER_H);
-	ctx.restore();
-}
-
-/** Draw bold single-word status stamp top-left */
-function drawStatusBadge(ctx: CanvasRenderingContext2D, isVisited: boolean) {
-	ctx.save();
-
-	const label = isVisited ? "VISITED" : "WISHLIST";
-	const borderColor = isVisited ? "#059669" : "#D97706";
-	const textColor = isVisited ? "#047857" : "#B45309";
-	const bgColor = "#FFFFFF";
-
-	ctx.font = "900 20px 'Montserrat', sans-serif";
-	const tw = ctx.measureText(label).width;
-	const padX = 14;
-	const padY = 8;
-	const stampW = tw + padX * 2;
-	const stampH = 20 + padY * 2;
-	const stampX = INNER_X + 22;
-	const stampY = INNER_Y + 18;
-
-	ctx.translate(stampX + stampW / 2, stampY + stampH / 2);
-	ctx.rotate(-0.06);
-
-	// Drop shadow for sticker effect
-	ctx.shadowColor = "rgba(0, 0, 0, 0.25)";
-	ctx.shadowBlur = 12;
-	ctx.shadowOffsetY = 4;
-
-	// Solid background
-	ctx.fillStyle = bgColor;
-	ctx.fillRect(-stampW / 2, -stampH / 2, stampW, stampH);
-
-	// Remove shadow for borders and text
-	ctx.shadowColor = "transparent";
-
-	// Outer border (thick)
-	ctx.strokeStyle = borderColor;
-	ctx.lineWidth = 3;
-	ctx.strokeRect(-stampW / 2, -stampH / 2, stampW, stampH);
-
-	// Inner border
-	ctx.lineWidth = 1;
-	ctx.strokeRect(-stampW / 2 + 4, -stampH / 2 + 4, stampW - 8, stampH - 8);
-
-	// Bold label
-	ctx.fillStyle = textColor;
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-	ctx.fillText(label, 0, 1);
-
-	ctx.restore();
-}
-
 /** Draw bold "TRAVEL POSTCARD" rubber stamp */
 async function drawAirMailStamp(
 	ctx: CanvasRenderingContext2D,
 	country: string,
+	x: number,
+	y: number,
 ) {
 	ctx.save();
 
-	const innerW = 140;
-	const innerH = 76;
-	const pad = 12; // white padding
+	const innerW = 100;
+	const innerH = 120;
+	const pad = 10;
 	const stampW = innerW + pad * 2;
 	const stampH = innerH + pad * 2;
 
-	const stampX = INNER_X + INNER_W - stampW - 16;
-	const stampY = INNER_Y + 16;
-
-	ctx.translate(stampX + stampW / 2, stampY + stampH / 2);
-	ctx.rotate(-0.06);
+	ctx.translate(x + stampW / 2, y + stampH / 2);
+	ctx.rotate(0.04);
 
 	// Create offscreen canvas for scalloped edge
 	const offscreen = document.createElement("canvas");
@@ -280,173 +190,115 @@ async function drawAirMailStamp(
 	offscreen.height = stampH;
 	const octx = offscreen.getContext("2d");
 	if (octx) {
-		octx.fillStyle = "#FFFFFF";
+		octx.fillStyle = "#EAE6DF"; // slightly darker cream for the stamp
 		octx.fillRect(0, 0, stampW, stampH);
 
 		octx.globalCompositeOperation = "destination-out";
 		octx.fillStyle = "#000000";
-		const radius = 3.5;
-		const spacing = 12;
-		for (let x = 0; x <= stampW; x += spacing) {
+		const radius = 3;
+		const spacing = 10;
+		for (let cx = 0; cx <= stampW; cx += spacing) {
 			octx.beginPath();
-			octx.arc(x, 0, radius, 0, Math.PI * 2);
+			octx.arc(cx, 0, radius, 0, Math.PI * 2);
 			octx.fill();
 			octx.beginPath();
-			octx.arc(x, stampH, radius, 0, Math.PI * 2);
+			octx.arc(cx, stampH, radius, 0, Math.PI * 2);
 			octx.fill();
 		}
-		for (let y = 0; y <= stampH; y += spacing) {
+		for (let cy = 0; cy <= stampH; cy += spacing) {
 			octx.beginPath();
-			octx.arc(0, y, radius, 0, Math.PI * 2);
+			octx.arc(0, cy, radius, 0, Math.PI * 2);
 			octx.fill();
 			octx.beginPath();
-			octx.arc(stampW, y, radius, 0, Math.PI * 2);
+			octx.arc(stampW, cy, radius, 0, Math.PI * 2);
 			octx.fill();
 		}
 	}
 
-	// Drop shadow for sticker effect
-	ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
-	ctx.shadowBlur = 12;
-	ctx.shadowOffsetY = 6;
 	ctx.drawImage(offscreen, -stampW / 2, -stampH / 2);
 
-	// Remove shadow for borders and text
-	ctx.shadowColor = "transparent";
-
-	// Outer red border rectangle (slate-800)
-	ctx.strokeStyle = "#1E293B";
-	ctx.lineWidth = 3;
-	ctx.strokeRect(-innerW / 2, -innerH / 2, innerW, innerH);
-
-	// Inner red border (slate-800)
+	// Outer border rectangle
+	ctx.strokeStyle = "#334155";
 	ctx.lineWidth = 1;
-	ctx.strokeRect(-innerW / 2 + 4, -innerH / 2 + 4, innerW - 8, innerH - 8);
-
-	// "TRAVEL" text
-	ctx.fillStyle = "#1E293B";
-	ctx.font = "900 14px 'Montserrat', sans-serif";
-	ctx.textAlign = "center";
-	ctx.fillText("TRAVEL", 0, -14);
-
-	// "POSTCARD" text — big and bold
-	ctx.font = "900 20px 'Montserrat', sans-serif";
-	ctx.fillText("POSTCARD", 0, 10);
+	ctx.strokeRect(-innerW / 2, -innerH / 2, innerW, innerH);
 
 	// Flag with horizontal lines
 	const countryCode = getCountryCode(country);
 
-	const lineW = 20;
-	const gap = 6;
-	const bottomY = 26;
-
-	let flagW = 14;
-
 	if (countryCode) {
 		const flagImg = await loadImage(
-			`https://flagcdn.com/w40/${countryCode}.png`,
+			`https://flagcdn.com/w80/${countryCode}.png`,
 		);
 		if (flagImg) {
-			const imgW = 20;
+			const imgW = 60;
 			const imgH = (flagImg.height / flagImg.width) * imgW;
-			flagW = imgW;
-			// Draw shadow for flag to match DOM
-			ctx.shadowColor = "rgba(0,0,0,0.3)";
-			ctx.shadowBlur = 2;
-			ctx.shadowOffsetY = 1;
-			ctx.drawImage(flagImg, -imgW / 2, bottomY - imgH / 2, imgW, imgH);
-			ctx.shadowColor = "transparent";
+			ctx.drawImage(flagImg, -imgW / 2, -imgH / 2, imgW, imgH);
 		}
 	} else {
-		ctx.font = "14px sans-serif";
-		flagW = ctx.measureText("🌍").width;
-		ctx.fillText("🌍", 0, bottomY + 5);
+		ctx.font = "30px sans-serif";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("🌍", 0, 0);
 	}
 
-	// Lines
-	ctx.strokeStyle = "#1E293B";
-	ctx.lineWidth = 2;
+	ctx.textAlign = "left";
+	ctx.fillText(
+		country.substring(0, 3).toUpperCase(),
+		-innerW / 2 + 6,
+		innerH / 2 - 8,
+	);
+
+	ctx.restore();
+}
+
+/** Draw vintage postmark circles */
+function drawPostmark(ctx: CanvasRenderingContext2D, x: number, y: number) {
+	ctx.save();
+	ctx.translate(x, y);
+	ctx.rotate(-0.2);
+
+	ctx.strokeStyle = "rgba(51, 65, 85, 0.6)"; // slate-700 with opacity
+	ctx.lineWidth = 1.5;
+
+	// Outer circle
 	ctx.beginPath();
-	// Left line
-	ctx.moveTo(-flagW / 2 - gap - lineW, bottomY);
-	ctx.lineTo(-flagW / 2 - gap, bottomY);
-	// Right line
-	ctx.moveTo(flagW / 2 + gap, bottomY);
-	ctx.lineTo(flagW / 2 + gap + lineW, bottomY);
+	ctx.arc(0, 0, 45, 0, Math.PI * 2);
+	ctx.stroke();
+
+	// Inner circle
+	ctx.beginPath();
+	ctx.arc(0, 0, 30, 0, Math.PI * 2);
+	ctx.stroke();
+
+	// Date Text
+	ctx.fillStyle = "rgba(51, 65, 85, 0.7)";
+	ctx.font = "bold 10px 'Montserrat', sans-serif";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	ctx.fillText("POST OFF.", 0, -12);
+
+	// Wavy lines exiting the postmark
+	ctx.beginPath();
+	for (let i = 0; i < 4; i++) {
+		const lineY = -15 + i * 10;
+		ctx.moveTo(45, lineY);
+		// Draw a wave
+		ctx.bezierCurveTo(70, lineY - 10, 80, lineY + 10, 105, lineY);
+		ctx.bezierCurveTo(130, lineY - 10, 140, lineY + 10, 165, lineY);
+	}
 	ctx.stroke();
 
 	ctx.restore();
 }
 
-/** Draw editorial text overlay on the gradient */
-function drawTextContent(
-	ctx: CanvasRenderingContext2D,
-	destination: Destination,
-) {
-	const padX = INNER_X + 28;
-	let curY = INNER_Y + INNER_H - 170;
-
-	ctx.textAlign = "left";
-
-	// 1. Route type + Expedition
-	ctx.fillStyle = TEXT_MUTED;
-	ctx.font = FONT_SANS_CAPS;
-	ctx.letterSpacing = "2px";
-	const routeTag =
-		destination.type === "domestic" ? "✦ DOMESTIC" : "✦ INTERNATIONAL";
-	const expText = ` · EXPEDITION #${destination.id.padStart(4, "0")}`;
-	ctx.fillText(routeTag + expText, padX, curY);
-	ctx.letterSpacing = "0px";
-
-	// 2. Destination name
-	curY += 52;
-	ctx.fillStyle = TEXT_WHITE;
-	ctx.font = FONT_SERIF_HUGE;
-	ctx.fillText(destination.name, padX, curY);
-
-	// 3. Location subtitle
-	curY += 26;
-	ctx.fillStyle = TEXT_SUBTITLE;
-	ctx.font = FONT_SANS_BOLD;
-	ctx.fillText(`${destination.location}, ${destination.country}`, padX, curY);
-
-	// 4. Description quote
-	curY += 30;
-	ctx.fillStyle = TEXT_WHITE;
-	ctx.font = FONT_SERIF_ITALIC;
-	const maxWidth = INNER_W - 56;
-	const lines = wrapText(ctx, `"${destination.description}"`, maxWidth, 2);
-	for (let i = 0; i < lines.length; i++) {
-		ctx.fillText(lines[i], padX, curY + i * 22);
-	}
-
-	// 5. Footer
-	curY = INNER_Y + INNER_H - 26;
-
-	ctx.strokeStyle = "rgba(255,255,255,0.15)";
-	ctx.lineWidth = 1;
-	ctx.beginPath();
-	ctx.moveTo(padX, curY - 14);
-	ctx.lineTo(INNER_X + INNER_W - 28, curY - 14);
-	ctx.stroke();
-
-	ctx.fillStyle = TEXT_MUTED;
-	ctx.font = FONT_SANS_TINY;
-	ctx.letterSpacing = "1.5px";
-	const dateStr = formatDate(destination.visitedDate).toUpperCase();
-	ctx.fillText(`${AUTHOR.name.toUpperCase()} · ${dateStr}`, padX, curY);
-	ctx.letterSpacing = "0px";
-}
-
 /* ═══════════════════════════════════════════════════════════════════════
  * Public export
- * ═══════════════════════════════════════════════════════════════════ */
+ * ═══════════════════════════════════════════════════════════════════════ */
 
 /**
- * Render the editorial postcard with airmail border to canvas
- * for high-resolution PNG sticker export.
+ * Render the Front side of the postcard (Image + Caption)
  */
-export async function renderPostcardToCanvas(
+export async function renderPostcardFrontToCanvas(
 	destination: Destination,
 	scale = 2,
 ): Promise<HTMLCanvasElement> {
@@ -458,17 +310,186 @@ export async function renderPostcardToCanvas(
 
 	ctx.scale(scale, scale);
 
-	// 1. Plain border (fills edges)
-	drawPlainBorder(ctx);
+	// 1. Vintage cream border
+	ctx.save();
+	ctx.fillStyle = VINTAGE_CREAM;
+	ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+	ctx.restore();
 
 	// 2. Photo background (inside border)
 	await drawPhotoBackground(ctx, destination);
 
-	// 3. Gradient + content overlays
-	drawGradientOverlay(ctx);
-	drawStatusBadge(ctx, destination.isVisited);
-	await drawAirMailStamp(ctx, destination.country);
-	drawTextContent(ctx, destination);
+	// 3. Caption at the bottom
+	ctx.save();
+	ctx.fillStyle = "#64748B"; // slate-500
+	ctx.font = "bold 9px 'Montserrat', sans-serif";
+	ctx.textAlign = "left";
+	ctx.letterSpacing = "2px";
+	const routeTag = destination.type === "domestic" ? "DOMESTIC" : "INTL";
+
+	// Add text slightly below the image
+	const textY = INNER_Y + INNER_H + 18;
+	ctx.fillText(
+		`${routeTag} — ${destination.name.toUpperCase()}`,
+		INNER_X + 2,
+		textY,
+	);
+
+	ctx.textAlign = "right";
+	ctx.fillText(
+		destination.location.toUpperCase(),
+		INNER_X + INNER_W - 2,
+		textY,
+	);
+	ctx.restore();
+
+	return canvas;
+}
+
+/**
+ * Render the Back side of the postcard (Handwriting + Stamp)
+ */
+export async function renderPostcardBackToCanvas(
+	destination: Destination,
+	scale = 2,
+): Promise<HTMLCanvasElement> {
+	const canvas = document.createElement("canvas");
+	canvas.width = CANVAS_W * scale;
+	canvas.height = CANVAS_H * scale;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) throw new Error("Canvas 2D context unavailable");
+
+	ctx.scale(scale, scale);
+
+	// Ensure the Caveat font is loaded before rendering
+	if (typeof document !== "undefined" && document.fonts) {
+		await document.fonts.ready;
+	}
+
+	// Resolve the actual font family name from the CSS variable
+	let caveatFontFamily = "'Caveat', cursive";
+	if (typeof document !== "undefined") {
+		const dummy = document.createElement("span");
+		dummy.style.fontFamily = "var(--font-caveat), 'Caveat', cursive";
+		document.body.appendChild(dummy);
+		const computed = window.getComputedStyle(dummy).fontFamily;
+		if (computed) caveatFontFamily = computed;
+		document.body.removeChild(dummy);
+	}
+
+	// 1. Textured cream background
+	ctx.save();
+	ctx.fillStyle = VINTAGE_CREAM;
+	ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+	ctx.restore();
+
+	// 2. Vertical Divider
+	const midX = CANVAS_W / 2;
+	ctx.save();
+	ctx.strokeStyle = "rgba(0,0,0,0.15)";
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(midX, 40);
+	ctx.lineTo(midX, CANVAS_H - 40);
+	ctx.stroke();
+
+	// Tiny text near divider
+	ctx.fillStyle = "rgba(0,0,0,0.3)";
+	ctx.font = "8px 'Montserrat', sans-serif";
+	ctx.textAlign = "center";
+	ctx.translate(midX - 10, CANVAS_H / 2);
+	ctx.rotate(-Math.PI / 2);
+	ctx.fillText("C-C.CO   TRAVEL SERIES", 0, 0);
+	ctx.restore();
+
+	// 3. Left Side: Handwritten description
+	ctx.save();
+	ctx.fillStyle = "#1c1917"; // very dark stone for ink
+	ctx.font = `44px ${caveatFontFamily}`;
+	const leftPad = 40;
+	const maxTextWidth = midX - leftPad * 2 - 10;
+
+	// Date
+	ctx.fillText(formatDate(destination.visitedDate), leftPad, 60);
+
+	// Body
+	ctx.font = `38px ${caveatFontFamily}`;
+	const description =
+		destination.description ||
+		"What a lovely place. The views were breathtaking and I can't wait to visit again someday.";
+	const lines = wrapText(ctx, description, maxTextWidth, 10);
+	let curY = 120;
+	for (let i = 0; i < lines.length; i++) {
+		// slight rotation per line for realism
+		ctx.save();
+		ctx.translate(leftPad, curY);
+		ctx.rotate(Math.random() * 0.02 - 0.01);
+		ctx.fillText(lines[i], 0, 0);
+		ctx.restore();
+		curY += 46;
+	}
+
+	// Sign off
+	curY += 40;
+	ctx.font = `44px ${caveatFontFamily}`;
+	ctx.save();
+	ctx.translate(leftPad, curY);
+	ctx.rotate(-0.02);
+	ctx.fillText(`${AUTHOR.name}`, 0, 0);
+	ctx.restore();
+	ctx.restore();
+
+	// 4. Right Side: Address Lines
+	ctx.save();
+	const rightPad = midX + 40;
+	const lineStartX = rightPad;
+	const lineEndX = CANVAS_W - 40;
+	let lineY = CANVAS_H / 2 + 30;
+
+	ctx.strokeStyle = "rgba(0,0,0,0.12)";
+	ctx.lineWidth = 1.5;
+
+	const addressLines = [
+		destination.name,
+		destination.location,
+		destination.country.toUpperCase(),
+	];
+
+	ctx.fillStyle = "#1c1917";
+	ctx.font = `46px ${caveatFontFamily}`;
+
+	for (let i = 0; i < 4; i++) {
+		// Draw line
+		ctx.beginPath();
+		ctx.moveTo(lineStartX, lineY);
+		ctx.lineTo(lineEndX, lineY);
+		ctx.stroke();
+
+		// Draw text slightly misaligned for realism
+		if (i < addressLines.length) {
+			ctx.save();
+			ctx.translate(lineStartX + 20, lineY - 8);
+			ctx.rotate(-0.02);
+			ctx.fillText(addressLines[i], 0, 0);
+			ctx.restore();
+		}
+
+		lineY += 50;
+	}
+
+	// Address label
+	ctx.fillStyle = "rgba(0,0,0,0.5)";
+	ctx.font = "10px 'Montserrat', sans-serif";
+	ctx.fillText("This space for address only", lineStartX, CANVAS_H / 2 - 20);
+	ctx.restore();
+
+	// 5. Right Side: Stamp & Postmark
+	const stampX = CANVAS_W - 40 - 120;
+	const stampY = 40;
+	await drawAirMailStamp(ctx, destination.country, stampX, stampY);
+
+	// Draw Postmark overlapping the stamp
+	drawPostmark(ctx, stampX + 20, stampY + 60);
 
 	return canvas;
 }

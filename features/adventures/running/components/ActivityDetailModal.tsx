@@ -603,15 +603,36 @@ export default function ActivityDetailModal({
 		[activity, derivedData, splits, isCopying, exportTheme],
 	);
 
-	// Copy direct activity deep-link URL to clipboard (without opening new page or tab)
+	// Share activity via native Web Share API or copy direct link to clipboard
 	const handleShare = useCallback(async () => {
-		if (!activity) return;
+		if (!activity || !derivedData) return;
 
 		const shareUrl =
 			typeof window !== "undefined"
 				? `${window.location.origin}/adventures/running?activity=${activity.id}`
-				: `https://poltak.dev/adventures/running?activity=${activity.id}`;
+				: `https://polmatambunan.my.id/adventures/running?activity=${activity.id}`;
 
+		const shareText = `🏃 ${activity.name} • ${derivedData.distanceKm} km in ${derivedData.formattedMovingDuration} (Avg ${derivedData.formattedPace})`;
+
+		if (typeof navigator !== "undefined" && navigator.share) {
+			try {
+				await navigator.share({
+					title: activity.name,
+					text: shareText,
+					url: shareUrl,
+				});
+				setCopiedLink(true);
+				setTimeout(() => setCopiedLink(false), 2200);
+				return;
+			} catch (err: unknown) {
+				// User dismissed native share sheet
+				if (err instanceof Error && err.name === "AbortError") {
+					return;
+				}
+			}
+		}
+
+		// Fallback: Copy direct URL to clipboard
 		try {
 			if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
 				await navigator.clipboard.writeText(shareUrl);
@@ -630,7 +651,7 @@ export default function ActivityDetailModal({
 		} catch (err) {
 			console.error("Failed to copy activity link:", err);
 		}
-	}, [activity]);
+	}, [activity, derivedData]);
 
 	if (!activity || !derivedData) return null;
 

@@ -1,6 +1,11 @@
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
-import { Varela_Round, JetBrains_Mono, Montserrat } from "next/font/google";
+import {
+	Varela_Round,
+	JetBrains_Mono,
+	Montserrat,
+	Caveat,
+} from "next/font/google";
 import "./globals.css";
 import CompactBottomBar from "@/features/shared/components/CompactBottomBar";
 import NavigationLoader from "@/features/shared/components/NavigationLoader";
@@ -24,6 +29,13 @@ const varela = Varela_Round({
 	weight: "400",
 	subsets: ["latin"],
 	variable: "--font-varela",
+	display: "swap",
+});
+
+// Handwriting font for postcards
+const caveat = Caveat({
+	subsets: ["latin"],
+	variable: "--font-caveat",
 	display: "swap",
 });
 
@@ -66,7 +78,7 @@ export default function RootLayout({
 				/>
 			</head>
 			<body
-				className={`${varela.variable} ${jetbrainsMono.variable} ${montserrat.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
+				className={`${varela.variable} ${jetbrainsMono.variable} ${montserrat.variable} ${caveat.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
 				suppressHydrationWarning
 			>
 				<AuthProvider>

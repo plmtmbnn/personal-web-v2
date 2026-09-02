@@ -18,6 +18,8 @@ import {
 	Route,
 	Activity,
 	CheckCircle,
+	Copy,
+	Check,
 } from "lucide-react";
 import { personalBests } from "../data/personal-bests";
 
@@ -50,6 +52,7 @@ export default function PersonalBestsSwipeCard() {
 	const [currentIndex, setCurrentIndex] = useState<number>(getInitialIndex());
 	const [direction, setDirection] = useState<number>(0);
 	const [isDragging, setIsDragging] = useState<boolean>(false);
+	const [copied, setCopied] = useState<boolean>(false);
 
 	const totalItems = personalBests.length;
 	const currentItem = personalBests[currentIndex];
@@ -103,6 +106,17 @@ export default function PersonalBestsSwipeCard() {
 		return calculateSpeed(currentItem.time, currentItem.distanceKm);
 	}, [currentItem]);
 
+	const handleCopyRecord = useCallback(async () => {
+		const summary = `🏆 Personal Best: ${currentItem.distance}\n⏱️ Time: ${currentItem.time}\n⚡ Pace: ${currentItem.pace}\n📏 Distance: ${currentItem.distanceKm} km\n⛰️ Elevation: ${currentItem.elevation || "Flat"}\n💨 Avg Speed: ${speedKmH}`;
+		try {
+			await navigator.clipboard.writeText(summary);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch {
+			/* clipboard unavailable */
+		}
+	}, [currentItem, speedKmH]);
+
 	const slideVariants = {
 		enter: (dir: number) => ({
 			x: shouldReduceMotion ? 0 : dir > 0 ? 60 : -60,
@@ -131,23 +145,18 @@ export default function PersonalBestsSwipeCard() {
 	};
 
 	return (
-		<div className="w-full bg-white border border-slate-200/80 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-7 shadow-xl shadow-slate-200/40 space-y-6 select-none relative overflow-hidden">
-			{/* Ambient Glowing Backdrop Accent */}
-			<div
-				className={`absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br ${currentItem.bgGlow} rounded-full blur-3xl pointer-events-none opacity-50 transition-all duration-700`}
-			/>
-
+		<div className="w-full bg-white border border-slate-200/80 rounded-[2rem] p-5 sm:p-7 shadow-xs space-y-5 select-none relative overflow-hidden">
 			{/* ═══════════════════════════════════════
 			    HEADER & MILESTONE STEPPER
 			═══════════════════════════════════════ */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10 pb-4 border-b border-slate-100">
 				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">
+					<div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0 shadow-xs">
 						<Trophy className="w-5 h-5 text-amber-500" />
 					</div>
 					<div>
 						<div className="flex items-center gap-2">
-							<h3 className="text-base font-black text-slate-900 leading-tight tracking-tight">
+							<h3 className="text-base font-extrabold text-slate-900 leading-tight tracking-tight">
 								Personal Bests
 							</h3>
 							<span className="px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/60 text-[10px] font-black text-amber-700 uppercase tracking-wider">
@@ -166,7 +175,7 @@ export default function PersonalBestsSwipeCard() {
 						<button
 							type="button"
 							onClick={() => paginate(-1)}
-							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-2xs"
+							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-xs"
 							title="Previous Record (← Arrow Key)"
 							aria-label="Previous record"
 						>
@@ -175,7 +184,7 @@ export default function PersonalBestsSwipeCard() {
 						<button
 							type="button"
 							onClick={() => paginate(1)}
-							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-2xs"
+							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-xs"
 							title="Next Record (→ Arrow Key)"
 							aria-label="Next record"
 						>
@@ -183,7 +192,7 @@ export default function PersonalBestsSwipeCard() {
 						</button>
 					</div>
 
-					<span className="text-xs font-black text-slate-700 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-2xs tabular-nums">
+					<span className="text-xs font-black text-slate-700 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-xs tabular-nums">
 						{currentIndex + 1} / {totalItems}
 					</span>
 				</div>
@@ -204,9 +213,9 @@ export default function PersonalBestsSwipeCard() {
 								key={item.id}
 								type="button"
 								onClick={() => goToIndex(idx)}
-								className={`group relative h-[54px] sm:h-[60px] px-1 sm:px-2 rounded-2xl text-center transition-all duration-300 cursor-pointer border flex flex-col items-center justify-center gap-0.5 sm:gap-1 overflow-hidden min-w-0 active:scale-95 ${
+								className={`group relative h-[52px] sm:h-[58px] px-1 sm:px-2 rounded-xl text-center transition-all duration-200 cursor-pointer border flex flex-col items-center justify-center gap-0.5 sm:gap-1 overflow-hidden min-w-0 active:scale-95 ${
 									isActive
-										? "bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/15"
+										? "bg-slate-900 text-white border-slate-900 shadow-xs"
 										: "bg-slate-50/80 text-slate-600 hover:text-slate-900 border-slate-200/70 hover:border-slate-300 hover:bg-white"
 								}`}
 							>
@@ -220,7 +229,7 @@ export default function PersonalBestsSwipeCard() {
 											className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-white" : item.color}`}
 										/>
 									)}
-									<span className="text-[10.5px] sm:text-xs font-black tracking-tight truncate whitespace-nowrap">
+									<span className="text-[10.5px] sm:text-xs font-extrabold tracking-tight truncate whitespace-nowrap">
 										{label}
 									</span>
 								</div>
@@ -240,7 +249,7 @@ export default function PersonalBestsSwipeCard() {
 			{/* ═══════════════════════════════════════
 			    MAIN SHOWCASE CARD (SWIPE / SLIDE STAGE)
 			═══════════════════════════════════════ */}
-			<div className="relative z-10 min-h-[280px] sm:min-h-[290px]">
+			<div className="relative z-10 min-h-[270px] sm:min-h-[280px]">
 				<AnimatePresence initial={false} custom={direction} mode="wait">
 					<motion.div
 						key={currentItem.id}
@@ -254,20 +263,20 @@ export default function PersonalBestsSwipeCard() {
 						dragElastic={0.25}
 						onDragStart={() => setIsDragging(true)}
 						onDragEnd={handleDragEnd}
-						className={`w-full rounded-[2rem] p-5 sm:p-7 bg-gradient-to-br from-white via-slate-50/50 to-slate-50 border border-slate-200/90 shadow-sm relative overflow-hidden touch-pan-y ${
+						className={`w-full rounded-2xl p-5 sm:p-6 bg-slate-50/50 border border-slate-200/90 shadow-xs relative overflow-hidden touch-pan-y ${
 							isDragging ? "cursor-grabbing" : "cursor-grab"
 						}`}
 					>
-						{/* Accent Top Border Line */}
+						{/* Clean Solid Top Accent Line */}
 						<div
-							className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${currentItem.bgGlow.replace("/10", "").replace("/5", "")}`}
+							className={`absolute top-0 left-0 right-0 h-1 ${currentItem.solidAccent || "bg-indigo-500"}`}
 						/>
 
 						{/* Top Row: Category Badge & Distance Title */}
 						<div className="flex items-start justify-between gap-4 mb-5">
 							<div className="flex items-center gap-3.5">
 								<div
-									className={`w-12 h-12 sm:w-13 sm:h-13 rounded-2xl ${currentItem.badgeBg} border border-white flex items-center justify-center shadow-xs shrink-0`}
+									className={`w-12 h-12 rounded-2xl ${currentItem.badgeBg} border border-slate-200/60 flex items-center justify-center shadow-xs shrink-0`}
 								>
 									<currentItem.icon
 										className={`w-6 h-6 ${currentItem.color}`}
@@ -276,13 +285,13 @@ export default function PersonalBestsSwipeCard() {
 								<div>
 									<div className="flex items-center gap-2 mb-1">
 										{currentItem.isHighest ? (
-											<span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider shadow-2xs border border-amber-200">
-												<Crown className="w-3 h-3 text-amber-600" /> Pinnacle
-												Achievement
+											<span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider shadow-xs border border-amber-200">
+												<Crown className="w-3 h-3 text-amber-600" />
+												<span>Pinnacle Achievement</span>
 											</span>
 										) : (
 											<span
-												className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${currentItem.badgeBg} border border-current/10`}
+												className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${currentItem.badgeBg} border border-slate-200/60`}
 											>
 												{currentItem.badge}
 											</span>
@@ -294,18 +303,35 @@ export default function PersonalBestsSwipeCard() {
 								</div>
 							</div>
 
-							<div className="text-right hidden sm:block">
-								<span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-0.5">
-									Pace Split
-								</span>
-								<span className="text-sm font-black text-slate-700 font-mono">
-									{currentItem.pace}
-								</span>
+							<div className="flex items-center gap-3">
+								<div className="text-right hidden sm:block">
+									<span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-0.5">
+										Pace Split
+									</span>
+									<span className="text-sm font-black text-slate-700 font-mono">
+										{currentItem.pace}
+									</span>
+								</div>
+
+								{/* Copy Button */}
+								<button
+									type="button"
+									onClick={handleCopyRecord}
+									className="p-2 text-slate-400 hover:text-slate-800 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all cursor-pointer shadow-xs"
+									title="Copy Record Summary"
+									aria-label="Copy record summary"
+								>
+									{copied ? (
+										<Check className="w-4 h-4 text-emerald-600" />
+									) : (
+										<Copy className="w-4 h-4" />
+									)}
+								</button>
 							</div>
 						</div>
 
 						{/* Primary Metric: Duration */}
-						<div className="mb-5 pb-5 border-b border-slate-100">
+						<div className="mb-5 pb-5 border-b border-slate-200/70">
 							<span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
 								Official Personal Best Time
 							</span>
@@ -322,7 +348,7 @@ export default function PersonalBestsSwipeCard() {
 						{/* 4-Metric Grid */}
 						<div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
 							{/* Pace */}
-							<div className="p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs min-w-0">
+							<div className="p-3.5 rounded-xl bg-white border border-slate-200/70 shadow-xs min-w-0">
 								<div className="flex items-center gap-1.5 text-slate-400 mb-1">
 									<Gauge className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
 									<span className="text-[10px] font-extrabold uppercase tracking-wider truncate">
@@ -335,7 +361,7 @@ export default function PersonalBestsSwipeCard() {
 							</div>
 
 							{/* Distance */}
-							<div className="p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs min-w-0">
+							<div className="p-3.5 rounded-xl bg-white border border-slate-200/70 shadow-xs min-w-0">
 								<div className="flex items-center gap-1.5 text-slate-400 mb-1">
 									<Route className="w-3.5 h-3.5 text-blue-600 shrink-0" />
 									<span className="text-[10px] font-extrabold uppercase tracking-wider truncate">
@@ -348,7 +374,7 @@ export default function PersonalBestsSwipeCard() {
 							</div>
 
 							{/* Elevation / Terrain */}
-							<div className="p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs min-w-0">
+							<div className="p-3.5 rounded-xl bg-white border border-slate-200/70 shadow-xs min-w-0">
 								<div className="flex items-center gap-1.5 text-slate-400 mb-1">
 									<Mountain className="w-3.5 h-3.5 text-purple-600 shrink-0" />
 									<span className="text-[10px] font-extrabold uppercase tracking-wider truncate">
@@ -361,7 +387,7 @@ export default function PersonalBestsSwipeCard() {
 							</div>
 
 							{/* Speed */}
-							<div className="p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs min-w-0">
+							<div className="p-3.5 rounded-xl bg-white border border-slate-200/70 shadow-xs min-w-0">
 								<div className="flex items-center gap-1.5 text-slate-400 mb-1">
 									<Activity className="w-3.5 h-3.5 text-rose-500 shrink-0" />
 									<span className="text-[10px] font-extrabold uppercase tracking-wider truncate">

@@ -1112,9 +1112,9 @@ export default function RunningView({
 					<motion.div
 						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
 						animate={{ opacity: 1, scale: 1 }}
-						className="mt-12 text-center py-16 px-6 bg-gradient-to-br from-emerald-50/50 to-slate-50 border border-emerald-100/80 rounded-3xl shadow-xs max-w-md mx-auto"
+						className="mt-12 text-center py-16 px-6 bg-white border border-slate-200/80 rounded-3xl shadow-xs max-w-md mx-auto"
 					>
-						<div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4">
+						<div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center mx-auto mb-4">
 							<Activity className="w-6 h-6 animate-pulse" />
 						</div>
 						<h3 className="text-base font-extrabold text-slate-900 mb-1">
@@ -1141,9 +1141,9 @@ export default function RunningView({
 					<motion.div
 						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
 						animate={{ opacity: 1, scale: 1 }}
-						className="mt-12 text-center py-20 bg-gradient-to-br from-emerald-50/50 to-slate-50 border border-emerald-100/80 rounded-3xl shadow-sm max-w-md mx-auto"
+						className="mt-12 text-center py-20 bg-white border border-slate-200/80 rounded-3xl shadow-xs max-w-md mx-auto"
 					>
-						<div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4">
+						<div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center mx-auto mb-4">
 							<Activity className="w-6 h-6" />
 						</div>
 						<h3 className="text-base font-extrabold text-slate-900 mb-2">
@@ -1153,9 +1153,9 @@ export default function RunningView({
 							Your account is connected. Start running and activities will sync
 							automatically.
 						</p>
-						<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100/80 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
+						<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
 							<CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-							Synced with Strava
+							<span>Synced with Strava</span>
 						</div>
 					</motion.div>
 				)}

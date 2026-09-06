@@ -1,11 +1,15 @@
+"use client";
+
 import { useMemo } from "react";
 import type { ProcessedStock } from "../../types";
+import { TrendingUp, TrendingDown, Zap, ChevronRight } from "lucide-react";
 
 interface TopMoversProps {
 	stocks: ProcessedStock[];
+	onSelectStock?: (stock: ProcessedStock) => void;
 }
 
-export default function TopMovers({ stocks }: TopMoversProps) {
+export default function TopMovers({ stocks, onSelectStock }: TopMoversProps) {
 	const topGainers = useMemo(
 		() => [...stocks].sort((a, b) => b.ChangePct - a.ChangePct).slice(0, 5),
 		[stocks],
@@ -25,42 +29,69 @@ export default function TopMovers({ stocks }: TopMoversProps) {
 		return n.toLocaleString();
 	};
 
-	const renderList = (
+	const renderColumn = (
 		title: string,
+		subtitle: string,
+		icon: React.ReactNode,
 		data: ProcessedStock[],
 		metric: "ChangePct" | "Volume",
-		color: string,
+		colorClass: string,
+		badgeBgClass: string,
 	) => (
-		<div className="flex-1 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-			<h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">
-				{title}
-			</h3>
-			<div className="space-y-3">
+		<div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+			<div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+				<div className="flex items-center gap-2.5">
+					<div className={`p-2 rounded-xl ${badgeBgClass}`}>{icon}</div>
+					<div>
+						<h3 className="text-xs font-black uppercase tracking-wider text-slate-900">
+							{title}
+						</h3>
+						<p className="text-[10px] font-bold text-slate-400">{subtitle}</p>
+					</div>
+				</div>
+				<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+					Top 5
+				</span>
+			</div>
+
+			<div className="space-y-2">
 				{data.map((s, idx) => (
 					<div
 						key={s.StockCode}
-						className="flex justify-between items-center group cursor-pointer hover:bg-slate-50 p-1.5 -mx-1.5 rounded-lg transition-colors"
+						onClick={() => onSelectStock?.(s)}
+						className="flex justify-between items-center group cursor-pointer hover:bg-slate-50 p-2.5 rounded-xl transition-all border border-transparent hover:border-slate-200/60"
 					>
 						<div className="flex items-center gap-3">
-							<span className="text-[9px] font-bold text-slate-300 w-3">
+							<span className="text-[10px] font-extrabold text-slate-400 w-4 text-center">
 								{idx + 1}
 							</span>
 							<div>
-								<p className="text-xs font-black text-slate-900">
-									{s.StockCode}
-								</p>
-								<p className="text-[9px] font-bold text-slate-500 truncate max-w-[100px]">
+								<div className="flex items-center gap-1.5">
+									<p className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+										{s.StockCode}
+									</p>
+									<span className="text-[9px] font-semibold text-slate-400">
+										{s.Sector}
+									</span>
+								</div>
+								<p className="text-[10px] font-medium text-slate-500 truncate max-w-[130px]">
 									{s.StockName}
 								</p>
 							</div>
 						</div>
-						<div className="text-right">
-							<p className="text-xs font-bold text-slate-900">{s.Close}</p>
-							<p className={`text-[10px] font-black ${color}`}>
-								{metric === "ChangePct"
-									? `${s.ChangePct > 0 ? "+" : ""}${s.ChangePct.toFixed(1)}%`
-									: formatNumber(s.Volume)}
-							</p>
+
+						<div className="flex items-center gap-2 text-right">
+							<div>
+								<p className="text-xs font-black text-slate-900">
+									{s.Close.toLocaleString()}
+								</p>
+								<p className={`text-[11px] font-black ${colorClass}`}>
+									{metric === "ChangePct"
+										? `${s.ChangePct > 0 ? "+" : ""}${s.ChangePct.toFixed(1)}%`
+										: `${formatNumber(s.Volume)} vol`}
+								</p>
+							</div>
+							<ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all" />
 						</div>
 					</div>
 				))}
@@ -69,10 +100,34 @@ export default function TopMovers({ stocks }: TopMoversProps) {
 	);
 
 	return (
-		<div className="flex flex-col md:flex-row gap-4">
-			{renderList("Top Gainers", topGainers, "ChangePct", "text-emerald-600")}
-			{renderList("Top Losers", topLosers, "ChangePct", "text-rose-600")}
-			{renderList("Highest Volume", topVolume, "Volume", "text-indigo-600")}
+		<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+			{renderColumn(
+				"Top Gainers",
+				"Leading momentum",
+				<TrendingUp className="w-4 h-4 text-emerald-600" />,
+				topGainers,
+				"ChangePct",
+				"text-emerald-600",
+				"bg-emerald-50 border border-emerald-100",
+			)}
+			{renderColumn(
+				"Top Losers",
+				"Heavy pullbacks",
+				<TrendingDown className="w-4 h-4 text-rose-600" />,
+				topLosers,
+				"ChangePct",
+				"text-rose-600",
+				"bg-rose-50 border border-rose-100",
+			)}
+			{renderColumn(
+				"Volume Leaders",
+				"High liquidity flow",
+				<Zap className="w-4 h-4 text-indigo-600" />,
+				topVolume,
+				"Volume",
+				"text-indigo-600",
+				"bg-indigo-50 border border-indigo-100",
+			)}
 		</div>
 	);
 }

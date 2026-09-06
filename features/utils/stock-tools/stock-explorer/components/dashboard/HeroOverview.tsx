@@ -1,3 +1,5 @@
+"use client";
+
 import { motion, useReducedMotion } from "framer-motion";
 import {
 	TrendingUp,
@@ -9,7 +11,17 @@ import {
 } from "lucide-react";
 
 interface HeroOverviewProps {
-	marketHealth: any;
+	marketHealth: {
+		avgReturn: number;
+		sentimentScore: number;
+		sentimentLabel: string;
+		netForeign: number;
+		totalVolume: number;
+		totalValue: number;
+		advancers: number;
+		decliners: number;
+		unchanged: number;
+	};
 }
 
 export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
@@ -21,140 +33,158 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 		netForeign,
 		totalVolume,
 		totalValue,
+		advancers,
+		decliners,
 	} = marketHealth;
 
-	const formatBillions = (val: number) => `${(val / 1000000000).toFixed(1)}B`;
-	const formatTrillions = (val: number) =>
-		`${(val / 1000000000000).toFixed(1)}T`;
+	const formatBillions = (val: number) => `${(val / 1e9).toFixed(1)}B`;
+	const formatTrillions = (val: number) => `${(val / 1e12).toFixed(1)}T`;
 
 	return (
-		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 			{/* IHSG Return */}
 			<motion.div
 				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
-				className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between"
+				className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between"
 			>
 				<div className="flex justify-between items-start mb-4">
 					<div>
-						<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
 							Market Return (Avg)
 						</p>
-						<h2 className="text-3xl font-black text-slate-900 mt-1">
+						<h2 className="text-3xl font-black text-slate-900 mt-1 tracking-tight">
 							{avgReturn > 0 ? "+" : ""}
 							{avgReturn.toFixed(2)}%
 						</h2>
 					</div>
 					<div
-						className={`p-3 rounded-xl ${avgReturn >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}
+						className={`p-3 rounded-2xl ${
+							avgReturn >= 0
+								? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+								: "bg-rose-50 text-rose-600 border border-rose-100"
+						}`}
 					>
 						{avgReturn >= 0 ? (
-							<TrendingUp className="w-6 h-6" />
+							<TrendingUp className="w-5 h-5" />
 						) : (
-							<TrendingDown className="w-6 h-6" />
+							<TrendingDown className="w-5 h-5" />
 						)}
 					</div>
 				</div>
-				<div className="mt-auto">
-					<span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md">
+				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
+					<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
 						IHSG Proxy
+					</span>
+					<span className="text-[10px] font-bold text-slate-400">
+						{advancers} Up · {decliners} Down
 					</span>
 				</div>
 			</motion.div>
 
-			{/* Market Score */}
+			{/* Market Composite Score */}
 			<motion.div
 				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
-				transition={{ delay: 0.1 }}
-				className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-xl flex flex-col justify-between text-white relative overflow-hidden"
+				transition={{ delay: 0.05 }}
+				className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-md flex flex-col justify-between text-white"
 			>
-				<div className="absolute -right-6 -top-6 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full pointer-events-none" />
-				<div className="flex justify-between items-start mb-4 relative z-10">
+				<div className="flex justify-between items-start mb-4">
 					<div>
-						<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
 							Market Score
 						</p>
-						<h2 className="text-3xl font-black text-white mt-1">
+						<h2 className="text-3xl font-black text-white mt-1 tracking-tight">
 							{sentimentScore}{" "}
-							<span className="text-sm font-medium text-slate-400">/ 100</span>
+							<span className="text-sm font-semibold text-slate-400">
+								/ 100
+							</span>
 						</h2>
 					</div>
-					<div className="p-3 rounded-xl bg-slate-800 text-indigo-400">
-						<Activity className="w-6 h-6" />
+					<div className="p-3 rounded-2xl bg-slate-800 border border-slate-700 text-indigo-400">
+						<Activity className="w-5 h-5" />
 					</div>
 				</div>
-				<div className="mt-auto relative z-10">
+				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-800">
 					<span
-						className={`text-xs font-bold px-2 py-1 rounded-md ${
+						className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
 							sentimentScore >= 60
-								? "bg-emerald-500/20 text-emerald-400"
+								? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
 								: sentimentScore <= 40
-									? "bg-rose-500/20 text-rose-400"
-									: "bg-amber-500/20 text-amber-400"
+									? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+									: "bg-amber-500/10 text-amber-400 border-amber-500/30"
 						}`}
 					>
 						{sentimentLabel}
 					</span>
+					<span className="text-[10px] font-bold text-slate-400">
+						Real-Time Index
+					</span>
 				</div>
 			</motion.div>
 
-			{/* Foreign Flow */}
+			{/* Foreign Net Flow */}
 			<motion.div
 				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
-				transition={{ delay: 0.2 }}
-				className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between"
+				transition={{ delay: 0.1 }}
+				className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between"
 			>
 				<div className="flex justify-between items-start mb-4">
 					<div>
-						<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
 							Foreign Net Flow
 						</p>
 						<h2
-							className={`text-3xl font-black mt-1 ${netForeign > 0 ? "text-emerald-600" : "text-rose-600"}`}
+							className={`text-3xl font-black mt-1 tracking-tight ${
+								netForeign > 0 ? "text-emerald-600" : "text-rose-600"
+							}`}
 						>
 							{netForeign > 0 ? "+" : ""}
 							{formatBillions(netForeign)}
 						</h2>
 					</div>
-					<div className="p-3 rounded-xl bg-indigo-50 text-indigo-600">
-						<Globe className="w-6 h-6" />
+					<div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+						<Globe className="w-5 h-5" />
 					</div>
 				</div>
-				<div className="mt-auto">
-					<span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md">
+				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
+					<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
 						IDR (Billions)
+					</span>
+					<span className="text-[10px] font-bold text-slate-400">
+						{netForeign > 0 ? "Accumulation" : "Net Selling"}
 					</span>
 				</div>
 			</motion.div>
 
-			{/* Volume & Value */}
+			{/* Total Turnover */}
 			<motion.div
 				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
-				transition={{ delay: 0.3 }}
-				className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between"
+				transition={{ delay: 0.15 }}
+				className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between"
 			>
 				<div className="flex justify-between items-start mb-4">
 					<div>
-						<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-							Total Transaction
+						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+							Total Turnover
 						</p>
-						<h2 className="text-3xl font-black text-slate-900 mt-1">
+						<h2 className="text-3xl font-black text-slate-900 mt-1 tracking-tight">
 							{formatTrillions(totalValue)}
 						</h2>
 					</div>
-					<div className="p-3 rounded-xl bg-amber-50 text-amber-600">
-						<Coins className="w-6 h-6" />
+					<div className="p-3 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600">
+						<Coins className="w-5 h-5" />
 					</div>
 				</div>
-				<div className="mt-auto flex items-center justify-between">
-					<span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md">
+				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
+					<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
 						Value (IDR)
 					</span>
-					<span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-						<BarChart2 className="w-3 h-3" /> {formatBillions(totalVolume)} Vol
+					<span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+						<BarChart2 className="w-3.5 h-3.5 text-slate-400" />
+						{formatBillions(totalVolume)} Vol
 					</span>
 				</div>
 			</motion.div>

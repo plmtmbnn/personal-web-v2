@@ -47,6 +47,11 @@ export default function FearAndGreedGauge({
 		return historicalData ? [...historicalData].sort((a, b) => a.x - b.x) : [];
 	}, [historicalData]);
 
+	// Extract the 7-day window for Trend Velocity
+	const sevenDayData = useMemo(() => {
+		return sortedData.length > 7 ? sortedData.slice(-7) : sortedData;
+	}, [sortedData]);
+
 	// Get badge style for rating
 	const getRatingBadge = (r: string) => {
 		const lower = r.toLowerCase();
@@ -64,15 +69,16 @@ export default function FearAndGreedGauge({
 	};
 
 	const chartData = {
-		labels: sortedData.map(() => ""),
+		labels: sevenDayData.map(() => ""),
 		datasets: [
 			{
-				data: sortedData.map((d) => d?.y ?? 0),
+				data: sevenDayData.map((d) => d?.y ?? 0),
 				fill: true,
 				borderColor: "rgb(79, 70, 229)",
-				backgroundColor: "rgba(79, 70, 229, 0.05)",
-				tension: 0.4,
-				pointRadius: 0,
+				backgroundColor: "rgba(79, 70, 229, 0.08)",
+				tension: 0.35,
+				pointRadius: sevenDayData.length <= 2 ? 3 : 0,
+				pointHoverRadius: 4,
 				borderWidth: 2,
 			},
 		],
@@ -87,7 +93,11 @@ export default function FearAndGreedGauge({
 		},
 		scales: {
 			x: { display: false },
-			y: { display: false },
+			y: {
+				display: false,
+				suggestedMin: 0,
+				suggestedMax: 100,
+			},
 		},
 	};
 
@@ -193,8 +203,14 @@ export default function FearAndGreedGauge({
 								7D Window
 							</span>
 						</div>
-						<div className="h-20 w-full bg-slate-50/50 rounded-2xl border border-slate-100 p-3">
-							<ChartWrapper data={chartData} options={chartOptions} />
+						<div className="h-20 w-full bg-slate-50/50 rounded-2xl border border-slate-100 p-3 flex items-center justify-center">
+							{sevenDayData.length > 0 ? (
+								<ChartWrapper data={chartData} options={chartOptions} />
+							) : (
+								<span className="text-[10px] font-bold text-slate-400">
+									Trend data calibrating...
+								</span>
+							)}
 						</div>
 					</div>
 				</div>

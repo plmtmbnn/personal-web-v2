@@ -88,6 +88,7 @@ const nextConfig: NextConfig = {
 		"firebase",
 		"@upstash/redis",
 		"@upstash/ratelimit",
+		"got-scraping",
 	],
 
 	// Use Turbopack (default in Next.js 16) with optimizations

@@ -109,3 +109,40 @@ export type FearAndGreedData = {
 		}>;
 	};
 };
+
+export interface CryptoSentimentItem {
+	value: string;
+	value_classification: string;
+	timestamp: string;
+	time_until_update?: string;
+}
+
+export interface CryptoFearAndGreedResponse {
+	name: string;
+	data: CryptoSentimentItem[];
+}
+
+export interface MarketRegimeClassification {
+	key:
+		| "expansion"
+		| "speculative_decoupling"
+		| "defensive_rotation"
+		| "capitulation";
+	title: string;
+	headline: string;
+	diagnosis: string;
+	color: {
+		border: string;
+		topBar: string;
+		badgeBg: string;
+		badgeText: string;
+		badgeBorder: string;
+	};
+	compositeScore: number;
+	divergence: number;
+	playbook: {
+		favoredSectors: string[];
+		elevatedRisks: string[];
+		posture: string;
+	};
+}

@@ -58,14 +58,14 @@ export interface FundamentalData {
 }
 
 export type OpportunityCategory =
-	| "🔥 Strong Buy"
-	| "🚀 Momentum"
-	| "📈 Breakout"
-	| "💰 Value"
-	| "🏦 Blue Chip"
-	| "🌍 Foreign Accumulation"
-	| "⚠ Watchlist"
-	| "❌ Weak Trend";
+	| "Strong Buy"
+	| "Momentum"
+	| "Breakout"
+	| "Value"
+	| "Blue Chip"
+	| "Foreign Accumulation"
+	| "Watchlist"
+	| "Weak Trend";
 
 export interface ProcessedStock extends IDXStock {
 	ForeignNet: number;

@@ -58,20 +58,20 @@ export function useMarketData(rawData: IDXStock[], weights: ScoreWeights) {
 			);
 
 			// Categorization
-			let Opportunity: OpportunityCategory = "⚠ Watchlist";
+			let Opportunity: OpportunityCategory = "Watchlist";
 			if (CompositeScore > 85 && ChangePct > 2 && ForeignNet > 1000000000)
-				Opportunity = "🔥 Strong Buy";
+				Opportunity = "Strong Buy";
 			else if (ChangePct > 4 && stock.Volume > 50000000)
-				Opportunity = "🚀 Momentum";
+				Opportunity = "Momentum";
 			else if (stock.High === stock.Close && ChangePct > 2)
-				Opportunity = "📈 Breakout";
+				Opportunity = "Breakout";
 			else if (ForeignNet > 5000000000 && ChangePct < 1)
-				Opportunity = "🌍 Foreign Accumulation";
+				Opportunity = "Foreign Accumulation";
 			else if (CompositeScore < 40 && ChangePct < -2)
-				Opportunity = "❌ Weak Trend";
+				Opportunity = "Weak Trend";
 			else if (stock.Value > 100000000000)
-				Opportunity = "🏦 Blue Chip"; // Proxy for blue chip
-			else if (CompositeScore > 60) Opportunity = "💰 Value";
+				Opportunity = "Blue Chip"; // Proxy for blue chip
+			else if (CompositeScore > 60) Opportunity = "Value";
 
 			return {
 				...stock,

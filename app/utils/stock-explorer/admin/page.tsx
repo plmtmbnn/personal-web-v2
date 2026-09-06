@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
 	Database,
 	Upload,
@@ -16,10 +16,16 @@ import {
 	Sparkles,
 	Code2,
 	RotateCcw,
+	Globe,
+	Eye,
+	ChevronDown,
+	ChevronUp,
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import PinGuard from "@/features/auth/PinGuard";
+import CustomModal from "@/features/shared/components/CustomModal";
+import { format } from "date-fns";
 
 interface CacheStatusState {
 	loading: boolean;
@@ -33,6 +39,36 @@ interface ImportStatusState {
 	message: string;
 }
 
+interface NormalizedStockRecord {
+	No: number;
+	IDStockSummary?: number;
+	Date: string;
+	StockCode: string;
+	StockName: string;
+	Remarks: string;
+	Previous: number;
+	OpenPrice: number;
+	FirstTrade: number;
+	High: number;
+	Low: number;
+	Close: number;
+	Change: number;
+	Volume: number;
+	Value: number;
+	Frequency: number;
+	IndexIndividual: number;
+	Offer: number;
+	OfferVolume: number;
+	Bid: number;
+	BidVolume: number;
+	ForeignSell: number;
+	ForeignBuy: number;
+	NonRegularVolume: number;
+	NonRegularValue: number;
+	NonRegularFrequency: number;
+	[key: string]: unknown;
+}
+
 const SAMPLE_TEMPLATE = `{
   "draw": 1,
   "recordsTotal": 3,
@@ -40,8 +76,10 @@ const SAMPLE_TEMPLATE = `{
   "data": [
     {
       "No": 1,
-      "Code": "BBCA",
-      "Name": "Bank Central Asia Tbk.",
+      "IDStockSummary": 101,
+      "Date": "2026-09-05T00:00:00",
+      "StockCode": "BBCA",
+      "StockName": "Bank Central Asia Tbk.",
       "Remarks": "",
       "Previous": 10200,
       "OpenPrice": 10250,
@@ -53,7 +91,7 @@ const SAMPLE_TEMPLATE = `{
       "Volume": 85000000,
       "Value": 875000000000,
       "Frequency": 18500,
-      "IndexIndividual": 0,
+      "IndexIndividual": 100,
       "Offer": 10325,
       "OfferVolume": 50000,
       "Bid": 10300,
@@ -66,8 +104,10 @@ const SAMPLE_TEMPLATE = `{
     },
     {
       "No": 2,
-      "Code": "BBRI",
-      "Name": "Bank Rakyat Indonesia (Persero) Tbk.",
+      "IDStockSummary": 102,
+      "Date": "2026-09-05T00:00:00",
+      "StockCode": "BBRI",
+      "StockName": "Bank Rakyat Indonesia (Persero) Tbk.",
       "Remarks": "",
       "Previous": 4850,
       "OpenPrice": 4860,
@@ -79,7 +119,7 @@ const SAMPLE_TEMPLATE = `{
       "Volume": 120000000,
       "Value": 586000000000,
       "Frequency": 22400,
-      "IndexIndividual": 0,
+      "IndexIndividual": 100,
       "Offer": 4910,
       "OfferVolume": 60000,
       "Bid": 4900,
@@ -92,8 +132,10 @@ const SAMPLE_TEMPLATE = `{
     },
     {
       "No": 3,
-      "Code": "BMRI",
-      "Name": "Bank Mandiri (Persero) Tbk.",
+      "IDStockSummary": 103,
+      "Date": "2026-09-05T00:00:00",
+      "StockCode": "BMRI",
+      "StockName": "Bank Mandiri (Persero) Tbk.",
       "Remarks": "",
       "Previous": 6700,
       "OpenPrice": 6725,
@@ -105,7 +147,7 @@ const SAMPLE_TEMPLATE = `{
       "Volume": 65000000,
       "Value": 439000000000,
       "Frequency": 14200,
-      "IndexIndividual": 0,
+      "IndexIndividual": 100,
       "Offer": 6800,
       "OfferVolume": 40000,
       "Bid": 6775,
@@ -118,6 +160,125 @@ const SAMPLE_TEMPLATE = `{
     }
   ]
 }`;
+
+/**
+ * Resilient array extractor for various IDX JSON response structures
+ */
+function extractStockArray(parsed: unknown): unknown[] | null {
+	if (Array.isArray(parsed)) {
+		return parsed;
+	}
+	if (typeof parsed === "object" && parsed !== null) {
+		const obj = parsed as Record<string, unknown>;
+		if (Array.isArray(obj.data)) return obj.data;
+		if (Array.isArray(obj.results)) return obj.results;
+		if (Array.isArray(obj.stocks)) return obj.stocks;
+		if (Array.isArray(obj.items)) return obj.items;
+
+		for (const val of Object.values(obj)) {
+			if (Array.isArray(val) && val.length > 0 && typeof val[0] === "object") {
+				return val;
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Normalizes input stock objects to ensure consistent field names and types
+ */
+function normalizeStockData(rawArray: unknown[]): NormalizedStockRecord[] {
+	const defaultDate = new Date().toISOString();
+
+	return rawArray
+		.filter(
+			(item): item is Record<string, unknown> =>
+				typeof item === "object" && item !== null,
+		)
+		.map((item, index) => {
+			const code = String(
+				item.StockCode ||
+					item.Code ||
+					item.code ||
+					item.symbol ||
+					item.Ticker ||
+					item.ticker ||
+					"",
+			)
+				.trim()
+				.toUpperCase();
+
+			const name = String(
+				item.StockName || item.Name || item.name || item.companyName || "",
+			).trim();
+
+			const dateStr = String(
+				item.Date || item.date || item.tradingDate || defaultDate,
+			).trim();
+
+			return {
+				...item,
+				No: Number(item.No) || index + 1,
+				IDStockSummary: Number(item.IDStockSummary) || index + 1,
+				Date: dateStr,
+				StockCode: code,
+				StockName: name || code,
+				Remarks: String(item.Remarks || item.remarks || ""),
+				Previous: Number(item.Previous || item.previous) || 0,
+				OpenPrice: Number(item.OpenPrice || item.openPrice || item.open) || 0,
+				FirstTrade: Number(item.FirstTrade || item.firstTrade) || 0,
+				High: Number(item.High || item.high) || 0,
+				Low: Number(item.Low || item.low) || 0,
+				Close: Number(item.Close || item.close || item.price) || 0,
+				Change: Number(item.Change || item.change) || 0,
+				Volume: Number(item.Volume || item.volume) || 0,
+				Value: Number(item.Value || item.value) || 0,
+				Frequency: Number(item.Frequency || item.frequency) || 0,
+				IndexIndividual:
+					Number(item.IndexIndividual || item.indexIndividual) || 0,
+				Offer: Number(item.Offer || item.offer) || 0,
+				OfferVolume: Number(item.OfferVolume || item.offerVolume) || 0,
+				Bid: Number(item.Bid || item.bid) || 0,
+				BidVolume: Number(item.BidVolume || item.bidVolume) || 0,
+				ForeignSell: Number(item.ForeignSell || item.foreignSell) || 0,
+				ForeignBuy: Number(item.ForeignBuy || item.foreignBuy) || 0,
+				NonRegularVolume:
+					Number(item.NonRegularVolume || item.nonRegularVolume) || 0,
+				NonRegularValue:
+					Number(item.NonRegularValue || item.nonRegularValue) || 0,
+				NonRegularFrequency:
+					Number(item.NonRegularFrequency || item.nonRegularFrequency) || 0,
+			};
+		})
+		.filter((record) => record.StockCode.length > 0);
+}
+
+function formatTradingDate(dateStr: string | null): string {
+	if (!dateStr) return "N/A";
+	try {
+		const d = new Date(dateStr);
+		if (Number.isNaN(d.getTime())) return dateStr.substring(0, 10);
+		return format(d, "dd MMM yyyy");
+	} catch {
+		return dateStr.substring(0, 10);
+	}
+}
+
+function formatCompactNumber(num: number): string {
+	if (num >= 1_000_000_000_000) {
+		return `${(num / 1_000_000_000_000).toFixed(2)}T`;
+	}
+	if (num >= 1_000_000_000) {
+		return `${(num / 1_000_000_000).toFixed(2)}B`;
+	}
+	if (num >= 1_000_000) {
+		return `${(num / 1_000_000).toFixed(2)}M`;
+	}
+	if (num >= 1_000) {
+		return `${(num / 1_000).toFixed(1)}K`;
+	}
+	return num.toLocaleString();
+}
 
 export default function StockImportAdmin() {
 	const reduceMotion = useReducedMotion();
@@ -134,6 +295,12 @@ export default function StockImportAdmin() {
 		count: 0,
 		lastDate: null,
 	});
+
+	const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
+	const [isPurging, setIsPurging] = useState(false);
+	const [isLiveFetching, setIsLiveFetching] = useState(false);
+	const [isDragging, setIsDragging] = useState(false);
+	const [showPreviewTable, setShowPreviewTable] = useState(false);
 
 	const fetchCacheStatus = useCallback(async () => {
 		setCacheStatus((prev) => ({ ...prev, loading: true }));
@@ -164,13 +331,86 @@ export default function StockImportAdmin() {
 		fetchCacheStatus();
 	}, [fetchCacheStatus]);
 
+	// Compute pre-import data preview
+	const previewData = useMemo(() => {
+		if (!input.trim()) return null;
+		try {
+			const parsed = JSON.parse(input);
+			const arr = extractStockArray(parsed);
+			if (!arr || arr.length === 0) return null;
+			const normalized = normalizeStockData(arr);
+			if (normalized.length === 0) return null;
+
+			const totalVolume = normalized.reduce(
+				(acc, s) => acc + (s.Volume || 0),
+				0,
+			);
+			const totalValue = normalized.reduce((acc, s) => acc + (s.Value || 0), 0);
+			const sampleDate = normalized[0]?.Date || null;
+
+			return {
+				totalCount: normalized.length,
+				totalVolume,
+				totalValue,
+				sampleDate,
+				samples: normalized.slice(0, 5),
+			};
+		} catch {
+			return null;
+		}
+	}, [input]);
+
+	// Live sync from IDX API
+	const handleLiveSync = async () => {
+		setIsLiveFetching(true);
+		setStatus({
+			type: "loading",
+			message: "Attempting live IDX Trading Summary fetch...",
+		});
+
+		try {
+			const response = await fetch("/api/utils/stock-data?refresh=true");
+			const result = await response.json();
+
+			if (!response.ok) {
+				throw new Error(result.error || "Failed to fetch live stock data");
+			}
+
+			if (result.source === "idx_live") {
+				setStatus({
+					type: "success",
+					message: `Successfully synced ${result.data?.length || 0} stocks directly from IDX!`,
+				});
+			} else if (result.source === "fallback_static") {
+				setStatus({
+					type: "error",
+					message:
+						"Live IDX blocked datacenter IP. Fallback loaded. Please use manual JSON upload below.",
+				});
+			} else {
+				setStatus({
+					type: "success",
+					message: `Cache updated from ${result.source} (${result.data?.length || 0} items).`,
+				});
+			}
+			fetchCacheStatus();
+		} catch (err: unknown) {
+			setStatus({
+				type: "error",
+				message: err instanceof Error ? err.message : "Live IDX sync failed.",
+			});
+		} finally {
+			setIsLiveFetching(false);
+		}
+	};
+
+	// Import to Redis with normalization & force overwrite
 	const handleImport = useCallback(async () => {
 		if (!input.trim()) return;
 
 		setStatus({ type: "loading", message: "Validating JSON structure..." });
 
 		try {
-			// 1. Parse JSON
 			let parsed: unknown;
 			try {
 				parsed = JSON.parse(input);
@@ -178,31 +418,27 @@ export default function StockImportAdmin() {
 				throw new Error("Invalid JSON format. Please check your syntax.");
 			}
 
-			// 2. Validate Structure (Expect { draw, recordsTotal, data: [] } or just [])
-			const stockData = Array.isArray(parsed)
-				? parsed
-				: (parsed as { data?: unknown[] })?.data;
-
-			if (!stockData || !Array.isArray(stockData)) {
+			const stockArray = extractStockArray(parsed);
+			if (!stockArray || stockArray.length === 0) {
 				throw new Error(
-					"Invalid structure. Could not find a 'data' array in the JSON.",
+					"Invalid structure. Could not find an array of stock objects in the JSON.",
 				);
 			}
 
-			if (stockData.length === 0) {
-				throw new Error("The data array is empty.");
+			const normalizedData = normalizeStockData(stockArray);
+			if (normalizedData.length === 0) {
+				throw new Error("No valid stock records with ticker codes found.");
 			}
 
-			// 3. API Call
 			setStatus({
 				type: "loading",
-				message: `Importing ${stockData.length} records to Redis...`,
+				message: `Importing ${normalizedData.length} records to Redis (Force Overwrite)...`,
 			});
 
 			const response = await fetch("/api/admin/import-stock", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ data: stockData }),
+				body: JSON.stringify({ data: normalizedData, force: true }),
 			});
 
 			const result = (await response.json()) as {
@@ -216,10 +452,12 @@ export default function StockImportAdmin() {
 
 			setStatus({
 				type: "success",
-				message: result.message || "Data imported successfully!",
+				message:
+					result.message ||
+					`Successfully imported ${normalizedData.length} instruments to Redis!`,
 			});
-			setInput(""); // Clear input on success
-			fetchCacheStatus(); // Reload cache metadata
+			setInput("");
+			fetchCacheStatus();
 		} catch (error: unknown) {
 			console.error("Import Error:", error);
 			setStatus({
@@ -239,12 +477,9 @@ export default function StockImportAdmin() {
 		}
 	};
 
-	const handleClearCache = useCallback(async () => {
-		const confirmed = window.confirm(
-			"Are you sure you want to purge the stock data from Redis cache? This will delete all instruments and reset the auto-fetch cooldown.",
-		);
-		if (!confirmed) return;
-
+	// Cache Purge Confirmation
+	const handleClearCacheConfirm = async () => {
+		setIsPurging(true);
 		setStatus({ type: "loading", message: "Purging Redis cache..." });
 
 		try {
@@ -263,9 +498,10 @@ export default function StockImportAdmin() {
 
 			setStatus({
 				type: "success",
-				message: result.message || "Redis cache cleared.",
+				message: result.message || "Redis cache cleared successfully.",
 			});
-			fetchCacheStatus(); // Reload cache metadata
+			setIsPurgeModalOpen(false);
+			fetchCacheStatus();
 		} catch (error: unknown) {
 			console.error("Clear Cache Error:", error);
 			setStatus({
@@ -275,24 +511,33 @@ export default function StockImportAdmin() {
 						? error.message
 						: "An unexpected error occurred while clearing cache.",
 			});
+		} finally {
+			setIsPurging(false);
 		}
-	}, [fetchCacheStatus]);
+	};
 
-	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (!file) return;
-
+	const processUploadedFile = (file: File) => {
 		const reader = new FileReader();
 		reader.onload = (event) => {
 			const content = event.target?.result;
 			if (typeof content === "string") {
 				try {
 					const parsed = JSON.parse(content);
-					setInput(JSON.stringify(parsed, null, 2));
-					setStatus({
-						type: "success",
-						message: `Loaded ${file.name} successfully`,
-					});
+					const extracted = extractStockArray(parsed);
+					if (extracted && extracted.length > 0) {
+						setInput(JSON.stringify(parsed, null, 2));
+						setStatus({
+							type: "success",
+							message: `Loaded ${file.name} (${extracted.length} instruments detected)`,
+						});
+					} else {
+						setInput(content);
+						setStatus({
+							type: "error",
+							message:
+								"Uploaded file does not contain a recognized stock records array.",
+						});
+					}
 				} catch {
 					setInput(content);
 					setStatus({
@@ -303,9 +548,45 @@ export default function StockImportAdmin() {
 			}
 		};
 		reader.readAsText(file);
-		// Reset file input so same file can be re-uploaded if needed
+	};
+
+	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		processUploadedFile(file);
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
+		}
+	};
+
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(true);
+	};
+
+	const handleDragLeave = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(false);
+	};
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(false);
+
+		const files = e.dataTransfer.files;
+		if (files && files.length > 0) {
+			const file = files[0];
+			if (!file.name.endsWith(".json") && file.type !== "application/json") {
+				setStatus({
+					type: "error",
+					message: "Please drop a valid .json file.",
+				});
+				return;
+			}
+			processUploadedFile(file);
 		}
 	};
 
@@ -327,7 +608,7 @@ export default function StockImportAdmin() {
 		setInput(SAMPLE_TEMPLATE);
 		setStatus({
 			type: "success",
-			message: "Sample IDX template loaded.",
+			message: "Sample IDX template loaded (BBCA, BBRI, BMRI).",
 		});
 	};
 
@@ -369,7 +650,7 @@ export default function StockImportAdmin() {
 
 					{/* Cache Status Indicator Card */}
 					<section className="bg-white border border-slate-200/80 rounded-[2rem] shadow-xs p-5 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-						<div className="space-y-3.5 flex-1">
+						<div className="space-y-3.5 flex-1 w-full">
 							<div className="flex items-center gap-3">
 								<h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
 									Cache Status
@@ -399,8 +680,8 @@ export default function StockImportAdmin() {
 									</p>
 								</div>
 							) : cacheStatus.available ? (
-								<div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-									<div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+								<div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+									<div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
 										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
 											Total Instruments
 										</span>
@@ -408,22 +689,20 @@ export default function StockImportAdmin() {
 											{cacheStatus.count.toLocaleString()}
 										</p>
 									</div>
-									<div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+									<div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
 										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
 											Trading Date
 										</span>
-										<p className="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5">
-											{cacheStatus.lastDate
-												? cacheStatus.lastDate.substring(0, 10)
-												: "N/A"}
+										<p className="text-base sm:text-lg font-extrabold text-slate-900 mt-0.5">
+											{formatTradingDate(cacheStatus.lastDate)}
 										</p>
 									</div>
-									<div className="col-span-2 sm:col-span-1 p-3 bg-indigo-50/60 rounded-xl border border-indigo-100/80">
+									<div className="col-span-2 sm:col-span-1 p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-100/80">
 										<span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1">
 											<Clock className="w-3 h-3 text-indigo-600" /> Lifespan
 										</span>
 										<p className="text-xs font-bold text-indigo-950 mt-1">
-											3 Hours (Auto-purges)
+											12 Hours (Auto-purges)
 										</p>
 									</div>
 								</div>
@@ -437,7 +716,7 @@ export default function StockImportAdmin() {
 						</div>
 
 						{/* Cache Actions */}
-						<div className="flex items-center gap-2.5 w-full md:w-auto">
+						<div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
 							<button
 								type="button"
 								onClick={fetchCacheStatus}
@@ -453,9 +732,24 @@ export default function StockImportAdmin() {
 
 							<button
 								type="button"
-								onClick={handleClearCache}
+								onClick={handleLiveSync}
+								disabled={isLiveFetching || cacheStatus.loading}
+								className="flex items-center justify-center gap-1.5 px-3.5 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
+								title="Trigger Live IDX API Fetch"
+							>
+								{isLiveFetching ? (
+									<Loader2 className="w-4 h-4 animate-spin" />
+								) : (
+									<Globe className="w-4 h-4" />
+								)}
+								<span>Sync Live</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={() => setIsPurgeModalOpen(true)}
 								disabled={!cacheStatus.available || cacheStatus.loading}
-								className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
+								className="flex items-center justify-center gap-1.5 px-3.5 py-3 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
 							>
 								<Trash2 className="w-4 h-4" />
 								<span>Purge Cache</span>
@@ -474,20 +768,28 @@ export default function StockImportAdmin() {
 									Manual Override Protocol
 								</h3>
 								<p className="text-xs text-indigo-900/80 leading-relaxed font-medium">
-									If live connection to IDX API is unstable, paste or upload the
-									raw JSON response from IDX Trading Summary below to manually
-									prime the Redis cache.
+									If cloud datacenter IP is blocked by IDX, drag and drop or
+									paste the raw JSON response from IDX Trading Summary below to
+									manually prime the Redis cache.
 								</p>
 							</div>
 						</div>
 					</section>
 
-					{/* Input Area */}
-					<div className="bg-white border border-slate-200/80 rounded-[2rem] shadow-xs overflow-hidden flex flex-col min-h-[480px]">
+					{/* Input Area with Drag & Drop */}
+					<div
+						onDragOver={handleDragOver}
+						onDragLeave={handleDragLeave}
+						onDrop={handleDrop}
+						className={`bg-white border rounded-[2rem] shadow-xs overflow-hidden flex flex-col min-h-[480px] transition-all relative ${
+							isDragging
+								? "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/10"
+								: "border-slate-200/80"
+						}`}
+					>
 						{/* Quick Action Toolbar */}
 						<div className="p-3 sm:p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5">
 							<div className="flex flex-wrap items-center gap-2">
-								{/* Hidden file input */}
 								<input
 									type="file"
 									ref={fileInputRef}
@@ -531,13 +833,112 @@ export default function StockImportAdmin() {
 							</span>
 						</div>
 
+						{/* Pre-Import Inspector Strip */}
+						{previewData && (
+							<div className="p-3 sm:p-4 bg-emerald-50/50 border-b border-emerald-100 flex flex-col gap-2.5">
+								<div className="flex flex-wrap items-center justify-between gap-2">
+									<div className="flex flex-wrap items-center gap-2 text-xs">
+										<span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-extrabold text-[11px]">
+											<CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+											{previewData.totalCount.toLocaleString()} Instruments
+											Detected
+										</span>
+										<span className="px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-emerald-800 font-bold text-[11px]">
+											Date: {formatTradingDate(previewData.sampleDate)}
+										</span>
+										<span className="hidden md:inline-flex px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-slate-600 font-medium text-[11px]">
+											Vol: {formatCompactNumber(previewData.totalVolume)}
+										</span>
+										<span className="hidden md:inline-flex px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-slate-600 font-medium text-[11px]">
+											Val: Rp {formatCompactNumber(previewData.totalValue)}
+										</span>
+									</div>
+
+									<button
+										type="button"
+										onClick={() => setShowPreviewTable((prev) => !prev)}
+										className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 hover:text-emerald-950 cursor-pointer"
+									>
+										<Eye className="w-3.5 h-3.5" />
+										<span>
+											{showPreviewTable ? "Hide Sample" : "Inspect Sample"}
+										</span>
+										{showPreviewTable ? (
+											<ChevronUp className="w-3.5 h-3.5" />
+										) : (
+											<ChevronDown className="w-3.5 h-3.5" />
+										)}
+									</button>
+								</div>
+
+								{/* Collapsible Mini Preview Table */}
+								{showPreviewTable && (
+									<div className="overflow-x-auto bg-white rounded-xl border border-emerald-200/80 p-2 shadow-2xs mt-1">
+										<table className="w-full text-left text-[11px]">
+											<thead>
+												<tr className="border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
+													<th className="p-1.5">Ticker</th>
+													<th className="p-1.5">Name</th>
+													<th className="p-1.5 text-right">Close</th>
+													<th className="p-1.5 text-right">Change</th>
+													<th className="p-1.5 text-right">Volume</th>
+													<th className="p-1.5 text-right">Foreign Buy</th>
+													<th className="p-1.5 text-right">Foreign Sell</th>
+												</tr>
+											</thead>
+											<tbody className="divide-y divide-slate-50 font-medium text-slate-800">
+												{previewData.samples.map((stock) => (
+													<tr
+														key={stock.StockCode}
+														className="hover:bg-slate-50/50"
+													>
+														<td className="p-1.5 font-mono font-bold text-indigo-700">
+															{stock.StockCode}
+														</td>
+														<td className="p-1.5 truncate max-w-[180px]">
+															{stock.StockName}
+														</td>
+														<td className="p-1.5 text-right font-mono font-bold">
+															{stock.Close.toLocaleString()}
+														</td>
+														<td
+															className={`p-1.5 text-right font-mono font-bold ${
+																stock.Change > 0
+																	? "text-emerald-600"
+																	: stock.Change < 0
+																		? "text-rose-600"
+																		: "text-slate-500"
+															}`}
+														>
+															{stock.Change > 0
+																? `+${stock.Change}`
+																: stock.Change}
+														</td>
+														<td className="p-1.5 text-right font-mono text-slate-600">
+															{formatCompactNumber(stock.Volume)}
+														</td>
+														<td className="p-1.5 text-right font-mono text-emerald-700">
+															{formatCompactNumber(stock.ForeignBuy)}
+														</td>
+														<td className="p-1.5 text-right font-mono text-rose-700">
+															{formatCompactNumber(stock.ForeignSell)}
+														</td>
+													</tr>
+												))}
+											</tbody>
+										</table>
+									</div>
+								)}
+							</div>
+						)}
+
 						{/* Textarea */}
 						<div className="flex-1 relative p-4 sm:p-6">
 							<textarea
 								value={input}
 								onChange={(e) => setInput(e.target.value)}
 								onKeyDown={handleKeyDown}
-								placeholder='{ "draw": 1, "recordsTotal": 900, "data": [...] }'
+								placeholder='Paste IDX JSON data here or drag and drop a .json file... e.g. { "data": [ { "StockCode": "BBCA", ... } ] }'
 								className="w-full h-full min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-xl text-slate-900 font-mono text-xs leading-relaxed outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-y"
 								spellCheck={false}
 							/>
@@ -602,6 +1003,19 @@ export default function StockImportAdmin() {
 						</div>
 					</div>
 				</div>
+
+				{/* High-Fidelity CustomModal for Cache Purging */}
+				<CustomModal
+					isOpen={isPurgeModalOpen}
+					onClose={() => setIsPurgeModalOpen(false)}
+					onConfirm={handleClearCacheConfirm}
+					title="Purge Stock Cache?"
+					description="Are you sure you want to purge the IDX stock data from Redis cache? This will delete all instruments and reset the auto-fetch cooldown."
+					confirmText="Yes, Purge Cache"
+					cancelText="Cancel"
+					variant="danger"
+					isLoading={isPurging}
+				/>
 			</main>
 		</PinGuard>
 	);

@@ -1,3 +1,10 @@
+# [0.84.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.83.0...v0.84.0) (2026-09-06)
+
+
+### Features
+
+* **utils:** revamp stock explorer with hard filter engine and refactor investment insights ([bee8a99](https://github.com/plmtmbnn/personal-web-v2/commit/bee8a990c3b8889def50347c59634893c58ece6d))
+
 # [0.83.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.82.0...v0.83.0) (2026-09-02)
 
 

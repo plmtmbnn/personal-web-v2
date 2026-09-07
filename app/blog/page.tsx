@@ -21,7 +21,7 @@ export default async function BlogPage() {
 	const allBlogs = await getBlogsStatic();
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-36 sm:pb-44 pt-24 sm:pt-32">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<BlogView allBlogs={allBlogs} />
 			</div>

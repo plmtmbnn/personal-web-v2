@@ -15,6 +15,7 @@ import {
 	Info,
 	Clock,
 	ShieldCheck,
+	TrendingUp,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -144,46 +145,91 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 	const StatCard = ({
 		title,
 		value,
+		unit,
 		icon: Icon,
 		colorClass,
 		subtext,
+		badge,
 		description,
 	}: {
 		title: string;
 		value: React.ReactNode;
+		unit?: string;
 		icon: any;
 		colorClass: string;
 		subtext?: string;
+		badge?: {
+			text: string;
+			variant?:
+				| "emerald"
+				| "rose"
+				| "slate"
+				| "amber"
+				| "orange"
+				| "blue"
+				| "indigo";
+		};
 		description?: string;
-	}) => (
-		<div className="bg-white border border-slate-200/80 p-4 sm:p-5 lg:p-6 rounded-2xl sm:rounded-3xl shadow-xs hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between min-w-0">
-			<div>
-				<div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
-					<div
-						className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl ${colorClass} shadow-2xs group-hover:scale-110 transition-transform duration-300 shrink-0`}
-					>
-						<Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+	}) => {
+		const badgeVariant = badge?.variant || "slate";
+		const badgeStyles =
+			badgeVariant === "emerald"
+				? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+				: badgeVariant === "rose"
+					? "bg-rose-50 text-rose-700 border-rose-200/80"
+					: badgeVariant === "amber"
+						? "bg-amber-50 text-amber-700 border-amber-200/80"
+						: badgeVariant === "orange"
+							? "bg-orange-50 text-orange-700 border-orange-200/80"
+							: badgeVariant === "blue"
+								? "bg-blue-50 text-blue-700 border-blue-200/80"
+								: badgeVariant === "indigo"
+									? "bg-indigo-50 text-indigo-700 border-indigo-200/80"
+									: "bg-slate-50 text-slate-600 border-slate-200/80";
+
+		return (
+			<div className="bg-white border border-slate-200/80 p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-xs hover:shadow-md hover:border-slate-300/80 hover:-translate-y-0.5 transition-all duration-200 group flex flex-col justify-between min-w-0">
+				<div>
+					<div className="flex items-center justify-between gap-2 mb-3">
+						<div
+							className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl ${colorClass} transition-transform duration-200 group-hover:scale-105 shrink-0`}
+						>
+							<Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+						</div>
+						{(badge || subtext) && (
+							<span
+								className={`text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${
+									badge
+										? badgeStyles
+										: "bg-emerald-50 text-emerald-700 border-emerald-100"
+								}`}
+							>
+								{badge ? badge.text : subtext}
+							</span>
+						)}
 					</div>
-					{subtext && (
-						<span className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-100 shrink-0">
-							{subtext}
-						</span>
-					)}
+					<p className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-1 truncate">
+						{title}
+					</p>
+					<div className="flex items-baseline gap-1.5 whitespace-nowrap min-w-0">
+						<h4 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+							{value}
+						</h4>
+						{unit && (
+							<span className="text-xs sm:text-sm font-semibold text-slate-400">
+								{unit}
+							</span>
+						)}
+					</div>
 				</div>
-				<p className="text-slate-500 text-[9.5px] sm:text-[10px] lg:text-[11px] font-bold uppercase tracking-wider mb-1 sm:mb-1.5 truncate">
-					{title}
-				</p>
-				<h4 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight break-words leading-none sm:leading-tight">
-					{value}
-				</h4>
+				{description && (
+					<p className="text-[10.5px] sm:text-xs text-slate-500 mt-3 pt-2.5 border-t border-slate-100 font-medium leading-normal break-words">
+						{description}
+					</p>
+				)}
 			</div>
-			{description && (
-				<p className="text-[10px] sm:text-xs text-slate-600 mt-3 pt-3 border-t border-slate-100 font-medium leading-relaxed break-words">
-					{description}
-				</p>
-			)}
-		</div>
-	);
+		);
+	};
 
 	if (loading || !stats) return <AnalyticsDashboardSkeleton />;
 
@@ -378,65 +424,111 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 						<Activity className="w-3.5 h-3.5 text-slate-400" />
 						Supporting Intel
 					</h3>
+					<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+						Operational Cadence
+					</span>
 				</div>
-				<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+				<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
 					<StatCard
 						title="Total Scope"
 						value={stats.totalTasks}
+						unit={stats.totalTasks === 1 ? "task" : "tasks"}
 						icon={ClipboardList}
-						colorClass="bg-blue-50 text-blue-600"
+						colorClass="bg-blue-50 text-blue-600 border border-blue-100/80"
+						badge={{ text: period, variant: "blue" }}
 						description="Objectives in cycle"
 					/>
 					<StatCard
 						title="Active Streak"
-						value={`${stats.streak}d`}
+						value={stats.streak}
+						unit={stats.streak === 1 ? "day" : "days"}
 						icon={Flame}
-						colorClass="bg-orange-50 text-orange-600"
+						colorClass="bg-orange-50 text-orange-600 border border-orange-100/80"
+						badge={
+							stats.streak >= 7
+								? { text: "On Fire", variant: "orange" }
+								: stats.streak > 0
+									? { text: "Active", variant: "emerald" }
+									: undefined
+						}
 						description="Operational momentum"
 					/>
 					<StatCard
 						title="Execution Score"
 						value={
 							reliabilityMetrics.hasData
-								? `${reliabilityMetrics.executionScore}/100`
+								? reliabilityMetrics.executionScore
 								: "—"
 						}
+						unit={reliabilityMetrics.hasData ? "/ 100" : undefined}
 						icon={Zap}
-						colorClass="bg-yellow-50 text-yellow-600"
+						colorClass="bg-amber-50 text-amber-600 border border-amber-100/80"
+						badge={
+							reliabilityMetrics.hasData
+								? reliabilityMetrics.executionScore >= 80
+									? { text: "Optimal", variant: "emerald" }
+									: reliabilityMetrics.executionScore >= 50
+										? { text: "Moderate", variant: "amber" }
+										: { text: "Critical", variant: "rose" }
+								: undefined
+						}
 						description="Weighted reliability grade"
 					/>
 					<StatCard
 						title="Lead Time"
 						value={
-							reliabilityMetrics.hasData
-								? `${reliabilityMetrics.avgLeadTime}d`
-								: "—"
+							reliabilityMetrics.hasData ? reliabilityMetrics.avgLeadTime : "—"
 						}
+						unit={reliabilityMetrics.hasData ? "d avg" : undefined}
 						icon={Clock}
-						colorClass="bg-purple-50 text-purple-600"
+						colorClass="bg-purple-50 text-purple-600 border border-purple-100/80"
+						badge={{ text: "Cycle", variant: "slate" }}
 						description="Avg cycle duration"
 					/>
 					<StatCard
 						title="Velocity"
-						value={`${stats.taskVelocity}/d`}
-						icon={Zap}
-						colorClass="bg-rose-50 text-rose-600"
+						value={stats.taskVelocity}
+						unit="tasks / day"
+						icon={TrendingUp}
+						colorClass="bg-indigo-50 text-indigo-600 border border-indigo-100/80"
+						badge={
+							stats.taskVelocity >= 1
+								? { text: "High", variant: "emerald" }
+								: { text: "Steady", variant: "slate" }
+						}
 						description="Average completion rate"
 					/>
 					<StatCard
 						title="Trend"
 						value={
-							stats.comparison > 0
-								? `+${stats.comparison}%`
-								: `${stats.comparison}%`
+							<span
+								className={
+									stats.comparison > 0
+										? "text-emerald-600"
+										: stats.comparison < 0
+											? "text-rose-600"
+											: "text-slate-900"
+								}
+							>
+								{stats.comparison > 0
+									? `+${stats.comparison}%`
+									: `${stats.comparison}%`}
+							</span>
 						}
 						icon={Activity}
 						colorClass={
 							stats.comparison > 0
-								? "bg-emerald-50 text-emerald-600"
+								? "bg-emerald-50 text-emerald-600 border border-emerald-100/80"
 								: stats.comparison < 0
-									? "bg-rose-50 text-rose-600"
-									: "bg-slate-50 text-slate-600"
+									? "bg-rose-50 text-rose-600 border border-rose-100/80"
+									: "bg-slate-50 text-slate-600 border border-slate-200/80"
+						}
+						badge={
+							stats.comparison > 0
+								? { text: "Rising", variant: "emerald" }
+								: stats.comparison < 0
+									? { text: "Falling", variant: "rose" }
+									: { text: "Flat", variant: "slate" }
 						}
 						description="vs. Previous Period"
 					/>

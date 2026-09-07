@@ -18,6 +18,7 @@ import {
 	ArrowUpDown,
 	Activity,
 	Clock,
+	Info,
 } from "lucide-react";
 import Link from "next/link";
 import { getCombinedMarketIntelligence } from "@/features/investment/actions";
@@ -53,6 +54,35 @@ interface SubIndexItem {
 /* ─────────────────────────────────────────────────────────────
    Standalone Skeleton & Error Decoupled Components
    ───────────────────────────────────────────────────────────── */
+
+function InfoTooltip({
+	text,
+	position = "top",
+}: {
+	text: string;
+	position?: "top" | "bottom";
+}) {
+	return (
+		<span className="group/tip relative inline-flex items-center cursor-help ml-1">
+			<Info className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 transition-colors shrink-0" />
+			<span
+				role="tooltip"
+				className={`absolute ${
+					position === "top" ? "bottom-full mb-2" : "top-full mt-2"
+				} left-0 sm:left-1/2 sm:-translate-x-1/2 w-48 sm:w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium rounded-xl opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl border border-slate-800 leading-snug text-left normal-case tracking-normal`}
+			>
+				{text}
+				<span
+					className={`absolute ${
+						position === "top"
+							? "top-full border-t-slate-900"
+							: "bottom-full border-b-slate-900"
+					} left-3 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent`}
+				/>
+			</span>
+		</span>
+	);
+}
 
 function LoadingTelemetryStrip() {
 	return (
@@ -489,8 +519,9 @@ export default function InvestmentPage() {
 						{/* Telemetry 1: Current Score */}
 						<div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between">
 							<div className="flex items-center justify-between gap-2 mb-2">
-								<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+								<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center">
 									Market Sentiment
+									<InfoTooltip text="Aggregated 0–100 index tracking broad investor psychology from extreme fear to extreme greed." />
 								</span>
 								<div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
 									<Activity className="w-4 h-4" />
@@ -514,8 +545,9 @@ export default function InvestmentPage() {
 						{/* Telemetry 2: 7-Day Velocity */}
 						<div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between">
 							<div className="flex items-center justify-between gap-2 mb-2">
-								<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+								<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center">
 									7-Day Velocity
+									<InfoTooltip text="Net score change over the last 7 days indicating momentum acceleration or rapid cooling." />
 								</span>
 								<div
 									className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${
@@ -552,8 +584,9 @@ export default function InvestmentPage() {
 						{/* Telemetry 3: Factor Alignment */}
 						<div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between">
 							<div className="flex items-center justify-between gap-2 mb-2">
-								<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+								<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center">
 									Factor Alignment
+									<InfoTooltip text="Distribution of the 7 core factors in bullish (>55), neutral (45–55), or bearish (<45) zones." />
 								</span>
 								<div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0">
 									<ShieldCheck className="w-4 h-4" />
@@ -572,8 +605,9 @@ export default function InvestmentPage() {
 						{/* Telemetry 4: Historical Anchor */}
 						<div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between">
 							<div className="flex items-center justify-between gap-2 mb-2">
-								<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+								<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center">
 									Historical Anchor
+									<InfoTooltip text="Fear & Greed index exactly 1 year ago vs. previous close to benchmark current cycle positioning." />
 								</span>
 								<div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
 									<Clock className="w-4 h-4" />
@@ -602,11 +636,11 @@ export default function InvestmentPage() {
 					<motion.div
 						initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
-						className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-7 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6"
+						className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-7 relative flex flex-col md:flex-row md:items-center justify-between gap-6"
 					>
 						{/* Solid Accent Top Bar */}
 						<div
-							className={`absolute top-0 left-0 right-0 h-1.5 ${strategicSignal.topBarBg}`}
+							className={`absolute top-0 left-0 right-0 h-1.5 rounded-t-3xl ${strategicSignal.topBarBg}`}
 						/>
 
 						<div className="flex items-start gap-4">
@@ -622,12 +656,16 @@ export default function InvestmentPage() {
 									>
 										{strategicSignal.title}
 									</span>
-									<span className="text-xs font-bold text-slate-500">
+									<span className="text-xs font-bold text-slate-500 flex items-center">
 										Composite Score:{" "}
-										<strong className="text-slate-900 font-black">
+										<strong className="text-slate-900 font-black ml-1 mr-1">
 											{Math.round(score)}
 										</strong>{" "}
 										/ 100
+										<InfoTooltip
+											position="bottom"
+											text="Automated regime classification based on sentiment thresholds to guide risk positioning."
+										/>
 									</span>
 								</div>
 								<h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900">
@@ -727,6 +765,7 @@ export default function InvestmentPage() {
 									<span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200/60">
 										{displayedSubIndices.length}
 									</span>
+									<InfoTooltip text="7-factor quantitative model tracking momentum, breadth, volatility, credit spreads, and safe-haven flows." />
 								</div>
 								<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
 									Core Market Indicators Breakdown

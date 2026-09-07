@@ -12,6 +12,7 @@ import {
 	Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { Info } from "lucide-react";
 
 ChartJS.register(
 	CategoryScale,
@@ -27,7 +28,45 @@ interface SentimentCardProps {
 	score: number;
 	rating: string;
 	data: Array<{ x: number; y: number; rating: string }>;
+	description?: string;
 	delay?: number;
+}
+
+const FACTOR_DESCRIPTIONS: Record<string, string> = {
+	"Market Momentum (S&P 500)":
+		"S&P 500 vs. its 125-day moving average. Trading above signals bullish momentum.",
+	"Market Momentum (S&P 125)":
+		"125-day rate of change in the S&P 500 gauging multi-month trend strength.",
+	"Stock Price Strength":
+		"Net ratio of NYSE stocks hitting new 52-week highs versus new 52-week lows.",
+	"Stock Price Breadth":
+		"Trading volume in advancing vs. declining NYSE stocks via the McClellan Oscillator.",
+	"Put and Call Options":
+		"CBOE 5-day put/call ratio. High put volume signals fear; high call volume reflects bullish bets.",
+	"Market Volatility (VIX)":
+		"50-day moving average of the VIX measuring market anxiety and expected 30-day volatility.",
+	"Junk Bond Demand":
+		"Yield spread between junk and investment-grade bonds. Tighter spreads indicate risk tolerance.",
+	"Safe Haven Demand":
+		"Difference between 20-day stock returns and treasury bond returns. Stocks beating bonds signals risk-on.",
+};
+
+function FactorTooltip({ text }: { text: string }) {
+	return (
+		<span
+			className="group/tip relative inline-flex items-center cursor-help ml-1 align-middle"
+			onClick={(e) => e.stopPropagation()}
+		>
+			<Info className="w-3 h-3 text-slate-400 group-hover/tip:text-slate-600 transition-colors shrink-0" />
+			<span
+				role="tooltip"
+				className="absolute bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 w-48 sm:w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium rounded-xl opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl border border-slate-800 leading-snug text-left normal-case tracking-normal"
+			>
+				{text}
+				<span className="absolute top-full left-3 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+			</span>
+		</span>
+	);
 }
 
 // Color mapping for different sentiment levels
@@ -74,6 +113,7 @@ export default function SentimentCard({
 	score,
 	rating,
 	data,
+	description,
 	delay = 0,
 }: SentimentCardProps) {
 	const reduceMotion = useReducedMotion();
@@ -160,12 +200,19 @@ export default function SentimentCard({
 		>
 			<div className="p-4 space-y-3">
 				<div>
-					<div className="flex items-start justify-between mb-2">
-						<h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-indigo-600 transition-colors leading-tight">
-							{title}
+					<div className="flex items-start justify-between gap-2 mb-2">
+						<h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-indigo-600 transition-colors leading-tight flex items-center">
+							<span>{title}</span>
+							<FactorTooltip
+								text={
+									description ||
+									FACTOR_DESCRIPTIONS[title] ||
+									"Multi-factor market indicator quantifying investor positioning."
+								}
+							/>
 						</h4>
 						<div
-							className={`px-2 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider border ${getRatingBadge(
+							className={`px-2 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider border shrink-0 ${getRatingBadge(
 								rating,
 							)} `}
 						>

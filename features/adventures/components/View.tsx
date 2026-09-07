@@ -5,12 +5,10 @@ import Link from "next/link";
 import {
 	Camera,
 	Activity,
-	Compass,
 	ArrowUpRight,
 	Mountain,
 	Trophy,
 	MapPin,
-	Sparkles,
 	Timer,
 	Image as ImageIcon,
 	Layers,
@@ -52,37 +50,38 @@ export default function AdventuresLanding() {
 	];
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden py-20 pb-32 sm:py-24 sm:pb-36 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-6xl mx-auto space-y-8 sm:space-y-10 pt-4 sm:pt-6">
-				{/* Hero Header */}
-				<motion.div
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-24 sm:pt-32 pb-36 sm:pb-44 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-5xl mx-auto space-y-10 sm:space-y-14">
+				{/* ═══════════════════════════════════════
+				    HERO HEADER: Centered, Minimalist, Classy
+				═══════════════════════════════════════ */}
+				<motion.header
 					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5 }}
-					className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4"
+					className="text-center max-w-3xl mx-auto space-y-4 pt-2 sm:pt-4"
 				>
-					<div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs">
-						<Compass className="w-3.5 h-3.5 text-indigo-600" />
-						<span>Life in Motion & Explorations</span>
-					</div>
-
-					<h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
-						Personal <span className="text-indigo-600">Adventures.</span>
+					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
+						Personal
+						<br />
+						<span>adventures & journeys</span>
 					</h1>
 
-					<p className="text-xs sm:text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto">
+					<p className="text-slate-500 text-sm sm:text-base font-normal max-w-xl mx-auto leading-relaxed">
 						Exploring the intersection of endurance, discipline, and aesthetics.
 						A collection of distance running logs, telemetry benchmarks, and
 						curated global travel journeys.
 					</p>
-				</motion.div>
+				</motion.header>
 
-				{/* Telemetry Summary Stats Row */}
+				{/* ═══════════════════════════════════════
+				    TELEMETRY STATS ROW: 4 Core Milestones Strip
+				═══════════════════════════════════════ */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.1 }}
-					className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto"
+					className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4"
 				>
 					{summaryStats.map((stat) => (
 						<div
@@ -95,13 +94,13 @@ export default function AdventuresLanding() {
 								<stat.icon className="w-4 h-4" />
 							</div>
 							<div className="min-w-0">
-								<p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate">
+								<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">
 									{stat.label}
 								</p>
-								<p className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
+								<p className="text-sm sm:text-base font-bold text-slate-900 truncate">
 									{stat.value}
 								</p>
-								<p className="text-[10px] text-slate-400 font-medium truncate">
+								<p className="text-[10px] text-slate-500 font-normal truncate">
 									{stat.sublabel}
 								</p>
 							</div>
@@ -109,8 +108,10 @@ export default function AdventuresLanding() {
 					))}
 				</motion.div>
 
-				{/* Two Main Domain Cards Grid */}
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+				{/* ═══════════════════════════════════════
+				    TWO MAIN DOMAIN CARDS (Running & Travel)
+				═══════════════════════════════════════ */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
 					{/* Running Adventure Card */}
 					<motion.div
 						initial={reduceMotion ? false : { opacity: 0, y: 20 }}
@@ -120,26 +121,31 @@ export default function AdventuresLanding() {
 					>
 						<Link
 							href="/adventures/running"
-							className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-emerald-300 transition-all duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
+							className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
 						>
-							<div className="space-y-5">
+							<div>
 								{/* Header & Icon */}
-								<div className="flex items-start justify-between">
-									<div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-xs">
-										<Activity className="w-6 h-6" />
+								<div className="flex items-center justify-between gap-4">
+									<div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-xs group-hover:scale-105 transition-transform duration-300">
+										<Activity className="w-6 h-6 sm:w-7 sm:h-7" />
 									</div>
-									<div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-bold text-emerald-700">
-										<Sparkles className="w-3 h-3 text-emerald-600" />
-										<span>Strava Sync</span>
+
+									<div className="flex items-center gap-2">
+										<span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+											Strava Sync
+										</span>
+										<div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200/60 text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 flex items-center justify-center transition-colors">
+											<ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+										</div>
 									</div>
 								</div>
 
 								{/* Title & Description */}
-								<div className="space-y-1.5">
-									<h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors">
+								<div className="mt-6 mb-4">
+									<h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight group-hover:text-emerald-700 transition-colors leading-snug">
 										Running Performance
 									</h2>
-									<p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+									<p className="mt-2 text-xs sm:text-sm text-slate-500 font-normal leading-relaxed">
 										Endurance training logs, race benchmarks, and mountain trail
 										milestones with live split pacing telemetry and Instagram
 										canvas exports.
@@ -147,67 +153,65 @@ export default function AdventuresLanding() {
 								</div>
 
 								{/* Benchmark Milestones Snapshot */}
-								<div className="grid grid-cols-3 gap-2 p-3 bg-slate-50/70 rounded-2xl border border-slate-200/70 text-center">
-									<div className="p-1.5">
-										<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+								<div className="grid grid-cols-3 divide-x divide-slate-200/60 p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/60 text-center mb-5">
+									<div className="px-2">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
 											5K Pace
 										</p>
-										<p className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono">
+										<p className="text-sm font-bold text-slate-900 font-mono">
 											25:45
 										</p>
-										<p className="text-[10px] text-slate-400 font-medium">
+										<p className="text-[10px] text-slate-500 font-normal">
 											5:09/km
 										</p>
 									</div>
-									<div className="p-1.5 border-x border-slate-200/60">
-										<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+									<div className="px-2">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
 											Marathon
 										</p>
-										<p className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono">
+										<p className="text-sm font-bold text-slate-900 font-mono">
 											4:30:29
 										</p>
-										<p className="text-[10px] text-slate-400 font-medium">
-											42.2K
+										<p className="text-[10px] text-slate-500 font-normal">
+											42.2 km
 										</p>
 									</div>
-									<div className="p-1.5">
-										<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+									<div className="px-2">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
 											Ultra Trail
 										</p>
-										<p className="text-xs sm:text-sm font-extrabold text-purple-700 font-mono">
+										<p className="text-sm font-bold text-slate-900 font-mono">
 											65.9 km
 										</p>
-										<p className="text-[10px] text-slate-400 font-medium">
+										<p className="text-[10px] text-slate-500 font-normal">
 											2,982m Gain
 										</p>
 									</div>
 								</div>
 
 								{/* Feature Highlights Chips */}
-								<div className="flex flex-wrap gap-1.5 pt-1">
-									<span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-semibold flex items-center gap-1">
-										<Timer className="w-3 h-3 text-slate-500" />
+								<div className="flex flex-wrap gap-1.5">
+									<span className="px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
+										<Timer className="w-3.5 h-3.5 text-slate-400" />
 										<span>Split Pacing</span>
 									</span>
-									<span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-semibold flex items-center gap-1">
-										<Trophy className="w-3 h-3 text-amber-500" />
+									<span className="px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
+										<Trophy className="w-3.5 h-3.5 text-amber-500" />
 										<span>PB Swipe Card</span>
 									</span>
-									<span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-semibold flex items-center gap-1">
-										<ImageIcon className="w-3 h-3 text-emerald-600" />
-										<span>Canvas Sticker Export</span>
+									<span className="px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
+										<ImageIcon className="w-3.5 h-3.5 text-emerald-600" />
+										<span>Canvas Export</span>
 									</span>
 								</div>
 							</div>
 
 							{/* Card Action Link */}
-							<div className="pt-6 mt-4 border-t border-slate-100 flex items-center justify-between">
-								<span className="text-xs font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors">
-									View Running Logs & Milestones
+							<div className="pt-6 mt-6 border-t border-slate-100/80 flex items-center justify-between">
+								<span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors">
+									<span>View Running Logs & Milestones</span>
+									<ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
 								</span>
-								<div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-									<ArrowUpRight className="w-4 h-4" />
-								</div>
 							</div>
 						</Link>
 					</motion.div>
@@ -221,26 +225,31 @@ export default function AdventuresLanding() {
 					>
 						<Link
 							href="/adventures/travel"
-							className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-indigo-300 transition-all duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
+							className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
 						>
-							<div className="space-y-5">
+							<div>
 								{/* Header & Icon */}
-								<div className="flex items-start justify-between">
-									<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs">
-										<Camera className="w-6 h-6" />
+								<div className="flex items-center justify-between gap-4">
+									<div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs group-hover:scale-105 transition-transform duration-300">
+										<Camera className="w-6 h-6 sm:w-7 sm:h-7" />
 									</div>
-									<div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[11px] font-bold text-indigo-700">
-										<Sparkles className="w-3 h-3 text-indigo-600" />
-										<span>Postcard Studio</span>
+
+									<div className="flex items-center gap-2">
+										<span className="px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+											Postcard Studio
+										</span>
+										<div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200/60 text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 flex items-center justify-center transition-colors">
+											<ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+										</div>
 									</div>
 								</div>
 
 								{/* Title & Description */}
-								<div className="space-y-1.5">
-									<h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-indigo-700 transition-colors">
+								<div className="mt-6 mb-4">
+									<h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight group-hover:text-indigo-700 transition-colors leading-snug">
 										Travel Bucket List
 									</h2>
-									<p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+									<p className="mt-2 text-xs sm:text-sm text-slate-500 font-normal leading-relaxed">
 										Curated global destinations, cultural memories, and vintage
 										airmail postcard generators with 3D flip polaroid sticker
 										exports.
@@ -248,67 +257,65 @@ export default function AdventuresLanding() {
 								</div>
 
 								{/* Travel Exploration Snapshot */}
-								<div className="grid grid-cols-3 gap-2 p-3 bg-slate-50/70 rounded-2xl border border-slate-200/70 text-center">
-									<div className="p-1.5">
-										<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+								<div className="grid grid-cols-3 divide-x divide-slate-200/60 p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/60 text-center mb-5">
+									<div className="px-2">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
 											Completed
 										</p>
-										<p className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono">
+										<p className="text-sm font-bold text-slate-900 font-mono">
 											10+ Cities
 										</p>
-										<p className="text-[10px] text-slate-400 font-medium">
+										<p className="text-[10px] text-slate-500 font-normal">
 											Logged
 										</p>
 									</div>
-									<div className="p-1.5 border-x border-slate-200/60">
-										<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+									<div className="px-2">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
 											Regions
 										</p>
-										<p className="text-xs sm:text-sm font-extrabold text-indigo-700 font-mono">
+										<p className="text-sm font-bold text-slate-900 font-mono">
 											3 Countries
 										</p>
-										<p className="text-[10px] text-slate-400 font-medium">
+										<p className="text-[10px] text-slate-500 font-normal">
 											ID, TH, SG
 										</p>
 									</div>
-									<div className="p-1.5">
-										<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+									<div className="px-2">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
 											Postcards
 										</p>
-										<p className="text-xs sm:text-sm font-extrabold text-purple-700 font-mono">
+										<p className="text-sm font-bold text-slate-900 font-mono">
 											3D Flip
 										</p>
-										<p className="text-[10px] text-slate-400 font-medium">
+										<p className="text-[10px] text-slate-500 font-normal">
 											Vintage PNG
 										</p>
 									</div>
 								</div>
 
 								{/* Feature Highlights Chips */}
-								<div className="flex flex-wrap gap-1.5 pt-1">
-									<span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-semibold flex items-center gap-1">
-										<Layers className="w-3 h-3 text-slate-500" />
+								<div className="flex flex-wrap gap-1.5">
+									<span className="px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
+										<Layers className="w-3.5 h-3.5 text-slate-400" />
 										<span>3D Flip Postcards</span>
 									</span>
-									<span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-semibold flex items-center gap-1">
-										<MapPin className="w-3 h-3 text-indigo-600" />
+									<span className="px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
+										<MapPin className="w-3.5 h-3.5 text-indigo-600" />
 										<span>Wishlist Tracker</span>
 									</span>
-									<span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-semibold flex items-center gap-1">
-										<ImageIcon className="w-3 h-3 text-purple-600" />
-										<span>Polaroid PNG Export</span>
+									<span className="px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
+										<ImageIcon className="w-3.5 h-3.5 text-purple-600" />
+										<span>Polaroid PNG</span>
 									</span>
 								</div>
 							</div>
 
 							{/* Card Action Link */}
-							<div className="pt-6 mt-4 border-t border-slate-100 flex items-center justify-between">
-								<span className="text-xs font-bold text-indigo-700 group-hover:text-indigo-800 transition-colors">
-									Explore Travel Tracker & Postcards
+							<div className="pt-6 mt-6 border-t border-slate-100/80 flex items-center justify-between">
+								<span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
+									<span>Explore Travel Tracker & Postcards</span>
+									<ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
 								</span>
-								<div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-									<ArrowUpRight className="w-4 h-4" />
-								</div>
 							</div>
 						</Link>
 					</motion.div>

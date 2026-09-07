@@ -199,13 +199,18 @@ export default function PostcardModal({
 					</motion.div>
 
 					{/* 1. The Postcard 3D Container Wrapper */}
-					<div className="relative flex justify-center items-center w-full flex-1 min-h-0 mb-6 sm:mb-8">
+					<div className="relative flex flex-col justify-center items-center w-full flex-1 min-h-0 py-1">
 						<motion.div
-							className="relative cursor-pointer group h-full w-auto max-w-full aspect-[8/5] sm:aspect-[16/10]"
+							className="relative cursor-pointer group aspect-[8/5] w-full m-auto"
+							style={{
+								aspectRatio: "8/5",
+								maxHeight: "min(52vh, 480px)",
+								maxWidth: "min(100%, calc(min(52vh, 480px) * 1.6))",
+								transformStyle: "preserve-3d",
+							}}
 							animate={{ rotateY: side === "front" ? 0 : 180 }}
 							transition={{ type: "spring", stiffness: 220, damping: 25 }}
 							onClick={() => setSide((s) => (s === "front" ? "back" : "front"))}
-							style={{ transformStyle: "preserve-3d" }}
 						>
 							{/* FRONT FACE */}
 							<div
@@ -253,15 +258,15 @@ export default function PostcardModal({
 								}}
 							>
 								{/* Vertical Divider */}
-								<div className="absolute top-6 sm:top-12 bottom-6 sm:bottom-12 left-1/2 w-px bg-black/15 -translate-x-1/2" />
-								<div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 text-[4px] sm:text-[7px] font-bold text-black/30 tracking-[0.2em] whitespace-nowrap">
+								<div className="absolute top-4 sm:top-12 bottom-4 sm:bottom-12 left-1/2 w-px bg-black/15 -translate-x-1/2" />
+								<div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 text-[4px] sm:text-[7px] font-bold text-black/30 tracking-[0.2em] whitespace-nowrap pointer-events-none select-none">
 									C-C.CO <span className="mx-2">·</span> TRAVEL SERIES
 								</div>
 
 								{/* Left Pane (Handwriting) */}
-								<div className="flex-1 pr-4 sm:pr-10 relative flex flex-col justify-start pt-1 sm:pt-4">
+								<div className="flex-1 pr-3 sm:pr-10 relative flex flex-col justify-start pt-1 sm:pt-4 overflow-hidden">
 									<p
-										className="text-xs sm:text-2xl md:text-3xl text-[#1c1917] leading-tight sm:leading-relaxed -rotate-1 select-none"
+										className="text-[11px] sm:text-2xl md:text-3xl text-[#1c1917] leading-tight sm:leading-relaxed -rotate-1 select-none"
 										style={{
 											fontFamily: "var(--font-caveat), 'Caveat', cursive",
 										}}
@@ -269,7 +274,7 @@ export default function PostcardModal({
 										{formatVisitDate(destination.visitedDate)}
 									</p>
 									<p
-										className="text-[10px] sm:text-lg md:text-2xl text-[#1c1917] mt-1 sm:mt-6 leading-snug sm:leading-relaxed rotate-1 select-none"
+										className="text-[9px] sm:text-base md:text-2xl text-[#1c1917] mt-1 sm:mt-4 leading-snug sm:leading-relaxed rotate-1 select-none line-clamp-3 sm:line-clamp-4"
 										style={{
 											fontFamily: "var(--font-caveat), 'Caveat', cursive",
 										}}
@@ -278,7 +283,7 @@ export default function PostcardModal({
 											"What a lovely place. The views were breathtaking and I can't wait to visit again someday."}
 									</p>
 									<p
-										className="text-xs sm:text-2xl md:text-3xl text-[#1c1917] mt-2 sm:mt-8 -rotate-2 select-none"
+										className="text-[11px] sm:text-2xl md:text-3xl text-[#1c1917] mt-auto sm:mt-6 -rotate-2 select-none"
 										style={{
 											fontFamily: "var(--font-caveat), 'Caveat', cursive",
 										}}
@@ -288,19 +293,19 @@ export default function PostcardModal({
 								</div>
 
 								{/* Right Pane (Address & Stamp) */}
-								<div className="flex-1 pl-4 sm:pl-10 relative flex flex-col">
+								<div className="flex-1 pl-3 sm:pl-10 relative flex flex-col">
 									{/* Stamp area */}
 									<div className="absolute top-0 sm:top-2 right-0 flex items-center justify-center">
 										{/* Postmark overlapping stamp */}
-										<div className="absolute -left-8 sm:-left-16 z-10 w-12 sm:w-28 h-12 sm:h-28 border-[1px] sm:border-[1.5px] border-slate-700/60 rounded-full flex items-center justify-center -rotate-12 opacity-80 pointer-events-none">
-											<div className="w-8 sm:w-20 h-8 sm:h-20 border-[1px] sm:border-[1.5px] border-slate-700/60 rounded-full flex items-center justify-center">
-												<span className="text-[4px] sm:text-[8px] font-bold text-slate-700/80 -mt-1 sm:-mt-3">
+										<div className="absolute -left-6 sm:-left-16 z-10 w-10 sm:w-28 h-10 sm:h-28 border-[1px] sm:border-[1.5px] border-slate-700/60 rounded-full flex items-center justify-center -rotate-12 opacity-80 pointer-events-none">
+											<div className="w-6 sm:w-20 h-6 sm:h-20 border-[1px] sm:border-[1.5px] border-slate-700/60 rounded-full flex items-center justify-center">
+												<span className="text-[3px] sm:text-[8px] font-bold text-slate-700/80 -mt-0.5 sm:-mt-3">
 													POST OFF.
 												</span>
 											</div>
 											{/* Wavy lines */}
 											<svg
-												className="absolute -right-8 sm:-right-16 top-1/2 -translate-y-1/2 w-10 sm:w-20 h-6 sm:h-10 opacity-70"
+												className="absolute -right-6 sm:-right-16 top-1/2 -translate-y-1/2 w-8 sm:w-20 h-5 sm:h-10 opacity-70"
 												viewBox="0 0 100 50"
 											>
 												<path
@@ -325,20 +330,20 @@ export default function PostcardModal({
 										</div>
 
 										{/* The Stamp */}
-										<div className="w-10 sm:w-24 h-[50px] sm:h-[110px] bg-[#EAE6DF] border border-slate-800 rotate-2 relative overflow-hidden stamp-edges flex flex-col items-center justify-center p-0.5 sm:p-2 shadow-sm">
+										<div className="w-9 sm:w-24 h-[44px] sm:h-[110px] bg-[#EAE6DF] border border-slate-800 rotate-2 relative overflow-hidden stamp-edges flex flex-col items-center justify-center p-0.5 sm:p-2 shadow-sm">
 											{getCountryCode(destination.country) ? (
 												<img
 													src={`https://flagcdn.com/w80/${getCountryCode(
 														destination.country,
 													)}.png`}
 													alt={destination.country}
-													className="w-6 sm:w-14 shadow-sm"
+													className="w-5 sm:w-14 shadow-sm"
 												/>
 											) : (
-												<span className="text-sm sm:text-3xl">🌍</span>
+												<span className="text-xs sm:text-3xl">🌍</span>
 											)}
-											<div className="absolute bottom-0.5 right-0.5 sm:bottom-2 sm:right-1.5 flex justify-between w-full px-1 sm:px-2 items-end">
-												<span className="text-[4px] sm:text-[8px] font-bold text-slate-800 uppercase tracking-wider">
+											<div className="absolute bottom-0.5 right-0.5 sm:bottom-2 sm:right-1.5 flex justify-between w-full px-0.5 sm:px-2 items-end">
+												<span className="text-[3.5px] sm:text-[8px] font-bold text-slate-800 uppercase tracking-wider">
 													{destination.country.substring(0, 3)}
 												</span>
 											</div>
@@ -346,7 +351,7 @@ export default function PostcardModal({
 									</div>
 
 									{/* Address Lines */}
-									<div className="mt-auto mb-4 sm:mb-10 w-full flex flex-col gap-5 sm:gap-11 pt-12">
+									<div className="mt-auto mb-2 sm:mb-10 w-full flex flex-col gap-2.5 sm:gap-9 pt-8 sm:pt-12">
 										<span className="text-[5px] sm:text-[9px] text-black/50 font-semibold absolute top-1/2 sm:top-[45%]">
 											This space for address only
 										</span>
@@ -361,7 +366,7 @@ export default function PostcardModal({
 												className="w-full border-b-[1px] sm:border-b-[1.5px] border-black/10 relative"
 											>
 												<span
-													className="absolute bottom-1 sm:bottom-2 left-2 sm:left-4 text-[10px] sm:text-2xl md:text-3xl text-[#1c1917] -rotate-2 select-none"
+													className="absolute bottom-0.5 sm:bottom-2 left-1.5 sm:left-4 text-[9px] sm:text-2xl md:text-3xl text-[#1c1917] -rotate-2 select-none truncate max-w-full"
 													style={{
 														fontFamily: "var(--font-caveat), 'Caveat', cursive",
 													}}
@@ -377,9 +382,9 @@ export default function PostcardModal({
 							</div>
 						</motion.div>
 
-						{/* Flip Hint (Now positioned outside the rotating container) */}
-						<div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-white/50 text-xs flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full backdrop-blur-sm pointer-events-none transition-opacity">
-							<RefreshCw className="w-3.5 h-3.5" />
+						{/* Flip Hint */}
+						<div className="mt-2.5 sm:mt-3 text-white/60 text-[11px] sm:text-xs flex items-center gap-1.5 bg-black/30 px-3.5 py-1 rounded-full backdrop-blur-sm pointer-events-none select-none shrink-0">
+							<RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
 							<span>Click card to flip</span>
 						</div>
 					</div>
@@ -389,23 +394,23 @@ export default function PostcardModal({
 						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.3 }}
-						className="flex items-center gap-3 w-full sm:w-auto flex-wrap justify-center shrink-0"
+						className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-wrap justify-center shrink-0 px-2"
 					>
 						<button
 							type="button"
 							onClick={handleCopyLink}
-							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md"
+							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-[11px] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md"
 							title="Copy Share Link"
 						>
 							{isLinkCopied ? (
 								<>
-									<Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+									<Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 stroke-[3]" />
 									<span className="text-emerald-700">Link Copied!</span>
 								</>
 							) : (
 								<>
-									<Link2 className="w-4 h-4 text-[#C2703E]" />
-									<span>Copy Share Link</span>
+									<Link2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C2703E]" />
+									<span>Copy Link</span>
 								</>
 							)}
 						</button>
@@ -414,13 +419,13 @@ export default function PostcardModal({
 							type="button"
 							onClick={() => handleDownload(side)}
 							disabled={isDownloading}
-							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md"
+							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-[11px] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md"
 							title={`Download ${side === "front" ? "Front" : "Back"} Image`}
 						>
 							{isDownloading ? (
-								<Loader2 className="w-4 h-4 animate-spin" />
+								<Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
 							) : (
-								<Download className="w-4 h-4 text-[#C2703E]" />
+								<Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C2703E]" />
 							)}
 							<span>Save {side === "front" ? "Front" : "Back"}</span>
 						</button>
@@ -429,7 +434,7 @@ export default function PostcardModal({
 							type="button"
 							onClick={() => handleCopy(side)}
 							disabled={isCopying}
-							className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md ${
+							className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md ${
 								isCopied
 									? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20"
 									: "bg-[#C2703E] hover:bg-[#A85E34] text-white shadow-[#C2703E]/20"
@@ -437,17 +442,17 @@ export default function PostcardModal({
 						>
 							{isCopying ? (
 								<>
-									<Loader2 className="w-4 h-4 animate-spin" />
+									<Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
 									<span>Generating...</span>
 								</>
 							) : isCopied ? (
 								<>
-									<Check className="w-4 h-4 stroke-[3]" />
+									<Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
 									<span>Copied!</span>
 								</>
 							) : (
 								<>
-									<Copy className="w-4 h-4" />
+									<Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
 									<span>Copy {side === "front" ? "Front" : "Back"}</span>
 								</>
 							)}

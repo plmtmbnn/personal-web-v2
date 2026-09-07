@@ -7,13 +7,7 @@ import {
 	TrendingUp,
 	Trophy,
 	Wrench,
-	ChevronRight,
-	Sparkles,
 	ArrowUpRight,
-	Lightbulb,
-	Flame,
-	Cpu,
-	BarChart3,
 } from "lucide-react";
 
 interface InsightModule {
@@ -26,7 +20,7 @@ interface InsightModule {
 	badgeBg: string;
 	badgeBorder: string;
 	badgeText: string;
-	buttonColor: string;
+	dotColor: string;
 	tags: string[];
 	highlight: string;
 }
@@ -43,7 +37,7 @@ const INSIGHT_MODULES: InsightModule[] = [
 		badgeBg: "bg-indigo-50",
 		badgeBorder: "border-indigo-100",
 		badgeText: "text-indigo-700",
-		buttonColor: "text-indigo-700",
+		dotColor: "bg-indigo-500",
 		tags: ["Fintech Core", "Distributed Systems", "Technical Essays", "SSG"],
 		highlight:
 			"System design patterns, high-concurrency ledger design & culture",
@@ -59,7 +53,7 @@ const INSIGHT_MODULES: InsightModule[] = [
 		badgeBg: "bg-emerald-50",
 		badgeBorder: "border-emerald-100",
 		badgeText: "text-emerald-700",
-		buttonColor: "text-emerald-700",
+		dotColor: "bg-emerald-500",
 		tags: [
 			"Fear & Greed Index",
 			"Crypto Sentiment",
@@ -79,7 +73,7 @@ const INSIGHT_MODULES: InsightModule[] = [
 		badgeBg: "bg-rose-50",
 		badgeBorder: "border-rose-100",
 		badgeText: "text-rose-700",
-		buttonColor: "text-rose-700",
+		dotColor: "bg-rose-500",
 		tags: [
 			"Live Countdown",
 			"Matchday Reports",
@@ -99,7 +93,7 @@ const INSIGHT_MODULES: InsightModule[] = [
 		badgeBg: "bg-cyan-50",
 		badgeBorder: "border-cyan-100",
 		badgeText: "text-cyan-700",
-		buttonColor: "text-cyan-700",
+		dotColor: "bg-cyan-500",
 		tags: [
 			"JWT Inspector",
 			"Stock Explorer",
@@ -146,57 +140,37 @@ export default function InsightsView() {
 	];
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden py-20 pb-32 sm:py-24 sm:pb-36 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-6xl mx-auto space-y-8 sm:space-y-10 pt-4 sm:pt-6">
-				{/* Hero Header */}
-				<motion.div
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-24 sm:pt-32 pb-36 sm:pb-44 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-5xl mx-auto space-y-10 sm:space-y-14">
+				{/* ═══════════════════════════════════════
+				    HERO HEADER: Centered, Minimalist, Classy
+				═══════════════════════════════════════ */}
+				<motion.header
 					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5 }}
-					className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4"
+					className="text-center max-w-3xl mx-auto space-y-4 pt-2 sm:pt-4"
 				>
-					<div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs">
-						<Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-						<span>Knowledge & Intelligence Hub</span>
-					</div>
-
-					<h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
-						Curated <span className="text-indigo-600">Insights.</span>
+					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
+						Curated
+						<br />
+						<span>insights & intelligence</span>
 					</h1>
 
-					<p className="text-xs sm:text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto">
+					<p className="text-slate-500 text-sm sm:text-base font-normal max-w-xl mx-auto leading-relaxed">
 						A unified nexus of fintech engineering essays, market sentiment
-						telemetry, Liverpool FC matchday analytics, and precision developer
-						toolkits.
+						telemetry, matchday analytics, and precision developer toolkits.
 					</p>
+				</motion.header>
 
-					{/* Quick Highlight Pills */}
-					<div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-						<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-bold text-slate-600 shadow-xs">
-							<Cpu className="w-3.5 h-3.5 text-indigo-500" />
-							<span>Engineering</span>
-						</span>
-						<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-bold text-slate-600 shadow-xs">
-							<BarChart3 className="w-3.5 h-3.5 text-emerald-500" />
-							<span>Fintech & Markets</span>
-						</span>
-						<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-bold text-slate-600 shadow-xs">
-							<Flame className="w-3.5 h-3.5 text-rose-500" />
-							<span>Matchday Center</span>
-						</span>
-						<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-bold text-slate-600 shadow-xs">
-							<Lightbulb className="w-3.5 h-3.5 text-cyan-500" />
-							<span>Developer Toolkits</span>
-						</span>
-					</div>
-				</motion.div>
-
-				{/* Global Intelligence Telemetry Stats Row */}
+				{/* ═══════════════════════════════════════
+				    TELEMETRY STATS ROW: 4 Core Modules Strip
+				═══════════════════════════════════════ */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.1 }}
-					className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto"
+					className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4"
 				>
 					{summaryStats.map((stat) => (
 						<div
@@ -209,13 +183,13 @@ export default function InsightsView() {
 								<stat.icon className="w-4 h-4" />
 							</div>
 							<div className="min-w-0">
-								<p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate">
+								<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">
 									{stat.label}
 								</p>
-								<p className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
+								<p className="text-sm sm:text-base font-bold text-slate-900 truncate">
 									{stat.value}
 								</p>
-								<p className="text-[10px] text-slate-400 font-medium truncate">
+								<p className="text-[10px] text-slate-500 font-normal truncate">
 									{stat.sublabel}
 								</p>
 							</div>
@@ -223,8 +197,10 @@ export default function InsightsView() {
 					))}
 				</motion.div>
 
-				{/* Cards Grid */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+				{/* ═══════════════════════════════════════
+				    MODULE CARDS GRID (2x2 Balanced)
+				═══════════════════════════════════════ */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
 					{INSIGHT_MODULES.map((module, i) => {
 						const Icon = module.icon;
 
@@ -240,8 +216,8 @@ export default function InsightsView() {
 									href={module.href}
 									className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
 								>
-									{/* Top Row: Icon + Category Badge */}
-									<div className="space-y-4">
+									{/* Top Row: Squircle Icon + Category Pill + Arrow Circle */}
+									<div>
 										<div className="flex items-center justify-between gap-4">
 											<div
 												className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl ${module.badgeBg} ${module.badgeBorder} ${module.badgeText} border shadow-xs group-hover:scale-105 transition-transform duration-300`}
@@ -249,9 +225,9 @@ export default function InsightsView() {
 												<Icon className="w-6 h-6 sm:w-7 sm:h-7" />
 											</div>
 
-											<div className="flex items-center gap-1.5">
+											<div className="flex items-center gap-2">
 												<span
-													className={`px-3 py-1 rounded-full ${module.badgeBg} ${module.badgeBorder} border text-[11px] font-bold uppercase tracking-wider ${module.badgeText}`}
+													className={`px-3 py-1 rounded-full ${module.badgeBg} ${module.badgeBorder} border text-[10px] font-bold uppercase tracking-wider ${module.badgeText}`}
 												>
 													{module.category}
 												</span>
@@ -262,48 +238,45 @@ export default function InsightsView() {
 										</div>
 
 										{/* Title & Description */}
-										<div className="space-y-1.5">
+										<div className="mt-6 mb-4">
 											<h2
-												className={`text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight ${module.accentColor} transition-colors`}
+												className={`text-xl sm:text-2xl font-bold text-slate-900 tracking-tight ${module.accentColor} transition-colors leading-snug`}
 											>
 												{module.title}
 											</h2>
 
-											<p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+											<p className="mt-2 text-xs sm:text-sm text-slate-500 font-normal leading-relaxed">
 												{module.description}
 											</p>
 										</div>
 
-										{/* Highlight Feature Quote */}
-										<div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-700">
-											<span className="text-slate-400 font-normal">
-												Featured:{" "}
-											</span>
-											<span>{module.highlight}</span>
+										{/* Subtle Highlight Callout */}
+										<div className="text-xs text-slate-600 bg-slate-50/80 border border-slate-200/60 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 mb-5">
+											<span
+												className={`w-1.5 h-1.5 rounded-full ${module.dotColor} shrink-0`}
+											/>
+											<span className="truncate">{module.highlight}</span>
 										</div>
-									</div>
 
-									{/* Bottom Section: Tags & Action */}
-									<div className="space-y-4 pt-4 mt-4 border-t border-slate-100">
-										{/* Tags */}
+										{/* Topic Tags */}
 										<div className="flex flex-wrap gap-1.5">
 											{module.tags.map((tag) => (
 												<span
 													key={tag}
-													className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-semibold"
+													className="px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 text-[11px] font-medium"
 												>
 													{tag}
 												</span>
 											))}
 										</div>
+									</div>
 
-										{/* Action Link */}
-										<div
-											className={`flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider ${module.buttonColor} transition-all`}
-										>
+									{/* Bottom Action: Learn More ↗ Style */}
+									<div className="pt-6 mt-6 border-t border-slate-100/80 flex items-center justify-between">
+										<span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
 											<span>Explore Module</span>
-											<ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
-										</div>
+											<ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+										</span>
 									</div>
 								</Link>
 							</motion.div>

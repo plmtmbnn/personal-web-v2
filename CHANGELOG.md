@@ -1,3 +1,10 @@
+# [0.85.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.84.0...v0.85.0) (2026-09-07)
+
+
+### Features
+
+* **ui:** revamp editorial layouts, postcard ratio, and add factor matrix tooltips ([525956c](https://github.com/plmtmbnn/personal-web-v2/commit/525956c2e6c79c8b669324bfcbaa399cbd7c2aed))
+
 # [0.84.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.83.0...v0.84.0) (2026-09-06)
 
 

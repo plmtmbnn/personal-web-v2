@@ -1,3 +1,10 @@
+# [0.86.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.85.0...v0.86.0) (2026-09-08)
+
+
+### Features
+
+* **ui:** standardize floating card headers, revamp cache telemetry, and clean dead code ([79e0a3e](https://github.com/plmtmbnn/personal-web-v2/commit/79e0a3e78eff8b82cb6e6a1ad4b4f6d9706a0d91))
+
 # [0.85.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.84.0...v0.85.0) (2026-09-07)
 
 

@@ -49,7 +49,9 @@ export interface StravaStats {
 	};
 }
 
-async function refreshAccessToken(refreshToken: string): Promise<StravaTokenData> {
+async function refreshAccessToken(
+	refreshToken: string,
+): Promise<StravaTokenData> {
 	if (!ENV_GLOBAL.STRAVA_CLIENT_ID || !ENV_GLOBAL.STRAVA_CLIENT_SECRET) {
 		throw new Error("Missing Strava Client ID or Secret in environment.");
 	}
@@ -69,7 +71,9 @@ async function refreshAccessToken(refreshToken: string): Promise<StravaTokenData
 
 	if (!response.ok) {
 		const errText = await response.text();
-		throw new Error(`Failed to refresh Strava token: ${response.status} - ${errText}`);
+		throw new Error(
+			`Failed to refresh Strava token: ${response.status} - ${errText}`,
+		);
 	}
 
 	const data = await response.json();
@@ -85,13 +89,18 @@ async function forceTokenRefresh(): Promise<void> {
 	try {
 		const rawTokenData = await redis.get<any>("strava:token_data");
 		if (rawTokenData) {
-			const tokenData: StravaTokenData = typeof rawTokenData === "string"
-				? JSON.parse(rawTokenData)
-				: rawTokenData;
+			const tokenData: StravaTokenData =
+				typeof rawTokenData === "string"
+					? JSON.parse(rawTokenData)
+					: rawTokenData;
 			if (tokenData) {
 				tokenData.expires_at = 0; // Force refresh on next request
-				await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
-				console.log("Strava token expiration forced to 0 in Redis for self-healing.");
+				await redis.set("strava:token_data", JSON.stringify(tokenData), {
+					ex: 60 * 60 * 24 * 30,
+				});
+				console.log(
+					"Strava token expiration forced to 0 in Redis for self-healing.",
+				);
 			}
 		}
 	} catch (err) {
@@ -117,10 +126,16 @@ export async function getAccessToken(): Promise<string | null> {
 	// If not in redis, bootstrap using fallback refresh token in env
 	if (!tokenData && ENV_GLOBAL.STRAVA_REFRESH_TOKEN) {
 		try {
-			console.log("Bootstrapping Strava token from fallback env refresh token...");
-			const refreshed = await refreshAccessToken(ENV_GLOBAL.STRAVA_REFRESH_TOKEN);
+			console.log(
+				"Bootstrapping Strava token from fallback env refresh token...",
+			);
+			const refreshed = await refreshAccessToken(
+				ENV_GLOBAL.STRAVA_REFRESH_TOKEN,
+			);
 			tokenData = refreshed;
-			await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
+			await redis.set("strava:token_data", JSON.stringify(tokenData), {
+				ex: 60 * 60 * 24 * 30,
+			});
 		} catch (error) {
 			console.error("Error bootstrapping Strava token:", error);
 			return null;
@@ -135,30 +150,43 @@ export async function getAccessToken(): Promise<string | null> {
 	const now = Math.floor(Date.now() / 1000);
 	if (tokenData.expires_at < now + 60) {
 		try {
-			console.log("Strava access token expired or expiring soon. Refreshing...");
+			console.log(
+				"Strava access token expired or expiring soon. Refreshing...",
+			);
 			const refreshed = await refreshAccessToken(tokenData.refresh_token);
 			tokenData = {
 				...refreshed,
 				athlete_id: tokenData.athlete_id || refreshed.athlete_id,
 			};
-			await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
+			await redis.set("strava:token_data", JSON.stringify(tokenData), {
+				ex: 60 * 60 * 24 * 30,
+			});
 		} catch (error: any) {
 			console.error("Error refreshing Strava token:", error);
-			
+
 			// Only evict the token if it's a permanent authentication error (400 or 401)
 			// e.g. "Failed to refresh Strava token: 400 - ..."
-			const match = error?.message?.match(/Failed to refresh Strava token: (\d+)/);
+			const match = error?.message?.match(
+				/Failed to refresh Strava token: (\d+)/,
+			);
 			const status = match ? parseInt(match[1], 10) : null;
-			
+
 			if (status === 400 || status === 401) {
-				console.warn(`Permanent auth failure (${status}). Evicting Strava token from Redis...`);
+				console.warn(
+					`Permanent auth failure (${status}). Evicting Strava token from Redis...`,
+				);
 				try {
 					await redis.del("strava:token_data");
 				} catch (delErr) {
-					console.error("Failed to delete expired token data from Redis:", delErr);
+					console.error(
+						"Failed to delete expired token data from Redis:",
+						delErr,
+					);
 				}
 			} else {
-				console.warn("Transient or network error refreshing Strava token. Retaining token in Redis.");
+				console.warn(
+					"Transient or network error refreshing Strava token. Retaining token in Redis.",
+				);
 			}
 			return null;
 		}
@@ -167,8 +195,11 @@ export async function getAccessToken(): Promise<string | null> {
 	return tokenData.access_token;
 }
 
-export async function getRecentRuns(limit = 10, accessToken?: string | null): Promise<StravaRunActivity[] | null> {
-	const token = accessToken ?? await getAccessToken();
+export async function getRecentRuns(
+	limit = 10,
+	accessToken?: string | null,
+): Promise<StravaRunActivity[] | null> {
+	const token = accessToken ?? (await getAccessToken());
 	if (!token) return null;
 
 	try {
@@ -191,7 +222,9 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 		);
 
 		if (response.status === 401) {
-			console.warn("Strava access token is unauthorized (401). Attempting immediate token refresh...");
+			console.warn(
+				"Strava access token is unauthorized (401). Attempting immediate token refresh...",
+			);
 			await forceTokenRefresh();
 			const freshToken = await getAccessToken();
 			if (freshToken) {
@@ -207,7 +240,9 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 					const activities = await retryRes.json();
 					if (Array.isArray(activities)) {
 						const runs: StravaRunActivity[] = activities
-							.filter((act: any) => act.type === "Run" || act.sport_type === "Run")
+							.filter(
+								(act: any) => act.type === "Run" || act.sport_type === "Run",
+							)
 							.slice(0, limit)
 							.map((act: any) => ({
 								id: Number(act.id),
@@ -216,16 +251,24 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 								moving_time: Number(act.moving_time || 0),
 								elapsed_time: Number(act.elapsed_time || 0),
 								total_elevation_gain: Number(act.total_elevation_gain || 0),
-								start_date_local: String(act.start_date_local || new Date().toISOString()),
+								start_date_local: String(
+									act.start_date_local || new Date().toISOString(),
+								),
 								average_speed: Number(act.average_speed || 0),
 								max_speed: Number(act.max_speed || 0),
 								has_heartrate: Boolean(act.has_heartrate),
-								average_heartrate: act.average_heartrate ? Number(act.average_heartrate) : undefined,
-								max_heartrate: act.max_heartrate ? Number(act.max_heartrate) : undefined,
+								average_heartrate: act.average_heartrate
+									? Number(act.average_heartrate)
+									: undefined,
+								max_heartrate: act.max_heartrate
+									? Number(act.max_heartrate)
+									: undefined,
 							}));
 
 						try {
-							await redis.set("strava:activities", JSON.stringify(runs), { ex: 43200 }); // Cache 12 hours
+							await redis.set("strava:activities", JSON.stringify(runs), {
+								ex: 43200,
+							}); // Cache 12 hours
 						} catch (err) {
 							console.error("Error writing activities cache to Redis:", err);
 						}
@@ -234,28 +277,44 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 					}
 				} else {
 					const retryErr = await retryRes.text();
-					if (retryErr.includes("activity:read_permission") || retryErr.includes("Authorization Error")) {
-						console.warn("[Strava API] Missing 'activity:read_all' permission. Reconnection required via /adventures/running.");
+					if (
+						retryErr.includes("activity:read_permission") ||
+						retryErr.includes("Authorization Error")
+					) {
+						console.warn(
+							"[Strava API] Missing 'activity:read_all' permission. Reconnection required via /adventures/running.",
+						);
 					} else {
-						console.error(`[Strava API] Retry activities failed with status ${retryRes.status}:`, retryErr);
+						console.error(
+							`[Strava API] Retry activities failed with status ${retryRes.status}:`,
+							retryErr,
+						);
 					}
 					if (retryRes.status === 401 || retryRes.status === 403) {
 						try {
 							await redis.del("strava:token_data");
 						} catch (delErr) {
-							console.error("Failed to delete expired token data from Redis:", delErr);
+							console.error(
+								"Failed to delete expired token data from Redis:",
+								delErr,
+							);
 						}
 					}
 				}
 			} else {
-				console.warn("[Strava API] No valid token available after refresh attempt.");
+				console.warn(
+					"[Strava API] No valid token available after refresh attempt.",
+				);
 			}
 			return null;
 		}
 
 		if (!response.ok) {
 			const errBody = await response.text();
-			console.warn(`[Strava API] Activities request returned status ${response.status}:`, errBody);
+			console.warn(
+				`[Strava API] Activities request returned status ${response.status}:`,
+				errBody,
+			);
 			return null;
 		}
 
@@ -274,12 +333,18 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 				moving_time: Number(act.moving_time || 0),
 				elapsed_time: Number(act.elapsed_time || 0),
 				total_elevation_gain: Number(act.total_elevation_gain || 0),
-				start_date_local: String(act.start_date_local || new Date().toISOString()),
+				start_date_local: String(
+					act.start_date_local || new Date().toISOString(),
+				),
 				average_speed: Number(act.average_speed || 0),
 				max_speed: Number(act.max_speed || 0),
 				has_heartrate: Boolean(act.has_heartrate),
-				average_heartrate: act.average_heartrate ? Number(act.average_heartrate) : undefined,
-				max_heartrate: act.max_heartrate ? Number(act.max_heartrate) : undefined,
+				average_heartrate: act.average_heartrate
+					? Number(act.average_heartrate)
+					: undefined,
+				max_heartrate: act.max_heartrate
+					? Number(act.max_heartrate)
+					: undefined,
 			}));
 
 		try {
@@ -295,8 +360,10 @@ export async function getRecentRuns(limit = 10, accessToken?: string | null): Pr
 	}
 }
 
-export async function getAthleteStats(accessToken?: string | null): Promise<StravaStats | null> {
-	const token = accessToken ?? await getAccessToken();
+export async function getAthleteStats(
+	accessToken?: string | null,
+): Promise<StravaStats | null> {
+	const token = accessToken ?? (await getAccessToken());
 	if (!token) return null;
 
 	try {
@@ -321,23 +388,32 @@ export async function getAthleteStats(accessToken?: string | null): Promise<Stra
 		athleteId = tokenData?.athlete_id;
 
 		if (!athleteId) {
-			const athleteResponse = await fetch("https://www.strava.com/api/v3/athlete", {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const athleteResponse = await fetch(
+				"https://www.strava.com/api/v3/athlete",
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				},
+			);
 			if (athleteResponse.status === 401) {
-				console.warn("Strava access token is unauthorized (401) during profile check. Forcing token refresh in Redis...");
+				console.warn(
+					"Strava access token is unauthorized (401) during profile check. Forcing token refresh in Redis...",
+				);
 				await forceTokenRefresh();
 				return null;
 			}
 			if (!athleteResponse.ok) {
-				throw new Error(`Failed to fetch Strava athlete profile: ${athleteResponse.status}`);
+				throw new Error(
+					`Failed to fetch Strava athlete profile: ${athleteResponse.status}`,
+				);
 			}
 			const athlete = await athleteResponse.json();
 			athleteId = Number(athlete.id);
 
 			if (tokenData && athleteId) {
 				tokenData.athlete_id = athleteId;
-				await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
+				await redis.set("strava:token_data", JSON.stringify(tokenData), {
+					ex: 60 * 60 * 24 * 30,
+				});
 			}
 		}
 
@@ -353,7 +429,9 @@ export async function getAthleteStats(accessToken?: string | null): Promise<Stra
 		);
 
 		if (statsResponse.status === 401) {
-			console.warn("Strava access token is unauthorized (401) during stats fetch. Attempting immediate token refresh...");
+			console.warn(
+				"Strava access token is unauthorized (401) during stats fetch. Attempting immediate token refresh...",
+			);
 			await forceTokenRefresh();
 			const freshToken = await getAccessToken();
 			if (freshToken && freshToken !== token) {
@@ -380,7 +458,9 @@ export async function getAthleteStats(accessToken?: string | null): Promise<Stra
 						},
 					};
 					try {
-						await redis.set("strava:stats", JSON.stringify(runningStats), { ex: 43200 });
+						await redis.set("strava:stats", JSON.stringify(runningStats), {
+							ex: 43200,
+						});
 					} catch (err) {
 						console.error("Error writing stats cache to Redis:", err);
 					}
@@ -391,7 +471,9 @@ export async function getAthleteStats(accessToken?: string | null): Promise<Stra
 		}
 
 		if (!statsResponse.ok) {
-			throw new Error(`Failed to fetch Strava athlete stats: ${statsResponse.status}`);
+			throw new Error(
+				`Failed to fetch Strava athlete stats: ${statsResponse.status}`,
+			);
 		}
 
 		const stats = await statsResponse.json();
@@ -411,7 +493,9 @@ export async function getAthleteStats(accessToken?: string | null): Promise<Stra
 		};
 
 		try {
-			await redis.set("strava:stats", JSON.stringify(runningStats), { ex: 43200 }); // Cache 12 hours
+			await redis.set("strava:stats", JSON.stringify(runningStats), {
+				ex: 43200,
+			}); // Cache 12 hours
 		} catch (err) {
 			console.error("Error writing stats cache to Redis:", err);
 		}
@@ -433,7 +517,9 @@ export interface StravaDataResult {
 }
 
 export async function getStravaData(): Promise<StravaDataResult> {
-	const isConfigured = Boolean(ENV_GLOBAL.STRAVA_CLIENT_ID && ENV_GLOBAL.STRAVA_CLIENT_SECRET);
+	const isConfigured = Boolean(
+		ENV_GLOBAL.STRAVA_CLIENT_ID && ENV_GLOBAL.STRAVA_CLIENT_SECRET,
+	);
 	if (!isConfigured) {
 		return {
 			isConfigured: false,
@@ -454,7 +540,7 @@ export async function getStravaData(): Promise<StravaDataResult> {
 		const activeToken = await getAccessToken();
 		const hasValidToken = Boolean(activeToken);
 
-		console.log('🏃 Strava Data Fetched:', {
+		console.log("🏃 Strava Data Fetched:", {
 			hasToken: hasValidToken,
 			runsCount: runs?.length ?? 0,
 			runsIsNull: runs === null,
@@ -517,7 +603,9 @@ export async function getActivitySplits(
 		);
 
 		if (response.status === 401) {
-			console.warn(`[Strava API] Activity ${activityId} splits unauthorized (401). Refreshing token...`);
+			console.warn(
+				`[Strava API] Activity ${activityId} splits unauthorized (401). Refreshing token...`,
+			);
 			await forceTokenRefresh();
 			const freshToken = await getAccessToken();
 			if (freshToken) {
@@ -531,7 +619,9 @@ export async function getActivitySplits(
 				);
 				if (retryRes.ok) {
 					const data = await retryRes.json();
-					const splitsMetric: StravaSplitMetric[] = Array.isArray(data.splits_metric)
+					const splitsMetric: StravaSplitMetric[] = Array.isArray(
+						data.splits_metric,
+					)
 						? data.splits_metric.map((s: any) => ({
 								distance: Number(s.distance || 0),
 								elapsed_time: Number(s.elapsed_time || 0),
@@ -547,10 +637,8 @@ export async function getActivitySplits(
 										? s.average_heartrate
 										: undefined,
 								pace_zone:
-									typeof s.pace_zone === "number"
-										? s.pace_zone
-										: undefined,
-						  }))
+									typeof s.pace_zone === "number" ? s.pace_zone : undefined,
+							}))
 						: [];
 
 					if (splitsMetric.length > 0) {
@@ -592,9 +680,8 @@ export async function getActivitySplits(
 						typeof s.average_heartrate === "number"
 							? s.average_heartrate
 							: undefined,
-					pace_zone:
-						typeof s.pace_zone === "number" ? s.pace_zone : undefined,
-			  }))
+					pace_zone: typeof s.pace_zone === "number" ? s.pace_zone : undefined,
+				}))
 			: [];
 
 		if (splitsMetric.length > 0) {

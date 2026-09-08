@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
 	TrendingUp,
@@ -62,14 +62,55 @@ function InfoTooltip({
 	text: string;
 	position?: "top" | "bottom";
 }) {
+	const [isOpen, setIsOpen] = useState(false);
+	const containerRef = useRef<HTMLSpanElement>(null);
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const handlePointerDown = (e: PointerEvent) => {
+			if (
+				containerRef.current &&
+				!containerRef.current.contains(e.target as Node)
+			) {
+				setIsOpen(false);
+			}
+		};
+		document.addEventListener("pointerdown", handlePointerDown);
+		return () => {
+			document.removeEventListener("pointerdown", handlePointerDown);
+		};
+	}, [isOpen]);
+
 	return (
-		<span className="group/tip relative inline-flex items-center cursor-help ml-1">
-			<Info className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 transition-colors shrink-0" />
+		<span
+			ref={containerRef}
+			className="group/tip relative inline-flex items-center ml-1 align-middle"
+			onMouseEnter={() => setIsOpen(true)}
+			onMouseLeave={() => setIsOpen(false)}
+			onClick={(e) => e.stopPropagation()}
+		>
+			<button
+				type="button"
+				aria-label="More information"
+				aria-expanded={isOpen}
+				onClick={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					setIsOpen((prev) => !prev);
+				}}
+				className="p-1 -m-1 rounded-md text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 transition-colors flex items-center justify-center cursor-pointer touch-manipulation"
+			>
+				<Info className="w-3.5 h-3.5 shrink-0" />
+			</button>
 			<span
 				role="tooltip"
 				className={`absolute ${
 					position === "top" ? "bottom-full mb-2" : "top-full mt-2"
-				} left-0 sm:left-1/2 sm:-translate-x-1/2 w-48 sm:w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium rounded-xl opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl border border-slate-800 leading-snug text-left normal-case tracking-normal`}
+				} left-0 sm:left-1/2 sm:-translate-x-1/2 w-48 sm:w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium rounded-xl transition-all duration-150 z-50 shadow-xl border border-slate-800 leading-snug text-left normal-case tracking-normal ${
+					isOpen
+						? "opacity-100 pointer-events-auto visible scale-100"
+						: "opacity-0 pointer-events-none invisible scale-95"
+				}`}
 			>
 				{text}
 				<span
@@ -428,67 +469,66 @@ export default function InvestmentPage() {
 
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
-			{/* ── Structural Hero Header ───────────────────────────────────── */}
-			<div className="bg-slate-900 border-b border-slate-800 mb-8 pt-8 sm:pt-10 pb-10 sm:pb-12 text-white shadow-md">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-						<div className="space-y-2">
-							<div className="flex items-center gap-2 text-indigo-400 font-extrabold text-xs uppercase tracking-wider">
-								<TrendingUp className="w-4 h-4 text-indigo-400" />
-								Market Intelligence Engine
+			{/* ── Top Floating Header Card ─────────────────────────────────── */}
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 mb-6 sm:mb-8">
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
+						<div className="space-y-1.5 sm:space-y-2">
+							<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider">
+								<TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+								<span>Market Intelligence Engine</span>
+								<span className="w-1 h-1 rounded-full bg-indigo-400" />
+								<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal">
+									sentiment telemetry &amp; indicators
+								</span>
 							</div>
-							<h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-								Fear & Greed Index
+							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+								Fear &amp; Greed Index
 							</h1>
 							<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
 								<Link
 									href="/"
-									className="!text-slate-300 hover:!text-white transition-colors !no-underline"
+									className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
 								>
 									Home
 								</Link>
-								<ChevronRight className="w-3 h-3 text-slate-500" />
-								<span className="text-white font-extrabold">
+								<ChevronRight className="w-3 h-3 text-slate-400" />
+								<span className="text-slate-900 font-bold">
 									Sentiment Dashboard
 								</span>
 							</div>
 						</div>
 
 						{/* Header Actions */}
-						<div className="flex flex-wrap items-center gap-3 p-2 bg-slate-800/80 border border-slate-700/80 rounded-2xl backdrop-blur-md shadow-sm">
+						<div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
 							<Link
 								href="/utils/stock-explorer"
-								className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 !text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-500 transition-all shadow-md active:scale-95 cursor-pointer !no-underline"
+								className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/80 text-indigo-700 hover:text-indigo-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-all active:scale-95 cursor-pointer !no-underline group"
 							>
-								<TableIcon className="w-4 h-4 !text-white" />
-								<span className="!text-white">Stock Explorer</span>
+								<TableIcon className="w-4 h-4 text-indigo-600 group-hover:scale-105 transition-transform" />
+								<span>Stock Explorer</span>
 							</Link>
 
 							{/* Connection Status */}
-							<div className="px-3.5 py-1.5 text-center border-l border-slate-700/80 hidden sm:block">
-								<p className="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-0.5">
-									Sync Status
-								</p>
-								<div className="flex items-center justify-center gap-1.5">
-									<div
-										className={`w-2 h-2 rounded-full ${
-											isLoading
-												? "bg-amber-400 animate-pulse"
-												: error
-													? "bg-rose-400"
-													: "bg-emerald-400"
-										}`}
-									/>
-									<span className="text-[10px] font-extrabold text-white uppercase tracking-wider">
-										{isLoading
-											? "Syncing"
-											: isRefreshing
-												? "Refreshing"
-												: error
-													? "Error"
-													: "Live"}
-									</span>
-								</div>
+							<div className="px-3.5 py-2 bg-slate-50/80 border border-slate-200/80 rounded-xl text-center shadow-2xs flex items-center gap-2">
+								<div
+									className={`w-2 h-2 rounded-full ${
+										isLoading
+											? "bg-amber-400 animate-pulse"
+											: error
+												? "bg-rose-500"
+												: "bg-emerald-500"
+									}`}
+								/>
+								<span className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">
+									{isLoading
+										? "Syncing"
+										: isRefreshing
+											? "Refreshing"
+											: error
+												? "Error"
+												: "Live"}
+								</span>
 							</div>
 
 							{/* Refresh Button */}
@@ -497,10 +537,11 @@ export default function InvestmentPage() {
 								onClick={() => fetchData(true)}
 								disabled={isLoading || isRefreshing}
 								aria-label="Refresh market data"
-								className="p-2.5 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-xl transition-all disabled:opacity-30 cursor-pointer active:scale-95"
+								className="p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+								title="Refresh market data"
 							>
 								<RefreshCw
-									className={`w-4 h-4 ${isLoading || isRefreshing ? "animate-spin" : ""}`}
+									className={`w-4 h-4 ${isLoading || isRefreshing ? "animate-spin text-indigo-600" : ""}`}
 								/>
 							</button>
 						</div>

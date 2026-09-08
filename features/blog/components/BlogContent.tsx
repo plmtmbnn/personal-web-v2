@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/prism-light";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -19,11 +19,39 @@ SyntaxHighlighter.registerLanguage("json", json);
 SyntaxHighlighter.registerLanguage("sql", sql);
 SyntaxHighlighter.registerLanguage("css", css);
 SyntaxHighlighter.registerLanguage("bash", bash);
-import { Copy, Check } from "lucide-react";
+
+import {
+	Copy,
+	Check,
+	Info,
+	Sparkles,
+	AlertCircle,
+	AlertTriangle,
+	ShieldAlert,
+} from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { slugifyHeading } from "./TableOfContents";
 
 interface BlogContentProps {
 	content: string;
+}
+
+// ─────────────────────────────────────────────
+// Extract text recursively from React children
+// ─────────────────────────────────────────────
+function getTextFromChildren(children: React.ReactNode): string {
+	if (!children) return "";
+	if (typeof children === "string" || typeof children === "number") {
+		return String(children);
+	}
+	if (Array.isArray(children)) {
+		return children.map(getTextFromChildren).join("");
+	}
+	if (React.isValidElement(children)) {
+		const props = children.props as { children?: React.ReactNode };
+		return getTextFromChildren(props?.children);
+	}
+	return "";
 }
 
 // ─────────────────────────────────────────────
@@ -45,9 +73,10 @@ function CopyButton({ code }: { code: string }) {
 
 	return (
 		<button
+			type="button"
 			onClick={handleCopy}
 			title={copied ? "Copied!" : "Copy code"}
-			className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white/60 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider"
+			className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white/70 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider cursor-pointer"
 		>
 			<AnimatePresence mode="wait" initial={false}>
 				{copied ? (
@@ -82,44 +111,33 @@ function CopyButton({ code }: { code: string }) {
 // BlogContent
 // ─────────────────────────────────────────────
 
-/**
- * BlogContent
- * Renders Markdown with syntax-highlighted code blocks (One Dark theme),
- * per-block copy buttons, and Tailwind Typography prose styles.
- *
- * Uses the modern react-markdown v9+ code component API (no `inline` prop).
- */
 export default function BlogContent({ content }: BlogContentProps) {
 	return (
 		<div
 			className="prose prose-slate prose-lg max-w-none
-        prose-headings:font-black prose-headings:text-slate-950 prose-headings:tracking-tight
-        prose-p:text-slate-700 prose-p:leading-relaxed
-        prose-a:text-slate-900 prose-a:font-bold prose-a:underline prose-a:underline-offset-4 prose-a:decoration-slate-300 hover:prose-a:decoration-slate-900 hover:prose-a:text-indigo-600 transition-colors
+        prose-headings:font-extrabold prose-headings:text-slate-950 prose-headings:tracking-tight
+        prose-p:text-slate-700 prose-p:leading-relaxed prose-p:text-base sm:prose-p:text-[17px]
+        prose-a:text-emerald-700 prose-a:font-bold prose-a:underline prose-a:underline-offset-4 prose-a:decoration-emerald-300 hover:prose-a:decoration-emerald-600 hover:prose-a:text-emerald-800 transition-colors
         prose-strong:text-slate-950 prose-strong:font-bold
-        prose-li:text-slate-700 prose-li:marker:text-slate-300
-        prose-blockquote:border-l-4 prose-blockquote:border-indigo-500/30 prose-blockquote:bg-indigo-50/30 prose-blockquote:px-6 prose-blockquote:py-2 prose-blockquote:rounded-r-2xl prose-blockquote:not-italic
-        prose-code:text-slate-800 prose-code:bg-slate-100/90 prose-code:border prose-code:border-slate-200/80 prose-code:px-2 prose-code:py-0.5 prose-code:rounded-lg prose-code:font-mono prose-code:text-xs sm:prose-code:text-sm prose-code:font-medium prose-code:before:content-none prose-code:after:content-none hover:prose-code:bg-slate-200/70 hover:prose-code:border-slate-300 transition-colors
+        prose-li:text-slate-700 prose-li:marker:text-emerald-500
+        prose-code:text-slate-800 prose-code:bg-slate-100 prose-code:border prose-code:border-slate-200/80 prose-code:px-2 prose-code:py-0.5 prose-code:rounded-lg prose-code:font-mono prose-code:text-xs sm:prose-code:text-sm prose-code:font-medium prose-code:before:content-none prose-code:after:content-none
         prose-pre:bg-transparent prose-pre:p-0
-        prose-img:rounded-3xl prose-img:border border-slate-100 shadow-sm
-        prose-h2:mt-12 prose-h2:scroll-mt-24
-        prose-h3:mt-8 prose-h3:scroll-mt-24"
+        prose-img:rounded-3xl prose-img:border border-slate-200/80 shadow-xs
+        prose-h2:mt-12 prose-h2:mb-4 prose-h2:scroll-mt-28 prose-h2:text-2xl sm:prose-h2:text-3xl
+        prose-h3:mt-8 prose-h3:mb-3 prose-h3:scroll-mt-28 prose-h3:text-xl sm:prose-h3:text-2xl"
 		>
 			<ReactMarkdown
 				components={{
 					// ── Code blocks & inline code ──────────────────────
-					// Modern API: detect block vs inline by presence of language class
-					code({ node, className, children, ...props }: any) {
+					code({ className, children, ...props }: any) {
 						const match = /language-(\w+)/.exec(className || "");
 						const codeString = String(children).replace(/\n$/, "");
 
-						// Block code — has language class
 						if (match) {
 							return (
-								<div className="relative w-full overflow-hidden rounded-xl !my-8 shadow-md border border-slate-800 bg-[#282c34] max-h-[32rem] group/code">
+								<div className="relative w-full overflow-hidden rounded-2xl !my-8 shadow-sm border border-slate-800 bg-[#282c34] max-h-[32rem] group/code not-prose">
 									<CopyButton code={codeString} />
-									{/* Language label */}
-									<div className="absolute top-3 left-3 z-10 text-[10px] font-black uppercase tracking-widest text-white/30 select-none">
+									<div className="absolute top-3 left-3 z-10 text-[10px] font-black uppercase tracking-widest text-white/40 select-none">
 										{match[1]}
 									</div>
 									<div className="overflow-auto max-h-[32rem]">
@@ -131,7 +149,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 												margin: 0,
 												padding: "3.5rem 1.5rem 1.5rem",
 												fontSize: "0.875rem",
-												lineHeight: "1.6",
+												lineHeight: "1.65",
 												backgroundColor: "transparent",
 												whiteSpace: "pre",
 												wordBreak: "normal",
@@ -146,7 +164,6 @@ export default function BlogContent({ content }: BlogContentProps) {
 							);
 						}
 
-						// Inline code
 						return (
 							<code className={className} {...props}>
 								{children}
@@ -156,27 +173,201 @@ export default function BlogContent({ content }: BlogContentProps) {
 
 					// ── Headings — add scroll-margin + id anchor ───────
 					h2({ children, ...props }: any) {
-						const text = String(children);
-						const id = text
-							.toLowerCase()
-							.replace(/[^\w\s-]/g, "")
-							.replace(/\s+/g, "-");
+						const text = getTextFromChildren(children);
+						const id = slugifyHeading(text);
 						return (
-							<h2 id={id} {...props}>
-								{children}
+							<h2
+								id={id}
+								className="group/heading flex items-center justify-between border-b border-slate-100 pb-2.5"
+								{...props}
+							>
+								<span>{children}</span>
+								{id && (
+									<a
+										href={`#${id}`}
+										className="opacity-0 group-hover/heading:opacity-100 text-slate-300 hover:text-emerald-600 transition-opacity ml-2 text-lg font-normal select-none !no-underline"
+										aria-label={`Direct link to ${text}`}
+									>
+										#
+									</a>
+								)}
 							</h2>
 						);
 					},
 					h3({ children, ...props }: any) {
-						const text = String(children);
-						const id = text
-							.toLowerCase()
-							.replace(/[^\w\s-]/g, "")
-							.replace(/\s+/g, "-");
+						const text = getTextFromChildren(children);
+						const id = slugifyHeading(text);
 						return (
-							<h3 id={id} {...props}>
-								{children}
+							<h3
+								id={id}
+								className="group/heading flex items-center justify-between"
+								{...props}
+							>
+								<span>{children}</span>
+								{id && (
+									<a
+										href={`#${id}`}
+										className="opacity-0 group-hover/heading:opacity-100 text-slate-300 hover:text-emerald-600 transition-opacity ml-2 text-base font-normal select-none !no-underline"
+										aria-label={`Direct link to ${text}`}
+									>
+										#
+									</a>
+								)}
 							</h3>
+						);
+					},
+
+					// ── Blockquotes & GitHub Alert Callouts ────────────
+					blockquote({ children, ...props }: any) {
+						const text = getTextFromChildren(children).trim();
+
+						// Detect [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]
+						const alertMatch = text.match(
+							/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i,
+						);
+
+						if (alertMatch) {
+							const type = alertMatch[1].toUpperCase();
+							// Strip the alert tag from the beginning
+							const contentText = text.replace(
+								/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/i,
+								"",
+							);
+
+							const configs: Record<
+								string,
+								{
+									label: string;
+									icon: typeof Info;
+									cardClass: string;
+									titleClass: string;
+								}
+							> = {
+								NOTE: {
+									label: "Note",
+									icon: Info,
+									cardClass: "bg-blue-50/70 border-blue-200/80 text-blue-950",
+									titleClass: "text-blue-700",
+								},
+								TIP: {
+									label: "Tip",
+									icon: Sparkles,
+									cardClass:
+										"bg-emerald-50/70 border-emerald-200/80 text-emerald-950",
+									titleClass: "text-emerald-700",
+								},
+								IMPORTANT: {
+									label: "Important",
+									icon: AlertCircle,
+									cardClass:
+										"bg-purple-50/70 border-purple-200/80 text-purple-950",
+									titleClass: "text-purple-700",
+								},
+								WARNING: {
+									label: "Warning",
+									icon: AlertTriangle,
+									cardClass:
+										"bg-amber-50/70 border-amber-200/80 text-amber-950",
+									titleClass: "text-amber-700",
+								},
+								CAUTION: {
+									label: "Caution",
+									icon: ShieldAlert,
+									cardClass: "bg-rose-50/70 border-rose-200/80 text-rose-950",
+									titleClass: "text-rose-700",
+								},
+							};
+
+							const config = configs[type] || configs.NOTE;
+							const AlertIcon = config.icon;
+
+							return (
+								<div
+									className={`not-prose my-6 p-4 sm:p-5 rounded-2xl border shadow-2xs ${config.cardClass}`}
+								>
+									<div className="flex items-center gap-2 mb-1.5 font-bold text-xs uppercase tracking-wider">
+										<AlertIcon
+											className={`w-4 h-4 shrink-0 ${config.titleClass}`}
+										/>
+										<span className={config.titleClass}>{config.label}</span>
+									</div>
+									<div className="text-sm leading-relaxed pl-6 font-medium">
+										{contentText}
+									</div>
+								</div>
+							);
+						}
+
+						// Standard styled blockquote
+						return (
+							<blockquote
+								className="my-6 border-l-4 border-emerald-500 bg-emerald-50/30 rounded-r-2xl py-3.5 px-5 text-slate-800 font-medium not-italic"
+								{...props}
+							>
+								{children}
+							</blockquote>
+						);
+					},
+
+					// ── Tables — responsive wrapper with zebra styles ─
+					table({ children, ...props }: any) {
+						return (
+							<div className="not-prose overflow-x-auto my-8 rounded-2xl border border-slate-200/80 shadow-2xs bg-white">
+								<table
+									className="min-w-full divide-y divide-slate-200 text-left text-sm"
+									{...props}
+								>
+									{children}
+								</table>
+							</div>
+						);
+					},
+					th({ children, ...props }: any) {
+						return (
+							<th
+								className="bg-slate-50/80 px-4 py-3 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-200"
+								{...props}
+							>
+								{children}
+							</th>
+						);
+					},
+					td({ children, ...props }: any) {
+						return (
+							<td
+								className="px-4 py-3 text-slate-600 border-b border-slate-100 text-sm"
+								{...props}
+							>
+								{children}
+							</td>
+						);
+					},
+
+					// ── Horizontal Rule ───────────────────────────────
+					hr() {
+						return (
+							<div className="my-10 flex items-center justify-center gap-2">
+								<span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+								<span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+								<span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+							</div>
+						);
+					},
+
+					// ── Links — secure external links ──────────────────
+					a({ href, children, ...props }: any) {
+						const isExternal =
+							href &&
+							(href.startsWith("http://") || href.startsWith("https://"));
+						return (
+							<a
+								href={href}
+								target={isExternal ? "_blank" : undefined}
+								rel={isExternal ? "noopener noreferrer" : undefined}
+								{...props}
+							>
+								{children}
+							</a>
 						);
 					},
 
@@ -188,6 +379,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 								alt={alt as string}
 								loading="lazy"
 								decoding="async"
+								className="rounded-3xl border border-slate-200/80 shadow-xs"
 								{...props}
 							/>
 						);

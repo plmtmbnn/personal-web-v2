@@ -14,7 +14,10 @@ export async function GET(request: Request) {
 	if (error) {
 		console.error("Strava OAuth error callback:", error);
 		return NextResponse.redirect(
-			new URL(`/adventures/running?error=${encodeURIComponent(error)}`, siteUrl),
+			new URL(
+				`/adventures/running?error=${encodeURIComponent(error)}`,
+				siteUrl,
+			),
 		);
 	}
 
@@ -26,9 +29,13 @@ export async function GET(request: Request) {
 
 	// Verify scope
 	const hasRequiredScope =
-		scope && (scope.includes("activity:read_all") || scope.includes("activity:read"));
+		scope &&
+		(scope.includes("activity:read_all") || scope.includes("activity:read"));
 	if (!hasRequiredScope) {
-		console.error("Strava OAuth scope error: missing activity:read_all / activity:read in:", scope);
+		console.error(
+			"Strava OAuth scope error: missing activity:read_all / activity:read in:",
+			scope,
+		);
 		return NextResponse.redirect(
 			new URL("/adventures/running?error=insufficient_permissions", siteUrl),
 		);
@@ -58,7 +65,9 @@ export async function GET(request: Request) {
 
 		if (!response.ok) {
 			const errText = await response.text();
-			throw new Error(`Failed to exchange code: ${response.status} - ${errText}`);
+			throw new Error(
+				`Failed to exchange code: ${response.status} - ${errText}`,
+			);
 		}
 
 		const data = await response.json();
@@ -71,14 +80,19 @@ export async function GET(request: Request) {
 		};
 
 		// Store in Redis (30 days — refresh tokens don't expire, keep them durable)
-		await redis.set("strava:token_data", JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 30 });
+		await redis.set("strava:token_data", JSON.stringify(tokenData), {
+			ex: 60 * 60 * 24 * 30,
+		});
 
 		// Invalidate cached data to pull immediately
 		await redis.del("strava:activities");
 		await redis.del("strava:stats");
 
 		console.log("✅ Strava token exchange successfully stored in Redis.");
-		console.log("👉 New STRAVA_REFRESH_TOKEN for .env:", tokenData.refresh_token);
+		console.log(
+			"👉 New STRAVA_REFRESH_TOKEN for .env:",
+			tokenData.refresh_token,
+		);
 		return NextResponse.redirect(
 			new URL("/adventures/running?success=true", siteUrl),
 		);

@@ -20,6 +20,9 @@ import {
 	Eye,
 	ChevronDown,
 	ChevronUp,
+	ChevronRight,
+	Calendar,
+	Server,
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -619,142 +622,236 @@ export default function StockImportAdmin() {
 
 	return (
 		<PinGuard>
-			<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 sm:pb-36 py-20 sm:py-24 px-4 sm:px-6 lg:px-8">
-				<div className="max-w-5xl mx-auto space-y-6">
-					{/* Header */}
-					<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-						<div className="space-y-3">
-							<Link
-								href="/utils/stock-explorer"
-								className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-							>
-								<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-								<span>Back to Explorer</span>
-							</Link>
+			<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+				<div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+					{/* Top Floating Header Card */}
+					<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
+							<div className="space-y-1.5 sm:space-y-2">
+								<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider">
+									<Database className="w-3.5 h-3.5 text-indigo-600" />
+									<span>Financial Registry</span>
+									<span className="w-1 h-1 rounded-full bg-indigo-400" />
+									<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal">
+										idx market synchronization
+									</span>
+								</div>
+								<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+									Stock Explorer Manager
+								</h1>
+								<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+									<Link
+										href="/admin"
+										className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+									>
+										Admin Dashboard
+									</Link>
+									<ChevronRight className="w-3 h-3 text-slate-400" />
+									<span className="text-slate-900 font-bold">
+										Stock Registry
+									</span>
+								</div>
+							</div>
 
-							<div className="flex items-center gap-4">
-								<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-xs shrink-0">
-									<Database className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
-								</div>
-								<div>
-									<h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
-										Redis <span className="text-indigo-600">Import</span>
-									</h1>
-									<p className="text-slate-500 text-xs font-bold uppercase tracking-wider mt-0.5">
-										IDX Stock Data Synchronization Center
-									</p>
-								</div>
+							<div className="flex items-center gap-3">
+								<Link
+									href="/utils/stock-explorer"
+									className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-all active:scale-95 cursor-pointer !no-underline group"
+								>
+									<ArrowLeft className="w-4 h-4 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
+									<span>Back to Explorer</span>
+								</Link>
 							</div>
 						</div>
 					</div>
 
 					{/* Cache Status Indicator Card */}
-					<section className="bg-white border border-slate-200/80 rounded-[2rem] shadow-xs p-5 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-						<div className="space-y-3.5 flex-1 w-full">
-							<div className="flex items-center gap-3">
-								<h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-									Cache Status
-								</h2>
-								{cacheStatus.loading ? (
-									<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700">
-										<Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
-										<span>Checking...</span>
-									</span>
-								) : cacheStatus.available ? (
-									<span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-										<CheckCircle2 className="w-3 h-3 text-emerald-600" />
-										<span>Active Cache</span>
-									</span>
-								) : (
-									<span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-800 border border-rose-200">
-										<AlertCircle className="w-3 h-3 text-rose-600" />
-										<span>No Cache / Expired</span>
-									</span>
-								)}
-							</div>
-
-							{cacheStatus.loading ? (
-								<div className="h-10 flex items-center">
+					<section className="bg-white border border-slate-200/80 rounded-3xl shadow-xs p-5 sm:p-7 space-y-5 sm:space-y-6">
+						{/* Card Header & Operational Controls */}
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+							<div className="flex items-center gap-3.5">
+								<div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100/80 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+									<Server className="w-5 h-5" />
+								</div>
+								<div className="space-y-0.5">
+									<div className="flex items-center gap-2.5 flex-wrap">
+										<h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+											Redis Cache Status
+										</h2>
+										{cacheStatus.loading ? (
+											<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+												<Loader2 className="w-3 h-3 animate-spin text-slate-500" />
+												<span>Verifying</span>
+											</span>
+										) : cacheStatus.available ? (
+											<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+												<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+												<span>Active Cache</span>
+											</span>
+										) : (
+											<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/80">
+												<AlertCircle className="w-3 h-3 text-rose-500" />
+												<span>No Cache / Expired</span>
+											</span>
+										)}
+									</div>
 									<p className="text-xs text-slate-500 font-medium">
-										Retrieving Redis cache statistics...
+										In-memory IDX equity dataset status and operational controls
 									</p>
 								</div>
-							) : cacheStatus.available ? (
-								<div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-									<div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+							</div>
+
+							{/* Cache Actions */}
+							<div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+								<button
+									type="button"
+									onClick={fetchCacheStatus}
+									disabled={cacheStatus.loading}
+									className="flex items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+									title="Refresh Status"
+									aria-label="Refresh Cache Status"
+								>
+									<RefreshCw
+										className={`w-4 h-4 ${cacheStatus.loading ? "animate-spin text-indigo-600" : ""}`}
+									/>
+								</button>
+
+								<button
+									type="button"
+									onClick={handleLiveSync}
+									disabled={isLiveFetching || cacheStatus.loading}
+									className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+									title="Trigger Live IDX API Fetch"
+								>
+									{isLiveFetching ? (
+										<Loader2 className="w-3.5 h-3.5 animate-spin" />
+									) : (
+										<Globe className="w-3.5 h-3.5" />
+									)}
+									<span>Sync Live</span>
+								</button>
+
+								<button
+									type="button"
+									onClick={() => setIsPurgeModalOpen(true)}
+									disabled={!cacheStatus.available || cacheStatus.loading}
+									className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+								>
+									<Trash2 className="w-3.5 h-3.5" />
+									<span>Purge Cache</span>
+								</button>
+							</div>
+						</div>
+
+						{/* Telemetry Metrics Grid or Empty/Loading Fallback */}
+						{cacheStatus.loading ? (
+							<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 animate-pulse">
+								{[1, 2, 3].map((i) => (
+									<div
+										key={i}
+										className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-2.5"
+									>
+										<div className="h-3 w-24 bg-slate-200 rounded-full" />
+										<div className="h-7 w-32 bg-slate-200 rounded-lg" />
+										<div className="h-2.5 w-20 bg-slate-200 rounded-full" />
+									</div>
+								))}
+							</div>
+						) : cacheStatus.available ? (
+							<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors">
+									<div className="flex items-center justify-between mb-2">
 										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
 											Total Instruments
 										</span>
-										<p className="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5">
+										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs">
+											<Database className="w-3.5 h-3.5" />
+										</div>
+									</div>
+									<div className="flex items-baseline gap-1.5">
+										<p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
 											{cacheStatus.count.toLocaleString()}
 										</p>
+										<span className="text-xs font-bold text-slate-400">
+											equities
+										</span>
 									</div>
-									<div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+									<p className="text-[11px] font-medium text-slate-500 mt-1">
+										Active symbols indexed in Redis
+									</p>
+								</div>
+
+								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors">
+									<div className="flex items-center justify-between mb-2">
 										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
 											Trading Date
 										</span>
-										<p className="text-base sm:text-lg font-extrabold text-slate-900 mt-0.5">
-											{formatTradingDate(cacheStatus.lastDate)}
-										</p>
+										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs">
+											<Calendar className="w-3.5 h-3.5" />
+										</div>
 									</div>
-									<div className="col-span-2 sm:col-span-1 p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-100/80">
-										<span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1">
-											<Clock className="w-3 h-3 text-indigo-600" /> Lifespan
+									<p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+										{formatTradingDate(cacheStatus.lastDate)}
+									</p>
+									<p className="text-[11px] font-medium text-slate-500 mt-1">
+										Latest IDX market close session
+									</p>
+								</div>
+
+								<div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/90 flex flex-col justify-between group hover:bg-indigo-50/80 transition-colors">
+									<div className="flex items-center justify-between mb-2">
+										<span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
+											Cache Lifespan
 										</span>
-										<p className="text-xs font-bold text-indigo-950 mt-1">
-											12 Hours (Auto-purges)
+										<div className="w-7 h-7 rounded-lg bg-white border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs">
+											<Clock className="w-3.5 h-3.5" />
+										</div>
+									</div>
+									<div className="flex items-baseline gap-1.5">
+										<p className="text-2xl sm:text-3xl font-black text-indigo-950 tracking-tight">
+											12
+										</p>
+										<span className="text-xs font-bold text-indigo-800">
+											Hours
+										</span>
+									</div>
+									<p className="text-[11px] font-medium text-indigo-700/90 mt-1">
+										Auto-purges via rolling Redis TTL
+									</p>
+								</div>
+							</div>
+						) : (
+							<div className="rounded-2xl bg-amber-50/60 border border-amber-200/80 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+								<div className="flex items-start gap-3.5">
+									<div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0 shadow-2xs">
+										<AlertCircle className="w-5 h-5" />
+									</div>
+									<div className="space-y-1">
+										<h4 className="text-sm font-bold text-amber-950">
+											Redis Cache is Empty or Expired
+										</h4>
+										<p className="text-xs text-amber-800/90 leading-relaxed font-medium max-w-2xl">
+											No equity records are currently stored in Redis. The
+											system will automatically fetch live data on the next
+											query, or you can prime the dataset immediately.
 										</p>
 									</div>
 								</div>
-							) : (
-								<p className="text-xs text-slate-600 leading-relaxed font-medium">
-									Redis database is empty or data has expired. System will
-									automatically pull live data from IDX and rebuild the cache on
-									the next stock query.
-								</p>
-							)}
-						</div>
-
-						{/* Cache Actions */}
-						<div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-							<button
-								type="button"
-								onClick={fetchCacheStatus}
-								disabled={cacheStatus.loading}
-								className="flex items-center justify-center p-3 bg-white border border-slate-200/80 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
-								title="Refresh Status"
-								aria-label="Refresh Cache Status"
-							>
-								<RefreshCw
-									className={`w-4 h-4 ${cacheStatus.loading ? "animate-spin" : ""}`}
-								/>
-							</button>
-
-							<button
-								type="button"
-								onClick={handleLiveSync}
-								disabled={isLiveFetching || cacheStatus.loading}
-								className="flex items-center justify-center gap-1.5 px-3.5 py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
-								title="Trigger Live IDX API Fetch"
-							>
-								{isLiveFetching ? (
-									<Loader2 className="w-4 h-4 animate-spin" />
-								) : (
-									<Globe className="w-4 h-4" />
-								)}
-								<span>Sync Live</span>
-							</button>
-
-							<button
-								type="button"
-								onClick={() => setIsPurgeModalOpen(true)}
-								disabled={!cacheStatus.available || cacheStatus.loading}
-								className="flex items-center justify-center gap-1.5 px-3.5 py-3 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
-							>
-								<Trash2 className="w-4 h-4" />
-								<span>Purge Cache</span>
-							</button>
-						</div>
+								<button
+									type="button"
+									onClick={handleLiveSync}
+									disabled={isLiveFetching}
+									className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold tracking-wider uppercase transition-all active:scale-95 disabled:opacity-50 cursor-pointer shrink-0 shadow-xs"
+								>
+									{isLiveFetching ? (
+										<Loader2 className="w-3.5 h-3.5 animate-spin" />
+									) : (
+										<Globe className="w-3.5 h-3.5" />
+									)}
+									<span>Prime Cache Now</span>
+								</button>
+							</div>
+						)}
 					</section>
 
 					{/* Protocol Helper Card */}

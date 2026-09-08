@@ -9,10 +9,7 @@ interface RouteContext {
 	}>;
 }
 
-export async function GET(
-	_request: Request,
-	context: RouteContext,
-) {
+export async function GET(_request: Request, context: RouteContext) {
 	try {
 		const { id } = await context.params;
 		const activityId = Number.parseInt(id, 10);

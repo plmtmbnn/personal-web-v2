@@ -6,7 +6,20 @@ import {
 	getRelatedPosts,
 } from "@/features/blog/data";
 import BlogContent from "@/features/blog/components/BlogContent";
-import { ArrowLeft, AlertTriangle, Lock } from "lucide-react";
+import TableOfContents from "@/features/blog/components/TableOfContents";
+import QuickSharePill from "@/features/blog/components/QuickSharePill";
+import {
+	ArrowLeft,
+	AlertTriangle,
+	Lock,
+	Calendar,
+	Clock,
+	BookOpen,
+	Compass,
+	Mail,
+	Briefcase,
+	ArrowUp,
+} from "lucide-react";
 import PinGuard from "@/features/auth/PinGuard";
 import Link from "next/link";
 import {
@@ -18,11 +31,9 @@ const motion = {
 	div: motionDiv,
 	article: motionArticle,
 };
-import { EnhancedScrollProgress } from "@/features/blog/components/EnhancedScrollProgress";
 import BlogAnalyticsTracker from "@/features/blog/components/BlogAnalyticsTracker";
 import ShareButton from "@/features/blog/components/ShareButton";
 import RelatedPosts from "@/features/blog/components/RelatedPosts";
-import BackToTop from "@/features/blog/components/BackToTop";
 import type { Metadata } from "next";
 import {
 	createBlogMetadata,
@@ -51,7 +62,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
 	const resolvedParams = await params;
 	const slug = decodeURIComponent(resolvedParams.slug);
-	// getBlogBySlug is wrapped in React cache() — no second DB trip
 	const post = await getBlogBySlug(slug);
 
 	if (!post) return { title: "Entry Not Found" };
@@ -85,11 +95,11 @@ export default async function BlogDetailPage({
 	const resolvedParams = await params;
 	const slug = decodeURIComponent(resolvedParams.slug);
 
-	// Step 1: fetch post (getBlogBySlug is cache()-deduped with generateMetadata)
+	// Fetch post (deduped with generateMetadata via React cache)
 	const post = await getBlogBySlug(slug);
 	if (!post) return notFound();
 
-	// Step 2: fetch related posts using the real category (parallel with other derived data)
+	// Fetch related posts from matching category
 	const related = await getRelatedPosts(slug, post.category, 3);
 
 	const formattedDate = new Intl.DateTimeFormat("en-US", {
@@ -121,10 +131,10 @@ export default async function BlogDetailPage({
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 			/>
 
-			{/* Skip to content link for keyboard navigation */}
+			{/* Skip to content link for accessibility */}
 			<a
 				href="#article-content"
-				className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-lg focus:shadow-lg"
+				className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-xl focus:shadow-lg"
 			>
 				Skip to article content
 			</a>
@@ -141,129 +151,122 @@ export default async function BlogDetailPage({
 
 			<main
 				id="top"
-				className="min-h-screen bg-white relative overflow-x-hidden pb-32 print:overflow-visible print:pb-0"
+				className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 print:overflow-visible print:pb-0"
 			>
-				<EnhancedScrollProgress readTimeMinutes={readTimeMinutes} />
 				<BlogAnalyticsTracker
 					slug={post.slug}
 					title={post.title}
 					readTime={readTimeMinutes}
 				/>
-				<BackToTop />
 
 				{/* ═══════════════════════════════════════
-				    HERO SECTION
+				    HERO BANNER & ELEVATED HEADER CARD
 				═══════════════════════════════════════ */}
 				<section className="relative w-full">
-					{/* Hero Image */}
-					<div className="relative w-full h-[52vh] min-h-[420px] print:hidden">
+					{/* Proportional Hero Image Banner */}
+					<div className="relative w-full h-[36vh] sm:h-[44vh] min-h-[260px] sm:min-h-[380px] max-h-[500px] print:hidden overflow-hidden">
 						<Image
 							src={heroImage}
 							alt={post.title}
 							fill
 							priority
 							className="object-cover"
-							sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1400px"
+							sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1400px"
 						/>
-						{/* Improved overlay — was 20% (invisible), now 45% for card contrast */}
-						<div className="absolute inset-0 bg-slate-950/45" />
+						{/* Clean bottom gradient blend into the page */}
+						<div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-slate-950/20" />
 					</div>
 
-					{/* Overlapping Header Card */}
-					<div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-20 -mt-24 sm:-mt-44">
+					{/* Overlapping Floating Header Card */}
+					<div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-20 -mt-16 sm:-mt-28">
 						<motion.div
-							initial={{ opacity: 0, y: 30 }}
+							initial={{ opacity: 0, y: 25 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.5, ease: "easeOut" }}
-							className="bg-white border border-slate-100 p-7 sm:p-14 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-xl shadow-slate-100/70"
+							className="bg-white border border-slate-200/80 p-6 sm:p-10 lg:p-12 rounded-3xl sm:rounded-[2.5rem] shadow-xl shadow-slate-200/50 space-y-6"
 						>
-							{/* Breadcrumb + category */}
-							<div className="flex flex-wrap items-center gap-4 mb-6">
-								<Link
-									href="/blog"
-									className="inline-flex items-center text-xs font-black uppercase tracking-[0.3em] text-slate-400 hover:text-slate-950 transition-colors gap-2 !no-underline"
-								>
-									<ArrowLeft className="w-3.5 h-3.5" />
-									Back to Journal
-								</Link>
-								<div className="w-px h-4 bg-slate-200" />
-								<span
-									className={`px-4 py-1.5 border text-[9px] font-black uppercase tracking-widest rounded-full ${getCategoryStyles(post.category)}`}
-								>
-									{post.category}
-								</span>
-								{post.is_private && (
-									<span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-xs">
-										<Lock className="w-3 h-3 text-white" />
-										PIN Protected
+							{/* Top Action Bar: Breadcrumb + Category + PIN + Share */}
+							<div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-100">
+								<div className="flex items-center gap-3">
+									<Link
+										href="/blog"
+										className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-emerald-600 transition-colors gap-1.5 group !no-underline"
+									>
+										<ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+										<span>Back to Journal</span>
+									</Link>
+
+									<span
+										className={`px-3 py-1 border text-[9.5px] font-extrabold uppercase tracking-wider rounded-full shadow-2xs ${getCategoryStyles(post.category)}`}
+									>
+										{post.category}
 									</span>
-								)}
+
+									{post.is_private && (
+										<span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-[9.5px] font-extrabold uppercase tracking-wider rounded-full shadow-2xs">
+											<Lock className="w-3 h-3" />
+											PIN Protected
+										</span>
+									)}
+								</div>
+
+								{/* Quick Share / Copy Pill */}
+								<div className="print:hidden">
+									<QuickSharePill title={post.title} />
+								</div>
 							</div>
 
 							{/* Title */}
-							<h1 className="text-3xl sm:text-5xl xl:text-6xl font-black text-slate-950 tracking-tighter leading-[1.05] max-w-4xl mb-4">
+							<h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight leading-[1.14]">
 								{post.title}
 							</h1>
 
-							{/* Description / subtitle — now visible! */}
+							{/* Description / Lede */}
 							{post.description && (
-								<p className="text-base sm:text-lg text-slate-500 font-medium leading-relaxed max-w-2xl mb-8">
+								<p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-3xl">
 									{post.description}
 								</p>
 							)}
 
-							{/* Meta row */}
-							<div className="flex flex-col sm:flex-row sm:items-center gap-6 pt-6 border-t border-slate-100">
-								{/* Author — sourced from AUTHOR constant, not hardcoded */}
+							{/* Metadata Strip */}
+							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-5 border-t border-slate-100">
+								{/* Author */}
 								<div className="flex items-center gap-3">
-									<div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center text-white shadow-md text-sm font-black select-none">
+									<div className="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-white font-extrabold text-xs shadow-xs select-none">
 										{AUTHOR.name
 											.split(" ")
 											.map((n) => n[0])
 											.join("")}
 									</div>
 									<div>
-										<p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-											Written By
+										<p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 leading-none">
+											Author
 										</p>
-										<p className="text-sm font-bold text-slate-900">
+										<p className="text-xs sm:text-sm font-bold text-slate-900 mt-0.5">
 											{AUTHOR.name}
 										</p>
 									</div>
 								</div>
 
-								<div className="hidden sm:block w-px h-10 bg-slate-100" />
+								{/* Metrics & Date Pills */}
+								<div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+									{/* Date */}
+									<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/70 text-slate-600 text-xs font-medium">
+										<Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+										<span>{formattedDate}</span>
+									</div>
 
-								{/* Date */}
-								<div>
-									<p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-										Published
-									</p>
-									<p className="text-sm font-bold text-slate-600 uppercase">
-										{formattedDate}
-									</p>
-								</div>
+									{/* Read time */}
+									<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/70 text-slate-600 text-xs font-medium">
+										<Clock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+										<span>{readTime}</span>
+									</div>
 
-								<div className="hidden sm:block w-px h-10 bg-slate-100" />
-
-								{/* Read time */}
-								<div>
-									<p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-										Reading Time
-									</p>
-									<p className="text-sm font-bold text-slate-600 uppercase">
-										{readTime}
-									</p>
-								</div>
-
-								{/* Word count badge */}
-								<div className="hidden sm:block">
-									<p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-										Words
-									</p>
-									<p className="text-sm font-bold text-slate-600">
-										{wordCount.toLocaleString()}
-									</p>
+									{/* Word count */}
+									<div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/70 text-slate-600 text-xs font-medium">
+										<BookOpen className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+										<span>{wordCount.toLocaleString()} words</span>
+									</div>
 								</div>
 							</div>
 						</motion.div>
@@ -271,53 +274,114 @@ export default async function BlogDetailPage({
 				</section>
 
 				{/* ═══════════════════════════════════════
-				    MAIN CONTENT — Article
+				    ARTICLE BODY & READING CONTAINER
 				═══════════════════════════════════════ */}
-				<section className="max-w-5xl mx-auto px-4 sm:px-6 relative mt-12 sm:mt-20">
-					{/* Article body */}
-					{post.is_private ? (
-						<PinGuard>
+				<section className="max-w-4xl mx-auto px-4 sm:px-6 relative mt-8 sm:mt-12 space-y-10">
+					{/* Floating Reading Stage */}
+					<div className="bg-white border border-slate-200/80 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 lg:p-14 shadow-xs sm:shadow-sm">
+						{/* Table of Contents / Article Outline */}
+						<TableOfContents content={post.content} />
+
+						{/* Article Markdown */}
+						{post.is_private ? (
+							<PinGuard>
+								<motion.article
+									id="article-content"
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									transition={{ delay: 0.2 }}
+									className="w-full print:shadow-none"
+									aria-label={`Article: ${post.title}`}
+								>
+									<BlogContent content={post.content} />
+								</motion.article>
+							</PinGuard>
+						) : (
 							<motion.article
 								id="article-content"
 								initial={{ opacity: 0 }}
 								animate={{ opacity: 1 }}
-								transition={{ delay: 0.3 }}
+								transition={{ delay: 0.2 }}
 								className="w-full print:shadow-none"
 								aria-label={`Article: ${post.title}`}
 							>
 								<BlogContent content={post.content} />
 							</motion.article>
-						</PinGuard>
-					) : (
-						<motion.article
-							id="article-content"
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							transition={{ delay: 0.3 }}
-							className="w-full print:shadow-none"
-							aria-label={`Article: ${post.title}`}
-						>
-							<BlogContent content={post.content} />
-						</motion.article>
-					)}
+						)}
+					</div>
+
+					{/* ── Author Signature Block ── */}
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 print:hidden"
+					>
+						<div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 text-white flex items-center justify-center font-extrabold text-base shrink-0 shadow-sm">
+							{AUTHOR.name
+								.split(" ")
+								.map((n) => n[0])
+								.join("")}
+						</div>
+						<div className="space-y-2 text-center sm:text-left flex-1 min-w-0">
+							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+								<div>
+									<h4 className="text-base font-extrabold text-slate-900 tracking-tight">
+										Written by {AUTHOR.name}
+									</h4>
+									<p className="text-xs text-emerald-600 font-bold">
+										Software Engineer & Endurance Runner
+									</p>
+								</div>
+								<div className="flex items-center justify-center sm:justify-start gap-2">
+									<Link
+										href="/portfolio"
+										className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[10.5px] font-bold text-slate-600 transition-colors !no-underline"
+									>
+										<Briefcase className="w-3 h-3 text-slate-400" />
+										<span>Work</span>
+									</Link>
+									<Link
+										href="/adventures"
+										className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[10.5px] font-bold text-slate-600 transition-colors !no-underline"
+									>
+										<Compass className="w-3 h-3 text-slate-400" />
+										<span>Adventures</span>
+									</Link>
+									<Link
+										href="/contact"
+										className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[10.5px] font-bold text-slate-600 transition-colors !no-underline"
+									>
+										<Mail className="w-3 h-3 text-slate-400" />
+										<span>Contact</span>
+									</Link>
+								</div>
+							</div>
+							<p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+								Writing about fintech architecture, distributed systems, and the
+								discipline of distance running. Focused on building
+								high-reliability systems with clean aesthetics.
+							</p>
+						</div>
+					</motion.div>
 
 					{/* ── Share Block ── */}
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true }}
-						className="w-full max-w-2xl mx-auto mt-16 print:hidden"
+						className="w-full print:hidden"
 					>
-						<div className="bg-slate-50 border border-slate-100 rounded-[2.5rem] p-8 sm:p-12 flex flex-col items-center gap-6 text-center">
+						<div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 shadow-xs flex flex-col items-center gap-5 text-center">
 							<div>
-								<p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">
-									Found this useful?
-								</p>
-								<p className="text-lg font-black text-slate-900 tracking-tight">
-									Share this Story
-								</p>
+								<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 mb-2">
+									Spread the Knowledge
+								</span>
+								<h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+									Enjoyed this article? Share it with your network.
+								</h3>
 							</div>
-							<div className="w-full max-w-sm">
+							<div className="w-full max-w-md">
 								<ShareButton title={post.title} />
 							</div>
 						</div>
@@ -329,21 +393,28 @@ export default async function BlogDetailPage({
 							initial={{ opacity: 0, y: 24 }}
 							whileInView={{ opacity: 1, y: 0 }}
 							viewport={{ once: true, margin: "-80px" }}
-							className="mt-16 print:hidden"
+							className="mt-12 print:hidden"
 						>
 							<RelatedPosts posts={related} />
 						</motion.div>
 					)}
 
-					{/* ── Return Anchor ── */}
-					<div className="mt-20 flex flex-col items-center gap-3 print:hidden">
+					{/* ── Return Anchor & Back to Top ── */}
+					<div className="mt-16 flex flex-wrap items-center justify-center gap-3 print:hidden">
 						<Link
 							href="/blog"
-							className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 hover:text-slate-950 hover:border-slate-400 transition-all shadow-sm"
+							className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 border border-slate-200/80 hover:border-slate-300 rounded-2xl text-xs font-bold uppercase tracking-wider text-slate-700 hover:text-slate-950 transition-all shadow-xs hover:shadow-sm active:scale-95 !no-underline cursor-pointer"
 						>
-							<ArrowLeft className="w-3.5 h-3.5" />
-							Return to Journal Index
+							<ArrowLeft className="w-4 h-4 text-slate-400" />
+							<span>Return to Journal Index</span>
 						</Link>
+						<a
+							href="#top"
+							className="inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 border border-slate-200/80 hover:border-slate-300 rounded-2xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-950 transition-all shadow-xs hover:shadow-sm active:scale-95 !no-underline cursor-pointer"
+						>
+							<ArrowUp className="w-4 h-4 text-slate-400" />
+							<span>Back to Top</span>
+						</a>
 					</div>
 				</section>
 			</main>

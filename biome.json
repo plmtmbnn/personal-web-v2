@@ -37,6 +37,7 @@
 		"maxSize": 500000,
 		"includes": [
 			"app/**/*.tsx",
+			"app/**/*.ts",
 			"app/**/*.css",
 			"app/**/*.json",
 			"postcss.config.mjs",
@@ -44,7 +45,13 @@
 			"biome.json",
 			"next.config.ts",
 			"features/**/*",
-			"lib/**/*"
+			"lib/**/*",
+			"services/**/*",
+			"types/**/*",
+			"instrumentation.ts",
+			"instrumentation-client.ts",
+			"proxy.ts",
+			"vitest.config.ts"
 		]
 	},
 	"formatter": {

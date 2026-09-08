@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
 	Chart as ChartJS,
@@ -52,15 +52,53 @@ const FACTOR_DESCRIPTIONS: Record<string, string> = {
 };
 
 function FactorTooltip({ text }: { text: string }) {
+	const [isOpen, setIsOpen] = useState(false);
+	const containerRef = useRef<HTMLSpanElement>(null);
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const handlePointerDown = (e: PointerEvent) => {
+			if (
+				containerRef.current &&
+				!containerRef.current.contains(e.target as Node)
+			) {
+				setIsOpen(false);
+			}
+		};
+		document.addEventListener("pointerdown", handlePointerDown);
+		return () => {
+			document.removeEventListener("pointerdown", handlePointerDown);
+		};
+	}, [isOpen]);
+
 	return (
 		<span
-			className="group/tip relative inline-flex items-center cursor-help ml-1 align-middle"
+			ref={containerRef}
+			className="group/tip relative inline-flex items-center ml-1 align-middle"
+			onMouseEnter={() => setIsOpen(true)}
+			onMouseLeave={() => setIsOpen(false)}
 			onClick={(e) => e.stopPropagation()}
 		>
-			<Info className="w-3 h-3 text-slate-400 group-hover/tip:text-slate-600 transition-colors shrink-0" />
+			<button
+				type="button"
+				aria-label="Factor information"
+				aria-expanded={isOpen}
+				onClick={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					setIsOpen((prev) => !prev);
+				}}
+				className="p-1 -m-1 rounded-md text-slate-400 group-hover/tip:text-slate-600 focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 transition-colors flex items-center justify-center cursor-pointer touch-manipulation"
+			>
+				<Info className="w-3 h-3 shrink-0" />
+			</button>
 			<span
 				role="tooltip"
-				className="absolute bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 w-48 sm:w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium rounded-xl opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl border border-slate-800 leading-snug text-left normal-case tracking-normal"
+				className={`absolute bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 w-48 sm:w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium rounded-xl transition-all duration-150 z-50 shadow-xl border border-slate-800 leading-snug text-left normal-case tracking-normal ${
+					isOpen
+						? "opacity-100 pointer-events-auto visible scale-100"
+						: "opacity-0 pointer-events-none invisible scale-95"
+				}`}
 			>
 				{text}
 				<span className="absolute top-full left-3 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent border-t-slate-900" />

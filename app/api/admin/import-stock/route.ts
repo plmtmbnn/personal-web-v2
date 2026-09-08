@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { checkAdmin } from "@/features/auth/actions";
-import { saveStockData, getStockData, redis, CACHE_KEYS } from "@/lib/core/redis";
+import {
+	saveStockData,
+	getStockData,
+	redis,
+	CACHE_KEYS,
+} from "@/lib/core/redis";
 
 export async function GET() {
 	try {
@@ -10,7 +15,7 @@ export async function GET() {
 		}
 
 		const data = await getStockData();
-		
+
 		return NextResponse.json({
 			available: !!data && data.length > 0,
 			count: data ? data.length : 0,
@@ -37,7 +42,8 @@ export async function DELETE() {
 
 		return NextResponse.json({
 			success: true,
-			message: "Stock cache and fetch cooldown successfully cleared from Redis.",
+			message:
+				"Stock cache and fetch cooldown successfully cleared from Redis.",
 		});
 	} catch (error: any) {
 		console.error("Stock Clear API Error:", error);
@@ -100,4 +106,3 @@ export async function POST(req: Request) {
 		);
 	}
 }
-

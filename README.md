@@ -10,7 +10,6 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ### Code Quality
 - **Custom Hooks**: `useTags()` for centralized tag state management.
-- **Reusable Components**: `components/ui/Button.tsx` with variant/size support.
 - **Centralized Constants**: `lib/constants/index.ts` for all feature constants.
 
 ### Security

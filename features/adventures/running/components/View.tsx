@@ -483,7 +483,7 @@ export default function RunningView({
 				{/* ═══════════════════════════════════════
 				    HERO SECTION
 				═══════════════════════════════════════ */}
-				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
 					{/* LEFT COLUMN: Header & Quick Stats */}
 					<div className="lg:col-span-5 space-y-6">
 						{/* Breadcrumb */}
@@ -523,78 +523,78 @@ export default function RunningView({
 							</p>
 						</motion.div>
 
-						{/* Quick Stats Cards */}
+						{/* Unified Hero Telemetry Card */}
 						<motion.div
-							initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
-							animate={{ opacity: 1, scale: 1 }}
+							initial={safeReduceMotion ? false : { opacity: 0, y: 15 }}
+							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.15 }}
-							className="grid grid-cols-2 gap-4 p-6 bg-white border border-slate-200/80 rounded-[1.5rem] max-w-sm shadow-xs"
+							className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs space-y-3.5"
 						>
-							<div className="text-center py-1 group">
-								<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors">
-									{totalRuns}
-								</p>
-								<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mt-1">
-									Total Runs
-								</p>
+							{/* Volume Metrics Row */}
+							<div className="grid grid-cols-2 divide-x divide-slate-100 py-1">
+								<div className="text-center px-3 group">
+									<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tight">
+										{totalRuns}
+									</p>
+									<p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
+										Total Runs
+									</p>
+								</div>
+								<div className="text-center px-3 group">
+									<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tight">
+										{kmPerYear}
+									</p>
+									<p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
+										KM this year
+									</p>
+								</div>
 							</div>
-							<div className="text-center py-1 border-l border-slate-100 group">
-								<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors">
-									{kmPerYear}
-								</p>
-								<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mt-1">
-									KM this year
-								</p>
-							</div>
-						</motion.div>
 
-						{/* Average Pace Ring */}
-						{rawRuns.length > 0 && (
-							<motion.div
-								initial={safeReduceMotion ? false : { opacity: 0, y: 10 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ delay: 0.2 }}
-								className="flex items-center gap-4 p-5 bg-white border border-slate-200/80 rounded-[1.5rem] max-w-sm shadow-xs"
-							>
-								<div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
-									<PaceRing
-										pace={avgPaceData.paceMinutes}
-										size={56}
-										strokeWidth={5}
-									/>
-									<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-										<Zap
-											className={`w-4 h-4 ${
-												avgPaceData.paceMinutes < 5
-													? "text-emerald-500"
-													: avgPaceData.paceMinutes < 6
-														? "text-blue-500"
-														: avgPaceData.paceMinutes < 7
-															? "text-amber-500"
-															: "text-rose-500"
-											}`}
+							{/* Live Average Pace Telemetry */}
+							{rawRuns.length > 0 && (
+								<div className="flex items-center gap-3.5 pt-3.5 border-t border-slate-100">
+									<div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
+										<PaceRing
+											pace={avgPaceData.paceMinutes}
+											size={48}
+											strokeWidth={4.5}
 										/>
+										<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+											<Zap
+												className={`w-3.5 h-3.5 ${
+													avgPaceData.paceMinutes < 5
+														? "text-emerald-500"
+														: avgPaceData.paceMinutes < 6
+															? "text-blue-500"
+															: avgPaceData.paceMinutes < 7
+																? "text-amber-500"
+																: "text-rose-500"
+												}`}
+											/>
+										</div>
+									</div>
+									<div className="flex-1 min-w-0 flex items-center justify-between gap-3">
+										<div className="min-w-0">
+											<p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500">
+												Average Pace
+											</p>
+											<div className="flex items-center gap-1.5 mt-0.5 text-emerald-600">
+												<TrendingUp className="w-3 h-3 shrink-0" />
+												<span className="text-[10.5px] font-semibold text-slate-600 truncate">
+													Based on {rawRuns.length} recent activities
+												</span>
+											</div>
+										</div>
+										<p className="text-lg sm:text-xl font-black text-slate-900 tracking-tight shrink-0">
+											{avgPaceData.formatted}{" "}
+											<span className="text-xs font-bold text-slate-500">
+												min/km
+											</span>
+										</p>
 									</div>
 								</div>
-								<div className="flex-1 min-w-0">
-									<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
-										Average Pace
-									</p>
-									<p className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-										{avgPaceData.formatted}{" "}
-										<span className="text-xs font-bold text-slate-500">
-											min/km
-										</span>
-									</p>
-									<div className="flex items-center gap-1.5 mt-1 text-emerald-600">
-										<TrendingUp className="w-3.5 h-3.5 shrink-0" />
-										<span className="text-[10.5px] font-semibold text-slate-600 truncate">
-											Based on {rawRuns.length} recent activities
-										</span>
-									</div>
-								</div>
-							</motion.div>
-						)}
+							)}
+						</motion.div>
 					</div>
 
 					{/* RIGHT COLUMN: Personal Bests Showcase */}

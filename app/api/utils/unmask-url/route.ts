@@ -40,10 +40,7 @@ export async function POST(request: NextRequest) {
 				});
 
 				const locationHeader = response.headers.get("location");
-				if (
-					(response.status >= 300 && response.status < 400) &&
-					locationHeader
-				) {
+				if (response.status >= 300 && response.status < 400 && locationHeader) {
 					// Resolve relative redirects
 					const nextUrl = new URL(locationHeader, currentUrl).toString();
 					redirectChain.push(nextUrl);

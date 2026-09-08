@@ -41,7 +41,6 @@ import {
 	CheckSquare,
 	Square,
 	FileText,
-	Plus,
 	Copy,
 	Check,
 	Lock,
@@ -600,84 +599,93 @@ function AdminBlogListInner({
 			/>
 
 			{/* ═══════════════════════════════════════
-			    STATS BAR
+			    STATS & STATUS FILTER BAR
 			═══════════════════════════════════════ */}
-			<div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-slate-100 bg-slate-50">
-				<div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-2">
-					{(
-						[
-							{
-								label: "Total",
-								value: blogStats.total,
-								color: "text-slate-900",
-								active: currentStatus === "all" && !currentHeadline,
-								onClick: () =>
-									updateParams({ status: "all", headline: null, page: "1" }),
-							},
-							{
-								label: "Published",
-								value: blogStats.published,
-								color: "text-emerald-600",
-								active: currentStatus === "published" && !currentHeadline,
-								onClick: () =>
-									updateParams({
-										status: "published",
-										headline: null,
-										page: "1",
-									}),
-							},
-							{
-								label: "Drafts",
-								value: blogStats.draft,
-								color: "text-amber-600",
-								active: currentStatus === "draft" && !currentHeadline,
-								onClick: () =>
-									updateParams({ status: "draft", headline: null, page: "1" }),
-							},
-							{
-								label: "Headlines",
-								value: blogStats.headlines,
-								color: "text-blue-600",
-								active: currentHeadline,
-								onClick: () =>
-									updateParams({
-										headline: !currentHeadline ? "true" : null,
-										page: "1",
-									}),
-							},
-						] as const
-					).map(({ label, value, color, active, onClick }) => (
-						<button
-							key={label}
-							onClick={onClick}
-							className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-xl transition-all ${
-								active
-									? "bg-white shadow-xs ring-1 ring-slate-200"
-									: "hover:bg-white/60 opacity-80 hover:opacity-100"
-							}`}
-							title={`Filter by ${label}`}
-						>
-							<span className={`text-base sm:text-lg font-black ${color}`}>
-								{value}
-							</span>
-							<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">
-								{label}
-							</span>
-						</button>
-					))}
+			<div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/80">
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+						{(
+							[
+								{
+									label: "Total",
+									value: blogStats.total,
+									color: "text-slate-900",
+									activeColor:
+										"bg-white text-slate-900 ring-1 ring-slate-200 shadow-xs",
+									active: currentStatus === "all" && !currentHeadline,
+									onClick: () =>
+										updateParams({ status: "all", headline: null, page: "1" }),
+								},
+								{
+									label: "Published",
+									value: blogStats.published,
+									color: "text-emerald-600",
+									activeColor:
+										"bg-white text-emerald-700 ring-1 ring-emerald-200 shadow-xs",
+									active: currentStatus === "published" && !currentHeadline,
+									onClick: () =>
+										updateParams({
+											status: "published",
+											headline: null,
+											page: "1",
+										}),
+								},
+								{
+									label: "Drafts",
+									value: blogStats.draft,
+									color: "text-amber-600",
+									activeColor:
+										"bg-white text-amber-700 ring-1 ring-amber-200 shadow-xs",
+									active: currentStatus === "draft" && !currentHeadline,
+									onClick: () =>
+										updateParams({
+											status: "draft",
+											headline: null,
+											page: "1",
+										}),
+								},
+								{
+									label: "Headlines",
+									value: blogStats.headlines,
+									color: "text-blue-600",
+									activeColor:
+										"bg-white text-blue-700 ring-1 ring-blue-200 shadow-xs",
+									active: currentHeadline,
+									onClick: () =>
+										updateParams({
+											headline: !currentHeadline ? "true" : null,
+											page: "1",
+										}),
+								},
+							] as const
+						).map(({ label, value, color, activeColor, active, onClick }) => (
+							<button
+								key={label}
+								onClick={onClick}
+								className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+									active
+										? activeColor
+										: "hover:bg-white/70 text-slate-600 opacity-80 hover:opacity-100"
+								}`}
+								title={`Filter by ${label}`}
+							>
+								<span
+									className={`text-sm sm:text-base font-black ${active ? "" : color}`}
+								>
+									{value}
+								</span>
+								<span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">
+									{label}
+								</span>
+							</button>
+						))}
+					</div>
 
-					{/* Export CSV + New Blog */}
-					<div className="ml-auto flex items-center gap-2">
-						<Link
-							href="/admin/blog/editor"
-							className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 !text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer !no-underline"
-						>
-							<Plus className="w-3.5 h-3.5 text-white stroke-[2.5]" />
-							<span className="hidden sm:inline !text-white">New Blog</span>
-						</Link>
+					{/* Export CSV */}
+					<div className="flex items-center gap-2">
 						<button
 							onClick={handleExportCSV}
-							className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-2xs active:scale-95 cursor-pointer"
+							className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-2xs active:scale-95 cursor-pointer"
 						>
 							<Download className="w-3.5 h-3.5 text-slate-500" />
 							<span className="hidden sm:inline">Export CSV</span>
@@ -690,8 +698,8 @@ function AdminBlogListInner({
 			    FILTER BAR
 			═══════════════════════════════════════ */}
 			<div className="p-4 sm:p-5 md:p-6 border-b border-slate-100 bg-slate-50/50 space-y-3 sm:space-y-4">
-				{/* Row 1: Search + Controls */}
-				<div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 sm:gap-4">
+				{/* Row 1: Search + Sort + Clear */}
+				<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
 					{/* Search */}
 					<div className="relative flex-1 w-full group">
 						<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors pointer-events-none z-10" />
@@ -718,44 +726,7 @@ function AdminBlogListInner({
 						)}
 					</div>
 
-					<div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
-						{/* Headlines filter */}
-						<button
-							onClick={() =>
-								updateParams({
-									headline: !currentHeadline ? "true" : null,
-									page: "1",
-								})
-							}
-							className={`flex items-center gap-2 px-3 sm:px-4 py-2 bg-white border rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all shadow-xs cursor-pointer ${
-								currentHeadline
-									? "border-indigo-500 text-indigo-600 ring-2 ring-indigo-500/20"
-									: "border-slate-200/80 text-slate-700 hover:text-slate-950 hover:bg-slate-50"
-							}`}
-						>
-							<Sparkles
-								className={`w-3.5 h-3.5 ${currentHeadline ? "fill-indigo-600 text-indigo-600" : "text-slate-500"}`}
-							/>
-							<span className="hidden sm:inline">Headlines</span>
-						</button>
-
-						{/* Status filter */}
-						<div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-xl p-1 shadow-xs">
-							{(["all", "published", "draft"] as const).map((s) => (
-								<button
-									key={s}
-									onClick={() => updateParams({ status: s, page: "1" })}
-									className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-										currentStatus === s
-											? "bg-slate-900 text-white shadow-xs"
-											: "text-slate-700 hover:text-slate-950 hover:bg-slate-50"
-									}`}
-								>
-									{s === "all" ? "All" : s === "published" ? "Pub" : "Draft"}
-								</button>
-							))}
-						</div>
-
+					<div className="flex items-center gap-2 sm:gap-3 shrink-0">
 						{/* Sort toggle */}
 						<button
 							onClick={() =>
@@ -764,7 +735,7 @@ function AdminBlogListInner({
 									page: "1",
 								})
 							}
-							className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-white border border-slate-200/80 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-slate-700 hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
+							className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 bg-white border border-slate-200/80 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-slate-700 hover:bg-slate-50 transition-all shadow-2xs cursor-pointer"
 						>
 							<ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
 							<span className="hidden sm:inline">

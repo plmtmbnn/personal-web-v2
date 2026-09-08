@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
 
 		if (!parsedQuery.success) {
 			return NextResponse.json(
-				{ error: "Invalid query parameters", details: parsedQuery.error.format() },
+				{
+					error: "Invalid query parameters",
+					details: parsedQuery.error.format(),
+				},
 				{ status: 400 },
 			);
 		}
@@ -107,13 +110,17 @@ export async function GET(request: NextRequest) {
 				}
 
 				// Set cooldown key to avoid spamming IDX
-				await redis.set(FETCH_ATTEMPT_KEY, "true", { ex: 3600 }).catch(() => {});
+				await redis
+					.set(FETCH_ATTEMPT_KEY, "true", { ex: 3600 })
+					.catch(() => {});
 			} catch (fetchError: any) {
 				console.warn(
 					"Failed to fetch fresh stock data from IDX (likely cloud datacenter/IP block):",
 					fetchError?.message || fetchError,
 				);
-				await redis.set(FETCH_ATTEMPT_KEY, "failed", { ex: 900 }).catch(() => {});
+				await redis
+					.set(FETCH_ATTEMPT_KEY, "failed", { ex: 900 })
+					.catch(() => {});
 
 				// If we don't have cached Redis data, fall back to resilient static dataset
 				if (!data || data.length === 0) {

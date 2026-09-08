@@ -1,74 +1,78 @@
-import { createAdminClient } from '@/lib/core/supabase-server';
-import { notificationDispatcher } from './dispatcher';
-import { TelegramChannel } from './channels/telegram';
-import { BrowserChannel } from './channels/browser';
-import { remoteConfigService } from '@/services/config/remote-config';
+import { createAdminClient } from "@/lib/core/supabase-server";
+import { notificationDispatcher } from "./dispatcher";
+import { TelegramChannel } from "./channels/telegram";
+import { BrowserChannel } from "./channels/browser";
+import { remoteConfigService } from "@/services/config/remote-config";
 
 /**
  * Task Reminder Cron Job.
  * Fetches today's incomplete tasks and dispatches notifications.
  */
 export async function runTaskReminders() {
-  console.log('[Cron] Starting task reminders...');
-  
-  // 1. Fetch Remote Config
-  const enableTelegram = await remoteConfigService.getConfigValue('enable_telegram_notifications');
-  const enableBrowser = await remoteConfigService.getConfigValue('enable_browser_notifications');
+	console.log("[Cron] Starting task reminders...");
 
-  // 2. Initialize Channels (Pluggable & Condition-based)
-  if (enableTelegram) {
-    notificationDispatcher.registerChannel(new TelegramChannel());
-  } else {
-    console.log('[Cron] Telegram notifications disabled via Remote Config.');
-  }
+	// 1. Fetch Remote Config
+	const enableTelegram = await remoteConfigService.getConfigValue(
+		"enable_telegram_notifications",
+	);
+	const enableBrowser = await remoteConfigService.getConfigValue(
+		"enable_browser_notifications",
+	);
 
-  if (enableBrowser) {
-    notificationDispatcher.registerChannel(new BrowserChannel());
-  } else {
-    console.log('[Cron] Browser notifications disabled via Remote Config.');
-  }
+	// 2. Initialize Channels (Pluggable & Condition-based)
+	if (enableTelegram) {
+		notificationDispatcher.registerChannel(new TelegramChannel());
+	} else {
+		console.log("[Cron] Telegram notifications disabled via Remote Config.");
+	}
 
-  // 3. Fetch Tasks from Supabase (Service Role to bypass RLS)
-  const supabase = await createAdminClient();
-  const todayStr = new Date().toISOString().split('T')[0];
+	if (enableBrowser) {
+		notificationDispatcher.registerChannel(new BrowserChannel());
+	} else {
+		console.log("[Cron] Browser notifications disabled via Remote Config.");
+	}
 
-  const { data: tasks, error } = await supabase
-    .from('tasks')
-    .select('id, title, due_date, reschedule_count, priority')
-    .neq('status', 'done')
-    .neq('status', 'cancelled')
-    .eq('due_date', todayStr);
+	// 3. Fetch Tasks from Supabase (Service Role to bypass RLS)
+	const supabase = await createAdminClient();
+	const todayStr = new Date().toISOString().split("T")[0];
 
-  if (error) {
-    console.error('[Cron] Error fetching tasks:', error);
-    return;
-  }
+	const { data: tasks, error } = await supabase
+		.from("tasks")
+		.select("id, title, due_date, reschedule_count, priority")
+		.neq("status", "done")
+		.neq("status", "cancelled")
+		.eq("due_date", todayStr);
 
-  if (!tasks || tasks.length === 0) {
-    console.log('[Cron] No pending tasks for today.');
-    return;
-  }
+	if (error) {
+		console.error("[Cron] Error fetching tasks:", error);
+		return;
+	}
 
-  console.log(`[Cron] Found ${tasks.length} tasks. Aggregating...`);
+	if (!tasks || tasks.length === 0) {
+		console.log("[Cron] No pending tasks for today.");
+		return;
+	}
 
-  // 4. Aggregate tasks into a single summary
-  const taskList = tasks
-    .map((task) => {
-      const rescheduleText =
-        task.reschedule_count > 0 ? ` (🔄 ${task.reschedule_count})` : "";
-      return `• ${task.title}${rescheduleText}`;
-    })
-    .join("\n");
+	console.log(`[Cron] Found ${tasks.length} tasks. Aggregating...`);
 
-  const payload = {
-    title: "Daily Task Reminders",
-    body: `You have ${tasks.length} objectives pending for today:\n\n${taskList}`,
-    data: {
-      dueDate: todayStr,
-    },
-  };
+	// 4. Aggregate tasks into a single summary
+	const taskList = tasks
+		.map((task) => {
+			const rescheduleText =
+				task.reschedule_count > 0 ? ` (🔄 ${task.reschedule_count})` : "";
+			return `• ${task.title}${rescheduleText}`;
+		})
+		.join("\n");
 
-  await notificationDispatcher.dispatch(payload);
+	const payload = {
+		title: "Daily Task Reminders",
+		body: `You have ${tasks.length} objectives pending for today:\n\n${taskList}`,
+		data: {
+			dueDate: todayStr,
+		},
+	};
 
-  console.log("[Cron] Task reminders complete.");
+	await notificationDispatcher.dispatch(payload);
+
+	console.log("[Cron] Task reminders complete.");
 }

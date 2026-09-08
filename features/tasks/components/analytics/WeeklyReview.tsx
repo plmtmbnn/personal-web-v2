@@ -23,6 +23,7 @@ import {
 	Activity,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import InfoTooltip from "@/features/shared/components/InfoTooltip";
 
 // ─── Mini circular progress ───────────────────────────────────────────────────
 function RingProgress({
@@ -345,6 +346,11 @@ export default function WeeklyReview() {
 										<CalendarDays className="w-3 h-3" />
 										Weekly Performance Report
 									</span>
+									<InfoTooltip
+										text="Composite weekly evaluation assessing completion velocity, focus time, and postponement discipline into a standardized letter grade."
+										iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+										size="xs"
+									/>
 								</div>
 
 								<div>
@@ -364,10 +370,20 @@ export default function WeeklyReview() {
 									<span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-black text-slate-300 uppercase tracking-widest">
 										<Target className="w-2.5 h-2.5" />
 										{stats.completionRate}% Completion Rate
+										<InfoTooltip
+											text="Ratio of planned weekly objectives successfully marked completed."
+											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											size="xs"
+										/>
 									</span>
 									<span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-black text-slate-300 uppercase tracking-widest">
 										<Flame className="w-2.5 h-2.5 text-orange-400" />
 										{stats.activeCategory} Most Active
+										<InfoTooltip
+											text="Operational domain with the highest volume of completed tasks and focus time."
+											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											size="xs"
+										/>
 									</span>
 								</div>
 							</div>
@@ -398,29 +414,52 @@ export default function WeeklyReview() {
 									>
 										{stats.performanceGrade}
 									</div>
-									<p
-										className={`text-[9px] font-black uppercase tracking-widest mt-2 ${grade.text}`}
-									>
-										{grade.label}
-									</p>
+									<div className="flex items-center justify-center gap-1 mt-2">
+										<p
+											className={`text-[9px] font-black uppercase tracking-widest ${grade.text}`}
+										>
+											{grade.label}
+										</p>
+										<InfoTooltip
+											text="Academic performance grade benchmarked against completion efficiency and postponement frequency."
+											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											size="xs"
+										/>
+									</div>
 								</div>
 							</div>
 
 							{/* Right: Key numbers column */}
 							<div className="flex flex-row lg:flex-col gap-4 lg:gap-5 flex-shrink-0">
 								<div className="text-center lg:text-right">
-									<p className="text-[9px] font-black !text-white uppercase tracking-widest">
-										Tasks Completed
-									</p>
+									<div className="flex items-center justify-center lg:justify-end gap-1">
+										<p className="text-[9px] font-black !text-white uppercase tracking-widest">
+											Tasks Completed
+										</p>
+										<InfoTooltip
+											text="Total count of discrete tasks moved to Done status during this weekly review cycle."
+											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											size="xs"
+											align="right"
+										/>
+									</div>
 									<p className="text-2xl font-black !text-white mt-0.5">
 										<CountUp target={stats.completedCount} />
 									</p>
 								</div>
 								<div className="w-px lg:w-full h-full lg:h-px bg-white/5" />
 								<div className="text-center lg:text-right">
-									<p className="text-[9px] font-black !text-white uppercase tracking-widest">
-										Effort Neutralized
-									</p>
+									<div className="flex items-center justify-center lg:justify-end gap-1">
+										<p className="text-[9px] font-black !text-white uppercase tracking-widest">
+											Effort Neutralized
+										</p>
+										<InfoTooltip
+											text="Sum of all estimated focus duration cleared through completed tasks this week."
+											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											size="xs"
+											align="right"
+										/>
+									</div>
 									<p className="text-2xl font-black !text-white mt-0.5">
 										{formatMinutes(stats.effortNeutralized)}
 									</p>
@@ -443,6 +482,8 @@ export default function WeeklyReview() {
 							border: "border-slate-200/80",
 							bar: efficiency,
 							barColor: "bg-emerald-500",
+							tooltip:
+								"Total tasks marked done out of all active objectives committed for the week (completed + carried forward).",
 						},
 						{
 							icon: Clock,
@@ -456,6 +497,8 @@ export default function WeeklyReview() {
 								Math.round((stats.effortNeutralized / 480) * 100),
 							),
 							barColor: "bg-indigo-500",
+							tooltip:
+								"Estimated work capacity neutralized through completed objectives during the week.",
 						},
 						{
 							icon: AlertTriangle,
@@ -469,6 +512,8 @@ export default function WeeklyReview() {
 							border: "border-slate-200/80",
 							bar: Math.min(100, stats.totalDelays * 10),
 							barColor: stats.totalDelays > 3 ? "bg-rose-500" : "bg-amber-500",
+							tooltip:
+								"Total due date extensions and deadline shifts recorded across all tasks during the sprint.",
 						},
 						{
 							icon: ArrowUpRight,
@@ -490,6 +535,8 @@ export default function WeeklyReview() {
 							),
 							barColor:
 								stats.carriedForwardCount > 0 ? "bg-rose-500" : "bg-slate-400",
+							tooltip:
+								"Incomplete tasks that were deferred and rolled over into next week's operational backlog.",
 						},
 					].map((item, idx) => (
 						<motion.div
@@ -505,9 +552,12 @@ export default function WeeklyReview() {
 								</div>
 							</div>
 							<div>
-								<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-									{item.label}
-								</p>
+								<div className="flex items-center justify-between gap-1 mb-0.5">
+									<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+										{item.label}
+									</p>
+									<InfoTooltip text={item.tooltip} align="right" size="xs" />
+								</div>
 								<h4 className="text-2xl font-extrabold text-slate-900 mt-0.5 leading-none">
 									{item.value}
 								</h4>
@@ -543,9 +593,15 @@ export default function WeeklyReview() {
 									<Trophy className="w-5 h-5" />
 								</div>
 								<div>
-									<h3 className="text-base font-extrabold text-slate-900">
-										Major Wins
-									</h3>
+									<div className="flex items-center gap-1.5">
+										<h3 className="text-base font-extrabold text-slate-900">
+											Major Wins
+										</h3>
+										<InfoTooltip
+											text="Top priority completed objectives ranked by priority level and estimated effort cleared."
+											size="xs"
+										/>
+									</div>
 									<p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
 										Top completed objectives this week
 									</p>
@@ -629,9 +685,15 @@ export default function WeeklyReview() {
 									<Zap className="w-5 h-5" />
 								</div>
 								<div>
-									<h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
-										Domain Focus
-									</h3>
+									<div className="flex items-center gap-1.5">
+										<h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+											Domain Focus
+										</h3>
+										<InfoTooltip
+											text="Primary category representing the majority of completed task volume and focused energy."
+											size="xs"
+										/>
+									</div>
 									<p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
 										Most active category
 									</p>
@@ -662,9 +724,15 @@ export default function WeeklyReview() {
 								<div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
 									<BarChart2 className="w-5 h-5" />
 								</div>
-								<h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
-									Sprint Audit
-								</h3>
+								<div className="flex items-center gap-1.5">
+									<h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+										Sprint Audit
+									</h3>
+									<InfoTooltip
+										text="Detailed accounting of tasks created, completed, delayed, and carried forward during the weekly sprint."
+										size="xs"
+									/>
+								</div>
 							</div>
 
 							<div className="space-y-3">
@@ -728,9 +796,15 @@ export default function WeeklyReview() {
 							{/* Overall health bar */}
 							<div className="pt-3 border-t border-slate-100">
 								<div className="flex items-center justify-between mb-2">
-									<span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
-										Sprint Health
-									</span>
+									<div className="flex items-center gap-1">
+										<span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+											Sprint Health
+										</span>
+										<InfoTooltip
+											text="Weekly completion ratio measuring execution consistency against total workload."
+											size="xs"
+										/>
+									</div>
 									<span
 										className={`text-[10px] font-extrabold uppercase tracking-wider ${grade.text}`}
 									>
@@ -765,9 +839,16 @@ export default function WeeklyReview() {
 							<Award className="w-6 h-6 text-white" />
 						</div>
 						<div className="flex-1">
-							<p className="text-[10px] font-extrabold text-white/70 uppercase tracking-wider">
-								Commander's Assessment
-							</p>
+							<div className="flex items-center gap-1.5">
+								<p className="text-[10px] font-extrabold text-white/70 uppercase tracking-wider">
+									Commander's Assessment
+								</p>
+								<InfoTooltip
+									text="Automated algorithmic performance critique and strategic guidance for the upcoming week."
+									iconColor="text-white/60 hover:text-white group-hover/tip:text-white"
+									size="xs"
+								/>
+							</div>
 							<p className="text-base font-extrabold text-white mt-1 leading-snug">
 								{stats.feedbackMessage}
 							</p>

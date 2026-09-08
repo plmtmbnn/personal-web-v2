@@ -12,12 +12,12 @@ import {
 	Flame,
 	Target,
 	Trophy,
-	Info,
 	Clock,
 	ShieldCheck,
 	TrendingUp,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import InfoTooltip from "@/features/shared/components/InfoTooltip";
 import {
 	getTaskStats,
 	type AnalyticsStats,
@@ -151,6 +151,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 		subtext,
 		badge,
 		description,
+		tooltip,
 	}: {
 		title: string;
 		value: React.ReactNode;
@@ -170,6 +171,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 				| "indigo";
 		};
 		description?: string;
+		tooltip?: string;
 	}) => {
 		const badgeVariant = badge?.variant || "slate";
 		const badgeStyles =
@@ -208,9 +210,12 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 							</span>
 						)}
 					</div>
-					<p className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-1 truncate">
-						{title}
-					</p>
+					<div className="flex items-center justify-between gap-1 mb-1">
+						<p className="text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider truncate">
+							{title}
+						</p>
+						{tooltip && <InfoTooltip text={tooltip} align="right" size="xs" />}
+					</div>
 					<div className="flex items-baseline gap-1.5 whitespace-nowrap min-w-0">
 						<h4 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
 							{value}
@@ -241,9 +246,12 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 						<BarChart3 className="w-7 h-7 text-indigo-400" />
 					</div>
 					<div>
-						<h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight">
-							Operational Intel
-						</h2>
+						<div className="flex items-center gap-2">
+							<h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight">
+								Operational Intel
+							</h2>
+							<InfoTooltip text="Strategic audit of execution throughput, punctuality, and operational cadence across tasks." />
+						</div>
 						<p className="text-slate-500 text-xs font-bold uppercase tracking-wider mt-0.5">
 							Strategic Audit
 						</p>
@@ -303,9 +311,16 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 						</div>
 					</div>
 					<div className="text-center sm:text-left min-w-0">
-						<p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em] mb-2">
-							Completion Rate
-						</p>
+						<div className="flex items-center justify-center sm:justify-start gap-1.5 mb-2">
+							<p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">
+								Completion Rate
+							</p>
+							<InfoTooltip
+								text="Percentage of scheduled objectives successfully marked done within the selected timeframe."
+								iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+								size="xs"
+							/>
+						</div>
 						<h4 className="text-3xl font-black text-white tracking-tight leading-none mb-3">
 							Efficiency
 						</h4>
@@ -368,16 +383,14 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 						</div>
 					</div>
 					<div className="text-center sm:text-left min-w-0">
-						<div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+						<div className="flex items-center justify-center sm:justify-start gap-1.5 mb-2">
 							<p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">
 								Punctuality Rate
 							</p>
-							<div className="group/info relative cursor-help">
-								<Info className="w-3 h-3 text-slate-300" />
-								<div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-900 text-white text-[9px] font-bold rounded-lg opacity-0 group-hover/info:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
-									Completing tasks without ever rescheduling them.
-								</div>
-							</div>
+							<InfoTooltip
+								text="Completing tasks on or before the due date without ever rescheduling them."
+								size="xs"
+							/>
 						</div>
 						<h4 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-3">
 							Reliability
@@ -437,6 +450,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 						colorClass="bg-blue-50 text-blue-600 border border-blue-100/80"
 						badge={{ text: period, variant: "blue" }}
 						description="Objectives in cycle"
+						tooltip="Total active objectives assigned or tracked within the selected operational cycle."
 					/>
 					<StatCard
 						title="Active Streak"
@@ -452,6 +466,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 									: undefined
 						}
 						description="Operational momentum"
+						tooltip="Consecutive days with at least one completed task without breaking operational rhythm."
 					/>
 					<StatCard
 						title="Execution Score"
@@ -473,6 +488,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								: undefined
 						}
 						description="Weighted reliability grade"
+						tooltip="Weighted reliability score penalizing postponements (100 for 0 shifts, 80 for 1, 50 for 2, 0 for 3+)."
 					/>
 					<StatCard
 						title="Lead Time"
@@ -484,6 +500,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 						colorClass="bg-purple-50 text-purple-600 border border-purple-100/80"
 						badge={{ text: "Cycle", variant: "slate" }}
 						description="Avg cycle duration"
+						tooltip="Average turnaround time in days from task creation to final completion."
 					/>
 					<StatCard
 						title="Velocity"
@@ -497,6 +514,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								: { text: "Steady", variant: "slate" }
 						}
 						description="Average completion rate"
+						tooltip="Average throughput rate of completed tasks per calendar day."
 					/>
 					<StatCard
 						title="Trend"
@@ -531,6 +549,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 									: { text: "Flat", variant: "slate" }
 						}
 						description="vs. Previous Period"
+						tooltip="Percentage change in completed task output compared to the immediately preceding period."
 					/>
 				</div>
 			</section>
@@ -545,9 +564,15 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								<Target className="w-7 h-7" />
 							</div>
 							<div>
-								<h3 className="font-black text-sm uppercase tracking-[0.3em] text-slate-900">
-									Distribution
-								</h3>
+								<div className="flex items-center gap-1.5">
+									<h3 className="font-black text-sm uppercase tracking-[0.3em] text-slate-900">
+										Distribution
+									</h3>
+									<InfoTooltip
+										text="Current operational spread across immediate focus (due today), upcoming tasks, and overdue lapsed items."
+										size="xs"
+									/>
+								</div>
 								<p className="text-xs font-medium text-slate-400">
 									Current operational spread
 								</p>
@@ -601,9 +626,15 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								<PieChart className="w-7 h-7" />
 							</div>
 							<div>
-								<h3 className="font-black text-sm uppercase tracking-[0.3em] text-slate-900">
-									Top Segments
-								</h3>
+								<div className="flex items-center gap-1.5">
+									<h3 className="font-black text-sm uppercase tracking-[0.3em] text-slate-900">
+										Top Segments
+									</h3>
+									<InfoTooltip
+										text="Volume breakdown across dominant task categories to assess workload distribution."
+										size="xs"
+									/>
+								</div>
 								<p className="text-xs font-medium text-slate-400">
 									Dominant categories
 								</p>
@@ -643,9 +674,15 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								<Repeat className="w-7 h-7" />
 							</div>
 							<div>
-								<h3 className="font-black text-sm uppercase tracking-[0.3em] text-slate-900">
-									Reschedule Intel
-								</h3>
+								<div className="flex items-center gap-1.5">
+									<h3 className="font-black text-sm uppercase tracking-[0.3em] text-slate-900">
+										Reschedule Intel
+									</h3>
+									<InfoTooltip
+										text="Temporal discipline analysis measuring total due date postponements and average delay frequency per task."
+										size="xs"
+									/>
+								</div>
 								<p className="text-xs font-medium text-slate-400">
 									Temporal discipline analysis
 								</p>

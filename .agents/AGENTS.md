@@ -108,18 +108,30 @@ Strictly for routing and page definitions.
 ## 🎨 UI/UX Patterns
 - **Solid Productivity Pattern**: For admin, operational, and utility pages, use solid white containers, `slate-50` backgrounds, and defined borders.
 - **Contrast Mastery**: 
-  - **Headlines**: Use dark-themed solid backing cards behind white headline text.
-  - **Details**: Metadata and titles anchored in high-contrast white cards overlapping hero banners.
+  - Standard panels rely on pure white containers (`bg-white`). Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) are strictly obsoleted across the entire application in favor of the unified **Modern Floating Card Header Standard** (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`). Dark slate panels (`bg-slate-900`) are reserved exclusively for isolated high-priority metric widgets (such as the Total Pending backlog counter in Tasks) or technical code blocks.
+- **Modern Floating Card Header Standard**:
+  - Encapsulates hero headers within elevated floating cards (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`) resting on the signature textured canvas (`bg-slate-50/80 bg-dot-pattern`).
+  - Standardized across all management, intelligence, and operational views: Admin Hub (`/admin`), Blog Management (`/admin/blog`), Quick Reminders (`/admin/reminders`), Stock Registry (`/utils/stock-explorer/admin`), Tasks Agenda (`/tasks`), and Market Intelligence (`/investment`).
+  - Features thematic domain badge pills (e.g. `OPERATIONS HUB • daily task orchestration`, `FINANCIAL REGISTRY • idx market synchronization`), bold title typography `h1`, contextual breadcrumbs (`Admin Dashboard › ...` or `Home › ...`), and aligned action/telemetry controls.
+  - Declares calibrated top clearance (`pt-20 sm:pt-24` or `pt-24 sm:pt-28`) ensuring fixed floating navigation switchers (such as `QuickNav` in Tasks) never overlap or clip header titles.
+- **Floating Widget & Anti-Collision Hygiene**:
+  - The bottom-right viewport area is strictly reserved for the global command palette trigger (`SEARCH ⌘K`).
+  - Redundant floating widgets (such as floating `BackToTop` pills and floating scroll progress HUDs) are eliminated in favor of in-flow document return navigation (e.g. at the bottom of blog articles) and browser-native scroll dynamics, guaranteeing zero gesture or click collisions.
 - **Custom Modal System**: Use `features/shared/components/CustomModal.tsx` for high-fidelity alerts and confirmations.
 - **Interactive Feedback**: 
   - All server transitions must provide high-fidelity feedback (e.g., **Synchronization Overlays**, loading spinners).
-  - Global loading screens utilize a non-repeating progress crawl (e.g., 40% -> 70% -> 95%) presented within a **Modern Floating Card Dashboard Aesthetic** (`bg-white rounded-3xl border-slate-200/80 shadow-2xl`) to simulate realistic page readiness.
+  - Global loading screens utilize a lightweight, single-indicator **Modern Floating Card Dashboard Aesthetic** (`bg-white rounded-3xl border-slate-200/80 shadow-xl` with a crisp GPU-accelerated spinner and zero main-thread JS re-render overhead) to eliminate visual clutter and maximize performance during page transitions.
   - Page-level skeleton loading is preferred over redundant inline "Synchronizing Intel" indicators.
 - **Module Focus Pattern**: For side-by-side utility modules (e.g., Input/Output), provide `Minimize2` / `Maximize2` buttons to collapse/expand modules, allowing users to focus on specific panes. Use `framer-motion` for smooth layout transitions. Ensure Framer Motion transforms do not conflict with Tailwind transform classes (use `style={{ x: ... }}` directly).
 - **Mobile-First UX**:
   - **Strategic Grids**: Utilities transition from 1-column mobile to multi-column desktop/tablet (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`).
   - **Desktop Entry Screen Standard**: Single-page entry points (Home, Contact) utilize compact 100vh entry screens on desktop (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden`) to eliminate scrollbars, while providing fluid vertical scrolling on handheld mobile devices.
   - **Touch Targets**: Enhanced padding and `active:scale-90` feedback for handheld training tools.
+- **Mobile & Touch-Friendly Tooltip Architecture**: All info popovers and metric tooltips (`InfoTooltip`, `FactorTooltip`) MUST use a hybrid tap + hover architecture:
+  - **Accessible Triggers**: Semantic `<button type="button">` triggers with `aria-label`, `aria-expanded`, and `touch-manipulation` (eliminating mobile 300ms double-tap delays).
+  - **Touch Target Padding**: Expanded hit-targets via `p-1 -m-1` for comfortable touch on Android & iOS without distorting visual alignment.
+  - **Stateful Tap & Click-Outside Dismissal**: Managed via local `isOpen` state in React: tap toggles the tooltip open/closed on mobile, while `onMouseEnter`/`onMouseLeave` retains instant desktop hover functionality. A global `pointerdown` listener dismisses active tooltips when tapping anywhere outside.
+  - **Event Isolation**: Explicit `e.stopPropagation()` on buttons and wrappers prevents nested touch events from triggering parent card scale or navigation gestures.
 
 ## 🗺 Navigation
 - **Data-Driven:** Driven by the `NAV_ITEMS` constant in `CompactBottomBar.tsx`.
@@ -141,6 +153,9 @@ Strictly for routing and page definitions.
 
 ### Blog System
 - **Optimization**: Public routes use **Static Site Generation (SSG)** with absolute OG/Twitter metadata.
+- **Editorial Cleanliness & Layout**: Confident centered editorial headline (`Insights for modern engineering`) paired with a minimalist control toolbar (category pills, compact search input, and clean sort selector).
+- **Pristine 3-Column Grid**: Aspect ratio `4:3` rounded cards (`rounded-2xl sm:rounded-[1.5rem]`), 3-line clamped excerpts, and clean diagonal action links (`Learn More ↗` with `ArrowUpRight`).
+- **Pagination & Skeletons**: Batch size standardized to **9 articles** (`PAGE_SIZE = 9`) supported by matching 3-column shimmering card skeletons during pagination.
 - **Dynamic Filtering & Sorting**: Real-time article counters on category pills (*All, Tech, Finance, Running, General*) and 4-mode article sort selector (*Newest First, Oldest First, Quickest Read, Deepest Read*).
 - **Interactive Tools**: Built-in `ShareButton` leveraging native Web Share API.
 - **Syntax Highlighting**: 
@@ -149,14 +164,24 @@ Strictly for routing and page definitions.
 - **Code Block Responsiveness**:
   - **Scrolling**: Mandate `overflow-auto` for both horizontal and vertical scrolling.
   - **Formatting**: Use `white-space: pre` to prevent line wrapping, preserving original code structure.
-  - **Height Constraints**: Set `max-h-[32rem]` to keep extremely long snippets manageable.
-- **Post-Article UX**: Centered "Post Actions" footer replacing legacy sidebar with high-fidelity share actions.
+  - **Post-Article UX**: Centered "Post Actions" footer replacing legacy sidebar with high-fidelity share actions.
+- **Blog Reading Page Architecture (`app/blog/[slug]/page.tsx`)**:
+  - **Canvas & Atmosphere**: Signature light textured canvas (`bg-slate-50/80 bg-dot-pattern`) with floating card architecture.
+  - **Proportional Hero Image**: Calibrated banner (`h-[36vh] sm:h-[44vh]`) with bottom gradient fade to prevent excessive vertical displacement and bottom navigation collisions.
+  - **Overlapping Header Card**: `rounded-3xl sm:rounded-[2.5rem] bg-white border border-slate-200/80 shadow-xl` featuring breadcrumb navigation, category pill, `QuickSharePill` (Web Share + copy link), confident title, lede subtitle, and horizontal metadata strip (Author squircle, formatted calendar date, reading time with emerald clock, and word count).
+  - **Modern Floating Reading Stage**: Article body encased inside an elevated floating container (`bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 lg:p-14 shadow-xs`) eliminating stark white voids.
+  - **Interactive Table of Contents (`TableOfContents.tsx`)**: Automatic extraction of `h2`/`h3` headings with section counts, collapsible accordion, active scroll-spy, and smooth anchor navigation.
+  - **Typography & Callouts (`BlogContent.tsx`)**: Heading deep-link anchors (`#`), GitHub-style alert callouts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`), responsive table containers, and styled blockquotes with emerald borders.
+  - **Post-Article Engagement**: Author signature block with bio and links, interactive share block (`ShareButton.tsx`), 3-column related articles, and in-flow document return navigation ("Back to Top" alongside "Return to Journal Index") avoiding any floating button collisions with the global Search trigger (`SEARCH ⌘K`).
 
 ### Task System
 - **Modular Directory Organization**: Task system UI components are organized into logical sub-directories under `components/`: `agenda/` (forms, lists, filters, items), `analytics/` (charts, graphs, reports), `health/` (system checks), and `shared/` (task-specific loading skeletons, toasts, errors).
 - **Tabbed Architecture**:
   - **Agenda**: Prominent `TaskProgress` (independent fetch, dynamic completion rates) and collapsible `HealthCheck`.
-  - **Analytics**: Displays a permanently visible `GeneralReport` panel with period filters (Today, Week, Month, 6 Months, All Time), using `AnalyticsDashboardSkeleton` as its loading state. The stats grid is enriched with Velocity (average completion rate) and Trend metrics (percentage change vs previous period, color-coded dynamically). Displays a clean "Awaiting Data" fallback when there are zero completed tasks.
+  - **Analytics (`GeneralReport`)**: Displays a permanently visible report panel with period filters (Today, Week, Month, 6 Months, All Time), using `AnalyticsDashboardSkeleton` as its loading state. The stats grid is enriched with Velocity (average completion rate) and Trend metrics (percentage change vs previous period, color-coded dynamically). Displays a clean "Awaiting Data" fallback when there are zero completed tasks.
+  - **Supporting Intel Analytics Grid**: Balanced **3-column desktop / 2-column mobile matrix** (`grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-5`) replacing legacy 6-column squeezing. Metric typography structures primary values and secondary units with `items-baseline gap-1.5 whitespace-nowrap` to prevent awkward line-wrapping (e.g., `tasks`, `days`, `/ 100`, `tasks / day`). Cards feature semantic contextual status badges (`WEEK`, `ACTIVE`, `OPTIMAL`, `CYCLE`, `STEADY`, `RISING`/`FALLING`/`FLAT`) beside icon squircles.
+  - **Weekly Review (`WeeklyReview`)**: Comprehensive retrospective assessing weekly completion velocity, focus time, and schedule discipline into an academic grade (A+ to D). Equipped with interactive `InfoTooltip` explainers across the Hero Banner (Completion Rate, Most Active Domain, Grade, Tasks Completed, Effort Neutralized), the 4 Metrics Cards (Objectives Met, Focus Time, Reschedules, Carried Forward), Sprint Audit telemetry, and Commander's Assessment.
+  - **Analytics Telemetry Tooltips**: Both `GeneralReport` and `WeeklyReview` utilize the centralized mobile-friendly `InfoTooltip` component with touch-to-toggle and pointerdown dismissal.
 - **Task Layout & Actions**: `TaskItem` separates title and description with clear vertical breathing room. A status selector dropdown is positioned in the bottom-right actions bar; selecting "DONE" automatically completes the task (setting `status = "done"` with a timestamp), and selecting other options resets it.
 - **Kanban Board Optimization**: Transitions the item card to a vertical layout with dedicated top header handles and stacks controls at the bottom to maintain touch target usability in narrow columns.
 - **Dynamic Initialization**: `TaskForm` utilizes an auto-expanding `textarea` triggered by content changes to support multi-line batch entry without layout shifting.
@@ -174,8 +199,22 @@ Strictly for routing and page definitions.
 
 ### Insights Hub
 - **Architecture**: Centralized aggregator at `/insights` (`features/insights/`) consolidating Blog, Investment sentiment, Liverpool FC Matchday Hub, and Developer Utilities.
-- **Global Intelligence Telemetry**: Top 4-stat telemetry strip previewing core platform domains (Engineering Blueprints, Market Sentiment, Matchday Center, Developer Toolkits).
-- **Curated Modules**: Floating cards with category pills, topic tags, high-contrast linkout arrows (`ArrowUpRight`), and organic spring hover interactions (`whileHover={{ y: -4 }}`).
+- **Global Intelligence Telemetry**: Clean 4-stat telemetry strip previewing core platform domains (`Engineering Blueprints`, `Market Sentiment`, `Matchday Center`, `Developer Toolkits`) with high-contrast typography, eliminating duplicate highlight pills.
+- **Curated 2x2 Module Cards**: Floating cards with category pills, topic tags, high-contrast linkout arrows (`ArrowUpRight`), and organic spring hover interactions (`whileHover={{ y: -4 }}`).
+
+### Investment Intelligence & Market Sentiment Hub
+- **Architecture**: Domain-driven feature in `features/investment/` and `/investment` route tracking Fear & Greed sentiment, historical momentum, and composite market intelligence.
+- **Global Telemetry Summary Strip**: 4-stat telemetry strip (`Market Sentiment`, `7-Day Velocity`, `Factor Alignment`, `Historical Anchor`) equipped with straight-to-the-point mobile-friendly tooltips.
+- **Strategic Signal Banner**: Automated regime classification (`Composite Score`) based on sentiment thresholds with downward-opening info tooltip (`position="bottom"`) and accent boundary styling.
+- **Componentized Factor Matrix Breakdown**: 8 individual quantitative indicator cards (`SentimentCard.tsx`) with dynamic Chart.js sparklines, semantic rating badges, and mobile-friendly `FactorTooltip` popovers:
+  - *Market Momentum (S&P 500)*: S&P 500 vs. its 125-day moving average (bullish momentum when above).
+  - *Market Momentum (S&P 125)*: 125-day rate of change in the S&P 500 gauging multi-month trend strength.
+  - *Stock Price Strength*: Net ratio of NYSE stocks hitting new 52-week highs vs. 52-week lows.
+  - *Stock Price Breadth*: McClellan Oscillator tracking advancing vs. declining NYSE trading volume.
+  - *Put and Call Options*: CBOE 5-day put/call ratio measuring market fear vs. bullish call volume.
+  - *Market Volatility (VIX)*: 50-day moving average of the VIX measuring expected 30-day volatility.
+  - *Junk Bond Demand*: Yield spread between junk and investment-grade bonds (tighter spreads signal risk tolerance).
+  - *Safe Haven Demand*: Difference between 20-day stock returns and treasury bond returns (stocks outperforming signals risk-on).
 
 ### Second Brain / Knowledge Graph
 - **Architecture**: Local filesystem-backed (`content/brain/*.md`) knowledge management system.
@@ -186,9 +225,10 @@ Strictly for routing and page definitions.
 
 ### Adventures & Professional Showcase
 - **Adventures**: High-fidelity logs for Running and Travel missions, utilizing solid floating card aesthetics and rich typography.
-  - **Adventures Landing Hub (`/adventures`)**: Global telemetry stats strip (`65.9 km` Max Distance, `2,982 m` Peak Elevation, `10+` Destinations, `2` Canvas Engines) previewing Running and Travel ecosystems with milestone snapshots.
+  - **Adventures Landing Hub (`/adventures`)**: Clean headline typography without gradient text, paired with a global telemetry stats strip (`65.9 km` Max Distance, `2,982 m` Peak Elevation, `10+` Destinations, `2` Canvas Engines) and solid benchmark telemetry cards.
   - **Running Performance (`/adventures/running`)**: Tracks metrics like distance, time, pace, and **elevation gain** for trail-specific milestones. Features a high-fidelity **Activity Detail Modal** with real Strava splits, light/dark themes, transparent canvas background export, and native **Web Share API** integration (`navigator.share` with rich summary text: `🏃 Morning Run • 10.02 km in 52m 14s`). Includes a **PersonalBestsSwipeCard** built on pure solid surfaces (zero blur glow orbs, zero gradient backgrounds) and one-click record copy actions.
-  - **Travel Bucket List Tracker (`/adventures/travel`)**: Domain-driven logic in `features/travel/` featuring dynamic filtering ("Completed" vs. "Future Adventures"), high-fidelity `StatsCard`, `DestinationCard`, and `PostcardModal` 3D flipping card (polaroid front & handwritten postcard back with postmark/stamp) with high-res PNG sticker export (`postcardCanvas.ts` with Next.js dynamic font-face extraction).
+  - **Travel Bucket List Tracker (`/adventures/travel`)**: Domain-driven logic in `features/travel/` featuring a consolidated 4-stat telemetry strip (`Countries`, `Completed`, `Wishlist`, `Postcards`), segmented filter toolbar (responsive pills + live search), 4:3 cards (`rounded-2xl sm:rounded-[1.5rem]`), and `PostcardModal` vintage airmail canvas generator.
+  - **Postcard Modal Fixed 8:5 Landscape Ratio**: Postcards (`PostcardModal.tsx`) strictly enforce an **8:5 fixed landscape ratio** across both mobile and desktop viewports (`aspectRatio: "8/5"`, `maxHeight: "min(52vh, 480px)"`, `maxWidth: "min(100%, calc(min(52vh, 480px) * 1.6))"`), eliminating portrait collapse on mobile. The back face features responsive cursive handwriting sizing, stamp, postmarks, and ergonomic action buttons.
 - **Professional Showcase**:
   - **Portfolio Core Engines (`/portfolio`)**: Interactive SVG Expertise Distribution visualizer with accordion modules, staggered floating cards, and `PortfolioDetailModal` showcasing deep-dive architectures, capabilities, tech stack matrices, and measurable impact metrics across LOS/LMS and specialized platforms.
   - **Work Experience Timeline (`/work-experience`)**: Chronological career milestones featuring clean brand/legal entity hierarchy, inline technology chips, bottom impact statistics, and `ExperienceDetailModal` delivering comprehensive organizational impact and role breakdowns.
@@ -209,7 +249,11 @@ Strictly for routing and page definitions.
 
 ### Administrative Ecosystem
 - **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, Stock Registry, and Quick Reminders (`/admin/reminders`).
-- **Stock Manager**: Re-engineered portal (`/utils/stock-explorer/admin`) providing live cache status statistics (instruments count, trading date, 3-hour lifespan info), a programmatic "Purge Cache" action, direct JSON file upload (`<input type="file" accept=".json" />`), JSON formatting utility, sample template loader (`BBCA`, `BBRI`, `BMRI`), <kbd>⌘/Ctrl+Enter</kbd> shortcut, and strict TypeScript types.
+- **Stock Manager**: Re-engineered portal (`/utils/stock-explorer/admin`) featuring the **Modern Floating Card Header** and the **Operational Cache Telemetry & Control Card**:
+  - *Header Controls*: Indigo `<Server />` squircle badge, title, pulsing active cache badge, and dedicated action triggers (`[↻ Refresh]`, `[🌐 Sync Live]`, `[🗑 Purge Cache]`).
+  - *Full-Width Metric Grid*: Balanced 3-stat grid displaying Total Instruments (e.g. `963 equities`), Trading Settlement Date, and 12-Hour Redis TTL Lifespan.
+  - *Defensive States*: Shimmering 3-card skeleton loader for zero CLS, and an amber alert banner with a direct *"Prime Cache Now"* CTA when cache is expired or empty.
+  - *Manual Override*: Direct JSON file upload reader (`<input type="file" accept=".json" />`), JSON formatting utility, sample template loader (`BBCA`, `BBRI`, `BMRI`), <kbd>⌘/Ctrl+Enter</kbd> shortcut, and strict TypeScript types.
 - **Navigation**: "Manage Stocks" and "Quick Reminders" integrated into `CompactBottomBar.tsx` Admin sub-menu with pending counts.
 
 ## 🚀 Development & Build Optimization
@@ -242,6 +286,7 @@ pnpm run analyze         # Alias for build:analyze
 ### Configuration Files
 - `next.config.ts`: Optimized with bundle analyzer, Sentry (configured with `silent: true` to suppress Turbopack warning noise in CI), and caching
 - `tsconfig.json`: Performance-optimized TypeScript settings
+- `biome.json`: Strict linter and formatter covering all 311 files across `app/`, `features/`, `lib/`, `services/`, `types/`, and root configs
 - `.env.development`: Development-specific environment variables
 - `tailwind.config.js`: Optimized Tailwind CSS v4 configuration
 - `postcss.config.mjs`: Enhanced with autoprefixer
@@ -249,11 +294,12 @@ pnpm run analyze         # Alias for build:analyze
 ## 📏 Engineering Standards
 - **UI/UX Consistency**: All new or modified pages/components MUST strictly conform to [`ui-uix-guideline.md`](file:///c:/Work/Me/personal-web-v2/ui-uix-guideline.md) (Floating Cards, `bg-slate-50/80 bg-dot-pattern`, `bg-white` containers, `rounded-2xl` to `rounded-[2rem]`, pill badges, mobile-first responsive grids, and `pb-32 sm:pb-36` navigation clearance).
 - **Strict Anti-Gradient & Anti-Emoji Mandates**: NEVER use gradient headers, gradient modal dialogs, multi-color gradient text, or ambient blur glow orbs. NEVER use raw unicode emojis in UI components, headers, or cards (always use scalable SVG icons from `lucide-react` or `react-icons`).
+- **Feature-Module Cleanliness**: Domain logic and UI components strictly reside in `features/<domain>/`. Shared global UI components reside exclusively in `features/shared/components/`. Zero orphaned root `components/` folders.
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.
 - **Defensive Data Handling**: Always implement safety fallbacks and type-casting (e.g., `String(val || "")`) when processing external API data to prevent runtime `TypeError` on missing fields.
 - **SEO & Metadata**: Every route must implement `generateMetadata` using `createMetadata` helper in `lib/shared/metadata.ts`.
 - **Error Tracking & Monitoring**: Sentry is configured for client (`instrumentation-client.ts`), server (`sentry.server.config.ts`), and edge environment tracking (`sentry.edge.config.ts`), integrated via Next.js instrumentation (`instrumentation.ts`). Sentry builds use `silent: true` to suppress noisy missing source map warnings from Turbopack internal chunks.
 - **Git Workflow**: Follow **Conventional Commits**.
-- **Linter**: **Biome** for formatting and linting.
+- **Linter & Formatter**: **Biome** for strict full-repository formatting and linting (`311 files, 0 warnings, 0 errors`).
 - **Performance Tools:** Bundle analyzer, profiling scripts, and optimized configurations.
 - **Commit/Push Policy**: **NEVER** stage, commit, or push changes unless explicitly requested by the user for each occurrence.

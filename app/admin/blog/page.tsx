@@ -39,35 +39,39 @@ export default async function AdminBlogPage({
 	}
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
-			{/* Structural Hero Header */}
-			<div className="bg-slate-900 border-b border-slate-800 mb-10 pt-8 sm:pt-10 pb-10 sm:pb-12 text-white shadow-md">
-				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-						<div className="space-y-2 text-center md:text-left">
-							<div className="flex items-center justify-center md:justify-start gap-2 text-indigo-400 font-extrabold text-xs uppercase tracking-wider">
-								<BookOpen className="w-4 h-4 text-indigo-400" />
-								Knowledge Base Management
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+				{/* Top Floating Header Card */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs mb-6 sm:mb-8">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
+						<div className="space-y-1.5 sm:space-y-2">
+							<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100/80 text-blue-700 text-xs font-bold uppercase tracking-wider">
+								<BookOpen className="w-3.5 h-3.5 text-blue-600" />
+								<span>Knowledge Base Management</span>
+								<span className="w-1 h-1 rounded-full bg-blue-400" />
+								<span className="text-[11px] font-semibold text-blue-600 lowercase tracking-normal">
+									publishing console
+								</span>
 							</div>
-							<h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
 								Blog Articles
 							</h1>
-							<div className="flex items-center justify-center md:justify-start gap-2 text-xs font-semibold text-slate-400">
+							<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
 								<Link
 									href="/admin"
-									className="!text-slate-300 hover:!text-white transition-colors !no-underline"
+									className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
 								>
 									Admin Dashboard
 								</Link>
-								<ChevronRight className="w-3 h-3 text-slate-500" />
-								<span className="text-white font-extrabold">Manage Blog</span>
+								<ChevronRight className="w-3 h-3 text-slate-400" />
+								<span className="text-slate-900 font-bold">Manage Blog</span>
 							</div>
 						</div>
 
-						<div className="flex justify-center">
+						<div className="flex items-center gap-3">
 							<Link
 								href="/admin/blog/editor"
-								className="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 !text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer !no-underline"
+								className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 !text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer !no-underline"
 							>
 								<Plus className="w-4 h-4 text-white stroke-[2.5]" />
 								<span className="!text-white">Create New Post</span>
@@ -75,16 +79,12 @@ export default async function AdminBlogPage({
 						</div>
 					</div>
 				</div>
-			</div>
 
-			{/* Main Content Container - Solid Floating Container */}
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xl shadow-slate-200/50 overflow-hidden">
-					<div className="p-1 bg-slate-50/50">
-						<Suspense fallback={<BlogListSkeleton />}>
-							<BlogListDataLoader searchParams={searchParams} />
-						</Suspense>
-					</div>
+				{/* Main Content Container - Solid Floating Container */}
+				<div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+					<Suspense fallback={<BlogListSkeleton />}>
+						<BlogListDataLoader searchParams={searchParams} />
+					</Suspense>
 				</div>
 			</div>
 		</main>

@@ -1,3 +1,10 @@
+# [0.87.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.86.0...v0.87.0) (2026-09-10)
+
+
+### Features
+
+* revamp liverpool matchday hub, refine blog reader, and expand task ranges ([fe93775](https://github.com/plmtmbnn/personal-web-v2/commit/fe937758ff32981bb9591f4e45028f75ef7c7fb7))
+
 # [0.86.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.85.0...v0.86.0) (2026-09-08)
 
 

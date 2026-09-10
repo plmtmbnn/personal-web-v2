@@ -1,116 +1,81 @@
-export interface ImageSize {
-	url: string;
-	webpUrl?: string;
-	height?: number;
-	width?: number;
+/**
+ * Raw event model returned by TheSportsDB API (eventsnext.php)
+ */
+export interface TheSportsDbEvent {
+	idEvent: string;
+	idAPIfootball?: string;
+	strTimestamp?: string;
+	strEvent: string;
+	strEventAlternate?: string;
+	strFilename?: string;
+	strSport?: string;
+	idLeague?: string;
+	strLeague: string;
+	strLeagueBadge?: string;
+	strSeason?: string;
+	strDescriptionEN?: string;
+	strHomeTeam: string;
+	strAwayTeam: string;
+	intHomeScore?: string | number | null;
+	intHomeScoreExtra?: string | number | null;
+	intAwayScoreExtra?: string | number | null;
+	intRound?: string | null;
+	intAwayScore?: string | number | null;
+	intSpectators?: string | number | null;
+	strOfficial?: string;
+	strWeather?: string;
+	dateEvent: string;
+	dateEventLocal?: string;
+	strTime?: string;
+	strTimeLocal?: string;
+	strGroup?: string;
+	idHomeTeam: string;
+	strHomeTeamBadge?: string;
+	idAwayTeam: string;
+	strAwayTeamBadge?: string;
+	intScore?: string | number | null;
+	intScoreVotes?: string | number | null;
+	strResult?: string;
+	idVenue?: string;
+	strVenue?: string;
+	strCountry?: string;
+	strCity?: string;
+	strPoster?: string;
+	strSquare?: string;
+	strFanart?: string | null;
+	strThumb?: string;
+	strBanner?: string;
+	strMap?: string | null;
+	strTweet1?: string;
+	strVideo?: string;
+	strStatus?: string;
+	strPostponed?: string;
+	strLocked?: string;
 }
 
-export interface Sizes {
-	xs?: ImageSize;
-	sm?: ImageSize;
-	md?: ImageSize;
-	lg?: ImageSize;
-	xl?: ImageSize;
+export interface TheSportsDbResponse {
+	events: TheSportsDbEvent[] | null;
 }
 
-export interface TeamLogo {
-	sizes?: Sizes;
-	alt?: string;
-}
-
-export interface CompetitionLogo {
-	sizes?: Sizes;
-	alt?: string;
-}
-
-export interface Competition {
+/**
+ * Normalized Liverpool FC Fixture domain model
+ */
+export interface LfcFixture {
 	id: string;
-	weight?: number;
-	displayName: string;
-	logo?: CompetitionLogo;
-	optaID?: string;
-	shortName?: string;
-	slug?: string;
-	abbreviation?: string;
-}
-
-export interface Season {
-	id: string;
-	weight?: number;
-	displayName: string;
-	year: number;
-	isActiveSeasonForPlayers?: boolean;
-}
-
-export interface KitFontColors {
-	light?: string;
-	dark?: string;
-}
-
-export interface KitFont {
-	kitFontId?: number;
-	colors?: KitFontColors;
-}
-
-export interface Team {
-	id: string;
-	weight?: number;
-	abbreviation?: string;
-	contestantID?: string;
-	displayName: string;
-	shortName?: string;
-	slug?: string;
-	kitFont?: KitFont;
-	academy?: boolean;
-}
-
-export interface Broadcaster {
-	id: string;
-	name: string;
-	url?: string;
-	logo?: string;
-}
-
-export interface LinkItem {
-	label?: string;
-	external?: boolean;
-	href?: string;
-}
-
-export interface Score {
-	home?: number;
-	away?: number;
-}
-
-export interface Result {
-	id?: string;
-	score?: Score;
-}
-
-export interface MatchData {
-	status: string; // 'Played' | 'Fixture' | 'TBC' | etc.
-	competition: Competition;
-	season?: Season;
-	team?: Team;
-	date: string; // ISO date string
+	title: string;
+	date: string; // ISO date string (e.g. "2026-09-12T14:00:00Z")
 	stadium: string;
 	homeTeam: string;
-	homeTeamLogo?: TeamLogo;
 	awayTeam: string;
-	awayTeamLogo?: TeamLogo;
-	result?: Result;
+	homeTeamBadge?: string;
+	awayTeamBadge?: string;
+	competition: string;
+	competitionBadge?: string;
+	season?: string;
+	round?: string;
+	thumb?: string;
+	banner?: string;
+	poster?: string;
+	isHome: boolean;
+	status?: string;
 }
-
-export interface LfcFixtureResponse {
-	id: number;
-	createdAt?: string;
-	updatedAt?: string;
-	title: string;
-	type?: string;
-	link?: LinkItem;
-	broadcasters?: Broadcaster[];
-	highlight?: boolean;
-	matchData: MatchData;
-}
-
-export type VenueFilter = "all" | "home" | "away";

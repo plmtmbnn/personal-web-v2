@@ -18,6 +18,7 @@ export const CACHE_KEYS = {
 	SESSION_META: (sessionId: string) => `session:meta:${sessionId}`,
 	STOCK_SUMMARY: "idx:stock-summary",
 	STOCK_SUMMARY_BACKUP: "idx:stock-summary:backup",
+	LFC_FIXTURES: "liverpool:fixtures:upcoming",
 };
 
 /**

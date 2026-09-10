@@ -6,47 +6,33 @@ import {
 	Calendar,
 	Clock,
 	MapPin,
-	Tv,
-	ExternalLink,
 	Sparkles,
 	Trophy,
 	Shield,
 } from "lucide-react";
-import type { LfcFixtureResponse } from "../types";
+import type { LfcFixture } from "../types";
 import {
-	getBestImageUrl,
-	isLiverpoolHome,
 	formatMatchDate,
 	getCountdown,
 	createGoogleCalendarUrl,
 } from "../utils";
 
 interface NextMatchHeroProps {
-	fixture: LfcFixtureResponse;
+	fixture: LfcFixture;
 }
 
 export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
-	const { matchData } = fixture;
-	const isHome = isLiverpoolHome(matchData.homeTeam);
-	const dateInfo = useMemo(
-		() => formatMatchDate(matchData.date),
-		[matchData.date],
-	);
+	const isHome = fixture.isHome;
+	const dateInfo = useMemo(() => formatMatchDate(fixture.date), [fixture.date]);
 
-	const [countdown, setCountdown] = useState(() =>
-		getCountdown(matchData.date),
-	);
+	const [countdown, setCountdown] = useState(() => getCountdown(fixture.date));
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			setCountdown(getCountdown(matchData.date));
+			setCountdown(getCountdown(fixture.date));
 		}, 1000);
 		return () => clearInterval(interval);
-	}, [matchData.date]);
-
-	const homeLogoUrl = getBestImageUrl(matchData.homeTeamLogo?.sizes);
-	const awayLogoUrl = getBestImageUrl(matchData.awayTeamLogo?.sizes);
-	const compLogoUrl = getBestImageUrl(matchData.competition?.logo?.sizes);
+	}, [fixture.date]);
 
 	const gCalUrl = useMemo(() => createGoogleCalendarUrl(fixture), [fixture]);
 
@@ -71,11 +57,11 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 
 				{/* Competition Tag */}
 				<div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 shadow-xs">
-					{compLogoUrl ? (
+					{fixture.competitionBadge ? (
 						<div className="relative w-4 h-4 shrink-0">
 							<Image
-								src={compLogoUrl}
-								alt={matchData.competition?.displayName || "Competition"}
+								src={fixture.competitionBadge}
+								alt={fixture.competition || "Competition"}
 								fill
 								className="object-contain"
 								unoptimized
@@ -85,7 +71,8 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 						<Trophy className="w-4 h-4 text-amber-500" />
 					)}
 					<span className="text-xs font-bold text-slate-900">
-						{matchData.competition?.displayName}
+						{fixture.competition}
+						{fixture.round ? ` • ${fixture.round}` : ""}
 					</span>
 				</div>
 			</div>
@@ -97,10 +84,10 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 					{/* Home Team */}
 					<div className="flex flex-col items-center text-center space-y-3 flex-1">
 						<div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-50 p-3 border border-slate-200/80 flex items-center justify-center shadow-xs hover:scale-105 transition-transform">
-							{homeLogoUrl ? (
+							{fixture.homeTeamBadge ? (
 								<Image
-									src={homeLogoUrl}
-									alt={matchData.homeTeam}
+									src={fixture.homeTeamBadge}
+									alt={fixture.homeTeam}
 									width={96}
 									height={96}
 									className="object-contain max-h-full max-w-full"
@@ -112,7 +99,7 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 						</div>
 						<div>
 							<h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-								{matchData.homeTeam}
+								{fixture.homeTeam}
 							</h3>
 							<span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
 								Home
@@ -130,10 +117,10 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 					{/* Away Team */}
 					<div className="flex flex-col items-center text-center space-y-3 flex-1">
 						<div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-50 p-3 border border-slate-200/80 flex items-center justify-center shadow-xs hover:scale-105 transition-transform">
-							{awayLogoUrl ? (
+							{fixture.awayTeamBadge ? (
 								<Image
-									src={awayLogoUrl}
-									alt={matchData.awayTeam}
+									src={fixture.awayTeamBadge}
+									alt={fixture.awayTeam}
 									width={96}
 									height={96}
 									className="object-contain max-h-full max-w-full"
@@ -145,7 +132,7 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 						</div>
 						<div>
 							<h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-								{matchData.awayTeam}
+								{fixture.awayTeam}
 							</h3>
 							<span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
 								Away
@@ -197,7 +184,7 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 						</div>
 					) : (
 						<div className="px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-700 text-sm font-bold">
-							Matchday In Progress / Live
+							Matchday In Progress / Imminent
 						</div>
 					)}
 
@@ -212,67 +199,24 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 						</div>
 						<div className="flex items-center justify-center lg:justify-end gap-1.5 text-xs font-semibold text-slate-500">
 							<MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-							<span>{matchData.stadium}</span>
+							<span>{fixture.stadium}</span>
 						</div>
 					</div>
 
-					{/* Action Buttons */}
+					{/* Action Button */}
 					<div className="flex flex-wrap items-center justify-center lg:justify-end gap-3 pt-2 w-full">
 						<a
 							href={gCalUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white hover:bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs transition-all active:scale-[0.98]"
+							className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs transition-all active:scale-[0.98]"
 						>
 							<Calendar className="w-3.5 h-3.5 text-red-600" />
 							<span>Add to Calendar</span>
 						</a>
-
-						{fixture.link?.href && (
-							<a
-								href={fixture.link.href}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-xs font-bold text-white shadow-xs transition-all active:scale-[0.98]"
-							>
-								<span>{fixture.link.label || "Match Hub"}</span>
-								<ExternalLink className="w-3.5 h-3.5" />
-							</a>
-						)}
 					</div>
 				</div>
 			</div>
-
-			{/* Bottom Bar: Broadcasters */}
-			{fixture.broadcasters && fixture.broadcasters.length > 0 && (
-				<div className="pt-4 mt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-					<div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-						<Tv className="w-4 h-4 text-slate-400" />
-						<span>Official Broadcasters:</span>
-					</div>
-					<div className="flex flex-wrap items-center gap-2">
-						{fixture.broadcasters.map((b) => (
-							<span
-								key={b.id || b.name}
-								className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs"
-							>
-								{b.logo && (
-									<Image
-										src={b.logo}
-										alt={b.name}
-										width={16}
-										height={16}
-										className="object-contain rounded-sm w-4 h-4"
-										style={{ width: "auto", height: "auto" }}
-										unoptimized
-									/>
-								)}
-								<span>{b.name}</span>
-							</span>
-						))}
-					</div>
-				</div>
-			)}
 		</div>
 	);
 }

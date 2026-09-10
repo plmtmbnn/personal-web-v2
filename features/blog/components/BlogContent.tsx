@@ -28,9 +28,18 @@ import {
 	AlertCircle,
 	AlertTriangle,
 	ShieldAlert,
+	ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { slugifyHeading } from "./TableOfContents";
+import remarkGfm from "remark-gfm";
+import {
+	rehypeHeadingIds,
+	slugifyHeading,
+	normalizeMarkdown,
+} from "./TableOfContents";
+
+const REMARK_PLUGINS = [remarkGfm];
+const REHYPE_PLUGINS = [rehypeHeadingIds];
 
 interface BlogContentProps {
 	content: string;
@@ -112,6 +121,8 @@ function CopyButton({ code }: { code: string }) {
 // ─────────────────────────────────────────────
 
 export default function BlogContent({ content }: BlogContentProps) {
+	const normalizedContent = normalizeMarkdown(content);
+
 	return (
 		<div
 			className="prose prose-slate prose-lg max-w-none
@@ -127,6 +138,8 @@ export default function BlogContent({ content }: BlogContentProps) {
         prose-h3:mt-8 prose-h3:mb-3 prose-h3:scroll-mt-28 prose-h3:text-xl sm:prose-h3:text-2xl"
 		>
 			<ReactMarkdown
+				remarkPlugins={REMARK_PLUGINS}
+				rehypePlugins={REHYPE_PLUGINS}
 				components={{
 					// ── Code blocks & inline code ──────────────────────
 					code({ className, children, ...props }: any) {
@@ -164,6 +177,26 @@ export default function BlogContent({ content }: BlogContentProps) {
 							);
 						}
 
+						const text = codeString.trim();
+						const isUrl = /^(https?:\/\/|www\.)[^\s]+$/i.test(text);
+
+						if (isUrl) {
+							const href = text.startsWith("www.") ? `https://${text}` : text;
+							return (
+								<a
+									href={href}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 border border-slate-200/80 hover:border-emerald-300 font-mono text-xs sm:text-sm font-medium transition-colors !no-underline group/codelink"
+								>
+									<code className={className} {...props}>
+										{children}
+									</code>
+									<ExternalLink className="w-3 h-3 shrink-0 opacity-60 group-hover/codelink:opacity-100 transition-opacity text-emerald-600" />
+								</a>
+							);
+						}
+
 						return (
 							<code className={className} {...props}>
 								{children}
@@ -172,19 +205,19 @@ export default function BlogContent({ content }: BlogContentProps) {
 					},
 
 					// ── Headings — add scroll-margin + id anchor ───────
-					h2({ children, ...props }: any) {
+					h2({ id, children, ...props }: any) {
 						const text = getTextFromChildren(children);
-						const id = slugifyHeading(text);
+						const headingId = id || slugifyHeading(text);
 						return (
 							<h2
-								id={id}
+								id={headingId}
 								className="group/heading flex items-center justify-between border-b border-slate-100 pb-2.5"
 								{...props}
 							>
 								<span>{children}</span>
-								{id && (
+								{headingId && (
 									<a
-										href={`#${id}`}
+										href={`#${headingId}`}
 										className="opacity-0 group-hover/heading:opacity-100 text-slate-300 hover:text-emerald-600 transition-opacity ml-2 text-lg font-normal select-none !no-underline"
 										aria-label={`Direct link to ${text}`}
 									>
@@ -194,19 +227,19 @@ export default function BlogContent({ content }: BlogContentProps) {
 							</h2>
 						);
 					},
-					h3({ children, ...props }: any) {
+					h3({ id, children, ...props }: any) {
 						const text = getTextFromChildren(children);
-						const id = slugifyHeading(text);
+						const headingId = id || slugifyHeading(text);
 						return (
 							<h3
-								id={id}
+								id={headingId}
 								className="group/heading flex items-center justify-between"
 								{...props}
 							>
 								<span>{children}</span>
-								{id && (
+								{headingId && (
 									<a
-										href={`#${id}`}
+										href={`#${headingId}`}
 										className="opacity-0 group-hover/heading:opacity-100 text-slate-300 hover:text-emerald-600 transition-opacity ml-2 text-base font-normal select-none !no-underline"
 										aria-label={`Direct link to ${text}`}
 									>
@@ -310,11 +343,11 @@ export default function BlogContent({ content }: BlogContentProps) {
 					},
 
 					// ── Tables — responsive wrapper with zebra styles ─
-					table({ children, ...props }: any) {
+					table({ node, children, ...props }: any) {
 						return (
-							<div className="not-prose overflow-x-auto my-8 rounded-2xl border border-slate-200/80 shadow-2xs bg-white">
+							<div className="not-prose overflow-x-auto my-8 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs bg-white">
 								<table
-									className="min-w-full divide-y divide-slate-200 text-left text-sm"
+									className="min-w-full divide-y divide-slate-200 text-sm"
 									{...props}
 								>
 									{children}
@@ -322,20 +355,47 @@ export default function BlogContent({ content }: BlogContentProps) {
 							</div>
 						);
 					},
-					th({ children, ...props }: any) {
+					thead({ node, children, ...props }: any) {
+						return (
+							<thead
+								className="bg-slate-50/80 border-b border-slate-200"
+								{...props}
+							>
+								{children}
+							</thead>
+						);
+					},
+					tbody({ node, children, ...props }: any) {
+						return (
+							<tbody className="divide-y divide-slate-100 bg-white" {...props}>
+								{children}
+							</tbody>
+						);
+					},
+					tr({ node, children, ...props }: any) {
+						return (
+							<tr
+								className="hover:bg-slate-50/60 transition-colors border-b border-slate-100 last:border-0"
+								{...props}
+							>
+								{children}
+							</tr>
+						);
+					},
+					th({ node, children, ...props }: any) {
 						return (
 							<th
-								className="bg-slate-50/80 px-4 py-3 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-200"
+								className="px-4 py-3.5 text-xs font-black text-slate-800 uppercase tracking-wider whitespace-nowrap"
 								{...props}
 							>
 								{children}
 							</th>
 						);
 					},
-					td({ children, ...props }: any) {
+					td({ node, children, ...props }: any) {
 						return (
 							<td
-								className="px-4 py-3 text-slate-600 border-b border-slate-100 text-sm"
+								className="px-4 py-3 text-slate-600 text-sm font-medium"
 								{...props}
 							>
 								{children}
@@ -344,9 +404,12 @@ export default function BlogContent({ content }: BlogContentProps) {
 					},
 
 					// ── Horizontal Rule ───────────────────────────────
-					hr() {
+					hr({ node, ...props }: any) {
 						return (
-							<div className="my-10 flex items-center justify-center gap-2">
+							<div
+								className="my-10 flex items-center justify-center gap-2"
+								{...props}
+							>
 								<span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
 								<span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
 								<span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
@@ -355,13 +418,20 @@ export default function BlogContent({ content }: BlogContentProps) {
 					},
 
 					// ── Links — secure external links ──────────────────
-					a({ href, children, ...props }: any) {
+					a({ node, href, children, ...props }: any) {
 						const isExternal =
-							href &&
-							(href.startsWith("http://") || href.startsWith("https://"));
+							href?.startsWith("http://") ||
+							href?.startsWith("https://") ||
+							href?.startsWith("www.");
+						let finalHref = href;
+						if (finalHref?.startsWith("www.")) {
+							finalHref = `https://${finalHref}`;
+						} else if (finalHref?.startsWith("http://www.")) {
+							finalHref = finalHref.replace("http://www.", "https://www.");
+						}
 						return (
 							<a
-								href={href}
+								href={finalHref}
 								target={isExternal ? "_blank" : undefined}
 								rel={isExternal ? "noopener noreferrer" : undefined}
 								{...props}
@@ -386,7 +456,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 					},
 				}}
 			>
-				{content}
+				{normalizedContent}
 			</ReactMarkdown>
 		</div>
 	);

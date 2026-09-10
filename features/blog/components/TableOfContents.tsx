@@ -19,7 +19,63 @@ export function slugifyHeading(text: string): string {
 		.replace(/[`*_~[\]()]/g, "") // remove markdown syntax characters
 		.replace(/[^a-z0-9\s-]/g, "") // remove special punctuation
 		.trim()
-		.replace(/\s+/g, "-");
+		.replace(/\s+/g, "-")
+		.replace(/-+/g, "-") // collapse multiple hyphens
+		.replace(/^-+|-+$/g, ""); // trim leading/trailing hyphens
+}
+
+/**
+ * Disambiguates heading slugs across a markdown document,
+ * appending -1, -2, etc. when heading text repeats.
+ */
+export class HeadingSlugger {
+	private occurrences = new Map<string, number>();
+
+	slug(text: string): string {
+		let rawSlug = slugifyHeading(text);
+		if (!rawSlug) {
+			rawSlug = "heading";
+		}
+
+		if (!this.occurrences.has(rawSlug)) {
+			this.occurrences.set(rawSlug, 0);
+			return rawSlug;
+		}
+
+		let count = this.occurrences.get(rawSlug)!;
+		let candidate = "";
+		do {
+			count += 1;
+			candidate = `${rawSlug}-${count}`;
+		} while (this.occurrences.has(candidate));
+
+		this.occurrences.set(rawSlug, count);
+		this.occurrences.set(candidate, 0);
+		return candidate;
+	}
+
+	reset(): void {
+		this.occurrences.clear();
+	}
+}
+
+/**
+ * Preprocesses markdown to ensure tables and formatting parse reliably:
+ * 1. Restores row line breaks for tables pasted or collapsed into single-line "| |" or "||" syntax
+ * 2. Ensures table blocks are preceded and followed by blank lines so GFM parses them as tables
+ */
+export function normalizeMarkdown(content: string): string {
+	if (!content) return "";
+
+	let normalized = content.replace(/\r\n/g, "\n");
+
+	// In case table rows are collapsed on a single line separated by "| |"
+	// e.g. "| col1 | col2 | | :--- | :--- | | val1 | val2 |"
+	if (/\|[ \t]+\|(?=[ \t]*:?-+:?)/.test(normalized)) {
+		normalized = normalized.replace(/\|[ \t]+\|/g, "|\n|");
+	}
+
+	return normalized;
 }
 
 /**
@@ -28,10 +84,13 @@ export function slugifyHeading(text: string): string {
 export function extractHeadings(markdown: string): HeadingItem[] {
 	if (!markdown) return [];
 
+	const normalized = normalizeMarkdown(markdown);
+
 	// Match markdown heading lines, ignoring code blocks
-	const cleaned = markdown.replace(/```[\s\S]*?```/g, "");
-	const headingRegex = /^(#{2,3})\s+(.+)$/gm;
+	const cleaned = normalized.replace(/(```|~~~)[\s\S]*?\1/g, "");
+	const headingRegex = /^(#{2,3})\s+(.+?)(?:\s+#+)?$/gm;
 	const headings: HeadingItem[] = [];
+	const slugger = new HeadingSlugger();
 
 	let match: RegExpExecArray | null;
 	while (true) {
@@ -41,8 +100,12 @@ export function extractHeadings(markdown: string): HeadingItem[] {
 		const level = match[1].length;
 		const rawText = match[2].trim();
 		// Clean any remaining markdown formatting inside heading text
-		const text = rawText.replace(/[`*_~]/g, "").trim();
-		const id = slugifyHeading(text);
+		const text = rawText
+			.replace(/!\[.*?\]\(.*?\)/g, "") // remove images
+			.replace(/\[(.*?)\]\(.*?\)/g, "$1") // keep link text
+			.replace(/[`*_~]/g, "")
+			.trim();
+		const id = slugger.slug(text);
 
 		if (text && id) {
 			headings.push({ id, text, level });
@@ -50,6 +113,142 @@ export function extractHeadings(markdown: string): HeadingItem[] {
 	}
 
 	return headings;
+}
+
+function walkHast(node: any, fn: (node: any) => void) {
+	if (!node) return;
+	fn(node);
+	if (node.children && Array.isArray(node.children)) {
+		for (const child of node.children) {
+			walkHast(child, fn);
+		}
+	}
+}
+
+function getHastNodeText(node: any): string {
+	if (!node) return "";
+	if (node.type === "text") return node.value || "";
+	if (node.children && Array.isArray(node.children)) {
+		return node.children.map(getHastNodeText).join("");
+	}
+	return "";
+}
+
+const URL_REGEX = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+
+function autolinkHastText(text: string): any[] {
+	if (!URL_REGEX.test(text)) {
+		return [{ type: "text", value: text }];
+	}
+
+	URL_REGEX.lastIndex = 0;
+	const nodes: any[] = [];
+	let lastIndex = 0;
+	let match: RegExpExecArray | null;
+
+	while (true) {
+		match = URL_REGEX.exec(text);
+		if (!match) break;
+
+		const matchStart = match.index;
+		const fullMatch = match[0];
+
+		if (matchStart > lastIndex) {
+			nodes.push({
+				type: "text",
+				value: text.slice(lastIndex, matchStart),
+			});
+		}
+
+		let cleanUrl = fullMatch;
+		let trailing = "";
+		while (cleanUrl.length > 0 && /[.,;:!?)\]'">]$/.test(cleanUrl)) {
+			trailing = cleanUrl.slice(-1) + trailing;
+			cleanUrl = cleanUrl.slice(0, -1);
+		}
+
+		const href = cleanUrl.startsWith("www.") ? `https://${cleanUrl}` : cleanUrl;
+
+		nodes.push({
+			type: "element",
+			tagName: "a",
+			properties: {
+				href,
+				target: "_blank",
+				rel: "noopener noreferrer",
+			},
+			children: [{ type: "text", value: cleanUrl }],
+		});
+
+		if (trailing) {
+			nodes.push({
+				type: "text",
+				value: trailing,
+			});
+		}
+
+		lastIndex = matchStart + fullMatch.length;
+	}
+
+	if (lastIndex < text.length) {
+		nodes.push({
+			type: "text",
+			value: text.slice(lastIndex),
+		});
+	}
+
+	return nodes;
+}
+
+function transformAutolink(node: any) {
+	if (!node) return;
+	// Do not autolink inside existing links, pre blocks, or code blocks
+	if (
+		node.type === "element" &&
+		(node.tagName === "a" || node.tagName === "pre" || node.tagName === "code")
+	) {
+		return;
+	}
+
+	if (node.children && Array.isArray(node.children)) {
+		const newChildren: any[] = [];
+		for (const child of node.children) {
+			if (child.type === "text") {
+				newChildren.push(...autolinkHastText(child.value || ""));
+			} else {
+				transformAutolink(child);
+				newChildren.push(child);
+			}
+		}
+		node.children = newChildren;
+	}
+}
+
+/**
+ * Unified/Rehype plugin that traverses the markdown AST
+ * and assigns unique heading IDs to h2 and h3 elements,
+ * as well as automatically autolinking URL format strings.
+ * Runs during markdown compilation and guarantees pure,
+ * idempotent React rendering without mutating state across render passes.
+ */
+export function rehypeHeadingIds() {
+	return (tree: any) => {
+		const slugger = new HeadingSlugger();
+		walkHast(tree, (node: any) => {
+			if (
+				node.type === "element" &&
+				(node.tagName === "h2" || node.tagName === "h3")
+			) {
+				const text = getHastNodeText(node).trim();
+				const id = slugger.slug(text);
+				if (!node.properties) {
+					node.properties = {};
+				}
+				node.properties.id = id;
+			}
+		});
+		transformAutolink(tree);
+	};
 }
 
 interface TableOfContentsProps {
@@ -149,11 +348,11 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
 							className="pt-4 mt-4 border-t border-slate-200/60"
 						>
 							<ul className="space-y-1">
-								{headings.map((heading) => {
+								{headings.map((heading, index) => {
 									const isActive = activeId === heading.id;
 									return (
 										<li
-											key={heading.id}
+											key={`${heading.id}-${index}`}
 											className={heading.level === 3 ? "pl-4 sm:pl-5" : ""}
 										>
 											<button

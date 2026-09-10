@@ -54,7 +54,7 @@ Contains all business logic, components, and types for specific features.
 - `features/home/`: Landing hero, dynamic greetings, quick link cards, and zero-scrollbar desktop entry layout.
 - `features/insights/`: Insights hub module aggregator (Blog, Investment, Liverpool FC, Utils) with top telemetry summary strip.
 - `features/investment/`: Actions, types, Fear & Greed market sentiment telemetry, and historical trends.
-- `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureCard.tsx`, `PlayedCard.tsx`, `FixtureFilters.tsx`, `FixtureSkeleton.tsx`).
+- `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureSkeleton.tsx`, `View.tsx`).
 - `features/portfolio/` & `features/work-experience/`: Professional showcases, career timeline, interactive project cards, skills radar/metrics.
 - `features/reminders/`: Quick Reminders actions, types, linkified text pills, keyboard shortcuts (<kbd>⌘/Ctrl+Enter</kbd>), one-click note copying, and duration extensions backed by Upstash Redis.
 - `features/tasks/`: Actions, analytics, types, utils, 6-month date horizon, optimized `TaskProgress`, and task UI components structured under logical `components/` subdirectories (`agenda/`, `analytics/`, `health/`, `shared/`).
@@ -111,7 +111,7 @@ Strictly for routing and page definitions.
   - Standard panels rely on pure white containers (`bg-white`). Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) are strictly obsoleted across the entire application in favor of the unified **Modern Floating Card Header Standard** (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`). Dark slate panels (`bg-slate-900`) are reserved exclusively for isolated high-priority metric widgets (such as the Total Pending backlog counter in Tasks) or technical code blocks.
 - **Modern Floating Card Header Standard**:
   - Encapsulates hero headers within elevated floating cards (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`) resting on the signature textured canvas (`bg-slate-50/80 bg-dot-pattern`).
-  - Standardized across all management, intelligence, and operational views: Admin Hub (`/admin`), Blog Management (`/admin/blog`), Quick Reminders (`/admin/reminders`), Stock Registry (`/utils/stock-explorer/admin`), Tasks Agenda (`/tasks`), and Market Intelligence (`/investment`).
+  - Standardized across all management, intelligence, and operational views: Admin Hub (`/admin`), Blog Management (`/admin/blog`), Blog Editor (`/admin/blog/editor`), Quick Reminders (`/admin/reminders`), Stock Registry (`/utils/stock-explorer/admin`), Tasks Agenda (`/tasks`), and Market Intelligence (`/investment`).
   - Features thematic domain badge pills (e.g. `OPERATIONS HUB • daily task orchestration`, `FINANCIAL REGISTRY • idx market synchronization`), bold title typography `h1`, contextual breadcrumbs (`Admin Dashboard › ...` or `Home › ...`), and aligned action/telemetry controls.
   - Declares calibrated top clearance (`pt-20 sm:pt-24` or `pt-24 sm:pt-28`) ensuring fixed floating navigation switchers (such as `QuickNav` in Tasks) never overlap or clip header titles.
 - **Floating Widget & Anti-Collision Hygiene**:
@@ -146,10 +146,11 @@ Strictly for routing and page definitions.
 ## 📝 Content Systems
 
 ### Liverpool FC Matchday Hub
-- **Architecture**: Domain-driven feature in `features/liverpool/` fetching from official REST API (`backend.liverpoolfc.com`) with 1-hour ISR revalidation and defensive data fallbacks.
-- **Dual-Tab Architecture**: Focuses on "Upcoming Matches" (with a live countdown Next Match hero and monthly schedule grouping) and isolates "Played Results" (displaying outcome pills `WIN`/`DRAW`/`LOSS`, final scores, and official match reports).
-- **Aesthetics & UI/UX**: Pure light model with Liverpool Red accents, dot pattern canvas (`bg-slate-50/80 bg-dot-pattern`), `rounded-[2rem]` floating cards, and pill badges matching `TravelPage()`.
-- **Integrations**: Google Calendar URL export and direct LFC match center links.
+- **Architecture**: Domain-driven feature in `features/liverpool/` fetching from TheSportsDB free API (`thesportsdb.com/api/v1/json/123/eventsnext.php?id=133602`) with 1-hour Next.js ISR revalidation, Upstash Redis caching (`CACHE_KEYS.LFC_FIXTURES`), and defensive data fallbacks.
+- **Dynamic Redis Caching**: Caches raw API response to Upstash Redis with a dynamic TTL set to `strTimestamp + 1 day` of the imminent fixture, ensuring zero stale queries after matchday completion while providing <10ms response times. Includes manual `forceRefresh` cache invalidation via UI refresh button.
+- **Next Matchday Focus**: Exclusively focuses on the imminent upcoming matchday with a prominent hero card (`NextMatchHero.tsx`), featuring a live countdown clock, official high-resolution team badges, stadium venue, and local timezone kickoff times.
+- **Aesthetics & UI/UX**: Pure light model with Liverpool Red accents, signature textured canvas (`bg-slate-50/80 bg-dot-pattern`), `rounded-3xl` elevated floating hero card, calibrated bottom clearance (`pb-36 sm:pb-44`), and zero clutter (filters and redundant lists removed).
+- **Integrations**: Google Calendar URL export (`createGoogleCalendarUrl`) for 1-click scheduling in user's local timezone.
 
 ### Blog System
 - **Optimization**: Public routes use **Static Site Generation (SSG)** with absolute OG/Twitter metadata.
@@ -170,9 +171,18 @@ Strictly for routing and page definitions.
   - **Proportional Hero Image**: Calibrated banner (`h-[36vh] sm:h-[44vh]`) with bottom gradient fade to prevent excessive vertical displacement and bottom navigation collisions.
   - **Overlapping Header Card**: `rounded-3xl sm:rounded-[2.5rem] bg-white border border-slate-200/80 shadow-xl` featuring breadcrumb navigation, category pill, `QuickSharePill` (Web Share + copy link), confident title, lede subtitle, and horizontal metadata strip (Author squircle, formatted calendar date, reading time with emerald clock, and word count).
   - **Modern Floating Reading Stage**: Article body encased inside an elevated floating container (`bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 lg:p-14 shadow-xs`) eliminating stark white voids.
-  - **Interactive Table of Contents (`TableOfContents.tsx`)**: Automatic extraction of `h2`/`h3` headings with section counts, collapsible accordion, active scroll-spy, and smooth anchor navigation.
+  - **Interactive Table of Contents (`TableOfContents.tsx`)**: Automatic extraction of `h2`/`h3` headings with section counts, collapsible accordion, active scroll-spy, and smooth anchor navigation. Disambiguates duplicate headings via `HeadingSlugger` (`workout`, `workout-1`, `workout-2`) to guarantee unique DOM IDs.
+  - **AST-Level Heading ID & Hydration Parity (`rehypeHeadingIds`)**: Compiles heading IDs directly onto the unified AST before React rendering passes, guaranteeing 100% pure and idempotent rendering without React hydration attribute mismatch errors.
+  - **GFM Table Support & Responsive Containers**: Integrates `remark-gfm` with custom `table`, `thead`, `tbody`, `tr`, `th`, and `td` components wrapped in a responsive card (`not-prose overflow-x-auto my-8 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs bg-white`). Correctly honors column text alignments (`:---`, `:---:`, `---:`), renders bold/rich text in cells, and normalizes single-line collapsed tables (`| |` / `||`) via `normalizeMarkdown`.
+  - **URL Autolinking & Interactive Code Pills**: Automatically autolinks plain text URLs with trailing punctuation isolation, and converts inline code URL highlights (`` `https://...` ``) into clickable pill badges with `ExternalLink` indicators opening in a new tab (`target="_blank" rel="noopener noreferrer"`). Automatically upgrades `http://www.` links to secure HTTPS.
   - **Typography & Callouts (`BlogContent.tsx`)**: Heading deep-link anchors (`#`), GitHub-style alert callouts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`), responsive table containers, and styled blockquotes with emerald borders.
-  - **Post-Article Engagement**: Author signature block with bio and links, interactive share block (`ShareButton.tsx`), 3-column related articles, and in-flow document return navigation ("Back to Top" alongside "Return to Journal Index") avoiding any floating button collisions with the global Search trigger (`SEARCH ⌘K`).
+  - **Post-Article Engagement**: Author signature block with bio and links, interactive share block (`ShareButton.tsx`), 3-column related articles, and in-flow document return navigation ("Back to Top" alongside "Back to Insights") avoiding any floating button collisions with the global Search trigger (`SEARCH ⌘K`).
+- **Markdown Editing Toolbar (`BlogForm.tsx`)**:
+  - Organizes editing actions into clear visual clusters separated by subtle dividers:
+    - *Headings & Typography*: `Heading2` (`## Section Heading` auto-syncing with TOC), `Bold`, `Italic`.
+    - *Code & Links*: `Inline Code`, `Code Block`, `Hyperlink`.
+    - *Structures & Scaffolding*: `Bullet List`, `Numbered List`, `Callout Note` (`> [!NOTE]`), `Table` (pre-scaffolded GFM table with alignment delimiters), and `Divider` (`---`).
+  - Supports responsive `flex-wrap` and provides live preview parity with `BlogContent`.
 
 ### Task System
 - **Modular Directory Organization**: Task system UI components are organized into logical sub-directories under `components/`: `agenda/` (forms, lists, filters, items), `analytics/` (charts, graphs, reports), `health/` (system checks), and `shared/` (task-specific loading skeletons, toasts, errors).
@@ -182,6 +192,11 @@ Strictly for routing and page definitions.
   - **Supporting Intel Analytics Grid**: Balanced **3-column desktop / 2-column mobile matrix** (`grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-5`) replacing legacy 6-column squeezing. Metric typography structures primary values and secondary units with `items-baseline gap-1.5 whitespace-nowrap` to prevent awkward line-wrapping (e.g., `tasks`, `days`, `/ 100`, `tasks / day`). Cards feature semantic contextual status badges (`WEEK`, `ACTIVE`, `OPTIMAL`, `CYCLE`, `STEADY`, `RISING`/`FALLING`/`FLAT`) beside icon squircles.
   - **Weekly Review (`WeeklyReview`)**: Comprehensive retrospective assessing weekly completion velocity, focus time, and schedule discipline into an academic grade (A+ to D). Equipped with interactive `InfoTooltip` explainers across the Hero Banner (Completion Rate, Most Active Domain, Grade, Tasks Completed, Effort Neutralized), the 4 Metrics Cards (Objectives Met, Focus Time, Reschedules, Carried Forward), Sprint Audit telemetry, and Commander's Assessment.
   - **Analytics Telemetry Tooltips**: Both `GeneralReport` and `WeeklyReview` utilize the centralized mobile-friendly `InfoTooltip` component with touch-to-toggle and pointerdown dismissal.
+- **Upcoming Range Scopes**: `Upcoming Filters with Range Toggle` in `TaskList.tsx` & `TaskFilters.tsx` supports 3 distinct horizons:
+  - **7 Days** (`week` — default): Focused sprint awareness from today through the next 7 days.
+  - **1 Month** (`month`): Mid-term milestone awareness from today through the next 30 days.
+  - **All** (`all`): Comprehensive foresight displaying all scheduled upcoming tasks without upper date limits.
+  - Persists selection seamlessly in query parameters (`?upcoming_range=all`) with 0ms optimistic UI toggle feedback and drag-and-drop reordering parity.
 - **Task Layout & Actions**: `TaskItem` separates title and description with clear vertical breathing room. A status selector dropdown is positioned in the bottom-right actions bar; selecting "DONE" automatically completes the task (setting `status = "done"` with a timestamp), and selecting other options resets it.
 - **Kanban Board Optimization**: Transitions the item card to a vertical layout with dedicated top header handles and stacks controls at the bottom to maintain touch target usability in narrow columns.
 - **Dynamic Initialization**: `TaskForm` utilizes an auto-expanding `textarea` triggered by content changes to support multi-line batch entry without layout shifting.

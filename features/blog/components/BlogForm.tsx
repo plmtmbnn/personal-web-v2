@@ -25,6 +25,11 @@ import {
 	Code,
 	Link as LinkIcon,
 	List,
+	ListOrdered,
+	Heading2,
+	Quote,
+	Table,
+	Minus,
 	ChevronDown,
 	Check,
 	Plus,
@@ -49,7 +54,9 @@ SyntaxHighlighter.registerLanguage("sql", sql);
 SyntaxHighlighter.registerLanguage("css", css);
 SyntaxHighlighter.registerLanguage("bash", bash);
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import remarkGfm from "remark-gfm";
 import { CATEGORIES, getCategoryStyles } from "@/features/blog/utils";
+import { normalizeMarkdown } from "./TableOfContents";
 
 // ─────────────────────────────────────────────
 // Form Category Select Component (Floating Card UI/UX)
@@ -409,6 +416,11 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 		let selectLength = 0;
 
 		switch (syntax) {
+			case "heading":
+				replacement = `\n## ${selectedText || "Section Heading"}\n`;
+				selectOffset = 4;
+				selectLength = selectedText ? selectedText.length : 15;
+				break;
 			case "bold":
 				replacement = `**${selectedText || "bold text"}**`;
 				selectOffset = 2;
@@ -438,6 +450,26 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 				replacement = `\n- ${selectedText || "list item"}`;
 				selectOffset = 3;
 				selectLength = selectedText ? selectedText.length : 9;
+				break;
+			case "ordered-list":
+				replacement = `\n1. ${selectedText || "First item"}\n2. Second item\n`;
+				selectOffset = 4;
+				selectLength = selectedText ? selectedText.length : 10;
+				break;
+			case "quote":
+				replacement = `\n> [!NOTE]\n> ${selectedText || "Key insight or takeaway"}\n`;
+				selectOffset = 13;
+				selectLength = selectedText ? selectedText.length : 24;
+				break;
+			case "table":
+				replacement = `\n| Column 1 | Column 2 | Column 3 |\n| :--- | :---: | :---: |\n| Item 1 | Item 2 | Item 3 |\n`;
+				selectOffset = 3;
+				selectLength = 8;
+				break;
+			case "divider":
+				replacement = `\n---\n`;
+				selectOffset = 5;
+				selectLength = 0;
 				break;
 			default:
 				return;
@@ -558,7 +590,15 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 					</label>
 
 					{/* Markdown Editing Toolbar */}
-					<div className="flex items-center gap-0.5 bg-slate-100 p-0.5 border border-slate-200 rounded-lg">
+					<div className="flex flex-wrap items-center gap-0.5 bg-slate-100 p-0.5 border border-slate-200 rounded-lg">
+						<button
+							type="button"
+							onClick={() => insertMarkdown("heading")}
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							title="Heading 2 (TOC Section Anchor)"
+						>
+							<Heading2 className="w-3.5 h-3.5" />
+						</button>
 						<button
 							type="button"
 							onClick={() => insertMarkdown("bold")}
@@ -575,6 +615,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						>
 							<Italic className="w-3.5 h-3.5" />
 						</button>
+						<div className="w-px h-3.5 bg-slate-200 mx-0.5" />
 						<button
 							type="button"
 							onClick={() => insertMarkdown("code")}
@@ -599,6 +640,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						>
 							<LinkIcon className="w-3.5 h-3.5" />
 						</button>
+						<div className="w-px h-3.5 bg-slate-200 mx-0.5" />
 						<button
 							type="button"
 							onClick={() => insertMarkdown("list")}
@@ -606,6 +648,38 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							title="Bullet List"
 						>
 							<List className="w-3.5 h-3.5" />
+						</button>
+						<button
+							type="button"
+							onClick={() => insertMarkdown("ordered-list")}
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							title="Numbered List"
+						>
+							<ListOrdered className="w-3.5 h-3.5" />
+						</button>
+						<button
+							type="button"
+							onClick={() => insertMarkdown("quote")}
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							title="Callout Note [!NOTE]"
+						>
+							<Quote className="w-3.5 h-3.5" />
+						</button>
+						<button
+							type="button"
+							onClick={() => insertMarkdown("table")}
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							title="Insert Table"
+						>
+							<Table className="w-3.5 h-3.5" />
+						</button>
+						<button
+							type="button"
+							onClick={() => insertMarkdown("divider")}
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							title="Section Divider"
+						>
+							<Minus className="w-3.5 h-3.5" />
 						</button>
 					</div>
 				</div>
@@ -647,6 +721,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 				</h1>
 			)}
 			<ReactMarkdown
+				remarkPlugins={[remarkGfm]}
 				components={{
 					code({ node, inline, className, children, ...props }: any) {
 						const match = /language-(\w+)/.exec(className || "");
@@ -677,9 +752,68 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							</code>
 						);
 					},
+					table({ children, ...props }: any) {
+						return (
+							<div className="not-prose overflow-x-auto my-8 rounded-2xl border border-slate-200 shadow-xs bg-white">
+								<table
+									className="min-w-full divide-y divide-slate-200 text-sm"
+									{...props}
+								>
+									{children}
+								</table>
+							</div>
+						);
+					},
+					thead({ children, ...props }: any) {
+						return (
+							<thead
+								className="bg-slate-50 border-b border-slate-200"
+								{...props}
+							>
+								{children}
+							</thead>
+						);
+					},
+					tbody({ children, ...props }: any) {
+						return (
+							<tbody className="divide-y divide-slate-100 bg-white" {...props}>
+								{children}
+							</tbody>
+						);
+					},
+					tr({ children, ...props }: any) {
+						return (
+							<tr
+								className="hover:bg-slate-50/60 transition-colors border-b border-slate-100 last:border-0"
+								{...props}
+							>
+								{children}
+							</tr>
+						);
+					},
+					th({ children, ...props }: any) {
+						return (
+							<th
+								className="px-4 py-3.5 text-xs font-black text-slate-800 uppercase tracking-wider whitespace-nowrap"
+								{...props}
+							>
+								{children}
+							</th>
+						);
+					},
+					td({ children, ...props }: any) {
+						return (
+							<td
+								className="px-4 py-3 text-slate-600 text-sm font-medium"
+								{...props}
+							>
+								{children}
+							</td>
+						);
+					},
 				}}
 			>
-				{content || "*Empty content*"}
+				{normalizeMarkdown(content || "*Empty content*")}
 			</ReactMarkdown>
 		</div>
 	);

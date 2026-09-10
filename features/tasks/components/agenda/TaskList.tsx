@@ -216,21 +216,28 @@ export default function TaskList({
 
 			// 4. Date Range (For Upcoming & Completed)
 			if (isUpcoming) {
-				if (filters.range === "week") {
-					// WEEK: today until next 7 days
-					const maxWeek = addDays(todayRef, 7);
-					result = result.filter((t) => {
-						if (!t.due_date) return false;
-						const d = parseISO(t.due_date);
-						return !isBefore(d, todayRef) && !isAfter(d, maxWeek);
-					});
-				} else if (filters.range === "month") {
+				if (filters.range === "month") {
 					// MONTH: today until next 1 month
 					const maxMonth = addMonths(todayRef, 1);
 					result = result.filter((t) => {
 						if (!t.due_date) return false;
 						const d = parseISO(t.due_date);
 						return !isBefore(d, todayRef) && !isAfter(d, maxMonth);
+					});
+				} else if (filters.range === "all") {
+					// ALL: all upcoming tasks from today onwards
+					result = result.filter((t) => {
+						if (!t.due_date) return true;
+						const d = parseISO(t.due_date);
+						return !isBefore(d, todayRef);
+					});
+				} else {
+					// Default: WEEK (today until next 7 days)
+					const maxWeek = addDays(todayRef, 7);
+					result = result.filter((t) => {
+						if (!t.due_date) return false;
+						const d = parseISO(t.due_date);
+						return !isBefore(d, todayRef) && !isAfter(d, maxWeek);
 					});
 				}
 			}
@@ -432,11 +439,19 @@ export default function TaskList({
 			filters.priority !== "all" ||
 			filters.category !== "all" ||
 			filters.status !== "all" ||
+			(filters.range && filters.range !== "week") ||
 			!!filters.search
 		);
 	};
 	const isDragDisabled =
-		hasActiveFilters(todayFilters) || hasActiveFilters(upcomingFilters);
+		todayFilters.priority !== "all" ||
+		todayFilters.category !== "all" ||
+		todayFilters.status !== "all" ||
+		Boolean(todayFilters.search) ||
+		upcomingFilters.priority !== "all" ||
+		upcomingFilters.category !== "all" ||
+		upcomingFilters.status !== "all" ||
+		Boolean(upcomingFilters.search);
 
 	const onDragEnd = (result: DropResult) => {
 		const { destination, source, draggableId } = result;

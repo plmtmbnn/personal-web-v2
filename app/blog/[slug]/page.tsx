@@ -193,7 +193,7 @@ export default async function BlogDetailPage({
 										className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-emerald-600 transition-colors gap-1.5 group !no-underline"
 									>
 										<ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-										<span>Back to Journal</span>
+										<span>Back to Insights</span>
 									</Link>
 
 									<span

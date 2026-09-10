@@ -1,18 +1,50 @@
-import type { LfcFixtureResponse, Sizes } from "./types";
+import type { LfcFixture, TheSportsDbEvent } from "./types";
 
 /**
- * Get the highest quality available image URL from the sizes object
+ * Normalizes a raw TheSportsDB event into a clean LfcFixture domain model
  */
-export function getBestImageUrl(sizes?: Sizes): string | undefined {
-	if (!sizes) return undefined;
-	return (
-		sizes.xl?.url ||
-		sizes.lg?.url ||
-		sizes.md?.url ||
-		sizes.sm?.url ||
-		sizes.xs?.url ||
-		undefined
-	);
+export function normalizeTheSportsDbFixture(
+	event: TheSportsDbEvent,
+): LfcFixture {
+	const isHome = (event.strHomeTeam || "").toLowerCase().includes("liverpool");
+
+	// Parse date safely
+	let dateIso = "";
+	if (event.strTimestamp) {
+		const raw = event.strTimestamp.trim();
+		dateIso = raw.endsWith("Z") || raw.includes("+") ? raw : `${raw}Z`;
+	} else if (event.dateEvent) {
+		const time = event.strTime || "15:00:00";
+		dateIso = `${event.dateEvent}T${time}Z`;
+	}
+
+	// Validate date parsing
+	const parsed = new Date(dateIso);
+	if (Number.isNaN(parsed.getTime())) {
+		dateIso = new Date().toISOString();
+	}
+
+	const stadium = event.strVenue?.trim() || (isHome ? "Anfield" : "TBC");
+
+	return {
+		id: String(event.idEvent),
+		title: event.strEvent || `${event.strHomeTeam} vs ${event.strAwayTeam}`,
+		date: dateIso,
+		stadium,
+		homeTeam: event.strHomeTeam || "Liverpool",
+		awayTeam: event.strAwayTeam || "Opponent",
+		homeTeamBadge: event.strHomeTeamBadge || undefined,
+		awayTeamBadge: event.strAwayTeamBadge || undefined,
+		competition: event.strLeague || "Premier League",
+		competitionBadge: event.strLeagueBadge || undefined,
+		season: event.strSeason || undefined,
+		round: event.intRound ? `Round ${event.intRound}` : undefined,
+		thumb: event.strThumb || undefined,
+		banner: event.strBanner || undefined,
+		poster: event.strPoster || undefined,
+		isHome,
+		status: event.strStatus || "NS",
+	};
 }
 
 /**
@@ -21,45 +53,6 @@ export function getBestImageUrl(sizes?: Sizes): string | undefined {
 export function isLiverpoolHome(homeTeamName = ""): boolean {
 	const normalized = homeTeamName.toLowerCase().trim();
 	return normalized.includes("liverpool");
-}
-
-export type MatchOutcome = "win" | "draw" | "loss" | "unknown";
-
-/**
- * Determine the outcome of a played match from Liverpool FC perspective
- */
-export function getMatchOutcome(fixture: LfcFixtureResponse): {
-	outcome: MatchOutcome;
-	label: string;
-	lfcScore?: number;
-	opponentScore?: number;
-} {
-	const { matchData } = fixture;
-	const score = matchData?.result?.score;
-	if (
-		!score ||
-		typeof score.home !== "number" ||
-		typeof score.away !== "number"
-	) {
-		return { outcome: "unknown", label: "Played" };
-	}
-
-	const isHome = isLiverpoolHome(matchData.homeTeam);
-	const lfcScore = isHome ? score.home : score.away;
-	const oppScore = isHome ? score.away : score.home;
-
-	if (lfcScore > oppScore) {
-		return { outcome: "win", label: "WIN", lfcScore, opponentScore: oppScore };
-	}
-	if (lfcScore === oppScore) {
-		return {
-			outcome: "draw",
-			label: "DRAW",
-			lfcScore,
-			opponentScore: oppScore,
-		};
-	}
-	return { outcome: "loss", label: "LOSS", lfcScore, opponentScore: oppScore };
 }
 
 /**
@@ -150,7 +143,7 @@ export function formatMatchDate(isoString: string) {
 
 	const fullDateTime = `${formattedDate} • ${formattedTime}`;
 
-	// Month key for grouping e.g. "2026-08"
+	// Month key for grouping e.g. "2026-09"
 	const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 	const monthName = date.toLocaleDateString("en-GB", {
 		month: "long",
@@ -204,28 +197,71 @@ export function getCountdown(targetIsoDate: string) {
 }
 
 /**
- * Generate Google Calendar URL for a fixture
+ * Generate Google Calendar URL for an upcoming fixture
  */
-export function createGoogleCalendarUrl(fixture: LfcFixtureResponse): string {
-	const { matchData, title } = fixture;
-	const matchDate = new Date(matchData.date);
+export function createGoogleCalendarUrl(fixture: LfcFixture): string {
+	const matchDate = new Date(fixture.date);
 	if (Number.isNaN(matchDate.getTime())) return "#";
 
-	// 2 hours match window
+	// Standard 2-hour match window
 	const endDate = new Date(matchDate.getTime() + 2 * 60 * 60 * 1000);
 
 	const formatGCalDate = (d: Date) => d.toISOString().replace(/-|:|\.\d+/g, "");
 
 	const text = encodeURIComponent(
-		`${matchData.homeTeam} vs ${matchData.awayTeam} - ${matchData.competition?.displayName || "Match"}`,
+		`${fixture.homeTeam} vs ${fixture.awayTeam} - ${fixture.competition || "Match"}`,
 	);
 	const dates = `${formatGCalDate(matchDate)}/${formatGCalDate(endDate)}`;
 	const location = encodeURIComponent(
-		`${matchData.stadium || "Stadium"}, ${isLiverpoolHome(matchData.homeTeam) ? "Liverpool, UK" : ""}`,
+		`${fixture.stadium || "Stadium"}${fixture.isHome ? ", Liverpool, UK" : ""}`,
 	);
 	const details = encodeURIComponent(
-		`Liverpool FC fixture: ${title}\nCompetition: ${matchData.competition?.displayName || "Football"}\nVenue: ${matchData.stadium}`,
+		`Liverpool FC upcoming fixture: ${fixture.title}\nCompetition: ${fixture.competition}\nVenue: ${fixture.stadium}`,
 	);
 
 	return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&location=${location}&details=${details}`;
+}
+
+const DEFAULT_TTL_SECONDS = 86400; // 1 day fallback if no upcoming events
+
+/**
+ * Calculate TTL in seconds until strTimestamp + 1 day
+ */
+export function calculateFixtureTtlSeconds(
+	matchIsoDate?: string,
+	rawTimestamp?: string,
+	nowMs: number = Date.now(),
+): number {
+	let matchTimeMs = 0;
+
+	if (rawTimestamp) {
+		const raw = rawTimestamp.trim();
+		const iso =
+			raw.endsWith("Z") || raw.includes("+")
+				? raw
+				: `${raw.replace(" ", "T")}Z`;
+		const parsed = new Date(iso).getTime();
+		if (!Number.isNaN(parsed)) {
+			matchTimeMs = parsed;
+		}
+	}
+
+	if (!matchTimeMs && matchIsoDate) {
+		const parsed = new Date(matchIsoDate).getTime();
+		if (!Number.isNaN(parsed)) {
+			matchTimeMs = parsed;
+		}
+	}
+
+	if (!matchTimeMs) {
+		return DEFAULT_TTL_SECONDS;
+	}
+
+	const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+	const expireTimestamp = matchTimeMs + ONE_DAY_MS;
+	const diffSeconds = Math.floor((expireTimestamp - nowMs) / 1000);
+
+	// If match was in the past and already expired or expiring within seconds,
+	// keep a 1-hour buffer so we don't spam the API on every request
+	return diffSeconds > 0 ? diffSeconds : 3600;
 }

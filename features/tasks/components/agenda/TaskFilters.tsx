@@ -133,7 +133,7 @@ export default function TaskFilters({
 			const params = new URLSearchParams(searchParams.toString());
 			if (
 				!value ||
-				value === "all" ||
+				(key !== KEY_RANGE && value === "all") ||
 				value === "false" ||
 				(key === KEY_RANGE && value === "week") ||
 				(key === KEY_WEEK_OFFSET && value === "0")
@@ -387,7 +387,7 @@ export default function TaskFilters({
 											: "text-slate-500 hover:text-slate-700 bg-white/50"
 									}`}
 								>
-									Next 7 Days
+									7 Days
 								</button>
 								<button
 									type="button"
@@ -398,7 +398,18 @@ export default function TaskFilters({
 											: "text-slate-500 hover:text-slate-700 bg-white/50"
 									}`}
 								>
-									Next 1 Month
+									1 Month
+								</button>
+								<button
+									type="button"
+									onClick={() => setFilter(KEY_RANGE, "all")}
+									className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center active:scale-95 ${
+										localRange === "all"
+											? "bg-slate-900 text-white shadow-xs"
+											: "text-slate-500 hover:text-slate-700 bg-white/50"
+									}`}
+								>
+									All
 								</button>
 							</div>
 						)}
@@ -618,6 +629,17 @@ export default function TaskFilters({
 									}`}
 								>
 									1 Month
+								</button>
+								<button
+									type="button"
+									onClick={() => setFilter(KEY_RANGE, "all")}
+									className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all cursor-pointer active:scale-95 ${
+										localRange === "all"
+											? "bg-slate-900 text-white shadow-xs"
+											: "text-slate-400 hover:text-slate-600"
+									}`}
+								>
+									All
 								</button>
 							</div>
 						))}

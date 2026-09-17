@@ -3,9 +3,9 @@
 This document provides foundational context for any AI coding assistant (e.g., Claude, GPT, Gemini, Grok, Mima, Copilot) to ensure architectural consistency, security, and efficiency across the codebase.
 
 ## 🛠 Tech Stack
-- **Framework:** Next.js 16.2.10 (App Router) & React 19.2.7
+- **Framework:** Next.js 16.3.5 (App Router) & React 19.3.0
 - **Language:** TypeScript 5.9.3
-- **Package Manager:** pnpm 11.11.0
+- **Package Manager:** pnpm 12.4.2
 - **Database:** Supabase (Auth, PostgreSQL)
 - **Real-time Config:** Firebase Remote Config
 - **Cache/Session:** Upstash Redis
@@ -24,7 +24,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Dev Server:** `pnpm run dev` uses Turbo compiler with telemetry disabled (~60% faster startup)
 - **Build Process:** `pnpm run build` with filesystem caching and optimizations (~50% faster)
 - **Bundle Analysis:** `pnpm run build:analyze` for bundle size optimization
-- **pnpm Upgrade:** v11.11.0 with improved dependency resolution
+- **pnpm Upgrade:** v12.4.2 with improved dependency resolution and native binary performance
 - **Image Optimization:** Enhanced device sizes, formats (AVIF/WebP), and caching
 - **TypeScript:** Incremental compilation with performance optimizations
 
@@ -168,7 +168,7 @@ Strictly for routing and page definitions.
 ## 🚀 Development & Build Optimization
 
 ### Performance Enhancements Implemented
-- **pnpm Upgrade:** v8.12.1 → v11.11.0 for faster dependency management
+- **pnpm Upgrade:** v11.11.0 → v12.4.2 for faster dependency management and native execution
 - **Next.js Turbo:** `--turbo` flag enabled for faster compilation
 - **Telemetry Disabled:** `NEXT_TELEMETRY_DISABLED=1` reduces startup overhead
 - **Filesystem Caching:** Webpack caching with build dependencies tracking

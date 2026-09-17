@@ -12,9 +12,9 @@ This document provides foundational context for any AI coding assistant (e.g., C
 > - **Strict Anti-Gradient & Anti-Emoji Mandates**: Zero gradient headers, zero gradient modals, zero multi-color gradient typography, zero ambient blur orbs (`blur-3xl`), and zero raw unicode emojis.
 
 ## 🛠 Tech Stack
-- **Framework:** Next.js 16.2.10 (App Router) & React 19.2.7
+- **Framework:** Next.js 16.3.5 (App Router) & React 19.3.0
 - **Language:** TypeScript 5.9.3
-- **Package Manager:** pnpm 11.11.0
+- **Package Manager:** pnpm 12.4.2
 - **Database:** Supabase (Auth, PostgreSQL)
 - **Real-time Config:** Firebase Remote Config
 - **Cache/Session:** Upstash Redis
@@ -38,7 +38,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Sentry Build Optimization:** `withSentryConfig` conditionally enabled only for production releases (`VERCEL_ENV === "production"` or `ENABLE_SENTRY_BUILD=true`) with `deleteSourcemapsAfterUpload: true`
 - **Vercel Serverless Harmony:** Removed custom Webpack `splitChunks` and manual cache directory overrides to let Next.js & Vercel manage route-level chunking and remote caching natively
 - **Bundle Analysis:** `pnpm run build:analyze` for bundle size optimization
-- **pnpm Upgrade:** v11.11.0 with improved dependency resolution
+- **pnpm Upgrade:** v12.4.2 with improved dependency resolution and native binary performance
 - **Image Optimization:** Enhanced device sizes, formats (AVIF/WebP), and caching
 - **TypeScript:** Incremental compilation with performance optimizations
 
@@ -149,7 +149,7 @@ Strictly for routing and page definitions.
 - **Architecture**: Domain-driven feature in `features/liverpool/` fetching from TheSportsDB free API (`thesportsdb.com/api/v1/json/123/eventsnext.php?id=133602`) with 1-hour Next.js ISR revalidation, Upstash Redis caching (`CACHE_KEYS.LFC_FIXTURES`), and defensive data fallbacks.
 - **Dynamic Redis Caching**: Caches raw API response to Upstash Redis with a dynamic TTL set to `strTimestamp + 1 day` of the imminent fixture, ensuring zero stale queries after matchday completion while providing <10ms response times. Includes manual `forceRefresh` cache invalidation via UI refresh button.
 - **Next Matchday Focus**: Exclusively focuses on the imminent upcoming matchday with a prominent hero card (`NextMatchHero.tsx`), featuring a live countdown clock, official high-resolution team badges, stadium venue, and local timezone kickoff times.
-- **Aesthetics & UI/UX**: Pure light model with Liverpool Red accents, signature textured canvas (`bg-slate-50/80 bg-dot-pattern`), `rounded-3xl` elevated floating hero card, calibrated bottom clearance (`pb-36 sm:pb-44`), and zero clutter (filters and redundant lists removed).
+- **Aesthetics & UI/UX**: **Zero-Scroll Full Viewport Standard** (`h-[100dvh] max-h-[100dvh] overflow-hidden` on both mobile and desktop), pure light model with Liverpool Red accents, signature textured canvas (`bg-slate-50/80 bg-dot-pattern`), horizontal side-by-side team clash arena with prominent crests, bold fixture title (`Bournemouth vs Liverpool`), live 4-tile countdown HUD, calibrated bottom clearance (`pb-20 sm:pb-24`) clearing `CompactBottomBar`, and zero empty-space stretching.
 - **Integrations**: Google Calendar URL export (`createGoogleCalendarUrl`) for 1-click scheduling in user's local timezone.
 
 ### Blog System
@@ -206,6 +206,8 @@ Strictly for routing and page definitions.
 - **Architecture**: Domain-driven feature in `features/reminders/` and management portal at `/admin/reminders`.
 - **Keyboard Ergonomics**: Instant note submission via <kbd>⌘ + Enter</kbd> (Mac) or <kbd>Ctrl + Enter</kbd> (Windows).
 - **One-Click Actions**: Dedicated `Copy Note` action on each card with visual checkmark feedback.
+- **Two-Step Delete Confirmation**: Integrated with `CustomModal` (`variant="danger"`), featuring loading spinners on both the modal confirmation button and the card's delete action button to prevent accidental note purges.
+- **Consistent Relative Timestamps**: Enforces concise creation timestamps (`formatCreatedTime`), standardizing items created within the last 60 seconds to `Created < 1 min ago` with `whitespace-nowrap` to prevent card footers from wrapping into multi-line layouts.
 - **Search & TTL Filter Strip**: Live search bar paired with duration category filters (*All, Expiring Soon, 1 Day, 1 Week, 1 Month*).
 - **Redis TTL Lifespan**: Backed by Upstash Redis with selectable expiration lifespans (1 Day, 1 Week, 1 Month) and automatic key expiration.
 - **Interactive Links**: Automatic URL detection with clickable pill buttons and one-click copy-to-clipboard functionality.
@@ -274,7 +276,7 @@ Strictly for routing and page definitions.
 ## 🚀 Development & Build Optimization
 
 ### Performance Enhancements Implemented
-- **pnpm Upgrade:** v8.12.1 → v11.11.0 for faster dependency management
+- **pnpm Upgrade:** v11.11.0 → v12.4.2 for faster dependency management and native execution
 - **Next.js Turbo:** `--turbo` flag enabled for faster compilation
 - **Telemetry Disabled:** `NEXT_TELEMETRY_DISABLED=1` reduces startup overhead
 - **Filesystem Caching:** Webpack caching with build dependencies tracking

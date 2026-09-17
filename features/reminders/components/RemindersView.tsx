@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
+import CustomModal from "@/features/shared/components/CustomModal";
 
 /**
  * Regex to detect URLs in text (http, https, or bare www.)
@@ -64,6 +65,31 @@ function shortenUrl(raw: string): string {
 	} catch {
 		return raw.length > 16 ? `${raw.slice(0, 14)}…` : raw;
 	}
+}
+
+/**
+ * Formats reminder creation timestamp with a concise and consistent label.
+ * For items created under 1 minute ago, returns "Created < 1 min ago"
+ * to maintain consistent structure and avoid multi-line wrapping in cards.
+ */
+function formatCreatedTime(createdAt: string): string {
+	const createdTime = new Date(createdAt).getTime();
+	const now = Date.now();
+	const diffSeconds = Math.max(0, Math.floor((now - createdTime) / 1000));
+
+	if (diffSeconds < 60) {
+		return "Created < 1 min ago";
+	}
+
+	const distance = formatDistanceToNow(new Date(createdAt), {
+		addSuffix: true,
+	});
+
+	if (distance.includes("less than a minute")) {
+		return "Created < 1 min ago";
+	}
+
+	return `Created ${distance}`;
 }
 
 /**
@@ -189,6 +215,8 @@ export default function RemindersView({
 	>("all");
 	const [copiedNoteId, setCopiedNoteId] = useState<string | null>(null);
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
+	const [deleteReminderId, setDeleteReminderId] = useState<string | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 	const [isPending, startTransition] = useTransition();
 
 	const charsLeft = 150 - text.length;
@@ -231,7 +259,14 @@ export default function RemindersView({
 	};
 
 	const handleDelete = (id: string) => {
-		if (isPending) return;
+		setDeleteReminderId(id);
+	};
+
+	const handleConfirmDelete = () => {
+		if (!deleteReminderId || isDeleting) return;
+		const id = deleteReminderId;
+		setIsDeleting(true);
+
 		startTransition(async () => {
 			try {
 				const { success } = await deleteReminder(id);
@@ -241,6 +276,10 @@ export default function RemindersView({
 				}
 			} catch (error) {
 				console.error("Failed to delete reminder", error);
+				showToast("Failed to delete reminder");
+			} finally {
+				setIsDeleting(false);
+				setDeleteReminderId(null);
 			}
 		});
 	};
@@ -621,15 +660,12 @@ export default function RemindersView({
 									{/* Card Footer Actions */}
 									<div className="flex flex-wrap items-center justify-between mt-auto gap-2 pt-3.5 border-t border-slate-100">
 										{/* Creation timestamp */}
-										<span className="text-[11px] font-semibold text-slate-400">
-											Created{" "}
-											{formatDistanceToNow(new Date(reminder.createdAt), {
-												addSuffix: true,
-											})}
+										<span className="text-[11px] font-semibold text-slate-400 whitespace-nowrap">
+											{formatCreatedTime(reminder.createdAt)}
 										</span>
 
 										{/* Quick Action Buttons */}
-										<div className="flex items-center gap-1.5">
+										<div className="flex items-center gap-1.5 shrink-0">
 											{/* Copy Note Button */}
 											<button
 												type="button"
@@ -688,12 +724,16 @@ export default function RemindersView({
 											<button
 												type="button"
 												onClick={() => handleDelete(reminder.id)}
-												disabled={isPending}
+												disabled={isPending || isDeleting}
 												className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0 cursor-pointer disabled:opacity-50"
 												title="Delete reminder"
 												aria-label="Delete reminder"
 											>
-												<Trash2 className="w-4 h-4" />
+												{isDeleting && deleteReminderId === reminder.id ? (
+													<Loader2 className="w-4 h-4 animate-spin text-rose-500" />
+												) : (
+													<Trash2 className="w-4 h-4" />
+												)}
 											</button>
 										</div>
 									</div>
@@ -703,6 +743,21 @@ export default function RemindersView({
 					</div>
 				)}
 			</div>
+
+			{/* Custom Delete Confirmation Modal */}
+			<CustomModal
+				isOpen={!!deleteReminderId}
+				onClose={() => {
+					if (!isDeleting) setDeleteReminderId(null);
+				}}
+				onConfirm={handleConfirmDelete}
+				title="Delete Reminder"
+				description="Are you sure you want to permanently delete this reminder? This action cannot be undone."
+				confirmText="Delete"
+				cancelText="Cancel"
+				variant="danger"
+				isLoading={isDeleting}
+			/>
 
 			{/* Toast Notification Alert */}
 			<AnimatePresence>

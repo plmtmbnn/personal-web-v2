@@ -1,3 +1,10 @@
+# [0.88.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.87.0...v0.88.0) (2026-09-17)
+
+
+### Features
+
+* revamp liverpool matchday hub to zero-scroll layout and enhance reminders deletion flow ([4afd342](https://github.com/plmtmbnn/personal-web-v2/commit/4afd3429a0bbdb21321df158c4dacfdbbcc95336))
+
 # [0.87.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.86.0...v0.87.0) (2026-09-10)
 
 

@@ -1,3 +1,10 @@
+# [0.89.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.88.0...v0.89.0) (2026-09-18)
+
+
+### Features
+
+* eliminate sparkles, refine portal pages, and enhance responsiveness ([df7ec6e](https://github.com/plmtmbnn/personal-web-v2/commit/df7ec6e8c348c00a13f204c9b66ed6665dfc4d0e))
+
 # [0.88.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.87.0...v0.88.0) (2026-09-17)
 
 

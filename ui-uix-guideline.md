@@ -2,10 +2,14 @@
 
 This document outlines the core UI/UX patterns, design principles, and architectural standards for the `personal-web-v2` codebase, standardized around a **Modern Floating Card** dashboard aesthetic.
 
+> [!CAUTION]
+> **Anti-AI-Slop Mandate (Strict).** Every AI assistant working on this codebase MUST treat this guideline as a hard constraint — not a suggestion. The most common failure mode is AI-generated "slop": predictable, generic, template-like UI patterns that look like every other SaaS product. The rules in this document exist to prevent that outcome. Violations will be reverted.
+
 ---
 
-## 1. Core Design Philosophy: Floating Cards & Subtle Neomorphism
-The application utilizes a unified, modern dashboard aesthetic characterized by clean surfaces, distinct depth, and precise data visualization.
+## 1. Core Design Philosophy: Floating Cards & Precision Surfaces
+
+The application utilizes a unified, modern dashboard aesthetic characterized by clean surfaces, distinct depth, and precise data visualization. **No aesthetic decision should ever look auto-generated.**
 
 * **Floating Cards:** The core architectural unit is the "Floating Card." Components are encapsulated within panels featuring large border radii (e.g., `rounded-2xl`, `rounded-3xl`, or `rounded-[2rem]`), subtle border rings (`border border-slate-200/80`), and soft drop shadows (`shadow-xs` to `shadow-xl`) to create a distinct layering effect over the canvas.
 * **Subtle Textures:** The global background utilizes an off-white or very light gray canvas (`bg-slate-50/80`) enhanced with a subtle dot-grid pattern (`bg-dot-pattern`), providing tactile depth without distracting from content.
@@ -19,7 +23,87 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
 
 ---
 
-## 2. CSS Hygiene & Preflight Standards
+## 2. Anti-AI-Slop Mandate (UI/UX)
+
+This section defines explicit prohibitions against the most common AI-generated UI patterns. These are "red flags" — immediately recognizable signs of lazy, template-driven UI work. **Any component, page, or PR that exhibits these patterns must be refactored.**
+
+### 2.1 Prohibited Visual Patterns ("Slop Signatures")
+
+The following patterns are **strictly forbidden** in this codebase:
+
+* **Hero Section Clichés:**
+  - NEVER center a large gradient headline with a subtitle below it and a "Get Started" CTA button as the entire hero. This is the most recognizable AI-slop hero pattern.
+  - NEVER place ambient glowing orbs or blurred gradient blobs (`blur-3xl`) behind hero content. This is a hallmark of AI-generated landing pages circa 2023–2024.
+  - NEVER use multi-color gradient text (e.g., `from-purple-400 to-cyan-400`) as a headline effect. Headlines must be solid `text-slate-900` or a single, deliberate semantic accent.
+  - NEVER stack: big emoji → headline → subtitle → CTA button in that exact order. This is a cargo-cult pattern from AI code generators.
+
+* **Card Grid Uniformity:**
+  - NEVER render a grid of 3 or 4 identical cards with the exact same structure: icon (top-left) → title → description → CTA link. This looks machine-generated.
+  - Cards within the same view MUST have intentional visual differentiation: varying accent colors, differing content density, asymmetric badge placement, or distinct semantic roles.
+  - NEVER use generic placeholder icons (`Star`, `Zap`, `Shield`, `Rocket`, `Check`) as the primary icon for a card without a deliberate, domain-specific reason. Every icon choice must be semantically justified.
+
+* **Feature List Sections:**
+  - NEVER render a "Features" section as a uniformly spaced icon-title-description list with 6 identical items in a 3×2 grid. This is a SaaS landing page cliché.
+  - If feature breakdowns are needed, they must be embedded as functional UI patterns (e.g., a live demo, a data table, a telemetry strip) — not a marketing bullet list.
+
+* **Forbidden Badge/Pill Patterns:**
+  - NEVER render a floating "✨ New" or "🚀 Introducing..." marquee badge above a hero headline. This is a startup landing page trope.
+  - NEVER use `Sparkles` icon (from `lucide-react` or any icon library) anywhere in the application. It is the single most overused AI-slop icon and immediately signals generic, auto-generated UI. Use purpose-specific icons instead (e.g., `Star`, `Award`, `Wand2`, `Cpu` depending on context).
+  - NEVER combine `Sparkles` + gradient text + ambient blur orbs in the same component. This triple combination is the canonical AI-slop signature.
+
+* **Loading & Skeleton States:**
+  - NEVER show a full-screen spinner with a brand logo in the center. Use targeted, in-component skeleton placeholders that match the exact shape and dimensions of the incoming content.
+  - NEVER use a generic `CircleLoader` or `BounceLoader` from external spinner libraries. Skeletons must use `animate-pulse bg-slate-200 rounded-*` blocks mirroring real content dimensions.
+
+* **Section Dividers & Spacers:**
+  - NEVER use decorative SVG wave/curve dividers between page sections. These are template-kit artifacts.
+  - NEVER inject arbitrary `<Separator />` lines between every card or every section. Spacing and visual rhythm must come from deliberate padding and card structure, not ornamental rules.
+
+* **Copy & Microcopy:**
+  - NEVER use the phrases: "Supercharge your workflow", "Built for the modern developer", "Unlock the power of...", "Seamlessly integrate...", "Level up your...", "Take it to the next level", "Game-changing", or any AI-speak superlatives in any UI label, button, heading, badge, or tooltip. All copy must be direct, specific, and first-person authentic.
+  - NEVER auto-generate placeholder text with `Lorem ipsum`. All placeholder and sample content must be contextually accurate to the domain.
+
+### 2.2 Anti-Pattern Icon Blacklist
+
+The following icons are **banned from use in UI surfaces** unless there is an exceptional, documented, domain-specific justification approved in a code review:
+
+| Banned Icon | Reason | Preferred Alternatives |
+|---|---|---|
+| `Sparkles` | #1 most overused AI-slop icon — banned sitewide | `Star`, `Award`, `Wand2`, `Cpu`, `Gem` |
+| `Rocket` (as decoration) | Generic "launch/startup" cliché | `ArrowUpRight`, `ExternalLink`, `Play` |
+| `Zap` (as decoration) | Generic "fast/powerful" cliché | Context-specific: `Timer`, `Bolt`, `Activity` |
+| `Star` (as decoration) | Generic "rating/favorite" misuse | `Award`, `Trophy`, `Bookmark` |
+| `Shield` (as generic security) | Lazy security icon | `ShieldCheck`, `ShieldAlert`, `Lock`, `KeyRound` |
+| `Globe` (as generic icon) | Overused "global/web" cliché | `Map`, `Navigation`, `Compass`, `Earth` |
+| `Magic` / `Wand` (as decoration) | AI tool marketing trope | Only use when the feature is genuinely algorithmic |
+
+### 2.3 Layout Structural Anti-Patterns
+
+* **NEVER flatten an entire page into a vertical stack of full-width sections.** Pages must have visual rhythm: sidebar + main, asymmetric two-column, floating card clusters with varying widths, or a defined information hierarchy.
+* **NEVER use `justify-between` + icon + title + arrow as the universal card pattern.** This creates visually monotonous lists that read like a file explorer.
+* **NEVER default to centering all content.** Centered layouts are appropriate for single-focus views (empty states, 404, login). Multi-content pages must use left-aligned or grid-based layouts.
+* **NEVER use `opacity-50` on entire disabled sections.** This creates a murky, indistinct UI. Use specific skeleton states, disabled chip badges, or contextual empty states instead.
+* **NEVER stack more than 2 consecutive full-width section dividers (`w-full border-b border-slate-200`).** Use card grouping and spatial rhythm instead.
+
+### 2.4 Motion & Animation Anti-Patterns
+
+* **NEVER animate everything.** Applying `framer-motion` or CSS transitions to every single element on page load creates visual noise, not sophistication. Animations must be purposeful: state changes, user-triggered interactions, data loading transitions.
+* **NEVER use `animate-bounce` on decorative icons.** Bouncing icons are a UI regression to early 2010s web design.
+* **NEVER use `animate-spin` on static decorative elements.** Rotation animations are reserved for genuine loading indicators only.
+* **NEVER apply `transition-all duration-300` as a blanket style** across all elements. Specify exactly which CSS properties to animate (e.g., `transition-shadow`, `transition-transform`).
+* **Stagger animations deliberately:** If multiple items animate in, use `staggerChildren` with a conservative `delayChildren: 0.05` to `0.1` seconds. Never exceed `0.2s` per item stagger — it makes the page feel sluggish.
+
+### 2.5 Color & Contrast Anti-Patterns
+
+* **NEVER use raw Tailwind spectrum colors as primary UI accents** (e.g., plain `blue-500`, `green-500`, `red-500`, `purple-500` straight from the palette). All colors must be deliberately chosen within the established semantic palette (see §8).
+* **NEVER place light text on a light background** without checking WCAG AA contrast ratios. The minimum acceptable contrast is 4.5:1 for body text and 3:1 for large headings.
+* **NEVER use `text-gray-*` classes.** This project uses the `slate` neutral scale exclusively. `gray` and `zinc` neutrals are forbidden to maintain color system consistency.
+* **NEVER use more than 3 distinct accent colors within a single card component.** Visual overload is a direct result of AI models applying every available color to signal "rich" UI.
+
+---
+
+## 3. CSS Hygiene & Preflight Standards
+
 To prevent layout degradation, hardcoded specificity conflicts, and broken mobile variants:
 
 * **No Aggressive Universal Resets:** Never define `* { margin: 0; padding: 0; }` in `globals.css`. Allow Tailwind CSS v4 Preflight to handle box resets naturally.
@@ -30,7 +114,8 @@ To prevent layout degradation, hardcoded specificity conflicts, and broken mobil
 
 ---
 
-## 3. Mobile-First & Responsive Approach
+## 4. Mobile-First & Responsive Approach
+
 A mobile-first mindset is strictly enforced across the codebase. Layouts gracefully scale up rather than gracefully degrading.
 
 * **Responsive Grids:** Complex layouts start stacked on mobile (`grid-cols-1`) and expand to multi-column grid layouts on larger screens (`md:grid-cols-2`, `lg:grid-cols-3` or `xl:grid-cols-3`).
@@ -45,7 +130,8 @@ A mobile-first mindset is strictly enforced across the codebase. Layouts gracefu
 
 ---
 
-## 4. Floating Bottom Navigation (`CompactBottomBar`)
+## 5. Floating Bottom Navigation (`CompactBottomBar`)
+
 The primary application navigation utilizes a floating glassmorphic pill bar positioned at the bottom of the viewport:
 
 * **Glassmorphic Surface:** Enclosed in `bg-white/90 backdrop-blur-2xl` with a subtle inner ring (`ring-1 ring-slate-900/5`) and soft ambient drop shadow (`shadow-[0_16px_48px_-12px_rgba(15,23,42,0.15)]`).
@@ -54,36 +140,44 @@ The primary application navigation utilizes a floating glassmorphic pill bar pos
 
 ---
 
-## 5. Motion, Animation, & Feedback
-Animations are used purposefully to guide attention and provide feedback.
+## 6. Motion, Animation, & Feedback
+
+Animations are used purposefully to guide attention and provide feedback. **Less is more.**
 
 * **Framer Motion Integration:** Page transitions, popovers, and animated tab pills utilize `framer-motion` for fluid state changes.
 * **Spring Physics:** Animations favor spring physics (`type: "spring", stiffness: 380, damping: 30` or `stiffness: 260, damping: 20` for floating card hover lifts) over linear easing for a snappy, organic feel.
 * **Micro-interactions:** Hover states are enriched with slight translations (`hover:-translate-y-1.5`, `whileHover={{ y: -4 }}`), scale boosts (`hover:scale-105`), and subtle shadow enhancements.
 * **Accessibility (Reduced Motion):** All animations respect user accessibility settings via the `useReducedMotion()` hook.
+* **Animation Discipline:** Apply animations only to state-driven transitions (hover, focus, mount, dismiss). Never animate static decorative elements. Never use `animate-bounce` or `animate-spin` on non-functional icons.
 
 ---
 
-## 6. Typography & Text Contrast
+## 7. Typography & Text Contrast
+
 * **Metric Typography:** Primary values use large font sizes and extra-bold weights (`text-xl sm:text-3xl font-extrabold text-slate-900`) for immediate legibility.
 * **High Contrast Hierarchy:** Primary labels use `text-slate-700 font-bold`, while secondary units and sublabels use `text-slate-500 font-semibold`.
 * **Dark Mode & Dark Panels:** When using dark containers (`bg-slate-900`), text MUST be set to pure white or vibrant glowing accents (`text-indigo-400`, `text-emerald-400`, `text-cyan-400`, `text-red-400`) with sufficient contrast.
+* **Zero Gradient Text:** Multi-color gradient text (`bg-clip-text text-transparent`) is absolutely prohibited on any headline, badge, or label. All text must be a single, deliberate solid color.
+* **Authentic Microcopy:** All button labels, tooltips, placeholders, and section headings must be written in plain, direct language. No AI-speak marketing phrases (see §2.1).
 
 ---
 
-## 7. Color System & Semantic Accents
-* **Base Palette:** Neutral slates for structure (`slate-50` to `slate-950`).
-* **Semantic Accents:** 
+## 8. Color System & Semantic Accents
+
+* **Base Palette:** Neutral slates for structure (`slate-50` to `slate-950`). Use exclusively `slate-*` for neutral tones — never `gray-*` or `zinc-*`.
+* **Semantic Accents:**
   * **Indigo/Blue:** Engineering, systems architecture, primary actions.
   * **Emerald/Teal:** Active states, running/endurance logs, match victory results (`WIN`), success metrics.
   * **Cyan:** Fintech systems, interactive data cards, chart indicators.
   * **Red / Crimson (`red-600` / `#C8102E`):** Liverpool FC Matchday Hub, Anfield home badges, countdown highlights, live matchday indicators.
   * **Amber / Gold (`amber-500`):** Match draws (`DRAW`), trophies, wishlists, market volatility warnings.
   * **Rose / Coral (`rose-600`):** Alerts, notifications, match losses (`LOSS`), pending task counters.
+* **Color Discipline:** NEVER apply more than 3 distinct accent colors within a single card component. Color choices must reinforce semantic meaning, not decoration.
 
 ---
 
-## 8. Progressive Loading & Infinite Pagination Standards
+## 9. Progressive Loading & Infinite Pagination Standards
+
 For content-heavy feeds, journals, and dynamic list views:
 
 * **Progressive Batch Slicing:** Render initial content in controlled batches (e.g. `PAGE_SIZE = 6`) to optimize DOM tree performance and initial rendering speed.
@@ -95,21 +189,25 @@ For content-heavy feeds, journals, and dynamic list views:
 
 ---
 
-## 9. Empty State Design Patterns
+## 10. Empty State Design Patterns
+
 Empty states are critical UX moments that guide users when no data is available. They must be contextual, actionable, and visually consistent.
 
 * **Floating Card Container:** Use solid white surfaces (`bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl shadow-xs`).
 * **Actionable CTAs:** Always provide a clear action when the user can fix the empty state (connect account, clear filters, refresh, etc.).
-* **Icon Selection:** 
-  - `CheckCircle` = Success/Ready
-  - `ShieldAlert` = Warning/Error
-  - `Sparkles` = Empty but ready for content
-  - `Activity` = Integration/Sync related
-  - `TrendingUp` = Data exists elsewhere
+* **Icon Selection (domain-specific only):**
+  - `CheckCircle` = Success / ready state
+  - `ShieldAlert` = Warning or error state
+  - `InboxIcon` = Empty inbox or no results found
+  - `Activity` = Integration / sync related
+  - `TrendingUp` = Data exists elsewhere or awaiting first entry
+  - **Do NOT use `Sparkles` for any empty state.** Use `InboxIcon`, `FolderOpen`, or a domain-specific icon instead.
+* **Copy Discipline:** Empty state messages must be specific to the domain. NEVER use generic phrases like "Nothing here yet!" or "No data found." Write contextual, instructional copy (e.g., "No running activities synced. Connect your Strava account to import your logs.").
 
 ---
 
-## 10. Error Page Standards
+## 11. Error Page Standards
+
 Error pages (404, 500, etc.) must be simple, direct, and provide clear navigation options.
 
 * **404 Not Found Pattern:**
@@ -118,10 +216,12 @@ Error pages (404, 500, etc.) must be simple, direct, and provide clear navigatio
   - Brief explanation: One sentence maximum
   - Dual action buttons: Primary (Go Home) + Secondary (Go Back)
   - Centered floating card (`max-w-md bg-white border border-slate-200/80 rounded-3xl shadow-xs`)
+  - No decorative emojis, no `Sparkles` icon, no gradient text on error pages.
 
 ---
 
-## 11. Authentication & Session Management UX
+## 12. Authentication & Session Management UX
+
 Authentication flows must be seamless, secure, and user-friendly with automatic session maintenance.
 
 * **TOTP Authenticator Protection (`PinGuard.tsx`):** Protects restricted sections (Admin, Tasks) using a 6-digit Google Authenticator code verified via `otplib`. Optimized for device numeric keypads with 12-hour session lifetime.
@@ -132,7 +232,8 @@ Authentication flows must be seamless, secure, and user-friendly with automatic 
 
 ---
 
-## 12. HTML5 Canvas Export & Web Share Standards
+## 13. HTML5 Canvas Export & Web Share Standards
+
 Dynamic image and sticker generation provides engaging, shareable visual summaries across adventures, utilities, and travel.
 
 ### Canvas Rendering Principles
@@ -157,7 +258,8 @@ Dynamic image and sticker generation provides engaging, shareable visual summari
 
 ---
 
-## 13. Developer Utilities UI/UX & Module Focus Patterns
+## 14. Developer Utilities UI/UX & Module Focus Patterns
+
 Utilities must balance high data density with focused productivity and clear mental models.
 
 ### Categorized Utility Architecture
@@ -179,7 +281,8 @@ For side-by-side split utilities (e.g. Input vs Output, Side-by-Side Text Compar
 
 ---
 
-## 14. System Audio & Hardware Integration Standards
+## 15. System Audio & Hardware Integration Standards
+
 When utilizing native browser and device APIs for real-time utilities:
 
 * **Web Audio API (Synthesized Audio):**
@@ -191,7 +294,8 @@ When utilizing native browser and device APIs for real-time utilities:
 
 ---
 
-## 15. Admin & Operational Productivity Patterns
+## 16. Admin & Operational Productivity Patterns
+
 Operational views (e.g., Admin Dashboard, Task Agenda, Quick Reminders, Stock Manager) emphasize speed, clarity, and zero cognitive friction.
 
 ### Keyboard Shortcuts Standard
@@ -211,7 +315,8 @@ Operational views (e.g., Admin Dashboard, Task Agenda, Quick Reminders, Stock Ma
 
 ---
 
-## 16. Insights & Aggregation Hub Standards
+## 17. Insights & Aggregation Hub Standards
+
 Hub and aggregator pages (e.g., `/insights`, `/adventures`) provide curated entry points into the platform's analytical subsystems.
 
 * **Global Intelligence Telemetry Strip:** Top 4-stat telemetry strip previewing core platform domains with solid icon squircles and high-contrast numbers.
@@ -222,7 +327,8 @@ Hub and aggregator pages (e.g., `/insights`, `/adventures`) provide curated entr
 
 ---
 
-## 17. Modern Floating Card Header Standard
+## 18. Modern Floating Card Header Standard
+
 Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) are strictly obsoleted across the entire application in favor of the **Modern Floating Card Header Standard**:
 
 * **Container Architecture:** All management, intelligence, and operational views (e.g., `/admin`, `/admin/blog`, `/admin/reminders`, `/utils/stock-explorer/admin`, `/tasks`, `/investment`) encapsulate the hero header within a floating card (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`) resting on the signature textured canvas (`bg-slate-50/80 bg-dot-pattern`).
@@ -236,7 +342,8 @@ Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) are str
 
 ---
 
-## 18. Floating Widget Hygiene & Anti-Collision Mandate
+## 19. Floating Widget Hygiene & Anti-Collision Mandate
+
 To maintain an uncluttered viewport and eliminate gesture conflicts on both mobile and desktop:
 
 * **Zero Bottom-Right Overlays:** The bottom-right viewport area is reserved exclusively for the global command palette trigger (`SEARCH ⌘K`). No secondary floating buttons (such as floating "Back to Top" pills or floating scroll progress indicators) are permitted in this area.
@@ -245,7 +352,8 @@ To maintain an uncluttered viewport and eliminate gesture conflicts on both mobi
 
 ---
 
-## 19. Operational Cache Telemetry & Control Pattern
+## 20. Operational Cache Telemetry & Control Pattern
+
 For administrative caching engines and backend synchronization portals (such as the Stock Explorer Manager at `/utils/stock-explorer/admin`):
 
 * **Distinct Separation of Controls & Metrics:** Do NOT cram operational action buttons side-by-side with metric values in an uneven horizontal flex row.
@@ -260,7 +368,8 @@ For administrative caching engines and backend synchronization portals (such as 
 
 ---
 
-## 20. Feature-Module Cleanliness & Dead Code Policy
+## 21. Feature-Module Cleanliness & Dead Code Policy
+
 * **Domain-Driven Isolation:** All application logic and UI components reside under domain folders in `features/<domain>/` (e.g. `features/tasks/`, `features/investment/`, `features/adventures/`).
 * **Shared UI Consolidation:** Reusable global primitives (such as `CustomModal`, `CompactBottomBar`, `StockTicker`, `Skeleton`, `JsonValue`, `InfoTooltip`) reside exclusively in `features/shared/components/`.
 * **Zero Orphaned Directories:** Legacy root `components/` folders and dead UI components (such as standalone `Button.tsx`) must be purged to maintain single-source architectural integrity.
@@ -268,7 +377,8 @@ For administrative caching engines and backend synchronization portals (such as 
 
 ---
 
-## 21. Blog Reading Experience & Markdown Typography Standards (`/blog`, `/blog/[slug]`)
+## 22. Blog Reading Experience & Markdown Typography Standards (`/blog`, `/blog/[slug]`)
+
 To ensure an exceptional reading experience across long-form essays, technical architectures, and training logs:
 
 * **Modern Floating Reading Stage:** The article body is encased inside an elevated floating container (`bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 lg:p-14 shadow-xs`) resting on the signature dot-pattern canvas (`bg-slate-50/80 bg-dot-pattern`).
@@ -287,9 +397,47 @@ To ensure an exceptional reading experience across long-form essays, technical a
   - Inline code URLs (e.g. `` `https://strava.com` ``) are rendered as interactive pill badges with an `ExternalLink` icon and hover transitions.
   - Automatic security upgrade converts insecure `http://www.` URLs to secure `https://www.`.
 * **GitHub-Style Alert Callouts:**
-  - Supports GitHub alert blocks (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) styled with thematic Lucide icons (`Info`, `Sparkles`, `AlertCircle`, `AlertTriangle`, `ShieldAlert`), tinted borders, and high-contrast solid backgrounds.
+  - Supports GitHub alert blocks (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) styled with thematic Lucide icons (`Info`, `Lightbulb`, `AlertCircle`, `AlertTriangle`, `ShieldAlert`), tinted borders, and high-contrast solid backgrounds.
+  - **Do NOT use `Sparkles` as an alert callout icon.** Use `Lightbulb` for tips, `Info` for notes.
 * **Editor Toolbar Scaffolding (`BlogForm.tsx`):**
   - Provides quick scaffolding buttons clustered into logical groups (`[ H2 | Bold | Italic ]`, `[ Code | Code Block | Link ]`, `[ Bullet List | Numbered List | Callout Note | Table | Divider ]`).
   - One-click GFM Table injection scaffolds alignment delimiters (`:---`, `:---:`) to eliminate manual pipe formatting syntax.
+
+---
+
+## 23. AI Code Review Checklist
+
+Before submitting any AI-generated or AI-assisted component for code review, verify the following:
+
+### Visual Integrity
+- [ ] No gradient text, gradient headers, or gradient modals
+- [ ] No ambient blur orbs (`blur-3xl`, `blur-[100px]`)
+- [ ] No `Sparkles` icon used anywhere in the component
+- [ ] No raw unicode emojis in UI surfaces
+- [ ] No more than 3 accent colors in a single card
+
+### Pattern Discipline
+- [ ] Hero section does NOT follow: emoji → gradient headline → subtitle → CTA button pattern
+- [ ] Card grid items are NOT all structurally identical (icon + title + description + link)
+- [ ] No "Feature section" with 6 uniformly identical icon-description blocks in a 3x2 grid
+- [ ] Loading states use in-shape skeleton placeholders, not generic spinners
+- [ ] Empty states have domain-specific copy, not generic "Nothing here yet!" phrases
+
+### Motion & Animation
+- [ ] No `animate-bounce` or `animate-spin` on decorative elements
+- [ ] Animations are state-driven only (hover, mount, dismiss)
+- [ ] `transition-all` is NOT used as a blanket style; specific properties are targeted
+- [ ] Stagger animations use 0.1s or less delay per item
+
+### Copy & Microcopy
+- [ ] No AI-speak phrases ("Supercharge", "Level up", "Game-changing", "Seamlessly", "Unlock")
+- [ ] Button labels are action-specific verbs, not generic ("Submit", "Click Here", "Learn More")
+- [ ] No Lorem ipsum placeholder text anywhere
+
+### Code Structure
+- [ ] Component lives in the correct `features/<domain>/` directory
+- [ ] No orphaned files in root-level `components/` directory
+- [ ] Icon imports come exclusively from `lucide-react` or `react-icons/fa`
+- [ ] `gray-*` or `zinc-*` Tailwind classes are NOT used (use `slate-*` only)
 
 ---

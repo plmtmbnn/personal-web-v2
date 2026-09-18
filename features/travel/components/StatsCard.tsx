@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { CheckCircle2, Compass, Sparkles, Star } from "lucide-react";
+import { CheckCircle2, Compass, Star } from "lucide-react";
 
 interface StatsCardProps {
 	visited: number;
@@ -82,8 +82,8 @@ export default function StatsCard({ visited, total }: StatsCardProps) {
 					{/* Title & Description */}
 					<div className="space-y-1 min-w-0">
 						<div className="flex items-center gap-2">
-							<span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1">
-								<Sparkles className="w-3 h-3 text-emerald-600" />
+							<span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1.5">
+								<Compass className="w-3.5 h-3.5 text-emerald-600" />
 								Exploration Progress
 							</span>
 						</div>
@@ -145,7 +145,7 @@ export default function StatsCard({ visited, total }: StatsCardProps) {
 						</div>
 					</div>
 
-					{/* Sleek Gradient Progress Bar */}
+					{/* Solid Emerald Progress Bar */}
 					<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
 						<motion.div
 							initial={reduceMotion ? false : { width: 0 }}
@@ -156,7 +156,7 @@ export default function StatsCard({ visited, total }: StatsCardProps) {
 								damping: 30,
 								delay: 0.3,
 							}}
-							className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500 rounded-full"
+							className="h-full bg-emerald-500 rounded-full"
 						/>
 					</div>
 				</div>

@@ -60,10 +60,10 @@ export default function LiverpoolView() {
 	}, [upcomingFixtures]);
 
 	return (
-		<main className="h-[100dvh] max-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative overflow-hidden flex flex-col justify-between px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-20 sm:pb-24">
-			<div className="max-w-4xl lg:max-w-5xl mx-auto w-full flex-1 flex flex-col justify-between min-h-0">
+		<main className="min-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden overflow-y-auto flex flex-col justify-between px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-24 sm:pb-28">
+			<div className="max-w-4xl lg:max-w-5xl mx-auto w-full flex-1 flex flex-col">
 				{/* ── Breadcrumb & Sync Actions ─────────────────────────── */}
-				<div className="flex items-center justify-between gap-3 shrink-0 py-1">
+				<div className="flex items-center justify-between gap-3 shrink-0 py-1 mb-2 sm:mb-3">
 					<div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-slate-500 min-w-0">
 						<Link
 							href="/"
@@ -99,7 +99,7 @@ export default function LiverpoolView() {
 							type="button"
 							onClick={() => fetchFixtures(true)}
 							disabled={isLoading || isRefreshing}
-							className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200/80 rounded-full text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+							className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200/80 rounded-full text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-[background-color,border-color,transform] cursor-pointer disabled:opacity-50"
 							title="Refresh fixtures"
 						>
 							<RefreshCw
@@ -115,9 +115,11 @@ export default function LiverpoolView() {
 				</div>
 
 				{/* ── Main Content Area ─────────────────────────────────── */}
-				<div className="flex-1 flex flex-col justify-center min-h-0 py-1 sm:py-2">
+				<div className="w-full flex-1 flex flex-col my-auto py-1 sm:py-2">
 					{isLoading ? (
-						<FixtureSkeleton />
+						<div className="w-full my-auto">
+							<FixtureSkeleton />
+						</div>
 					) : error ? (
 						<motion.div
 							initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
@@ -138,7 +140,7 @@ export default function LiverpoolView() {
 							<button
 								type="button"
 								onClick={() => fetchFixtures()}
-								className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+								className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-xs font-bold shadow-xs active:scale-95 transition-[background-color,transform] cursor-pointer"
 							>
 								Retry Connection
 							</button>
@@ -148,7 +150,7 @@ export default function LiverpoolView() {
 							initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.35 }}
-							className="w-full flex flex-col justify-center my-auto"
+							className="w-full my-auto"
 						>
 							<NextMatchHero fixture={nextMatch} />
 						</motion.div>

@@ -101,7 +101,7 @@ export const PRESETS: WheelPreset[] = [
 	{
 		id: "truth-dare",
 		name: "🎮 Truth or Dare",
-		icon: "Sparkles",
+		icon: "Dices",
 		items: [
 			"TRUTH 💡",
 			"DARE ⚡",

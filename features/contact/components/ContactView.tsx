@@ -13,7 +13,6 @@ import {
 	FaGlobeAsia,
 } from "react-icons/fa";
 import {
-	Sparkles,
 	ArrowUpRight,
 	MessageSquare,
 	Send,
@@ -21,7 +20,7 @@ import {
 	Briefcase,
 	Cpu,
 	Coffee,
-	Zap,
+	GitMerge,
 	type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -193,7 +192,7 @@ export default function ContactView() {
 					className="flex flex-wrap items-center justify-between gap-2.5"
 				>
 					<div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs">
-						<Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+						<Handshake className="w-3.5 h-3.5 text-indigo-600" />
 						<span>Let's Connect & Collaborate</span>
 					</div>
 
@@ -250,7 +249,7 @@ export default function ContactView() {
 									key={topic.id}
 									type="button"
 									onClick={() => setSelectedTopic(topic)}
-									className={`p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 ${
+									className={`p-2.5 rounded-xl border text-left transition-[background-color,border-color,color] duration-200 cursor-pointer flex flex-col justify-between gap-2 ${
 										isSelected
 											? "bg-indigo-50 border-indigo-200 text-indigo-950 shadow-xs"
 											: "bg-slate-50/60 border-slate-200/70 text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
@@ -311,7 +310,7 @@ export default function ContactView() {
 
 					<div className="col-span-2 sm:col-span-1 flex items-center gap-2.5">
 						<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-indigo-600 shrink-0">
-							<Zap className="w-4 h-4" />
+							<GitMerge className="w-4 h-4" />
 						</div>
 						<div>
 							<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
@@ -334,7 +333,7 @@ export default function ContactView() {
 							transition={{ delay: 0.2 + index * 0.04, duration: 0.3 }}
 							className="group relative"
 						>
-							<div className="relative bg-white p-3.5 rounded-2xl border border-slate-200/80 flex items-center justify-between hover:border-indigo-300 hover:shadow-xs transition-all duration-200">
+							<div className="relative bg-white p-3.5 rounded-2xl border border-slate-200/80 flex items-center justify-between hover:border-indigo-300 hover:shadow-xs transition-[border-color,box-shadow] duration-200">
 								<div className="flex items-center gap-3 min-w-0 pr-2">
 									<div
 										className={`p-2 rounded-xl border ${item.color} shrink-0`}

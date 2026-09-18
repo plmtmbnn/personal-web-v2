@@ -14,7 +14,7 @@ import {
 	Database,
 	Files,
 	Table as TableIcon,
-	Sparkles,
+	Dices,
 	ShieldCheck,
 	QrCode,
 	Image as ImageIcon,
@@ -335,7 +335,7 @@ const utilities: UtilityItem[] = [
 		accent: "bg-purple-600",
 		color: "text-purple-600",
 		bg: "bg-purple-600/5",
-		icon: Sparkles,
+		icon: Dices,
 	},
 ];
 

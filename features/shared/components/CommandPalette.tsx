@@ -27,7 +27,7 @@ import {
 	QrCode,
 	ShieldCheck,
 	Trophy,
-	Sparkles,
+	Layers,
 } from "lucide-react";
 
 export default function CommandPalette() {
@@ -160,7 +160,7 @@ export default function CommandPalette() {
 											{
 												name: "Insights Hub & Submenus",
 												path: "/insights",
-												icon: Sparkles,
+												icon: Layers,
 											},
 											{
 												name: "Personal Tasks & Analytics",

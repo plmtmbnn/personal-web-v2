@@ -21,7 +21,8 @@ import {
 	Mountain,
 	Map as MapIcon,
 	Layers,
-	Sparkles,
+	LayoutGrid,
+	Compass,
 	Toolbox,
 	Database,
 	Trophy,
@@ -68,7 +69,7 @@ const NAV_ITEMS: NavItem[] = [
 		href: "/portfolio",
 		icon: Briefcase,
 		subItems: [
-			{ label: "Portfolio", href: "/portfolio", icon: Sparkles },
+			{ label: "Portfolio", href: "/portfolio", icon: LayoutGrid },
 			{ label: "Experience", href: "/work-experience", icon: Layers },
 			{ label: "Contact", href: "/contact", icon: Mail },
 		],
@@ -78,7 +79,7 @@ const NAV_ITEMS: NavItem[] = [
 		href: "/insights",
 		icon: BookOpen,
 		subItems: [
-			{ label: "Overview", href: "/insights", icon: Sparkles },
+			{ label: "Overview", href: "/insights", icon: Compass },
 			{ label: "Blog Posts", href: "/blog", icon: BookOpen },
 			{ label: "Investments", href: "/investment", icon: TrendingUp },
 			{ label: "Liverpool FC", href: "/liverpool", icon: Trophy },
@@ -313,9 +314,6 @@ export default function CompactBottomBar() {
 			aria-label="Main Navigation"
 		>
 			<div className="bg-white/90 backdrop-blur-2xl flex items-center gap-1 sm:gap-1.5 p-1.5 sm:p-2 rounded-full shadow-[0_16px_48px_-12px_rgba(15,23,42,0.15)] border border-slate-200/90 ring-1 ring-slate-900/5 relative pointer-events-auto">
-				{/* Glow effect backdrop */}
-				<div className="absolute inset-0 rounded-full bg-slate-900/5 blur-xl opacity-50 -z-10 pointer-events-none" />
-
 				<div className="flex items-center gap-0.5 sm:gap-1">
 					{visibleItems.map((item) => {
 						const Icon = item.icon;
@@ -359,7 +357,7 @@ export default function CompactBottomBar() {
 												const isSubActive = pathname === sub.href;
 												const badgeCount = getSubItemBadge(sub.label);
 
-												const commonClasses = `flex w-full text-left items-center gap-3 px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 !no-underline ${
+												const commonClasses = `flex w-full text-left items-center gap-3 px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-[background-color,color] duration-200 !no-underline ${
 													isSubActive
 														? "bg-slate-900 !text-white shadow-sm"
 														: "text-slate-700 hover:text-slate-950 hover:bg-slate-100/80"

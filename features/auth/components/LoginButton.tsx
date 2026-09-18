@@ -61,7 +61,7 @@ export default function LoginButton({ user }: LoginButtonProps) {
 			<motion.div
 				initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
 				animate={{ opacity: 1, scale: 1 }}
-				className="flex items-center gap-4 p-3.5 bg-white border border-slate-200/80 shadow-xs hover:shadow-md rounded-2xl group transition-all"
+				className="flex items-center gap-4 p-3.5 bg-white border border-slate-200/80 shadow-xs hover:shadow-md rounded-2xl group transition-[box-shadow,border-color]"
 			>
 				{user.user_metadata?.avatar_url ? (
 					<img
@@ -93,7 +93,7 @@ export default function LoginButton({ user }: LoginButtonProps) {
 						await logout();
 					}}
 					disabled={isLoading}
-					className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+					className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-[color,background-color] cursor-pointer"
 					title="Logout"
 				>
 					{isLoading ? (
@@ -112,11 +112,9 @@ export default function LoginButton({ user }: LoginButtonProps) {
 			disabled={isLoading}
 			whileHover={{
 				y: -2,
-				boxShadow:
-					"0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
 			}}
 			whileTap={{ scale: 0.97 }}
-			className="flex items-center gap-3.5 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all border border-slate-800 shadow-md disabled:opacity-70 disabled:pointer-events-none group cursor-pointer"
+			className="flex items-center gap-3.5 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs uppercase tracking-wider transition-[background-color,transform] border border-slate-800 shadow-xs hover:shadow-md disabled:opacity-70 disabled:pointer-events-none group cursor-pointer"
 		>
 			{isLoading ? (
 				<Loader2 className="w-4 h-4 animate-spin text-indigo-400" />

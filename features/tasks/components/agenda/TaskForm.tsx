@@ -8,13 +8,10 @@ import {
 	Calendar,
 	Flag,
 	Tag,
-	Sparkles,
 	X,
 	Target,
 	ChevronDown,
 	Layers,
-	Zap,
-	ZapOff,
 	CheckCircle2,
 	AlertCircle,
 	RefreshCw,
@@ -488,7 +485,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 												type="button"
 												onClick={() => setIsBatchEnabled(!isBatchEnabled)}
 												aria-pressed={isBatchEnabled}
-												className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
+												className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-[background-color,border-color,color] ${
 													isBatchEnabled
 														? "bg-blue-50 border-blue-100 text-blue-600"
 														: "bg-slate-50 border-slate-100 text-slate-400"
@@ -499,11 +496,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 														: "Single Task Mode"
 												}
 											>
-												{isBatchEnabled ? (
-													<Zap className="w-3 h-3 fill-current" />
-												) : (
-													<ZapOff className="w-3 h-3" />
-												)}
+												<Layers className="w-3 h-3" />
 												<span className="text-[8px] font-black uppercase tracking-wider">
 													Batch Protocol
 												</span>
@@ -1071,7 +1064,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2">
-										<Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+										<Target className="w-3.5 h-3.5 text-emerald-600" />
 										<span className="text-[10px] font-bold text-slate-400 uppercase">
 											{finalBatchActive
 												? "Collective execution."

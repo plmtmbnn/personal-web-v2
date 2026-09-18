@@ -11,7 +11,6 @@ import {
 	Loader2,
 	Lock,
 	ChevronDown,
-	Sparkles,
 } from "lucide-react";
 import type { Blog } from "@/features/blog/data";
 import { getBlogImage, getWordCount } from "@/features/blog/utils";
@@ -144,7 +143,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 	}, [hasMore, isLoadingMore]);
 
 	return (
-		<div className="space-y-10 sm:space-y-14 transition-all duration-300">
+		<div className="space-y-10 sm:space-y-14">
 			{/* ═══════════════════════════════════════
 			    HERO HEADER: Centered, Minimalist, Classy
 			═══════════════════════════════════════ */}
@@ -175,7 +174,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 									key={category}
 									type="button"
 									onClick={() => handleCategoryChange(category)}
-									className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer active:scale-95 ${
+									className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-[background-color,border-color,color] shrink-0 cursor-pointer active:scale-95 ${
 										isActive
 											? "bg-slate-900 text-white shadow-xs"
 											: "bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/80"
@@ -275,7 +274,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 						className="flex flex-col items-center justify-center text-center py-20 bg-white border border-slate-200/80 rounded-[2rem] p-8 shadow-xs max-w-lg mx-auto"
 					>
 						<div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 text-slate-700">
-							<Sparkles className="w-5 h-5" />
+							<Search className="w-5 h-5" />
 						</div>
 						<h3 className="text-lg font-bold text-slate-900 tracking-tight mb-1">
 							{allBlogs.length === 0 ? "No Articles Yet" : "No Articles Found"}
@@ -289,7 +288,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 							<button
 								type="button"
 								onClick={handleResetFilters}
-								className="mt-6 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer"
+								className="mt-6 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-[background-color] cursor-pointer"
 							>
 								Clear Filters
 							</button>
@@ -404,7 +403,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 										}, 300);
 									}}
 									disabled={isLoadingMore}
-									className="px-6 py-2.5 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-bold rounded-full shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+									className="px-6 py-2.5 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-bold rounded-full shadow-xs transition-[background-color,border-color,color] flex items-center gap-2 cursor-pointer active:scale-95"
 								>
 									{isLoadingMore ? (
 										<>

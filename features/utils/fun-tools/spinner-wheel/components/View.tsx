@@ -7,7 +7,7 @@ import {
 	Volume2,
 	VolumeX,
 	Trophy,
-	Sparkles,
+	Dices,
 	Trash2,
 	ArrowLeft,
 	Palette,
@@ -255,7 +255,7 @@ export default function SpinnerWheelView() {
 						</Link>
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-md shrink-0">
-								<Sparkles className="w-5 h-5 text-indigo-400" />
+								<Dices className="w-5 h-5 text-indigo-400" />
 							</div>
 							<div>
 								<h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
@@ -299,7 +299,7 @@ export default function SpinnerWheelView() {
 						<div className="relative w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] my-4 flex items-center justify-center">
 							{items.length === 0 ? (
 								<div className="text-center p-8 border-2 border-dashed border-slate-200 rounded-full w-full h-full flex flex-col items-center justify-center gap-3">
-									<Sparkles className="w-8 h-8 text-slate-300" />
+									<Dices className="w-8 h-8 text-slate-300" />
 									<p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
 										Add entries to build wheel
 									</p>

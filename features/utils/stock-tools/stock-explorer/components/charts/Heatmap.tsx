@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import type { ProcessedStock, Sector } from "../../types";
-import { LayoutGrid, Filter, Sparkles } from "lucide-react";
+import { LayoutGrid, Filter, Award } from "lucide-react";
 
 interface HeatmapProps {
 	stocks: ProcessedStock[];
@@ -78,14 +78,15 @@ export default function Heatmap({
 					{/* Score Qualified Toggle */}
 					{minScore > 0 && (
 						<button
+							type="button"
 							onClick={() => setFilterByScore(!filterByScore)}
-							className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+							className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-[background-color,border-color,color,box-shadow] cursor-pointer border ${
 								filterByScore
 									? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
 									: "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
 							}`}
 						>
-							<Sparkles className="w-3.5 h-3.5" />
+							<Award className="w-3.5 h-3.5" />
 							<span>Score ≥ {minScore}</span>
 						</button>
 					)}

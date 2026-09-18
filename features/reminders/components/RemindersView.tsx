@@ -17,7 +17,6 @@ import {
 	ExternalLink,
 	Search,
 	X,
-	Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -768,7 +767,7 @@ export default function RemindersView({
 						exit={{ opacity: 0, y: 15 }}
 						className="fixed bottom-24 left-1/2 -translate-x-1/2 w-auto px-4 py-2.5 bg-slate-900 text-white rounded-2xl font-bold shadow-xl z-[100] flex items-center gap-2 border border-slate-800"
 					>
-						<Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
+						<Check className="w-4 h-4 text-emerald-400 shrink-0" />
 						<span className="text-xs sm:text-sm text-white font-medium">
 							{toastMessage}
 						</span>

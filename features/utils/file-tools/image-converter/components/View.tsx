@@ -11,7 +11,6 @@ import {
 	Trash2,
 	CheckCircle2,
 	AlertTriangle,
-	Sparkles,
 	FileImage,
 	RefreshCw,
 	Sliders,
@@ -633,12 +632,12 @@ export default function ImageConverterView() {
 									type="button"
 									onClick={handleConvertAll}
 									disabled={isBatchConverting || validCount === 0}
-									className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold tracking-wide uppercase transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+									className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold tracking-wide uppercase transition-[background-color,opacity] shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									{isBatchConverting ? (
 										<RefreshCw className="w-4 h-4 animate-spin" />
 									) : (
-										<Sparkles className="w-4 h-4" />
+										<RefreshCw className="w-4 h-4" />
 									)}
 									{isBatchConverting ? "Converting..." : "Convert All"}
 								</button>
@@ -647,7 +646,7 @@ export default function ImageConverterView() {
 									<button
 										type="button"
 										onClick={handleDownloadAll}
-										className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold tracking-wide uppercase transition-all shadow-sm cursor-pointer"
+										className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold tracking-wide uppercase transition-[background-color] shadow-sm cursor-pointer"
 									>
 										<Download className="w-4 h-4" />
 										Download All ({convertedCount})
@@ -885,7 +884,7 @@ export default function ImageConverterView() {
 
 					<div className="p-6 bg-white border border-slate-200/80 rounded-3xl space-y-2 shadow-xs">
 						<div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-							<Sparkles className="w-5 h-5" />
+							<Layers className="w-5 h-5" />
 						</div>
 						<h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide">
 							Multi-Format Conversion

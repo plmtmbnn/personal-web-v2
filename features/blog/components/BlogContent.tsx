@@ -24,7 +24,7 @@ import {
 	Copy,
 	Check,
 	Info,
-	Sparkles,
+	Lightbulb,
 	AlertCircle,
 	AlertTriangle,
 	ShieldAlert,
@@ -85,7 +85,7 @@ function CopyButton({ code }: { code: string }) {
 			type="button"
 			onClick={handleCopy}
 			title={copied ? "Copied!" : "Copy code"}
-			className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white/70 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+			className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white/70 hover:text-white transition-[background-color,border-color,color] text-[10px] font-bold uppercase tracking-wider cursor-pointer"
 		>
 			<AnimatePresence mode="wait" initial={false}>
 				{copied ? (
@@ -284,7 +284,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 								},
 								TIP: {
 									label: "Tip",
-									icon: Sparkles,
+									icon: Lightbulb,
 									cardClass:
 										"bg-emerald-50/70 border-emerald-200/80 text-emerald-950",
 									titleClass: "text-emerald-700",

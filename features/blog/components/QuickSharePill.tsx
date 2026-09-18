@@ -42,7 +42,7 @@ export default function QuickSharePill({ title }: QuickSharePillProps) {
 			<button
 				type="button"
 				onClick={handleNativeShare}
-				className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-950 border border-slate-200/80 text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 shadow-2xs cursor-pointer"
+				className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-950 border border-slate-200/80 text-[10px] font-bold uppercase tracking-wider transition-[background-color,color] active:scale-95 shadow-2xs cursor-pointer"
 				title="Share or copy article link"
 			>
 				<AnimatePresence mode="wait" initial={false}>
@@ -75,7 +75,7 @@ export default function QuickSharePill({ title }: QuickSharePillProps) {
 			<button
 				type="button"
 				onClick={handleCopy}
-				className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 border border-slate-200/80 transition-all active:scale-90 shadow-2xs cursor-pointer"
+				className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 border border-slate-200/80 transition-[background-color,color] active:scale-90 shadow-2xs cursor-pointer"
 				title="Copy article link"
 				aria-label="Copy article link"
 			>

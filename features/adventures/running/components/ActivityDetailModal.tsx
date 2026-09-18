@@ -6,7 +6,7 @@ import {
 	X,
 	Calendar,
 	Route,
-	Zap,
+	Gauge,
 	Clock,
 	Flame,
 	BarChart3,
@@ -744,7 +744,7 @@ export default function ActivityDetailModal({
 								<button
 									type="button"
 									onClick={() => setActiveTab("overview")}
-									className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+									className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-[background-color,color,box-shadow] active:scale-95 cursor-pointer ${
 										activeTab === "overview"
 											? "bg-white text-slate-900 shadow-xs ring-1 ring-slate-900/5"
 											: "text-slate-500 hover:text-slate-800"
@@ -757,7 +757,7 @@ export default function ActivityDetailModal({
 								<button
 									type="button"
 									onClick={() => setActiveTab("splits")}
-									className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+									className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-[background-color,color,box-shadow] active:scale-95 cursor-pointer ${
 										activeTab === "splits"
 											? "bg-slate-900 text-white shadow-xs"
 											: "text-slate-500 hover:text-slate-800"
@@ -776,7 +776,7 @@ export default function ActivityDetailModal({
 									onClick={() =>
 										setExportTheme((t) => (t === "light" ? "dark" : "light"))
 									}
-									className={`p-1.5 rounded-xl transition-all active:scale-90 cursor-pointer ${
+									className={`p-1.5 rounded-xl transition-[background-color,color,transform] active:scale-90 cursor-pointer ${
 										exportTheme === "dark"
 											? "bg-slate-800 text-amber-300 shadow-xs"
 											: "bg-transparent text-slate-400 hover:text-slate-700 hover:bg-slate-100"
@@ -795,7 +795,7 @@ export default function ActivityDetailModal({
 									type="button"
 									disabled={isCopying}
 									onClick={() => handleCopyImage(activeTab)}
-									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-transparent hover:bg-slate-100 text-slate-900 hover:text-indigo-600 text-xs font-black transition-all active:scale-95 cursor-pointer disabled:opacity-50 group"
+									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-transparent hover:bg-slate-100 text-slate-900 hover:text-indigo-600 text-xs font-black transition-[background-color,color,transform] active:scale-95 cursor-pointer disabled:opacity-50 disabled:pointer-events-none group"
 									title="Copy transparent PNG sticker to clipboard"
 								>
 									{isCopying ? (
@@ -864,7 +864,7 @@ export default function ActivityDetailModal({
 									{/* Alert / Highlight Badge */}
 									<div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
 										<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200/70 shadow-2xs">
-											<Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+											<Gauge className="w-3.5 h-3.5 text-amber-500" />
 											<span>
 												{fastestSplit
 													? `Best Split: KM ${fastestSplit.split} at ${fastestSplit.paceFormatted}/km`
@@ -887,7 +887,7 @@ export default function ActivityDetailModal({
 									{/* Average Pace */}
 									<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
 										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-											<Zap className="w-3.5 h-3.5 text-amber-500" />
+											<Gauge className="w-3.5 h-3.5 text-amber-500" />
 											Avg Pace
 										</span>
 										<p className="text-base sm:text-lg font-black text-slate-900 font-mono">
@@ -1012,7 +1012,7 @@ export default function ActivityDetailModal({
 																</span>
 																{item.isFastest && (
 																	<span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-slate-950 text-amber-300 text-[8px] font-black uppercase tracking-wider shadow-xs">
-																		<Zap className="w-2.5 h-2.5 fill-amber-300" />{" "}
+																		<Flame className="w-2.5 h-2.5 fill-amber-300" />{" "}
 																		Top
 																	</span>
 																)}
@@ -1058,7 +1058,7 @@ export default function ActivityDetailModal({
 							<button
 								type="button"
 								onClick={handleShare}
-								className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black shadow-xs hover:shadow-sm active:scale-95 transition-all cursor-pointer"
+								className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black shadow-xs hover:shadow-sm active:scale-95 transition-[background-color,box-shadow,transform] cursor-pointer"
 								title="Copy direct link to this activity"
 							>
 								{copiedLink ? (

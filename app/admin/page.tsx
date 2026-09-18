@@ -109,7 +109,7 @@ export default async function AdminDashboardPage() {
 						<form action={logout} className="shrink-0">
 							<button
 								type="submit"
-								className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/80 text-rose-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-2xs active:scale-95 cursor-pointer"
+								className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/80 text-rose-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-[background-color,border-color,transform] shadow-2xs active:scale-95 cursor-pointer"
 							>
 								<LogOut className="w-4 h-4 text-rose-600" />
 								<span>Sign Out</span>
@@ -124,7 +124,7 @@ export default async function AdminDashboardPage() {
 						<Link
 							key={action.title}
 							href={action.href}
-							className="group flex flex-col justify-between p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 !no-underline"
+							className="group flex flex-col justify-between p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/80 hover:border-slate-300 transition-[border-color,box-shadow,transform] duration-300 shadow-xs hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 !no-underline"
 						>
 							<div>
 								{/* Top Row: Squircle Icon & Category Badge + Arrow Circle */}
@@ -176,7 +176,9 @@ export default async function AdminDashboardPage() {
 
 							{/* Bottom Action Row */}
 							<div className="pt-3.5 sm:pt-4 border-t border-slate-100 flex items-center justify-between">
-								<span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
+								<span
+									className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-800 ${action.hoverAccent} transition-colors`}
+								>
 									<span>Manage Console</span>
 									<ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
 								</span>

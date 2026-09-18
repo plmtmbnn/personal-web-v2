@@ -40,7 +40,7 @@ export default function RelatedPosts({ posts }: RelatedPostsProps) {
 						<Link
 							key={post.id}
 							href={`/blog/${post.slug}`}
-							className="group flex flex-col bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 !no-underline"
+							className="group flex flex-col bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-[transform,box-shadow] duration-300 !no-underline"
 						>
 							{/* Thumbnail */}
 							<div className="relative w-full h-44 overflow-hidden">
@@ -87,7 +87,7 @@ export default function RelatedPosts({ posts }: RelatedPostsProps) {
 							</div>
 
 							{/* Read more arrow */}
-							<div className="px-5 pb-4 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-blue-600 group-hover:gap-2.5 transition-all duration-200">
+							<div className="px-5 pb-4 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-blue-600 group-hover:gap-2.5 transition-[gap] duration-200">
 								Read Article
 								<ArrowRight className="w-3 h-3" />
 							</div>

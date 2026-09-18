@@ -358,7 +358,7 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
 											<button
 												type="button"
 												onClick={() => handleScrollTo(heading.id)}
-												className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
+												className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-left text-xs transition-[background-color,color,border-color] cursor-pointer ${
 													isActive
 														? "bg-white font-extrabold text-emerald-700 border border-emerald-200/70 shadow-2xs"
 														: "text-slate-600 hover:text-slate-950 hover:bg-white/60 font-medium"

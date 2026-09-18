@@ -32,7 +32,7 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	ArrowUpDown,
-	Sparkles,
+	Star,
 	ImageIcon,
 	ChevronDown,
 	MoreHorizontal,
@@ -162,7 +162,7 @@ function CategoryDropdown({
 				disabled={disabled || isLoading}
 				aria-expanded={isOpen}
 				aria-haspopup="listbox"
-				className={`group inline-flex items-center gap-1.5 border font-black uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${getCategoryStyles(currentCat)} ${
+				className={`group inline-flex items-center gap-1.5 border font-black uppercase tracking-wider rounded-full transition-[border-color,color,background-color] duration-200 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${getCategoryStyles(currentCat)} ${
 					size === "sm" ? "px-2.5 py-1 text-[9px]" : "px-3 py-1.5 text-[10px]"
 				}`}
 			>
@@ -219,7 +219,7 @@ function CategoryDropdown({
 										onChange(cat);
 										setIsOpen(false);
 									}}
-									className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+									className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-[background-color,color] cursor-pointer ${
 										isSelected
 											? "bg-slate-900 text-white shadow-xs"
 											: "text-slate-700 hover:bg-slate-100/80 hover:text-slate-950 active:scale-[0.98]"
@@ -662,7 +662,7 @@ function AdminBlogListInner({
 							<button
 								key={label}
 								onClick={onClick}
-								className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+								className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl transition-[background-color,color,box-shadow] cursor-pointer ${
 									active
 										? activeColor
 										: "hover:bg-white/70 text-slate-600 opacity-80 hover:opacity-100"
@@ -685,7 +685,7 @@ function AdminBlogListInner({
 					<div className="flex items-center gap-2">
 						<button
 							onClick={handleExportCSV}
-							className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-2xs active:scale-95 cursor-pointer"
+							className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color,border-color] shadow-2xs active:scale-95 cursor-pointer"
 						>
 							<Download className="w-3.5 h-3.5 text-slate-500" />
 							<span className="hidden sm:inline">Export CSV</span>
@@ -709,7 +709,7 @@ function AdminBlogListInner({
 							placeholder="Search by title or description... (Press / to search)"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full pl-10 pr-14 py-2.5 bg-white border border-slate-200/80 focus:border-indigo-500 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none transition-all shadow-2xs"
+							className="w-full pl-10 pr-14 py-2.5 bg-white border border-slate-200/80 focus:border-indigo-500 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none transition-[border-color,box-shadow] shadow-2xs"
 						/>
 						{searchQuery ? (
 							<button
@@ -735,7 +735,7 @@ function AdminBlogListInner({
 									page: "1",
 								})
 							}
-							className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 bg-white border border-slate-200/80 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-slate-700 hover:bg-slate-50 transition-all shadow-2xs cursor-pointer"
+							className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 bg-white border border-slate-200/80 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-slate-700 hover:bg-slate-50 transition-[background-color] shadow-2xs cursor-pointer"
 						>
 							<ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
 							<span className="hidden sm:inline">
@@ -760,7 +760,7 @@ function AdminBlogListInner({
 											page: "1",
 										});
 									}}
-									className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 border border-rose-200 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-rose-700 hover:bg-rose-100 transition-all shadow-xs cursor-pointer"
+									className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 border border-rose-200 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-rose-700 hover:bg-rose-100 transition-[background-color] shadow-xs cursor-pointer"
 								>
 									<X className="w-3 h-3 text-rose-700" />
 									Clear
@@ -779,7 +779,7 @@ function AdminBlogListInner({
 						<button
 							key={cat}
 							onClick={() => updateParams({ category: cat, page: "1" })}
-							className={`px-2.5 sm:px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider border transition-all cursor-pointer ${
+							className={`px-2.5 sm:px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider border transition-[background-color,border-color,color] cursor-pointer ${
 								currentCategory === cat
 									? `${getCategoryStyles(cat)} ring-2 ring-offset-1 ring-current/20 shadow-xs`
 									: "bg-white border-slate-200/80 text-slate-700 hover:text-slate-950 hover:bg-slate-50"
@@ -812,14 +812,14 @@ function AdminBlogListInner({
 							<button
 								onClick={() => handleBulkPublish(true)}
 								disabled={isBulkLoading}
-								className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50"
+								className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-[background-color] disabled:opacity-50"
 							>
 								Publish All
 							</button>
 							<button
 								onClick={() => handleBulkPublish(false)}
 								disabled={isBulkLoading}
-								className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-all disabled:opacity-50"
+								className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-[background-color] disabled:opacity-50"
 							>
 								Unpublish All
 							</button>
@@ -834,7 +834,7 @@ function AdminBlogListInner({
 								<button
 									onClick={handleBulkCategory}
 									disabled={isBulkLoading}
-									className="px-2.5 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+									className="px-2.5 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-[background-color] active:scale-95 disabled:opacity-50 cursor-pointer"
 								>
 									Apply
 								</button>
@@ -843,7 +843,7 @@ function AdminBlogListInner({
 							<button
 								onClick={() => setBulkDeleteModal(true)}
 								disabled={isBulkLoading}
-								className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all disabled:opacity-50 ml-auto"
+								className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-[background-color] disabled:opacity-50 ml-auto"
 							>
 								<span className="flex items-center gap-1.5">
 									<Trash2 className="w-3 h-3" />
@@ -1048,13 +1048,13 @@ function AdminBlogListInner({
 																	? `Remove headline from "${blog.title}"`
 																	: `Set "${blog.title}" as headline`
 															}
-															className={`p-2 rounded-xl border transition-all duration-300 ${
+															className={`p-2 rounded-xl border transition-[background-color,border-color,color] duration-300 ${
 																blog.is_headline
 																	? "bg-blue-50 border-blue-100 text-blue-600 shadow-sm"
 																	: "bg-white border-slate-100 text-slate-300 hover:text-blue-400 hover:bg-slate-50"
 															}`}
 														>
-															<Sparkles
+															<Star
 																className={`w-4 h-4 ${blog.is_headline ? "fill-blue-600" : ""}`}
 															/>
 														</button>
@@ -1080,7 +1080,7 @@ function AdminBlogListInner({
 																	? "PIN Protection Active"
 																	: "No PIN Protection"
 															}
-															className={`p-2 rounded-xl border transition-all duration-300 ${
+															className={`p-2 rounded-xl border transition-[background-color,border-color,color] duration-300 ${
 																blog.is_private
 																	? "bg-amber-50 border-amber-200 text-amber-600 shadow-sm"
 																	: "bg-white border-slate-100 text-slate-300 hover:text-amber-500 hover:bg-amber-50"
@@ -1153,7 +1153,7 @@ function AdminBlogListInner({
 															onClick={() =>
 																setExpandedRow(isExpanded ? null : blog.id)
 															}
-															className={`p-2 rounded-lg transition-all ${isExpanded ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"}`}
+															className={`p-2 rounded-lg transition-[background-color,color] ${isExpanded ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"}`}
 															title="Preview"
 														>
 															<FileText className="w-4 h-4" />
@@ -1172,7 +1172,7 @@ function AdminBlogListInner({
 														<Link
 															href={`/blog/${blog.slug}`}
 															target="_blank"
-															className={`p-2 rounded-lg transition-all ${
+															className={`p-2 rounded-lg transition-[background-color,color] ${
 																blog.published
 																	? "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
 																	: "text-amber-500 hover:text-amber-700 hover:bg-amber-50"
@@ -1262,7 +1262,7 @@ function AdminBlogListInner({
 																			</span>
 																			{blog.is_headline && (
 																				<span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600">
-																					<Sparkles className="w-3 h-3 fill-blue-600" />
+																					<Star className="w-3 h-3 fill-blue-600" />
 																					Headline
 																				</span>
 																			)}
@@ -1296,7 +1296,7 @@ function AdminBlogListInner({
 									initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ delay: idx * 0.03 }}
-									className={`border rounded-2xl p-4 transition-all ${
+									className={`border rounded-2xl p-4 transition-[border-color,background-color,box-shadow] ${
 										isSelected
 											? "border-blue-200 bg-blue-50/40 shadow-sm"
 											: "border-slate-200 bg-white shadow-sm"
@@ -1368,7 +1368,7 @@ function AdminBlogListInner({
 										</span>
 										{blog.is_headline && (
 											<span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600">
-												<Sparkles className="w-3 h-3 fill-blue-600" />
+												<Star className="w-3 h-3 fill-blue-600" />
 												Headline
 											</span>
 										)}
@@ -1411,7 +1411,7 @@ function AdminBlogListInner({
 												onClick={() =>
 													setExpandedRow(isExpanded ? null : blog.id)
 												}
-												className={`p-2.5 rounded-xl transition-all ${isExpanded ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"}`}
+												className={`p-2.5 rounded-xl transition-[background-color,color] ${isExpanded ? "text-blue-600 bg-blue-50" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"}`}
 												aria-label="Preview"
 											>
 												<FileText className="w-4 h-4" />
@@ -1430,7 +1430,7 @@ function AdminBlogListInner({
 											<Link
 												href={`/blog/${blog.slug}`}
 												target="_blank"
-												className={`p-2.5 rounded-xl transition-all ${
+												className={`p-2.5 rounded-xl transition-[background-color,color] ${
 													blog.published
 														? "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
 														: "text-amber-500 hover:text-amber-700 hover:bg-amber-50"
@@ -1560,21 +1560,21 @@ function AdminBlogListInner({
 								<button
 									onClick={() => handleBulkPublish(true)}
 									disabled={isBulkLoading}
-									className="flex-1 px-3 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50"
+									className="flex-1 px-3 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-[background-color] disabled:opacity-50"
 								>
 									Publish
 								</button>
 								<button
 									onClick={() => handleBulkPublish(false)}
 									disabled={isBulkLoading}
-									className="flex-1 px-3 py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-all disabled:opacity-50"
+									className="flex-1 px-3 py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-[background-color] disabled:opacity-50"
 								>
 									Draft
 								</button>
 								<button
 									onClick={() => setBulkDeleteModal(true)}
 									disabled={isBulkLoading}
-									className="flex-1 px-3 py-2.5 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all disabled:opacity-50"
+									className="flex-1 px-3 py-2.5 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-[background-color] disabled:opacity-50"
 								>
 									Delete
 								</button>
@@ -1616,7 +1616,7 @@ function AdminBlogListInner({
 								onClick={() =>
 									updateParams({ pageSize: String(size), page: "1" })
 								}
-								className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
+								className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] font-black transition-[background-color,color] ${
 									currentPageSize === size
 										? "bg-slate-900 text-white"
 										: "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
@@ -1634,7 +1634,7 @@ function AdminBlogListInner({
 						onClick={() => updateParams({ page: String(currentPage - 1) })}
 						disabled={currentPage <= 1 || isPending}
 						aria-label="Previous page"
-						className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all disabled:opacity-20 disabled:pointer-events-none shadow-sm mr-1 sm:mr-2"
+						className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-[border-color,color] disabled:opacity-20 disabled:pointer-events-none shadow-sm mr-1 sm:mr-2"
 					>
 						<ChevronLeft className="w-4 h-4" />
 					</button>
@@ -1659,7 +1659,7 @@ function AdminBlogListInner({
 									disabled={isPending}
 									aria-label={`Page ${page}`}
 									aria-current={isActive ? "page" : undefined}
-									className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl text-[10px] font-black transition-all shadow-sm ${
+									className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl text-[10px] font-black transition-[background-color,border-color,color] shadow-sm ${
 										isActive
 											? "bg-blue-600 text-white shadow-blue-200"
 											: "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
@@ -1675,7 +1675,7 @@ function AdminBlogListInner({
 						onClick={() => updateParams({ page: String(currentPage + 1) })}
 						disabled={currentPage >= totalPages || isPending}
 						aria-label="Next page"
-						className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all disabled:opacity-20 disabled:pointer-events-none shadow-sm ml-1 sm:ml-2"
+						className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-[border-color,color] disabled:opacity-20 disabled:pointer-events-none shadow-sm ml-1 sm:ml-2"
 					>
 						<ChevronRight className="w-4 h-4" />
 					</button>

@@ -8,10 +8,8 @@ import {
 	ChevronRight,
 	RefreshCw,
 	Layers,
-	Zap,
 	Table as TableIcon,
 	ShieldAlert,
-	Sparkles,
 	Compass,
 	Flame,
 	ShieldCheck,
@@ -398,7 +396,7 @@ export default function InvestmentPage() {
 				topBarBg: "bg-orange-500",
 				badgeBg: "bg-orange-50 text-orange-700 border-orange-200",
 				iconBg: "bg-orange-50 text-orange-600 border-orange-100",
-				icon: Flame,
+				icon: TrendingDown,
 			};
 		}
 		if (score <= 55) {
@@ -433,7 +431,7 @@ export default function InvestmentPage() {
 			topBarBg: "bg-teal-500",
 			badgeBg: "bg-teal-50 text-teal-800 border-teal-200",
 			iconBg: "bg-teal-50 text-teal-600 border-teal-100",
-			icon: Sparkles,
+			icon: Flame,
 		};
 	}, [score]);
 
@@ -742,7 +740,7 @@ export default function InvestmentPage() {
 				<div className="bg-white p-6 sm:p-8 lg:p-10 rounded-[2.5rem] border border-slate-200/80 shadow-xs">
 					<div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-4">
 						<h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2.5">
-							<Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+							<Activity className="w-4 h-4 text-emerald-600" />
 							Strategic Sentiment Analysis
 						</h3>
 						<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">

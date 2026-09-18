@@ -5,7 +5,6 @@ import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import {
 	ArrowLeft,
-	Sparkles,
 	Copy,
 	Check,
 	Download,
@@ -151,7 +150,7 @@ export default function CodeToImageView() {
 					<div className="space-y-3">
 						<div className="flex items-center gap-4">
 							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20 shrink-0">
-								<Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+								<FileCode2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
 							</div>
 							<div>
 								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">

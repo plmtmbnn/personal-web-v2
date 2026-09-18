@@ -15,7 +15,6 @@ import {
 	Code2,
 	Layers,
 	FileText,
-	Sparkles,
 	Building2,
 	Eye,
 	EyeOff,
@@ -191,8 +190,8 @@ export default function JWTInspectorView() {
 					transition={{ duration: 0.4, delay: 0.05 }}
 					className="flex flex-wrap items-center gap-2"
 				>
-					<span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mr-1 flex items-center gap-1">
-						<Sparkles className="w-3 h-3 text-indigo-600" />
+					<span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mr-1 flex items-center gap-1.5">
+						<KeyRound className="w-3 h-3 text-indigo-600" />
 						<span>Sample Presets:</span>
 					</span>
 					{JWT_PRESETS.map((preset) => {
@@ -202,7 +201,7 @@ export default function JWTInspectorView() {
 								key={preset.id}
 								type="button"
 								onClick={() => handleLoadPreset(preset)}
-								className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+								className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-[background-color,border-color,color,box-shadow] cursor-pointer flex items-center gap-1.5 border ${
 									isCurrent
 										? "bg-indigo-50 border-indigo-200 text-indigo-950 shadow-xs"
 										: "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50 hover:text-slate-900"

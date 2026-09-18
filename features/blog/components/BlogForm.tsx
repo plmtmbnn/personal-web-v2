@@ -19,7 +19,7 @@ import {
 	Layout,
 	Tag,
 	Image as ImageIcon,
-	Sparkles,
+	Star,
 	Bold,
 	Italic,
 	Code,
@@ -112,7 +112,7 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 				onClick={() => setIsOpen(!isOpen)}
 				aria-expanded={isOpen}
 				aria-haspopup="listbox"
-				className={`w-full flex items-center justify-between border font-black uppercase tracking-wider rounded-xl px-4 py-2.5 transition-all duration-200 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] ${getCategoryStyles(currentCat)}`}
+				className={`w-full flex items-center justify-between border font-black uppercase tracking-wider rounded-xl px-4 py-2.5 transition-[border-color,color,background-color] duration-200 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] ${getCategoryStyles(currentCat)}`}
 			>
 				<div className="flex items-center gap-2">
 					<span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
@@ -159,7 +159,7 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 										setIsCustom(false);
 										setIsOpen(false);
 									}}
-									className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+									className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-[background-color,color] cursor-pointer ${
 										isSelected
 											? "bg-slate-900 text-white shadow-xs"
 											: "text-slate-700 hover:bg-slate-100/80 hover:text-slate-950 active:scale-[0.98]"
@@ -182,7 +182,7 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 								<button
 									type="button"
 									onClick={() => setIsCustom(true)}
-									className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all cursor-pointer"
+									className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 transition-[background-color,color] cursor-pointer"
 								>
 									<Plus className="w-3.5 h-3.5 text-blue-500" />
 									<span>Custom Category...</span>
@@ -212,7 +212,7 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 												setIsOpen(false);
 											}
 										}}
-										className="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-all cursor-pointer"
+										className="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-[background-color] cursor-pointer"
 									>
 										Save
 									</button>
@@ -507,7 +507,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 									: "text-slate-400"
 							}`}
 						>
-							{title.length} / 60 Chars {title.length > 60 && "⚠️ (Too Long)"}
+							{title.length} / 60 Chars {title.length > 60 && "(Too Long)"}
 						</span>
 					)}
 				</div>
@@ -563,7 +563,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 								}`}
 							>
 								{description.length} / 160 Chars{" "}
-								{description.length > 160 && "⚠️ (Too Long)"}
+								{description.length > 160 && "(Too Long)"}
 							</span>
 						)}
 					</div>
@@ -594,7 +594,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("heading")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Heading 2 (TOC Section Anchor)"
 						>
 							<Heading2 className="w-3.5 h-3.5" />
@@ -602,7 +602,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("bold")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Bold Text"
 						>
 							<Bold className="w-3.5 h-3.5" />
@@ -610,7 +610,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("italic")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Italic Text"
 						>
 							<Italic className="w-3.5 h-3.5" />
@@ -619,7 +619,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("code")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Inline Code"
 						>
 							<Code className="w-3.5 h-3.5" />
@@ -627,7 +627,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("codeblock")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Code Block"
 						>
 							<FileText className="w-3.5 h-3.5" />
@@ -635,7 +635,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("link")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Hyperlink"
 						>
 							<LinkIcon className="w-3.5 h-3.5" />
@@ -644,7 +644,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("list")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Bullet List"
 						>
 							<List className="w-3.5 h-3.5" />
@@ -652,7 +652,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("ordered-list")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Numbered List"
 						>
 							<ListOrdered className="w-3.5 h-3.5" />
@@ -660,7 +660,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("quote")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Callout Note [!NOTE]"
 						>
 							<Quote className="w-3.5 h-3.5" />
@@ -668,7 +668,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("table")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Insert Table"
 						>
 							<Table className="w-3.5 h-3.5" />
@@ -676,7 +676,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="button"
 							onClick={() => insertMarkdown("divider")}
-							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-all cursor-pointer"
+							className="p-1.5 hover:bg-white hover:text-slate-900 rounded text-slate-500 transition-[background-color,color] cursor-pointer"
 							title="Section Divider"
 						>
 							<Minus className="w-3.5 h-3.5" />
@@ -898,7 +898,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							htmlFor="is_headline"
 							className="text-[10px] font-black uppercase text-blue-900 block tracking-tight flex items-center gap-1.5 text-left"
 						>
-							<Sparkles className="w-3 h-3" /> Featured Story
+							<Star className="w-3 h-3" /> Featured Story
 						</label>
 						<span className="text-blue-400 uppercase font-bold text-[7px] block mt-0.5 text-left">
 							Mark as headline
@@ -1001,7 +1001,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							<button
 								type="button"
 								onClick={() => setEditorMode("edit")}
-								className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+								className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-[background-color,color,border-color] cursor-pointer ${
 									editorMode === "edit"
 										? "bg-white text-slate-800 shadow-sm border border-slate-200/50"
 										: "text-slate-500 hover:text-slate-700"
@@ -1023,7 +1023,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							<button
 								type="button"
 								onClick={() => setEditorMode("preview")}
-								className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+								className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-[background-color,color,border-color] cursor-pointer ${
 									editorMode === "preview"
 										? "bg-white text-slate-800 shadow-sm border border-slate-200/50"
 										: "text-slate-500 hover:text-slate-700"
@@ -1036,7 +1036,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 						<button
 							type="submit"
 							disabled={isSubmitting}
-							className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-70 active:scale-95 cursor-pointer"
+							className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-[background-color] shadow-md shadow-blue-200 disabled:opacity-70 active:scale-95 cursor-pointer"
 						>
 							{isSubmitting ? (
 								<Loader2 className="w-3.5 h-3.5 animate-spin" />

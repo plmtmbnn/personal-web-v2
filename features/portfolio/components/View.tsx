@@ -10,7 +10,7 @@ import {
 import {
 	PieChart as PieIcon,
 	Briefcase,
-	Rocket,
+	Layers,
 	ShieldCheck,
 	UserPlus,
 	PenTool,
@@ -115,7 +115,7 @@ const losModules: PortfolioItem[] = [
 		fullDescription:
 			"Enterprise digital signing pipeline interfacing with licensed PSrE Certificate Authorities (PrivyID, VIDA, Peruri). Generates immutable PDF contracts with dynamic watermark timestamps, cryptographic seals, and audit trails.",
 		capabilities: [
-			"Seamless integration with licensed Indonesian PSrE providers",
+			"Direct integration with licensed Indonesian PSrE providers",
 			"Dynamic loan agreement generation with automated template variables",
 			"Biometric-authorized signature placement with OTP validation",
 			"Tamper-evident cryptographic verification and audit certificates",
@@ -581,7 +581,7 @@ export default function PortfolioView() {
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6, delay: 0.4 }}
 							layout
-							className={`group bg-white rounded-[2.5rem] border transition-all duration-300 overflow-hidden shadow-xs hover:shadow-md ${
+							className={`group bg-white rounded-[2.5rem] border transition-[border-color,box-shadow] duration-300 overflow-hidden shadow-xs hover:shadow-md ${
 								expandedSection === "los"
 									? "border-indigo-300 ring-2 ring-indigo-500/10 shadow-lg"
 									: "border-slate-200/80"
@@ -652,7 +652,7 @@ export default function PortfolioView() {
 														whileTap={{ scale: 0.98 }}
 														key={mod.id}
 														onClick={() => setSelectedItem(mod)}
-														className="text-left p-4 bg-slate-50/60 border border-slate-200/80 rounded-2xl group/item hover:bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 cursor-pointer relative flex flex-col justify-between"
+														className="text-left p-4 bg-slate-50/60 border border-slate-200/80 rounded-2xl group/item hover:bg-white hover:border-indigo-300 hover:shadow-md transition-[background-color,border-color,box-shadow] duration-200 cursor-pointer relative flex flex-col justify-between"
 													>
 														<div>
 															<div className="flex items-center justify-between gap-2 mb-2">
@@ -668,7 +668,7 @@ export default function PortfolioView() {
 																	<ArrowUpRight className="w-3.5 h-3.5" />
 																</div>
 															</div>
-															<p className="text-xs text-slate-500 font-semibold pl-11 leading-relaxed">
+															<p className="text-xs text-slate-500 font-semibold mt-1.5 leading-relaxed">
 																{mod.desc}
 															</p>
 														</div>
@@ -691,7 +691,7 @@ export default function PortfolioView() {
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6, delay: 0.5 }}
 							layout
-							className={`group bg-white rounded-[2.5rem] border transition-all duration-300 overflow-hidden shadow-xs hover:shadow-md ${
+							className={`group bg-white rounded-[2.5rem] border transition-[border-color,box-shadow] duration-300 overflow-hidden shadow-xs hover:shadow-md ${
 								expandedSection === "other"
 									? "border-purple-300 ring-2 ring-purple-500/10 shadow-lg"
 									: "border-slate-200/80"
@@ -712,7 +712,7 @@ export default function PortfolioView() {
 							>
 								<div className="flex items-center gap-5 sm:gap-6">
 									<div className="w-14 h-14 sm:w-16 sm:h-16 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-center text-purple-600 shrink-0">
-										<Rocket className="w-6 h-6 sm:w-7 sm:h-7" />
+										<Layers className="w-6 h-6 sm:w-7 sm:h-7" />
 									</div>
 									<div>
 										<h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
@@ -764,7 +764,7 @@ export default function PortfolioView() {
 														whileTap={{ scale: 0.98 }}
 														key={mod.id}
 														onClick={() => setSelectedItem(mod)}
-														className="text-left p-4 sm:p-5 bg-slate-50/60 border border-slate-200/80 rounded-2xl group/item hover:bg-white hover:border-purple-300 hover:shadow-md transition-all duration-200 flex items-center justify-between gap-5 cursor-pointer"
+														className="text-left p-4 sm:p-5 bg-slate-50/60 border border-slate-200/80 rounded-2xl group/item hover:bg-white hover:border-purple-300 hover:shadow-md transition-[background-color,border-color,box-shadow] duration-200 flex items-center justify-between gap-5 cursor-pointer"
 													>
 														<div className="flex items-center gap-4 sm:gap-5">
 															<div className="w-12 h-12 bg-purple-50 border border-purple-100 rounded-xl flex items-center justify-center text-purple-600 group-hover/item:scale-105 transition-transform duration-200 shrink-0">

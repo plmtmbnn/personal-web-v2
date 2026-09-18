@@ -13,10 +13,11 @@ import {
 	Clock,
 	RefreshCw,
 	FileUp,
-	Sparkles,
+	LayoutTemplate,
 	Code2,
 	RotateCcw,
-	Globe,
+	Radio,
+	CloudDownload,
 	Eye,
 	ChevronDown,
 	ChevronUp,
@@ -656,7 +657,7 @@ export default function StockImportAdmin() {
 							<div className="flex items-center gap-3">
 								<Link
 									href="/utils/stock-explorer"
-									className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-all active:scale-95 cursor-pointer !no-underline group"
+									className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline group"
 								>
 									<ArrowLeft className="w-4 h-4 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
 									<span>Back to Explorer</span>
@@ -707,7 +708,7 @@ export default function StockImportAdmin() {
 									type="button"
 									onClick={fetchCacheStatus}
 									disabled={cacheStatus.loading}
-									className="flex items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+									className="flex items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
 									title="Refresh Status"
 									aria-label="Refresh Cache Status"
 								>
@@ -720,13 +721,13 @@ export default function StockImportAdmin() {
 									type="button"
 									onClick={handleLiveSync}
 									disabled={isLiveFetching || cacheStatus.loading}
-									className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+									className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
 									title="Trigger Live IDX API Fetch"
 								>
 									{isLiveFetching ? (
 										<Loader2 className="w-3.5 h-3.5 animate-spin" />
 									) : (
-										<Globe className="w-3.5 h-3.5" />
+										<Radio className="w-3.5 h-3.5" />
 									)}
 									<span>Sync Live</span>
 								</button>
@@ -735,7 +736,7 @@ export default function StockImportAdmin() {
 									type="button"
 									onClick={() => setIsPurgeModalOpen(true)}
 									disabled={!cacheStatus.available || cacheStatus.loading}
-									className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs"
+									className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
 								>
 									<Trash2 className="w-3.5 h-3.5" />
 									<span>Purge Cache</span>
@@ -745,26 +746,29 @@ export default function StockImportAdmin() {
 
 						{/* Telemetry Metrics Grid or Empty/Loading Fallback */}
 						{cacheStatus.loading ? (
-							<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 animate-pulse">
+							<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
 								{[1, 2, 3].map((i) => (
 									<div
 										key={i}
-										className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-2.5"
+										className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between min-h-[118px] animate-pulse"
 									>
-										<div className="h-3 w-24 bg-slate-200 rounded-full" />
-										<div className="h-7 w-32 bg-slate-200 rounded-lg" />
-										<div className="h-2.5 w-20 bg-slate-200 rounded-full" />
+										<div className="flex items-center justify-between mb-2">
+											<div className="h-3 w-24 bg-slate-200 rounded-md" />
+											<div className="w-7 h-7 rounded-lg bg-slate-200" />
+										</div>
+										<div className="h-7 w-28 bg-slate-200 rounded-lg my-1" />
+										<div className="h-3 w-36 bg-slate-200 rounded-md mt-1" />
 									</div>
 								))}
 							</div>
 						) : cacheStatus.available ? (
 							<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
-								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors">
+								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors min-w-0">
 									<div className="flex items-center justify-between mb-2">
-										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
 											Total Instruments
 										</span>
-										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs">
+										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs shrink-0">
 											<Database className="w-3.5 h-3.5" />
 										</div>
 									</div>
@@ -776,34 +780,34 @@ export default function StockImportAdmin() {
 											equities
 										</span>
 									</div>
-									<p className="text-[11px] font-medium text-slate-500 mt-1">
+									<p className="text-[11px] font-medium text-slate-500 mt-1 truncate">
 										Active symbols indexed in Redis
 									</p>
 								</div>
 
-								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors">
+								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors min-w-0">
 									<div className="flex items-center justify-between mb-2">
-										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
 											Trading Date
 										</span>
-										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs">
+										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs shrink-0">
 											<Calendar className="w-3.5 h-3.5" />
 										</div>
 									</div>
-									<p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+									<p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
 										{formatTradingDate(cacheStatus.lastDate)}
 									</p>
-									<p className="text-[11px] font-medium text-slate-500 mt-1">
+									<p className="text-[11px] font-medium text-slate-500 mt-1 truncate">
 										Latest IDX market close session
 									</p>
 								</div>
 
-								<div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/90 flex flex-col justify-between group hover:bg-indigo-50/80 transition-colors">
+								<div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/90 flex flex-col justify-between group hover:bg-indigo-50/80 transition-colors min-w-0">
 									<div className="flex items-center justify-between mb-2">
-										<span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
+										<span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider truncate">
 											Cache Lifespan
 										</span>
-										<div className="w-7 h-7 rounded-lg bg-white border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs">
+										<div className="w-7 h-7 rounded-lg bg-white border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
 											<Clock className="w-3.5 h-3.5" />
 										</div>
 									</div>
@@ -815,7 +819,7 @@ export default function StockImportAdmin() {
 											Hours
 										</span>
 									</div>
-									<p className="text-[11px] font-medium text-indigo-700/90 mt-1">
+									<p className="text-[11px] font-medium text-indigo-700/90 mt-1 truncate">
 										Auto-purges via rolling Redis TTL
 									</p>
 								</div>
@@ -841,12 +845,12 @@ export default function StockImportAdmin() {
 									type="button"
 									onClick={handleLiveSync}
 									disabled={isLiveFetching}
-									className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold tracking-wider uppercase transition-all active:scale-95 disabled:opacity-50 cursor-pointer shrink-0 shadow-xs"
+									className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold tracking-wider uppercase transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shrink-0 shadow-xs"
 								>
 									{isLiveFetching ? (
 										<Loader2 className="w-3.5 h-3.5 animate-spin" />
 									) : (
-										<Globe className="w-3.5 h-3.5" />
+										<CloudDownload className="w-3.5 h-3.5" />
 									)}
 									<span>Prime Cache Now</span>
 								</button>
@@ -878,12 +882,29 @@ export default function StockImportAdmin() {
 						onDragOver={handleDragOver}
 						onDragLeave={handleDragLeave}
 						onDrop={handleDrop}
-						className={`bg-white border rounded-[2rem] shadow-xs overflow-hidden flex flex-col min-h-[480px] transition-all relative ${
+						className={`bg-white border rounded-[2rem] shadow-xs overflow-hidden flex flex-col min-h-[480px] transition-[border-color,box-shadow,background-color] relative ${
 							isDragging
 								? "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/10"
 								: "border-slate-200/80"
 						}`}
 					>
+						{/* Drag & Drop Visual Overlay */}
+						{isDragging && (
+							<div className="absolute inset-0 z-20 bg-indigo-50/90 backdrop-blur-xs border-2 border-dashed border-indigo-500 rounded-[2rem] flex flex-col items-center justify-center gap-3 pointer-events-none">
+								<div className="w-14 h-14 rounded-2xl bg-white border border-indigo-200 shadow-xs flex items-center justify-center text-indigo-600">
+									<FileUp className="w-7 h-7" />
+								</div>
+								<div className="text-center">
+									<p className="text-sm font-extrabold text-indigo-950 uppercase tracking-wider">
+										Drop JSON File to Load Instruments
+									</p>
+									<p className="text-xs text-indigo-700 font-medium">
+										IDX Trading Summary structure detected automatically
+									</p>
+								</div>
+							</div>
+						)}
+
 						{/* Quick Action Toolbar */}
 						<div className="p-3 sm:p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5">
 							<div className="flex flex-wrap items-center gap-2">
@@ -897,7 +918,7 @@ export default function StockImportAdmin() {
 								<button
 									type="button"
 									onClick={() => fileInputRef.current?.click()}
-									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
 								>
 									<FileUp className="w-3.5 h-3.5 text-indigo-600" />
 									<span>Upload JSON File</span>
@@ -907,27 +928,37 @@ export default function StockImportAdmin() {
 									type="button"
 									onClick={handleFormatJson}
 									disabled={!input.trim()}
-									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:pointer-events-none text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
 								>
-									<Code2 className="w-3.5 h-3.5 text-blue-600" />
+									<Code2 className="w-3.5 h-3.5 text-indigo-600" />
 									<span>Format JSON</span>
 								</button>
 
 								<button
 									type="button"
 									onClick={handleLoadSample}
-									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
 								>
-									<Sparkles className="w-3.5 h-3.5 text-amber-500" />
+									<LayoutTemplate className="w-3.5 h-3.5 text-amber-500" />
 									<span>Load Sample</span>
 								</button>
 							</div>
 
-							<span className="hidden sm:inline-flex text-[11px] font-bold text-slate-400 font-mono">
-								{input.length > 0
-									? `${input.length.toLocaleString()} chars`
-									: "⌘/Ctrl + ↵ to Import"}
-							</span>
+							<div className="hidden sm:flex items-center gap-2 text-[11px] font-bold text-slate-500 font-mono">
+								{input.length > 0 && (
+									<span className="px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700">
+										{input.length.toLocaleString()} chars
+									</span>
+								)}
+								<span className="inline-flex items-center gap-1 text-slate-500">
+									<kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200/80 text-[10px] text-slate-600 shadow-2xs font-mono">
+										⌘/Ctrl + ↵
+									</kbd>
+									<span className="text-slate-400 font-sans font-semibold">
+										to import
+									</span>
+								</span>
+							</div>
 						</div>
 
 						{/* Pre-Import Inspector Strip */}
@@ -935,8 +966,8 @@ export default function StockImportAdmin() {
 							<div className="p-3 sm:p-4 bg-emerald-50/50 border-b border-emerald-100 flex flex-col gap-2.5">
 								<div className="flex flex-wrap items-center justify-between gap-2">
 									<div className="flex flex-wrap items-center gap-2 text-xs">
-										<span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-extrabold text-[11px]">
-											<CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+										<span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-extrabold text-[11px] border border-emerald-200/60">
+											<CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
 											{previewData.totalCount.toLocaleString()} Instruments
 											Detected
 										</span>
@@ -954,7 +985,7 @@ export default function StockImportAdmin() {
 									<button
 										type="button"
 										onClick={() => setShowPreviewTable((prev) => !prev)}
-										className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 hover:text-emerald-950 cursor-pointer"
+										className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-800 hover:text-emerald-950 hover:bg-emerald-100/60 transition-[background-color,color] active:scale-95 cursor-pointer"
 									>
 										<Eye className="w-3.5 h-3.5" />
 										<span>
@@ -987,7 +1018,7 @@ export default function StockImportAdmin() {
 												{previewData.samples.map((stock) => (
 													<tr
 														key={stock.StockCode}
-														className="hover:bg-slate-50/50"
+														className="hover:bg-slate-50/70 transition-colors"
 													>
 														<td className="p-1.5 font-mono font-bold text-indigo-700">
 															{stock.StockCode}
@@ -1036,7 +1067,7 @@ export default function StockImportAdmin() {
 								onChange={(e) => setInput(e.target.value)}
 								onKeyDown={handleKeyDown}
 								placeholder='Paste IDX JSON data here or drag and drop a .json file... e.g. { "data": [ { "StockCode": "BBCA", ... } ] }'
-								className="w-full h-full min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-xl text-slate-900 font-mono text-xs leading-relaxed outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-y"
+								className="w-full h-full min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-xl text-slate-900 font-mono text-xs leading-relaxed outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-[border-color,background-color,box-shadow] resize-y"
 								spellCheck={false}
 							/>
 						</div>
@@ -1054,11 +1085,11 @@ export default function StockImportAdmin() {
 											className="flex items-center gap-2.5"
 										>
 											{status.type === "loading" ? (
-												<Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />
+												<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
 											) : status.type === "success" ? (
-												<CheckCircle2 className="w-4 h-4 text-emerald-600" />
+												<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
 											) : (
-												<AlertCircle className="w-4 h-4 text-rose-600" />
+												<AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
 											)}
 											<span
 												className={`text-xs font-bold uppercase tracking-wider ${
@@ -1081,7 +1112,7 @@ export default function StockImportAdmin() {
 									type="button"
 									onClick={handleResetInput}
 									disabled={!input.trim()}
-									className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer shadow-xs"
+									className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-xs"
 								>
 									<RotateCcw className="w-3.5 h-3.5" />
 									<span>Clear</span>
@@ -1091,10 +1122,18 @@ export default function StockImportAdmin() {
 									type="button"
 									onClick={handleImport}
 									disabled={!input.trim() || status.type === "loading"}
-									className="flex-[2] sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+									className="flex-[2] sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-xs transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
 								>
-									<Upload className="w-4 h-4" />
-									<span>Import to Redis</span>
+									{status.type === "loading" ? (
+										<Loader2 className="w-4 h-4 animate-spin" />
+									) : (
+										<Upload className="w-4 h-4" />
+									)}
+									<span>
+										{status.type === "loading"
+											? "Importing..."
+											: "Import to Redis"}
+									</span>
 								</button>
 							</div>
 						</div>

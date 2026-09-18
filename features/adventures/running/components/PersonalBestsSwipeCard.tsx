@@ -11,7 +11,7 @@ import {
 	Trophy,
 	ChevronLeft,
 	ChevronRight,
-	Sparkles,
+	Footprints,
 	Crown,
 	Gauge,
 	Mountain,
@@ -175,7 +175,7 @@ export default function PersonalBestsSwipeCard() {
 						<button
 							type="button"
 							onClick={() => paginate(-1)}
-							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-xs"
+							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-[background-color,color,transform] active:scale-90 cursor-pointer shadow-xs"
 							title="Previous Record (← Arrow Key)"
 							aria-label="Previous record"
 						>
@@ -184,7 +184,7 @@ export default function PersonalBestsSwipeCard() {
 						<button
 							type="button"
 							onClick={() => paginate(1)}
-							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-xs"
+							className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-[background-color,color,transform] active:scale-90 cursor-pointer shadow-xs"
 							title="Next Record (→ Arrow Key)"
 							aria-label="Next record"
 						>
@@ -213,7 +213,7 @@ export default function PersonalBestsSwipeCard() {
 								key={item.id}
 								type="button"
 								onClick={() => goToIndex(idx)}
-								className={`group relative h-[52px] sm:h-[58px] px-1 sm:px-2 rounded-xl text-center transition-all duration-200 cursor-pointer border flex flex-col items-center justify-center gap-0.5 sm:gap-1 overflow-hidden min-w-0 active:scale-95 ${
+								className={`group relative h-[52px] sm:h-[58px] px-1 sm:px-2 rounded-xl text-center transition-[background-color,color,border-color,box-shadow,transform] duration-200 cursor-pointer border flex flex-col items-center justify-center gap-0.5 sm:gap-1 overflow-hidden min-w-0 active:scale-95 ${
 									isActive
 										? "bg-slate-900 text-white border-slate-900 shadow-xs"
 										: "bg-slate-50/80 text-slate-600 hover:text-slate-900 border-slate-200/70 hover:border-slate-300 hover:bg-white"
@@ -317,7 +317,7 @@ export default function PersonalBestsSwipeCard() {
 								<button
 									type="button"
 									onClick={handleCopyRecord}
-									className="p-2 text-slate-400 hover:text-slate-800 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all cursor-pointer shadow-xs"
+									className="p-2 text-slate-400 hover:text-slate-800 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-[background-color,color,border-color] cursor-pointer shadow-xs active:scale-95"
 									title="Copy Record Summary"
 									aria-label="Copy record summary"
 								>
@@ -408,7 +408,7 @@ export default function PersonalBestsSwipeCard() {
 			═══════════════════════════════════════ */}
 			<div className="flex items-center justify-between pt-1 text-[11px] text-slate-400 font-semibold relative z-10">
 				<div className="flex items-center gap-1.5">
-					<Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+					<Footprints className="w-3.5 h-3.5 text-amber-500 shrink-0" />
 					<span className="truncate">
 						Swipe card, select milestone, or press ← → keys
 					</span>

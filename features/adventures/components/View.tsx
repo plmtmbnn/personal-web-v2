@@ -12,7 +12,8 @@ import {
 	Timer,
 	Image as ImageIcon,
 	Layers,
-	Flame,
+	Route,
+	Compass,
 } from "lucide-react";
 
 export default function AdventuresLanding() {
@@ -23,15 +24,15 @@ export default function AdventuresLanding() {
 			label: "Max Distance",
 			value: "65.9 km",
 			sublabel: "Ultra Trail Milestone",
-			icon: Mountain,
-			color: "text-purple-600 bg-purple-50 border-purple-100",
+			icon: Route,
+			color: "text-emerald-600 bg-emerald-50 border-emerald-100",
 		},
 		{
 			label: "Max Elevation",
 			value: "2,982 m",
 			sublabel: "Single Peak Ascent",
-			icon: Flame,
-			color: "text-rose-600 bg-rose-50 border-rose-100",
+			icon: Mountain,
+			color: "text-teal-600 bg-teal-50 border-teal-100",
 		},
 		{
 			label: "Destinations",
@@ -45,7 +46,7 @@ export default function AdventuresLanding() {
 			value: "2 Generators",
 			sublabel: "Postcards & Run Canvas",
 			icon: ImageIcon,
-			color: "text-emerald-600 bg-emerald-50 border-emerald-100",
+			color: "text-amber-600 bg-amber-50 border-amber-100",
 		},
 	];
 
@@ -61,6 +62,13 @@ export default function AdventuresLanding() {
 					transition={{ duration: 0.5 }}
 					className="text-center max-w-3xl mx-auto space-y-4 pt-2 sm:pt-4"
 				>
+					<div className="flex items-center justify-center">
+						<span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-xs">
+							<Compass className="w-3.5 h-3.5 text-emerald-600" />
+							Adventures Hub
+						</span>
+					</div>
+
 					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
 						Personal
 						<br />
@@ -117,11 +125,11 @@ export default function AdventuresLanding() {
 						initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.15, duration: 0.5 }}
-						whileHover={{ y: -4 }}
+						whileHover={reduceMotion ? undefined : { y: -4 }}
 					>
 						<Link
 							href="/adventures/running"
-							className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
+							className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-[border-color,box-shadow] duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
 						>
 							<div>
 								{/* Header & Icon */}
@@ -221,11 +229,11 @@ export default function AdventuresLanding() {
 						initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.2, duration: 0.5 }}
-						whileHover={{ y: -4 }}
+						whileHover={reduceMotion ? undefined : { y: -4 }}
 					>
 						<Link
 							href="/adventures/travel"
-							className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
+							className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-[border-color,box-shadow] duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
 						>
 							<div>
 								{/* Header & Icon */}
@@ -304,7 +312,7 @@ export default function AdventuresLanding() {
 										<span>Wishlist Tracker</span>
 									</span>
 									<span className="px-2.5 py-1 rounded-lg bg-slate-100/80 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
-										<ImageIcon className="w-3.5 h-3.5 text-purple-600" />
+										<ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
 										<span>Polaroid PNG</span>
 									</span>
 								</div>

@@ -160,7 +160,7 @@ export default function PostcardModal({
 					exit={{ opacity: 0 }}
 					transition={{ delay: 0.2 }}
 					onClick={onClose}
-					className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[70] p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all active:scale-90"
+					className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[70] p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-[background-color,transform] active:scale-90 cursor-pointer"
 					aria-label="Close postcard"
 				>
 					<X className="w-5 h-5" />
@@ -185,14 +185,14 @@ export default function PostcardModal({
 						<button
 							type="button"
 							onClick={() => setSide("front")}
-							className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${side === "front" ? "bg-white text-slate-900 shadow-md scale-100" : "text-white hover:bg-white/20 scale-95"}`}
+							className={`px-5 py-2 rounded-full text-xs font-bold transition-[background-color,color,box-shadow,transform] cursor-pointer ${side === "front" ? "bg-white text-slate-900 shadow-md scale-100" : "text-white hover:bg-white/20 scale-95"}`}
 						>
 							Front
 						</button>
 						<button
 							type="button"
 							onClick={() => setSide("back")}
-							className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${side === "back" ? "bg-white text-slate-900 shadow-md scale-100" : "text-white hover:bg-white/20 scale-95"}`}
+							className={`px-5 py-2 rounded-full text-xs font-bold transition-[background-color,color,box-shadow,transform] cursor-pointer ${side === "back" ? "bg-white text-slate-900 shadow-md scale-100" : "text-white hover:bg-white/20 scale-95"}`}
 						>
 							Back
 						</button>
@@ -399,7 +399,7 @@ export default function PostcardModal({
 						<button
 							type="button"
 							onClick={handleCopyLink}
-							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-[11px] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md"
+							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-[11px] sm:text-xs font-bold transition-[background-color,transform] active:scale-95 cursor-pointer shadow-lg backdrop-blur-md"
 							title="Copy Share Link"
 						>
 							{isLinkCopied ? (
@@ -419,7 +419,7 @@ export default function PostcardModal({
 							type="button"
 							onClick={() => handleDownload(side)}
 							disabled={isDownloading}
-							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-[11px] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md"
+							className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/90 hover:bg-white text-[#5C4033] text-[11px] sm:text-xs font-bold transition-[background-color,transform] active:scale-95 cursor-pointer shadow-lg backdrop-blur-md disabled:opacity-50 disabled:pointer-events-none"
 							title={`Download ${side === "front" ? "Front" : "Back"} Image`}
 						>
 							{isDownloading ? (
@@ -434,7 +434,7 @@ export default function PostcardModal({
 							type="button"
 							onClick={() => handleCopy(side)}
 							disabled={isCopying}
-							className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-lg backdrop-blur-md ${
+							className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-[11px] sm:text-xs font-bold transition-[background-color,box-shadow,transform] active:scale-95 cursor-pointer shadow-lg backdrop-blur-md disabled:opacity-50 disabled:pointer-events-none ${
 								isCopied
 									? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20"
 									: "bg-[#C2703E] hover:bg-[#A85E34] text-white shadow-[#C2703E]/20"

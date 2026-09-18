@@ -1,4 +1,4 @@
-import { Trophy, Zap, Flame, Milestone, Mountain } from "lucide-react";
+import { Trophy, Gauge, Flame, Milestone, Mountain } from "lucide-react";
 import type { PersonalBestItem } from "../types/personal-bests";
 
 export const personalBests: PersonalBestItem[] = [
@@ -24,7 +24,7 @@ export const personalBests: PersonalBestItem[] = [
 		time: "54:42",
 		pace: "5:28/km",
 		badge: "Tempo Benchmark",
-		icon: Zap,
+		icon: Gauge,
 		color: "text-amber-600",
 		badgeBg: "bg-amber-50 text-amber-700",
 		solidAccent: "bg-amber-500",

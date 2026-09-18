@@ -8,6 +8,7 @@ import {
 	Trophy,
 	Wrench,
 	ArrowUpRight,
+	Layers,
 } from "lucide-react";
 
 interface InsightModule {
@@ -151,6 +152,13 @@ export default function InsightsView() {
 					transition={{ duration: 0.5 }}
 					className="text-center max-w-3xl mx-auto space-y-4 pt-2 sm:pt-4"
 				>
+					<div className="flex items-center justify-center">
+						<span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-xs">
+							<Layers className="w-3.5 h-3.5 text-indigo-600" />
+							Intelligence Nexus
+						</span>
+					</div>
+
 					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
 						Curated
 						<br />
@@ -210,11 +218,11 @@ export default function InsightsView() {
 								initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: 0.15 + i * 0.08, duration: 0.5 }}
-								whileHover={{ y: -4 }}
+								whileHover={reduceMotion ? undefined : { y: -4 }}
 							>
 								<Link
 									href={module.href}
-									className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
+									className="group block relative p-6 sm:p-8 rounded-[2rem] bg-white border border-slate-200/80 hover:border-slate-300 transition-[border-color,box-shadow] duration-300 shadow-xs hover:shadow-md overflow-hidden !no-underline h-full flex flex-col justify-between"
 								>
 									{/* Top Row: Squircle Icon + Category Pill + Arrow Circle */}
 									<div>
@@ -273,7 +281,9 @@ export default function InsightsView() {
 
 									{/* Bottom Action: Learn More ↗ Style */}
 									<div className="pt-6 mt-6 border-t border-slate-100/80 flex items-center justify-between">
-										<span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+										<span
+											className={`inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-900 ${module.accentColor} transition-colors`}
+										>
 											<span>Explore Module</span>
 											<ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
 										</span>

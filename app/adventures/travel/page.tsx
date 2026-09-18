@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Compass,
-	Globe,
+	Map as MapIcon,
 	CheckCircle2,
 	Star,
 	Search,
+	SearchX,
 	X,
-	Sparkles,
+	ArrowLeft,
 } from "lucide-react";
 import { destinations } from "@/features/travel/data";
 import useDestinations from "@/features/travel/hooks/useDestinations";
@@ -97,7 +99,7 @@ function TravelContent() {
 			label: "Countries",
 			value: `${totalCountries} Countries`,
 			sublabel: "Domestic & Global",
-			icon: Globe,
+			icon: MapIcon,
 			color: "text-emerald-600 bg-emerald-50 border-emerald-100",
 		},
 		{
@@ -177,23 +179,47 @@ function TravelContent() {
 				{/* ═══════════════════════════════════════
 				    HERO HEADER: Centered, Minimalist, Classy
 				═══════════════════════════════════════ */}
-				<motion.header
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5 }}
-					className="text-center max-w-3xl mx-auto space-y-4 pt-2 sm:pt-4"
-				>
-					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
-						Travel
-						<br />
-						<span>bucket list & tracker</span>
-					</h1>
+				<header className="space-y-6">
+					{/* Navigation / Back to Adventures */}
+					<motion.div
+						initial={reduceMotion ? false : { opacity: 0, x: -10 }}
+						animate={{ opacity: 1, x: 0 }}
+					>
+						<Link
+							href="/adventures"
+							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-emerald-600 transition-colors gap-2 group !no-underline"
+						>
+							<ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+							Back to Adventures
+						</Link>
+					</motion.div>
 
-					<p className="text-slate-500 text-sm sm:text-base font-normal max-w-xl mx-auto leading-relaxed">
-						Curating a life of exploration. Mapping the journeys completed and
-						the adventures yet to come across domestic and global expeditions.
-					</p>
-				</motion.header>
+					{/* Centered Editorial Title & Domain Badge */}
+					<motion.div
+						initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.5 }}
+						className="text-center max-w-3xl mx-auto space-y-4 pt-2 sm:pt-4"
+					>
+						<div className="flex items-center justify-center">
+							<span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-xs">
+								<Compass className="w-3.5 h-3.5 text-emerald-600" />
+								Expedition Log
+							</span>
+						</div>
+
+						<h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
+							Travel
+							<br />
+							<span>bucket list & tracker</span>
+						</h1>
+
+						<p className="text-slate-500 text-sm sm:text-base font-normal max-w-xl mx-auto leading-relaxed">
+							Curating a life of exploration. Mapping the journeys completed and
+							the adventures yet to come across domestic and global expeditions.
+						</p>
+					</motion.div>
+				</header>
 
 				{/* ═══════════════════════════════════════
 				    TELEMETRY STATS ROW: 4 Core Milestones
@@ -243,7 +269,7 @@ function TravelContent() {
 										key={tab.id}
 										type="button"
 										onClick={() => setActiveFilter(tab.id)}
-										className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer active:scale-95 ${
+										className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-[background-color,color,border-color,box-shadow,transform] shrink-0 cursor-pointer active:scale-95 ${
 											isActive
 												? "bg-slate-900 text-white shadow-xs"
 												: "bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/80"
@@ -272,7 +298,7 @@ function TravelContent() {
 								placeholder="Search destinations..."
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
-								className="w-full pl-9 pr-8 py-1.5 bg-white border border-slate-200/80 focus:border-emerald-500 rounded-full text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none transition-all shadow-xs"
+								className="w-full pl-9 pr-8 py-1.5 bg-white border border-slate-200/80 focus:border-emerald-500 rounded-full text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none transition-[border-color,box-shadow] shadow-xs"
 							/>
 							{searchQuery && (
 								<button
@@ -326,8 +352,8 @@ function TravelContent() {
 							exit={{ opacity: 0, y: -15 }}
 							className="flex flex-col items-center justify-center text-center py-20 bg-white border border-slate-200/80 rounded-[2rem] p-8 shadow-xs max-w-lg mx-auto"
 						>
-							<div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 text-slate-700">
-								<Sparkles className="w-5 h-5" />
+							<div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 text-slate-500">
+								<SearchX className="w-6 h-6" />
 							</div>
 							<h3 className="text-lg font-bold text-slate-900 tracking-tight mb-1">
 								No Destinations Found
@@ -340,7 +366,7 @@ function TravelContent() {
 								<button
 									type="button"
 									onClick={handleResetFilters}
-									className="mt-6 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer"
+									className="mt-6 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-[background-color,transform] cursor-pointer"
 								>
 									Clear Filters
 								</button>

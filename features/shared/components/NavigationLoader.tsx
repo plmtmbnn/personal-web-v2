@@ -48,7 +48,7 @@ export default function NavigationLoader() {
 					transition={{ duration: 0.2 }}
 				>
 					<motion.div
-						className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]"
+						className="h-full bg-indigo-600"
 						initial={reduceMotion ? { width: "85%" } : { width: "0%" }}
 						animate={{ width: "85%" }}
 						exit={{ width: "100%" }}

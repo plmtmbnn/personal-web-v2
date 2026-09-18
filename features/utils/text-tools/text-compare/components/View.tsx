@@ -12,7 +12,6 @@ import {
 	Trash2,
 	Columns2,
 	AlignLeft,
-	Sparkles,
 	Plus,
 	Minus,
 	FileText,
@@ -235,14 +234,14 @@ export default function TextCompareView() {
 					{/* Sample Preset Buttons */}
 					<div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
 						<span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5 mr-1">
-							<Sparkles className="w-3.5 h-3.5 text-indigo-500" /> Presets:
+							<FileText className="w-3.5 h-3.5 text-indigo-500" /> Presets:
 						</span>
 						{TEXT_COMPARE_SAMPLES.map((sample) => (
 							<button
 								key={sample.id}
 								type="button"
 								onClick={() => handleLoadSample(sample.id)}
-								className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-slate-200/80 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 shadow-2xs hover:shadow-xs transition-all shrink-0 cursor-pointer"
+								className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-slate-200/80 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 shadow-2xs hover:shadow-xs transition-[color,border-color,box-shadow] shrink-0 cursor-pointer"
 							>
 								{sample.title}
 							</button>

@@ -40,7 +40,7 @@ const TECH_PILLS = [
 // ─── Memoized Components ───────────────────────────────────────────────────────
 
 const TechPill = memo(({ tech }: { tech: string }) => (
-	<span className="text-[11px] sm:text-xs font-semibold text-slate-600 px-3 py-1 bg-white border border-slate-200/80 shadow-xs hover:border-slate-300 hover:text-slate-900 rounded-full transition-all duration-200 cursor-default">
+	<span className="text-[11px] sm:text-xs font-semibold text-slate-600 px-3 py-1 bg-white border border-slate-200/80 shadow-xs hover:border-slate-300 hover:text-slate-900 rounded-full transition-[border-color,color] duration-200 cursor-default">
 		{tech}
 	</span>
 ));
@@ -83,7 +83,7 @@ const StatCard = memo(
 		<Link
 			href={href}
 			aria-label={`View ${label} details`}
-			className={`col-span-1 bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between hover:-translate-y-1.5 shadow-xs hover:shadow-md transition-all duration-300 cursor-pointer group/card relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${accentBorderClass}`}
+			className={`col-span-1 bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between hover:-translate-y-1.5 shadow-xs hover:shadow-md transition-[transform,box-shadow,border-color] duration-300 cursor-pointer group/card relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${accentBorderClass}`}
 		>
 			{/* Solid top border accent line on hover */}
 			<div
@@ -97,7 +97,7 @@ const StatCard = memo(
 					{icon}
 				</div>
 				<div className="p-1 rounded-full bg-slate-50 group-hover/card:bg-slate-100 transition-colors duration-200 border border-slate-100">
-					<ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover/card:text-slate-900 group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5 transition-all duration-200" />
+					<ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover/card:text-slate-900 group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5 transition-[transform,color] duration-200" />
 				</div>
 			</div>
 
@@ -186,12 +186,12 @@ export default function Home({
 						className="relative group cursor-pointer"
 					>
 						{/* Photo frame — Floating white card container */}
-						<div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-64 lg:h-64 xl:w-80 xl:h-80 rounded-[2rem] p-3 bg-white border border-slate-200/80 shadow-xs group-hover:shadow-md group-hover:scale-[1.01] transition-all duration-500">
+						<div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-64 lg:h-64 xl:w-80 xl:h-80 rounded-[2rem] p-3 bg-white border border-slate-200/80 shadow-xs group-hover:shadow-md group-hover:scale-[1.01] transition-[transform,box-shadow] duration-500">
 							<div className="w-full h-full rounded-[1.5rem] overflow-hidden">
 								<Image
 									src="/profile.jpg"
 									alt={`${AUTHOR.name} — Software Engineer and Distance Runner`}
-									className="w-full h-full object-cover grayscale-[15%] group-hover:grayscale-0 transition-all duration-500"
+									className="w-full h-full object-cover grayscale-[15%] group-hover:grayscale-0 transition-[filter] duration-500"
 									priority
 									width={400}
 									height={400}
@@ -348,7 +348,7 @@ export default function Home({
 					>
 						<Link
 							href="/work-experience"
-							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-slate-900 text-white !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-xs hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 cursor-pointer"
+							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-slate-900 text-white !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 hover:-translate-y-0.5 active:scale-95 transition-[transform,box-shadow,background-color] duration-200 shadow-xs hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 cursor-pointer"
 						>
 							<span className="text-white">Explore Work</span>
 							<ArrowRight className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-1 transition-transform duration-200" />
@@ -356,7 +356,7 @@ export default function Home({
 
 						<Link
 							href="/contact"
-							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-white border border-slate-200/80 text-slate-900 !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-all duration-200 shadow-xs hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
+							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-white border border-slate-200/80 text-slate-900 !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-[transform,box-shadow,border-color,background-color] duration-200 shadow-xs hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
 						>
 							<Mail className="w-3.5 h-3.5 group-hover/btn:rotate-6 transition-transform duration-200 text-slate-700" />
 							<span className="text-slate-900">Get in Touch</span>
@@ -369,7 +369,7 @@ export default function Home({
 								target="_blank"
 								rel="noopener noreferrer"
 								aria-label={`${AUTHOR.name}'s GitHub`}
-								className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:shadow-sm hover:bg-slate-50 transition-all duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
+								className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:shadow-sm hover:bg-slate-50 transition-[color,box-shadow,background-color] duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
 							>
 								<FaGithub className="w-4 h-4" />
 							</a>
@@ -378,7 +378,7 @@ export default function Home({
 								target="_blank"
 								rel="noopener noreferrer"
 								aria-label={`${AUTHOR.name}'s LinkedIn`}
-								className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:shadow-sm hover:bg-slate-50 transition-all duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
+								className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:shadow-sm hover:bg-slate-50 transition-[color,box-shadow,background-color] duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
 							>
 								<FaLinkedin className="w-4 h-4" />
 							</a>

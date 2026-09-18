@@ -13,7 +13,6 @@ import {
 	Trash2,
 	Columns2,
 	AlignLeft,
-	Sparkles,
 	Sliders,
 	Plus,
 	Minus,
@@ -670,7 +669,7 @@ export default function DiffViewerView() {
 
 					<div className="p-6 bg-white border border-slate-200/80 rounded-3xl space-y-2 shadow-xs">
 						<div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-							<Sparkles className="w-5 h-5" />
+							<FileCode2 className="w-5 h-5" />
 						</div>
 						<h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide">
 							Git Patch Compatible

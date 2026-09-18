@@ -17,8 +17,7 @@ import {
 	Unlock,
 	Trophy,
 	Activity,
-	Zap,
-	Sparkles,
+	Gauge,
 	Clock,
 	Plus,
 	Minus,
@@ -80,7 +79,7 @@ const PHASE_THEME: Record<
 
 const PHASE_ICONS: Record<PhaseType, React.FC<{ className?: string }>> = {
 	warmup: ({ className }) => <Flame className={className} />,
-	speed: ({ className }) => <Zap className={className} />,
+	speed: ({ className }) => <Gauge className={className} />,
 	rest: ({ className }) => <TimerReset className={className} />,
 	cooldown: ({ className }) => <Activity className={className} />,
 };
@@ -1177,7 +1176,7 @@ export default function TimerView() {
 							<div className="space-y-2 mb-2">
 								<div className="flex items-center justify-between px-1">
 									<span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-										<Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+										<Activity className="w-3.5 h-3.5 text-indigo-600" />
 										Quick Presets
 									</span>
 									<span className="text-[10px] font-bold text-slate-400">
@@ -1190,7 +1189,7 @@ export default function TimerView() {
 											key={preset.id}
 											type="button"
 											onClick={() => applyPreset(preset)}
-											className="p-3 bg-white border border-slate-200/80 rounded-2xl text-left hover:border-indigo-300 hover:shadow-xs active:scale-95 transition-all group cursor-pointer"
+											className="p-3 bg-white border border-slate-200/80 rounded-2xl text-left hover:border-indigo-300 hover:shadow-xs active:scale-95 transition-[border-color,box-shadow,transform] group cursor-pointer"
 										>
 											<div className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
 												{preset.name}
@@ -1215,7 +1214,7 @@ export default function TimerView() {
 							/>
 							<SetupCard
 								label="Speed"
-								icon={Zap}
+								icon={Gauge}
 								color="text-rose-600"
 								bgColor="bg-rose-50 border-rose-100"
 								min={speedMin}

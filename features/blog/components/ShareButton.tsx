@@ -74,7 +74,7 @@ export default function ShareButton({ title, url }: ShareButtonProps) {
 			{/* Primary share / copy button */}
 			<button
 				onClick={handleNativeShare}
-				className="flex items-center gap-3 px-6 py-3.5 bg-slate-950 text-white rounded-2xl font-bold text-xs hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95 w-full justify-center"
+				className="flex items-center gap-3 px-6 py-3.5 bg-slate-950 text-white rounded-2xl font-bold text-xs hover:bg-slate-800 transition-[background-color] shadow-lg shadow-slate-200 active:scale-95 w-full justify-center"
 			>
 				<AnimatePresence mode="wait" initial={false}>
 					{copied ? (
@@ -118,7 +118,7 @@ export default function ShareButton({ title, url }: ShareButtonProps) {
 						href={href}
 						target="_blank"
 						rel="noopener noreferrer"
-						className={`flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition-all duration-200 bg-white ${color} active:scale-95 shadow-sm`}
+						className={`flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition-[background-color,border-color,color] duration-200 bg-white ${color} active:scale-95 shadow-sm`}
 					>
 						<Icon className="w-3.5 h-3.5" />
 						{label}
@@ -128,7 +128,7 @@ export default function ShareButton({ title, url }: ShareButtonProps) {
 				{/* Copy link button */}
 				<button
 					onClick={handleCopy}
-					className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-200 bg-white active:scale-95 shadow-sm"
+					className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-[background-color,border-color,color] duration-200 bg-white active:scale-95 shadow-sm"
 				>
 					<Link2 className="w-3.5 h-3.5" />
 					{copied ? "Copied!" : "Copy Link"}

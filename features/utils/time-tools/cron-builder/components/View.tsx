@@ -9,7 +9,6 @@ import {
 	Calendar,
 	Copy,
 	Check,
-	Sparkles,
 	Sliders,
 	AlertCircle,
 	CheckCircle2,
@@ -230,7 +229,7 @@ export default function CronBuilderView() {
 						<div className="lg:w-[460px] p-6 bg-indigo-50/60 border border-indigo-100 rounded-2xl space-y-3">
 							<div className="flex items-center justify-between">
 								<span className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-									<Sparkles className="w-4 h-4 text-indigo-600" />
+									<CalendarDays className="w-4 h-4 text-indigo-600" />
 									Plain-English Schedule
 								</span>
 								{nextExecutions[0] && (

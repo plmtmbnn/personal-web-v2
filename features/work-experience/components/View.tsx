@@ -8,7 +8,7 @@ import {
 	MapPin,
 	Calendar,
 	Award,
-	Zap,
+	GraduationCap,
 	ShieldCheck,
 	Users,
 	Cpu,
@@ -80,7 +80,7 @@ const experiences: Experience[] = [
 					"Built SIAPPS platform serving 5M+ users",
 				],
 				highlights: [
-					"🏆 World CIO 200 Summit 2024 Winner (Indonesia – Next Gen Category)",
+					"World CIO 200 Summit 2024 Winner (Indonesia – Next Gen Category)",
 					"Integrated multiple banks and payment gateways",
 				],
 				skills: [
@@ -105,7 +105,7 @@ const experiences: Experience[] = [
 			"Remote-first technology bootcamp focused on training career changers and aspiring software engineers in modern full-stack web and cloud architectures.",
 		color: "bg-amber-50 border-amber-200 text-amber-600",
 		badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-		icon: Zap,
+		icon: GraduationCap,
 		impact: "Graduated hundreds of career-ready full-stack software engineers",
 		positions: [
 			{
@@ -148,7 +148,7 @@ const experiences: Experience[] = [
 					"Managed system architecture and sprint execution",
 					"Mentored junior and mid-level engineers",
 				],
-				highlights: ["🏆 Best Mentor Award 2021"],
+				highlights: ["Best Mentor Award 2021"],
 				skills: [
 					"Engineering Management",
 					"Agile / Scrum",
@@ -178,7 +178,7 @@ const experiences: Experience[] = [
 					"Developed first-generation loan management system",
 					"Built internal dashboards and reporting tools",
 				],
-				highlights: ["🏆 Best Employee Award 2020"],
+				highlights: ["Best Employee Award 2020"],
 				skills: ["PHP / Laravel", "JavaScript", "MySQL", "Reporting Engines"],
 			},
 		],
@@ -250,7 +250,7 @@ export default function WorkExperience() {
 											whileHover={{ y: -3 }}
 											whileTap={{ scale: 0.99 }}
 											onClick={() => setSelectedExp(exp)}
-											className="text-left w-full group relative bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-200/80 shadow-xs hover:border-indigo-300 hover:shadow-lg transition-all duration-200 cursor-pointer"
+											className="text-left w-full group relative bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-200/80 shadow-xs hover:border-indigo-300 hover:shadow-lg transition-[transform,box-shadow,border-color] duration-200 cursor-pointer"
 										>
 											{/* Clean Company Header */}
 											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-5 border-b border-slate-100">
@@ -395,7 +395,7 @@ export default function WorkExperience() {
 						return (
 							<div
 								key={s.label}
-								className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl text-center shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+								className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl text-center shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-[transform,box-shadow] duration-200"
 							>
 								<div
 									className={`w-10 h-10 sm:w-12 sm:h-12 border ${s.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3.5`}

@@ -1,3 +1,10 @@
+# [0.90.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.89.0...v0.90.0) (2026-09-19)
+
+
+### Features
+
+* revamp UI architecture, fix runtime warnings, and optimize proxy and SEO ([8205a13](https://github.com/plmtmbnn/personal-web-v2/commit/8205a1371e038fde8c8ae01f5f70144f63e7c9b7))
+
 # [0.89.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.88.0...v0.89.0) (2026-09-18)
 
 

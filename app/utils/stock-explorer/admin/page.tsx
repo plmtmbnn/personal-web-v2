@@ -13,7 +13,6 @@ import {
 	Clock,
 	RefreshCw,
 	FileUp,
-	LayoutTemplate,
 	Code2,
 	RotateCcw,
 	Radio,
@@ -24,6 +23,11 @@ import {
 	ChevronRight,
 	Calendar,
 	Server,
+	Search,
+	LayoutTemplate,
+	Layers,
+	ShieldCheck,
+	TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -73,15 +77,15 @@ interface NormalizedStockRecord {
 	[key: string]: unknown;
 }
 
-const SAMPLE_TEMPLATE = `{
+const SAMPLE_BANKS_TEMPLATE = `{
   "draw": 1,
-  "recordsTotal": 3,
-  "recordsFiltered": 3,
+  "recordsTotal": 4,
+  "recordsFiltered": 4,
   "data": [
     {
       "No": 1,
       "IDStockSummary": 101,
-      "Date": "2026-09-05T00:00:00",
+      "Date": "2026-09-18T00:00:00",
       "StockCode": "BBCA",
       "StockName": "Bank Central Asia Tbk.",
       "Remarks": "",
@@ -109,7 +113,7 @@ const SAMPLE_TEMPLATE = `{
     {
       "No": 2,
       "IDStockSummary": 102,
-      "Date": "2026-09-05T00:00:00",
+      "Date": "2026-09-18T00:00:00",
       "StockCode": "BBRI",
       "StockName": "Bank Rakyat Indonesia (Persero) Tbk.",
       "Remarks": "",
@@ -137,7 +141,7 @@ const SAMPLE_TEMPLATE = `{
     {
       "No": 3,
       "IDStockSummary": 103,
-      "Date": "2026-09-05T00:00:00",
+      "Date": "2026-09-18T00:00:00",
       "StockCode": "BMRI",
       "StockName": "Bank Mandiri (Persero) Tbk.",
       "Remarks": "",
@@ -161,6 +165,126 @@ const SAMPLE_TEMPLATE = `{
       "NonRegularVolume": 200000,
       "NonRegularValue": 1350000000,
       "NonRegularFrequency": 5
+    },
+    {
+      "No": 4,
+      "IDStockSummary": 104,
+      "Date": "2026-09-18T00:00:00",
+      "StockCode": "BBNI",
+      "StockName": "Bank Negara Indonesia (Persero) Tbk.",
+      "Remarks": "",
+      "Previous": 5250,
+      "OpenPrice": 5275,
+      "FirstTrade": 5275,
+      "High": 5350,
+      "Low": 5250,
+      "Close": 5325,
+      "Change": 75,
+      "Volume": 42000000,
+      "Value": 223000000000,
+      "Frequency": 9800,
+      "IndexIndividual": 100,
+      "Offer": 5350,
+      "OfferVolume": 30000,
+      "Bid": 5325,
+      "BidVolume": 38000,
+      "ForeignSell": 12000000,
+      "ForeignBuy": 21000000,
+      "NonRegularVolume": 150000,
+      "NonRegularValue": 798000000,
+      "NonRegularFrequency": 4
+    }
+  ]
+}`;
+
+const SAMPLE_TECH_TEMPLATE = `{
+  "draw": 1,
+  "recordsTotal": 3,
+  "recordsFiltered": 3,
+  "data": [
+    {
+      "No": 1,
+      "IDStockSummary": 201,
+      "Date": "2026-09-18T00:00:00",
+      "StockCode": "TLKM",
+      "StockName": "Telkom Indonesia (Persero) Tbk.",
+      "Remarks": "",
+      "Previous": 3100,
+      "OpenPrice": 3120,
+      "FirstTrade": 3120,
+      "High": 3180,
+      "Low": 3100,
+      "Close": 3150,
+      "Change": 50,
+      "Volume": 95000000,
+      "Value": 298000000000,
+      "Frequency": 16400,
+      "IndexIndividual": 100,
+      "Offer": 3160,
+      "OfferVolume": 45000,
+      "Bid": 3150,
+      "BidVolume": 62000,
+      "ForeignSell": 20000000,
+      "ForeignBuy": 38000000,
+      "NonRegularVolume": 400000,
+      "NonRegularValue": 1260000000,
+      "NonRegularFrequency": 6
+    },
+    {
+      "No": 2,
+      "IDStockSummary": 202,
+      "Date": "2026-09-18T00:00:00",
+      "StockCode": "ASII",
+      "StockName": "Astra International Tbk.",
+      "Remarks": "",
+      "Previous": 4980,
+      "OpenPrice": 5000,
+      "FirstTrade": 5000,
+      "High": 5075,
+      "Low": 4970,
+      "Close": 5050,
+      "Change": 70,
+      "Volume": 54000000,
+      "Value": 272000000000,
+      "Frequency": 11200,
+      "IndexIndividual": 100,
+      "Offer": 5075,
+      "OfferVolume": 35000,
+      "Bid": 5050,
+      "BidVolume": 48000,
+      "ForeignSell": 14000000,
+      "ForeignBuy": 28000000,
+      "NonRegularVolume": 250000,
+      "NonRegularValue": 1262500000,
+      "NonRegularFrequency": 5
+    },
+    {
+      "No": 3,
+      "IDStockSummary": 203,
+      "Date": "2026-09-18T00:00:00",
+      "StockCode": "GOTO",
+      "StockName": "GoTo Gojek Tokopedia Tbk.",
+      "Remarks": "",
+      "Previous": 54,
+      "OpenPrice": 55,
+      "FirstTrade": 55,
+      "High": 58,
+      "Low": 54,
+      "Close": 56,
+      "Change": 2,
+      "Volume": 2800000000,
+      "Value": 156800000000,
+      "Frequency": 28900,
+      "IndexIndividual": 100,
+      "Offer": 57,
+      "OfferVolume": 850000,
+      "Bid": 56,
+      "BidVolume": 1200000,
+      "ForeignSell": 620000000,
+      "ForeignBuy": 710000000,
+      "NonRegularVolume": 15000000,
+      "NonRegularValue": 840000000,
+      "NonRegularFrequency": 12
     }
   ]
 }`;
@@ -305,6 +429,8 @@ export default function StockImportAdmin() {
 	const [isLiveFetching, setIsLiveFetching] = useState(false);
 	const [isDragging, setIsDragging] = useState(false);
 	const [showPreviewTable, setShowPreviewTable] = useState(false);
+	const [previewSearchQuery, setPreviewSearchQuery] = useState("");
+	const [showProtocolBanner, setShowProtocolBanner] = useState(true);
 
 	const fetchCacheStatus = useCallback(async () => {
 		setCacheStatus((prev) => ({ ...prev, loading: true }));
@@ -357,19 +483,35 @@ export default function StockImportAdmin() {
 				totalVolume,
 				totalValue,
 				sampleDate,
-				samples: normalized.slice(0, 5),
+				allRecords: normalized,
 			};
 		} catch {
 			return null;
 		}
 	}, [input]);
 
+	// Filtered preview records based on search query
+	const filteredPreviewRecords = useMemo(() => {
+		if (!previewData) return [];
+		if (!previewSearchQuery.trim()) {
+			return previewData.allRecords.slice(0, 10);
+		}
+		const q = previewSearchQuery.trim().toUpperCase();
+		return previewData.allRecords
+			.filter(
+				(r) =>
+					r.StockCode.toUpperCase().includes(q) ||
+					r.StockName.toUpperCase().includes(q),
+			)
+			.slice(0, 15);
+	}, [previewData, previewSearchQuery]);
+
 	// Live sync from IDX API
 	const handleLiveSync = async () => {
 		setIsLiveFetching(true);
 		setStatus({
 			type: "loading",
-			message: "Attempting live IDX Trading Summary fetch...",
+			message: "Connecting to IDX live stream...",
 		});
 
 		try {
@@ -383,18 +525,18 @@ export default function StockImportAdmin() {
 			if (result.source === "idx_live") {
 				setStatus({
 					type: "success",
-					message: `Successfully synced ${result.data?.length || 0} stocks directly from IDX!`,
+					message: `Successfully synchronized ${result.data?.length || 0} stocks directly from IDX!`,
 				});
 			} else if (result.source === "fallback_static") {
 				setStatus({
 					type: "error",
 					message:
-						"Live IDX blocked datacenter IP. Fallback loaded. Please use manual JSON upload below.",
+						"IDX cloud IP rate-limited. Loaded fallback dataset. Please use manual JSON import below.",
 				});
 			} else {
 				setStatus({
 					type: "success",
-					message: `Cache updated from ${result.source} (${result.data?.length || 0} items).`,
+					message: `Registry updated from ${result.source} (${result.data?.length || 0} instruments).`,
 				});
 			}
 			fetchCacheStatus();
@@ -412,31 +554,31 @@ export default function StockImportAdmin() {
 	const handleImport = useCallback(async () => {
 		if (!input.trim()) return;
 
-		setStatus({ type: "loading", message: "Validating JSON structure..." });
+		setStatus({ type: "loading", message: "Validating JSON schema..." });
 
 		try {
 			let parsed: unknown;
 			try {
 				parsed = JSON.parse(input);
 			} catch {
-				throw new Error("Invalid JSON format. Please check your syntax.");
+				throw new Error("Invalid JSON format. Please verify your syntax.");
 			}
 
 			const stockArray = extractStockArray(parsed);
 			if (!stockArray || stockArray.length === 0) {
 				throw new Error(
-					"Invalid structure. Could not find an array of stock objects in the JSON.",
+					"Unrecognized structure. Could not find an array of stock instruments in the payload.",
 				);
 			}
 
 			const normalizedData = normalizeStockData(stockArray);
 			if (normalizedData.length === 0) {
-				throw new Error("No valid stock records with ticker codes found.");
+				throw new Error("No valid stock records with ticker symbols found.");
 			}
 
 			setStatus({
 				type: "loading",
-				message: `Importing ${normalizedData.length} records to Redis (Force Overwrite)...`,
+				message: `Pushing ${normalizedData.length} instruments to Redis...`,
 			});
 
 			const response = await fetch("/api/admin/import-stock", {
@@ -451,14 +593,14 @@ export default function StockImportAdmin() {
 			};
 
 			if (!response.ok) {
-				throw new Error(result.error || "Failed to import data");
+				throw new Error(result.error || "Failed to import dataset");
 			}
 
 			setStatus({
 				type: "success",
 				message:
 					result.message ||
-					`Successfully imported ${normalizedData.length} instruments to Redis!`,
+					`Successfully committed ${normalizedData.length} instruments to Redis cache!`,
 			});
 			setInput("");
 			fetchCacheStatus();
@@ -484,7 +626,7 @@ export default function StockImportAdmin() {
 	// Cache Purge Confirmation
 	const handleClearCacheConfirm = async () => {
 		setIsPurging(true);
-		setStatus({ type: "loading", message: "Purging Redis cache..." });
+		setStatus({ type: "loading", message: "Purging in-memory Redis cache..." });
 
 		try {
 			const response = await fetch("/api/admin/import-stock", {
@@ -502,7 +644,7 @@ export default function StockImportAdmin() {
 
 			setStatus({
 				type: "success",
-				message: result.message || "Redis cache cleared successfully.",
+				message: result.message || "Redis stock cache purged successfully.",
 			});
 			setIsPurgeModalOpen(false);
 			fetchCacheStatus();
@@ -513,7 +655,7 @@ export default function StockImportAdmin() {
 				message:
 					error instanceof Error
 						? error.message
-						: "An unexpected error occurred while clearing cache.",
+						: "An unexpected error occurred while purging cache.",
 			});
 		} finally {
 			setIsPurging(false);
@@ -608,16 +750,26 @@ export default function StockImportAdmin() {
 		}
 	};
 
-	const handleLoadSample = () => {
-		setInput(SAMPLE_TEMPLATE);
-		setStatus({
-			type: "success",
-			message: "Sample IDX template loaded (BBCA, BBRI, BMRI).",
-		});
+	const handleLoadPreset = (presetKey: "banks" | "tech") => {
+		if (presetKey === "banks") {
+			setInput(SAMPLE_BANKS_TEMPLATE);
+			setStatus({
+				type: "success",
+				message: "Sample Big 4 Banks loaded (BBCA, BBRI, BMRI, BBNI).",
+			});
+		} else {
+			setInput(SAMPLE_TECH_TEMPLATE);
+			setStatus({
+				type: "success",
+				message: "Sample Tech & Industrials loaded (TLKM, ASII, GOTO).",
+			});
+		}
 	};
 
 	const handleResetInput = () => {
 		setInput("");
+		setPreviewSearchQuery("");
+		setShowPreviewTable(false);
 		setStatus({ type: "idle", message: "" });
 	};
 
@@ -628,33 +780,38 @@ export default function StockImportAdmin() {
 					{/* Top Floating Header Card */}
 					<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
 						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
-							<div className="space-y-1.5 sm:space-y-2">
-								<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider">
-									<Database className="w-3.5 h-3.5 text-indigo-600" />
-									<span>Financial Registry</span>
-									<span className="w-1 h-1 rounded-full bg-indigo-400" />
-									<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal">
-										idx market synchronization
-									</span>
+							<div className="flex items-start sm:items-center gap-4">
+								<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200/70 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+									<Database className="w-6 h-6" />
 								</div>
-								<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-									Stock Explorer Manager
-								</h1>
-								<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-									<Link
-										href="/admin"
-										className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
-									>
-										Admin Dashboard
-									</Link>
-									<ChevronRight className="w-3 h-3 text-slate-400" />
-									<span className="text-slate-900 font-bold">
-										Stock Registry
-									</span>
+								<div className="space-y-1.5">
+									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider">
+										<TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+										<span>Financial Registry</span>
+										<span className="w-1 h-1 rounded-full bg-indigo-400" />
+										<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal">
+											idx market synchronization
+										</span>
+									</div>
+									<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+										Stock Explorer Manager
+									</h1>
+									<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+										<Link
+											href="/admin"
+											className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+										>
+											Admin Dashboard
+										</Link>
+										<ChevronRight className="w-3 h-3 text-slate-400" />
+										<span className="text-slate-900 font-bold">
+											Stock Registry
+										</span>
+									</div>
 								</div>
 							</div>
 
-							<div className="flex items-center gap-3">
+							<div className="flex items-center gap-3 self-start sm:self-center">
 								<Link
 									href="/utils/stock-explorer"
 									className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline group"
@@ -677,7 +834,7 @@ export default function StockImportAdmin() {
 								<div className="space-y-0.5">
 									<div className="flex items-center gap-2.5 flex-wrap">
 										<h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-											Redis Cache Status
+											Redis In-Memory Registry
 										</h2>
 										{cacheStatus.loading ? (
 											<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
@@ -697,7 +854,8 @@ export default function StockImportAdmin() {
 										)}
 									</div>
 									<p className="text-xs text-slate-500 font-medium">
-										In-memory IDX equity dataset status and operational controls
+										Real-time IDX equity dataset status and in-memory cache
+										operations
 									</p>
 								</div>
 							</div>
@@ -768,8 +926,8 @@ export default function StockImportAdmin() {
 										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
 											Total Instruments
 										</span>
-										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs shrink-0">
-											<Database className="w-3.5 h-3.5" />
+										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+											<Layers className="w-3.5 h-3.5" />
 										</div>
 									</div>
 									<div className="flex items-baseline gap-1.5">
@@ -788,9 +946,9 @@ export default function StockImportAdmin() {
 								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors min-w-0">
 									<div className="flex items-center justify-between mb-2">
 										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
-											Trading Date
+											Trading Session
 										</span>
-										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-2xs shrink-0">
+										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-emerald-600 shadow-2xs shrink-0">
 											<Calendar className="w-3.5 h-3.5" />
 										</div>
 									</div>
@@ -858,31 +1016,38 @@ export default function StockImportAdmin() {
 						)}
 					</section>
 
-					{/* Protocol Helper Card */}
-					<section className="p-4 sm:p-5 bg-indigo-50/70 border border-indigo-100 rounded-2xl space-y-2 shadow-xs">
-						<div className="flex items-start gap-3">
-							<div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-								<FileCode className="w-4 h-4" />
-							</div>
-							<div className="space-y-0.5">
-								<h3 className="text-xs font-extrabold uppercase tracking-wider text-indigo-950">
-									Manual Override Protocol
-								</h3>
-								<p className="text-xs text-indigo-900/80 leading-relaxed font-medium">
+					{/* Dismissible Protocol Info Pill */}
+					{showProtocolBanner && (
+						<div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+							<div className="flex items-center gap-3">
+								<div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+									<ShieldCheck className="w-4 h-4" />
+								</div>
+								<div className="text-xs text-indigo-900/90 leading-relaxed font-medium">
+									<strong className="font-bold text-indigo-950">
+										Manual Override Protocol:
+									</strong>{" "}
 									If cloud datacenter IP is blocked by IDX, drag and drop or
-									paste the raw JSON response from IDX Trading Summary below to
-									manually prime the Redis cache.
-								</p>
+									paste raw JSON below to manually prime Redis.
+								</div>
 							</div>
+							<button
+								type="button"
+								onClick={() => setShowProtocolBanner(false)}
+								className="text-indigo-400 hover:text-indigo-700 text-xs font-bold px-2 py-1 rounded-lg hover:bg-indigo-100/50 transition-colors"
+								aria-label="Dismiss banner"
+							>
+								✕
+							</button>
 						</div>
-					</section>
+					)}
 
 					{/* Input Area with Drag & Drop */}
 					<div
 						onDragOver={handleDragOver}
 						onDragLeave={handleDragLeave}
 						onDrop={handleDrop}
-						className={`bg-white border rounded-[2rem] shadow-xs overflow-hidden flex flex-col min-h-[480px] transition-[border-color,box-shadow,background-color] relative ${
+						className={`bg-white border rounded-3xl sm:rounded-[2rem] shadow-xs overflow-hidden flex flex-col min-h-[480px] transition-[border-color,box-shadow,background-color] relative ${
 							isDragging
 								? "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/10"
 								: "border-slate-200/80"
@@ -890,7 +1055,7 @@ export default function StockImportAdmin() {
 					>
 						{/* Drag & Drop Visual Overlay */}
 						{isDragging && (
-							<div className="absolute inset-0 z-20 bg-indigo-50/90 backdrop-blur-xs border-2 border-dashed border-indigo-500 rounded-[2rem] flex flex-col items-center justify-center gap-3 pointer-events-none">
+							<div className="absolute inset-0 z-20 bg-indigo-50/90 backdrop-blur-xs border-2 border-dashed border-indigo-500 rounded-3xl sm:rounded-[2rem] flex flex-col items-center justify-center gap-3 pointer-events-none">
 								<div className="w-14 h-14 rounded-2xl bg-white border border-indigo-200 shadow-xs flex items-center justify-center text-indigo-600">
 									<FileUp className="w-7 h-7" />
 								</div>
@@ -906,7 +1071,7 @@ export default function StockImportAdmin() {
 						)}
 
 						{/* Quick Action Toolbar */}
-						<div className="p-3 sm:p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5">
+						<div className="p-3.5 sm:p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
 							<div className="flex flex-wrap items-center gap-2">
 								<input
 									type="file"
@@ -921,7 +1086,7 @@ export default function StockImportAdmin() {
 									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
 								>
 									<FileUp className="w-3.5 h-3.5 text-indigo-600" />
-									<span>Upload JSON File</span>
+									<span>Upload JSON</span>
 								</button>
 
 								<button
@@ -934,23 +1099,35 @@ export default function StockImportAdmin() {
 									<span>Format JSON</span>
 								</button>
 
+								<div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
+
+								{/* Multi-preset sample triggers */}
 								<button
 									type="button"
-									onClick={handleLoadSample}
-									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+									onClick={() => handleLoadPreset("banks")}
+									className="px-3 py-1.5 rounded-xl border border-indigo-100 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
 								>
-									<LayoutTemplate className="w-3.5 h-3.5 text-amber-500" />
-									<span>Load Sample</span>
+									<LayoutTemplate className="w-3.5 h-3.5 text-indigo-600" />
+									<span>Sample Banks</span>
+								</button>
+
+								<button
+									type="button"
+									onClick={() => handleLoadPreset("tech")}
+									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+								>
+									<LayoutTemplate className="w-3.5 h-3.5 text-amber-600" />
+									<span>Sample Tech</span>
 								</button>
 							</div>
 
-							<div className="hidden sm:flex items-center gap-2 text-[11px] font-bold text-slate-500 font-mono">
+							<div className="flex items-center gap-3 text-[11px] font-bold text-slate-500 font-mono">
 								{input.length > 0 && (
 									<span className="px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700">
 										{input.length.toLocaleString()} chars
 									</span>
 								)}
-								<span className="inline-flex items-center gap-1 text-slate-500">
+								<span className="hidden sm:inline-flex items-center gap-1 text-slate-500">
 									<kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200/80 text-[10px] text-slate-600 shadow-2xs font-mono">
 										⌘/Ctrl + ↵
 									</kbd>
@@ -963,21 +1140,21 @@ export default function StockImportAdmin() {
 
 						{/* Pre-Import Inspector Strip */}
 						{previewData && (
-							<div className="p-3 sm:p-4 bg-emerald-50/50 border-b border-emerald-100 flex flex-col gap-2.5">
-								<div className="flex flex-wrap items-center justify-between gap-2">
+							<div className="p-3.5 sm:p-4 bg-emerald-50/50 border-b border-emerald-100 flex flex-col gap-3">
+								<div className="flex flex-wrap items-center justify-between gap-2.5">
 									<div className="flex flex-wrap items-center gap-2 text-xs">
-										<span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-extrabold text-[11px] border border-emerald-200/60">
+										<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-extrabold text-[11px] border border-emerald-200/60 shadow-2xs">
 											<CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
 											{previewData.totalCount.toLocaleString()} Instruments
 											Detected
 										</span>
-										<span className="px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-emerald-800 font-bold text-[11px]">
+										<span className="px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-emerald-800 font-bold text-[11px] shadow-2xs">
 											Date: {formatTradingDate(previewData.sampleDate)}
 										</span>
-										<span className="hidden md:inline-flex px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-slate-600 font-medium text-[11px]">
+										<span className="hidden md:inline-flex px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-slate-600 font-medium text-[11px] shadow-2xs">
 											Vol: {formatCompactNumber(previewData.totalVolume)}
 										</span>
-										<span className="hidden md:inline-flex px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-slate-600 font-medium text-[11px]">
+										<span className="hidden md:inline-flex px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-slate-600 font-medium text-[11px] shadow-2xs">
 											Val: Rp {formatCompactNumber(previewData.totalValue)}
 										</span>
 									</div>
@@ -985,11 +1162,13 @@ export default function StockImportAdmin() {
 									<button
 										type="button"
 										onClick={() => setShowPreviewTable((prev) => !prev)}
-										className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-800 hover:text-emerald-950 hover:bg-emerald-100/60 transition-[background-color,color] active:scale-95 cursor-pointer"
+										className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100/60 hover:bg-emerald-100 transition-[background-color,color] active:scale-95 cursor-pointer shadow-2xs"
 									>
 										<Eye className="w-3.5 h-3.5" />
 										<span>
-											{showPreviewTable ? "Hide Sample" : "Inspect Sample"}
+											{showPreviewTable
+												? "Hide Sample Table"
+												: "Inspect Sample Table"}
 										</span>
 										{showPreviewTable ? (
 											<ChevronUp className="w-3.5 h-3.5" />
@@ -999,81 +1178,122 @@ export default function StockImportAdmin() {
 									</button>
 								</div>
 
-								{/* Collapsible Mini Preview Table */}
+								{/* Collapsible Mini Preview Table with Search */}
 								{showPreviewTable && (
-									<div className="overflow-x-auto bg-white rounded-xl border border-emerald-200/80 p-2 shadow-2xs mt-1">
-										<table className="w-full text-left text-[11px]">
-											<thead>
-												<tr className="border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
-													<th className="p-1.5">Ticker</th>
-													<th className="p-1.5">Name</th>
-													<th className="p-1.5 text-right">Close</th>
-													<th className="p-1.5 text-right">Change</th>
-													<th className="p-1.5 text-right">Volume</th>
-													<th className="p-1.5 text-right">Foreign Buy</th>
-													<th className="p-1.5 text-right">Foreign Sell</th>
-												</tr>
-											</thead>
-											<tbody className="divide-y divide-slate-50 font-medium text-slate-800">
-												{previewData.samples.map((stock) => (
-													<tr
-														key={stock.StockCode}
-														className="hover:bg-slate-50/70 transition-colors"
-													>
-														<td className="p-1.5 font-mono font-bold text-indigo-700">
-															{stock.StockCode}
-														</td>
-														<td className="p-1.5 truncate max-w-[180px]">
-															{stock.StockName}
-														</td>
-														<td className="p-1.5 text-right font-mono font-bold">
-															{stock.Close.toLocaleString()}
-														</td>
-														<td
-															className={`p-1.5 text-right font-mono font-bold ${
-																stock.Change > 0
-																	? "text-emerald-600"
-																	: stock.Change < 0
-																		? "text-rose-600"
-																		: "text-slate-500"
-															}`}
-														>
-															{stock.Change > 0
-																? `+${stock.Change}`
-																: stock.Change}
-														</td>
-														<td className="p-1.5 text-right font-mono text-slate-600">
-															{formatCompactNumber(stock.Volume)}
-														</td>
-														<td className="p-1.5 text-right font-mono text-emerald-700">
-															{formatCompactNumber(stock.ForeignBuy)}
-														</td>
-														<td className="p-1.5 text-right font-mono text-rose-700">
-															{formatCompactNumber(stock.ForeignSell)}
-														</td>
+									<div className="bg-white rounded-2xl border border-emerald-200/80 p-3 shadow-2xs space-y-3 mt-1">
+										<div className="flex items-center justify-between gap-3">
+											<div className="relative flex-1 max-w-xs">
+												<Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+												<input
+													type="text"
+													value={previewSearchQuery}
+													onChange={(e) =>
+														setPreviewSearchQuery(e.target.value)
+													}
+													placeholder="Search ticker or name..."
+													className="w-full pl-8.5 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white focus:border-indigo-400"
+												/>
+											</div>
+											<span className="text-[11px] text-slate-400 font-medium">
+												Showing {filteredPreviewRecords.length} of{" "}
+												{previewData.totalCount}
+											</span>
+										</div>
+
+										<div className="overflow-x-auto">
+											<table className="w-full text-left text-[11px]">
+												<thead>
+													<tr className="border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
+														<th className="p-2">Ticker</th>
+														<th className="p-2">Company Name</th>
+														<th className="p-2 text-right">Close</th>
+														<th className="p-2 text-right">Change</th>
+														<th className="p-2 text-right">Volume</th>
+														<th className="p-2 text-right">Foreign Buy</th>
+														<th className="p-2 text-right">Foreign Sell</th>
 													</tr>
-												))}
-											</tbody>
-										</table>
+												</thead>
+												<tbody className="divide-y divide-slate-50 font-medium text-slate-800">
+													{filteredPreviewRecords.map((stock) => (
+														<tr
+															key={stock.StockCode}
+															className="hover:bg-slate-50/80 transition-colors"
+														>
+															<td className="p-2 font-mono font-bold text-indigo-700">
+																{stock.StockCode}
+															</td>
+															<td className="p-2 truncate max-w-[180px]">
+																{stock.StockName}
+															</td>
+															<td className="p-2 text-right font-mono font-bold">
+																{stock.Close.toLocaleString()}
+															</td>
+															<td
+																className={`p-2 text-right font-mono font-bold ${
+																	stock.Change > 0
+																		? "text-emerald-600"
+																		: stock.Change < 0
+																			? "text-rose-600"
+																			: "text-slate-500"
+																}`}
+															>
+																{stock.Change > 0
+																	? `+${stock.Change}`
+																	: stock.Change}
+															</td>
+															<td className="p-2 text-right font-mono text-slate-600">
+																{formatCompactNumber(stock.Volume)}
+															</td>
+															<td className="p-2 text-right font-mono text-emerald-700">
+																{formatCompactNumber(stock.ForeignBuy)}
+															</td>
+															<td className="p-2 text-right font-mono text-rose-700">
+																{formatCompactNumber(stock.ForeignSell)}
+															</td>
+														</tr>
+													))}
+												</tbody>
+											</table>
+										</div>
 									</div>
 								)}
 							</div>
 						)}
 
 						{/* Textarea */}
-						<div className="flex-1 relative p-4 sm:p-6">
+						<div className="flex-1 relative p-4 sm:p-6 flex flex-col">
+							{input.length === 0 && (
+								<div className="absolute inset-x-6 top-8 pointer-events-none flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-center space-y-3">
+									<div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-center text-slate-400">
+										<FileCode className="w-6 h-6" />
+									</div>
+									<div>
+										<p className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+											Paste JSON or Drop File Here
+										</p>
+										<p className="text-xs text-slate-400 font-medium mt-0.5">
+											Accepts IDX Trading Summary format e.g. &#123;
+											&quot;data&quot;: [ &#123; &quot;StockCode&quot;:
+											&quot;BBCA&quot; &#125; ] &#125;
+										</p>
+									</div>
+								</div>
+							)}
 							<textarea
 								value={input}
 								onChange={(e) => setInput(e.target.value)}
 								onKeyDown={handleKeyDown}
-								placeholder='Paste IDX JSON data here or drag and drop a .json file... e.g. { "data": [ { "StockCode": "BBCA", ... } ] }'
-								className="w-full h-full min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-xl text-slate-900 font-mono text-xs leading-relaxed outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-[border-color,background-color,box-shadow] resize-y"
+								className={`w-full flex-1 min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-slate-900 font-mono text-xs leading-relaxed outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-[border-color,background-color,box-shadow] resize-y ${
+									input.length === 0
+										? "opacity-0 focus:opacity-100"
+										: "opacity-100"
+								}`}
 								spellCheck={false}
 							/>
 						</div>
 
 						{/* Status Bar & Submit Row */}
-						<div className="p-4 sm:p-5 bg-slate-50/60 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+						<div className="p-4 sm:p-5 bg-slate-50/70 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
 							<div className="flex-1 w-full sm:w-auto">
 								<AnimatePresence mode="wait">
 									{status.type !== "idle" && (

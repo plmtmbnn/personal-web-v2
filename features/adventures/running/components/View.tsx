@@ -15,7 +15,6 @@ import {
 	Search,
 	SearchX,
 	X,
-	Award,
 	Clock,
 	Route,
 	Gauge,
@@ -433,8 +432,6 @@ export default function RunningView({
 		};
 	}, [rawRuns]);
 
-	if (!mounted) return null;
-
 	const totalRuns = stats?.all_run_totals?.count
 		? stats.all_run_totals.count.toLocaleString()
 		: hasRunData
@@ -455,8 +452,8 @@ export default function RunningView({
 		sortBy !== "date-desc";
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 space-y-12">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 space-y-8 sm:space-y-10 relative z-10">
 				{/* Status Banners */}
 				{statusMessage && (
 					<motion.div
@@ -480,212 +477,323 @@ export default function RunningView({
 					</motion.div>
 				)}
 
-				{/* ═══════════════════════════════════════
-				    HERO SECTION
-				═══════════════════════════════════════ */}
-				<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
-					{/* LEFT COLUMN: Header & Quick Stats */}
-					<div className="lg:col-span-5 space-y-6">
-						{/* Breadcrumb */}
-						<motion.div
-							initial={safeReduceMotion ? false : { opacity: 0, x: -10 }}
-							animate={{ opacity: 1, x: 0 }}
+				{/* ── Modern Floating Card Header Standard ── */}
+				<motion.div
+					initial={safeReduceMotion ? false : { opacity: 0, y: 16 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.4, ease: "easeOut" }}
+					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
+				>
+					{/* Contextual Breadcrumb */}
+					<div className="flex items-center gap-2 mb-3">
+						<Link
+							href="/adventures"
+							className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-emerald-600 transition-colors gap-1.5 !no-underline"
 						>
-							<Link
-								href="/adventures"
-								className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-emerald-600 transition-colors gap-2 group !no-underline"
-							>
-								<ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-								Back to Adventures
-							</Link>
-						</motion.div>
+							<ArrowLeft className="w-3.5 h-3.5" />
+							<span>Adventures</span>
+						</Link>
+						<span className="text-slate-300">/</span>
+						<span className="text-xs font-bold text-slate-700">Running</span>
+					</div>
 
-						{/* Header Content */}
-						<motion.div
-							initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.6 }}
-							className="space-y-4"
-						>
-							<div className="flex items-center gap-2">
-								<span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-slate-200/80 text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-xs">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+						<div>
+							<div className="flex items-center gap-2 mb-2">
+								<div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
 									<Activity className="w-3.5 h-3.5 text-emerald-600" />
-									Performance Hub
+								</div>
+								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+									PERFORMANCE HUB · STRAVA TELEMETRY & ENDURANCE LOGS
 								</span>
 							</div>
-							<h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]">
-								Endurance <span className="text-emerald-600">Journey</span>
+							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+								Running Performance
 							</h1>
-							<p className="text-slate-600 text-sm sm:text-base font-medium leading-relaxed max-w-md">
-								Tracking physical limits and mental discipline. Running is the
-								ultimate feedback loop for consistency and resilience in both
-								engineering and life.
+							<p className="text-sm text-slate-500 font-medium mt-1 max-w-xl">
+								Tracking physical limits and mental discipline. Live Strava
+								telemetry, race benchmarks, and split pacing analytics.
 							</p>
-						</motion.div>
+						</div>
 
-						{/* Unified Hero Telemetry Card */}
+						{/* Telemetry Quick Strip */}
+						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
+									{totalRuns}
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Total Runs
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-emerald-600 tabular-nums">
+									{kmPerYear}
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									KM This Year
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-teal-600 tabular-nums font-mono">
+									{avgPaceData.formatted}
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Avg /km
+								</p>
+							</div>
+							{isAdmin && isConnected && (
+								<>
+									<div className="w-px h-8 bg-slate-100" />
+									<div className="text-center">
+										<button
+											type="button"
+											onClick={handleLiveSync}
+											disabled={isSyncing}
+											className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs font-bold text-slate-700 transition-all cursor-pointer disabled:opacity-50"
+										>
+											<RefreshCw
+												className={`w-3.5 h-3.5 text-emerald-600 ${
+													isSyncing ? "animate-spin" : ""
+												}`}
+											/>
+											<span>{isSyncing ? "Syncing..." : "Sync"}</span>
+										</button>
+									</div>
+								</>
+							)}
+						</div>
+					</div>
+				</motion.div>
+
+				{/* ═══════════════════════════════════════
+				    BENCHMARKS & LIVE TELEMETRY ARENA
+				═══════════════════════════════════════ */}
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
+					{/* LEFT COLUMN: Live Volume Telemetry & Intel */}
+					<div className="lg:col-span-5">
 						<motion.div
 							initial={safeReduceMotion ? false : { opacity: 0, y: 15 }}
 							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.15 }}
-							className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs space-y-3.5"
+							transition={{ delay: 0.1 }}
+							className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs h-full flex flex-col justify-between gap-4"
 						>
-							{/* Volume Metrics Row */}
-							<div className="grid grid-cols-2 divide-x divide-slate-100 py-1">
-								<div className="text-center px-3 group">
-									<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tight">
-										{totalRuns}
-									</p>
-									<p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
-										Total Runs
-									</p>
-								</div>
-								<div className="text-center px-3 group">
-									<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tight">
-										{kmPerYear}
-									</p>
-									<p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
-										KM this year
-									</p>
-								</div>
-							</div>
-
-							{/* Live Average Pace Telemetry */}
-							{rawRuns.length > 0 && (
-								<div className="flex items-center gap-3.5 pt-3.5 border-t border-slate-100">
-									<div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
-										<PaceRing
-											pace={avgPaceData.paceMinutes}
-											size={48}
-											strokeWidth={4.5}
-										/>
-										<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-											<Gauge
-												className={`w-3.5 h-3.5 ${
-													avgPaceData.paceMinutes < 5
-														? "text-emerald-500"
-														: avgPaceData.paceMinutes < 6
-															? "text-blue-500"
-															: avgPaceData.paceMinutes < 7
-																? "text-amber-500"
-																: "text-rose-500"
-												}`}
-											/>
+							<div className="space-y-4">
+								{/* Card Header */}
+								<div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+									<div className="flex items-center gap-2.5">
+										<div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+											<Activity className="w-4 h-4" />
+										</div>
+										<div>
+											<h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
+												Training Load & Intel
+											</h3>
+											<p className="text-[10.5px] text-slate-500 font-medium">
+												Live endurance load & session benchmarks
+											</p>
 										</div>
 									</div>
-									<div className="flex-1 min-w-0 flex items-center justify-between gap-3">
-										<div className="min-w-0">
-											<p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500">
-												Average Pace
-											</p>
-											<div className="flex items-center gap-1.5 mt-0.5 text-emerald-600">
-												<TrendingUp className="w-3 h-3 shrink-0" />
-												<span className="text-[10.5px] font-semibold text-slate-600 truncate">
-													Based on {rawRuns.length} recent activities
-												</span>
-											</div>
-										</div>
-										<p className="text-lg sm:text-xl font-black text-slate-900 tracking-tight shrink-0">
-											{avgPaceData.formatted}{" "}
-											<span className="text-xs font-bold text-slate-500">
-												min/km
-											</span>
+									<span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
+										Live Telemetry
+									</span>
+								</div>
+
+								{/* Volume Metrics 2-Col Box */}
+								<div className="grid grid-cols-2 divide-x divide-slate-100 py-1 bg-slate-50/80 border border-slate-200/70 rounded-2xl">
+									<div className="text-center px-3 py-2 group">
+										<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tight">
+											{totalRuns}
+										</p>
+										<p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">
+											Total Activities
+										</p>
+									</div>
+									<div className="text-center px-3 py-2 group">
+										<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tight">
+											{kmPerYear}
+										</p>
+										<p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">
+											KM This Year
 										</p>
 									</div>
 								</div>
-							)}
+
+								{/* Live Average Pace Row */}
+								{rawRuns.length > 0 && (
+									<div className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70">
+										<div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
+											<PaceRing
+												pace={avgPaceData.paceMinutes}
+												size={48}
+												strokeWidth={4.5}
+											/>
+											<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+												<Gauge
+													className={`w-3.5 h-3.5 ${
+														avgPaceData.paceMinutes < 5
+															? "text-emerald-500"
+															: avgPaceData.paceMinutes < 6
+																? "text-blue-500"
+																: avgPaceData.paceMinutes < 7
+																	? "text-amber-500"
+																	: "text-rose-500"
+													}`}
+												/>
+											</div>
+										</div>
+										<div className="flex-1 min-w-0 flex items-center justify-between gap-3">
+											<div className="min-w-0">
+												<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+													Average Pace
+												</p>
+												<div className="flex items-center gap-1.5 mt-0.5 text-emerald-600">
+													<TrendingUp className="w-3 h-3 shrink-0" />
+													<span className="text-[11px] font-semibold text-slate-600 truncate">
+														Across {rawRuns.length} recent runs
+													</span>
+												</div>
+											</div>
+											<div className="text-right shrink-0">
+												<p className="text-lg sm:text-xl font-black text-slate-900 font-mono tracking-tight">
+													{avgPaceData.formatted}
+												</p>
+												<span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">
+													min/km
+												</span>
+											</div>
+										</div>
+									</div>
+								)}
+
+								{/* 4 Intel Metric Tiles (2x2 Grid) */}
+								{performanceHighlights && (
+									<div className="grid grid-cols-2 gap-2.5">
+										<div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-2.5">
+											<div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+												<Route className="w-4 h-4" />
+											</div>
+											<div className="min-w-0">
+												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+													Longest Run
+												</p>
+												<p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate font-mono">
+													{performanceHighlights.maxDistanceKm} km
+												</p>
+											</div>
+										</div>
+
+										<div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-2.5">
+											<div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+												<Gauge className="w-4 h-4" />
+											</div>
+											<div className="min-w-0">
+												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+													Fastest Pace
+												</p>
+												<p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate font-mono">
+													{performanceHighlights.fastestPace}
+												</p>
+											</div>
+										</div>
+
+										<div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-2.5">
+											<div className="w-8 h-8 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+												<Mountain className="w-4 h-4" />
+											</div>
+											<div className="min-w-0">
+												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+													Max Climb
+												</p>
+												<p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate font-mono">
+													{performanceHighlights.maxElevationM}
+												</p>
+											</div>
+										</div>
+
+										<div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-2.5">
+											<div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+												<Clock className="w-4 h-4" />
+											</div>
+											<div className="min-w-0">
+												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+													Total Time
+												</p>
+												<p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate font-mono">
+													{performanceHighlights.totalLoggedTime}
+												</p>
+											</div>
+										</div>
+									</div>
+								)}
+
+								{/* Distance Category Distribution Strip */}
+								<div className="pt-2">
+									<div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+										<span>Distance Distribution</span>
+										<span className="text-slate-600 font-mono">
+											{rawRuns.length} runs
+										</span>
+									</div>
+									<div className="grid grid-cols-4 gap-1.5">
+										<div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
+											<p className="text-[9px] font-bold text-slate-400">
+												&lt;5K
+											</p>
+											<p className="text-xs font-black text-slate-900 font-mono">
+												{distanceCounts.short}
+											</p>
+										</div>
+										<div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
+											<p className="text-[9px] font-bold text-slate-400">
+												5-10K
+											</p>
+											<p className="text-xs font-black text-slate-900 font-mono">
+												{distanceCounts.mid}
+											</p>
+										</div>
+										<div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
+											<p className="text-[9px] font-bold text-slate-400">
+												10-21K
+											</p>
+											<p className="text-xs font-black text-slate-900 font-mono">
+												{distanceCounts.long}
+											</p>
+										</div>
+										<div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
+											<p className="text-[9px] font-bold text-slate-400">
+												&gt;21K
+											</p>
+											<p className="text-xs font-black text-slate-900 font-mono">
+												{distanceCounts.ultra}
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Status indicator footer */}
+							<div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-500">
+								<div className="flex items-center gap-1.5">
+									<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+									<span className="text-xs font-semibold text-slate-700">
+										Strava Synchronized
+									</span>
+								</div>
+								<span className="text-[10px] font-mono text-slate-400">
+									Pacing Engine v2
+								</span>
+							</div>
 						</motion.div>
 					</div>
 
 					{/* RIGHT COLUMN: Personal Bests Showcase */}
-					<div className="lg:col-span-7 space-y-6">
+					<div className="lg:col-span-7">
 						<PersonalBestsSwipeCard />
 					</div>
 				</div>
-
-				{/* ═══════════════════════════════════════
-				    RECENT PERFORMANCE ANALYTICS HIGHLIGHTS
-				═══════════════════════════════════════ */}
-				{hasRunData && performanceHighlights && (
-					<motion.div
-						initial={safeReduceMotion ? false : { opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ delay: 0.25 }}
-						className="p-6 sm:p-7 bg-white border border-slate-200/80 rounded-3xl shadow-xs space-y-5"
-					>
-						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-							<div className="flex items-center gap-2.5">
-								<div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-2xs">
-									<Award className="w-4 h-4" />
-								</div>
-								<div>
-									<h3 className="text-base font-extrabold text-slate-900 tracking-tight">
-										Recent Activity Intel
-									</h3>
-									<p className="text-[11px] text-slate-500 font-medium">
-										Key benchmarks across your latest {rawRuns.length} synced
-										sessions
-									</p>
-								</div>
-							</div>
-							<span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 self-start sm:self-auto">
-								{performanceHighlights.totalLoggedKm} km total logged
-							</span>
-						</div>
-
-						{/* 4 Intel Metric Cards */}
-						<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-							<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
-								<div className="flex items-center gap-1.5 text-slate-500 mb-1">
-									<Route className="w-3.5 h-3.5 text-blue-600" />
-									<span className="text-[10px] font-bold uppercase tracking-wider">
-										Longest Run
-									</span>
-								</div>
-								<p className="text-lg sm:text-xl font-black text-slate-900">
-									{performanceHighlights.maxDistanceKm}{" "}
-									<span className="text-xs font-bold text-slate-500">km</span>
-								</p>
-							</div>
-
-							<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
-								<div className="flex items-center gap-1.5 text-slate-500 mb-1">
-									<Gauge className="w-3.5 h-3.5 text-amber-500" />
-									<span className="text-[10px] font-bold uppercase tracking-wider">
-										Fastest Pace
-									</span>
-								</div>
-								<p className="text-lg sm:text-xl font-black text-slate-900 font-mono">
-									{performanceHighlights.fastestPace}
-								</p>
-							</div>
-
-							<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
-								<div className="flex items-center gap-1.5 text-slate-500 mb-1">
-									<Mountain className="w-3.5 h-3.5 text-purple-600" />
-									<span className="text-[10px] font-bold uppercase tracking-wider">
-										Max Climb
-									</span>
-								</div>
-								<p className="text-lg sm:text-xl font-black text-slate-900">
-									{performanceHighlights.maxElevationM}
-								</p>
-							</div>
-
-							<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
-								<div className="flex items-center gap-1.5 text-slate-500 mb-1">
-									<Clock className="w-3.5 h-3.5 text-emerald-600" />
-									<span className="text-[10px] font-bold uppercase tracking-wider">
-										Total Time
-									</span>
-								</div>
-								<p className="text-lg sm:text-xl font-black text-slate-900 font-mono">
-									{performanceHighlights.totalLoggedTime}
-								</p>
-							</div>
-						</div>
-					</motion.div>
-				)}
 
 				{/* ═══════════════════════════════════════
 				    OAUTH CONNECTION PROMPT (ADMIN / DEV)

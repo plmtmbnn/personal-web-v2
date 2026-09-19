@@ -573,7 +573,7 @@ function AdminBlogListInner({
 	// Render
 	// ─────────────────────────────────────────
 	return (
-		<div className="flex flex-col bg-white border border-slate-200 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm overflow-hidden text-slate-900">
+		<div className="flex flex-col bg-white border border-slate-200/80 rounded-3xl shadow-xs overflow-hidden text-slate-900">
 			{/* ── Delete Single Modal ── */}
 			<CustomModal
 				isOpen={!!deleteModalId}

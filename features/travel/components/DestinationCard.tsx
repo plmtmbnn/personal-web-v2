@@ -85,7 +85,8 @@ export default function DestinationCard({
 							: "grayscale contrast-105 brightness-95"
 					}`}
 					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-					loading="lazy"
+					priority={index === 0}
+					loading={index === 0 ? "eager" : "lazy"}
 				/>
 
 				{/* Subtle Status & Category Badges */}

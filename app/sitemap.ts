@@ -28,6 +28,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
 			priority: 0.7,
 		},
 		{
+			url: `${SITE.url}/adventures/running`,
+			lastModified: new Date(),
+			changeFrequency: "weekly",
+			priority: 0.8,
+		},
+		{
+			url: `${SITE.url}/adventures/travel`,
+			lastModified: new Date(),
+			changeFrequency: "weekly",
+			priority: 0.8,
+		},
+		{
 			url: `${SITE.url}/blog`,
 			lastModified: new Date(),
 			changeFrequency: "weekly",
@@ -41,6 +53,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
 		},
 		{
 			url: `${SITE.url}/insights`,
+			lastModified: new Date(),
+			changeFrequency: "weekly",
+			priority: 0.8,
+		},
+		{
+			url: `${SITE.url}/investment`,
+			lastModified: new Date(),
+			changeFrequency: "daily",
+			priority: 0.8,
+		},
+		{
+			url: `${SITE.url}/utils`,
 			lastModified: new Date(),
 			changeFrequency: "weekly",
 			priority: 0.8,

@@ -131,8 +131,8 @@ const NAV_ITEMS: NavItem[] = [
 const containerVariants: Variants = {
 	hidden: {
 		opacity: 0,
-		y: 12,
-		scale: 0.96,
+		y: 8,
+		scale: 0.97,
 	},
 	visible: {
 		opacity: 1,
@@ -142,14 +142,14 @@ const containerVariants: Variants = {
 			type: "spring",
 			stiffness: 400,
 			damping: 28,
-			staggerChildren: 0.04,
+			staggerChildren: 0.03,
 			delayChildren: 0.02,
 		},
 	},
 	exit: {
 		opacity: 0,
-		y: 8,
-		scale: 0.96,
+		y: 6,
+		scale: 0.97,
 		transition: {
 			duration: 0.15,
 		},
@@ -157,7 +157,7 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-	hidden: { opacity: 0, y: 6 },
+	hidden: { opacity: 0, y: 4 },
 	visible: {
 		opacity: 1,
 		y: 0,
@@ -274,7 +274,7 @@ export default function CompactBottomBar() {
 			setPendingTasksCount(0);
 			setPendingRemindersCount(0);
 		}
-	}, [isLoggedIn, isAdmin, pathname, isGoogleAuthEnabled]);
+	}, [isLoggedIn, isAdmin, isGoogleAuthEnabled]);
 
 	const toggleSubMenu = (
 		e: React.MouseEvent,
@@ -307,32 +307,42 @@ export default function CompactBottomBar() {
 		return null;
 	};
 
+	const totalAdminBadge = pendingTasksCount + pendingRemindersCount;
+
 	return (
 		<motion.nav
 			ref={navRef}
 			className="fixed bottom-4 sm:bottom-6 left-0 right-0 z-50 px-3 sm:px-4 flex justify-center pointer-events-none"
 			aria-label="Main Navigation"
 		>
-			<div className="bg-white/90 backdrop-blur-2xl flex items-center gap-1 sm:gap-1.5 p-1.5 sm:p-2 rounded-full shadow-[0_16px_48px_-12px_rgba(15,23,42,0.15)] border border-slate-200/90 ring-1 ring-slate-900/5 relative pointer-events-auto">
-				<div className="flex items-center gap-0.5 sm:gap-1">
-					{visibleItems.map((item) => {
-						const Icon = item.icon;
-						const subItems = item.subItems?.filter(
-							(sub) => isGoogleAuthEnabled || sub.label !== "Logout",
-						);
-						const isActive =
-							pathname === item.href ||
-							subItems?.some((sub) => pathname === sub.href);
-						const isExpanded = expandedItem === item.label;
-						const hasSubItems = subItems && subItems.length > 0;
+			<div className="bg-white flex items-center p-1.5 sm:p-2 rounded-2xl shadow-xl border border-slate-200/80 relative pointer-events-auto">
+				{visibleItems.map((navItem, index) => {
+					const Icon = navItem.icon;
+					const subItems = navItem.subItems?.filter(
+						(sub) => isGoogleAuthEnabled || sub.label !== "Logout",
+					);
+					const isActive =
+						pathname === navItem.href ||
+						subItems?.some((sub) => pathname === sub.href);
+					const isExpanded = expandedItem === navItem.label;
+					const hasSubItems = subItems && subItems.length > 0;
 
-						return (
+					// Divider before admin section
+					const prevItem = visibleItems[index - 1];
+					const showDivider = navItem.adminOnly && index > 0 && prevItem;
+
+					return (
+						<div key={navItem.label} className="flex items-center">
+							{/* Section divider — public nav / admin */}
+							{showDivider && (
+								<div className="w-px h-7 bg-slate-100 mx-1 shrink-0" />
+							)}
+
 							<div
-								key={item.label}
 								className="relative flex-shrink-0"
 								onMouseEnter={
 									hasHover && hasSubItems
-										? () => setExpandedItem(item.label)
+										? () => setExpandedItem(navItem.label)
 										: undefined
 								}
 								onMouseLeave={
@@ -349,17 +359,22 @@ export default function CompactBottomBar() {
 											initial={reduceMotion ? false : "hidden"}
 											animate="visible"
 											exit="exit"
-											className="absolute bottom-[calc(100%+14px)] left-1/2 -translate-x-1/2 w-48 sm:w-52 bg-white/95 backdrop-blur-2xl rounded-2xl overflow-hidden shadow-2xl border border-slate-200/90 p-1.5 z-50 origin-bottom ring-1 ring-slate-900/5"
+											className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-48 sm:w-52 bg-white rounded-2xl overflow-hidden shadow-xl border border-slate-200/80 p-1.5 z-50 origin-bottom"
 											role="menu"
 										>
+											{/* Section header */}
+											<p className="px-3 pt-1.5 pb-1 text-[9px] font-black uppercase tracking-widest text-slate-400 select-none">
+												{navItem.label}
+											</p>
+
 											{subItems.map((sub) => {
 												const SubIcon = sub.icon;
 												const isSubActive = pathname === sub.href;
 												const badgeCount = getSubItemBadge(sub.label);
 
-												const commonClasses = `flex w-full text-left items-center gap-3 px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-[background-color,color] duration-200 !no-underline ${
+												const commonClasses = `flex w-full text-left items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-xl transition-[background-color,color] duration-150 !no-underline ${
 													isSubActive
-														? "bg-slate-900 !text-white shadow-sm"
+														? "bg-slate-900 !text-white shadow-xs"
 														: "text-slate-700 hover:text-slate-950 hover:bg-slate-100/80"
 												}`;
 
@@ -429,62 +444,64 @@ export default function CompactBottomBar() {
 								</AnimatePresence>
 
 								<Link
-									href={item.href}
+									href={navItem.href}
 									aria-current={isActive ? "page" : undefined}
+									aria-label={navItem.label}
 									onClick={(e) =>
-										toggleSubMenu(e, item.label, hasSubItems ?? false)
+										toggleSubMenu(e, navItem.label, hasSubItems ?? false)
 									}
-									className={`group relative flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 !no-underline ${
+									className={`group relative flex items-center justify-center px-2 sm:px-2.5 py-2 rounded-xl transition-colors duration-200 !no-underline ${
 										isActive
-											? "!text-white"
-											: "text-slate-600 hover:text-slate-950 hover:bg-slate-100/80 active:scale-95"
+											? "text-slate-900"
+											: "text-slate-500 hover:text-slate-800"
 									}`}
 								>
-									{/* Active pill background */}
-									{isActive && (
-										<motion.div
-											layoutId="nav-active-pill"
-											transition={{
-												type: "spring",
-												stiffness: 380,
-												damping: 30,
-											}}
-											className="absolute inset-0 bg-slate-900 rounded-full shadow-md shadow-slate-900/20 z-0"
+									{/* Icon container with active squircle */}
+									<div className="relative flex items-center justify-center w-8 h-8">
+										{isActive && (
+											<motion.div
+												layoutId="nav-active-icon"
+												transition={{
+													type: "spring",
+													stiffness: 380,
+													damping: 30,
+												}}
+												className="absolute inset-0 bg-slate-900 rounded-xl z-0"
+											/>
+										)}
+										<Icon
+											className={`relative z-10 w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-colors duration-200 ${
+												isActive ? "!text-white" : "!text-current"
+											}`}
 										/>
-									)}
 
-									<div
-										className={`relative z-10 flex items-center gap-1.5 ${
-											isActive
-												? "!text-white"
-												: "text-slate-600 group-hover:text-slate-950"
-										}`}
-									>
-										<Icon className="w-4 h-4 shrink-0 !text-current" />
-										{item.label === "Admin" &&
+										{/* Submenu affordance — tiny chevron at corner */}
+										{hasSubItems && (
+											<motion.span
+												animate={{ rotate: isExpanded ? 180 : 0 }}
+												transition={{ duration: 0.18 }}
+												className={`absolute -bottom-0.5 -right-0.5 z-20 ${
+													isActive ? "text-white/60" : "text-slate-400"
+												}`}
+											>
+												<ChevronUp className="w-2 h-2" strokeWidth={3} />
+											</motion.span>
+										)}
+
+										{/* Admin pending badge pip */}
+										{navItem.label === "Admin" &&
 											!isExpanded &&
-											(pendingTasksCount > 0 || pendingRemindersCount > 0) && (
-												<span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold !text-white ring-2 ring-white shadow-xs animate-pulse">
-													{pendingTasksCount + pendingRemindersCount}
+											totalAdminBadge > 0 && (
+												<span className="absolute -top-1 -right-1 z-20 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold !text-white ring-2 ring-white shadow-xs">
+													{totalAdminBadge}
 												</span>
 											)}
-										<span className="hidden sm:inline text-xs sm:text-sm font-extrabold whitespace-nowrap !text-current">
-											{item.label}
-										</span>
-										{hasSubItems && (
-											<motion.div
-												animate={{ rotate: isExpanded ? 180 : 0 }}
-												className="hidden sm:block opacity-70 !text-current"
-											>
-												<ChevronUp className="w-3 h-3" strokeWidth={2.5} />
-											</motion.div>
-										)}
 									</div>
 								</Link>
 							</div>
-						);
-					})}
-				</div>
+						</div>
+					);
+				})}
 			</div>
 		</motion.nav>
 	);

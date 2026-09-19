@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { EXPERIENCE_YEAR } from "@/lib/shared/constants";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import {
 	Briefcase,
 	MapPin,
@@ -10,12 +11,11 @@ import {
 	Award,
 	GraduationCap,
 	ShieldCheck,
-	Users,
 	Cpu,
 	CheckCircle2,
 	LayoutDashboard,
-	Building2,
 	ArrowUpRight,
+	ArrowRight,
 } from "lucide-react";
 import ExperienceDetailModal, {
 	type Experience,
@@ -185,233 +185,338 @@ const experiences: Experience[] = [
 	},
 ];
 
+const cardVariants: Variants = {
+	hidden: { opacity: 0, y: 16 },
+	visible: {
+		opacity: 1,
+		y: 0,
+		transition: { type: "spring", stiffness: 300, damping: 24 },
+	},
+};
+
 export default function WorkExperience() {
 	const reduceMotion = useReducedMotion();
 	const [selectedExp, setSelectedExp] = useState<Experience | null>(null);
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 overflow-x-hidden">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
-				{/* Header Section */}
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-8 sm:space-y-10">
+				{/* ── Modern Floating Card Header Standard ── */}
 				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.8 }}
-					className="text-center max-w-3xl mx-auto mb-16 sm:mb-24 space-y-4"
+					transition={{ duration: 0.4, ease: "easeOut" }}
+					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
-					<div>
-						<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-xs">
-							<Briefcase className="w-4 h-4 text-indigo-600" />
-							Career Milestones & Leadership
-						</span>
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+						<div>
+							<div className="flex items-center gap-2 mb-2">
+								<div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+									<Briefcase className="w-3.5 h-3.5 text-indigo-600" />
+								</div>
+								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+									CAREER TIMELINE · LEADERSHIP & SYSTEM ARCHITECTURE
+								</span>
+							</div>
+							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+								Professional Experience
+							</h1>
+							<p className="text-sm text-slate-500 font-medium mt-1 max-w-xl">
+								Over {EXPERIENCE_YEAR} years architecting secure fintech
+								ecosystems, scaling core lending platforms, and leading
+								high-performance engineering teams.
+							</p>
+						</div>
+
+						{/* Telemetry Quick Strip */}
+						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
+									{EXPERIENCE_YEAR}+
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Years
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-indigo-600 tabular-nums">
+									4
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Companies
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-amber-600 tabular-nums">
+									3
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Awards
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-emerald-600 tabular-nums">
+									5M+
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Users
+								</p>
+							</div>
+						</div>
 					</div>
-					<h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]">
-						Professional <span className="text-indigo-600">Experience</span>
-					</h1>
-					<p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
-						Over {EXPERIENCE_YEAR} years architecting secure fintech ecosystems,
-						scaling core lending platforms, and building high-performance
-						engineering cultures. Click any card for in-depth role details.
-					</p>
 				</motion.div>
 
-				{/* Timeline */}
-				<div className="relative">
-					{/* Central Connector Line */}
-					<div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-slate-200 md:-translate-x-1/2" />
+				{/* ── 12-Column Two-Column Split Architecture ── */}
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+					{/* Left Column — Sticky Overview & Honors (4 cols) */}
+					<motion.div
+						initial={reduceMotion ? false : { opacity: 0, x: -16 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+						className="lg:col-span-4 lg:sticky lg:top-24 space-y-4"
+					>
+						{/* Executive Summary Card */}
+						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs">
+							<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-3">
+								Leadership Profile
+							</span>
+							<h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight mb-2">
+								Engineering Leadership
+							</h2>
+							<p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
+								Specialized in enterprise LOS & LMS systems, high-throughput
+								financial pipelines, and scaling engineering organizations from
+								early venture to millions of active users.
+							</p>
 
-					<div className="space-y-12 sm:space-y-20">
-						{experiences.map((exp, idx) => {
+							{/* Core Competencies */}
+							<div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+								{[
+									"Fintech Core",
+									"LOS & LMS",
+									"BI-FAST Network",
+									"eKYC / Dukcapil",
+									"System Architecture",
+									"Engineering Org Scaling",
+								].map((tag) => (
+									<span
+										key={tag}
+										className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/70 text-[11px] font-medium text-slate-600"
+									>
+										{tag}
+									</span>
+								))}
+							</div>
+						</div>
+
+						{/* Honors & Recognitions Card */}
+						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs">
+							<div className="flex items-center gap-2 mb-3.5">
+								<Award className="w-4 h-4 text-amber-600" />
+								<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Recognitions & Honors
+								</span>
+							</div>
+
+							<div className="space-y-3">
+								<div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/60">
+									<p className="text-xs font-bold text-amber-950">
+										World CIO 200 Summit 2024
+									</p>
+									<p className="text-[11px] font-medium text-amber-800/80 mt-0.5">
+										Winner · Indonesia Next Gen Category
+									</p>
+								</div>
+								<div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+									<p className="text-xs font-bold text-slate-900">
+										Best Mentor Award 2021
+									</p>
+									<p className="text-[11px] font-medium text-slate-500 mt-0.5">
+										Pinjam Modal Engineering Team
+									</p>
+								</div>
+								<div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+									<p className="text-xs font-bold text-slate-900">
+										Best Employee Award 2020
+									</p>
+									<p className="text-[11px] font-medium text-slate-500 mt-0.5">
+										Pinjam Modal Core Platform
+									</p>
+								</div>
+							</div>
+						</div>
+
+						{/* Connected Work Links */}
+						<div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-center justify-between">
+							<Link
+								href="/portfolio"
+								className="text-xs font-bold text-slate-700 hover:text-indigo-600 transition-colors inline-flex items-center gap-1.5 !no-underline"
+							>
+								<span>View Portfolio</span>
+								<ArrowRight className="w-3.5 h-3.5" />
+							</Link>
+							<div className="w-px h-4 bg-slate-200" />
+							<Link
+								href="/contact"
+								className="text-xs font-bold text-slate-700 hover:text-indigo-600 transition-colors inline-flex items-center gap-1.5 !no-underline"
+							>
+								<span>Get in Touch</span>
+								<ArrowRight className="w-3.5 h-3.5" />
+							</Link>
+						</div>
+					</motion.div>
+
+					{/* Right Column — Chronological Career Track (8 cols) */}
+					<motion.div
+						className="lg:col-span-8 space-y-5"
+						initial={reduceMotion ? false : "hidden"}
+						animate="visible"
+						variants={{
+							visible: { transition: { staggerChildren: 0.08 } },
+						}}
+					>
+						{experiences.map((exp) => {
 							const Icon = exp.icon;
+
 							return (
 								<motion.div
 									key={exp.company}
-									initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-									whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-									viewport={{ once: true, margin: "-80px" }}
-									transition={{ duration: 0.6, delay: idx * 0.1 }}
-									className={`relative flex flex-col md:flex-row items-center ${
-										idx % 2 === 0 ? "md:flex-row-reverse" : ""
-									}`}
+									variants={cardVariants}
+									whileHover={reduceMotion ? undefined : { y: -2 }}
+									transition={{ type: "spring", stiffness: 300, damping: 22 }}
 								>
-									{/* Timeline Node */}
-									<div className="absolute left-4 md:left-1/2 top-0 md:top-8 w-8 h-8 rounded-full bg-white border-4 border-indigo-600 shadow-sm z-20 -translate-x-1/2 flex items-center justify-center">
-										<div className="w-2 h-2 rounded-full bg-indigo-600" />
-									</div>
-
-									{/* Card Side */}
-									<div
-										className={`w-full md:w-1/2 pl-10 md:pl-0 ${
-											idx % 2 === 0 ? "md:pl-12" : "md:pr-12"
-										}`}
+									<button
+										type="button"
+										onClick={() => setSelectedExp(exp)}
+										className="w-full text-left bg-white border border-slate-200/80 hover:border-slate-300 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-[border-color,box-shadow] duration-200 cursor-pointer group"
 									>
-										<motion.button
-											type="button"
-											whileHover={{ y: -3 }}
-											whileTap={{ scale: 0.99 }}
-											onClick={() => setSelectedExp(exp)}
-											className="text-left w-full group relative bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-200/80 shadow-xs hover:border-indigo-300 hover:shadow-lg transition-[transform,box-shadow,border-color] duration-200 cursor-pointer"
-										>
-											{/* Clean Company Header */}
-											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-5 border-b border-slate-100">
-												<div className="flex items-center gap-3.5">
-													<div
-														className={`w-11 h-11 rounded-xl border ${exp.color} flex items-center justify-center shrink-0`}
-													>
-														<Icon className="w-5 h-5" />
-													</div>
-													<div>
-														<div className="flex flex-wrap items-center gap-2">
-															<h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-																{exp.company}
-															</h3>
-															<span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200/60">
-																{exp.industry}
-															</span>
-														</div>
-														{exp.legalName && (
-															<p className="text-xs text-slate-500 font-medium mt-0.5">
-																{exp.legalName}
-															</p>
-														)}
-													</div>
+										{/* Company Header Row */}
+										<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+											<div className="flex items-center gap-3.5">
+												<div
+													className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 ${exp.color} group-hover:scale-105 transition-transform duration-200`}
+												>
+													<Icon className="w-5 h-5" />
 												</div>
+												<div>
+													<div className="flex flex-wrap items-center gap-2">
+														<h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+															{exp.company}
+														</h2>
+														<span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200/60">
+															{exp.industry}
+														</span>
+													</div>
+													{exp.legalName && (
+														<p className="text-xs text-slate-400 font-medium mt-0.5">
+															{exp.legalName}
+														</p>
+													)}
+												</div>
+											</div>
 
-												<div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 shrink-0">
+											<div className="flex items-center gap-3 shrink-0">
+												<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
 													<MapPin className="w-3.5 h-3.5 text-slate-400" />
 													<span>{exp.location}</span>
 												</div>
-											</div>
-
-											{/* Positions Sub-Timeline */}
-											<div className="space-y-6 relative">
-												{exp.positions.map((pos) => (
-													<div
-														key={pos.title}
-														className="relative pl-5 border-l-2 border-slate-100 last:border-transparent"
-													>
-														{/* Position Indicator */}
-														<div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-slate-300 border border-white" />
-
-														<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
-															<h4 className="text-base font-extrabold text-slate-900">
-																{pos.title}
-															</h4>
-															<span className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-slate-50 border border-slate-200/80 rounded-full text-xs font-bold text-slate-700 shrink-0 w-fit">
-																<Calendar className="w-3.5 h-3.5 text-indigo-600" />
-																{pos.period}
-															</span>
-														</div>
-
-														<ul className="space-y-2 mb-3.5">
-															{pos.responsibilities
-																.slice(0, 2)
-																.map((resp, rIdx) => (
-																	<li
-																		key={String(rIdx)}
-																		className="flex gap-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium"
-																	>
-																		<CheckCircle2 className="w-4 h-4 mt-0.5 text-indigo-600 shrink-0" />
-																		<span>{resp}</span>
-																	</li>
-																))}
-														</ul>
-
-														{/* Tech Skills Pills */}
-														{pos.skills && pos.skills.length > 0 && (
-															<div className="flex flex-wrap gap-1.5 pt-1">
-																{pos.skills.slice(0, 5).map((skill) => (
-																	<span
-																		key={skill}
-																		className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/80 text-[10px] font-semibold text-slate-600"
-																	>
-																		{skill}
-																	</span>
-																))}
-																{pos.skills.length > 5 && (
-																	<span className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-500">
-																		+{pos.skills.length - 5}
-																	</span>
-																)}
-															</div>
-														)}
-													</div>
-												))}
-											</div>
-
-											{/* Card Footer Callout */}
-											<div className="mt-6 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
-												<span>View complete overview & achievements</span>
-												<div className="flex items-center gap-1">
-													<span>Deep dive</span>
-													<ArrowUpRight className="w-4 h-4" />
+												<div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 flex items-center justify-center transition-colors">
+													<ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
 												</div>
 											</div>
-										</motion.button>
-									</div>
+										</div>
 
-									{/* Empty Side for MD+ screens to maintain timeline look */}
-									<div className="hidden md:block md:w-1/2" />
+										{/* High-Impact Highlight Callout */}
+										{exp.impact && (
+											<div className="mb-5 p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
+												<span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
+												<span>{exp.impact}</span>
+											</div>
+										)}
+
+										{/* Positions Progression */}
+										<div className="space-y-6 relative">
+											{exp.positions.map((pos, pIdx) => (
+												<div
+													key={pos.title}
+													className={`relative ${
+														exp.positions.length > 1
+															? "pl-5 border-l-2 border-slate-100 pb-2 last:border-transparent last:pb-0"
+															: ""
+													}`}
+												>
+													{/* Progression Dot if multi-position */}
+													{exp.positions.length > 1 && (
+														<div
+															className={`absolute -left-[5px] top-1.5 w-2 h-2 rounded-full border border-white ${
+																pIdx === 0 ? "bg-indigo-600" : "bg-slate-300"
+															}`}
+														/>
+													)}
+
+													<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+														<h3 className="text-base font-extrabold text-slate-900">
+															{pos.title}
+														</h3>
+														<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-50 border border-slate-200/80 rounded-full text-xs font-bold text-slate-700 shrink-0 w-fit">
+															<Calendar className="w-3 h-3 text-indigo-600" />
+															{pos.period}
+														</span>
+													</div>
+
+													<ul className="space-y-1.5 mb-3">
+														{pos.responsibilities
+															.slice(0, 2)
+															.map((resp, rIdx) => (
+																<li
+																	key={String(rIdx)}
+																	className="flex gap-2 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium"
+																>
+																	<CheckCircle2 className="w-4 h-4 mt-0.5 text-indigo-600 shrink-0" />
+																	<span>{resp}</span>
+																</li>
+															))}
+													</ul>
+
+													{/* Tech Skills Pills */}
+													{pos.skills && pos.skills.length > 0 && (
+														<div className="flex flex-wrap gap-1.5 pt-1">
+															{pos.skills.slice(0, 6).map((skill) => (
+																<span
+																	key={skill}
+																	className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-semibold text-slate-600"
+																>
+																	{skill}
+																</span>
+															))}
+															{pos.skills.length > 6 && (
+																<span className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-500">
+																	+{pos.skills.length - 6}
+																</span>
+															)}
+														</div>
+													)}
+												</div>
+											))}
+										</div>
+
+										{/* Bottom Action Affordance */}
+										<div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
+											<span>View complete achievements & tech details</span>
+											<span className="inline-flex items-center gap-1">
+												<span>Deep dive</span>
+												<ArrowUpRight className="w-3.5 h-3.5" />
+											</span>
+										</div>
+									</button>
 								</motion.div>
 							);
 						})}
-					</div>
+					</motion.div>
 				</div>
-
-				{/* Impact Stats */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-					whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-					viewport={{ once: true }}
-					className="mt-20 sm:mt-28 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6"
-				>
-					{[
-						{
-							num: `${EXPERIENCE_YEAR}+`,
-							label: "Years Experience",
-							icon: Briefcase,
-							color: "bg-indigo-50 text-indigo-600 border-indigo-100",
-						},
-						{
-							num: "4",
-							label: "Companies",
-							icon: Building2,
-							color: "bg-cyan-50 text-cyan-600 border-cyan-100",
-						},
-						{
-							num: "3",
-							label: "Awards Won",
-							icon: Award,
-							color: "bg-amber-50 text-amber-600 border-amber-100",
-						},
-						{
-							num: "5M+",
-							label: "Users Impacted",
-							icon: Users,
-							color: "bg-emerald-50 text-emerald-600 border-emerald-100",
-						},
-					].map((s) => {
-						const SIcon = s.icon;
-						return (
-							<div
-								key={s.label}
-								className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl text-center shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-[transform,box-shadow] duration-200"
-							>
-								<div
-									className={`w-10 h-10 sm:w-12 sm:h-12 border ${s.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3.5`}
-								>
-									<SIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-								</div>
-								<p className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-									{s.num}
-								</p>
-								<p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
-									{s.label}
-								</p>
-							</div>
-						);
-					})}
-				</motion.div>
 			</div>
 
 			{/* Experience Detail Modal */}

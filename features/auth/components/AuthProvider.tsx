@@ -72,7 +72,6 @@ export default function AuthProvider({
 				}
 
 				if (!session) {
-					console.warn("[AuthProvider] No active session found");
 					return;
 				}
 

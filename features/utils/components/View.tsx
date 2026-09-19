@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
 	Timer,
-	ArrowLeft,
 	Wrench,
 	Calculator,
 	Braces,
@@ -30,6 +29,7 @@ import {
 	X,
 	Layers,
 	FileText,
+	ArrowUpRight,
 } from "lucide-react";
 
 export interface UtilityCategory {
@@ -38,6 +38,8 @@ export interface UtilityCategory {
 	shortLabel: string;
 	description: string;
 	icon: React.ComponentType<{ className?: string }>;
+	badgeColor: string;
+	accentText: string;
 }
 
 export interface UtilityItem {
@@ -46,9 +48,6 @@ export interface UtilityItem {
 	path?: string;
 	description: string;
 	categoryId: string;
-	accent: string;
-	color: string;
-	bg: string;
 	icon: React.ComponentType<{ className?: string }>;
 }
 
@@ -60,6 +59,8 @@ const CATEGORIES: UtilityCategory[] = [
 		description:
 			"Schema generators, API mocking, diff analysis, and syntax formatters.",
 		icon: Code2,
+		badgeColor: "bg-indigo-50 border-indigo-100 text-indigo-600",
+		accentText: "group-hover:text-indigo-600",
 	},
 	{
 		id: "data",
@@ -68,6 +69,8 @@ const CATEGORIES: UtilityCategory[] = [
 		description:
 			"Format parsers, JSON beautifiers, image transformers, and batch file utilities.",
 		icon: FileStack,
+		badgeColor: "bg-emerald-50 border-emerald-100 text-emerald-600",
+		accentText: "group-hover:text-emerald-600",
 	},
 	{
 		id: "security",
@@ -76,6 +79,8 @@ const CATEGORIES: UtilityCategory[] = [
 		description:
 			"Cryptographic hashers, phishing detectors, network telemetry, and QR generation.",
 		icon: ShieldCheck,
+		badgeColor: "bg-sky-50 border-sky-100 text-sky-600",
+		accentText: "group-hover:text-sky-600",
 	},
 	{
 		id: "finance",
@@ -84,6 +89,8 @@ const CATEGORIES: UtilityCategory[] = [
 		description:
 			"IDX market flow tracking, stock opportunity exploration, and dollar-cost averaging.",
 		icon: TrendingUp,
+		badgeColor: "bg-amber-50 border-amber-100 text-amber-700",
+		accentText: "group-hover:text-amber-600",
 	},
 	{
 		id: "productivity",
@@ -92,6 +99,8 @@ const CATEGORIES: UtilityCategory[] = [
 		description:
 			"Interval training timers, cron schedule designers, and interactive decision tools.",
 		icon: Clock,
+		badgeColor: "bg-purple-50 border-purple-100 text-purple-600",
+		accentText: "group-hover:text-purple-600",
 	},
 ];
 
@@ -103,9 +112,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "development",
 		description:
 			"Compare 2 texts with real-time similarity metrics, Levenshtein edit distance, vocabulary matrix, and side-by-side highlighting.",
-		accent: "bg-indigo-600",
-		color: "text-indigo-600",
-		bg: "bg-indigo-600/5",
 		icon: FileText,
 	},
 	{
@@ -115,9 +121,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "development",
 		description:
 			"Advanced JSON to Multi-Target converter (TS, Go, Zod, Mongoose, Joi) with recursive parsing.",
-		accent: "bg-blue-600",
-		color: "text-blue-600",
-		bg: "bg-blue-600/5",
 		icon: Braces,
 	},
 	{
@@ -126,9 +129,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "development",
 		description:
 			"Dynamic API mocking tool to create temporary endpoints with custom JSON responses and status codes.",
-		accent: "bg-blue-400",
-		color: "text-cyan-500",
-		bg: "bg-cyan-500/5",
 		icon: Braces,
 	},
 	{
@@ -137,9 +137,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "development",
 		description:
 			"Side-by-side split & unified code diffing with word/character-level highlight and patch export.",
-		accent: "bg-blue-600",
-		color: "text-blue-600",
-		bg: "bg-blue-600/5",
 		icon: GitCompare,
 	},
 	{
@@ -148,9 +145,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "development",
 		description:
 			"Advanced SQL beautifier and syntax validator supporting PostgreSQL, MySQL, and T-SQL.",
-		accent: "bg-blue-500",
-		color: "text-blue-500",
-		bg: "bg-blue-500/5",
 		icon: Database,
 	},
 	{
@@ -159,9 +153,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "development",
 		description:
 			"Universal recursive converter for variable names and JSON keys (Camel, Pascal, Snake, Kebab).",
-		accent: "bg-blue-600",
-		color: "text-blue-600",
-		bg: "bg-blue-600/5",
 		icon: ArrowRightLeft,
 	},
 	{
@@ -169,10 +160,7 @@ const utilities: UtilityItem[] = [
 		slug: "code-to-image",
 		categoryId: "development",
 		description:
-			"Transform code snippets and text into high-resolution, gradient-backed aesthetic social cards.",
-		accent: "bg-fuchsia-600",
-		color: "text-fuchsia-600",
-		bg: "bg-fuchsia-600/5",
+			"Transform code snippets and text into high-resolution, aesthetic social export cards.",
 		icon: Camera,
 	},
 
@@ -183,9 +171,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "data",
 		description:
 			"Developer-centric tool to beautify, minify, and validate JSON strings with syntax highlighting.",
-		accent: "bg-indigo-500",
-		color: "text-indigo-500",
-		bg: "bg-indigo-500/5",
 		icon: Braces,
 	},
 	{
@@ -194,9 +179,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "data",
 		description:
 			"Advanced CSV parser with support for nested objects, custom delimiters, and file uploads.",
-		accent: "bg-emerald-600",
-		color: "text-emerald-600",
-		bg: "bg-emerald-600/5",
 		icon: FileSpreadsheet,
 	},
 	{
@@ -205,9 +187,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "data",
 		description:
 			"Convert image extensions (WebP, PNG, JPG, AVIF, ICO, BMP) with binary validation and quality scaling.",
-		accent: "bg-indigo-600",
-		color: "text-indigo-600",
-		bg: "bg-indigo-600/5",
 		icon: ImageIcon,
 	},
 	{
@@ -216,9 +195,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "data",
 		description:
 			"Batch rename files into clean, SEO-friendly kebab-case while preserving extensions.",
-		accent: "bg-slate-600",
-		color: "text-slate-700",
-		bg: "bg-slate-700/5",
 		icon: Files,
 	},
 
@@ -229,9 +205,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "security",
 		description:
 			"Decode JSON Web Tokens, inspect RFC 7519 claims, monitor live expiration countdowns, and verify HMAC signatures locally.",
-		accent: "bg-indigo-600",
-		color: "text-indigo-600",
-		bg: "bg-indigo-600/5",
 		icon: ShieldCheck,
 	},
 	{
@@ -240,9 +213,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "security",
 		description:
 			"Cryptographic password & passphrase generator, multi-algorithm hasher (SHA-256, MD5, HMAC), and security formatter.",
-		accent: "bg-emerald-600",
-		color: "text-emerald-600",
-		bg: "bg-emerald-600/5",
 		icon: KeyRound,
 	},
 	{
@@ -251,9 +221,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "security",
 		description:
 			"Detect phishing links, IDN homographs, shorteners, raw IP hosts, and invalid URL characters.",
-		accent: "bg-emerald-600",
-		color: "text-emerald-600",
-		bg: "bg-emerald-600/5",
 		icon: ShieldCheck,
 	},
 	{
@@ -262,9 +229,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "security",
 		description:
 			"Generate high-resolution, customized vector and raster QR codes for URLs, text, Wi-Fi, vCard, and crypto.",
-		accent: "bg-indigo-600",
-		color: "text-indigo-600",
-		bg: "bg-indigo-600/5",
 		icon: QrCode,
 	},
 	{
@@ -273,9 +237,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "security",
 		description:
 			"Internet speed test in Megabits per second (Mbps), ping, jitter, hardware GPU telemetry, display refresh rate, and media codecs.",
-		accent: "bg-cyan-600",
-		color: "text-cyan-600",
-		bg: "bg-cyan-600/5",
 		icon: Gauge,
 	},
 
@@ -286,9 +247,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "finance",
 		description:
 			"Interactive IDX stock summary explorer with foreign flow tracking and performance analysis.",
-		accent: "bg-indigo-600",
-		color: "text-indigo-600",
-		bg: "bg-indigo-600/5",
 		icon: TableIcon,
 	},
 	{
@@ -297,9 +255,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "finance",
 		description:
 			"Strategic calculator for weighted average cost analysis and goal-based purchase planning.",
-		accent: "bg-blue-500",
-		color: "text-blue-500",
-		bg: "bg-blue-500/5",
 		icon: Calculator,
 	},
 
@@ -310,9 +265,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "productivity",
 		description:
 			"Visual cron schedule builder, plain-English humanizer, future executions timeline, and platform exporters.",
-		accent: "bg-purple-600",
-		color: "text-purple-600",
-		bg: "bg-purple-600/5",
 		icon: Clock,
 	},
 	{
@@ -321,9 +273,6 @@ const utilities: UtilityItem[] = [
 		categoryId: "productivity",
 		description:
 			"High-precision interval timer with automated transitions, beeps, and wake-lock.",
-		accent: "bg-rose-500",
-		color: "text-rose-500",
-		bg: "bg-rose-500/5",
 		icon: Timer,
 	},
 	{
@@ -332,20 +281,14 @@ const utilities: UtilityItem[] = [
 		categoryId: "productivity",
 		description:
 			"Interactive decision wheel & random name picker with audio feedback, presets, and physics.",
-		accent: "bg-purple-600",
-		color: "text-purple-600",
-		bg: "bg-purple-600/5",
 		icon: Dices,
 	},
 ];
 
 export default function UtilsLanding() {
-	const [mounted, setMounted] = useState(false);
 	const [selectedCategory, setSelectedCategory] = useState<string>("all");
 	const [searchQuery, setSearchQuery] = useState<string>("");
 	const reduceMotion = useReducedMotion();
-
-	useEffect(() => setMounted(true), []);
 
 	// Category counts mapping
 	const categoryCounts = useMemo(() => {
@@ -387,70 +330,90 @@ export default function UtilsLanding() {
 		})).filter((group) => group.items.length > 0);
 	}, [filteredUtilities]);
 
-	if (!mounted) return null;
-
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
-				{/* Breadcrumb */}
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-6 sm:space-y-8">
+				{/* ── Modern Floating Card Header Standard ── */}
 				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="mb-8"
-				>
-					<Link
-						href="/"
-						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-					>
-						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Home
-					</Link>
-				</motion.div>
-
-				{/* Header Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.8 }}
-					className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-4"
+					transition={{ duration: 0.4, ease: "easeOut" }}
+					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
-					<div>
-						<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-xs">
-							<Wrench className="w-4 h-4 text-indigo-600" />
-							Operational & Developer Utilities
-						</span>
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+						<div>
+							<div className="flex items-center gap-2 mb-2">
+								<div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+									<Wrench className="w-3.5 h-3.5 text-indigo-600" />
+								</div>
+								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+									UTILITY REGISTRY · DEVELOPER & OPERATIONAL ENGINES
+								</span>
+							</div>
+							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+								Developer & Tech Utilities
+							</h1>
+							<p className="text-sm text-slate-500 font-medium mt-1 max-w-xl">
+								High-precision developer tools, schema converters, financial
+								calculators, and operational utilities running locally in your
+								browser.
+							</p>
+						</div>
+
+						{/* Telemetry Quick Strip */}
+						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
+									{utilities.length}
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Engines
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-indigo-600 tabular-nums">
+									{CATEGORIES.length}
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Domains
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-emerald-600 tabular-nums">
+									100%
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Client-Side
+								</p>
+							</div>
+						</div>
 					</div>
-					<h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]">
-						Developer & Tech <span className="text-indigo-600">Utilities</span>
-					</h1>
-					<p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-xl mx-auto">
-						High-fidelity developer tools, financial calculators, and
-						operational utilities categorized for performance and logistics.
-					</p>
 				</motion.div>
 
-				{/* Controls Bar: Search & Category Filter Pills */}
+				{/* ── Filter & Search Toolbar ── */}
 				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.1, duration: 0.5 }}
-					className="max-w-5xl mx-auto mb-12 space-y-4"
+					transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
+					className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5"
 				>
-					{/* Search Input */}
-					<div className="relative max-w-md mx-auto sm:mx-0">
+					{/* Search Input with explicit icon layering */}
+					<div className="relative max-w-md">
 						<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
 						<input
 							type="text"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							placeholder="Search utilities by name, description, or group..."
-							className="w-full bg-white border border-slate-200/80 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+							placeholder="Search utilities by name, description, or keyword..."
+							className="w-full bg-slate-50/80 border border-slate-200/80 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
 						/>
 						{searchQuery && (
 							<button
 								type="button"
 								onClick={() => setSearchQuery("")}
-								className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition-colors"
+								className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-200/60 transition-colors cursor-pointer"
 								aria-label="Clear search"
 							>
 								<X className="w-3.5 h-3.5" />
@@ -459,23 +422,23 @@ export default function UtilsLanding() {
 					</div>
 
 					{/* Category Filter Pills */}
-					<div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+					<div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
 						<button
 							type="button"
 							onClick={() => setSelectedCategory("all")}
-							className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+							className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
 								selectedCategory === "all"
-									? "bg-slate-900 text-white shadow-sm shadow-slate-900/20"
-									: "bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300"
+									? "bg-slate-900 text-white shadow-xs"
+									: "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
 							}`}
 						>
 							<Layers className="w-3.5 h-3.5" />
 							<span>All</span>
 							<span
-								className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+								className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${
 									selectedCategory === "all"
 										? "bg-slate-800 text-slate-200"
-										: "bg-slate-100 text-slate-600"
+										: "bg-slate-200/70 text-slate-600"
 								}`}
 							>
 								{categoryCounts.all}
@@ -490,19 +453,19 @@ export default function UtilsLanding() {
 									key={cat.id}
 									type="button"
 									onClick={() => setSelectedCategory(cat.id)}
-									className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+									className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
 										isActive
-											? "bg-slate-900 text-white shadow-sm shadow-slate-900/20"
-											: "bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300"
+											? "bg-slate-900 text-white shadow-xs"
+											: "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
 									}`}
 								>
 									<Icon className="w-3.5 h-3.5" />
 									<span>{cat.shortLabel}</span>
 									<span
-										className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+										className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${
 											isActive
 												? "bg-slate-800 text-slate-200"
-												: "bg-slate-100 text-slate-600"
+												: "bg-slate-200/70 text-slate-600"
 										}`}
 									>
 										{categoryCounts[cat.id]}
@@ -513,31 +476,38 @@ export default function UtilsLanding() {
 					</div>
 				</motion.div>
 
-				{/* Grouped Category Sections */}
+				{/* ── Grouped Category Sections ── */}
 				{groupedCategories.length > 0 ? (
-					<div className="space-y-14 max-w-5xl mx-auto">
+					<div className="space-y-10 sm:space-y-12">
 						{groupedCategories.map(({ category, items }, groupIndex) => {
 							const CategoryIcon = category.icon;
+
 							return (
 								<motion.section
 									key={category.id}
-									initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+									initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 									animate={{ opacity: 1, y: 0 }}
-									transition={{ delay: groupIndex * 0.08, duration: 0.5 }}
-									className="space-y-6"
+									transition={{
+										delay: 0.12 + groupIndex * 0.05,
+										duration: 0.4,
+										ease: "easeOut",
+									}}
+									className="space-y-4 sm:space-y-5"
 								>
-									{/* Grouping Label / Section Header */}
+									{/* Category Header Row */}
 									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200/80">
 										<div className="flex items-center gap-3">
-											<div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
+											<div
+												className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${category.badgeColor}`}
+											>
 												<CategoryIcon className="w-4 h-4" />
 											</div>
 											<div>
 												<div className="flex items-center gap-2.5">
-													<h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+													<h2 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900">
 														{category.label}
 													</h2>
-													<span className="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200/60 text-[11px] font-bold text-slate-600">
+													<span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200/60 text-[10px] font-bold text-slate-600">
 														{items.length}{" "}
 														{items.length === 1 ? "tool" : "tools"}
 													</span>
@@ -550,40 +520,56 @@ export default function UtilsLanding() {
 									</div>
 
 									{/* Cards Grid */}
-									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-										{items.map((util, i) => (
+									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-4.5">
+										{items.map((util) => (
 											<motion.div
 												key={util.slug}
-												initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-												animate={{ opacity: 1, y: 0 }}
-												transition={{ delay: i * 0.03, duration: 0.3 }}
+												whileHover={reduceMotion ? undefined : { y: -2 }}
+												transition={{
+													type: "spring",
+													stiffness: 300,
+													damping: 24,
+												}}
+												className="h-full"
 											>
 												<Link
 													href={util.path || `/utils/${util.slug}`}
-													className="group flex flex-col justify-between p-6 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 transition-all duration-300 shadow-xs hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 !no-underline h-full"
+													className={`group flex flex-col justify-between p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-[border-color,box-shadow] duration-200 !no-underline h-full`}
 												>
 													<div>
-														<div className="flex items-center justify-between gap-3 mb-4">
+														{/* Card Head: Squircle Icon + Action Arrow */}
+														<div className="flex items-center justify-between gap-3 mb-3.5">
 															<div
-																className={`w-12 h-12 flex items-center justify-center rounded-xl shrink-0 ${util.bg} ${util.color} border border-slate-100 shadow-2xs group-hover:scale-110 transition-transform duration-300`}
+																className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 ${category.badgeColor} group-hover:scale-105 transition-transform duration-200`}
 															>
-																<util.icon className="w-6 h-6" />
+																<util.icon className="w-5 h-5" />
 															</div>
-															<span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-																Open Tool →
-															</span>
+															<div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 flex items-center justify-center transition-colors shrink-0">
+																<ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+															</div>
 														</div>
-														<div className="mb-2 flex items-center gap-2">
-															<span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200/60">
-																{category.shortLabel}
-															</span>
-														</div>
-														<h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-snug group-hover:text-indigo-600 transition-colors mb-2">
+
+														{/* Title */}
+														<h3
+															className={`text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-snug ${category.accentText} transition-colors mb-1.5`}
+														>
 															{util.title}
 														</h3>
-														<p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+
+														{/* Description */}
+														<p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2 sm:line-clamp-3">
 															{util.description}
 														</p>
+													</div>
+
+													{/* Card Footer: Slug indicator */}
+													<div className="pt-3.5 mt-3.5 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-400">
+														<span className="truncate">/{util.slug}</span>
+														<span
+															className={`text-[10px] font-bold uppercase tracking-wider ${category.accentText} transition-colors opacity-0 group-hover:opacity-100`}
+														>
+															Launch →
+														</span>
 													</div>
 												</Link>
 											</motion.div>
@@ -596,19 +582,19 @@ export default function UtilsLanding() {
 				) : (
 					/* Empty Search State */
 					<motion.div
-						initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+						initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
 						animate={{ opacity: 1, scale: 1 }}
 						className="max-w-md mx-auto text-center py-16 px-6 bg-white rounded-3xl border border-slate-200/80 shadow-xs"
 					>
 						<div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
 							<Search className="w-6 h-6" />
 						</div>
-						<h3 className="text-base font-bold text-slate-900 mb-1">
+						<h3 className="text-base font-extrabold text-slate-900 mb-1">
 							No utilities found
 						</h3>
 						<p className="text-xs text-slate-500 mb-6">
 							No tools matched "{searchQuery}". Try searching for something else
-							or reset your category filter.
+							or reset your filters.
 						</p>
 						<button
 							type="button"

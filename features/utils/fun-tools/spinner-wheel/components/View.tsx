@@ -560,12 +560,6 @@ export default function SpinnerWheelView() {
 							exit={{ scale: 0.9, opacity: 0 }}
 							className="bg-white rounded-[2.5rem] p-8 sm:p-10 border border-slate-200 max-w-md w-full text-center space-y-6 shadow-2xl relative overflow-hidden"
 						>
-							{/* Background glow */}
-							<div
-								className="absolute -top-24 -left-24 w-48 h-48 rounded-full blur-3xl opacity-30 pointer-events-none"
-								style={{ background: winner.color }}
-							/>
-
 							<button
 								type="button"
 								onClick={() => setWinner(null)}

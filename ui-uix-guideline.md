@@ -19,7 +19,7 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
 * **Global Telemetry Summary Strip Pattern:** Domain entry points (such as Adventures Landing Hub and Insights Hub) employ a prominent 4-column desktop / 2-column mobile telemetry strip (`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4`) directly beneath the hero header. Each telemetry item is housed in a `bg-white rounded-2xl border border-slate-200/80 shadow-xs` card with a solid semantic squircle icon badge, uppercase tracking label, bold metric value, and descriptive subtext.
 * **Pure Light Explorer & Matchday Hub Standard:** Aesthetic hubs employ domain-calibrated architectures:
   - **Travel Bucket List Tracker (`/adventures/travel`)**: Airy centered hero (`pt-24 sm:pt-32`), quick stat pill rows (`px-4 py-2.5 bg-white border border-slate-200/80 rounded-full shadow-xs`), responsive search & filter toolbars (venue, competition, month), and `rounded-[2rem]` floating cards with organic spring hover interactions (`whileHover={{ y: -4 }}`).
-  - **Liverpool FC Matchday Hub (`/liverpool`)**: **Zero-Scroll Full Viewport Standard** (`h-[100dvh] max-h-[100dvh] overflow-hidden` on both mobile and desktop), compact breadcrumb navigation, side-by-side team clash arena with prominent crests (`w-20 h-20` to `w-28 h-28`), bold fixture title (`Bournemouth vs Liverpool`), live 4-tile countdown HUD, calibrated bottom clearance (`pb-20 sm:pb-24`) above `CompactBottomBar`, and zero vertical scrolling.
+  - **Liverpool FC Matchday Hub (`/liverpool`)**: **Zero-Scroll Full Viewport Standard** (`h-[100dvh] max-h-[100dvh] overflow-hidden` on both mobile and desktop), compact breadcrumb navigation, 3-zone floating match card (`NextMatchHero.tsx`) — Head Strip (domain badge + home/away chip), Clash Arena (prominent `w-28 h-28` crests; LFC home side tinted `bg-red-50/70`; dark VS pill), and Countdown Tray (4-tile HUD; seconds tile turns `bg-red-600` when imminent; `MATCHDAY IN PROGRESS` pulsing badge). No redundant fixture headline — team names shown only beneath crests. Calibrated bottom clearance (`pb-24 sm:pb-28`) above `CompactBottomBar`.
 
 ---
 
@@ -48,8 +48,8 @@ The following patterns are **strictly forbidden** in this codebase:
 
 * **Forbidden Badge/Pill Patterns:**
   - NEVER render a floating "✨ New" or "🚀 Introducing..." marquee badge above a hero headline. This is a startup landing page trope.
-  - NEVER use `Sparkles` icon (from `lucide-react` or any icon library) anywhere in the application. It is the single most overused AI-slop icon and immediately signals generic, auto-generated UI. Use purpose-specific icons instead (e.g., `Star`, `Award`, `Wand2`, `Cpu` depending on context).
-  - NEVER combine `Sparkles` + gradient text + ambient blur orbs in the same component. This triple combination is the canonical AI-slop signature.
+  - **STRICT ANTI-SPARKLES MANDATE (Zero AI-Slop Icons):** NEVER use the `Sparkles` icon (from `lucide-react` or any icon library) anywhere in the application. It is **STRICTLY BLACKLISTED FOREVER** sitewide with zero exceptions. It is the single most overused AI-slop icon and immediately signals generic, auto-generated UI. Always use purpose-specific, domain-accurate icons instead (e.g., `Star` for featured headlines/favorites, `LayoutTemplate` for presets/templates, `Award` / `Trophy` for achievements, `FileCode` / `Code2` for technical snippets, `Cpu` for hardware/engines, `Gem` for values).
+  - NEVER combine `Sparkles` + gradient text + ambient blur orbs in the same component. This combination is the canonical AI-slop signature and is completely forbidden.
 
 * **Loading & Skeleton States:**
   - NEVER show a full-screen spinner with a brand logo in the center. Use targeted, in-component skeleton placeholders that match the exact shape and dimensions of the incoming content.
@@ -69,7 +69,7 @@ The following icons are **banned from use in UI surfaces** unless there is an ex
 
 | Banned Icon | Reason | Preferred Alternatives |
 |---|---|---|
-| `Sparkles` | #1 most overused AI-slop icon — banned sitewide | `Star`, `Award`, `Wand2`, `Cpu`, `Gem` |
+| `Sparkles` | #1 most overused AI-slop icon — STRICTLY BLACKLISTED FOREVER sitewide | `Star` (featured/headlines), `LayoutTemplate` (presets/templates), `Award`, `Cpu`, `Gem` |
 | `Rocket` (as decoration) | Generic "launch/startup" cliché | `ArrowUpRight`, `ExternalLink`, `Play` |
 | `Zap` (as decoration) | Generic "fast/powerful" cliché | Context-specific: `Timer`, `Bolt`, `Activity` |
 | `Star` (as decoration) | Generic "rating/favorite" misuse | `Award`, `Trophy`, `Bookmark` |
@@ -122,8 +122,8 @@ A mobile-first mindset is strictly enforced across the codebase. Layouts gracefu
 * **Nested & Side-by-Side Grid Column Sizing:** When embedding card grids inside side-by-side split layouts (e.g., `lg:flex-row`, multi-column parent panes), NEVER use high column counts like `grid-cols-4` in a half-width container. A split pane only has ~350px-450px available width. In split containers, use a 2x2 grid (`grid-cols-2`) so each card maintains a minimum comfortable width ($\ge 160\text{px}-200\text{px}$). Full 4-column grids (`grid-cols-4`) are strictly reserved for standalone, full-width rows.
 * **Defensive Card Layout Hygiene:** All nested grid items, stat buttons, and flex containers MUST include `min-w-0` to prevent flex blowout. Card header labels and subtexts must use `truncate` with `shrink-0` on icons to guarantee text never breaks into awkward vertical stacks or overlaps adjacent cards.
 * **Card Header & Spatial Alignment Hygiene:** Never use arbitrary hardcoded left padding offsets (like `pl-11`) to manually align subheaders beneath an icon; this causes text and badges to wrap awkwardly on narrow mobile viewports. Instead, structure headers using flex columns/rows with direct icon containers (`w-11 h-11 shrink-0`), placing brand names, legal entity subtitles, domain badges, and right-aligned location pills into distinct, dedicated flex groups.
-* **Zero-Scroll Full Viewport Standard (Mobile & Desktop):** Dedicated single-focus views (such as `Liverpool FC Matchday Hub`) utilize a strict full viewport layout (`h-[100dvh] max-h-[100dvh] overflow-hidden`) across *both* mobile and desktop viewports. To prevent excess vertical whitespace or stretched empty space, content is organized into balanced, cohesive cards (`flex flex-col gap-3.5 sm:gap-5 lg:gap-6 my-auto`) with side-by-side presentation, generous team crests, and calibrated bottom clearance (`pb-20 sm:pb-24`) clearing `CompactBottomBar` without clipping or scrolling.
-* **Desktop Entry Screen Standard:** Multi-module single-page entry points (e.g., `HomeView`, `ContactView`) utilize a compact 100vh entry screen layout on desktop (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden lg:py-0 lg:pb-0`) to eliminate unnecessary vertical or horizontal scrollbars entirely, reverting to fluid scrolling on handheld devices.
+* **Zero-Scroll Full Viewport Standard (Mobile & Desktop):** Dedicated single-focus views (such as `Liverpool FC Matchday Hub`) utilize a strict full viewport layout (`h-[100dvh] max-h-[100dvh] overflow-hidden`) across *both* mobile and desktop viewports. The match card uses a **3-zone architecture**: Head Strip (domain badge + home/away context chip), Clash Arena (side-by-side crests `w-28 h-28 rounded-3xl`; LFC home side tinted red; dark VS pill), and Countdown Tray (recessed `bg-slate-50/90`; 4 `CountdownTile` units; seconds tile accents red when imminent). No redundant fixture headline text — team names are shown only beneath each crest. Calibrated bottom clearance (`pb-24 sm:pb-28`) clearing `CompactBottomBar` without clipping or scrolling.
+* **Desktop Entry Screen Standard:** Single-page entry points (`HomeView`, `ContactView`) use a compact 100vh layout on desktop (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden lg:py-0 lg:pb-0`), reverting to fluid vertical scrolling on mobile. `HomeView` enforces a **strict zero-redundancy rule**: every data point appears exactly once across the entire page. The layout uses a `lg:grid-cols-12` two-column split (8/4) with: (1) a single name+role line, (2) a large `h1` headline as the dominant visual element, (3) a one-sentence bio with no keyword repetition from the headline, (4) a compact **inline stat strip** of 3 animated counters (`yearsCount+ · kmCount+ · fintechCount+`) that each link to their domain page and change to their semantic accent color on hover — replacing stat cards entirely, and (5) a CTA row. The photo column is a clean floating squircle card (`rounded-[2.5rem] p-3 bg-white border border-slate-200/80`) with zero floating widgets — only an `"Open to work"` availability badge centered at the bottom when `AUTHOR.available` is true.
 * **Mobile-First Scrolling:** On standard multi-card feeds and dashboard views (`< lg`), pages revert to fluid vertical scrolling (`min-h-screen overflow-y-auto py-20 pb-32 sm:py-24 sm:pb-36`) to accommodate the floating bottom navigation bar (`CompactBottomBar`).
 * **Fluid Spacing & Typography:** Margins, padding, and font sizes scale smoothly based on breakpoints (e.g., `pt-24 sm:pt-32`, `text-3xl sm:text-5xl lg:text-6xl`, `px-3 sm:px-4`).
 * **Touch Targets & Feedback:** Interactive elements feature generous touch target areas and active feedback (`active:scale-95`, `active:scale-[0.98]`) for tactile confirmation on mobile devices.
@@ -132,11 +132,14 @@ A mobile-first mindset is strictly enforced across the codebase. Layouts gracefu
 
 ## 5. Floating Bottom Navigation (`CompactBottomBar`)
 
-The primary application navigation utilizes a floating glassmorphic pill bar positioned at the bottom of the viewport:
+The primary application navigation utilizes a floating dock card positioned at the bottom of the viewport:
 
-* **Glassmorphic Surface:** Enclosed in `bg-white/90 backdrop-blur-2xl` with a subtle inner ring (`ring-1 ring-slate-900/5`) and soft ambient drop shadow (`shadow-[0_16px_48px_-12px_rgba(15,23,42,0.15)]`).
-* **Active Tab Contrast:** Active tabs feature an animated dark slate spring pill background (`bg-slate-900`). Active text and icons MUST enforce explicit high contrast (`!text-white`) to prevent global `a` element styles from bleeding through.
-* **Submenu Affordances:** Submenu popovers feature a `ChevronUp` indicator visible on both mobile and desktop to provide clear visual affordance for expandable navigation items. "Insights" sub-menu hosts Blog, Investments, Liverpool FC, and Utils. "Admin" sub-menu hosts Tasks, Blog Editor, Stock Manager, and Quick Reminders with pending count badges.
+* **Dock Card Surface:** `bg-white border border-slate-200/80 shadow-xl rounded-2xl` — no glassmorphism, no `backdrop-blur`. Pure white card for performance and visual clarity.
+* **Item Layout:** Each nav item is a vertical `flex-col` stack — **icon on top, label below** — always visible on all breakpoints (`text-[9px]` mobile / `text-[10px]` sm+). Labels are never hidden. `ChevronUp` indicator inline with the label for items with submenus, visible on all sizes.
+* **Active State:** Active items render a `bg-slate-900 rounded-xl` squircle **behind the icon only** (`w-8 h-8` container with `layoutId="nav-active-icon"` spring animation). The label transitions to `font-extrabold text-slate-900`. The squircle slides fluidly between items via Framer Motion `layoutId`.
+* **Section Divider:** A `w-px h-7 bg-slate-100 mx-1` vertical line separates the public nav group (Home → Adventures) from the admin section (Admin), providing clear cognitive grouping.
+* **Submenu Affordances:** Submenu popovers (`bg-white rounded-2xl shadow-xl border border-slate-200/80`) feature a section header (`text-[9px] uppercase tracking-widest text-slate-400`) above item rows. "Insights" sub-menu hosts Blog, Investments, Liverpool FC, and Utils. "Admin" sub-menu hosts Tasks, Blog Editor, Stock Manager, and Quick Reminders with pending count badges.
+* **Admin Badge:** Rose-500 pip (`h-4 w-4 rounded-full bg-rose-500`) positioned `absolute -top-1 -right-1` on the icon container, with `ring-2 ring-white` isolation. Disappears when submenu is open.
 
 ---
 
@@ -302,16 +305,22 @@ Operational views (e.g., Admin Dashboard, Task Agenda, Quick Reminders, Stock Ma
 * **Instant Submission:** All administrative forms and text entry tools (Quick Reminders note area, Stock Admin JSON input) MUST support <kbd>⌘ + Enter</kbd> (Mac) and <kbd>Ctrl + Enter</kbd> (Windows/Linux) to immediately submit or import data without clicking the button.
 
 ### Quick Reminders Standard (`/admin/reminders`)
-* **Time-to-Live (TTL) Hierarchy:** Backed by Redis with selectable lifespans: `1 Day`, `1 Week`, `1 Month`.
-* **Automatic Linkification:** Detect URLs in reminder text and render them as interactive, clickable pill buttons (`bg-indigo-50 text-indigo-700 hover:bg-indigo-100`) accompanied by one-click copy buttons.
-* **One-Click Lifespan Extensions:** Provide rapid duration extension badges (`+1D`, `+1W`, `+1M`) on each card to extend TTL without re-entering reminder text.
-* **Card-Level Note Copying:** Dedicated `Copy` button on each card with visual checkmark feedback.
-* **Search & TTL Filter Strip:** Live search input combined with category pills (*All, Expiring Soon, 1 Day, 1 Week, 1 Month*).
+* **Full-Width Alignment & Creation Card:** Container uses `w-full space-y-6 sm:space-y-8` inside `max-w-5xl`. Features an elevated creation card with an Amber squircle badge (`w-12 h-12 rounded-2xl bg-amber-50 border-amber-200/70 text-amber-600`), character limit counter, segmented TTL duration track (`1 Day`, `1 Week`, `1 Month`), and solid dark submit button (`bg-slate-900 text-white`) with <kbd>⌘/Ctrl + Enter</kbd>.
+* **Modern Floating Controls Toolbar:** Elevated floating toolbar featuring segmented filter tabs with dynamic count badges (*All, Expiring Soon, 1 Day, 1 Week, 1 Month*), active filter summary text, and search input with explicit icon layering (`pointer-events-none z-10`, `pl-10`).
+* **Accent Line Reminder Cards:** 1.5px solid top border accents indicating expiry state (`amber-500` for expiring soon, `sky-500` for 1D, `indigo-500` for 1W, `purple-500` for 1M), tactile duration extension pills (`+1D`, `+1W`, `+1M`), one-click note text copy with visual checkmark feedback, and interactive linkified URL pills.
 
 ### Stock Manager Import Protocol (`/utils/stock-explorer/admin`)
-* **JSON File Upload:** Provide a direct `.json` file upload reader (`<input type="file" accept=".json" />`) to load large dataset files directly from disk without manual copy-paste overhead.
-* **JSON Formatting Tool:** One-click syntax validator and prettifier.
-* **Sample Template Generator:** One-click "Load Sample" button prefilling valid IDX payload structure (`BBCA`, `BBRI`, `BMRI`).
+* **Modern Floating Card Header Standard:** Anchored by an indigo squircle icon (`w-12 h-12 rounded-2xl bg-indigo-50 border-indigo-200/70 text-indigo-600 shadow-2xs`) with `Database`, domain badge (`FINANCIAL REGISTRY • idx market synchronization`), breadcrumbs (`Admin Dashboard › Stock Registry`), and `Back to Explorer` button.
+* **Redis In-Memory Registry Telemetry:** Real-time cache indicator (`Active Cache` with pulsing dot, `Verifying`, or `No Cache / Expired`), operational action triggers (`Refresh Status`, `Sync Live` with live radio indicator, and `Purge Cache` modal trigger), and 3 telemetry tiles (`Total Instruments`, `Trading Session`, `Cache Lifespan`).
+* **Dismissible Manual Override Notice:** Protocol notice with `ShieldCheck` explaining fallback manual JSON priming when cloud datacenter IPs are blocked by IDX.
+* **Interactive JSON Console:** Empty state dashed dropzone (`Paste JSON or Drop File Here`), multi-preset sample triggers (`Sample Banks`, `Sample Tech` using `LayoutTemplate` — strictly no `Sparkles`), syntax formatting tool, character/line counter, and <kbd>⌘/Ctrl + Enter</kbd> import shortcut.
+* **Searchable Pre-Import Inspector Drawer:** Aggregated session date, total trading volume, turnover value (Rp), detected instrument count, and a collapsible sample table with **real-time ticker search filtering** for previewing instruments before committing to Redis cache.
+
+### Blog Management Portal Standard (`/admin/blog`)
+* **Modern Floating Card Header Standard:** Anchored by a blue squircle icon (`w-12 h-12 rounded-2xl bg-blue-50 border-blue-200/70 text-blue-600 shadow-2xs`) with `BookOpen`, domain badge (`KNOWLEDGE BASE MANAGEMENT • publishing console`), contextual breadcrumbs (`Admin Dashboard › Manage Blog`), and direct dual actions: `View Public Blog ↗` (opens live `/blog` in a new tab) and solid dark `Create New Post` (`bg-slate-900 text-white hover:bg-slate-800`).
+* **4-Tile Interactive Telemetry KPI Strip:** Server-rendered 4-column desktop / 2-column mobile strip (`Total Articles`, `Published`, `Drafts`, `Headlines` with `Star` — strictly no `Sparkles`) functioning as 1-click filter links (`?status=published`, `?status=draft`, `?headline=true`, reset) with active focus rings and elevated backgrounds.
+* **Single Canonical Floating Card Architecture:** Eliminates redundant outer card wrapping around `DynamicAdminBlogList`. The table, toolbar, search, and bulk operations live inside a single floating card (`bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden`).
+* **Refined Skeleton:** `BlogListSkeleton` matches the rounded-3xl geometry, toolbar height, and shimmer animation.
 
 ---
 
@@ -334,11 +343,13 @@ Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) are str
 * **Container Architecture:** All management, intelligence, and operational views (e.g., `/admin`, `/admin/blog`, `/admin/reminders`, `/utils/stock-explorer/admin`, `/tasks`, `/investment`) encapsulate the hero header within a floating card (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`) resting on the signature textured canvas (`bg-slate-50/80 bg-dot-pattern`).
 * **Container Alignment & Max-Width:** The floating header card MUST share the exact same `max-w-*` container width and padding as the cards beneath it (`max-w-4xl`, `max-w-5xl`, or `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`).
 * **Header Hierarchy & Elements:**
-  - **Domain Theme Badge:** A pill badge at the top featuring a domain icon squircle, uppercase tracking title, dot separator, and lowercase sublabel (e.g., `OPERATIONS HUB • daily task orchestration`, `FINANCIAL REGISTRY • idx market synchronization`, `REMINDERS REGISTRY • quick ephemeral notes`, `MARKET INTELLIGENCE ENGINE • sentiment telemetry & indicators`).
+  - **Domain Theme Badge:** A pill badge at the top featuring a domain icon squircle, uppercase tracking title, dot separator, and lowercase sublabel (e.g., `OPERATIONS HUB • daily task orchestration`, `FINANCIAL REGISTRY • idx market synchronization`, `REMINDERS REGISTRY • quick ephemeral notes`, `KNOWLEDGE BASE MANAGEMENT • publishing console`, `MARKET INTELLIGENCE ENGINE • sentiment telemetry & indicators`).
+  - **Domain Icon Squircle Anchor:** An elevated visual anchor squircle (`w-12 h-12 rounded-2xl bg-<domain>-50 border border-<domain>-200/70 text-<domain>-600 shadow-2xs`) placed beside or above the title block.
   - **Confident Headline:** Extra-bold solid heading `h1` (`text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight`).
   - **Breadcrumbs Navigation:** Contextual breadcrumbs (`Admin Dashboard › ...` or `Home › ...`) using semantic muted links (`!text-slate-500 hover:!text-slate-900`) and `<ChevronRight className="w-3 h-3 text-slate-400" />`.
 * **Right-Aligned Controls Group:** Functional controls, back-links, or live telemetry badges are right-aligned (`flex flex-wrap items-center gap-2.5 sm:gap-3`) to maintain balance and avoid vertical dead space.
 * **Top Clearance Hygiene:** Main content containers must declare sufficient top clearance (`pt-20 sm:pt-24` or `pt-24 sm:pt-28` when fixed switchers like `QuickNav` are present) to ensure floating navigation switchers never overlap, clip, or obscure header titles.
+* **Single Canonical Floating Card Architecture:** Parent admin views (e.g., `/admin/blog`) must NEVER wrap already-contained card components in nested card containers with duplicate borders. Lists, tables, and consoles maintain a single canonical `rounded-3xl border border-slate-200/80 shadow-xs` surface.
 
 ---
 
@@ -412,7 +423,8 @@ Before submitting any AI-generated or AI-assisted component for code review, ver
 ### Visual Integrity
 - [ ] No gradient text, gradient headers, or gradient modals
 - [ ] No ambient blur orbs (`blur-3xl`, `blur-[100px]`)
-- [ ] No `Sparkles` icon used anywhere in the component
+- [ ] No `Sparkles` icon used anywhere in the component (strictly blacklisted forever sitewide)
+- [ ] Single canonical card architecture respected (zero nested duplicate card borders on admin portals)
 - [ ] No raw unicode emojis in UI surfaces
 - [ ] No more than 3 accent colors in a single card
 
@@ -428,6 +440,9 @@ Before submitting any AI-generated or AI-assisted component for code review, ver
 - [ ] Animations are state-driven only (hover, mount, dismiss)
 - [ ] `transition-all` is NOT used as a blanket style; specific properties are targeted
 - [ ] Stagger animations use 0.1s or less delay per item
+- [ ] Interactive SVG motion elements declare explicit base attributes (e.g., `strokeWidth={30}`, `initial={false}`)
+- [ ] Above-the-fold hero grid images declare `priority={index === 0}` and `loading="eager"` for optimal LCP scores
+- [ ] All Next.js `<Image fill />` components declare responsive `sizes` attributes to prevent browser over-fetching and console warnings
 
 ### Copy & Microcopy
 - [ ] No AI-speak phrases ("Supercharge", "Level up", "Game-changing", "Seamlessly", "Unlock")

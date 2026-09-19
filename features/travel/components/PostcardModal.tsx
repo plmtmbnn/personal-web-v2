@@ -229,6 +229,7 @@ export default function PostcardModal({
 										alt={`${destination.name}, ${destination.location}`}
 										fill
 										priority
+										sizes="(max-width: 640px) 90vw, (max-width: 1024px) 70vw, 640px"
 										className={`object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.02] ${
 											!isVisited ? "grayscale contrast-105 brightness-95" : ""
 										}`}

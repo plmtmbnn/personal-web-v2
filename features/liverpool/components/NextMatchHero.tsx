@@ -2,7 +2,14 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
-import { Calendar, Clock, MapPin, Trophy, Shield } from "lucide-react";
+import {
+	Calendar,
+	Clock,
+	MapPin,
+	Trophy,
+	ShieldAlert,
+	CalendarPlus,
+} from "lucide-react";
 import type { LfcFixture } from "../types";
 import {
 	formatMatchDate,
@@ -14,11 +21,42 @@ interface NextMatchHeroProps {
 	fixture: LfcFixture;
 }
 
+interface CountdownTileProps {
+	value: string;
+	label: string;
+	accent?: boolean;
+}
+
+function CountdownTile({ value, label, accent = false }: CountdownTileProps) {
+	return (
+		<div
+			className={`flex flex-col items-center justify-center rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 min-w-[52px] sm:min-w-[62px] shadow-2xs border transition-colors ${
+				accent ? "bg-red-600 border-red-500" : "bg-white border-slate-200/80"
+			}`}
+		>
+			<span
+				className={`text-lg sm:text-2xl font-black leading-tight tabular-nums ${
+					accent ? "text-white" : "text-slate-900"
+				}`}
+			>
+				{value}
+			</span>
+			<span
+				className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mt-0.5 ${
+					accent ? "text-red-200" : "text-slate-400"
+				}`}
+			>
+				{label}
+			</span>
+		</div>
+	);
+}
+
 export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 	const isHome = fixture.isHome;
 	const dateInfo = useMemo(() => formatMatchDate(fixture.date), [fixture.date]);
-
 	const [countdown, setCountdown] = useState(() => getCountdown(fixture.date));
+	const gCalUrl = useMemo(() => createGoogleCalendarUrl(fixture), [fixture]);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -27,194 +65,191 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 		return () => clearInterval(interval);
 	}, [fixture.date]);
 
-	const gCalUrl = useMemo(() => createGoogleCalendarUrl(fixture), [fixture]);
+	const isImminent =
+		!countdown.isPassed && countdown.days === 0 && countdown.hours < 2;
 
 	return (
-		<div className="relative overflow-hidden rounded-3xl sm:rounded-[2.25rem] border border-slate-200/80 bg-white shadow-xs p-4 sm:p-5 lg:p-6 w-full max-w-xl sm:max-w-2xl lg:max-w-3xl mx-auto flex flex-col gap-3 sm:gap-4 lg:gap-5">
-			{/* Top Header Pill Row */}
-			<div className="flex items-center justify-between gap-2 pb-3 sm:pb-3.5 border-b border-slate-100 shrink-0">
-				<div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-					<span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-red-600 text-white shadow-xs shrink-0">
-						<Trophy className="w-3 h-3" /> Next Matchday
-					</span>
-					<span
-						className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shrink-0 ${
-							isHome
-								? "bg-red-50 text-red-700 border border-red-100"
-								: "bg-slate-100 text-slate-700 border border-slate-200/80"
-						}`}
-					>
-						{isHome ? "Anfield (Home)" : "Away Fixture"}
-					</span>
+		<div className="relative rounded-3xl sm:rounded-[2.5rem] border border-slate-200/80 bg-white shadow-xl overflow-hidden w-full max-w-xl sm:max-w-2xl mx-auto">
+			{/* ── Zone A: Head Strip ─────────────────────────────────────────── */}
+			<div className="flex items-center justify-between gap-2 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 pb-3 sm:pb-3.5 border-b border-slate-100">
+				{/* Domain badge pill */}
+				<div className="flex items-center gap-1.5 min-w-0">
+					<div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-red-600 flex items-center justify-center shrink-0">
+						<Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+					</div>
+					<div className="flex items-center gap-1 min-w-0">
+						<span className="text-[10px] sm:text-xs font-black text-slate-900 uppercase tracking-wider shrink-0">
+							Matchday Hub
+						</span>
+						<span className="text-[10px] sm:text-xs font-medium text-slate-300 shrink-0">
+							•
+						</span>
+						<span className="text-[10px] sm:text-xs font-semibold text-slate-400 truncate">
+							{fixture.competition}
+							{fixture.round ? ` ${fixture.round}` : ""}
+						</span>
+					</div>
 				</div>
 
-				{/* Competition Tag */}
-				<div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-slate-50 border border-slate-200/80 shadow-2xs shrink-0">
-					{fixture.competitionBadge ? (
-						<div className="relative w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0">
-							<Image
-								src={fixture.competitionBadge}
-								alt={fixture.competition || "Competition"}
-								fill
-								className="object-contain"
-								unoptimized
-							/>
-						</div>
+				{/* Home/Away context chip */}
+				<span
+					className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9.5px] sm:text-[10.5px] font-extrabold uppercase tracking-widest shrink-0 ${
+						isHome
+							? "bg-red-50 text-red-700 border border-red-100"
+							: "bg-slate-100 text-slate-500 border border-slate-200/60"
+					}`}
+				>
+					{isHome ? (
+						<>
+							<span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+							Anfield
+						</>
 					) : (
-						<Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+						"Away Fixture"
 					)}
-					<span className="text-[10px] sm:text-xs font-bold text-slate-800 truncate max-w-[120px] sm:max-w-[200px]">
-						{fixture.competition}
-						{fixture.round ? ` • ${fixture.round}` : ""}
-					</span>
+				</span>
+			</div>
+
+			{/* ── Zone B: Clash Arena ────────────────────────────────────────── */}
+			<div className="px-4 sm:px-5 lg:px-6 pt-3.5 sm:pt-4 pb-3 sm:pb-3.5">
+				{/* Team crests arena */}
+				<div className="flex items-center justify-between gap-3 sm:gap-5">
+					{/* Home team */}
+					<div className="flex flex-col items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
+						<div
+							className={`relative w-20 h-20 sm:w-28 sm:h-28 rounded-3xl p-3 sm:p-4 border flex items-center justify-center shadow-xs transition-transform duration-200 hover:scale-[1.04] ${
+								isHome
+									? "bg-red-50/70 border-red-100"
+									: "bg-slate-50 border-slate-200/80"
+							}`}
+						>
+							{fixture.homeTeamBadge ? (
+								<Image
+									src={fixture.homeTeamBadge}
+									alt={fixture.homeTeam}
+									width={96}
+									height={96}
+									className="object-contain max-h-full max-w-full drop-shadow-xs"
+									unoptimized
+								/>
+							) : (
+								<ShieldAlert className="w-9 h-9 sm:w-12 sm:h-12 text-slate-300" />
+							)}
+						</div>
+						<div className="text-center w-full">
+							<p className="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate leading-tight">
+								{fixture.homeTeam}
+							</p>
+							<span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200/60">
+								Home
+							</span>
+						</div>
+					</div>
+
+					{/* VS badge */}
+					<div className="shrink-0 flex flex-col items-center gap-1">
+						<div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-900 flex items-center justify-center shadow-xs">
+							<span className="text-[10px] sm:text-xs font-black text-white tracking-wider">
+								VS
+							</span>
+						</div>
+					</div>
+
+					{/* Away team */}
+					<div className="flex flex-col items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
+						<div
+							className={`relative w-20 h-20 sm:w-28 sm:h-28 rounded-3xl p-3 sm:p-4 border flex items-center justify-center shadow-xs transition-transform duration-200 hover:scale-[1.04] ${
+								!isHome
+									? "bg-red-50/70 border-red-100"
+									: "bg-slate-50 border-slate-200/80"
+							}`}
+						>
+							{fixture.awayTeamBadge ? (
+								<Image
+									src={fixture.awayTeamBadge}
+									alt={fixture.awayTeam}
+									width={96}
+									height={96}
+									className="object-contain max-h-full max-w-full drop-shadow-xs"
+									unoptimized
+								/>
+							) : (
+								<ShieldAlert className="w-9 h-9 sm:w-12 sm:h-12 text-slate-300" />
+							)}
+						</div>
+						<div className="text-center w-full">
+							<p className="text-xs sm:text-sm font-black text-slate-900 tracking-tight truncate leading-tight">
+								{fixture.awayTeam}
+							</p>
+							<span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200/60">
+								Away
+							</span>
+						</div>
+					</div>
 				</div>
 			</div>
 
-			{/* Fixture Headline */}
-			<div className="text-center pt-0.5">
-				<h2 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-tight">
-					{fixture.homeTeam}{" "}
-					<span className="text-red-600 font-bold px-1 text-sm sm:text-lg">
-						vs
-					</span>{" "}
-					{fixture.awayTeam}
-				</h2>
-			</div>
-
-			{/* Match Teams & Versus Stage */}
-			<div className="py-0.5 sm:py-1 flex items-center justify-between gap-2.5 sm:gap-6">
-				{/* Home Team */}
-				<div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-2 flex-1 min-w-0">
-					<div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl sm:rounded-3xl bg-slate-50/80 p-2.5 sm:p-3.5 border border-slate-200/80 flex items-center justify-center shadow-xs transition-transform hover:scale-105">
-						{fixture.homeTeamBadge ? (
-							<Image
-								src={fixture.homeTeamBadge}
-								alt={fixture.homeTeam}
-								width={96}
-								height={96}
-								className="object-contain max-h-full max-w-full drop-shadow-xs"
-								unoptimized
-							/>
-						) : (
-							<Shield className="w-8 h-8 sm:w-10 sm:h-10 text-slate-400" />
-						)}
-					</div>
-					<div className="w-full px-1">
-						<h3 className="text-xs sm:text-sm md:text-base font-black text-slate-900 tracking-tight truncate leading-tight">
-							{fixture.homeTeam}
-						</h3>
-						<span className="inline-block mt-0.5 sm:mt-1 px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200/60">
-							Home
-						</span>
-					</div>
-				</div>
-
-				{/* VS Badge */}
-				<div className="flex flex-col items-center justify-center px-1 shrink-0">
-					<div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-[10px] sm:text-xs font-black text-red-600 shadow-xs">
-						VS
-					</div>
-				</div>
-
-				{/* Away Team */}
-				<div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-2 flex-1 min-w-0">
-					<div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl sm:rounded-3xl bg-slate-50/80 p-2.5 sm:p-3.5 border border-slate-200/80 flex items-center justify-center shadow-xs transition-transform hover:scale-105">
-						{fixture.awayTeamBadge ? (
-							<Image
-								src={fixture.awayTeamBadge}
-								alt={fixture.awayTeam}
-								width={96}
-								height={96}
-								className="object-contain max-h-full max-w-full drop-shadow-xs"
-								unoptimized
-							/>
-						) : (
-							<Shield className="w-8 h-8 sm:w-10 sm:h-10 text-slate-400" />
-						)}
-					</div>
-					<div className="w-full px-1">
-						<h3 className="text-xs sm:text-sm md:text-base font-black text-slate-900 tracking-tight truncate leading-tight">
-							{fixture.awayTeam}
-						</h3>
-						<span className="inline-block mt-0.5 sm:mt-1 px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200/60">
-							Away
-						</span>
-					</div>
-				</div>
-			</div>
-
-			{/* Countdown & Match Info Strip */}
-			<div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 space-y-2 sm:space-y-2.5">
+			{/* ── Zone C: Countdown + Info Tray ─────────────────────────────── */}
+			<div className="mx-3 sm:mx-4 mb-3 sm:mb-4 bg-slate-50/90 border border-slate-200/60 rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex flex-col gap-2.5 sm:gap-3">
+				{/* Countdown HUD */}
 				{!countdown.isPassed ? (
-					<div className="flex items-center justify-center gap-1.5 sm:gap-2 text-center">
-						<div className="bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl px-2 py-1 sm:px-3.5 sm:py-1.5 min-w-[46px] sm:min-w-[58px] shadow-2xs">
-							<span className="text-sm sm:text-lg font-black text-slate-900 block leading-tight">
-								{countdown.days}
-							</span>
-							<span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-400">
-								Days
-							</span>
-						</div>
-						<span className="text-xs sm:text-sm font-bold text-red-600">:</span>
-						<div className="bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl px-2 py-1 sm:px-3.5 sm:py-1.5 min-w-[46px] sm:min-w-[58px] shadow-2xs">
-							<span className="text-sm sm:text-lg font-black text-slate-900 block leading-tight">
-								{String(countdown.hours).padStart(2, "0")}
-							</span>
-							<span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-400">
-								Hours
-							</span>
-						</div>
-						<span className="text-xs sm:text-sm font-bold text-red-600">:</span>
-						<div className="bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl px-2 py-1 sm:px-3.5 sm:py-1.5 min-w-[46px] sm:min-w-[58px] shadow-2xs">
-							<span className="text-sm sm:text-lg font-black text-slate-900 block leading-tight">
-								{String(countdown.minutes).padStart(2, "0")}
-							</span>
-							<span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-400">
-								Mins
-							</span>
-						</div>
-						<span className="text-xs sm:text-sm font-bold text-red-600">:</span>
-						<div className="bg-white border border-red-200 rounded-xl sm:rounded-2xl px-2 py-1 sm:px-3.5 sm:py-1.5 min-w-[46px] sm:min-w-[58px] shadow-2xs">
-							<span className="text-sm sm:text-lg font-black text-red-600 block leading-tight">
-								{String(countdown.seconds).padStart(2, "0")}
-							</span>
-							<span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-red-500">
-								Secs
-							</span>
-						</div>
+					<div className="flex items-center justify-center gap-2 sm:gap-2.5">
+						<CountdownTile value={String(countdown.days)} label="Days" />
+						<CountdownTile
+							value={String(countdown.hours).padStart(2, "0")}
+							label="Hours"
+						/>
+						<CountdownTile
+							value={String(countdown.minutes).padStart(2, "0")}
+							label="Mins"
+						/>
+						<CountdownTile
+							value={String(countdown.seconds).padStart(2, "0")}
+							label="Secs"
+							accent={isImminent}
+						/>
 					</div>
 				) : (
-					<div className="text-center py-1">
-						<span className="px-3.5 py-1 rounded-full bg-red-50 border border-red-100 text-red-700 text-xs font-bold">
-							Matchday In Progress / Imminent
+					<div className="flex items-center justify-center py-1">
+						<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600 text-white text-xs font-black uppercase tracking-wider shadow-xs">
+							<span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
+							Matchday In Progress
 						</span>
 					</div>
 				)}
 
-				{/* Timing Details */}
-				<div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-slate-600 text-[10.5px] sm:text-xs font-semibold">
+				{/* Match metadata strip */}
+				<div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10.5px] sm:text-xs font-semibold">
 					<div className="flex items-center gap-1.5 text-slate-900 font-bold">
-						<Calendar className="w-3.5 h-3.5 text-red-600 shrink-0" />
+						<Calendar className="w-3 h-3 text-red-600 shrink-0" />
 						<span>{dateInfo.formattedDate}</span>
 					</div>
 					<span className="text-slate-300 hidden sm:inline">•</span>
 					<div className="flex items-center gap-1.5 text-slate-900 font-bold">
-						<Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-						<span>{dateInfo.formattedTime} (Local Time)</span>
+						<Clock className="w-3 h-3 text-amber-500 shrink-0" />
+						<span>{dateInfo.formattedTime} local</span>
 					</div>
 					<span className="text-slate-300 hidden sm:inline">•</span>
 					<div className="flex items-center gap-1.5 text-slate-500">
-						<MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-						<span className="truncate max-w-[180px] sm:max-w-none">
+						<MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+						<span className="truncate max-w-[160px] sm:max-w-none">
 							{fixture.stadium}
 						</span>
 					</div>
+					{dateInfo.relativeTime && (
+						<>
+							<span className="text-slate-300 hidden sm:inline">•</span>
+							<span className="text-slate-500 font-semibold">
+								{dateInfo.relativeTime}
+							</span>
+						</>
+					)}
 				</div>
 			</div>
 
-			{/* Action & Motto Row */}
-			<div className="flex items-center justify-between gap-3 pt-2.5 sm:pt-3.5 border-t border-slate-100 shrink-0">
-				<span className="text-[11px] sm:text-xs font-bold text-slate-400 italic hidden sm:inline">
+			{/* ── Footer: Motto + CTA ────────────────────────────────────────── */}
+			<div className="flex items-center justify-between gap-3 px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5">
+				<span className="text-[11px] sm:text-xs font-bold text-slate-300 italic hidden sm:inline">
 					&ldquo;You&apos;ll Never Walk Alone&rdquo;
 				</span>
 				<a
@@ -223,7 +258,7 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 					rel="noopener noreferrer"
 					className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-slate-900 hover:bg-slate-800 !text-white text-xs font-bold shadow-xs active:scale-95 transition-[background-color,transform] cursor-pointer !no-underline"
 				>
-					<Calendar className="w-3.5 h-3.5 text-red-400 shrink-0" />
+					<CalendarPlus className="w-3.5 h-3.5 text-red-400 shrink-0" />
 					<span className="!text-white font-bold">Add to Google Calendar</span>
 				</a>
 			</div>

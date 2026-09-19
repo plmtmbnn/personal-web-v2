@@ -20,10 +20,14 @@ import {
 	Briefcase,
 	Cpu,
 	Coffee,
-	GitMerge,
 	type LucideIcon,
 } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import {
+	motion,
+	AnimatePresence,
+	useReducedMotion,
+	type Variants,
+} from "framer-motion";
 import pkg from "@/package.json";
 
 interface InquiryTopic {
@@ -65,6 +69,53 @@ const inquiryTopics: InquiryTopic[] = [
 	},
 ];
 
+const contactLinks = (composedMailto: string) => [
+	{
+		key: "email",
+		label: "Email",
+		value: AUTHOR.email,
+		icon: FaEnvelope,
+		href: composedMailto,
+		badgeColor: "bg-indigo-50 border-indigo-100 text-indigo-600",
+		isCopyable: true,
+		copyValue: AUTHOR.email,
+		isEmail: true,
+	},
+	{
+		key: "telegram",
+		label: "Telegram",
+		value: "@plmtmbnn",
+		icon: FaTelegramPlane,
+		href: "https://t.me/plmtmbnn",
+		badgeColor: "bg-sky-50 border-sky-100 text-sky-600",
+		isCopyable: true,
+		copyValue: "https://t.me/plmtmbnn",
+		isEmail: false,
+	},
+	{
+		key: "linkedin",
+		label: "LinkedIn",
+		value: "polma-tambunan",
+		icon: FaLinkedin,
+		href: SOCIAL_LINKS.linkedin,
+		badgeColor: "bg-blue-50 border-blue-100 text-blue-600",
+		isCopyable: true,
+		copyValue: SOCIAL_LINKS.linkedin,
+		isEmail: false,
+	},
+	{
+		key: "github",
+		label: "GitHub",
+		value: "@plmtmbnn",
+		icon: FaGithub,
+		href: SOCIAL_LINKS.github,
+		badgeColor: "bg-slate-100 border-slate-200 text-slate-700",
+		isCopyable: true,
+		copyValue: SOCIAL_LINKS.github,
+		isEmail: false,
+	},
+];
+
 export default function ContactView() {
 	const reduceMotion = useReducedMotion();
 	const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -73,17 +124,13 @@ export default function ContactView() {
 	const [selectedTopic, setSelectedTopic] = useState<InquiryTopic>(
 		inquiryTopics[0],
 	);
-	const [statusChip, setStatusChip] = useState({
-		label: "Checking...",
-		color: "bg-slate-400",
-	});
+	const [isActive, setIsActive] = useState(false);
 	const version = pkg.version;
 
 	useEffect(() => {
 		const updateStatusAndClock = () => {
 			const now = new Date();
 
-			// Format time in Asia/Jakarta timezone
 			const time = new Intl.DateTimeFormat("en-US", {
 				timeZone: "Asia/Jakarta",
 				hour: "2-digit",
@@ -93,18 +140,10 @@ export default function ContactView() {
 			}).format(now);
 			setLocalTime(time);
 
-			// Calculate Jakarta Hour (Jakarta is UTC+7)
 			const utcHour = now.getUTCHours();
 			const jakartaHour = (utcHour + 7 + 24) % 24;
+			setIsActive(jakartaHour >= 8 && jakartaHour < 22);
 
-			// Define active hours (8:00 AM to 10:00 PM)
-			if (jakartaHour >= 8 && jakartaHour < 22) {
-				setStatusChip({ label: "Active & Available", color: "bg-emerald-500" });
-			} else {
-				setStatusChip({ label: "Resting / Offline", color: "bg-slate-400" });
-			}
-
-			// Relative timezone calculation
 			const userOffsetMinutes = -now.getTimezoneOffset();
 			const jakartaOffsetMinutes = 7 * 60;
 			const diffHours = Math.round(
@@ -112,7 +151,7 @@ export default function ContactView() {
 			);
 
 			if (diffHours === 0) {
-				setRelativeTimeDiff("Same time as you");
+				setRelativeTimeDiff("Same timezone");
 			} else if (diffHours > 0) {
 				setRelativeTimeDiff(`${diffHours}h ahead of you`);
 			} else {
@@ -122,7 +161,6 @@ export default function ContactView() {
 
 		updateStatusAndClock();
 		const timer = setInterval(updateStatusAndClock, 1000);
-
 		return () => clearInterval(timer);
 	}, []);
 
@@ -138,292 +176,250 @@ export default function ContactView() {
 		return `mailto:${AUTHOR.email}?subject=${subject}&body=${body}`;
 	}, [selectedTopic]);
 
-	const contactLinks = [
-		{
-			key: "email",
-			label: "Direct Email",
-			value: AUTHOR.email,
-			icon: FaEnvelope,
-			href: composedMailto,
-			color: "text-indigo-600 bg-indigo-50 border-indigo-100",
-			isCopyable: true,
-			copyValue: AUTHOR.email,
+	const channels = contactLinks(composedMailto);
+
+	const containerVariants: Variants = {
+		hidden: {},
+		visible: { transition: { staggerChildren: 0.05 } },
+	};
+	const itemVariants: Variants = {
+		hidden: { opacity: 0, y: 14 },
+		visible: {
+			opacity: 1,
+			y: 0,
+			transition: { duration: 0.38, ease: "easeOut" },
 		},
-		{
-			key: "telegram",
-			label: "Telegram",
-			value: "@plmtmbnn",
-			icon: FaTelegramPlane,
-			href: "https://t.me/plmtmbnn",
-			color: "text-sky-600 bg-sky-50 border-sky-100",
-			isCopyable: true,
-			copyValue: "https://t.me/plmtmbnn",
-		},
-		{
-			key: "linkedin",
-			label: "LinkedIn",
-			value: "polma-tambunan",
-			icon: FaLinkedin,
-			href: SOCIAL_LINKS.linkedin,
-			color: "text-blue-600 bg-blue-50 border-blue-100",
-			isCopyable: true,
-			copyValue: SOCIAL_LINKS.linkedin,
-		},
-		{
-			key: "github",
-			label: "GitHub",
-			value: "@plmtmbnn",
-			icon: FaGithub,
-			href: SOCIAL_LINKS.github,
-			color: "text-slate-800 bg-slate-100 border-slate-200",
-			isCopyable: true,
-			copyValue: SOCIAL_LINKS.github,
-		},
-	];
+	};
 
 	return (
 		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
-			<div className="max-w-2xl w-full space-y-4 sm:space-y-5 relative z-10 my-auto">
-				{/* Top Status & Badge Bar */}
+			<div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 my-auto">
+				{/* ── Left — Identity & Context ────────────────────────── */}
 				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.4 }}
-					className="flex flex-wrap items-center justify-between gap-2.5"
+					className="lg:col-span-5 w-full"
+					variants={containerVariants}
+					initial={reduceMotion ? false : "hidden"}
+					animate="visible"
 				>
-					<div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs">
-						<Handshake className="w-3.5 h-3.5 text-indigo-600" />
-						<span>Let's Connect & Collaborate</span>
-					</div>
-
-					<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs text-[11px] font-semibold text-slate-600">
-						<div className={`w-2 h-2 rounded-full ${statusChip.color}`} />
-						<span>{statusChip.label}</span>
-					</div>
-				</motion.div>
-
-				{/* Title Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5, delay: 0.05 }}
-					className="space-y-1.5 sm:space-y-2"
-				>
-					<h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
-						Get in <span className="text-indigo-600">Touch.</span>
-					</h1>
-					<p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl">
-						Have an engineering leadership opportunity, fintech core project, or
-						technical advisory proposal? Select a topic below or reach out
-						directly.
-					</p>
-				</motion.div>
-
-				{/* Interactive Quick Inquiry Topic Selector */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5, delay: 0.1 }}
-					className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2.5"
-				>
-					<div className="flex items-center justify-between">
-						<span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-							<MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
-							<span>Quick Inquiry Topic</span>
+					{/* Status chip */}
+					<motion.div variants={itemVariants} className="mb-4 sm:mb-5">
+						<span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-xs text-xs font-semibold text-slate-600">
+							<span
+								className={`w-2 h-2 rounded-full shrink-0 ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}
+							/>
+							{isActive ? "Active & available" : "Resting · offline"}
 						</span>
-						<a
-							href={composedMailto}
-							className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
-						>
-							<span>Compose Draft</span>
-							<Send className="w-3 h-3" />
-						</a>
-					</div>
+					</motion.div>
 
-					<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-						{inquiryTopics.map((topic) => {
-							const isSelected = selectedTopic.id === topic.id;
-							const TopicIcon = topic.icon;
-							return (
-								<button
-									key={topic.id}
-									type="button"
-									onClick={() => setSelectedTopic(topic)}
-									className={`p-2.5 rounded-xl border text-left transition-[background-color,border-color,color] duration-200 cursor-pointer flex flex-col justify-between gap-2 ${
-										isSelected
-											? "bg-indigo-50 border-indigo-200 text-indigo-950 shadow-xs"
-											: "bg-slate-50/60 border-slate-200/70 text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
-									}`}
-								>
-									<div
-										className={`p-1.5 rounded-lg w-fit ${
+					{/* Headline */}
+					<motion.h1
+						variants={itemVariants}
+						className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.1] mb-3 sm:mb-4"
+					>
+						Let's build
+						<br />
+						something worth
+						<br />
+						shipping.
+					</motion.h1>
+
+					{/* Sub-copy */}
+					<motion.p
+						variants={itemVariants}
+						className="text-sm text-slate-500 font-medium leading-relaxed mb-6 sm:mb-7 max-w-sm"
+					>
+						Engineering leadership, fintech core architecture, technical
+						advisory — or just a conversation worth having.
+					</motion.p>
+
+					{/* Location + time strip */}
+					<motion.div variants={itemVariants} className="flex flex-col gap-2.5">
+						<div className="flex items-center gap-3">
+							<div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
+								<FaGlobeAsia className="text-[13px] text-indigo-500" />
+							</div>
+							<div>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Location
+								</p>
+								<p className="text-xs font-bold text-slate-800">
+									Toba, Indonesia · UTC+7
+								</p>
+							</div>
+						</div>
+
+						<div className="flex items-center gap-3">
+							<div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
+								<FaClock className="text-[13px] text-indigo-500" />
+							</div>
+							<div className="flex items-baseline gap-2 min-w-0">
+								<p className="font-mono text-xs font-bold text-slate-800 tabular-nums">
+									{localTime || "--:--:--"}
+								</p>
+								{relativeTimeDiff && (
+									<span className="text-[10px] font-semibold text-slate-400 truncate">
+										{relativeTimeDiff}
+									</span>
+								)}
+							</div>
+						</div>
+
+						{/* Version pill */}
+						<div className="inline-flex items-center gap-1.5 mt-1">
+							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+							<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								System{" "}
+								<span className="text-slate-700 font-extrabold">
+									v{version}
+								</span>
+							</span>
+						</div>
+					</motion.div>
+				</motion.div>
+
+				{/* ── Right — Action Panel ──────────────────────────────── */}
+				<motion.div
+					className="lg:col-span-7 w-full space-y-3"
+					initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{
+						duration: 0.45,
+						delay: 0.1,
+						ease: [0.25, 0.1, 0.25, 1],
+					}}
+				>
+					{/* Inquiry topic selector */}
+					<div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4">
+						<div className="flex items-center justify-between mb-3">
+							<span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+								<MessageSquare className="w-3.5 h-3.5 text-indigo-500" />
+								Inquiry Topic
+							</span>
+							<a
+								href={composedMailto}
+								className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors duration-150 !no-underline"
+							>
+								Compose
+								<Send className="w-3 h-3" />
+							</a>
+						</div>
+
+						<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+							{inquiryTopics.map((topic) => {
+								const isSelected = selectedTopic.id === topic.id;
+								const TopicIcon = topic.icon;
+								return (
+									<button
+										key={topic.id}
+										type="button"
+										onClick={() => setSelectedTopic(topic)}
+										className={`p-3 rounded-xl border text-left transition-[background-color,border-color] duration-200 cursor-pointer flex flex-col gap-2.5 ${
 											isSelected
-												? "bg-indigo-600 text-white"
-												: "bg-white border border-slate-200 text-slate-700"
+												? "bg-slate-900 border-slate-900"
+												: "bg-slate-50/60 border-slate-200/70 hover:bg-slate-100/80 hover:border-slate-300"
 										}`}
 									>
-										<TopicIcon className="w-3.5 h-3.5" />
-									</div>
-									<span className="text-[11px] font-bold leading-snug line-clamp-1">
-										{topic.label}
-									</span>
-								</button>
-							);
-						})}
-					</div>
-				</motion.div>
-
-				{/* Status & Time Hub */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5, delay: 0.15 }}
-					className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs"
-				>
-					<div className="flex items-center gap-2.5">
-						<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
-							<FaGlobeAsia className="text-xs text-indigo-600" />
-						</div>
-						<div>
-							<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-								Location
-							</p>
-							<p className="text-xs font-bold text-slate-900">
-								Toba, Indonesia
-							</p>
+										<div
+											className={`p-1.5 rounded-lg w-fit ${
+												isSelected
+													? "bg-white/10"
+													: "bg-white border border-slate-200"
+											}`}
+										>
+											<TopicIcon
+												className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-slate-600"}`}
+											/>
+										</div>
+										<span
+											className={`text-[10px] font-bold leading-snug line-clamp-2 ${
+												isSelected ? "text-white" : "text-slate-700"
+											}`}
+										>
+											{topic.label}
+										</span>
+									</button>
+								);
+							})}
 						</div>
 					</div>
 
-					<div className="flex items-center gap-2.5">
-						<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
-							<FaClock className="text-xs text-indigo-600" />
-						</div>
-						<div>
-							<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-								Jakarta Time (WIB)
-							</p>
-							<p className="font-mono text-xs font-bold text-slate-900 truncate">
-								{localTime || "--:--:--"}
-							</p>
-						</div>
-					</div>
-
-					<div className="col-span-2 sm:col-span-1 flex items-center gap-2.5">
-						<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-indigo-600 shrink-0">
-							<GitMerge className="w-4 h-4" />
-						</div>
-						<div>
-							<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-								Timezone Offset
-							</p>
-							<p className="text-xs font-bold text-slate-900 truncate">
-								{relativeTimeDiff || "UTC+7"}
-							</p>
-						</div>
-					</div>
-				</motion.div>
-
-				{/* Contact Channels Grid */}
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-					{contactLinks.map((item, index) => (
-						<motion.div
-							key={item.key}
-							initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
-							animate={{ opacity: 1, scale: 1 }}
-							transition={{ delay: 0.2 + index * 0.04, duration: 0.3 }}
-							className="group relative"
-						>
-							<div className="relative bg-white p-3.5 rounded-2xl border border-slate-200/80 flex items-center justify-between hover:border-indigo-300 hover:shadow-xs transition-[border-color,box-shadow] duration-200">
-								<div className="flex items-center gap-3 min-w-0 pr-2">
+					{/* Contact channels */}
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+						{channels.map((ch, index) => (
+							<motion.div
+								key={ch.key}
+								initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{
+									delay: 0.2 + index * 0.04,
+									duration: 0.3,
+									ease: [0.25, 0.1, 0.25, 1],
+								}}
+								className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 flex items-center justify-between hover:border-slate-300 hover:shadow-sm transition-[border-color,box-shadow] duration-200 group"
+							>
+								<div className="flex items-center gap-3 min-w-0">
 									<div
-										className={`p-2 rounded-xl border ${item.color} shrink-0`}
+										className={`p-2 rounded-xl border ${ch.badgeColor} shrink-0`}
 									>
-										<item.icon className="text-sm" />
+										<ch.icon className="text-sm" />
 									</div>
-
 									<div className="min-w-0">
-										<p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-											{item.label}
+										<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+											{ch.label}
 										</p>
 										<a
-											href={item.href}
-											target={item.key === "email" ? undefined : "_blank"}
-											rel={
-												item.key === "email" ? undefined : "noopener noreferrer"
-											}
-											className="text-xs sm:text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors block truncate !no-underline"
+											href={ch.href}
+											target={ch.isEmail ? undefined : "_blank"}
+											rel={ch.isEmail ? undefined : "noopener noreferrer"}
+											className="text-xs font-bold text-slate-900 hover:text-indigo-600 transition-colors duration-150 block truncate !no-underline"
 										>
-											{item.value}
+											{ch.value}
 										</a>
 									</div>
 								</div>
 
-								{/* Actions */}
-								<div className="flex items-center gap-1 shrink-0">
-									{item.isCopyable && (
+								<div className="flex items-center gap-0.5 shrink-0">
+									{ch.isCopyable && (
 										<button
 											type="button"
-											onClick={() => handleCopy(item.copyValue, item.key)}
-											className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-											title={`Copy ${item.label}`}
-											aria-label={`Copy ${item.label}`}
+											onClick={() => handleCopy(ch.copyValue, ch.key)}
+											className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-[color,background-color] duration-150 cursor-pointer"
+											aria-label={`Copy ${ch.label}`}
 										>
-											{copiedKey === item.key ? (
-												<FaCheck className="w-3.5 h-3.5 text-emerald-600" />
+											{copiedKey === ch.key ? (
+												<FaCheck className="w-3 h-3 text-emerald-500" />
 											) : (
-												<FaRegCopy className="w-3.5 h-3.5" />
+												<FaRegCopy className="w-3 h-3" />
 											)}
 										</button>
 									)}
-
 									<a
-										href={item.href}
-										target={item.key === "email" ? undefined : "_blank"}
-										rel={
-											item.key === "email" ? undefined : "noopener noreferrer"
-										}
-										className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-										title={`Open ${item.label}`}
-										aria-label={`Open ${item.label}`}
+										href={ch.href}
+										target={ch.isEmail ? undefined : "_blank"}
+										rel={ch.isEmail ? undefined : "noopener noreferrer"}
+										className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-[color,background-color] duration-150 cursor-pointer"
+										aria-label={`Open ${ch.label}`}
 									>
-										<ArrowUpRight className="w-4 h-4" />
+										<ArrowUpRight className="w-3.5 h-3.5" />
 									</a>
 								</div>
-							</div>
-						</motion.div>
-					))}
-				</div>
-
-				{/* Version Info */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0 }}
-					animate={{ opacity: 1 }}
-					transition={{ delay: 0.35 }}
-					className="pt-0.5 flex justify-start"
-				>
-					<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs">
-						<div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-						<span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-							System Version{" "}
-							<span className="text-slate-900 font-extrabold">v{version}</span>
-						</span>
+							</motion.div>
+						))}
 					</div>
 				</motion.div>
 			</div>
 
-			{/* Copy Toast Alert */}
+			{/* Copy Toast */}
 			<AnimatePresence>
 				{copiedKey && (
 					<motion.div
-						initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+						initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
 						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: 15 }}
+						exit={{ opacity: 0, y: 12 }}
 						className="fixed bottom-24 left-1/2 -translate-x-1/2 w-auto px-4 py-2.5 bg-slate-900 text-white rounded-xl font-bold shadow-lg z-[100] flex items-center gap-2"
 					>
-						<FaCheck className="w-3.5 h-3.5 text-emerald-400" />
-						<span className="text-xs text-white font-medium">
-							Copied to clipboard!
-						</span>
+						<FaCheck className="w-3 h-3 text-emerald-400" />
+						<span className="text-xs font-medium">Copied to clipboard</span>
 					</motion.div>
 				)}
 			</AnimatePresence>

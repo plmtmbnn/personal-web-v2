@@ -307,7 +307,7 @@ const otherProjects: PortfolioItem[] = [
 ];
 
 const cardVariants: Variants = {
-	hidden: { opacity: 0, y: 15 },
+	hidden: { opacity: 0, y: 12 },
 	visible: {
 		opacity: 1,
 		y: 0,
@@ -322,56 +322,85 @@ export default function PortfolioView() {
 	const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 overflow-x-hidden">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 relative z-10">
-				{/* Header Section */}
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10">
+				{/* ── Floating Card Header ── */}
 				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.6 }}
-					className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-4"
+					transition={{ duration: 0.4, ease: "easeOut" }}
+					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs mb-8 sm:mb-10"
 				>
-					<div>
-						<motion.span
-							initial={{ opacity: 0, scale: 0.9 }}
-							animate={{ opacity: 1, scale: 1 }}
-							transition={{ delay: 0.2 }}
-							className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-xs"
-						>
-							<PieIcon className="w-4 h-4 text-indigo-600" />
-							Work Distribution & Platform Architecture
-						</motion.span>
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div>
+							<div className="flex items-center gap-2 mb-2">
+								<div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+									<PieIcon className="w-3.5 h-3.5 text-indigo-600" />
+								</div>
+								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+									PORTFOLIO · fintech & platform architecture
+								</span>
+							</div>
+							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+								Project Portfolio
+							</h1>
+							<p className="text-sm text-slate-500 font-medium mt-1 max-w-xl">
+								Fintech core engines, digital platforms, and specialized tools.
+								Click any module for architecture details.
+							</p>
+						</div>
+
+						{/* Quick stat row */}
+						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
+									11+
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Systems
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-indigo-600 tabular-nums">
+									80%
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Fintech
+								</p>
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="text-center">
+								<p className="text-xl font-extrabold text-purple-600 tabular-nums">
+									20%
+								</p>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Platforms
+								</p>
+							</div>
+						</div>
 					</div>
-					<h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]">
-						Project <span className="text-indigo-600">Portfolio</span>
-					</h1>
-					<p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
-						A comprehensive breakdown of high-impact fintech core engines,
-						digital platforms, and specialized tools I've architected. Click any
-						module for in-depth architecture and capability details.
-					</p>
 				</motion.div>
 
-				{/* Content Grid */}
+				{/* ── Content Grid ── */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-					{/* Analytics Visualizer (LHS) */}
+					{/* Analytics Visualizer — sticky LHS */}
 					<motion.div
-						initial={reduceMotion ? false : { opacity: 0, x: -20 }}
+						initial={reduceMotion ? false : { opacity: 0, x: -16 }}
 						animate={{ opacity: 1, x: 0 }}
-						transition={{ duration: 0.8, delay: 0.2 }}
-						className="lg:col-span-5 lg:sticky lg:top-24"
+						transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+						className="lg:col-span-4 lg:sticky lg:top-24"
 					>
-						<div className="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 relative overflow-hidden h-full">
-							<div className="flex items-center gap-2.5 mb-8">
-								<div className="w-2.5 h-2.5 bg-indigo-600 rounded-full" />
-								<h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-900">
+						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs">
+							<div className="flex items-center gap-2 mb-5">
+								<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
 									Expertise Distribution
-								</h3>
+								</span>
 							</div>
 
+							{/* SVG Donut Chart */}
 							<div className="flex flex-col items-center">
-								{/* Visual SVG Chart */}
-								<div className="relative w-56 h-56 sm:w-64 sm:h-64 mb-10 mt-2">
+								<div className="relative w-48 h-48 sm:w-52 sm:h-52 mb-6">
 									<svg
 										viewBox="0 0 200 200"
 										className="w-full h-full transform -rotate-90"
@@ -385,15 +414,17 @@ export default function PortfolioView() {
 											r="80"
 											fill="none"
 											stroke="currentColor"
-											className="text-indigo-600 cursor-pointer focus:outline-none"
+											strokeWidth={30}
+											initial={false}
+											className="text-indigo-600 cursor-pointer"
 											strokeDasharray="402 502"
 											role="button"
 											tabIndex={0}
 											aria-label="Show LOS & LMS systems (80%)"
 											animate={{
-												strokeWidth: activeSlice === 0 ? 38 : 32,
+												strokeWidth: activeSlice === 0 ? 38 : 30,
 												opacity:
-													activeSlice === null || activeSlice === 0 ? 1 : 0.3,
+													activeSlice === null || activeSlice === 0 ? 1 : 0.25,
 											}}
 											transition={{
 												type: "spring",
@@ -421,16 +452,18 @@ export default function PortfolioView() {
 											r="80"
 											fill="none"
 											stroke="currentColor"
-											className="text-purple-600 cursor-pointer focus:outline-none"
+											strokeWidth={30}
+											initial={false}
+											className="text-purple-600 cursor-pointer"
 											strokeDasharray="100 502"
 											strokeDashoffset="-402"
 											role="button"
 											tabIndex={0}
 											aria-label="Show notable platforms (20%)"
 											animate={{
-												strokeWidth: activeSlice === 1 ? 38 : 32,
+												strokeWidth: activeSlice === 1 ? 38 : 30,
 												opacity:
-													activeSlice === null || activeSlice === 1 ? 1 : 0.3,
+													activeSlice === null || activeSlice === 1 ? 1 : 0.25,
 											}}
 											transition={{
 												type: "spring",
@@ -453,7 +486,7 @@ export default function PortfolioView() {
 										/>
 									</svg>
 
-									{/* Center Content */}
+									{/* Center label */}
 									<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
 										<AnimatePresence mode="wait">
 											<motion.div
@@ -464,21 +497,14 @@ export default function PortfolioView() {
 															? "other"
 															: "total"
 												}
-												initial={{
-													opacity: 0,
-													scale: 0.8,
-												}}
+												initial={{ opacity: 0, scale: 0.85 }}
 												animate={{ opacity: 1, scale: 1 }}
-												exit={{
-													opacity: 0,
-													scale: 1.1,
-													position: "absolute",
-												}}
-												transition={{ duration: 0.2 }}
-												className="flex flex-col items-center justify-center"
+												exit={{ opacity: 0, scale: 1.1 }}
+												transition={{ duration: 0.15 }}
+												className="flex flex-col items-center"
 											>
 												<span
-													className={`text-4xl font-extrabold tracking-tight ${
+													className={`text-3xl font-extrabold tracking-tight ${
 														activeSlice === 0
 															? "text-indigo-600"
 															: activeSlice === 1
@@ -492,7 +518,7 @@ export default function PortfolioView() {
 															? "20%"
 															: "11+"}
 												</span>
-												<span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">
+												<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 													{activeSlice === 0
 														? "Fintech Core"
 														: activeSlice === 1
@@ -504,8 +530,8 @@ export default function PortfolioView() {
 									</div>
 								</div>
 
-								{/* Legend */}
-								<div className="w-full space-y-3">
+								{/* Legend buttons */}
+								<div className="w-full space-y-2">
 									<motion.button
 										whileHover={{ scale: 1.01 }}
 										whileTap={{ scale: 0.98 }}
@@ -515,21 +541,21 @@ export default function PortfolioView() {
 										}}
 										onMouseEnter={() => setActiveSlice(0)}
 										onMouseLeave={() => setActiveSlice(null)}
-										className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-colors duration-200 cursor-pointer ${
+										className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl border transition-[background-color,border-color] duration-200 cursor-pointer ${
 											expandedSection === "los" || activeSlice === 0
-												? "bg-indigo-50 border-indigo-200 text-indigo-900 shadow-xs"
-												: "bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100/70"
+												? "bg-indigo-50 border-indigo-200"
+												: "bg-slate-50 border-slate-200/80 hover:bg-slate-100/70"
 										}`}
 									>
-										<div className="flex items-center gap-3">
+										<div className="flex items-center gap-2.5">
 											<div
-												className={`w-3.5 h-3.5 rounded-full transition-colors ${
+												className={`w-2.5 h-2.5 rounded-full ${
 													activeSlice === 0 || expandedSection === "los"
 														? "bg-indigo-600"
-														: "bg-indigo-400"
+														: "bg-indigo-300"
 												}`}
 											/>
-											<span className="text-xs font-bold uppercase tracking-wider text-slate-900">
+											<span className="text-xs font-bold text-slate-900">
 												LOS & LMS Systems
 											</span>
 										</div>
@@ -537,6 +563,7 @@ export default function PortfolioView() {
 											80%
 										</span>
 									</motion.button>
+
 									<motion.button
 										whileHover={{ scale: 1.01 }}
 										whileTap={{ scale: 0.98 }}
@@ -546,21 +573,21 @@ export default function PortfolioView() {
 										}}
 										onMouseEnter={() => setActiveSlice(1)}
 										onMouseLeave={() => setActiveSlice(null)}
-										className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-colors duration-200 cursor-pointer ${
+										className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl border transition-[background-color,border-color] duration-200 cursor-pointer ${
 											expandedSection === "other" || activeSlice === 1
-												? "bg-purple-50 border-purple-200 text-purple-900 shadow-xs"
-												: "bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100/70"
+												? "bg-purple-50 border-purple-200"
+												: "bg-slate-50 border-slate-200/80 hover:bg-slate-100/70"
 										}`}
 									>
-										<div className="flex items-center gap-3">
+										<div className="flex items-center gap-2.5">
 											<div
-												className={`w-3.5 h-3.5 rounded-full transition-colors ${
+												className={`w-2.5 h-2.5 rounded-full ${
 													activeSlice === 1 || expandedSection === "other"
 														? "bg-purple-600"
-														: "bg-purple-400"
+														: "bg-purple-300"
 												}`}
 											/>
-											<span className="text-xs font-bold uppercase tracking-wider text-slate-900">
+											<span className="text-xs font-bold text-slate-900">
 												Notable Platforms
 											</span>
 										</div>
@@ -573,18 +600,18 @@ export default function PortfolioView() {
 						</div>
 					</motion.div>
 
-					{/* Detailed Lists (RHS) */}
-					<motion.div layout className="lg:col-span-7 space-y-6">
-						{/* LOS SECTION */}
+					{/* Detailed Lists — RHS */}
+					<motion.div layout className="lg:col-span-8 space-y-4">
+						{/* ── Fintech Core Section ── */}
 						<motion.div
-							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.6, delay: 0.4 }}
+							transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" }}
 							layout
-							className={`group bg-white rounded-[2.5rem] border transition-[border-color,box-shadow] duration-300 overflow-hidden shadow-xs hover:shadow-md ${
+							className={`bg-white rounded-2xl border transition-[border-color,box-shadow] duration-300 overflow-hidden shadow-xs ${
 								expandedSection === "los"
-									? "border-indigo-300 ring-2 ring-indigo-500/10 shadow-lg"
-									: "border-slate-200/80"
+									? "border-indigo-200 shadow-sm"
+									: "border-slate-200/80 hover:shadow-sm"
 							}`}
 						>
 							<button
@@ -596,27 +623,27 @@ export default function PortfolioView() {
 								onMouseEnter={() => setActiveSlice(0)}
 								onMouseLeave={() => setActiveSlice(null)}
 								aria-expanded={expandedSection === "los"}
-								className="w-full p-6 sm:p-8 flex items-center justify-between text-left outline-none cursor-pointer"
+								className="w-full p-5 sm:p-6 flex items-center justify-between text-left outline-none cursor-pointer"
 							>
-								<div className="flex items-center gap-5 sm:gap-6">
-									<div className="w-14 h-14 sm:w-16 sm:h-16 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0">
-										<Briefcase className="w-6 h-6 sm:w-7 sm:h-7" />
+								<div className="flex items-center gap-4">
+									<div className="w-10 h-10 sm:w-11 sm:h-11 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+										<Briefcase className="w-5 h-5" />
 									</div>
 									<div>
-										<h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+										<h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
 											Fintech Core Systems
-										</h3>
-										<p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">
-											LOS & LMS Architectures
+										</h2>
+										<p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
+											LOS & LMS Architectures · 7 modules
 										</p>
 									</div>
 								</div>
 								<motion.div
 									animate={{ rotate: expandedSection === "los" ? 180 : 0 }}
-									transition={{ type: "spring", stiffness: 300, damping: 20 }}
-									className="p-2 sm:p-2.5 rounded-full bg-slate-50 border border-slate-200/80 text-slate-500"
+									transition={{ type: "spring", stiffness: 300, damping: 22 }}
+									className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-500 shrink-0"
 								>
-									<ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" />
+									<ChevronDown className="w-4 h-4" />
 								</motion.div>
 							</button>
 
@@ -626,55 +653,48 @@ export default function PortfolioView() {
 										initial={{ height: 0, opacity: 0 }}
 										animate={{ height: "auto", opacity: 1 }}
 										exit={{ height: 0, opacity: 0 }}
-										transition={{ duration: 0.4, ease: "easeInOut" }}
+										transition={{ duration: 0.35, ease: "easeInOut" }}
 										style={{ overflow: "hidden" }}
 									>
-										<div className="px-6 sm:px-8 pb-8 pt-2">
-											<p className="text-slate-600 font-medium leading-relaxed text-sm sm:text-base mb-6 border-l-2 border-indigo-200 pl-4">
-												Scalable Loan Origination and Management engines capable
-												of handling high-volume transactions with integrated
-												compliance and automated decisioning.
-											</p>
-
+										<div className="px-5 sm:px-6 pb-6 pt-1">
 											<motion.div
-												className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+												className="grid grid-cols-1 sm:grid-cols-2 gap-3"
 												initial="hidden"
 												animate="visible"
 												variants={{
-													visible: { transition: { staggerChildren: 0.05 } },
+													visible: { transition: { staggerChildren: 0.04 } },
 												}}
 											>
 												{losModules.map((mod) => (
 													<motion.button
 														type="button"
 														variants={cardVariants}
-														whileHover={{ y: -3, scale: 1.01 }}
+														whileHover={{ y: -2 }}
 														whileTap={{ scale: 0.98 }}
 														key={mod.id}
 														onClick={() => setSelectedItem(mod)}
-														className="text-left p-4 bg-slate-50/60 border border-slate-200/80 rounded-2xl group/item hover:bg-white hover:border-indigo-300 hover:shadow-md transition-[background-color,border-color,box-shadow] duration-200 cursor-pointer relative flex flex-col justify-between"
+														className="text-left p-4 bg-slate-50/70 border border-slate-200/80 rounded-xl group/item hover:bg-white hover:border-indigo-200 hover:shadow-sm transition-[background-color,border-color,box-shadow] duration-200 cursor-pointer flex flex-col justify-between"
 													>
 														<div>
 															<div className="flex items-center justify-between gap-2 mb-2">
-																<div className="flex items-center gap-3">
-																	<div className="p-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 group-hover/item:scale-105 transition-transform duration-200">
-																		<mod.icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+																<div className="flex items-center gap-2.5">
+																	<div className="p-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 group-hover/item:scale-105 transition-transform duration-200">
+																		<mod.icon className="w-3.5 h-3.5" />
 																	</div>
-																	<span className="font-bold text-slate-900 text-sm sm:text-base">
+																	<span className="font-bold text-slate-900 text-xs sm:text-sm">
 																		{mod.title}
 																	</span>
 																</div>
-																<div className="p-1 rounded-full text-slate-400 group-hover/item:text-indigo-600 group-hover/item:bg-indigo-50 transition-colors">
-																	<ArrowUpRight className="w-3.5 h-3.5" />
-																</div>
+																<ArrowUpRight className="w-3.5 h-3.5 text-slate-300 group-hover/item:text-indigo-500 transition-colors shrink-0" />
 															</div>
-															<p className="text-xs text-slate-500 font-semibold mt-1.5 leading-relaxed">
+															<p className="text-[11px] text-slate-500 font-medium leading-relaxed">
 																{mod.desc}
 															</p>
 														</div>
-														<div className="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[10px] font-bold text-slate-400 group-hover/item:text-indigo-600 transition-colors">
-															<span>View details</span>
-															<span>→</span>
+														<div className="mt-2.5 pt-2.5 border-t border-slate-200/60">
+															<p className="text-[10px] font-bold text-slate-400 group-hover/item:text-indigo-500 transition-colors">
+																{mod.metrics}
+															</p>
 														</div>
 													</motion.button>
 												))}
@@ -685,16 +705,16 @@ export default function PortfolioView() {
 							</AnimatePresence>
 						</motion.div>
 
-						{/* OTHER SECTION */}
+						{/* ── Notable Platforms Section ── */}
 						<motion.div
-							initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.6, delay: 0.5 }}
+							transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
 							layout
-							className={`group bg-white rounded-[2.5rem] border transition-[border-color,box-shadow] duration-300 overflow-hidden shadow-xs hover:shadow-md ${
+							className={`bg-white rounded-2xl border transition-[border-color,box-shadow] duration-300 overflow-hidden shadow-xs ${
 								expandedSection === "other"
-									? "border-purple-300 ring-2 ring-purple-500/10 shadow-lg"
-									: "border-slate-200/80"
+									? "border-purple-200 shadow-sm"
+									: "border-slate-200/80 hover:shadow-sm"
 							}`}
 						>
 							<button
@@ -708,27 +728,27 @@ export default function PortfolioView() {
 								onMouseEnter={() => setActiveSlice(1)}
 								onMouseLeave={() => setActiveSlice(null)}
 								aria-expanded={expandedSection === "other"}
-								className="w-full p-6 sm:p-8 flex items-center justify-between text-left outline-none cursor-pointer"
+								className="w-full p-5 sm:p-6 flex items-center justify-between text-left outline-none cursor-pointer"
 							>
-								<div className="flex items-center gap-5 sm:gap-6">
-									<div className="w-14 h-14 sm:w-16 sm:h-16 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-center text-purple-600 shrink-0">
-										<Layers className="w-6 h-6 sm:w-7 sm:h-7" />
+								<div className="flex items-center gap-4">
+									<div className="w-10 h-10 sm:w-11 sm:h-11 bg-purple-50 border border-purple-100 rounded-xl flex items-center justify-center text-purple-600 shrink-0">
+										<Layers className="w-5 h-5" />
 									</div>
 									<div>
-										<h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+										<h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
 											Notable Platforms
-										</h3>
-										<p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">
-											Specialized Ecosystems
+										</h2>
+										<p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
+											Specialized Ecosystems · 4 platforms
 										</p>
 									</div>
 								</div>
 								<motion.div
 									animate={{ rotate: expandedSection === "other" ? 180 : 0 }}
-									transition={{ type: "spring", stiffness: 300, damping: 20 }}
-									className="p-2 sm:p-2.5 rounded-full bg-slate-50 border border-slate-200/80 text-slate-500"
+									transition={{ type: "spring", stiffness: 300, damping: 22 }}
+									className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-500 shrink-0"
 								>
-									<ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" />
+									<ChevronDown className="w-4 h-4" />
 								</motion.div>
 							</button>
 
@@ -738,55 +758,48 @@ export default function PortfolioView() {
 										initial={{ height: 0, opacity: 0 }}
 										animate={{ height: "auto", opacity: 1 }}
 										exit={{ height: 0, opacity: 0 }}
-										transition={{ duration: 0.4, ease: "easeInOut" }}
+										transition={{ duration: 0.35, ease: "easeInOut" }}
 										style={{ overflow: "hidden" }}
 									>
-										<div className="px-6 sm:px-8 pb-8 pt-2">
-											<p className="text-slate-600 font-medium leading-relaxed text-sm sm:text-base mb-6 border-l-2 border-purple-200 pl-4">
-												Highly specialized digital products including InsurTech
-												cores, automated identity extraction tools, and
-												institutional membership portals.
-											</p>
-
+										<div className="px-5 sm:px-6 pb-6 pt-1">
 											<motion.div
-												className="grid grid-cols-1 gap-4"
+												className="grid grid-cols-1 sm:grid-cols-2 gap-3"
 												initial="hidden"
 												animate="visible"
 												variants={{
-													visible: { transition: { staggerChildren: 0.05 } },
+													visible: { transition: { staggerChildren: 0.04 } },
 												}}
 											>
 												{otherProjects.map((mod) => (
 													<motion.button
 														type="button"
 														variants={cardVariants}
-														whileHover={{ y: -3, scale: 1.01 }}
+														whileHover={{ y: -2 }}
 														whileTap={{ scale: 0.98 }}
 														key={mod.id}
 														onClick={() => setSelectedItem(mod)}
-														className="text-left p-4 sm:p-5 bg-slate-50/60 border border-slate-200/80 rounded-2xl group/item hover:bg-white hover:border-purple-300 hover:shadow-md transition-[background-color,border-color,box-shadow] duration-200 flex items-center justify-between gap-5 cursor-pointer"
+														className="text-left p-4 bg-slate-50/70 border border-slate-200/80 rounded-xl group/item hover:bg-white hover:border-purple-200 hover:shadow-sm transition-[background-color,border-color,box-shadow] duration-200 cursor-pointer flex flex-col justify-between"
 													>
-														<div className="flex items-center gap-4 sm:gap-5">
-															<div className="w-12 h-12 bg-purple-50 border border-purple-100 rounded-xl flex items-center justify-center text-purple-600 group-hover/item:scale-105 transition-transform duration-200 shrink-0">
-																<mod.icon className="w-5 h-5" />
-															</div>
-															<div>
-																<div className="flex items-center gap-2">
-																	<h4 className="font-bold text-slate-900 text-sm sm:text-base">
+														<div>
+															<div className="flex items-center justify-between gap-2 mb-2">
+																<div className="flex items-center gap-2.5">
+																	<div className="p-1.5 rounded-lg bg-purple-50 border border-purple-100 text-purple-600 group-hover/item:scale-105 transition-transform duration-200">
+																		<mod.icon className="w-3.5 h-3.5" />
+																	</div>
+																	<span className="font-bold text-slate-900 text-xs sm:text-sm">
 																		{mod.title}
-																	</h4>
-																	<span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200/60">
-																		{mod.tagline}
 																	</span>
 																</div>
-																<p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 leading-relaxed">
-																	{mod.desc}
-																</p>
+																<ArrowUpRight className="w-3.5 h-3.5 text-slate-300 group-hover/item:text-purple-500 transition-colors shrink-0" />
 															</div>
+															<p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+																{mod.desc}
+															</p>
 														</div>
-														<div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 group-hover/item:text-purple-600 transition-colors shrink-0 pr-2">
-															<span className="hidden sm:inline">Details</span>
-															<ArrowUpRight className="w-4 h-4" />
+														<div className="mt-2.5 pt-2.5 border-t border-slate-200/60">
+															<p className="text-[10px] font-bold text-slate-400 group-hover/item:text-purple-500 transition-colors">
+																{mod.metrics}
+															</p>
 														</div>
 													</motion.button>
 												))}

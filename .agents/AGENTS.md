@@ -9,7 +9,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 > - **Canvas**: Light textured canvas (`bg-slate-50/80 bg-dot-pattern`) with airy hero layout (`pt-24 sm:pt-32`).
 > - **Mobile-First & Responsiveness**: Scaled grids (`grid-cols-1 md:grid-cols-2 lg/xl:grid-cols-3`), mobile touch targets, and proper floating bottom bar clearance (`pb-32 sm:pb-36`).
 > - **Form & Search Hygiene**: Explicit input icon layering (`pointer-events-none z-10` with `pl-10`/`pl-11`).
-> - **Strict Anti-Gradient & Anti-Emoji Mandates**: Zero gradient headers, zero gradient modals, zero multi-color gradient typography, zero ambient blur orbs (`blur-3xl`), and zero raw unicode emojis.
+> - **Strict Anti-Gradient, Anti-Emoji & Anti-Sparkles Mandates**: Zero gradient headers, zero gradient modals, zero multi-color gradient typography, zero ambient blur orbs (`blur-3xl`), zero raw unicode emojis, and zero `Sparkles` / AI-slop icons (`Sparkles` is strictly blacklisted forever sitewide without exception; always use domain-specific icons).
 
 ## 🛠 Tech Stack
 - **Framework:** Next.js 16.3.5 (App Router) & React 19.3.0
@@ -18,8 +18,8 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Database:** Supabase (Auth, PostgreSQL)
 - **Real-time Config:** Firebase Remote Config
 - **Cache/Session:** Upstash Redis
-- **Error Tracking:** Sentry (Next.js SDK)
-- **CI/CD:** GitHub Actions + Vercel Cron
+- **Error Tracking:** Sentry (Next.js SDK - production-only telemetry isolation)
+- **CI/CD & Auditing:** GitHub Actions + Vercel Cron + Lighthouse CI (`.lighthouserc.js`)
 - **Styling:** Tailwind CSS v4.3.2 + Framer Motion
 - **Icons:** Lucide-React + React-Icons/Fa
 - **Linter/Formatter:** Biome
@@ -35,7 +35,10 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Build Process:** `pnpm run build` compiled in ~31s (~75% faster, down from ~3 mins) via SWC import optimizations and Vercel serverless alignment
 - **Server External Packages:** Node libraries (`jsdom`, `@mozilla/readability`, `turndown`, `papaparse`, `sql-formatter`, `dompurify`, `got-scraping`, `node-sql-parser`) externalized in `next.config.ts` to shrink Vercel Lambda bundle sizes and prevent re-bundling
 - **Tree-Shaking Optimizations:** `experimental.optimizePackageImports` configured for `react-icons`, `framer-motion`, `@supabase/supabase-js`, `recharts`, `lucide-react`, and `date-fns`
-- **Sentry Build Optimization:** `withSentryConfig` conditionally enabled only for production releases (`VERCEL_ENV === "production"` or `ENABLE_SENTRY_BUILD=true`) with `deleteSourcemapsAfterUpload: true`
+- **Sentry Build & Runtime Isolation:**
+  - **Build Plugin:** `withSentryConfig` conditionally enabled only for production releases (`VERCEL_ENV === "production"` or `ENABLE_SENTRY_BUILD=true`) with `deleteSourcemapsAfterUpload: true`.
+  - **Strict Production Runtime Guard:** Sentry error reporting and logging are strictly isolated to production (`enabled: process.env.NODE_ENV === "production"` and `enableLogs: process.env.NODE_ENV === "production"`) across server (`sentry.server.config.ts`), edge (`sentry.edge.config.ts`), and client (`instrumentation-client.ts`).
+  - **Request & Exception Interception:** Next.js request error hook (`onRequestError` in `instrumentation.ts`) and global error handler (`GlobalError` in `app/global-error.tsx`) are guarded to only capture exceptions when `NODE_ENV === "production"`, preventing local dev errors and testing crashes from triggering Sentry events or polluting telemetry.
 - **Vercel Serverless Harmony:** Removed custom Webpack `splitChunks` and manual cache directory overrides to let Next.js & Vercel manage route-level chunking and remote caching natively
 - **Bundle Analysis:** `pnpm run build:analyze` for bundle size optimization
 - **pnpm Upgrade:** v12.4.2 with improved dependency resolution and native binary performance
@@ -51,7 +54,7 @@ Contains all business logic, components, and types for specific features.
 - `features/auth/`: Actions, `PinGuard.tsx`, and auth-specific components.
 - `features/blog/`: Actions, data fetching, dynamic category counts, sort controls, and all blog UI components.
 - `features/contact/`: Compact single-page contact view with real-time Jakarta clock & active status chip.
-- `features/home/`: Landing hero, dynamic greetings, quick link cards, and zero-scrollbar desktop entry layout.
+- `features/home/`: Landing hero with zero-redundancy layout — one-line name/role header, large `h1` headline, one-sentence bio, **inline stat strip** (animated counters for yrs engineering / km run / fintech systems, each linking to its domain page), and clean CTA row. No stat cards, no identity strip rows, no floating widgets on the photo. Each data point appears exactly once. Desktop: `lg:h-screen lg:max-h-[100dvh]` zero-scroll entry. Photo frame: clean squircle card with `grayscale-[15%]` → `grayscale-0` hover, `"Open to work"` badge centered at bottom only.
 - `features/insights/`: Insights hub module aggregator (Blog, Investment, Liverpool FC, Utils) with top telemetry summary strip.
 - `features/investment/`: Actions, types, Fear & Greed market sentiment telemetry, and historical trends.
 - `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureSkeleton.tsx`, `View.tsx`).
@@ -93,6 +96,7 @@ Strictly for routing and page definitions.
 - `app/api/mock/`: Dynamic path-based mocking engine endpoints.
 - `app/api/strava/`: Strava OAuth callback, sync, and split routes.
 - `app/api/auth/refresh-session/`: Proactive Redis session & Supabase token synchronizer.
+- `app/sitemap.ts` & `app/robots.ts`: Centralized search indexing and crawler configuration. All public navigation routes (`/`, `/portfolio`, `/work-experience`, `/adventures/*`, `/blog`, `/liverpool`, `/insights`, `/investment`, `/utils`, `/contact`) are registered in `sitemap.ts`. Internal administrative and API endpoints (`/admin/`, `/api/`, `/tasks`, `/login`, `/private/`) are explicitly disallowed in `robots.ts` to focus crawl budgets on public content.
 
 ## 🔑 Security & Authorization
 - **Environment Variables:** Always use `ENV_GLOBAL` from `@/lib/core/env`.
@@ -104,16 +108,24 @@ Strictly for routing and page definitions.
   - Designed for native device numeric keyboards (virtual keypad obsolete).
   - **Session Duration**: 12 hours.
 - **Auth Cookies**: Long-lived sessions (30 weeks).
+- **Proxy / Session Synchronizer (`proxy.ts`)**: 
+  - Intercepts non-static routes to refresh Supabase tokens and sync Redis session TTL.
+  - Implements a fast-path cookie check (`sb-*` / `app_session`) before instantiating the Supabase client to bypass auth lookups on anonymous visitors, eliminating unnecessary roundtrip latency and client overhead.
+  - Expected missing sessions (`Auth session missing!`) are handled silently and must NEVER be logged as server warnings.
 
 ## 🎨 UI/UX Patterns
+- **Next.js 16 Route Transition & Smooth Scrolling**: Whenever `scroll-behavior: smooth` is defined in CSS, `<html lang="en">` in `app/layout.tsx` MUST declare `data-scroll-behavior="smooth"`. This enables Next.js 16 to disable smooth scrolling during route transitions, preventing scroll stutter and console warnings.
+- **Framer Motion SVG Attribute Hygiene**: Interactive SVG elements animated with Framer Motion (e.g. `<motion.circle>`, `<motion.path>`) MUST define their initial base SVG attributes (e.g., `strokeWidth={30}`) and/or `initial={false}`. Never animate attributes from an uninitialized state, which causes Framer Motion to throw runtime `unanimatable value` warnings.
+- **Core Web Vitals, Responsive Sizes & LCP Image Preloading**: Top above-the-fold cards (such as the first card in destination or activity grids, `index === 0`) must declare `priority={index === 0}` and `loading={index === 0 ? "eager" : "lazy"}` to prioritize Largest Contentful Paint (LCP) and avoid lazy-loading penalties. Additionally, ALL Next.js `<Image fill />` components across the codebase MUST declare responsive `sizes` props (e.g., `sizes="(max-width: 640px) 100vw, ..."` or explicit sizes like `sizes="48px"`) to prevent browser over-fetching and console diagnostics.
 - **Solid Productivity Pattern**: For admin, operational, and utility pages, use solid white containers, `slate-50` backgrounds, and defined borders.
 - **Contrast Mastery**: 
   - Standard panels rely on pure white containers (`bg-white`). Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) are strictly obsoleted across the entire application in favor of the unified **Modern Floating Card Header Standard** (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`). Dark slate panels (`bg-slate-900`) are reserved exclusively for isolated high-priority metric widgets (such as the Total Pending backlog counter in Tasks) or technical code blocks.
 - **Modern Floating Card Header Standard**:
   - Encapsulates hero headers within elevated floating cards (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`) resting on the signature textured canvas (`bg-slate-50/80 bg-dot-pattern`).
   - Standardized across all management, intelligence, and operational views: Admin Hub (`/admin`), Blog Management (`/admin/blog`), Blog Editor (`/admin/blog/editor`), Quick Reminders (`/admin/reminders`), Stock Registry (`/utils/stock-explorer/admin`), Tasks Agenda (`/tasks`), and Market Intelligence (`/investment`).
-  - Features thematic domain badge pills (e.g. `OPERATIONS HUB • daily task orchestration`, `FINANCIAL REGISTRY • idx market synchronization`), bold title typography `h1`, contextual breadcrumbs (`Admin Dashboard › ...` or `Home › ...`), and aligned action/telemetry controls.
+  - Anchored by an elevated domain icon squircle (`w-12 h-12 rounded-2xl bg-<domain>-50 border border-<domain>-200/70 text-<domain>-600 shadow-2xs`) paired with thematic domain badge pills (e.g. `OPERATIONS HUB • daily task orchestration`, `FINANCIAL REGISTRY • idx market synchronization`, `KNOWLEDGE BASE MANAGEMENT • publishing console`), bold title typography `h1`, contextual breadcrumbs (`Admin Dashboard › ...` or `Home › ...`), and aligned action/telemetry controls.
   - Declares calibrated top clearance (`pt-20 sm:pt-24` or `pt-24 sm:pt-28`) ensuring fixed floating navigation switchers (such as `QuickNav` in Tasks) never overlap or clip header titles.
+  - **Single Canonical Floating Card Architecture**: Parent admin views (e.g., `/admin/blog`) must NEVER wrap already-contained card components in nested card containers with duplicate borders. Lists, tables, and consoles maintain a single canonical `rounded-3xl border border-slate-200/80 shadow-xs` surface.
 - **Floating Widget & Anti-Collision Hygiene**:
   - The bottom-right viewport area is strictly reserved for the global command palette trigger (`SEARCH ⌘K`).
   - Redundant floating widgets (such as floating `BackToTop` pills and floating scroll progress HUDs) are eliminated in favor of in-flow document return navigation (e.g. at the bottom of blog articles) and browser-native scroll dynamics, guaranteeing zero gesture or click collisions.
@@ -149,8 +161,12 @@ Strictly for routing and page definitions.
 - **Architecture**: Domain-driven feature in `features/liverpool/` fetching from TheSportsDB free API (`thesportsdb.com/api/v1/json/123/eventsnext.php?id=133602`) with 1-hour Next.js ISR revalidation, Upstash Redis caching (`CACHE_KEYS.LFC_FIXTURES`), and defensive data fallbacks.
 - **Dynamic Redis Caching**: Caches raw API response to Upstash Redis with a dynamic TTL set to `strTimestamp + 1 day` of the imminent fixture, ensuring zero stale queries after matchday completion while providing <10ms response times. Includes manual `forceRefresh` cache invalidation via UI refresh button.
 - **Next Matchday Focus**: Exclusively focuses on the imminent upcoming matchday with a prominent hero card (`NextMatchHero.tsx`), featuring a live countdown clock, official high-resolution team badges, stadium venue, and local timezone kickoff times.
-- **Aesthetics & UI/UX**: **Zero-Scroll Full Viewport Standard** (`h-[100dvh] max-h-[100dvh] overflow-hidden` on both mobile and desktop), pure light model with Liverpool Red accents, signature textured canvas (`bg-slate-50/80 bg-dot-pattern`), horizontal side-by-side team clash arena with prominent crests, bold fixture title (`Bournemouth vs Liverpool`), live 4-tile countdown HUD, calibrated bottom clearance (`pb-20 sm:pb-24`) clearing `CompactBottomBar`, and zero empty-space stretching.
-- **Integrations**: Google Calendar URL export (`createGoogleCalendarUrl`) for 1-click scheduling in user's local timezone.
+- **Aesthetics & UI/UX**: **Zero-Scroll Full Viewport Standard** (`h-[100dvh] max-h-[100dvh] overflow-hidden` on both mobile and desktop), pure light model with Liverpool Red accents, signature textured canvas (`bg-slate-50/80 bg-dot-pattern`), and calibrated bottom clearance (`pb-24 sm:pb-28`) clearing `CompactBottomBar`.
+- **3-Zone Card Architecture (`NextMatchHero.tsx`)**: The match card is divided into three distinct visual zones:
+  - **Zone A (Head Strip)**: Domain badge pill (`MATCHDAY HUB • competition name`) with red squircle `Trophy` icon, right-aligned home/away context chip (red pulsing dot for Anfield / neutral for away). No fixture title headline — team names are shown beneath each crest only.
+  - **Zone B (Clash Arena)**: Side-by-side team crests in enlarged squircle containers (`w-20 h-20 sm:w-28 sm:h-28 rounded-3xl`). LFC's crest side receives a red-tinted background (`bg-red-50/70 border-red-100`) when Liverpool is the home team. VS badge is a dark `bg-slate-900` pill with `text-white font-black`. Subtle `hover:scale-[1.04]` lift on each crest.
+  - **Zone C (Countdown Tray)**: Recessed `bg-slate-50/90` tray with a `CountdownTile` sub-component for each unit. When imminent (`days === 0 && hours < 2`), the seconds tile turns `bg-red-600 text-white` for urgency. When `isPassed`, a pulsing `MATCHDAY IN PROGRESS` live badge with an `animate-pulse` dot replaces the HUD. Metadata strip below: date, local time, stadium, and relative time.
+- **Integrations**: Google Calendar URL export (`createGoogleCalendarUrl`) for 1-click scheduling in user's local timezone. CTA uses `CalendarPlus` icon.
 
 ### Blog System
 - **Optimization**: Public routes use **Static Site Generation (SSG)** with absolute OG/Twitter metadata.
@@ -183,6 +199,11 @@ Strictly for routing and page definitions.
     - *Code & Links*: `Inline Code`, `Code Block`, `Hyperlink`.
     - *Structures & Scaffolding*: `Bullet List`, `Numbered List`, `Callout Note` (`> [!NOTE]`), `Table` (pre-scaffolded GFM table with alignment delimiters), and `Divider` (`---`).
   - Supports responsive `flex-wrap` and provides live preview parity with `BlogContent`.
+- **Blog Management Portal (`app/admin/blog/page.tsx`)**:
+  - **Modern Floating Card Header**: Anchored by a blue squircle icon (`w-12 h-12 rounded-2xl bg-blue-50 border-blue-200/70 text-blue-600 shadow-2xs`) with `BookOpen`, domain badge (`KNOWLEDGE BASE MANAGEMENT • publishing console`), contextual breadcrumbs (`Admin Dashboard › Manage Blog`), and direct dual actions: `View Public Blog ↗` (opens live `/blog` in a new tab) and solid dark `Create New Post` (`bg-slate-900 text-white hover:bg-slate-800`).
+  - **4-Tile Interactive Telemetry KPI Strip**: Server-rendered 4-column desktop / 2-column mobile strip (`Total Articles`, `Published`, `Drafts`, `Headlines`) functioning as 1-click filter links (`?status=published`, `?status=draft`, `?headline=true`, reset) with active focus rings and elevated backgrounds. Featured headlines strictly use `Star` (never `Sparkles`).
+  - **Single Canonical Floating Card Architecture**: Eliminates redundant outer card wrapping around `DynamicAdminBlogList`. The table, toolbar, search, and bulk operations live inside a single floating card (`bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden`).
+  - **Refined Skeleton**: `BlogListSkeleton` matches the rounded-3xl geometry, toolbar height, and shimmer animation.
 
 ### Task System
 - **Modular Directory Organization**: Task system UI components are organized into logical sub-directories under `components/`: `agenda/` (forms, lists, filters, items), `analytics/` (charts, graphs, reports), `health/` (system checks), and `shared/` (task-specific loading skeletons, toasts, errors).
@@ -204,15 +225,21 @@ Strictly for routing and page definitions.
 
 ### Quick Reminders System
 - **Architecture**: Domain-driven feature in `features/reminders/` and management portal at `/admin/reminders`.
-- **Keyboard Ergonomics**: Instant note submission via <kbd>⌘ + Enter</kbd> (Mac) or <kbd>Ctrl + Enter</kbd> (Windows).
-- **One-Click Actions**: Dedicated `Copy Note` action on each card with visual checkmark feedback.
+- **Full-Width Alignment & Creation Card**: Full-width container (`w-full space-y-6 sm:space-y-8`) matching `/admin/reminders` (`max-w-5xl`). Features an elevated creation card with an Amber squircle badge (`w-12 h-12 rounded-2xl bg-amber-50 border-amber-200/70 text-amber-600`), live character counter, segmented TTL duration track (`1 Day`, `1 Week`, `1 Month`), and solid dark submit button (`bg-slate-900 text-white hover:bg-slate-800`) with `<kbd>⌘/Ctrl + Enter</kbd>` shortcut.
+- **Modern Floating Controls Toolbar**: Segmented filter track with dynamic counter badges (`All`, `Expiring Soon`, `1 Day`, `1 Week`, `1 Month`), active filter summary text, and search input with explicit icon layering (`pointer-events-none z-10`, `pl-10`).
+- **Accent Line Reminder Cards**: 1.5px solid top border accents indicating expiry state (`amber-500` for expiring soon, `sky-500` for 1D, `indigo-500` for 1W, `purple-500` for 1M), tactile duration extension pills (`+1D`, `+1W`, `+1M`), one-click note copying, and URL autolinking into interactive pills.
 - **Two-Step Delete Confirmation**: Integrated with `CustomModal` (`variant="danger"`), featuring loading spinners on both the modal confirmation button and the card's delete action button to prevent accidental note purges.
 - **Consistent Relative Timestamps**: Enforces concise creation timestamps (`formatCreatedTime`), standardizing items created within the last 60 seconds to `Created < 1 min ago` with `whitespace-nowrap` to prevent card footers from wrapping into multi-line layouts.
-- **Search & TTL Filter Strip**: Live search bar paired with duration category filters (*All, Expiring Soon, 1 Day, 1 Week, 1 Month*).
 - **Redis TTL Lifespan**: Backed by Upstash Redis with selectable expiration lifespans (1 Day, 1 Week, 1 Month) and automatic key expiration.
-- **Interactive Links**: Automatic URL detection with clickable pill buttons and one-click copy-to-clipboard functionality.
-- **Rapid Time Extensions**: Provides one-click TTL extension badges (`+1D`, `+1W`, `+1M`) without re-entering reminder text.
 - **Navigation Badge**: Displays dynamic pending reminder counts in `CompactBottomBar.tsx` Admin submenu.
+
+### Stock Explorer Manager (`/utils/stock-explorer/admin`)
+- **Architecture**: In-memory IDX stock dataset manager and Redis synchronizer (`app/utils/stock-explorer/admin/page.tsx`).
+- **Modern Floating Card Header Standard**: Anchored by an indigo squircle icon (`w-12 h-12 rounded-2xl bg-indigo-50 border-indigo-200/70 text-indigo-600 shadow-2xs`) with `Database`, domain badge (`FINANCIAL REGISTRY • idx market synchronization`), breadcrumbs (`Admin Dashboard › Stock Registry`), and `Back to Explorer` button.
+- **Redis In-Memory Registry Telemetry**: Real-time cache indicator (`Active Cache` with pulsing dot, `Verifying`, or `No Cache / Expired`), operational action triggers (`Refresh Status`, `Sync Live` with live radio indicator, and `Purge Cache` modal trigger), and 3 telemetry tiles (`Total Instruments`, `Trading Session`, `Cache Lifespan`).
+- **Dismissible Manual Override Notice**: Protocol notice with `ShieldCheck` explaining fallback manual JSON priming when cloud datacenter IPs are blocked by IDX.
+- **Interactive JSON Console**: Empty state dashed dropzone (`Paste JSON or Drop File Here`), multi-preset sample triggers (`Sample Banks`, `Sample Tech` using `LayoutTemplate` — strictly no `Sparkles`), syntax formatting tool, character/line counter, and `<kbd>⌘/Ctrl + Enter</kbd>` import shortcut.
+- **Searchable Pre-Import Inspector Drawer**: Aggregated session date, total trading volume, turnover value (Rp), detected instrument count, and a collapsible sample table with **real-time ticker search filtering** for previewing instruments before committing to Redis cache.
 
 ### Insights Hub
 - **Architecture**: Centralized aggregator at `/insights` (`features/insights/`) consolidating Blog, Investment sentiment, Liverpool FC Matchday Hub, and Developer Utilities.

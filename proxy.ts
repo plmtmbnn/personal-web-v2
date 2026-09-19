@@ -11,6 +11,18 @@ export async function proxy(request: NextRequest) {
 		request,
 	});
 
+	// Fast path: If no Supabase auth token or app_session cookie exists, skip client creation and auth check
+	const hasAuthCookie = request.cookies
+		.getAll()
+		.some(
+			(cookie) =>
+				cookie.name.startsWith("sb-") || cookie.name === "app_session",
+		);
+
+	if (!hasAuthCookie) {
+		return supabaseResponse;
+	}
+
 	const supabase = createServerClient(
 		ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_URL!,
 		ENV_GLOBAL.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -60,7 +72,11 @@ export async function proxy(request: NextRequest) {
 				console.error("[Middleware] Failed to refresh Redis session:", err);
 			});
 		}
-	} else if (error) {
+	} else if (
+		error &&
+		!error.message?.toLowerCase().includes("session missing") &&
+		error.name !== "AuthSessionMissingError"
+	) {
 		console.warn("[Middleware] Auth error:", error.message);
 	}
 

@@ -1,3 +1,10 @@
+# [0.91.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.90.0...v0.91.0) (2026-09-21)
+
+
+### Features
+
+* enhance TaskForm and simplify root loading screen ([7994756](https://github.com/plmtmbnn/personal-web-v2/commit/7994756422fec52fd6f0fdaac2995f318939682a))
+
 # [0.90.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.89.0...v0.90.0) (2026-09-19)
 
 

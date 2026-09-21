@@ -3,26 +3,26 @@ import { Loader2 } from "lucide-react";
 /**
  * GlobalLoading (Root Page Suspense Fallback)
  *
- * Lightweight, high-performance loading state:
+ * Lightweight, minimalist loading state:
  * - Server Component with 0 client JS bundle overhead
- * - Pure GPU-accelerated CSS spinner (0 main-thread re-renders)
- * - Single, clean visual cue adhering to Modern Floating Card aesthetic
+ * - Single crisp GPU-accelerated indicator (no visual clutter)
+ * - Modern Floating Card standard with optical bottom-bar clearance
  */
 export default function GlobalLoading() {
 	return (
-		<div className="fixed inset-0 bg-slate-50/80 backdrop-blur-xs bg-dot-pattern z-[9999] flex flex-col items-center justify-center pointer-events-none select-none">
-			<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs flex flex-col items-center gap-3 max-w-[220px] w-full mx-4 text-center">
-				<div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+		<div
+			className="fixed inset-0 z-40 bg-slate-50/80 backdrop-blur-xs bg-dot-pattern flex items-center justify-center p-4 pb-24 sm:pb-28 select-none pointer-events-none"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading"
+		>
+			<div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xl shadow-slate-900/5 flex flex-col items-center gap-3 max-w-[180px] w-full text-center">
+				<div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200/70 text-indigo-600 flex items-center justify-center shadow-2xs">
 					<Loader2 className="w-5 h-5 animate-spin motion-reduce:animate-none" />
 				</div>
-				<div className="space-y-0.5">
-					<p className="text-sm font-black text-slate-900 tracking-tight">
-						Loading
-					</p>
-					<p className="text-[11px] font-semibold text-slate-400">
-						Preparing view...
-					</p>
-				</div>
+				<p className="text-xs font-bold text-slate-500 tracking-wider uppercase">
+					Loading...
+				</p>
 			</div>
 		</div>
 	);

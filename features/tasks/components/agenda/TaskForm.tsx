@@ -40,6 +40,7 @@ import {
 	EFFORT_CHIPS,
 	formatEstimatedTime,
 } from "@/features/tasks/constants";
+import { useTags } from "@/lib/hooks/useTags";
 
 // ─── Draft shape ─────────────────────────────────────────────────────────────
 
@@ -77,8 +78,10 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const [description, setDescription] = useState("");
 	const [status, setStatus] = useState<TaskStatus>("todo");
 	const [estimatedMinutes, setEstimatedMinutes] = useState<number | null>(null);
-	const [tags, setTags] = useState<string[]>([]);
-	const [tagInput, setTagInput] = useState("");
+
+	const { tags, tagInput, setTagInput, handleTagKeyDown, removeTag, setTags } =
+		useTags([]);
+
 	const [startDate, setStartDate] = useState<string | null>(null);
 	const [startTime, setStartTime] = useState<string | null>(null);
 	const [dueTime, setDueTime] = useState<string | null>(null);
@@ -107,6 +110,14 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const activeDateChipDays = QUICK_DATE_CHIPS.find(
 		(chip) => dueDate === format(addDays(new Date(), chip.days), "yyyy-MM-dd"),
 	)?.days;
+
+	// Count configured advanced settings
+	const advancedCount = [
+		status !== "todo" ? 1 : 0,
+		estimatedMinutes ? 1 : 0,
+		tags.length > 0 ? 1 : 0,
+		startDate || startTime || dueTime ? 1 : 0,
+	].reduce((a, b) => a + b, 0);
 
 	// ── Draft: Restore on mount ────────────────────────────────────────────────
 	useEffect(() => {
@@ -173,7 +184,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 			console.error("Failed to restore draft:", error);
 			localStorage.removeItem(DRAFT_STORAGE_KEY);
 		}
-	}, []);
+	}, [setTags]);
 
 	// ── Draft: Persist on change (debounced) ───────────────────────────────────
 	useEffect(() => {
@@ -219,11 +230,11 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	useEffect(() => {
 		if (textareaRef.current) {
 			textareaRef.current.style.height = "auto";
-			textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+			textareaRef.current.style.height = `${Math.max(textareaRef.current.scrollHeight, 44)}px`;
 		}
 	}, [title]);
 
-	// Smart syntax parsing handler (!high, #category, @tomorrow)
+	// Smart syntax parsing handler (!high, #category, @today, @tomorrow)
 	const handleTitleChange = useCallback(
 		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
 			let val = e.target.value;
@@ -265,27 +276,6 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		setDueDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
 	}, []);
 
-	// ── Tag Handlers ───────────────────────────────────────────────────────────
-	const handleTagKeyDown = useCallback(
-		(e: React.KeyboardEvent<HTMLInputElement>) => {
-			if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
-				e.preventDefault();
-				const newTag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
-				if (!tags.includes(newTag)) {
-					setTags((prev) => [...prev, newTag]);
-				}
-				setTagInput("");
-			} else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
-				setTags((prev) => prev.slice(0, -1));
-			}
-		},
-		[tagInput, tags],
-	);
-
-	const removeTag = useCallback((tag: string) => {
-		setTags((prev) => prev.filter((t) => t !== tag));
-	}, []);
-
 	// ── Ctrl+Enter / Cmd+Enter submit ──────────────────────────────────────────
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -297,7 +287,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		[],
 	);
 
-	// ── Submit ────────────────────────────────────────────────────────────────
+	// ── Reset ─────────────────────────────────────────────────────────────────
 	const resetForm = useCallback(() => {
 		setTitle("");
 		setCategory("");
@@ -314,8 +304,10 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		setDueTime(null);
 		setIsNotesOpen(false);
 		setIsAdvancedOpen(false);
-	}, []);
+		localStorage.removeItem(DRAFT_STORAGE_KEY);
+	}, [setTags, setTagInput]);
 
+	// ── Submit ────────────────────────────────────────────────────────────────
 	const handleSubmit = useCallback(
 		async (e: React.FormEvent) => {
 			e.preventDefault();
@@ -377,13 +369,14 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 			dueDate,
 			recurrence,
 			description,
-			isBatchEnabled,
 			status,
 			estimatedMinutes,
 			tags,
 			startDate,
 			startTime,
 			dueTime,
+			finalBatchActive,
+			taskTitles,
 			router,
 			onClose,
 			resetForm,
@@ -403,7 +396,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							onClick={onClose}
-							className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 lg:hidden"
+							className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 lg:hidden"
 						/>
 					)}
 
@@ -413,65 +406,70 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 								? false
 								: onClose
 									? { y: "100%" }
-									: { scale: 0.95, opacity: 0 }
+									: { scale: 0.98, opacity: 0 }
 						}
 						animate={onClose ? { y: 0 } : { scale: 1, opacity: 1 }}
-						exit={onClose ? { y: "100%" } : { scale: 0.95, opacity: 0 }}
-						transition={{ type: "spring", damping: 25, stiffness: 200 }}
+						exit={onClose ? { y: "100%" } : { scale: 0.98, opacity: 0 }}
+						transition={{ type: "spring", damping: 26, stiffness: 220 }}
 						className={`${
 							onClose
 								? "fixed bottom-0 left-0 right-0 z-[60] lg:relative lg:z-0 lg:bottom-auto"
 								: "relative"
-						} transition-all duration-500 ${isFocused ? "scale-[1.01]" : "scale-100"}`}
+						} transition-transform duration-300`}
 					>
 						<form
 							onSubmit={handleSubmit}
-							className={`bg-white border-2 transition-all duration-300 ${
+							className={`bg-white border transition-all duration-300 ${
 								onClose
-									? "rounded-t-[3rem] lg:rounded-[2rem]"
-									: "rounded-[2rem]"
-							} overflow-hidden shadow-sm ${
+									? "rounded-t-[2.5rem] lg:rounded-3xl border-slate-200/80 shadow-2xl"
+									: "rounded-3xl border-slate-200/80 shadow-xs hover:shadow-sm"
+							} overflow-hidden ${
 								isFocused
-									? "border-emerald-500/40 shadow-xl shadow-emerald-500/5"
-									: "border-slate-200"
+									? "border-emerald-500/50 shadow-lg shadow-emerald-500/5"
+									: ""
 							}`}
 						>
 							{/* Drag Handle for mobile */}
 							{onClose && (
-								<div className="w-full flex justify-center pt-4 lg:hidden">
+								<div className="w-full flex justify-center pt-3 pb-1 lg:hidden">
 									<div className="w-12 h-1.5 bg-slate-200 rounded-full" />
 								</div>
 							)}
 
 							{/* Main Content Area */}
-							<div className="p-6 md:p-8 space-y-6">
-								{/* Header Label */}
-								<div className="flex items-center justify-between mb-2">
-									<div className="flex items-center gap-2">
-										<label
-											htmlFor="task-title"
-											className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2"
+							<div className="p-5 sm:p-7 md:p-8 space-y-5 sm:space-y-6">
+								{/* Header Context Bar */}
+								<div className="flex items-center justify-between gap-2">
+									<div className="flex items-center gap-2 flex-wrap">
+										<div
+											className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-2xs transition-colors ${
+												finalBatchActive
+													? "bg-blue-50 border-blue-200/70 text-blue-700"
+													: "bg-emerald-50 border-emerald-200/70 text-emerald-700"
+											}`}
 										>
 											{finalBatchActive ? (
-												<Layers className="w-3 h-3 text-blue-500" />
+												<Layers className="w-3 h-3 text-blue-600" />
 											) : (
-												<Target className="w-3 h-3 text-emerald-500" />
+												<Target className="w-3 h-3 text-emerald-600" />
 											)}
-											{finalBatchActive
-												? `Batch Initialization (${taskTitles.length} Tasks)`
-												: "New Objective"}
-										</label>
+											<span>
+												{finalBatchActive
+													? `Batch Mode (${taskTitles.length} Tasks)`
+													: "New Objective"}
+											</span>
+										</div>
 
 										{/* Draft Restored badge */}
 										<AnimatePresence>
 											{draftRestored && (
 												<motion.span
 													initial={
-														reduceMotion ? false : { opacity: 0, scale: 0.8 }
+														reduceMotion ? false : { opacity: 0, scale: 0.85 }
 													}
 													animate={{ opacity: 1, scale: 1 }}
-													exit={{ opacity: 0, scale: 0.8 }}
-													className="text-[8px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full"
+													exit={{ opacity: 0, scale: 0.85 }}
+													className="text-[9px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 rounded-full"
 												>
 													Draft restored
 												</motion.span>
@@ -479,27 +477,26 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										</AnimatePresence>
 									</div>
 
-									<div className="flex items-center gap-2">
+									{/* Action Toolbar */}
+									<div className="flex items-center gap-1.5">
 										{hasMultipleLines && (
 											<button
 												type="button"
 												onClick={() => setIsBatchEnabled(!isBatchEnabled)}
 												aria-pressed={isBatchEnabled}
-												className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-[background-color,border-color,color] ${
+												className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all ${
 													isBatchEnabled
-														? "bg-blue-50 border-blue-100 text-blue-600"
-														: "bg-slate-50 border-slate-100 text-slate-400"
+														? "bg-blue-50 border-blue-200/80 text-blue-700 shadow-2xs"
+														: "bg-slate-50 border-slate-200/70 text-slate-400 hover:text-slate-600"
 												}`}
 												title={
 													isBatchEnabled
-														? "Batch Mode Active"
-														: "Single Task Mode"
+														? "Batch Mode Active: Multi-line entry creates individual tasks"
+														: "Single Task Mode: Multi-line entry kept as one task"
 												}
 											>
 												<Layers className="w-3 h-3" />
-												<span className="text-[8px] font-black uppercase tracking-wider">
-													Batch Protocol
-												</span>
+												<span className="hidden sm:inline">Batch Protocol</span>
 											</button>
 										)}
 
@@ -508,17 +505,15 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 											type="button"
 											onClick={() => setIsNotesOpen((v) => !v)}
 											aria-pressed={isNotesOpen}
-											className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
+											className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all ${
 												isNotesOpen || description
-													? "bg-violet-50 border-violet-100 text-violet-600"
-													: "bg-slate-50 border-slate-100 text-slate-400 hover:text-slate-600"
+													? "bg-slate-900 border-slate-900 text-white shadow-2xs"
+													: "bg-slate-50 border-slate-200/70 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
 											}`}
-											title="Toggle notes"
+											title="Toggle notes & checklist"
 										>
 											<FileText className="w-3 h-3" />
-											<span className="text-[8px] font-black uppercase tracking-wider">
-												Notes
-											</span>
+											<span>Notes</span>
 											{isNotesOpen ? (
 												<ChevronUp className="w-3 h-3" />
 											) : (
@@ -526,20 +521,27 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 											)}
 										</button>
 
-										{title && (
+										{/* Clear button */}
+										{(title || description) && (
 											<button
 												type="button"
-												onClick={() => setTitle("")}
-												className="text-slate-300 hover:text-rose-500 transition-colors ml-1"
+												onClick={resetForm}
+												className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+												title="Clear form"
+												aria-label="Clear form"
 											>
 												<X className="w-4 h-4" />
 											</button>
 										)}
+
+										{/* Close button for mobile modal */}
 										{onClose && (
 											<button
 												type="button"
 												onClick={onClose}
-												className="lg:hidden text-slate-300 hover:text-slate-900 transition-colors"
+												className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors ml-0.5"
+												title="Close dialog"
+												aria-label="Close dialog"
 											>
 												<ChevronDown className="w-5 h-5" />
 											</button>
@@ -548,11 +550,11 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 								</div>
 
 								{/* Dynamic Title Input */}
-								<div className="relative">
+								<div className="space-y-1.5">
 									<textarea
 										id="task-title"
 										ref={textareaRef}
-										placeholder="Enter task titles (one per line for multiple)..."
+										placeholder="What needs to be accomplished? (one per line for multiple)..."
 										value={title}
 										onChange={handleTitleChange}
 										onFocus={() => setIsFocused(true)}
@@ -560,30 +562,59 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										onKeyDown={handleKeyDown}
 										rows={1}
 										disabled={isSubmitting}
-										className="w-full bg-transparent text-xl md:text-2xl font-black text-slate-900 placeholder:text-slate-200 focus:outline-none resize-none leading-tight overflow-hidden"
+										className="w-full bg-transparent text-lg sm:text-xl font-extrabold text-slate-900 placeholder:text-slate-300 focus:placeholder:text-slate-200 focus:outline-none resize-none leading-snug overflow-hidden min-h-[44px]"
 									/>
 
-									{/* Batch status badges */}
-									{hasMultipleLines && isBatchEnabled && (
-										<div className="absolute -bottom-4 right-0 flex items-center gap-2">
-											<div className="text-[8px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-												Auto-Detection Active
-											</div>
-											<div className="text-[8px] font-black text-blue-400 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-												{taskTitles.length} tasks ·{" "}
-												{title.replace(/\n/g, "").replace(/\s+/g, "").length}{" "}
-												chars
-											</div>
-										</div>
-									)}
-									{hasMultipleLines && !isBatchEnabled && (
-										<div className="absolute -bottom-4 right-0 text-[8px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
-											Single Entry Mode
-										</div>
-									)}
+									{/* Smart Syntax Quick Helper Strip */}
+									<div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-400">
+										<span className="text-[9px] uppercase tracking-wider text-slate-400 font-extrabold">
+											Pro Tip:
+										</span>
+										<button
+											type="button"
+											onClick={() => setPriority("HIGH")}
+											className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-rose-50 border border-slate-200/70 hover:border-rose-200 text-slate-500 hover:text-rose-600 font-mono transition-colors"
+											title="Set Priority to High"
+										>
+											!high
+										</button>
+										<button
+											type="button"
+											onClick={() => setCategory("Work")}
+											className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-emerald-50 border border-slate-200/70 hover:border-emerald-200 text-slate-500 hover:text-emerald-700 font-mono transition-colors"
+											title="Set Category to #work"
+										>
+											#work
+										</button>
+										<button
+											type="button"
+											onClick={() =>
+												setDueDate(format(new Date(), "yyyy-MM-dd"))
+											}
+											className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-blue-50 border border-slate-200/70 hover:border-blue-200 text-slate-500 hover:text-blue-700 font-mono transition-colors"
+											title="Set Due Date to Today"
+										>
+											@today
+										</button>
+										<button
+											type="button"
+											onClick={() =>
+												setDueDate(format(addDays(new Date(), 1), "yyyy-MM-dd"))
+											}
+											className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-blue-50 border border-slate-200/70 hover:border-blue-200 text-slate-500 hover:text-blue-700 font-mono transition-colors"
+											title="Set Due Date to Tomorrow"
+										>
+											@tomorrow
+										</button>
+										{finalBatchActive && (
+											<span className="ml-auto text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded-full uppercase tracking-wider">
+												{taskTitles.length} tasks detected
+											</span>
+										)}
+									</div>
 								</div>
 
-								{/* Notes / Description (collapsible) */}
+								{/* Notes / Description (Collapsible) */}
 								<AnimatePresence>
 									{isNotesOpen && (
 										<motion.div
@@ -594,17 +625,17 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 											transition={{ duration: 0.2, ease: "easeInOut" }}
 											className="overflow-hidden"
 										>
-											<div className="relative pt-1">
-												<div className="flex items-center justify-between mb-2">
+											<div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3.5 space-y-2 focus-within:bg-white focus-within:border-slate-300 transition-all">
+												<div className="flex items-center justify-between">
 													<label
 														htmlFor="task-description"
-														className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5"
+														className="text-[9px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5"
 													>
-														<FileText className="w-3 h-3 text-violet-400" />
-														Notes / Description
+														<FileText className="w-3.5 h-3.5 text-slate-400" />
+														<span>Notes & Reference Context</span>
 														{finalBatchActive && (
-															<span className="text-[8px] font-bold text-violet-400 normal-case tracking-normal ml-1">
-																— applied to all tasks
+															<span className="text-[8px] font-bold text-slate-400 normal-case">
+																(applies to all batch items)
 															</span>
 														)}
 													</label>
@@ -635,19 +666,20 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 																);
 															}, 0);
 														}}
-														className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-violet-500 hover:text-violet-750 transition-colors px-2 py-0.5 bg-violet-50 hover:bg-violet-100 rounded-lg active:scale-95 cursor-pointer"
+														className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-slate-600 hover:text-slate-900 px-2 py-1 bg-white hover:bg-slate-100 border border-slate-200/80 rounded-lg shadow-2xs active:scale-95 transition-all cursor-pointer"
 													>
-														<ListTodo className="w-2.5 h-2.5" /> + Checklist
+														<ListTodo className="w-3 h-3 text-slate-500" />
+														<span>+ Checklist</span>
 													</button>
 												</div>
 												<textarea
 													id="task-description"
-													placeholder="Add context, links, or references…"
+													placeholder="Add supplementary notes, links, or checklist items…"
 													value={description}
 													onChange={(e) => setDescription(e.target.value)}
 													rows={3}
 													disabled={isSubmitting}
-													className="w-full bg-violet-50/50 border border-violet-100 rounded-xl px-4 py-3 text-sm text-slate-700 placeholder:text-slate-300 focus:bg-white focus:border-violet-400 focus:outline-none transition-all resize-none leading-relaxed"
+													className="w-full bg-transparent border-0 text-xs sm:text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none resize-none leading-relaxed"
 												/>
 											</div>
 										</motion.div>
@@ -655,16 +687,16 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 								</AnimatePresence>
 
 								{/* Metadata Grid */}
-								<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pt-4 border-t border-slate-50">
-									{/* Category with Suggestions + Quick Pills */}
+								<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 pt-3 border-t border-slate-100">
+									{/* Category Selector */}
 									<div className="space-y-2">
 										<label
 											htmlFor="task-category"
-											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1"
+											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-0.5"
 										>
-											<Tag className="w-3 h-3" /> Category
+											<Tag className="w-3 h-3 text-slate-400" /> Category
 										</label>
-										<div className="flex flex-wrap gap-1.5 mb-2">
+										<div className="flex flex-wrap gap-1.5">
 											{TASK_CATEGORIES.map((cat) => (
 												<button
 													key={cat}
@@ -672,25 +704,26 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 													onClick={() =>
 														setCategory(category === cat ? "" : cat)
 													}
-													className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wide border transition-all ${
+													className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-all ${
 														category === cat
-															? "bg-emerald-500 border-emerald-500 text-white shadow-sm"
-															: "bg-slate-50 border-slate-100 text-slate-500 hover:border-emerald-300 hover:text-emerald-600"
+															? "bg-slate-900 border-slate-900 text-white shadow-xs"
+															: "bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
 													}`}
 												>
 													{cat}
 												</button>
 											))}
 										</div>
-										<div className="relative group">
+										<div className="relative">
+											<Tag className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
 											<input
 												id="task-category"
 												list="category-suggestions"
 												type="text"
-												placeholder="e.g. Work"
+												placeholder="Custom category..."
 												value={category}
 												onChange={(e) => setCategory(e.target.value)}
-												className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-base md:text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
+												className="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
 											/>
 											<datalist id="category-suggestions">
 												{TASK_CATEGORIES.map((cat) => (
@@ -700,15 +733,15 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										</div>
 									</div>
 
-									{/* Due Date Picker with Quick Chips */}
-									<div className="space-y-3">
+									{/* Due Date Picker */}
+									<div className="space-y-2">
 										<label
 											htmlFor="task-due-date"
-											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1"
+											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-0.5"
 										>
-											<Calendar className="w-3 h-3" /> Due Date
+											<Calendar className="w-3 h-3 text-slate-400" /> Due Date
 										</label>
-										<div className="flex flex-wrap gap-2">
+										<div className="flex flex-wrap gap-1.5">
 											{QUICK_DATE_CHIPS.map((chip) => {
 												const isActive = activeDateChipDays === chip.days;
 												return (
@@ -716,10 +749,10 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 														key={chip.label}
 														type="button"
 														onClick={() => setQuickDate(chip.days)}
-														className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${
+														className={`px-2.5 py-1 rounded-lg text-[9px] font-bold border transition-all ${
 															isActive
-																? "bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-300"
-																: "bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+																? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
+																: "bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
 														}`}
 													>
 														{chip.label}
@@ -727,26 +760,29 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 												);
 											})}
 										</div>
-										<input
-											id="task-due-date"
-											type="date"
-											value={dueDate}
-											onChange={(e) => setDueDate(e.target.value)}
-											className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-base md:text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none appearance-none"
-										/>
+										<div className="relative">
+											<Calendar className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+											<input
+												id="task-due-date"
+												type="date"
+												value={dueDate}
+												onChange={(e) => setDueDate(e.target.value)}
+												className="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer"
+											/>
+										</div>
 									</div>
 
-									{/* Visual Priority Selector */}
+									{/* Priority Selector */}
 									<div className="space-y-2">
 										<label
 											htmlFor="task-priority"
-											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1"
+											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-0.5"
 										>
-											<Flag className="w-3 h-3" /> Priority Level
+											<Flag className="w-3 h-3 text-slate-400" /> Priority Level
 										</label>
 										<fieldset
 											id="task-priority"
-											className="flex p-1 bg-slate-50 border border-slate-100 rounded-xl"
+											className="flex p-1 bg-slate-50 border border-slate-200/80 rounded-xl gap-1"
 											aria-label="Priority Level"
 										>
 											{(["LOW", "MEDIUM", "HIGH"] as TaskPriority[]).map(
@@ -756,14 +792,14 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 														type="button"
 														onClick={() => setPriority(p)}
 														aria-pressed={priority === p}
-														className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all ${
+														className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
 															priority === p
 																? p === "HIGH"
-																	? "bg-rose-500 text-white shadow-sm"
+																	? "bg-rose-600 text-white shadow-xs"
 																	: p === "MEDIUM"
-																		? "bg-amber-500 text-white shadow-sm"
-																		: "bg-emerald-500 text-white shadow-sm"
-																: "text-slate-400 hover:text-slate-600"
+																		? "bg-amber-500 text-white shadow-xs"
+																		: "bg-emerald-600 text-white shadow-xs"
+																: "text-slate-500 hover:text-slate-800"
 														}`}
 													>
 														{p}
@@ -773,17 +809,18 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										</fieldset>
 									</div>
 
-									{/* Recurring Task Toggle */}
+									{/* Recurrence Selector */}
 									<div className="space-y-2">
 										<label
 											htmlFor="task-recurrence"
-											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1"
+											className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-0.5"
 										>
-											<RefreshCw className="w-3 h-3" /> Recurrence
+											<RefreshCw className="w-3 h-3 text-slate-400" />{" "}
+											Recurrence
 										</label>
 										<fieldset
 											id="task-recurrence"
-											className="flex flex-wrap gap-1 p-1 bg-slate-50 border border-slate-100 rounded-xl"
+											className="flex p-1 bg-slate-50 border border-slate-200/80 rounded-xl gap-1"
 											aria-label="Recurrence"
 										>
 											{RECURRENCE_OPTIONS.map((opt) => (
@@ -792,10 +829,12 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 													type="button"
 													onClick={() => setRecurrence(opt.value)}
 													aria-pressed={recurrence === opt.value}
-													className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all whitespace-nowrap ${
+													className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
 														recurrence === opt.value
-															? "bg-violet-500 text-white shadow-sm"
-															: "text-slate-400 hover:text-slate-600"
+															? opt.value === "none"
+																? "bg-slate-900 text-white shadow-xs"
+																: "bg-indigo-600 text-white shadow-xs"
+															: "text-slate-500 hover:text-slate-800"
 													}`}
 												>
 													{opt.label}
@@ -805,37 +844,28 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 									</div>
 								</div>
 
-								{/* Advanced Section — Status, Effort, Tags */}
+								{/* Advanced Drawer Trigger */}
 								<div>
 									<button
 										type="button"
 										onClick={() => setIsAdvancedOpen((v) => !v)}
-										className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+										aria-expanded={isAdvancedOpen}
+										className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200/80 text-[10px] font-black uppercase tracking-wider text-slate-600 transition-colors cursor-pointer"
 									>
 										{isAdvancedOpen ? (
-											<ChevronUp className="w-3 h-3" />
+											<ChevronUp className="w-3.5 h-3.5 text-slate-400" />
 										) : (
-											<ChevronDown className="w-3 h-3" />
+											<ChevronDown className="w-3.5 h-3.5 text-slate-400" />
 										)}
-										Advanced (Status, Effort, Tags, Schedule)
-										{(status !== "todo" ||
-											estimatedMinutes ||
-											tags.length > 0 ||
-											startDate ||
-											startTime ||
-											dueTime) && (
-											<span className="ml-1 px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-emerald-100 text-emerald-700">
-												{[
-													status !== "todo" ? 1 : 0,
-													estimatedMinutes ? 1 : 0,
-													tags.length > 0 ? 1 : 0,
-													startDate || startTime || dueTime ? 1 : 0,
-												].reduce((a, b) => a + b, 0)}{" "}
-												set
+										<span>Advanced Settings</span>
+										{advancedCount > 0 && (
+											<span className="px-1.5 py-0.2 rounded-md text-[9px] font-bold bg-emerald-100 text-emerald-700">
+												{advancedCount} set
 											</span>
 										)}
 									</button>
 
+									{/* Advanced Drawer Content */}
 									<AnimatePresence>
 										{isAdvancedOpen && (
 											<motion.div
@@ -848,12 +878,12 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 												transition={{ duration: 0.2, ease: "easeInOut" }}
 												className="overflow-hidden"
 											>
-												<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pt-4 border-t border-slate-50 mt-3">
-													{/* Status */}
+												<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 pt-4 border-t border-slate-100 mt-3">
+													{/* Initial Status */}
 													<div className="space-y-2">
-														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
-															<CheckCircle2 className="w-3 h-3" /> Initial
-															Status
+														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-0.5">
+															<CheckCircle2 className="w-3 h-3 text-slate-400" />{" "}
+															Initial Status
 														</span>
 														<div className="flex flex-col gap-1.5">
 															{(
@@ -870,14 +900,14 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 																		onClick={() => setStatus(key)}
 																		className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all ${
 																			status === key
-																				? `${cfg.color} shadow-sm`
-																				: "bg-slate-50 border-slate-100 text-slate-400 hover:border-slate-200"
+																				? `${cfg.color} shadow-2xs`
+																				: "bg-slate-50 border-slate-200/70 text-slate-400 hover:border-slate-300"
 																		}`}
 																	>
 																		<span
 																			className={`w-2 h-2 rounded-full ${cfg.dotColor}`}
 																		/>
-																		{cfg.label}
+																		<span>{cfg.label}</span>
 																	</button>
 																))}
 														</div>
@@ -885,8 +915,9 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 													{/* Effort Estimation */}
 													<div className="space-y-2">
-														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
-															<Clock className="w-3 h-3" /> Effort Estimate
+														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-0.5">
+															<Clock className="w-3 h-3 text-slate-400" />{" "}
+															Effort Estimate
 														</span>
 														<div className="flex flex-wrap gap-1.5">
 															{EFFORT_CHIPS.map((chip) => (
@@ -900,60 +931,65 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 																				: chip.minutes,
 																		)
 																	}
-																	className={`px-3 py-1.5 rounded-lg text-[9px] font-black border transition-all ${
+																	className={`px-2.5 py-1 rounded-lg text-[9px] font-black border transition-all ${
 																		estimatedMinutes === chip.minutes
-																			? "bg-cyan-500 text-white border-cyan-500 shadow-sm"
-																			: "bg-slate-50 border-slate-100 text-slate-500 hover:border-cyan-300 hover:text-cyan-600"
+																			? "bg-cyan-600 text-white border-cyan-600 shadow-2xs"
+																			: "bg-slate-50 border-slate-200/70 text-slate-600 hover:border-cyan-300 hover:text-cyan-700"
 																	}`}
 																>
 																	{chip.label}
 																</button>
 															))}
 														</div>
-														{/* Custom minutes input */}
 														<div className="flex items-center gap-2 mt-2">
-															<input
-																type="number"
-																min="1"
-																max="480"
-																placeholder="Custom (min)"
-																value={
-																	estimatedMinutes !== null &&
-																	!EFFORT_CHIPS.some(
-																		(c) => c.minutes === estimatedMinutes,
-																	)
-																		? estimatedMinutes
-																		: ""
-																}
-																onChange={(e) => {
-																	const v = Number.parseInt(e.target.value, 10);
-																	setEstimatedMinutes(
-																		Number.isNaN(v) || v <= 0 ? null : v,
-																	);
-																}}
-																className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-cyan-500 transition-all outline-none"
-															/>
+															<div className="relative flex-1">
+																<Clock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+																<input
+																	type="number"
+																	min="1"
+																	max="480"
+																	placeholder="Custom (min)"
+																	value={
+																		estimatedMinutes !== null &&
+																		!EFFORT_CHIPS.some(
+																			(c) => c.minutes === estimatedMinutes,
+																		)
+																			? estimatedMinutes
+																			: ""
+																	}
+																	onChange={(e) => {
+																		const v = Number.parseInt(
+																			e.target.value,
+																			10,
+																		);
+																		setEstimatedMinutes(
+																			Number.isNaN(v) || v <= 0 ? null : v,
+																		);
+																	}}
+																	className="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-cyan-500 transition-all outline-none"
+																/>
+															</div>
 															{estimatedMinutes && (
-																<span className="text-[9px] font-black text-cyan-600 bg-cyan-50 border border-cyan-100 px-2 py-1 rounded-lg whitespace-nowrap">
+																<span className="text-[9px] font-black text-cyan-700 bg-cyan-50 border border-cyan-200/70 px-2 py-1 rounded-lg whitespace-nowrap">
 																	⏱ {formatEstimatedTime(estimatedMinutes)}
 																</span>
 															)}
 														</div>
 													</div>
 
-													{/* Tags */}
+													{/* Tags Input */}
 													<div className="space-y-2">
-														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
-															<Hash className="w-3 h-3" /> Tags
+														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-0.5">
+															<Hash className="w-3 h-3 text-slate-400" /> Tags
 														</span>
 														<div
-															className="min-h-[60px] bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 flex flex-wrap gap-1.5 cursor-text focus-within:bg-white focus-within:border-slate-300 transition-all"
+															className="min-h-[64px] bg-slate-50 border border-slate-200/80 rounded-xl p-2 flex flex-wrap gap-1.5 cursor-text focus-within:bg-white focus-within:border-slate-300 transition-all"
 															onClick={() => tagInputRef.current?.focus()}
 														>
 															{tags.map((tag) => (
 																<span
 																	key={tag}
-																	className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wide bg-slate-200 text-slate-700"
+																	className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-slate-200/80 text-slate-700"
 																>
 																	#{tag}
 																	<button
@@ -962,7 +998,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 																			e.stopPropagation();
 																			removeTag(tag);
 																		}}
-																		className="text-slate-400 hover:text-slate-700"
+																		className="text-slate-400 hover:text-rose-600 transition-colors"
 																	>
 																		<X className="w-2.5 h-2.5" />
 																	</button>
@@ -976,36 +1012,40 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 																onKeyDown={handleTagKeyDown}
 																placeholder={
 																	tags.length === 0
-																		? "Add tags (Enter or comma)…"
+																		? "Type tag and press Enter…"
 																		: ""
 																}
-																className="bg-transparent text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none min-w-[80px] flex-1"
+																className="bg-transparent text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none min-w-[90px] flex-1 px-1"
 															/>
 														</div>
 													</div>
 
 													{/* Scheduling Window */}
 													<div className="space-y-2">
-														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-1">
-															<Calendar className="w-3 h-3" /> Scheduling Window
+														<span className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1.5 ml-0.5">
+															<Calendar className="w-3 h-3 text-slate-400" />{" "}
+															Scheduling Window
 														</span>
-														<div className="space-y-2.5">
+														<div className="space-y-2">
 															<div>
-																<span className="text-[8px] font-black text-slate-450 uppercase tracking-wider block mb-1">
+																<span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block mb-1">
 																	Start Date
 																</span>
-																<input
-																	type="date"
-																	value={startDate || ""}
-																	onChange={(e) =>
-																		setStartDate(e.target.value || null)
-																	}
-																	className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
-																/>
+																<div className="relative">
+																	<Calendar className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+																	<input
+																		type="date"
+																		value={startDate || ""}
+																		onChange={(e) =>
+																			setStartDate(e.target.value || null)
+																		}
+																		className="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer"
+																	/>
+																</div>
 															</div>
 															<div className="grid grid-cols-2 gap-2">
 																<div>
-																	<span className="text-[8px] font-black text-slate-455 uppercase tracking-wider block mb-1">
+																	<span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block mb-1">
 																		Start Time
 																	</span>
 																	<input
@@ -1014,11 +1054,11 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 																		onChange={(e) =>
 																			setStartTime(e.target.value || null)
 																		}
-																		className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
+																		className="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer"
 																	/>
 																</div>
 																<div>
-																	<span className="text-[8px] font-black text-slate-455 uppercase tracking-wider block mb-1">
+																	<span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block mb-1">
 																		Due Time
 																	</span>
 																	<input
@@ -1027,7 +1067,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 																		onChange={(e) =>
 																			setDueTime(e.target.value || null)
 																		}
-																		className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none"
+																		className="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 transition-all outline-none cursor-pointer"
 																	/>
 																</div>
 															</div>
@@ -1042,7 +1082,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 							{/* Action Footer */}
 							<div
-								className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-2"
+								className="px-5 sm:px-7 md:px-8 py-3.5 sm:py-4 bg-slate-50/90 border-t border-slate-100 flex flex-col gap-2"
 								style={{
 									paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
 								}}
@@ -1054,39 +1094,37 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 											initial={reduceMotion ? false : { opacity: 0, y: -4 }}
 											animate={{ opacity: 1, y: 0 }}
 											exit={{ opacity: 0, y: -4 }}
-											className="flex items-center gap-2 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-4 py-2"
+											className="flex items-center gap-2 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3.5 py-2"
 										>
 											<AlertCircle className="w-3.5 h-3.5 shrink-0" />
-											{submitError}
+											<span>{submitError}</span>
 										</motion.div>
 									)}
 								</AnimatePresence>
 
-								<div className="flex items-center justify-between">
+								<div className="flex items-center justify-between gap-3">
 									<div className="flex items-center gap-2">
-										<Target className="w-3.5 h-3.5 text-emerald-600" />
-										<span className="text-[10px] font-bold text-slate-400 uppercase">
+										<Target className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
 											{finalBatchActive
-												? "Collective execution."
-												: "Strategic initialization."}
+												? "Batch collective execution"
+												: "Direct execution objective"}
 										</span>
 										{/* Keyboard shortcut hint */}
-										{isFocused && (
-											<span className="hidden sm:inline-flex items-center text-[9px] font-bold text-slate-300 border border-slate-100 rounded px-1.5 py-0.5 gap-1">
-												⌘ Enter
-											</span>
-										)}
+										<kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-white border border-slate-200/80 text-[9px] font-mono text-slate-400 shadow-2xs">
+											⌘/Ctrl+Enter
+										</kbd>
 									</div>
 
 									<button
 										type="submit"
 										disabled={isSubmitting || submitSuccess || !title.trim()}
-										className={`flex items-center gap-2 px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg disabled:opacity-30 active:scale-95 ${
+										className={`flex items-center gap-2 px-6 sm:px-7 py-2.5 sm:py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer ${
 											submitSuccess
-												? "bg-emerald-500 text-white"
+												? "bg-emerald-600 text-white"
 												: finalBatchActive
-													? "bg-blue-600 hover:bg-blue-700 text-white"
-													: "bg-slate-900 hover:bg-emerald-600 text-white"
+													? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/10"
+													: "bg-slate-900 hover:bg-emerald-600 text-white shadow-slate-900/10"
 										}`}
 									>
 										{isSubmitting ? (
@@ -1096,13 +1134,15 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										) : (
 											<Plus className="w-4 h-4" />
 										)}
-										{isSubmitting
-											? "Initializing…"
-											: submitSuccess
-												? "Done!"
-												: finalBatchActive
-													? `Initialize ${taskTitles.length} Tasks`
-													: "Initialize"}
+										<span>
+											{isSubmitting
+												? "Initializing…"
+												: submitSuccess
+													? "Done!"
+													: finalBatchActive
+														? `Initialize ${taskTitles.length} Tasks`
+														: "Initialize"}
+										</span>
 									</button>
 								</div>
 							</div>

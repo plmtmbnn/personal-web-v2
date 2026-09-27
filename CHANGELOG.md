@@ -1,3 +1,10 @@
+# [0.92.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.91.0...v0.92.0) (2026-09-27)
+
+
+### Features
+
+* upgrade util headers, enhance bottom bar, and cap mock API ([2614dbc](https://github.com/plmtmbnn/personal-web-v2/commit/2614dbceb075a5e328104caec40b80a2f0fb5b7f))
+
 # [0.91.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.90.0...v0.91.0) (2026-09-21)
 
 

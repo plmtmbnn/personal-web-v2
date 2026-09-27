@@ -15,9 +15,14 @@ import {
 	ArrowLeft,
 } from "lucide-react";
 import { destinations } from "@/features/travel/data";
+import dynamic from "next/dynamic";
 import useDestinations from "@/features/travel/hooks/useDestinations";
 import DestinationCard from "@/features/travel/components/DestinationCard";
-import PostcardModal from "@/features/travel/components/PostcardModal";
+
+const PostcardModal = dynamic(
+	() => import("@/features/travel/components/PostcardModal"),
+	{ ssr: false },
+);
 import type { Destination } from "@/features/travel/types";
 
 type FilterTab =

@@ -15,44 +15,62 @@ import type { LfcFixture } from "../types";
 import NextMatchHero from "./NextMatchHero";
 import FixtureSkeleton from "./FixtureSkeleton";
 
-export default function LiverpoolView() {
+interface LiverpoolViewProps {
+	initialData?: {
+		upcoming: LfcFixture[];
+		lastUpdated: string;
+	};
+}
+
+export default function LiverpoolView({
+	initialData,
+}: LiverpoolViewProps = {}) {
 	const reduceMotion = useReducedMotion();
-	const [upcomingFixtures, setUpcomingFixtures] = useState<LfcFixture[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+	const [upcomingFixtures, setUpcomingFixtures] = useState<LfcFixture[]>(
+		initialData?.upcoming || [],
+	);
+	const [isLoading, setIsLoading] = useState(!initialData?.upcoming?.length);
 	const [isRefreshing, setIsRefreshing] = useState(false);
-	const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+	const [lastUpdated, setLastUpdated] = useState<string | null>(
+		initialData?.lastUpdated || null,
+	);
 	const [error, setError] = useState<string | null>(null);
 
-	const fetchFixtures = useCallback(async (refresh = false) => {
-		if (refresh) {
-			setIsRefreshing(true);
-		} else {
-			setIsLoading(true);
-		}
-		setError(null);
-
-		try {
-			const res = await getLiverpoolFixtures(refresh);
-			const upcoming = Array.isArray(res?.upcoming) ? res.upcoming : [];
-
-			if (res?.error && upcoming.length === 0) {
-				setError(res.error);
-			} else {
-				setUpcomingFixtures(upcoming);
-				setLastUpdated(res?.lastUpdated || new Date().toISOString());
+	const fetchFixtures = useCallback(
+		async (refresh = false) => {
+			if (refresh) {
+				setIsRefreshing(true);
+			} else if (!initialData?.upcoming?.length) {
+				setIsLoading(true);
 			}
-		} catch (err) {
-			console.error("Failed to load Liverpool fixtures:", err);
-			setError("Failed to synchronize with fixtures API");
-		} finally {
-			setIsLoading(false);
-			setIsRefreshing(false);
-		}
-	}, []);
+			setError(null);
+
+			try {
+				const res = await getLiverpoolFixtures(refresh);
+				const upcoming = Array.isArray(res?.upcoming) ? res.upcoming : [];
+
+				if (res?.error && upcoming.length === 0) {
+					setError(res.error);
+				} else {
+					setUpcomingFixtures(upcoming);
+					setLastUpdated(res?.lastUpdated || new Date().toISOString());
+				}
+			} catch (err) {
+				console.error("Failed to load Liverpool fixtures:", err);
+				setError("Failed to synchronize with fixtures API");
+			} finally {
+				setIsLoading(false);
+				setIsRefreshing(false);
+			}
+		},
+		[initialData],
+	);
 
 	useEffect(() => {
-		fetchFixtures();
-	}, [fetchFixtures]);
+		if (!initialData?.upcoming?.length) {
+			fetchFixtures();
+		}
+	}, [fetchFixtures, initialData]);
 
 	const nextMatch = useMemo(() => {
 		return upcomingFixtures.length > 0 ? upcomingFixtures[0] : null;

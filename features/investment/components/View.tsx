@@ -216,52 +216,64 @@ function InvestmentErrorState({
 	);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Main Component
-   ───────────────────────────────────────────────────────────── */
+interface InvestmentViewProps {
+	initialData?: {
+		traditional: FearAndGreedData | null;
+		crypto: CryptoFearAndGreedResponse | null;
+	};
+}
 
-export default function InvestmentPage() {
+export default function InvestmentView({
+	initialData,
+}: InvestmentViewProps = {}) {
 	const reduceMotion = useReducedMotion();
-	const [marketData, setMarketData] = useState<FearAndGreedData | null>(null);
+	const [marketData, setMarketData] = useState<FearAndGreedData | null>(
+		initialData?.traditional || null,
+	);
 	const [cryptoData, setCryptoData] =
-		useState<CryptoFearAndGreedResponse | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
+		useState<CryptoFearAndGreedResponse | null>(initialData?.crypto || null);
+	const [isLoading, setIsLoading] = useState(!initialData?.traditional);
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
 	const [sortMode, setSortMode] = useState<SortMode>("default");
 
-	const fetchData = useCallback(async (isSilent = false) => {
-		if (isSilent) {
-			setIsRefreshing(true);
-		} else {
-			setIsLoading(true);
-		}
-		setError(null);
-
-		try {
-			const { traditional, crypto } = await getCombinedMarketIntelligence();
-			if (traditional) {
-				setMarketData(traditional);
-			} else {
-				setError("Failed to synchronize market data from CNN source");
+	const fetchData = useCallback(
+		async (isSilent = false) => {
+			if (isSilent) {
+				setIsRefreshing(true);
+			} else if (!initialData?.traditional) {
+				setIsLoading(true);
 			}
+			setError(null);
 
-			if (crypto) {
-				setCryptoData(crypto);
+			try {
+				const { traditional, crypto } = await getCombinedMarketIntelligence();
+				if (traditional) {
+					setMarketData(traditional);
+				} else {
+					setError("Failed to synchronize market data from CNN source");
+				}
+
+				if (crypto) {
+					setCryptoData(crypto);
+				}
+			} catch (err) {
+				console.error("Market Intelligence fetch failed:", err);
+				setError("Operational connection failure");
+			} finally {
+				setIsLoading(false);
+				setIsRefreshing(false);
 			}
-		} catch (err) {
-			console.error("Market Intelligence fetch failed:", err);
-			setError("Operational connection failure");
-		} finally {
-			setIsLoading(false);
-			setIsRefreshing(false);
-		}
-	}, []);
+		},
+		[initialData],
+	);
 
 	useEffect(() => {
-		fetchData();
-	}, [fetchData]);
+		if (!initialData?.traditional) {
+			fetchData();
+		}
+	}, [fetchData, initialData]);
 
 	// All 8 sub-indices mapped with categories
 	const allSubIndices: SubIndexItem[] = useMemo(() => {

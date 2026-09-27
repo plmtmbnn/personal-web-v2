@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import {
-	ArrowLeft,
 	Clock,
 	Calendar,
 	Copy,
@@ -18,6 +16,7 @@ import {
 	Hourglass,
 	RefreshCw,
 } from "lucide-react";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import type { CronFieldType, CronParts } from "../types";
 import {
 	humanizeCron,
@@ -112,52 +111,39 @@ export default function CronBuilderView() {
 	}, [presetFilter]);
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1400px] mx-auto space-y-8">
-				{/* Top Breadcrumb & Badge */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-				>
-					<Link
-						href="/utils"
-						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-					>
-						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Utilities
-					</Link>
-					<div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200/80 rounded-full text-xs font-bold text-slate-600 shadow-2xs">
-						<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-						POSIX / Quartz Standard • 100% Client-Side
-					</div>
-				</motion.div>
-
-				{/* Header Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5 }}
-					className="flex flex-col xl:flex-row xl:items-end justify-between gap-6"
-				>
-					<div className="space-y-3">
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20 shrink-0">
-								<Clock className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									Cron Expression{" "}
-									<span className="text-indigo-600">Studio</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Interactive visual schedule builder, plain-English humanizer,
-									and live execution timeline simulator.
-								</p>
-							</div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1400px] mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Cron Expression Studio"
+					description="Interactive visual schedule builder, plain-English humanizer, and live execution timeline simulator."
+					category={{
+						label: "Productivity & Lifestyle",
+						sublabel: "cron schedule designer",
+						icon: Clock,
+						color: "purple",
+					}}
+					icon={Clock}
+					badges={
+						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
+							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+							<span>POSIX / Quartz Standard • 100% Client-Side</span>
 						</div>
-					</div>
-				</motion.div>
+					}
+					actions={
+						<button
+							type="button"
+							onClick={handleCopyCron}
+							className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+						>
+							{isCopied ? (
+								<Check className="w-3.5 h-3.5 text-emerald-600" />
+							) : (
+								<Copy className="w-3.5 h-3.5 text-slate-500" />
+							)}
+							<span>{isCopied ? "Copied Cron" : "Copy Expression"}</span>
+						</button>
+					}
+				/>
 
 				{/* Live Expression & Human Translation Banner */}
 				<motion.div

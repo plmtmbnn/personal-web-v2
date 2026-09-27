@@ -3,7 +3,8 @@ import { createMetadata } from "@/lib/shared/metadata";
 import HomeView from "@/features/home/components/HomeView";
 import { getAthleteStats } from "@/services/strava/service";
 
-export const dynamic = "force-dynamic";
+// Edge cache with ISR — revalidate athlete stats at most once every hour
+export const revalidate = 3600;
 
 export const metadata: Metadata = createMetadata({
 	title: "Polma Tambunan | Software Engineer & Fintech Expert",

@@ -30,6 +30,7 @@ import {
 	Layers,
 	FileText,
 	ArrowUpRight,
+	ChevronRight,
 } from "lucide-react";
 
 export interface UtilityCategory {
@@ -341,23 +342,33 @@ export default function UtilsLanding() {
 					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-						<div>
-							<div className="flex items-center gap-2 mb-2">
-								<div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
-									<Wrench className="w-3.5 h-3.5 text-indigo-600" />
-								</div>
-								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-									UTILITY REGISTRY · DEVELOPER & OPERATIONAL ENGINES
-								</span>
+						<div className="flex items-start sm:items-center gap-4">
+							<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200/70 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+								<Wrench className="w-6 h-6 text-indigo-600" />
 							</div>
-							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-								Developer & Tech Utilities
-							</h1>
-							<p className="text-sm text-slate-500 font-medium mt-1 max-w-xl">
-								High-precision developer tools, schema converters, financial
-								calculators, and operational utilities running locally in your
-								browser.
-							</p>
+							<div className="space-y-1.5">
+								<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider">
+									<Wrench className="w-3.5 h-3.5 text-indigo-600" />
+									<span>Utility Registry</span>
+									<span className="w-1 h-1 rounded-full bg-indigo-400" />
+									<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal">
+										developer & operational engines
+									</span>
+								</div>
+								<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+									Developer & Tech Utilities
+								</h1>
+								<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+									<Link
+										href="/"
+										className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+									>
+										Home
+									</Link>
+									<ChevronRight className="w-3 h-3 text-slate-400" />
+									<span className="text-slate-900 font-bold">Utilities</span>
+								</div>
+							</div>
 						</div>
 
 						{/* Telemetry Quick Strip */}

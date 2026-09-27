@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, QrCode } from "lucide-react";
+import { QrCode } from "lucide-react";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import type {
 	CryptoPayload,
 	EmailPayload,
@@ -20,7 +19,6 @@ import StyleEditor from "./StyleEditor";
 import QRPreview from "./QRPreview";
 
 export default function QRCodeGeneratorView() {
-	const reduceMotion = useReducedMotion();
 	const [mounted, setMounted] = useState(false);
 
 	// Payload States
@@ -84,45 +82,19 @@ export default function QRCodeGeneratorView() {
 	if (!mounted) return null;
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
-				{/* Breadcrumb */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="mb-8"
-				>
-					<Link
-						href="/utils"
-						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-					>
-						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Utilities
-					</Link>
-				</motion.div>
-
-				{/* Header Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.6 }}
-					className="max-w-3xl mb-12 space-y-4"
-				>
-					<div>
-						<span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-xs">
-							<QrCode className="w-4 h-4 text-indigo-600" />
-							Developer & Operational Utilities
-						</span>
-					</div>
-					<h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-						QR Code <span className="text-indigo-600">Generator</span>
-					</h1>
-					<p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl">
-						Convert URLs, raw text, Wi-Fi credentials, vCard contact cards,
-						emails, and crypto wallets into customizable, high-resolution vector
-						and raster QR codes.
-					</p>
-				</motion.div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="QR Code Generator"
+					description="Convert URLs, raw text, Wi-Fi credentials, vCard contact cards, emails, and crypto wallets into customizable, high-resolution vector and raster QR codes."
+					category={{
+						label: "Security & Diagnostics",
+						sublabel: "vector & raster qr generation",
+						icon: QrCode,
+						color: "sky",
+					}}
+					icon={QrCode}
+				/>
 
 				{/* Two-Column Working Layout */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

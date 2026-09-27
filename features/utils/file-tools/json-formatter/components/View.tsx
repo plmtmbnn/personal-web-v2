@@ -10,13 +10,12 @@ import {
 	Type,
 	Code2,
 	AlertCircle,
-	ArrowLeft,
 	Zap,
 	ZapOff,
 	Maximize2,
 	Minimize2,
 } from "lucide-react";
-import Link from "next/link";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 
 // ─── JSON Repair Logic ──────────────────────────────────────────────────────
 
@@ -112,74 +111,65 @@ export default function JsonFormatterView() {
 	}, [input, isAutoFormat, processJson]);
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1600px] mx-auto space-y-8">
-				{/* Header */}
-				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8">
-					<div className="space-y-4">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
-								<Braces className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									JSON <span className="text-indigo-600">Architect</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									High-fidelity JSON structure & syntax validation.
-								</p>
-							</div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1600px] mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="JSON Formatter & Validator"
+					description="Developer-centric tool to beautify, minify, and validate JSON strings with high-contrast syntax highlighting."
+					category={{
+						label: "Data & File Systems",
+						sublabel: "beautifier & syntax validation",
+						icon: Braces,
+						color: "emerald",
+					}}
+					icon={Braces}
+					actions={
+						<div className="flex flex-wrap items-center gap-2">
+							<button
+								type="button"
+								onClick={() => setIsAutoFormat(!isAutoFormat)}
+								className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border active:scale-95 ${
+									isAutoFormat
+										? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-2xs"
+										: "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50"
+								}`}
+							>
+								{isAutoFormat ? (
+									<Zap className="w-3.5 h-3.5 text-indigo-600" />
+								) : (
+									<ZapOff className="w-3.5 h-3.5 text-slate-400" />
+								)}
+								<span>Live Mode {isAutoFormat ? "ON" : "OFF"}</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={() => setIsMinified(!isMinified)}
+								className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-2xs border ${
+									isMinified
+										? "bg-purple-50 border-purple-200 text-purple-700"
+										: "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50"
+								}`}
+							>
+								{isMinified ? (
+									<Minimize2 className="w-3.5 h-3.5 text-purple-600" />
+								) : (
+									<Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+								)}
+								<span>{isMinified ? "Compact" : "Pretty"}</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={handleClear}
+								className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all active:scale-95 shadow-2xs cursor-pointer"
+							>
+								<Trash2 className="w-3.5 h-3.5" />
+								<span>Reset</span>
+							</button>
 						</div>
-					</div>
-
-					<div className="flex flex-wrap items-center gap-3">
-						<button
-							onClick={() => setIsAutoFormat(!isAutoFormat)}
-							className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
-								isAutoFormat
-									? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xs"
-									: "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50"
-							}`}
-						>
-							{isAutoFormat ? (
-								<Zap className="w-4 h-4 text-indigo-600" />
-							) : (
-								<ZapOff className="w-4 h-4" />
-							)}
-							Live Mode {isAutoFormat ? "ON" : "OFF"}
-						</button>
-
-						<button
-							onClick={() => setIsMinified(!isMinified)}
-							className={`flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm border ${
-								isMinified
-									? "bg-purple-50 border-purple-200 text-purple-600"
-									: "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
-							}`}
-						>
-							{isMinified ? (
-								<Minimize2 className="w-4 h-4" />
-							) : (
-								<Maximize2 className="w-4 h-4" />
-							)}
-							{isMinified ? "Compact" : "Pretty"}
-						</button>
-
-						<button
-							onClick={handleClear}
-							className="flex items-center gap-2.5 px-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:text-rose-600 transition-all active:scale-95 shadow-sm"
-						>
-							<Trash2 className="w-4 h-4" /> Reset
-						</button>
-					</div>
-				</div>
+					}
+				/>
 
 				{/* Editor Workspace */}
 				<div className="flex flex-col xl:flex-row gap-8 flex-1 min-h-[700px] items-stretch">

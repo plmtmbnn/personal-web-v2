@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
 import InvestmentView from "@/features/investment/components/View";
 
+import { getCombinedMarketIntelligence } from "@/features/investment/actions";
+
+export const revalidate = 3600;
+
 export const metadata: Metadata = createMetadata({
 	title: "Market Insights | Investments",
 	description:
@@ -16,6 +20,7 @@ export const metadata: Metadata = createMetadata({
 	],
 });
 
-export default function InvestmentPage() {
-	return <InvestmentView />;
+export default async function InvestmentPage() {
+	const initialData = await getCombinedMarketIntelligence();
+	return <InvestmentView initialData={initialData} />;
 }

@@ -9,7 +9,6 @@ import {
 	Calculator,
 	ArrowRightLeft,
 	RotateCcw,
-	ArrowLeft,
 	Coins,
 	Target,
 	AlertCircle,
@@ -19,7 +18,7 @@ import {
 	Info,
 	Layers,
 } from "lucide-react";
-import Link from "next/link";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import {
 	BarChart,
 	Bar,
@@ -345,55 +344,45 @@ export default function StockCryptoCalculatorView() {
 
 	// ── Render ─────────────────────────────────────────────────────────────
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-6xl mx-auto space-y-8">
-				{/* ── Header ── */}
-				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-					<div className="space-y-4">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
-								<Calculator className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Asset Averaging Calculator"
+					description="Position strategy, weighted cost & goal optimization for stocks and crypto."
+					category={{
+						label: "Financial Intelligence",
+						sublabel: "dca & cost averager",
+						color: "emerald",
+					}}
+					icon={Calculator}
+					actions={
+						<div className="flex flex-wrap items-center justify-between gap-3 w-full">
+							<div className="flex flex-wrap items-center gap-2">
+								<span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+									Scenarios:
+								</span>
+								{SCENARIOS.map((s) => (
+									<button
+										key={s.label}
+										type="button"
+										onClick={() => fillScenario(s)}
+										className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-slate-200/80 bg-slate-50 text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-all cursor-pointer shadow-2xs active:scale-95"
+									>
+										{s.label}
+									</button>
+								))}
 							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									Asset <span className="text-indigo-600">Averaging</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Position strategy, weighted cost & goal optimization.
-								</p>
-							</div>
+							<button
+								type="button"
+								onClick={reset}
+								className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer shadow-xs active:scale-95"
+							>
+								<RotateCcw className="w-3.5 h-3.5" />
+								Reset
+							</button>
 						</div>
-					</div>
-
-					<div className="flex items-center gap-3 self-start">
-						{/* Quick scenarios */}
-						<div className="flex flex-wrap gap-2">
-							{SCENARIOS.map((s) => (
-								<button
-									key={s.label}
-									onClick={() => fillScenario(s)}
-									className="px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-xl border border-slate-200/80 bg-white text-slate-600 hover:border-indigo-500 hover:text-indigo-600 transition-all cursor-pointer shadow-xs"
-								>
-									{s.label}
-								</button>
-							))}
-						</div>
-						<button
-							onClick={reset}
-							className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer shadow-xs"
-						>
-							<RotateCcw className="w-3.5 h-3.5" />
-							Reset
-						</button>
-					</div>
-				</div>
+					}
+				/>
 
 				{/* ── Main Grid ── */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">

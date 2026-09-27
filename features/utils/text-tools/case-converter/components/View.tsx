@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
-	ArrowLeft,
 	ArrowRightLeft,
 	ClipboardCheck,
 	Copy,
@@ -15,7 +14,7 @@ import {
 	Minimize2,
 	Maximize2,
 } from "lucide-react";
-import Link from "next/link";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 
 import type { CaseType } from "../utils/case";
 import { toWords, fromWords, transformObject } from "../utils/case";
@@ -84,40 +83,29 @@ export default function CaseConverterView() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-7xl mx-auto space-y-8">
-				{/* Header */}
-				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-					<div className="space-y-4">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Case Converter"
+					description="Universal recursive converter for variable names and JSON keys (Camel, Pascal, Snake, Kebab, Constant)."
+					category={{
+						label: "Development & Code",
+						sublabel: "variable naming & json key transform",
+						icon: ArrowRightLeft,
+						color: "indigo",
+					}}
+					icon={ArrowRightLeft}
+					actions={
+						<button
+							type="button"
+							onClick={handleReset}
+							className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all cursor-pointer active:scale-95"
 						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
-								<ArrowRightLeft className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									Case <span className="text-indigo-600">Converter</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Recursive variable name & JSON key transformation.
-								</p>
-							</div>
-						</div>
-					</div>
-
-					<button
-						onClick={handleReset}
-						className="self-start flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all shadow-xs cursor-pointer"
-					>
-						<RotateCcw className="w-4 h-4" /> Reset Workspace
-					</button>
-				</div>
+							<RotateCcw className="w-3.5 h-3.5" />
+							<span>Reset Workspace</span>
+						</button>
+					}
+				/>
 
 				{/* Editor Layout */}
 				<div className="flex flex-col xl:flex-row gap-4 sm:gap-8 items-stretch min-h-[500px] xl:min-h-[600px]">

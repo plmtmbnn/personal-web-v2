@@ -1,27 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useId } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import {
-	Chart as ChartJS,
-	CategoryScale,
-	LinearScale,
-	PointElement,
-	LineElement,
-	Filler,
-	Tooltip,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
 import { Info } from "lucide-react";
-
-ChartJS.register(
-	CategoryScale,
-	LinearScale,
-	PointElement,
-	LineElement,
-	Filler,
-	Tooltip,
-);
 
 interface SentimentCardProps {
 	title: string;
@@ -155,6 +136,10 @@ export default function SentimentCard({
 	delay = 0,
 }: SentimentCardProps) {
 	const reduceMotion = useReducedMotion();
+	const gradientId = useId();
+	const svgRef = useRef<SVGSVGElement>(null);
+	const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
 	const sortedData = useMemo(() => {
 		return data ? [...data].sort((a, b) => a.x - b.x) : [];
 	}, [data]);
@@ -171,47 +156,54 @@ export default function SentimentCard({
 	const colorKey = getCardColorKey(score);
 	const color = CARD_COLORS[colorKey];
 
-	// Build chart data with dynamic colors
-	const chartData = {
-		labels: sortedData.map(() => ""),
-		datasets: [
-			{
-				data: sortedData.map((d) => d?.y ?? 0),
-				fill: true,
-				borderColor: color.base,
-				backgroundColor: color.base
-					.replace("rgb", "rgba")
-					.replace(")", ", 0.05)"),
-				tension: 0.4,
-				pointRadius: 0,
-				borderWidth: 1.5,
-			},
-		],
+	// Compute SVG sparkline points
+	const points = useMemo(() => {
+		if (!sortedData || sortedData.length === 0) return [];
+		const values = sortedData.map((d) => d?.y ?? 0);
+		const minVal = Math.min(...values);
+		const maxVal = Math.max(...values);
+		const range = maxVal - minVal || 10;
+		const padY = 8;
+		const h = 64 - padY * 2;
+		const w = 260;
+
+		return sortedData.map((d, i) => {
+			const x = (i / Math.max(sortedData.length - 1, 1)) * w;
+			const y = padY + h - ((d.y - minVal) / range) * h;
+			return { x, y, val: d.y, rating: d.rating, origX: d.x };
+		});
+	}, [sortedData]);
+
+	// Build smooth cubic Bezier path
+	const { pathD, fillD } = useMemo(() => {
+		if (points.length < 2) return { pathD: "", fillD: "" };
+		let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+		for (let i = 0; i < points.length - 1; i++) {
+			const p0 = points[i];
+			const p1 = points[i + 1];
+			const dx = p1.x - p0.x;
+			const cp1x = p0.x + dx * 0.35;
+			const cp1y = p0.y;
+			const cp2x = p1.x - dx * 0.35;
+			const cp2y = p1.y;
+			d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+		}
+		const last = points[points.length - 1];
+		const fill = `${d} L ${last.x.toFixed(1)} 64 L ${points[0].x.toFixed(1)} 64 Z`;
+		return { pathD: d, fillD: fill };
+	}, [points]);
+
+	const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+		if (!svgRef.current || points.length === 0) return;
+		const rect = svgRef.current.getBoundingClientRect();
+		const relativeX = (e.clientX - rect.left) / rect.width;
+		const index = Math.round(relativeX * (points.length - 1));
+		const clamped = Math.max(0, Math.min(points.length - 1, index));
+		setHoveredIdx(clamped);
 	};
 
-	const chartOptions = {
-		responsive: true,
-		maintainAspectRatio: false,
-		plugins: {
-			legend: { display: false },
-			tooltip: {
-				enabled: true,
-				backgroundColor: "#1e293b",
-				padding: 8,
-				titleFont: { size: 0 },
-				bodyFont: { size: 9, weight: 700 },
-				callbacks: {
-					label: (context: any) => {
-						const pointRating = sortedData[context.dataIndex]?.rating;
-						return ` ${context.parsed.y.toFixed(1)} (${pointRating || ""})`;
-					},
-				},
-			},
-		},
-		scales: {
-			x: { display: false },
-			y: { display: false },
-		},
+	const handleMouseLeave = () => {
+		setHoveredIdx(null);
 	};
 
 	const getRatingBadge = (r: string) => {
@@ -267,7 +259,86 @@ export default function SentimentCard({
 
 				{/* Micro-chart container with hover effect */}
 				<div className="relative h-16 w-full opacity-70 group-hover:opacity-100 transition-opacity duration-300">
-					<Line data={chartData} options={chartOptions} />
+					{points.length >= 2 ? (
+						<>
+							<svg
+								ref={svgRef}
+								viewBox="0 0 260 64"
+								preserveAspectRatio="none"
+								className="w-full h-full overflow-visible cursor-crosshair touch-none"
+								onMouseMove={handleMouseMove}
+								onMouseLeave={handleMouseLeave}
+							>
+								<defs>
+									<linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+										<stop
+											offset="0%"
+											stopColor={color.base}
+											stopOpacity="0.25"
+										/>
+										<stop
+											offset="100%"
+											stopColor={color.base}
+											stopOpacity="0.0"
+										/>
+									</linearGradient>
+								</defs>
+								<path d={fillD} fill={`url(#${gradientId})`} />
+								<path
+									d={pathD}
+									fill="none"
+									stroke={color.base}
+									strokeWidth="1.75"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									vectorEffect="non-scaling-stroke"
+								/>
+								{hoveredIdx !== null && points[hoveredIdx] && (
+									<>
+										<line
+											x1={points[hoveredIdx].x}
+											y1={0}
+											x2={points[hoveredIdx].x}
+											y2={64}
+											stroke="rgba(148, 163, 184, 0.45)"
+											strokeDasharray="2 2"
+											strokeWidth="1"
+											vectorEffect="non-scaling-stroke"
+										/>
+										<circle
+											cx={points[hoveredIdx].x}
+											cy={points[hoveredIdx].y}
+											r="3.5"
+											fill={color.base}
+											stroke="#ffffff"
+											strokeWidth="1.5"
+										/>
+									</>
+								)}
+							</svg>
+
+							{/* Floating Tooltip */}
+							{hoveredIdx !== null && points[hoveredIdx] && (
+								<div
+									className="pointer-events-none absolute -top-8 px-2 py-1 bg-slate-900 text-white text-[10px] font-bold rounded-md shadow-lg whitespace-nowrap z-20 -translate-x-1/2 flex items-center gap-1.5 transition-all duration-75"
+									style={{
+										left: `${Math.max(12, Math.min(88, (points[hoveredIdx].x / 260) * 100))}%`,
+									}}
+								>
+									<span>{points[hoveredIdx].val.toFixed(1)}</span>
+									{points[hoveredIdx].rating && (
+										<span className="text-slate-400 font-normal">
+											({points[hoveredIdx].rating})
+										</span>
+									)}
+								</div>
+							)}
+						</>
+					) : (
+						<div className="w-full h-full flex items-center justify-center">
+							<span className="text-[10px] text-slate-400">No trend data</span>
+						</div>
+					)}
 				</div>
 			</div>
 		</motion.div>

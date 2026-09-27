@@ -2,9 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import {
-	ArrowLeft,
 	Copy,
 	Check,
 	Download,
@@ -13,6 +11,7 @@ import {
 	Eye,
 	RotateCcw,
 } from "lucide-react";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import type { CardConfig, SupportedLanguage, WindowStyle } from "../types";
 import {
 	copyCardToClipboard,
@@ -119,109 +118,76 @@ export default function CodeToImageView() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1440px] mx-auto space-y-8">
-				{/* Top Breadcrumb & Badge */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-				>
-					<Link
-						href="/utils"
-						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-					>
-						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Utilities
-					</Link>
-					<div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200/80 rounded-full text-xs font-bold text-slate-600 shadow-2xs">
-						<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-						High-DPI Retina Rasterizer • 100% In-Browser
-					</div>
-				</motion.div>
-
-				{/* Header Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5 }}
-					className="flex flex-col xl:flex-row xl:items-end justify-between gap-6"
-				>
-					<div className="space-y-3">
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20 shrink-0">
-								<FileCode2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Code to Image"
+					description="Transform code snippets, terminal commands, or text into high-resolution social cards."
+					category={{
+						label: "Development & Code",
+						sublabel: "card rasterizer",
+						color: "indigo",
+					}}
+					icon={FileCode2}
+					badges={
+						<div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100/80 rounded-full text-xs font-bold text-emerald-700">
+							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+							High-DPI Retina • 100% In-Browser
+						</div>
+					}
+					actions={
+						<div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 w-full">
+							<div className="flex items-center gap-2 overflow-x-auto">
+								<span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 shrink-0">
+									Presets:
+								</span>
+								{CODE_PRESETS.map((preset) => (
+									<button
+										key={preset.id}
+										type="button"
+										onClick={() => handleLoadPreset(preset.id)}
+										className="px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border border-slate-200/60 shadow-2xs active:scale-95"
+									>
+										{preset.title}
+									</button>
+								))}
 							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									Code Snippet to{" "}
-									<span className="text-indigo-600">Aesthetic Social Card</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Transform code snippets, terminal commands, or text into
-									gradient-backed social cards for Twitter/X, LinkedIn, and
-									blogs.
-								</p>
+
+							<div className="flex items-center gap-2 shrink-0">
+								<button
+									type="button"
+									onClick={handleCopyImage}
+									disabled={isExporting}
+									className="flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+								>
+									{isCopied ? (
+										<Check className="w-3.5 h-3.5 text-emerald-600" />
+									) : (
+										<Copy className="w-3.5 h-3.5" />
+									)}
+									<span>{isCopied ? "Copied!" : "Copy Image"}</span>
+								</button>
+								<button
+									type="button"
+									onClick={() => handleDownloadPng(2)}
+									disabled={isExporting}
+									className="flex items-center gap-2 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs disabled:opacity-50"
+								>
+									<Download className="w-3.5 h-3.5" />
+									<span>PNG (@2x)</span>
+								</button>
+								<button
+									type="button"
+									onClick={handleDownloadSvg}
+									className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+								>
+									<Download className="w-3.5 h-3.5" />
+									<span>SVG</span>
+								</button>
 							</div>
 						</div>
-					</div>
-
-					{/* Action Buttons */}
-					<div className="flex flex-wrap items-center gap-3">
-						<button
-							type="button"
-							onClick={handleCopyImage}
-							disabled={isExporting}
-							className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs disabled:opacity-50"
-						>
-							{isCopied ? (
-								<Check className="w-4 h-4 text-emerald-600" />
-							) : (
-								<Copy className="w-4 h-4" />
-							)}
-							<span>{isCopied ? "Copied to Clipboard!" : "Copy Image"}</span>
-						</button>
-						<button
-							type="button"
-							onClick={() => handleDownloadPng(2)}
-							disabled={isExporting}
-							className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs disabled:opacity-50"
-						>
-							<Download className="w-4 h-4" />
-							<span>Download PNG (@2x)</span>
-						</button>
-						<button
-							type="button"
-							onClick={handleDownloadSvg}
-							className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
-						>
-							<Download className="w-4 h-4" />
-							<span>SVG</span>
-						</button>
-					</div>
-				</motion.div>
-
-				{/* Presets Bar */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.1 }}
-					className="flex items-center gap-2 overflow-x-auto p-1.5 bg-white border border-slate-200/80 rounded-2xl shadow-2xs"
-				>
-					<span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 whitespace-nowrap">
-						Code Presets:
-					</span>
-					{CODE_PRESETS.map((preset) => (
-						<button
-							key={preset.id}
-							type="button"
-							onClick={() => handleLoadPreset(preset.id)}
-							className="px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border border-slate-200/60"
-						>
-							{preset.title}
-						</button>
-					))}
-				</motion.div>
+					}
+				/>
 
 				{/* ═══════════════════════════════════════════════════════════════════ */}
 				{/* MAIN STUDIO WORKSPACE (CONTROLS + LIVE PREVIEW)                     */}

@@ -8,14 +8,14 @@ import {
 	Check,
 	Download,
 	Trash2,
-	ArrowLeft,
 	FileText,
 	Zap,
 	AlertCircle,
 	Type,
 	ArrowRight,
 } from "lucide-react";
-import Link from "next/link";
+
+import UtilHeader from "@/features/utils/components/UtilHeader";
 
 // ─── Transformation Logic ───────────────────────────────────────────────────
 
@@ -88,51 +88,38 @@ export default function FileRenamerView() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1400px] mx-auto space-y-8">
-				{/* Header */}
-				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8">
-					<div className="space-y-4">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
-								<Files className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									File <span className="text-indigo-600">Renamer</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Batch kebab-case normalization for filenames with extension
-									preservation.
-								</p>
-							</div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="File Renamer"
+					description="Batch kebab-case normalization for filenames with extension preservation."
+					category={{
+						label: "Data & File Systems",
+						sublabel: "file renamer",
+						color: "blue",
+					}}
+					icon={Files}
+					actions={
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								onClick={handleDownload}
+								disabled={renamedList.length === 0}
+								className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								<Download className="w-3.5 h-3.5" /> Download .txt
+							</button>
+							<button
+								type="button"
+								onClick={() => setInput("")}
+								className="flex items-center justify-center w-9 h-9 bg-white border border-slate-200/80 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-xs"
+								title="Clear Input"
+							>
+								<Trash2 className="w-3.5 h-3.5" />
+							</button>
 						</div>
-					</div>
-
-					<div className="flex items-center gap-3">
-						<button
-							onClick={handleDownload}
-							disabled={renamedList.length === 0}
-							className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							<Download className="w-4 h-4" /> Download .txt
-						</button>
-						<button
-							onClick={() => setInput("")}
-							className="flex items-center justify-center w-10 h-10 bg-white border border-slate-200/80 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-xs"
-							title="Clear Input"
-						>
-							<Trash2 className="w-4 h-4" />
-						</button>
-					</div>
-				</div>
+					}
+				/>
 
 				{/* Workspace */}
 				<div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-stretch">

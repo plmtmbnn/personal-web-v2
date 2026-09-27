@@ -1,19 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useId } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { TrendingUp, History, Clock, Activity } from "lucide-react";
-import dynamic from "next/dynamic";
-
-// Lazy-load Chart.js for performance
-const ChartWrapper = dynamic(() => import("./FearAndGreedChartWrapper"), {
-	ssr: false,
-	loading: () => (
-		<div className="w-full h-24 flex items-center justify-center">
-			<div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />
-		</div>
-	),
-});
 
 interface FearAndGreedGaugeProps {
 	score: number;
@@ -23,6 +12,92 @@ interface FearAndGreedGaugeProps {
 	previous1Month: number;
 	previous1Year: number;
 	historicalData: Array<{ x: number; y: number; rating: string }>;
+}
+
+function TrendVelocitySparkline({
+	data,
+}: {
+	data: Array<{ x: number; y: number; rating: string }>;
+}) {
+	const gradientId = useId();
+	const points = useMemo(() => {
+		if (!data || data.length === 0) return [];
+		const values = data.map((d) => d?.y ?? 0);
+		const minVal = Math.min(...values);
+		const maxVal = Math.max(...values);
+		const range = maxVal - minVal || 10;
+		const padY = 6;
+		const h = 56 - padY * 2;
+		const w = 240;
+
+		return data.map((d, i) => {
+			const x = (i / Math.max(data.length - 1, 1)) * w;
+			const y = padY + h - ((d.y - minVal) / range) * h;
+			return { x, y, val: d.y };
+		});
+	}, [data]);
+
+	const { pathD, fillD } = useMemo(() => {
+		if (points.length < 2) return { pathD: "", fillD: "" };
+		let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+		for (let i = 0; i < points.length - 1; i++) {
+			const p0 = points[i];
+			const p1 = points[i + 1];
+			const dx = p1.x - p0.x;
+			const cp1x = p0.x + dx * 0.35;
+			const cp1y = p0.y;
+			const cp2x = p1.x - dx * 0.35;
+			const cp2y = p1.y;
+			d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+		}
+		const last = points[points.length - 1];
+		const fill = `${d} L ${last.x.toFixed(1)} 56 L ${points[0].x.toFixed(1)} 56 Z`;
+		return { pathD: d, fillD: fill };
+	}, [points]);
+
+	if (points.length < 2) {
+		return (
+			<span className="text-[10px] font-bold text-slate-400">
+				Trend data calibrating...
+			</span>
+		);
+	}
+
+	return (
+		<svg
+			viewBox="0 0 240 56"
+			preserveAspectRatio="none"
+			className="w-full h-full overflow-visible"
+		>
+			<defs>
+				<linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stopColor="rgb(79, 70, 229)" stopOpacity="0.18" />
+					<stop offset="100%" stopColor="rgb(79, 70, 229)" stopOpacity="0.0" />
+				</linearGradient>
+			</defs>
+			<path d={fillD} fill={`url(#${gradientId})`} />
+			<path
+				d={pathD}
+				fill="none"
+				stroke="rgb(79, 70, 229)"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				vectorEffect="non-scaling-stroke"
+			/>
+			{points.map((p, i) => (
+				<circle
+					key={i}
+					cx={p.x}
+					cy={p.y}
+					r="2.5"
+					fill="rgb(79, 70, 229)"
+					stroke="#ffffff"
+					strokeWidth="1.5"
+				/>
+			))}
+		</svg>
+	);
 }
 
 export default function FearAndGreedGauge({
@@ -66,39 +141,6 @@ export default function FearAndGreedGauge({
 		if (lower.includes("greed"))
 			return "bg-green-50 border-green-100 text-green-600";
 		return "bg-slate-50 border-slate-100 text-slate-600";
-	};
-
-	const chartData = {
-		labels: sevenDayData.map(() => ""),
-		datasets: [
-			{
-				data: sevenDayData.map((d) => d?.y ?? 0),
-				fill: true,
-				borderColor: "rgb(79, 70, 229)",
-				backgroundColor: "rgba(79, 70, 229, 0.08)",
-				tension: 0.35,
-				pointRadius: sevenDayData.length <= 2 ? 3 : 0,
-				pointHoverRadius: 4,
-				borderWidth: 2,
-			},
-		],
-	};
-
-	const chartOptions = {
-		responsive: true,
-		maintainAspectRatio: false,
-		plugins: {
-			legend: { display: false },
-			tooltip: { enabled: false },
-		},
-		scales: {
-			x: { display: false },
-			y: {
-				display: false,
-				suggestedMin: 0,
-				suggestedMax: 100,
-			},
-		},
 	};
 
 	if (!mounted) {
@@ -204,13 +246,7 @@ export default function FearAndGreedGauge({
 							</span>
 						</div>
 						<div className="h-20 w-full bg-slate-50/50 rounded-2xl border border-slate-100 p-3 flex items-center justify-center">
-							{sevenDayData.length > 0 ? (
-								<ChartWrapper data={chartData} options={chartOptions} />
-							) : (
-								<span className="text-[10px] font-bold text-slate-400">
-									Trend data calibrating...
-								</span>
-							)}
+							<TrendVelocitySparkline data={sevenDayData} />
 						</div>
 					</div>
 				</div>

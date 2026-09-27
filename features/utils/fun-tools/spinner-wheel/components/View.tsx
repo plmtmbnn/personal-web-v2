@@ -9,14 +9,13 @@ import {
 	Trophy,
 	Dices,
 	Trash2,
-	ArrowLeft,
 	Palette,
 	List,
 	History,
 	Shuffle,
 	X,
 } from "lucide-react";
-import Link from "next/link";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import type { WheelItem, ColorTheme, SpinResult } from "../types";
 import { COLOR_THEMES, PRESETS } from "../data/presets";
 import { playTickSound, playVictorySound } from "../utils/audio";
@@ -239,55 +238,41 @@ export default function SpinnerWheelView() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-28 font-sans">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 font-sans">
 			{winner && <Confetti />}
 
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 relative z-10">
-				{/* Header */}
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-					<div className="space-y-2">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-3">
-							<div className="w-10 h-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-md shrink-0">
-								<Dices className="w-5 h-5 text-indigo-400" />
-							</div>
-							<div>
-								<h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-									Spinner <span className="text-indigo-600">Wheel</span>
-								</h1>
-								<p className="text-xs font-bold text-slate-500 mt-0.5">
-									Random name & decision picker with audio feedback & physics.
-								</p>
-							</div>
-						</div>
-					</div>
-
-					<div className="flex items-center gap-2 self-start sm:self-auto">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 relative z-10">
+				<UtilHeader
+					title="Spinner Wheel"
+					description="Interactive decision wheel & random name picker with synthesized audio feedback, physics, and customizable presets."
+					category={{
+						label: "Productivity & Lifestyle",
+						sublabel: "interactive decision maker",
+						icon: Dices,
+						color: "purple",
+					}}
+					icon={Dices}
+					actions={
 						<button
+							type="button"
 							onClick={() => setSoundEnabled((s) => !s)}
-							className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+							className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
 							title="Toggle Audio Effects"
 						>
 							{soundEnabled ? (
-								<Volume2 className="w-4 h-4 text-indigo-600" />
+								<Volume2 className="w-3.5 h-3.5 text-indigo-600" />
 							) : (
-								<VolumeX className="w-4 h-4 text-slate-400" />
+								<VolumeX className="w-3.5 h-3.5 text-slate-400" />
 							)}
 							<span>{soundEnabled ? "Audio ON" : "Muted"}</span>
 						</button>
-					</div>
-				</div>
+					}
+				/>
 
 				{/* Main Workspace Layout */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 					{/* Left: Wheel Arena */}
-					<div className="lg:col-span-7 bg-white border border-slate-200/80 rounded-[2.5rem] p-6 sm:p-10 shadow-xl shadow-slate-200/40 flex flex-col items-center justify-center min-h-[460px] relative overflow-hidden">
+					<div className="lg:col-span-7 bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 shadow-xs flex flex-col items-center justify-center min-h-[460px] relative overflow-hidden">
 						{/* Wheel Pointer Arrow */}
 						<div className="absolute top-4 sm:top-6 z-30 flex flex-col items-center">
 							<div className="w-7 h-9 bg-rose-600 rounded-b-xl shadow-lg border-2 border-white flex items-center justify-center transform -translate-y-1">

@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import {
-	ArrowLeft,
 	Gauge,
 	Cpu,
 	Monitor,
@@ -29,7 +27,9 @@ import {
 	Video,
 	CloudUpload,
 	Award,
+	ShieldCheck,
 } from "lucide-react";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import type {
 	CodecItem,
 	DisplayInfo,
@@ -235,76 +235,49 @@ export default function DeviceInspectorView() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1400px] mx-auto space-y-8">
-				{/* Top Breadcrumb & Zero-Server Badge */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-				>
-					<Link
-						href="/utils"
-						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-					>
-						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Utilities
-					</Link>
-					<div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200/80 rounded-full text-xs font-bold text-slate-600 shadow-2xs">
-						<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-						WebGL & Web Audio Telemetry • 100% In-Browser
-					</div>
-				</motion.div>
-
-				{/* Header Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5 }}
-					className="flex flex-col xl:flex-row xl:items-end justify-between gap-6"
-				>
-					<div className="space-y-3">
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20 shrink-0">
-								<Gauge className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									Device, Speed &{" "}
-									<span className="text-indigo-600">Diagnostics Inspector</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Real-time internet speed test, hardware telemetry, display &
-									refresh rate analysis, and media codec audit.
-								</p>
-							</div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1400px] mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Device, Speed & Diagnostics Inspector"
+					description="Real-time internet speed test, hardware telemetry, display & refresh rate analysis, and media codec audit."
+					category={{
+						label: "Security & Diagnostics",
+						sublabel: "hardware telemetry & speed test",
+						icon: ShieldCheck,
+						color: "sky",
+					}}
+					icon={Gauge}
+					badges={
+						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
+							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+							<span>WebGL & Web Audio • 100% In-Browser</span>
 						</div>
-					</div>
-
-					{/* Action Buttons */}
-					<div className="flex items-center gap-3">
-						<button
-							type="button"
-							onClick={handleCopyReport}
-							className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
-						>
-							{isReportCopied ? (
-								<Check className="w-4 h-4 text-emerald-600" />
-							) : (
-								<Copy className="w-4 h-4" />
-							)}
-							<span>{isReportCopied ? "Copied JSON" : "Copy Report"}</span>
-						</button>
-						<button
-							type="button"
-							onClick={handleDownloadReport}
-							className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
-						>
-							<Download className="w-4 h-4" />
-							<span>Export JSON</span>
-						</button>
-					</div>
-				</motion.div>
+					}
+					actions={
+						<>
+							<button
+								type="button"
+								onClick={handleCopyReport}
+								className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+							>
+								{isReportCopied ? (
+									<Check className="w-3.5 h-3.5 text-emerald-600" />
+								) : (
+									<Copy className="w-3.5 h-3.5 text-slate-500" />
+								)}
+								<span>{isReportCopied ? "Copied" : "Copy Report"}</span>
+							</button>
+							<button
+								type="button"
+								onClick={handleDownloadReport}
+								className="flex items-center gap-2 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+							>
+								<Download className="w-3.5 h-3.5" />
+								<span>Export JSON</span>
+							</button>
+						</>
+					}
+				/>
 
 				{/* ═══════════════════════════════════════════════════════════════════ */}
 				{/* SECTION 1: INTERNET SPEED TEST & LATENCY STUDIO                     */}
@@ -487,9 +460,9 @@ export default function DeviceInspectorView() {
 						<motion.div
 							initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
 							animate={{ opacity: 1, scale: 1 }}
-							className="p-5 bg-gradient-to-br from-indigo-50/70 via-slate-50 to-white border border-indigo-100 rounded-2xl space-y-4 shadow-2xs"
+							className="p-5 bg-white border border-slate-200/80 rounded-2xl space-y-4 shadow-xs"
 						>
-							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100/60 pb-3">
+							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
 								<div className="flex items-center gap-2">
 									<Award className="w-4 h-4 text-indigo-600" />
 									<span className="text-xs font-extrabold uppercase tracking-wider text-slate-800">

@@ -18,11 +18,13 @@ import {
 	Trophy,
 	Activity,
 	Gauge,
-	Clock,
 	Plus,
 	Minus,
+	Timer,
+	Clock,
 } from "lucide-react";
 import Link from "next/link";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -941,7 +943,7 @@ export default function TimerView() {
 					? "bg-emerald-950"
 					: isActive
 						? theme.bg
-						: "bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8"
+						: "bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-8"
 			} font-sans`}
 		>
 			{isComplete && <Confetti />}
@@ -973,55 +975,46 @@ export default function TimerView() {
 			>
 				{/* Header */}
 				{!isActive && !isComplete ? (
-					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-						<div className="space-y-3">
-							<Link
-								href="/utils"
-								className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-							>
-								<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-								Back to Utilities
-							</Link>
-							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-md shrink-0">
-									<Activity className="w-5 h-5 text-indigo-400" />
+					<div className="mb-6 sm:mb-8">
+						<UtilHeader
+							title="Running Interval Timer"
+							description="High-precision interval workout timer with automated transitions, synthesized audio beeps, and screen wake lock."
+							category={{
+								label: "Productivity & Lifestyle",
+								sublabel: "interval training timer",
+								icon: Timer,
+								color: "purple",
+							}}
+							icon={Timer}
+							actions={
+								<div className="flex items-center gap-2">
+									<button
+										type="button"
+										onClick={() => setSoundEnabled((s) => !s)}
+										className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer active:scale-95"
+										title="Toggle Sound"
+									>
+										{soundEnabled ? (
+											<Volume2 className="w-3.5 h-3.5 text-indigo-600" />
+										) : (
+											<VolumeX className="w-3.5 h-3.5 text-slate-400" />
+										)}
+										<span>{soundEnabled ? "Audio ON" : "Muted"}</span>
+									</button>
+									<div
+										className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-2xs"
+										title="Wake Lock Status"
+									>
+										{wakeLockActive ? (
+											<Lock className="w-3.5 h-3.5 text-emerald-600" />
+										) : (
+											<Unlock className="w-3.5 h-3.5 text-slate-400" />
+										)}
+										<span>{wakeLockActive ? "Screen Awake" : "Wake Lock"}</span>
+									</div>
 								</div>
-								<div>
-									<h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-										Running <span className="text-indigo-600">Timer</span>
-									</h1>
-									<p className="text-xs font-semibold text-slate-600 mt-0.5">
-										Interval workout timer with wake-lock & sound alerts.
-									</p>
-								</div>
-							</div>
-						</div>
-
-						<div className="flex items-center gap-2 self-start sm:self-auto">
-							<button
-								onClick={() => setSoundEnabled((s) => !s)}
-								className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 cursor-pointer"
-								title="Toggle Sound"
-							>
-								{soundEnabled ? (
-									<Volume2 className="w-4 h-4 text-indigo-600" />
-								) : (
-									<VolumeX className="w-4 h-4 text-slate-400" />
-								)}
-								<span>{soundEnabled ? "Audio ON" : "Muted"}</span>
-							</button>
-							<div
-								className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-xs"
-								title="Wake Lock Status"
-							>
-								{wakeLockActive ? (
-									<Lock className="w-4 h-4 text-emerald-600" />
-								) : (
-									<Unlock className="w-4 h-4 text-slate-400" />
-								)}
-								<span>{wakeLockActive ? "Screen Awake" : "Wake Lock"}</span>
-							</div>
-						</div>
+							}
+						/>
 					</div>
 				) : (
 					<div className="flex items-center justify-between mb-8">

@@ -11,13 +11,12 @@ import {
 	Table as TableIcon,
 	FileCode,
 	AlertCircle,
-	ArrowLeft,
 	Settings2,
 	Download,
 	Maximize2,
 	Minimize2,
 } from "lucide-react";
-import Link from "next/link";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import Papa from "papaparse";
 
 import { transformToNested } from "../utils/transform";
@@ -124,59 +123,48 @@ export default function CsvToJsonView() {
 	// ─── Render ───────────────────────────────────────────────────────────────
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1600px] mx-auto space-y-8">
-				{/* Header */}
-				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-					<div className="space-y-4">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
-								<FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									CSV to <span className="text-emerald-600">JSON</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Advanced CSV parsing, key splitting & recursive JSON object
-									nesting.
-								</p>
-							</div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1600px] mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="CSV to JSON Converter"
+					description="Advanced CSV parser with support for nested objects, custom delimiters, and file uploads."
+					category={{
+						label: "Data & File Systems",
+						sublabel: "csv parsing & json object nesting",
+						icon: FileSpreadsheet,
+						color: "emerald",
+					}}
+					icon={FileSpreadsheet}
+					actions={
+						<div className="flex flex-wrap items-center gap-2">
+							<button
+								type="button"
+								onClick={() => setIsMinified(!isMinified)}
+								className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer active:scale-95 shadow-2xs ${
+									isMinified
+										? "bg-purple-50 border-purple-200 text-purple-700"
+										: "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50"
+								}`}
+							>
+								{isMinified ? (
+									<Minimize2 className="w-3.5 h-3.5 text-purple-600" />
+								) : (
+									<Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+								)}
+								<span>{isMinified ? "Compact" : "Pretty"}</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={handleReset}
+								className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all cursor-pointer shadow-2xs active:scale-95"
+							>
+								<Trash2 className="w-3.5 h-3.5" />
+								<span>Reset</span>
+							</button>
 						</div>
-					</div>
-
-					<div className="flex flex-wrap items-center gap-3">
-						<button
-							onClick={() => setIsMinified(!isMinified)}
-							className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border cursor-pointer ${
-								isMinified
-									? "bg-purple-50 border-purple-200 text-purple-700 shadow-xs"
-									: "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50 shadow-xs"
-							}`}
-						>
-							{isMinified ? (
-								<Minimize2 className="w-4 h-4 text-purple-600" />
-							) : (
-								<Maximize2 className="w-4 h-4" />
-							)}
-							{isMinified ? "Compact" : "Pretty"}
-						</button>
-
-						<button
-							onClick={handleReset}
-							className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all cursor-pointer shadow-xs"
-						>
-							<Trash2 className="w-4 h-4" /> Reset
-						</button>
-					</div>
-				</div>
+					}
+				/>
 
 				<div className="flex flex-col xl:flex-row gap-8 items-stretch min-h-[700px]">
 					{/* Column 1: Config & Input */}

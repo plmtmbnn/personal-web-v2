@@ -1,15 +1,10 @@
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
-import {
-	Varela_Round,
-	JetBrains_Mono,
-	Montserrat,
-	Caveat,
-} from "next/font/google";
+import { Varela_Round, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CompactBottomBar from "@/features/shared/components/CompactBottomBar";
 import NavigationLoader from "@/features/shared/components/NavigationLoader";
-import CommandPalette from "@/features/shared/components/CommandPalette";
+import CommandPaletteWrapper from "@/features/shared/components/CommandPaletteWrapper";
 import AuthProvider from "@/features/auth/components/AuthProvider";
 import { createMetadata } from "@/lib/shared/metadata";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -31,24 +26,10 @@ const varela = Varela_Round({
 	display: "swap",
 });
 
-// Handwriting font for postcards
-const caveat = Caveat({
-	subsets: ["latin"],
-	variable: "--font-caveat",
-	display: "swap",
-});
-
 // Monospace font for code snippets
 const jetbrainsMono = JetBrains_Mono({
 	subsets: ["latin"],
 	variable: "--font-mono",
-	display: "swap",
-});
-
-// Display font - Montserrat
-const montserrat = Montserrat({
-	subsets: ["latin"],
-	variable: "--font-montserrat",
 	display: "swap",
 });
 
@@ -77,7 +58,7 @@ export default function RootLayout({
 				/>
 			</head>
 			<body
-				className={`${varela.variable} ${jetbrainsMono.variable} ${montserrat.variable} ${caveat.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
+				className={`${varela.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
 				suppressHydrationWarning
 			>
 				<AuthProvider>
@@ -85,7 +66,7 @@ export default function RootLayout({
 						<NavigationLoader />
 					</Suspense>
 					{children}
-					<CommandPalette />
+					<CommandPaletteWrapper />
 					<CompactBottomBar />
 					<SpeedInsights />
 				</AuthProvider>

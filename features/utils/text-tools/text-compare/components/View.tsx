@@ -2,9 +2,7 @@
 
 import { useState, useMemo, useRef, type ChangeEvent } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import {
-	ArrowLeft,
 	ArrowRightLeft,
 	Copy,
 	Check,
@@ -20,7 +18,9 @@ import {
 	BookOpen,
 	ListFilter,
 	Search,
+	GitCompare,
 } from "lucide-react";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import type {
 	ComparisonOptions,
 	Granularity,
@@ -215,61 +215,38 @@ export default function TextCompareView() {
 	const simTheme = getSimilarityTheme(metrics.similarityPercent);
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-7xl mx-auto space-y-8">
-				{/* Breadcrumb & Navigation */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="flex flex-wrap items-center justify-between gap-4"
-				>
-					<Link
-						href="/utils"
-						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-					>
-						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Utilities
-					</Link>
-
-					{/* Sample Preset Buttons */}
-					<div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
-						<span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5 mr-1">
-							<FileText className="w-3.5 h-3.5 text-indigo-500" /> Presets:
-						</span>
-						{TEXT_COMPARE_SAMPLES.map((sample) => (
-							<button
-								key={sample.id}
-								type="button"
-								onClick={() => handleLoadSample(sample.id)}
-								className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-slate-200/80 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 shadow-2xs hover:shadow-xs transition-[color,border-color,box-shadow] shrink-0 cursor-pointer"
-							>
-								{sample.title}
-							</button>
-						))}
-					</div>
-				</motion.div>
-
-				{/* Header Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.4 }}
-					className="text-center max-w-3xl mx-auto space-y-4"
-				>
-					<div>
-						<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs">
-							<FileText className="w-4 h-4 text-indigo-600" />
-							Text Comparison & Similarity Studio
-						</span>
-					</div>
-					<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
-						Compare 2 <span className="text-indigo-600">Texts</span>
-					</h1>
-					<p className="text-sm sm:text-base text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
-						Granular side-by-side diffs, prose inline tracking, Levenshtein edit
-						distance, and vocabulary similarity matrix.
-					</p>
-				</motion.div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Text Compare Studio"
+					description="Granular side-by-side diffs, prose inline tracking, Levenshtein edit distance, and vocabulary similarity matrix."
+					category={{
+						label: "Development & Code",
+						sublabel: "text comparison & similarity",
+						icon: FileText,
+						color: "indigo",
+					}}
+					icon={GitCompare}
+					actions={
+						<div className="flex items-center gap-2 flex-wrap w-full">
+							<span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+								Presets:
+							</span>
+							<div className="flex items-center gap-2 flex-wrap">
+								{TEXT_COMPARE_SAMPLES.map((sample) => (
+									<button
+										key={sample.id}
+										type="button"
+										onClick={() => handleLoadSample(sample.id)}
+										className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-200 text-slate-700 hover:text-indigo-600 shadow-2xs hover:shadow-xs transition-all shrink-0 cursor-pointer active:scale-95"
+									>
+										{sample.title}
+									</button>
+								))}
+							</div>
+						</div>
+					}
+				/>
 
 				{/* Quick Stats & Overall Similarity Card */}
 				<motion.div

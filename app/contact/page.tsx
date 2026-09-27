@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
 import ContactView from "@/features/contact/components/ContactView";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = createMetadata({
 	title: "Contact | Polma Tambunan",
 	description:

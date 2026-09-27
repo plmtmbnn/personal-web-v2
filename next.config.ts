@@ -68,8 +68,8 @@ const nextConfig: NextConfig = {
 		imageSizes: [16, 32, 48, 64, 96, 128, 256],
 		// Output formats (AVIF for modern browsers, WebP as fallback)
 		formats: ["image/avif", "image/webp"],
-		// Enable image optimization caching
-		minimumCacheTTL: 60,
+		// Enable image optimization caching (30 days)
+		minimumCacheTTL: 2592000,
 		// Dangerously allow SVG uploads (if needed)
 		dangerouslyAllowSVG: false,
 		// Content security policy for images
@@ -83,9 +83,6 @@ const nextConfig: NextConfig = {
 
 	serverExternalPackages: [
 		"node-sql-parser",
-		"jsdom",
-		"@mozilla/readability",
-		"turndown",
 		"papaparse",
 		"sql-formatter",
 		"dompurify",
@@ -109,8 +106,6 @@ const nextConfig: NextConfig = {
 			"@supabase/supabase-js",
 			"recharts",
 			"react-syntax-highlighter",
-			"react-chartjs-2",
-			"chart.js",
 			"react-hook-form",
 			"zod",
 		],

@@ -9,17 +9,15 @@ import {
 	Trash2,
 	Code2,
 	AlertCircle,
-	ArrowLeft,
 	Settings2,
 	RefreshCw,
 	FileCode2,
 	AlignLeft,
 } from "lucide-react";
-import Link from "next/link";
-import { format as formatSql } from "sql-formatter";
+import UtilHeader from "@/features/utils/components/UtilHeader";
+import { formatSqlAction } from "../actions";
 import type { Dialect } from "../types";
 import { DIALECT_OPTIONS } from "../types";
-import { validateSql } from "../utils/sql";
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
@@ -28,6 +26,7 @@ export default function SqlFormatterView() {
 	const [input, setInput] = useState("");
 	const [output, setOutput] = useState("");
 	const [dialect, setDialect] = useState<Dialect>("postgresql");
+	const [isFormatting, setIsFormatting] = useState(false);
 	const [error, setError] = useState<{
 		message: string;
 		line?: number;
@@ -37,35 +36,29 @@ export default function SqlFormatterView() {
 
 	// ─── Handlers ─────────────────────────────────────────────────────────────
 
-	const handleFormat = useCallback(() => {
-		if (!input.trim()) return;
+	const handleFormat = useCallback(async () => {
+		if (!input.trim() || isFormatting) return;
 
-		// 1. Validate
-		const { isValid, error: validationError } = validateSql(input, dialect);
+		setIsFormatting(true);
+		setError(null);
 
-		if (!isValid) {
-			setError(validationError);
-			// We still attempt to format even if invalid, or should we stop?
-			// The requirement asks to display a clear error alert.
-			// Let's stop if it's completely unparseable to avoid confusing output.
-			setOutput("");
-			return;
-		}
-
-		// 2. Format
 		try {
-			const formatted = formatSql(input, {
-				language: dialect === "transactsql" ? "tsql" : dialect,
-				tabWidth: 2,
-				keywordCase: "upper",
-				indentStyle: "tabularLeft",
-			});
-			setOutput(formatted);
-			setError(null);
+			const res = await formatSqlAction(input, dialect);
+			if (!res.isValid) {
+				setError(res.error || { message: "SQL validation error" });
+				setOutput("");
+			} else {
+				setOutput(res.formattedSql || "");
+				setError(null);
+			}
 		} catch (err: any) {
-			setError({ message: `Formatter Error: ${err.message}` });
+			setError({
+				message: `Formatting Error: ${err.message || "Failed to process query"}`,
+			});
+		} finally {
+			setIsFormatting(false);
 		}
-	}, [input, dialect]);
+	}, [input, dialect, isFormatting]);
 
 	const handleClear = () => {
 		setInput("");
@@ -81,40 +74,27 @@ export default function SqlFormatterView() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-7xl mx-auto space-y-8">
-				{/* Header */}
-				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-					<div className="space-y-4">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="SQL Formatter"
+					description="Precise validation & structural query beautification across multiple SQL dialects."
+					category={{
+						label: "Development & Code",
+						sublabel: "sql beautifier",
+						color: "indigo",
+					}}
+					icon={Database}
+					actions={
+						<button
+							type="button"
+							onClick={handleClear}
+							className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all shadow-xs cursor-pointer"
 						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
-								<Database className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									SQL <span className="text-indigo-600">Formatter</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Precise validation & structural query beautification.
-								</p>
-							</div>
-						</div>
-					</div>
-
-					<button
-						onClick={handleClear}
-						className="self-start flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all shadow-xs cursor-pointer"
-					>
-						<Trash2 className="w-4 h-4" /> Clear Editor
-					</button>
-				</div>
+							<Trash2 className="w-3.5 h-3.5" /> Clear Editor
+						</button>
+					}
+				/>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 					{/* ─── Column 1: Configuration & Input ─── */}
@@ -170,11 +150,15 @@ export default function SqlFormatterView() {
 										spellCheck={false}
 									/>
 									<button
+										type="button"
 										onClick={handleFormat}
-										disabled={!input.trim()}
+										disabled={!input.trim() || isFormatting}
 										className="absolute bottom-4 right-4 flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-slate-800 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
 									>
-										<RefreshCw className="w-4 h-4" /> Format SQL
+										<RefreshCw
+											className={`w-4 h-4 ${isFormatting ? "animate-spin" : ""}`}
+										/>
+										<span>{isFormatting ? "Formatting..." : "Format SQL"}</span>
 									</button>
 								</div>
 							</div>

@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import {
-	ArrowLeft,
 	ShieldCheck,
 	KeyRound,
 	Hash,
@@ -24,6 +22,7 @@ import {
 	Eye,
 	EyeOff,
 } from "lucide-react";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import type {
 	EncodingAction,
 	EncodingFormat,
@@ -283,93 +282,65 @@ export default function HashPasswordGeneratorView() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1400px] mx-auto space-y-8">
-				{/* Top Breadcrumb & Zero-Server Badge */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-				>
-					<Link
-						href="/utils"
-						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-					>
-						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Utilities
-					</Link>
-					<div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200/80 rounded-full text-xs font-bold text-slate-600 shadow-2xs">
-						<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-						CSPRNG • Web Crypto API • 100% In-Browser
-					</div>
-				</motion.div>
-
-				{/* Header Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5 }}
-					className="flex flex-col xl:flex-row xl:items-end justify-between gap-6"
-				>
-					<div className="space-y-3">
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20 shrink-0">
-								<ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									Security, Hash &{" "}
-									<span className="text-indigo-600">Password Studio</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Cryptographic password generator, multi-algorithm hasher with
-									file checksum verification, and two-way security text
-									formatting.
-								</p>
-							</div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1400px] mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Security, Hash & Password Studio"
+					description="Cryptographic password generator, multi-algorithm hasher with file checksum verification, and two-way security text formatting."
+					category={{
+						label: "Security & Diagnostics",
+						sublabel: "csprng & hash verification",
+						icon: ShieldCheck,
+						color: "sky",
+					}}
+					icon={KeyRound}
+					badges={
+						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
+							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+							<span>CSPRNG • Web Crypto API • 100% In-Browser</span>
 						</div>
-					</div>
+					}
+				/>
 
-					{/* Navigation Tabs */}
-					<div className="flex items-center p-1.5 bg-white border border-slate-200/80 rounded-2xl shadow-xs gap-1">
-						<button
-							type="button"
-							onClick={() => setActiveTab("password")}
-							className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-								activeTab === "password"
-									? "bg-slate-900 text-white shadow-sm"
-									: "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
-							}`}
-						>
-							<KeyRound className="w-4 h-4" />
-							<span>Password Studio</span>
-						</button>
-						<button
-							type="button"
-							onClick={() => setActiveTab("hasher")}
-							className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-								activeTab === "hasher"
-									? "bg-slate-900 text-white shadow-sm"
-									: "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
-							}`}
-						>
-							<Hash className="w-4 h-4" />
-							<span>Crypto Hasher</span>
-						</button>
-						<button
-							type="button"
-							onClick={() => setActiveTab("formatter")}
-							className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-								activeTab === "formatter"
-									? "bg-slate-900 text-white shadow-sm"
-									: "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
-							}`}
-						>
-							<Binary className="w-4 h-4" />
-							<span>Formatter & Encoder</span>
-						</button>
-					</div>
-				</motion.div>
+				{/* Navigation Tabs */}
+				<div className="flex items-center p-1.5 bg-white border border-slate-200/80 rounded-2xl shadow-xs gap-1">
+					<button
+						type="button"
+						onClick={() => setActiveTab("password")}
+						className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+							activeTab === "password"
+								? "bg-slate-900 text-white shadow-sm"
+								: "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
+						}`}
+					>
+						<KeyRound className="w-4 h-4" />
+						<span>Password Studio</span>
+					</button>
+					<button
+						type="button"
+						onClick={() => setActiveTab("hasher")}
+						className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+							activeTab === "hasher"
+								? "bg-slate-900 text-white shadow-sm"
+								: "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
+						}`}
+					>
+						<Hash className="w-4 h-4" />
+						<span>Crypto Hasher</span>
+					</button>
+					<button
+						type="button"
+						onClick={() => setActiveTab("formatter")}
+						className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+							activeTab === "formatter"
+								? "bg-slate-900 text-white shadow-sm"
+								: "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
+						}`}
+					>
+						<Binary className="w-4 h-4" />
+						<span>Formatter & Encoder</span>
+					</button>
+				</div>
 
 				{/* ═══════════════════════════════════════════════════════════════════ */}
 				{/* TAB 1: PASSWORD STUDIO                                             */}

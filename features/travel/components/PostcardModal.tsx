@@ -11,10 +11,17 @@ import {
 	Link2,
 	RefreshCw,
 } from "lucide-react";
+import { Caveat } from "next/font/google";
 import Image from "next/image";
 import { AUTHOR } from "@/lib/shared/constants";
 import type { Destination } from "../types";
 import { usePostcardActions } from "../hooks/usePostcardActions";
+
+const caveat = Caveat({
+	subsets: ["latin"],
+	variable: "--font-caveat",
+	display: "swap",
+});
 
 /* ═══════════════════════════════════════════════════════════════════════
  * Animation presets
@@ -137,7 +144,7 @@ export default function PostcardModal({
 	return (
 		<AnimatePresence>
 			<div
-				className="fixed inset-0 z-[60] flex flex-col p-4 sm:p-6 lg:p-8 overflow-hidden"
+				className={`fixed inset-0 z-[60] flex flex-col p-4 sm:p-6 lg:p-8 overflow-hidden ${caveat.variable}`}
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="journal-title"

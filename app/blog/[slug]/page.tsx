@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import {
 	getBlogBySlug,
+	getBlogBySlugStatic,
 	getBlogsStatic,
-	getRelatedPosts,
+	getRelatedPostsStatic,
 } from "@/features/blog/data";
 import BlogContent from "@/features/blog/components/BlogContent";
 import TableOfContents from "@/features/blog/components/TableOfContents";
@@ -62,7 +63,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
 	const resolvedParams = await params;
 	const slug = decodeURIComponent(resolvedParams.slug);
-	const post = await getBlogBySlug(slug);
+	const post = (await getBlogBySlugStatic(slug)) || (await getBlogBySlug(slug));
 
 	if (!post) return { title: "Entry Not Found" };
 
@@ -95,12 +96,17 @@ export default async function BlogDetailPage({
 	const resolvedParams = await params;
 	const slug = decodeURIComponent(resolvedParams.slug);
 
-	// Fetch post (deduped with generateMetadata via React cache)
-	const post = await getBlogBySlug(slug);
+	// Fetch post (static first for instant SSG / ISR without cookies)
+	let post = await getBlogBySlugStatic(slug);
+
+	// If not found in published blogs, check if admin is previewing draft
+	if (!post) {
+		post = await getBlogBySlug(slug);
+	}
 	if (!post) return notFound();
 
 	// Fetch related posts from matching category
-	const related = await getRelatedPosts(slug, post.category, 3);
+	const related = await getRelatedPostsStatic(slug, post.category, 3);
 
 	const formattedDate = new Intl.DateTimeFormat("en-US", {
 		dateStyle: "long",

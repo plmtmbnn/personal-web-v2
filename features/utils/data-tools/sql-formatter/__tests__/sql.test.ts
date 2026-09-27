@@ -28,4 +28,21 @@ describe("SQL Formatter & Validator", () => {
 		expect(res.error).not.toBeNull();
 		expect(typeof res.error?.message).toBe("string");
 	});
+
+	it("formats valid query via formatSqlAction", async () => {
+		const { formatSqlAction } = await import("../actions");
+		const raw = "select id, name from users where id=1";
+		const res = await formatSqlAction(raw, "postgresql");
+		expect(res.isValid).toBe(true);
+		expect(res.formattedSql).toContain("SELECT");
+		expect(res.formattedSql).toContain("FROM");
+	});
+
+	it("returns error for invalid query via formatSqlAction", async () => {
+		const { formatSqlAction } = await import("../actions");
+		const bad = "select from where";
+		const res = await formatSqlAction(bad, "postgresql");
+		expect(res.isValid).toBe(false);
+		expect(res.error).toBeDefined();
+	});
 });

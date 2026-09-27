@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
 import LiverpoolView from "@/features/liverpool/components/View";
 
+import { getLiverpoolFixturesStatic } from "@/features/liverpool/actions";
+
+export const revalidate = 3600;
+
 export const metadata: Metadata = createMetadata({
 	title: "Liverpool FC | Matchday Schedule & Fixtures",
 	description:
@@ -19,6 +23,7 @@ export const metadata: Metadata = createMetadata({
 	],
 });
 
-export default function LiverpoolPage() {
-	return <LiverpoolView />;
+export default async function LiverpoolPage() {
+	const initialData = await getLiverpoolFixturesStatic();
+	return <LiverpoolView initialData={initialData} />;
 }

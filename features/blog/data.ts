@@ -188,6 +188,37 @@ export async function getBlogById(id: string): Promise<Blog | null> {
 }
 
 /**
+ * Fetch related posts from the same category for static generation (no cookies accessed).
+ */
+export const getRelatedPostsStatic = cache(
+	async (currentSlug: string, category: string, limit = 3): Promise<Blog[]> => {
+		const supabase = getStaticClient();
+		try {
+			const { data, error } = await supabase
+				.from("blogs")
+				.select(
+					"id, title, slug, description, date, category, image_url, is_headline, is_private, published, content",
+				)
+				.eq("published", true)
+				.eq("category", category)
+				.neq("slug", currentSlug)
+				.order("date", { ascending: false })
+				.limit(limit);
+
+			if (error) {
+				console.error("Error fetching related posts static:", error.message);
+				return [];
+			}
+
+			return (data as Blog[]) || [];
+		} catch (error) {
+			console.error("Unexpected error fetching related posts static:", error);
+			return [];
+		}
+	},
+);
+
+/**
  * Fetch related posts from the same category, excluding the current slug.
  * Used for the "More from the Journal" section at the bottom of blog detail pages.
  */

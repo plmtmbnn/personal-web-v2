@@ -2,9 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import {
-	ArrowLeft,
 	Image as ImageIcon,
 	Upload,
 	Download,
@@ -19,6 +17,7 @@ import {
 	FileCheck,
 	ArrowRight,
 } from "lucide-react";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import {
 	type ConversionItem,
 	FORMAT_OPTIONS,
@@ -338,71 +337,46 @@ export default function ImageConverterView() {
 	const validCount = items.filter((it) => it.validation.isValid).length;
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1400px] mx-auto space-y-8">
-				{/* Breadcrumb & Navigation */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-				>
-					<Link
-						href="/utils"
-						className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-					>
-						<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-						Back to Utilities
-					</Link>
-					<div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200/80 rounded-full text-xs font-bold text-slate-600 shadow-2xs">
-						<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-						100% Client-Side • Zero Server Uploads
-					</div>
-				</motion.div>
-
-				{/* Header Section */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.5 }}
-					className="flex flex-col xl:flex-row xl:items-end justify-between gap-6"
-				>
-					<div className="space-y-3">
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20 shrink-0">
-								<ImageIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									Image Extension & Format{" "}
-									<span className="text-indigo-600">Converter</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Convert image extensions and formats with binary magic-number
-									validation, quality scaling, and batch processing.
-								</p>
-							</div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1400px] mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Image Extension & Format Converter"
+					description="Convert image extensions and formats with binary magic-number validation, quality scaling, and batch processing."
+					category={{
+						label: "Data & File Systems",
+						sublabel: "image format transformation",
+						icon: ImageIcon,
+						color: "emerald",
+					}}
+					icon={ImageIcon}
+					badges={
+						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
+							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+							<span>100% Client-Side • Zero Server Uploads</span>
 						</div>
-					</div>
-
-					{/* Quick Preset Buttons */}
-					<div className="flex flex-wrap items-center gap-2">
-						{QUICK_PRESETS.map((preset) => (
-							<button
-								key={preset.label}
-								type="button"
-								onClick={() => handleApplyPreset(preset)}
-								className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-									globalFormat === preset.format
-										? "bg-slate-900 text-white border-slate-900 shadow-sm"
-										: "bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50"
-								}`}
-							>
-								<span>{preset.icon}</span>
-								<span>{preset.label}</span>
-							</button>
-						))}
-					</div>
-				</motion.div>
+					}
+					actions={
+						<div className="flex flex-wrap items-center gap-1.5">
+							<span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+								Presets:
+							</span>
+							{QUICK_PRESETS.map((preset) => (
+								<button
+									key={preset.label}
+									type="button"
+									onClick={() => handleApplyPreset(preset)}
+									className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border active:scale-95 ${
+										globalFormat === preset.format
+											? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+											: "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50"
+									}`}
+								>
+									<span>{preset.label}</span>
+								</button>
+							))}
+						</div>
+					}
+				/>
 
 				{/* Global Controls Bar */}
 				<motion.div

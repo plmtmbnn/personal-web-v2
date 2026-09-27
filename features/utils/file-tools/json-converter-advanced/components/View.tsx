@@ -12,12 +12,11 @@ import {
 	ShieldCheck,
 	Type,
 	Trash2,
-	ArrowLeft,
 	Zap,
 	AlertCircle,
 	Code2,
 } from "lucide-react";
-import Link from "next/link";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/prism-light";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import typescript from "react-syntax-highlighter/dist/esm/languages/prism/typescript";
@@ -120,62 +119,51 @@ export default function JsonToSchemaView() {
 	];
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-32 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-[1600px] mx-auto space-y-8">
-				{/* Header */}
-				<div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-8">
-					<div className="space-y-4">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20 shrink-0">
-								<Braces className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400" />
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-[1600px] mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="Schema Forge"
+					description="Advanced JSON to Multi-Target converter (TypeScript, Go, Zod, Mongoose, Joi) with recursive parsing."
+					category={{
+						label: "Development & Code",
+						sublabel: "json to schema converter",
+						icon: Braces,
+						color: "indigo",
+					}}
+					icon={Braces}
+					actions={
+						<div className="flex items-center gap-2.5">
+							<div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1.5 shadow-2xs">
+								<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+									Root:
+								</span>
+								<input
+									type="text"
+									value={rootName}
+									onChange={(e) => setRootName(e.target.value)}
+									className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none w-28"
+									placeholder="Root Name"
+								/>
 							</div>
-							<div>
-								<h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
-									Schema <span className="text-indigo-600">Forge</span>
-								</h1>
-								<p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-									Advanced JSON to Multi-Target converter (TS, Go, Zod,
-									Mongoose, Joi).
-								</p>
-							</div>
+							<button
+								type="button"
+								onClick={handleBeautify}
+								className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-2xs transition-all cursor-pointer active:scale-95"
+							>
+								<Code2 className="w-3.5 h-3.5 text-indigo-600" />
+								<span>Beautify</span>
+							</button>
+							<button
+								type="button"
+								onClick={() => setInput("")}
+								className="flex items-center justify-center w-8 h-8 bg-white border border-slate-200/80 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 shadow-2xs transition-all cursor-pointer active:scale-95"
+								title="Clear Input"
+							>
+								<Trash2 className="w-3.5 h-3.5" />
+							</button>
 						</div>
-					</div>
-
-					<div className="flex items-center gap-3">
-						<div className="flex flex-col gap-1">
-							<span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-1">
-								Root Identifier
-							</span>
-							<input
-								type="text"
-								value={rootName}
-								onChange={(e) => setRootName(e.target.value)}
-								className="px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all w-44 shadow-xs"
-								placeholder="Root Name"
-							/>
-						</div>
-						<button
-							onClick={handleBeautify}
-							className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all cursor-pointer shadow-xs mt-4"
-						>
-							<Code2 className="w-4 h-4 text-indigo-600" /> Beautify
-						</button>
-						<button
-							onClick={() => setInput("")}
-							className="flex items-center justify-center w-10 h-10 bg-white border border-slate-200/80 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-xs mt-4"
-							title="Clear Input"
-						>
-							<Trash2 className="w-4 h-4" />
-						</button>
-					</div>
-				</div>
+					}
+				/>
 
 				{/* Workspace */}
 				<div className="grid grid-cols-1 xl:grid-cols-2 gap-8 flex-1 min-h-[650px]">

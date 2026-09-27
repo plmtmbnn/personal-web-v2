@@ -20,6 +20,7 @@ import {
 	EyeOff,
 	ShieldAlert,
 } from "lucide-react";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { decodeJWT, verifyHmacSignature } from "../utils/jwt";
 import { JWT_PRESETS } from "../utils/presets";
@@ -148,40 +149,25 @@ export default function JWTInspectorView() {
 	}, [decoded.payload]);
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern py-20 pb-32 sm:py-24 sm:pb-36 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-7xl mx-auto space-y-6">
-				{/* Hero Header */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.4 }}
-					className="space-y-3"
-				>
-					<div className="flex flex-wrap items-center justify-between gap-3">
-						<div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-xs text-xs font-bold text-slate-700">
-							<ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-							<span>Security & Token Studio</span>
-						</div>
-
-						{/* Zero Telemetry Trust Badge */}
-						<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold shadow-xs">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+				<UtilHeader
+					title="JWT & API Token Inspector"
+					description="Decode JSON Web Tokens, inspect RFC 7519 claims, monitor live expiration countdowns, and verify HMAC signatures locally in your browser memory."
+					category={{
+						label: "Security & Diagnostics",
+						sublabel: "rfc 7519 claims & signature audit",
+						icon: ShieldCheck,
+						color: "sky",
+					}}
+					icon={KeyRound}
+					badges={
+						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
 							<Lock className="w-3 h-3 text-emerald-600" />
 							<span>100% Client-Side Decoded • Zero Server Telemetry</span>
 						</div>
-					</div>
-
-					<div className="space-y-1">
-						<h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-							JWT & API Token{" "}
-							<span className="text-indigo-600">Inspector.</span>
-						</h1>
-						<p className="text-xs sm:text-sm text-slate-600 font-medium max-w-2xl">
-							Decode JSON Web Tokens, inspect RFC 7519 claims, monitor live
-							expiration countdowns, and verify HMAC signatures locally in your
-							browser memory.
-						</p>
-					</div>
-				</motion.div>
+					}
+				/>
 
 				{/* Preset Quick Load Bar */}
 				<motion.div

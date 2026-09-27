@@ -8,7 +8,6 @@ import {
 	ShieldX,
 	AlertTriangle,
 	Search,
-	ArrowLeft,
 	Copy,
 	Check,
 	RefreshCw,
@@ -19,7 +18,7 @@ import {
 	Eye,
 	Layers,
 } from "lucide-react";
-import Link from "next/link";
+import UtilHeader from "@/features/utils/components/UtilHeader";
 import type { URLAnalysisResult, RiskLevel } from "../types";
 import { analyzeURL } from "../utils/analyzer";
 import { PRESET_URLS } from "../data/presets";
@@ -136,52 +135,38 @@ ${analysis.flags.map((f) => `- [${f.severity.toUpperCase()}] ${f.title}: ${f.des
 	const RiskIcon = theme.icon;
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pb-32 pt-24 sm:pt-28 font-sans">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 relative z-10">
-				{/* Header Section */}
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-					<div className="space-y-2">
-						<Link
-							href="/utils"
-							className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors gap-2 group !no-underline"
-						>
-							<ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-							Back to Utilities
-						</Link>
-						<div className="flex items-center gap-3">
-							<div className="w-10 h-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-md shrink-0">
-								<ShieldCheck className="w-5 h-5 text-indigo-400" />
-							</div>
-							<div>
-								<h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-									URL Safety <span className="text-indigo-600">Inspector</span>
-								</h1>
-								<p className="text-xs font-bold text-slate-500 mt-0.5">
-									Detect shorteners, IDN homograph phishing, malware indicators,
-									& invalid URL characters.
-								</p>
-							</div>
-						</div>
-					</div>
-
-					{analysis.isValid && (
-						<button
-							type="button"
-							onClick={copyReport}
-							className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer self-start sm:self-auto"
-						>
-							{copied ? (
-								<Check className="w-4 h-4 text-emerald-600" />
-							) : (
-								<Copy className="w-4 h-4 text-slate-500" />
-							)}
-							<span>{copied ? "Report Copied!" : "Copy Report"}</span>
-						</button>
-					)}
-				</div>
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 font-sans">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 relative z-10">
+				<UtilHeader
+					title="URL Safety & Threat Inspector"
+					description="Detect phishing links, IDN homographs, URL shorteners, raw IP hosts, and invalid URL characters."
+					category={{
+						label: "Security & Diagnostics",
+						sublabel: "phishing & threat detection",
+						icon: ShieldCheck,
+						color: "sky",
+					}}
+					icon={ShieldCheck}
+					actions={
+						analysis.isValid ? (
+							<button
+								type="button"
+								onClick={copyReport}
+								className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+							>
+								{copied ? (
+									<Check className="w-3.5 h-3.5 text-emerald-600" />
+								) : (
+									<Copy className="w-3.5 h-3.5 text-slate-500" />
+								)}
+								<span>{copied ? "Copied" : "Copy Report"}</span>
+							</button>
+						) : undefined
+					}
+				/>
 
 				{/* Presets & URL Scanner Input */}
-				<div className="bg-white border border-slate-200/80 rounded-[2.5rem] p-6 sm:p-8 shadow-xl shadow-slate-200/40 space-y-6">
+				<div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
 					<div className="space-y-2">
 						<label
 							htmlFor="url-input"

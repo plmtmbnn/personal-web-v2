@@ -27,8 +27,12 @@ import type {
 	StravaDataResult,
 	StravaRunActivity,
 } from "@/services/strava/service";
+import dynamic from "next/dynamic";
 import PersonalBestsSwipeCard from "./PersonalBestsSwipeCard";
-import ActivityDetailModal from "./ActivityDetailModal";
+
+const ActivityDetailModal = dynamic(() => import("./ActivityDetailModal"), {
+	ssr: false,
+});
 
 const PAGE_SIZE = 6;
 

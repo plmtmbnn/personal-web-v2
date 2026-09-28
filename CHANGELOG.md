@@ -1,3 +1,10 @@
+# [0.93.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.92.0...v0.93.0) (2026-09-28)
+
+
+### Features
+
+* refine travel cards, running metrics view, and bottom navigation bar ([1491323](https://github.com/plmtmbnn/personal-web-v2/commit/1491323a752a76ebe6824ff8af85c6c014867a36))
+
 # [0.92.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.91.0...v0.92.0) (2026-09-27)
 
 

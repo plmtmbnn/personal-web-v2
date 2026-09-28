@@ -12,7 +12,9 @@ import {
 	Search,
 	SearchX,
 	X,
-	ArrowLeft,
+	ChevronRight,
+	Globe,
+	Navigation,
 } from "lucide-react";
 import { destinations } from "@/features/travel/data";
 import dynamic from "next/dynamic";
@@ -31,6 +33,14 @@ type FilterTab =
 	| "wishlist"
 	| "domestic"
 	| "international";
+
+const FILTER_ACCENTS: Record<FilterTab, string> = {
+	all: "bg-slate-900 text-white",
+	completed: "bg-emerald-600 text-white",
+	wishlist: "bg-amber-500 text-white",
+	domestic: "bg-indigo-600 text-white",
+	international: "bg-cyan-600 text-white",
+};
 
 function TravelContent() {
 	const reduceMotion = useReducedMotion();
@@ -85,7 +95,7 @@ function TravelContent() {
 		}
 	};
 
-	// Counts calculation
+	// Counts
 	const totalDestinations = destinations.length;
 	const totalCountries = new Set(destinations.map((d) => d.country)).size;
 	const domesticCount = destinations.filter(
@@ -98,42 +108,10 @@ function TravelContent() {
 		(visitedDestinations.length / totalDestinations) * 100,
 	);
 
-	// 4 Telemetry Stats
-	const telemetryStats = [
-		{
-			label: "Countries",
-			value: `${totalCountries} Countries`,
-			sublabel: "Domestic & Global",
-			icon: MapIcon,
-			badgeColor: "text-emerald-600 bg-emerald-50 border-emerald-100",
-		},
-		{
-			label: "Completed",
-			value: `${visitedDestinations.length} Explored`,
-			sublabel: `${completionRate}% of Bucket List`,
-			icon: CheckCircle2,
-			badgeColor: "text-indigo-600 bg-indigo-50 border-indigo-100",
-		},
-		{
-			label: "Wishlist",
-			value: `${wishlistDestinations.length} Planned`,
-			sublabel: "On Future Radar",
-			icon: Star,
-			badgeColor: "text-amber-600 bg-amber-50 border-amber-100",
-		},
-		{
-			label: "Postcards",
-			value: "3D Flip Canvas",
-			sublabel: "Vintage Polaroid PNG",
-			icon: Compass,
-			badgeColor: "text-cyan-600 bg-cyan-50 border-cyan-100",
-		},
-	];
-
-	// Filter Tabs configuration
+	// Filter Tabs
 	const filterTabs: { id: FilterTab; label: string; count: number }[] = [
 		{ id: "all", label: "All", count: totalDestinations },
-		{ id: "completed", label: "Completed", count: visitedDestinations.length },
+		{ id: "completed", label: "Visited", count: visitedDestinations.length },
 		{ id: "wishlist", label: "Wishlist", count: wishlistDestinations.length },
 		{ id: "domestic", label: "Domestic", count: domesticCount },
 		{ id: "international", label: "International", count: intlCount },
@@ -163,7 +141,6 @@ function TravelContent() {
 				return matchesSearch && matchesTab;
 			})
 			.sort((a, b) => {
-				// Completed items first (by visitedDate desc), then wishlist
 				if (a.isVisited && !b.isVisited) return -1;
 				if (!a.isVisited && b.isVisited) return 1;
 				if (a.isVisited && b.isVisited) {
@@ -179,114 +156,167 @@ function TravelContent() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-6 sm:space-y-8">
-				{/* ── Modern Floating Card Header Standard ── */}
+		<main className="min-h-screen relative pb-32 sm:pb-36 overflow-x-hidden">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-5 sm:space-y-6">
+				{/* ── Modern Floating Card Header ─────────────────────────── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.4, ease: "easeOut" }}
 					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
-					{/* Contextual Breadcrumb */}
-					<div className="flex items-center gap-2 mb-3">
+					{/* Breadcrumb */}
+					<nav className="flex items-center gap-1.5 mb-4 text-xs font-semibold text-slate-400">
 						<Link
 							href="/adventures"
-							className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-emerald-600 transition-colors gap-1.5 !no-underline"
+							className="hover:text-slate-700 transition-colors !no-underline"
 						>
-							<ArrowLeft className="w-3.5 h-3.5" />
-							<span>Adventures</span>
+							Adventures
 						</Link>
-						<span className="text-slate-300">/</span>
-						<span className="text-xs font-bold text-slate-700">Travel</span>
-					</div>
+						<ChevronRight className="w-3.5 h-3.5 shrink-0" />
+						<span className="text-slate-700">Travel</span>
+					</nav>
 
-					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-						<div>
-							<div className="flex items-center gap-2 mb-2">
-								<div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-									<Compass className="w-3.5 h-3.5 text-emerald-600" />
+					<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
+						{/* Title block */}
+						<div className="flex-1 min-w-0">
+							<div className="flex items-center gap-2.5 mb-3">
+								<div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0">
+									<Compass className="w-5 h-5" />
 								</div>
-								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-									EXPEDITION LOG · GLOBAL TRAVEL & POSTCARD STUDIO
-								</span>
+								<div>
+									<p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400 whitespace-nowrap">
+										EXPEDITION LOG · GLOBAL TRAVEL &amp; POSTCARD STUDIO
+									</p>
+									<p className="text-[10px] font-medium text-slate-400 mt-0.5">
+										Bucket list tracker
+									</p>
+								</div>
 							</div>
 							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
 								Travel Bucket List
 							</h1>
-							<p className="text-sm text-slate-500 font-medium mt-1 max-w-xl">
-								Curating a life of exploration. Mapping journeys completed,
-								wishlist destinations, and generating vintage 3D airmail
-								postcards.
+							<p className="text-sm text-slate-500 font-medium mt-1.5 max-w-lg leading-relaxed">
+								Curating a life of exploration — journeys completed, wishlist
+								destinations, and vintage 3D airmail postcards.
 							</p>
 						</div>
 
-						{/* Telemetry Quick Strip */}
+						{/* Compact stat strip */}
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="text-center">
-								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
+								<p className="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums">
 									{totalCountries}
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 									Countries
 								</p>
 							</div>
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
-								<p className="text-xl font-extrabold text-emerald-600 tabular-nums">
+								<p className="text-xl sm:text-2xl font-extrabold text-emerald-600 tabular-nums">
 									{visitedDestinations.length}
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 									Explored
 								</p>
 							</div>
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
-								<p className="text-xl font-extrabold text-amber-600 tabular-nums">
+								<p className="text-xl sm:text-2xl font-extrabold text-amber-500 tabular-nums">
 									{wishlistDestinations.length}
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 									Wishlist
 								</p>
 							</div>
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
-								<p className="text-xl font-extrabold text-indigo-600 tabular-nums">
+								<p className="text-xl sm:text-2xl font-extrabold text-indigo-600 tabular-nums">
 									{completionRate}%
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 									Done
 								</p>
 							</div>
 						</div>
 					</div>
+
+					{/* Progress bar */}
+					<div className="mt-5 pt-4 border-t border-slate-100">
+						<div className="flex items-center justify-between mb-2">
+							<span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+								Bucket list progress
+							</span>
+							<span className="text-[10px] font-extrabold text-emerald-600">
+								{visitedDestinations.length} / {totalDestinations} destinations
+							</span>
+						</div>
+						<div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+							<motion.div
+								className="h-full bg-emerald-500 rounded-full"
+								initial={{ width: 0 }}
+								animate={{ width: `${completionRate}%` }}
+								transition={{ duration: 0.9, ease: "easeOut", delay: 0.3 }}
+							/>
+						</div>
+					</div>
 				</motion.div>
 
-				{/* ── Telemetry Summary Strip (4-Col Grid) ── */}
+				{/* ── Summary Cards Row ─────────────────────────────────────── */}
 				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+					initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
-					className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+					transition={{ duration: 0.4, delay: 0.07, ease: "easeOut" }}
+					className="grid grid-cols-2 sm:grid-cols-4 gap-3"
 				>
-					{telemetryStats.map((stat) => (
+					{[
+						{
+							label: "Countries",
+							value: totalCountries,
+							sublabel: "across the globe",
+							icon: Globe,
+							color: "text-emerald-600 bg-emerald-50 border-emerald-200/70",
+						},
+						{
+							label: "Explored",
+							value: visitedDestinations.length,
+							sublabel: `${completionRate}% of bucket list`,
+							icon: CheckCircle2,
+							color: "text-indigo-600 bg-indigo-50 border-indigo-200/70",
+						},
+						{
+							label: "Wishlist",
+							value: wishlistDestinations.length,
+							sublabel: "on future radar",
+							icon: Star,
+							color: "text-amber-600 bg-amber-50 border-amber-200/70",
+						},
+						{
+							label: "Postcards",
+							value: visitedDestinations.length,
+							sublabel: "vintage 3D canvas",
+							icon: MapIcon,
+							color: "text-cyan-600 bg-cyan-50 border-cyan-200/70",
+						},
+					].map((stat) => (
 						<div
 							key={stat.label}
-							className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3.5"
+							className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3"
 						>
 							<div
-								className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${stat.badgeColor}`}
+								className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${stat.color}`}
 							>
-								<stat.icon className="w-5 h-5" />
+								<stat.icon className="w-4.5 h-4.5" />
 							</div>
 							<div className="min-w-0">
 								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">
 									{stat.label}
 								</p>
-								<p className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
+								<p className="text-base font-extrabold text-slate-900 tabular-nums leading-tight">
 									{stat.value}
 								</p>
-								<p className="text-[11px] text-slate-500 font-medium truncate">
+								<p className="text-[10px] text-slate-400 font-medium truncate">
 									{stat.sublabel}
 								</p>
 							</div>
@@ -294,7 +324,7 @@ function TravelContent() {
 					))}
 				</motion.div>
 
-				{/* ── Filter & Search Toolbar ── */}
+				{/* ── Filter & Search Toolbar ────────────────────────────────── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -302,18 +332,19 @@ function TravelContent() {
 					className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5"
 				>
 					<div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-						{/* Category / Status Pills */}
-						<div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+						{/* Filter pills */}
+						<div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
 							{filterTabs.map((tab) => {
 								const isActive = activeFilter === tab.id;
+								const activeClass = FILTER_ACCENTS[tab.id];
 								return (
 									<button
 										key={tab.id}
 										type="button"
 										onClick={() => setActiveFilter(tab.id)}
-										className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+										className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
 											isActive
-												? "bg-slate-900 text-white shadow-xs"
+												? `${activeClass} shadow-xs`
 												: "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
 										}`}
 									>
@@ -321,7 +352,7 @@ function TravelContent() {
 										<span
 											className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${
 												isActive
-													? "bg-slate-800 text-slate-200"
+													? "bg-black/15 text-white"
 													: "bg-slate-200/70 text-slate-600"
 											}`}
 										>
@@ -332,7 +363,7 @@ function TravelContent() {
 							})}
 						</div>
 
-						{/* Search Input with explicit icon layering */}
+						{/* Search */}
 						<div className="relative w-full sm:w-64">
 							<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
 							<input
@@ -355,7 +386,7 @@ function TravelContent() {
 						</div>
 					</div>
 
-					{/* Active Filter Summary */}
+					{/* Active filter summary */}
 					{hasActiveFilter && (
 						<div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
 							<span>
@@ -376,13 +407,35 @@ function TravelContent() {
 								className="inline-flex items-center gap-1 font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
 							>
 								<X className="w-3.5 h-3.5" />
-								<span>Clear filters</span>
+								<span>Clear</span>
 							</button>
 						</div>
 					)}
 				</motion.div>
 
-				{/* ── Destination Cards Grid (3-Column) ── */}
+				{/* ── Wishlist section header (shown when any wishlist cards visible) ── */}
+				{(activeFilter === "all" || activeFilter === "wishlist") &&
+					filteredDestinations.some((d) => !d.isVisited) &&
+					!searchQuery && (
+						<motion.div
+							initial={reduceMotion ? false : { opacity: 0 }}
+							animate={{ opacity: 1 }}
+							className="flex items-center gap-3"
+						>
+							<div className="flex items-center gap-2">
+								<Navigation className="w-4 h-4 text-amber-500" />
+								<span className="text-sm font-extrabold text-slate-700">
+									On the Radar
+								</span>
+								<span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full uppercase tracking-wider">
+									{wishlistDestinations.length} planned
+								</span>
+							</div>
+							<div className="flex-1 h-px bg-slate-200/60" />
+						</motion.div>
+					)}
+
+				{/* ── Destination Cards Grid ─────────────────────────────────── */}
 				<AnimatePresence mode="wait">
 					{filteredDestinations.length === 0 ? (
 						<motion.div
@@ -399,8 +452,8 @@ function TravelContent() {
 								No Destinations Found
 							</h3>
 							<p className="text-xs text-slate-500 mb-6 leading-relaxed">
-								We couldn't find any destinations matching your search query or
-								selected category filter.
+								No destinations match your current search or filter. Try
+								broadening your search.
 							</p>
 							{hasActiveFilter && (
 								<button
@@ -420,7 +473,7 @@ function TravelContent() {
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.25 }}
 						>
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
 								{filteredDestinations.map((dest, i) => (
 									<DestinationCard
 										key={dest.id}
@@ -435,7 +488,7 @@ function TravelContent() {
 				</AnimatePresence>
 			</div>
 
-			{/* ── Postcard & Sticker Modal ──────────────────────────── */}
+			{/* ── Postcard & Sticker Modal ────────────────────────────── */}
 			<PostcardModal
 				destination={selectedDestination}
 				onClose={handleCloseModal}

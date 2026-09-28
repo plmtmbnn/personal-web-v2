@@ -13,7 +13,7 @@ import { SITE, SOCIAL_LINKS } from "@/lib/shared/constants";
 export const metadata: Metadata = createMetadata();
 
 export const viewport: Viewport = {
-	themeColor: "#f8fafc",
+	themeColor: "#eceef2",
 	width: "device-width",
 	initialScale: 1,
 };
@@ -58,7 +58,7 @@ export default function RootLayout({
 				/>
 			</head>
 			<body
-				className={`${varela.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-slate-50/80 bg-dot-pattern text-slate-900`}
+				className={`${varela.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-dot-pattern text-slate-900`}
 				suppressHydrationWarning
 			>
 				<AuthProvider>

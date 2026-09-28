@@ -4,10 +4,8 @@ import { useEffect, useState, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
 	Activity,
-	ArrowLeft,
 	Flame,
 	Mountain,
-	Calendar,
 	CheckCircle,
 	ShieldAlert,
 	TrendingUp,
@@ -19,6 +17,7 @@ import {
 	Route,
 	Gauge,
 	ChevronDown,
+	ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -437,17 +436,17 @@ export default function RunningView({
 	}, [rawRuns]);
 
 	const totalRuns = stats?.all_run_totals?.count
-		? stats.all_run_totals.count.toLocaleString()
+		? stats.all_run_totals.count.toLocaleString("en-US")
 		: hasRunData
-			? rawRuns.length.toLocaleString()
+			? rawRuns.length.toLocaleString("en-US")
 			: "—";
 
 	const kmPerYear = stats?.ytd_run_totals?.distance
-		? Math.round(stats.ytd_run_totals.distance / 1000).toLocaleString()
+		? Math.round(stats.ytd_run_totals.distance / 1000).toLocaleString("en-US")
 		: hasRunData
 			? Math.round(
 					rawRuns.reduce((acc, run) => acc + run.distance, 0) / 1000,
-				).toLocaleString()
+				).toLocaleString("en-US")
 			: "—";
 
 	const hasActiveFilters =
@@ -456,8 +455,8 @@ export default function RunningView({
 		sortBy !== "date-desc";
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 space-y-8 sm:space-y-10 relative z-10">
+		<main className="min-h-screen relative pb-32 sm:pb-36 overflow-x-hidden">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 space-y-6 sm:space-y-8 relative z-10">
 				{/* Status Banners */}
 				{statusMessage && (
 					<motion.div
@@ -488,33 +487,38 @@ export default function RunningView({
 					transition={{ duration: 0.4, ease: "easeOut" }}
 					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
-					{/* Contextual Breadcrumb */}
-					<div className="flex items-center gap-2 mb-3">
+					{/* Breadcrumb */}
+					<nav className="flex items-center gap-1.5 mb-4 text-xs font-semibold text-slate-400">
 						<Link
 							href="/adventures"
-							className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-emerald-600 transition-colors gap-1.5 !no-underline"
+							className="hover:text-slate-700 transition-colors !no-underline"
 						>
-							<ArrowLeft className="w-3.5 h-3.5" />
-							<span>Adventures</span>
+							Adventures
 						</Link>
-						<span className="text-slate-300">/</span>
-						<span className="text-xs font-bold text-slate-700">Running</span>
-					</div>
+						<ChevronRight className="w-3.5 h-3.5 shrink-0" />
+						<span className="text-slate-700">Running</span>
+					</nav>
 
-					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-						<div>
-							<div className="flex items-center gap-2 mb-2">
-								<div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-									<Activity className="w-3.5 h-3.5 text-emerald-600" />
+					<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
+						{/* Title block */}
+						<div className="flex-1 min-w-0">
+							<div className="flex items-center gap-2.5 mb-3">
+								<div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0">
+									<Activity className="w-5 h-5" />
 								</div>
-								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-									PERFORMANCE HUB · STRAVA TELEMETRY & ENDURANCE LOGS
-								</span>
+								<div>
+									<p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400 whitespace-nowrap">
+										PERFORMANCE HUB · STRAVA TELEMETRY &amp; ENDURANCE LOGS
+									</p>
+									<p className="text-[10px] font-medium text-slate-400 mt-0.5">
+										Live Strava sync · split pacing · race benchmarks
+									</p>
+								</div>
 							</div>
 							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
 								Running Performance
 							</h1>
-							<p className="text-sm text-slate-500 font-medium mt-1 max-w-xl">
+							<p className="text-sm text-slate-500 font-medium mt-1.5 max-w-xl leading-relaxed">
 								Tracking physical limits and mental discipline. Live Strava
 								telemetry, race benchmarks, and split pacing analytics.
 							</p>
@@ -523,49 +527,47 @@ export default function RunningView({
 						{/* Telemetry Quick Strip */}
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="text-center">
-								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
+								<p className="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums">
 									{totalRuns}
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 									Total Runs
 								</p>
 							</div>
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
-								<p className="text-xl font-extrabold text-emerald-600 tabular-nums">
+								<p className="text-xl sm:text-2xl font-extrabold text-emerald-600 tabular-nums">
 									{kmPerYear}
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 									KM This Year
 								</p>
 							</div>
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
-								<p className="text-xl font-extrabold text-teal-600 tabular-nums font-mono">
+								<p className="text-xl sm:text-2xl font-extrabold text-teal-600 tabular-nums font-mono">
 									{avgPaceData.formatted}
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 									Avg /km
 								</p>
 							</div>
 							{isAdmin && isConnected && (
 								<>
 									<div className="w-px h-8 bg-slate-100" />
-									<div className="text-center">
-										<button
-											type="button"
-											onClick={handleLiveSync}
-											disabled={isSyncing}
-											className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs font-bold text-slate-700 transition-all cursor-pointer disabled:opacity-50"
-										>
-											<RefreshCw
-												className={`w-3.5 h-3.5 text-emerald-600 ${
-													isSyncing ? "animate-spin" : ""
-												}`}
-											/>
-											<span>{isSyncing ? "Syncing..." : "Sync"}</span>
-										</button>
-									</div>
+									<button
+										type="button"
+										onClick={handleLiveSync}
+										disabled={isSyncing}
+										className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs font-bold text-slate-700 transition-all cursor-pointer disabled:opacity-50"
+									>
+										<RefreshCw
+											className={`w-3.5 h-3.5 text-emerald-600 ${
+												isSyncing ? "animate-spin" : ""
+											}`}
+										/>
+										<span>{isSyncing ? "Syncing..." : "Sync"}</span>
+									</button>
 								</>
 							)}
 						</div>
@@ -733,47 +735,68 @@ export default function RunningView({
 									</div>
 								)}
 
-								{/* Distance Category Distribution Strip */}
+								{/* Distance Distribution — proportional bar chart */}
 								<div className="pt-2">
-									<div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+									<div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
 										<span>Distance Distribution</span>
 										<span className="text-slate-600 font-mono">
 											{rawRuns.length} runs
 										</span>
 									</div>
-									<div className="grid grid-cols-4 gap-1.5">
-										<div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
-											<p className="text-[9px] font-bold text-slate-400">
-												&lt;5K
-											</p>
-											<p className="text-xs font-black text-slate-900 font-mono">
-												{distanceCounts.short}
-											</p>
-										</div>
-										<div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
-											<p className="text-[9px] font-bold text-slate-400">
-												5-10K
-											</p>
-											<p className="text-xs font-black text-slate-900 font-mono">
-												{distanceCounts.mid}
-											</p>
-										</div>
-										<div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
-											<p className="text-[9px] font-bold text-slate-400">
-												10-21K
-											</p>
-											<p className="text-xs font-black text-slate-900 font-mono">
-												{distanceCounts.long}
-											</p>
-										</div>
-										<div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-center">
-											<p className="text-[9px] font-bold text-slate-400">
-												&gt;21K
-											</p>
-											<p className="text-xs font-black text-slate-900 font-mono">
-												{distanceCounts.ultra}
-											</p>
-										</div>
+									<div className="space-y-1.5">
+										{(
+											[
+												{
+													label: "<5K",
+													key: "short" as const,
+													color: "bg-blue-400",
+												},
+												{
+													label: "5-10K",
+													key: "mid" as const,
+													color: "bg-emerald-400",
+												},
+												{
+													label: "10-21K",
+													key: "long" as const,
+													color: "bg-amber-400",
+												},
+												{
+													label: ">21K",
+													key: "ultra" as const,
+													color: "bg-rose-400",
+												},
+											] as const
+										).map((cat) => {
+											const pct =
+												rawRuns.length > 0
+													? Math.round(
+															(distanceCounts[cat.key] / rawRuns.length) * 100,
+														)
+													: 0;
+											return (
+												<div key={cat.key} className="flex items-center gap-2">
+													<span className="text-[9px] font-bold text-slate-400 w-8 shrink-0 text-right tabular-nums">
+														{cat.label}
+													</span>
+													<div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+														<motion.div
+															className={`h-full rounded-full ${cat.color}`}
+															initial={{ width: 0 }}
+															animate={{ width: `${pct}%` }}
+															transition={{
+																duration: 0.8,
+																ease: "easeOut",
+																delay: 0.2,
+															}}
+														/>
+													</div>
+													<span className="text-[9px] font-black text-slate-600 w-5 tabular-nums">
+														{distanceCounts[cat.key]}
+													</span>
+												</div>
+											);
+										})}
 									</div>
 								</div>
 							</div>
@@ -841,48 +864,44 @@ export default function RunningView({
 						initial={safeReduceMotion ? false : { opacity: 0, y: 30 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.3 }}
-						className="space-y-6"
+						className="space-y-5"
 					>
-						{/* Activities Section Header & Controls */}
-						<div className="space-y-4">
-							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
+						{/* Activities Section Header & Controls — floating card toolbar */}
+						<div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5">
+							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 								<div className="flex items-center gap-3">
-									<div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 shadow-2xs">
-										<Activity className="w-5 h-5" />
+									<div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/70 flex items-center justify-center text-emerald-600 shrink-0">
+										<Activity className="w-4 h-4" />
 									</div>
 									<div>
-										<h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
+										<h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
 											Running Activities
 										</h3>
-										<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-											Showing {displayedRuns.length} of{" "}
-											{filteredAndSortedRuns.length} matching activities
+										<p className="text-[10px] font-semibold text-slate-400">
+											{displayedRuns.length} of {filteredAndSortedRuns.length}{" "}
+											shown
 										</p>
 									</div>
 								</div>
 
-								{/* Live Sync Action */}
-								<div className="flex items-center gap-3 self-end sm:self-center">
-									<button
-										type="button"
-										onClick={handleLiveSync}
-										disabled={isSyncing}
-										className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-[background-color,border-color,color,box-shadow,transform] shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-										title="Sync live activities from Strava"
-									>
-										<RefreshCw
-											className={`w-3.5 h-3.5 text-emerald-600 ${
-												isSyncing ? "animate-spin" : ""
-											}`}
-										/>
-										<span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
-									</button>
-								</div>
+								<button
+									type="button"
+									onClick={handleLiveSync}
+									disabled={isSyncing}
+									className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-[background-color,border-color,color,box-shadow,transform] shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer self-start sm:self-auto"
+									title="Sync live activities from Strava"
+								>
+									<RefreshCw
+										className={`w-3.5 h-3.5 text-emerald-600 ${
+											isSyncing ? "animate-spin" : ""
+										}`}
+									/>
+									<span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
+								</button>
 							</div>
 
-							{/* Search, Filter Pills & Sort Row */}
-							<div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
-								{/* Search Input */}
+							{/* Search + Filter + Sort row */}
+							<div className="border-t border-slate-100 pt-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
 								<div className="relative max-w-xs w-full">
 									<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
 									<input
@@ -890,13 +909,13 @@ export default function RunningView({
 										value={searchQuery}
 										onChange={(e) => handleSearchChange(e.target.value)}
 										placeholder="Search runs by title or date..."
-										className="w-full bg-white border border-slate-200/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[border-color,box-shadow] shadow-xs"
+										className="w-full bg-slate-50/80 border border-slate-200/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[border-color,box-shadow]"
 									/>
 									{searchQuery && (
 										<button
 											type="button"
 											onClick={() => handleSearchChange("")}
-											className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition-colors"
+											className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-200/60 transition-colors"
 											aria-label="Clear search"
 										>
 											<X className="w-3.5 h-3.5" />
@@ -904,8 +923,7 @@ export default function RunningView({
 									)}
 								</div>
 
-								{/* Distance Filter Pills */}
-								<div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+								<div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
 									{DISTANCE_FILTERS.map((filter) => {
 										const isActive = distanceFilter === filter.id;
 										return (
@@ -913,18 +931,18 @@ export default function RunningView({
 												key={filter.id}
 												type="button"
 												onClick={() => handleFilterChange(filter.id)}
-												className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-[background-color,color,border-color,box-shadow] active:scale-95 whitespace-nowrap cursor-pointer shrink-0 ${
+												className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 whitespace-nowrap cursor-pointer shrink-0 ${
 													isActive
-														? "bg-slate-900 text-white shadow-xs shadow-slate-900/20"
-														: "bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300"
+														? "bg-emerald-600 text-white shadow-xs"
+														: "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
 												}`}
 											>
 												<span>{filter.label}</span>
 												<span
-													className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+													className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${
 														isActive
-															? "bg-slate-800 text-slate-200"
-															: "bg-slate-100 text-slate-600"
+															? "bg-emerald-500 text-white"
+															: "bg-slate-200/70 text-slate-600"
 													}`}
 												>
 													{distanceCounts[filter.id]}
@@ -934,13 +952,12 @@ export default function RunningView({
 									})}
 								</div>
 
-								{/* Sort Selector & Reset Button */}
 								<div className="flex items-center gap-2 self-end md:self-auto shrink-0">
 									{hasActiveFilters && (
 										<button
 											type="button"
 											onClick={resetFilters}
-											className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl hover:border-slate-300 transition-[background-color,border-color,color] active:scale-95 shadow-xs cursor-pointer"
+											className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl hover:border-slate-300 transition-all active:scale-95 shadow-xs cursor-pointer"
 											title="Reset search and filters"
 										>
 											<X className="w-3.5 h-3.5" />
@@ -1023,75 +1040,72 @@ export default function RunningView({
 														handleOpenActivity(run);
 													}
 												}}
-												className="p-5 sm:p-6 bg-white border border-slate-200/80 hover:border-emerald-300 rounded-2xl transition-[border-color,box-shadow,transform] duration-300 group flex flex-col justify-between h-full shadow-xs hover:shadow-xl hover:shadow-emerald-950/5 hover:-translate-y-1 relative overflow-hidden cursor-pointer text-left focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
+												className={`p-5 sm:p-6 bg-white border border-slate-200/80 hover:border-emerald-200 rounded-2xl transition-[border-color,box-shadow,transform] duration-300 group flex flex-col justify-between h-full shadow-xs hover:shadow-lg hover:shadow-emerald-950/5 hover:-translate-y-1 relative overflow-hidden cursor-pointer text-left focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40 border-l-4 ${
+													paceSeconds === 0
+														? "border-l-slate-200"
+														: paceMin < 5
+															? "border-l-emerald-400"
+															: paceMin < 6
+																? "border-l-blue-400"
+																: paceMin < 7
+																	? "border-l-amber-400"
+																	: "border-l-rose-400"
+												}`}
 											>
-												<div className="space-y-4 relative z-10">
-													<div className="space-y-1">
-														<p className="text-sm sm:text-base font-extrabold text-slate-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
-															{run.name}
-														</p>
-														<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-															<Calendar className="w-3.5 h-3.5 text-emerald-600" />
-															<span>{formattedDate}</span>
+												<div className="flex items-start justify-between gap-2 mb-4">
+													<p className="text-sm font-extrabold text-slate-900 line-clamp-1 group-hover:text-emerald-600 transition-colors leading-snug">
+														{run.name}
+													</p>
+													<span className="text-[10px] font-medium text-slate-400 whitespace-nowrap shrink-0 tabular-nums">
+														{formattedDate}
+													</span>
+												</div>
+
+												<div className="grid grid-cols-3 divide-x divide-slate-100 pt-4 border-t border-slate-100">
+													<div className="pr-4 space-y-1">
+														<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">
+															Distance
+														</span>
+														<div className="flex items-baseline gap-0.5">
+															<span className="text-xl font-extrabold text-slate-900 tabular-nums font-mono leading-none">
+																{distanceKm}
+															</span>
+															<span className="text-[10px] font-bold text-slate-400">
+																km
+															</span>
 														</div>
 													</div>
-
-													<div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
-														<div className="space-y-0.5">
-															<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
-																Distance
-															</span>
-															<div className="flex items-baseline gap-0.5">
-																<span className="text-sm sm:text-base font-extrabold text-slate-900">
-																	{distanceKm}
-																</span>
-																<span className="text-[9px] font-bold text-slate-500">
-																	KM
-																</span>
-															</div>
-														</div>
-														<div className="space-y-0.5 border-l border-slate-100 pl-2">
-															<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
-																Pace
-															</span>
-															<div className="flex items-baseline gap-0.5">
-																<span className="text-sm sm:text-base font-extrabold text-slate-900 font-mono">
-																	{formattedPace}
-																</span>
-															</div>
-														</div>
-														<div className="space-y-0.5 border-l border-slate-100 pl-2">
-															<span className="text-[8px] font-bold uppercase tracking-wider text-slate-500 block">
-																Duration
-															</span>
-															<div className="flex items-baseline gap-0.5">
-																<span className="text-sm sm:text-base font-extrabold text-slate-900 font-mono">
-																	{formattedDuration}
-																</span>
-															</div>
-														</div>
+													<div className="px-4 space-y-1">
+														<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">
+															Pace
+														</span>
+														<span className="text-xl font-extrabold text-slate-900 tabular-nums font-mono leading-none">
+															{formattedPace}
+														</span>
+													</div>
+													<div className="pl-4 space-y-1">
+														<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">
+															Duration
+														</span>
+														<span className="text-xl font-extrabold text-slate-900 tabular-nums font-mono leading-none">
+															{formattedDuration}
+														</span>
 													</div>
 												</div>
 
 												{(hasElevation || hasHeartRate) && (
-													<div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between relative z-10 text-xs">
+													<div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center gap-4">
 														{hasElevation && (
-															<div className="flex items-center gap-1.5 text-slate-600 font-bold">
-																<Mountain className="w-3.5 h-3.5 text-emerald-600" />
-																<span>+{run.total_elevation_gain}m climb</span>
-															</div>
+															<span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400">
+																<Mountain className="w-3 h-3 text-emerald-500 shrink-0" />
+																+{run.total_elevation_gain}m
+															</span>
 														)}
 														{hasHeartRate && (
-															<div
-																className={`flex items-center gap-1 text-slate-700 font-bold ${
-																	!hasElevation ? "ml-auto" : ""
-																}`}
-															>
-																<Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
-																<span>
-																	{Math.round(run.average_heartrate!)} bpm
-																</span>
-															</div>
+															<span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400">
+																<Flame className="w-3 h-3 text-rose-400 shrink-0" />
+																{Math.round(run.average_heartrate!)} bpm
+															</span>
 														)}
 													</div>
 												)}

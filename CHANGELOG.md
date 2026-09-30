@@ -1,3 +1,10 @@
+# [0.94.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.93.0...v0.94.0) (2026-09-30)
+
+
+### Features
+
+* redesign home hero, add travel spoiler mode, and fix util header responsiveness ([cb61d1c](https://github.com/plmtmbnn/personal-web-v2/commit/cb61d1cfe2445a4aedf546b7d9e6b8a47028cd57))
+
 # [0.93.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.92.0...v0.93.0) (2026-09-28)
 
 

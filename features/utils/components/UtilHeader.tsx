@@ -84,30 +84,30 @@ export default function UtilHeader({
 			initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.4, ease: "easeOut" }}
-			className={`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5 ${className}`}
+			className={`bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-slate-200/80 shadow-xs space-y-4 sm:space-y-5 ${className}`}
 		>
 			{/* ── Tier 1: Top Navigation Bar ──────────────────────────────── */}
-			<div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100">
+			<div className="flex items-center justify-between gap-2.5 sm:gap-3 pb-3.5 sm:pb-4 border-b border-slate-100">
 				{/* Breadcrumb Trail */}
 				<nav
 					aria-label="Breadcrumb"
-					className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 flex-wrap min-w-0"
+					className="flex items-center gap-1 sm:gap-1.5 text-xs font-semibold text-slate-400 min-w-0"
 				>
 					<Link
 						href="/"
-						className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+						className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline shrink-0"
 					>
 						Home
 					</Link>
 					<ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />
 					<Link
 						href="/utils"
-						className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+						className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline shrink-0"
 					>
 						Utilities
 					</Link>
 					<ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />
-					<span className="text-slate-900 font-bold truncate max-w-[200px] sm:max-w-none">
+					<span className="text-slate-900 font-bold truncate max-w-[120px] sm:max-w-[240px] md:max-w-none">
 						{title}
 					</span>
 				</nav>
@@ -115,7 +115,7 @@ export default function UtilHeader({
 				{/* Back to Utilities Return Action */}
 				<Link
 					href="/utils"
-					className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-600 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline shrink-0 group"
+					className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-600 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline shrink-0 group"
 				>
 					<ArrowLeft className="w-3.5 h-3.5 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
 					<span className="hidden sm:inline">Back to Utilities</span>
@@ -124,30 +124,30 @@ export default function UtilHeader({
 			</div>
 
 			{/* ── Tier 2: Hero Visual Anchor, Title & Description ──────────── */}
-			<div className="flex items-start gap-4 sm:gap-5">
+			<div className="flex items-start gap-3.5 sm:gap-5">
 				{/* Elevated Domain Icon Squircle */}
 				<div
-					className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${colorStyles.squircle} flex items-center justify-center shrink-0 shadow-2xs mt-0.5`}
+					className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${colorStyles.squircle} flex items-center justify-center shrink-0 shadow-2xs mt-0.5`}
 				>
-					<Icon className="w-6 h-6 sm:w-7 sm:h-7" />
+					<Icon className="w-5 h-5 sm:w-7 sm:h-7" />
 				</div>
 
-				<div className="space-y-2 min-w-0 flex-1">
+				<div className="space-y-1.5 sm:space-y-2 min-w-0 flex-1">
 					{/* Domain Badge Pill + Extra Telemetry Badges */}
 					<div className="flex items-center gap-2 flex-wrap">
 						<div
-							className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${colorStyles.badge} text-xs font-bold uppercase tracking-wider shadow-2xs whitespace-nowrap`}
+							className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full ${colorStyles.badge} text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-2xs max-w-full`}
 						>
 							{CategoryIcon && (
-								<CategoryIcon className="w-3.5 h-3.5 shrink-0" />
+								<CategoryIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
 							)}
-							<span className="whitespace-nowrap">{category.label}</span>
+							<span className="truncate">{category.label}</span>
 							{category.sublabel && (
 								<>
 									<span
-										className={`w-1 h-1 rounded-full ${colorStyles.dot} shrink-0`}
+										className={`w-1 h-1 rounded-full ${colorStyles.dot} shrink-0 hidden sm:inline-block`}
 									/>
-									<span className="text-[11px] font-semibold lowercase tracking-normal opacity-90 whitespace-nowrap">
+									<span className="text-[11px] font-semibold lowercase tracking-normal opacity-90 truncate hidden sm:inline">
 										{category.sublabel}
 									</span>
 								</>
@@ -157,7 +157,7 @@ export default function UtilHeader({
 					</div>
 
 					{/* Bold Headline */}
-					<h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+					<h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight break-words">
 						{title}
 					</h1>
 
@@ -172,7 +172,7 @@ export default function UtilHeader({
 
 			{/* ── Tier 3: Action Strip (Presets, Controls, Buttons) ────────── */}
 			{actions && (
-				<div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+				<div className="pt-3.5 sm:pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
 					{actions}
 				</div>
 			)}

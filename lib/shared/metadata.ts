@@ -39,19 +39,7 @@ export function createMetadata({
 			: `${SITE.url}${image}`
 		: `${SITE.url}/profile.jpg`;
 
-	const finalKeywords = [
-		...(keywords || []),
-		"software engineer",
-		"fintech",
-		"jakarta",
-		"typescript",
-		"react",
-		"next.js",
-		"react native",
-		"vite",
-		"polma tambunan",
-		"intentional running",
-	].join(", ");
+	const finalKeywords = [...(keywords || []), ...SEO.baseKeywords].join(", ");
 
 	return {
 		metadataBase: new URL(SITE.url),

@@ -54,7 +54,7 @@ Contains all business logic, components, and types for specific features.
 - `features/auth/`: Actions, `PinGuard.tsx`, and auth-specific components.
 - `features/blog/`: Actions, data fetching, dynamic category counts, sort controls, and all blog UI components.
 - `features/contact/`: Compact single-page contact view with real-time Jakarta clock & active status chip.
-- `features/home/`: Landing hero with zero-redundancy layout — one-line name/role header, large `h1` headline, one-sentence bio, **inline stat strip** (animated counters for yrs engineering / km run / fintech systems, each linking to its domain page), and clean CTA row. No stat cards, no identity strip rows, no floating widgets on the photo. Each data point appears exactly once. Desktop: `lg:h-screen lg:max-h-[100dvh]` zero-scroll entry. Photo frame: clean squircle card with `grayscale-[15%]` → `grayscale-0` hover, `"Open to work"` badge centered at bottom only.
+- `features/home/`: Landing hero with bold editorial layout — asymmetric `lg:grid-cols-12` two-column split (7/5: content left, photo right). Headline: alternating `text-slate-900` / `text-slate-400` weight typography for editorial contrast (`"Engineering systems by day. Miles everywhere."`). **Bento stat grid** (3 clickable `bg-white rounded-2xl` cards with animated counters, domain icon squircles, and hover lift) replacing the inline stat strip. Photo column: layered depth shadow stack (`translate-x-3 translate-y-3` ghost layers), `TiltCard` 3D perspective tilt-on-hover via Framer Motion springs (`useMotionValue`, `useSpring`, `useTransform`), `grayscale-[15%]` → `grayscale-0` + `scale-[1.03]` hover, two floating accent chips (`Activity / Runner` emerald top-right, `Layers / Engineering` indigo bottom-left). No `"Open to work"` badge. Desktop: `lg:h-screen lg:max-h-[100dvh]` zero-scroll entry. Identity: **Polma Tambunan · Software Engineer · Toba, ID**. Tagline: `"Engineering Systems. Miles Everywhere."` — multi-terrain running (road, trail, peak, treadmill). Each data point appears exactly once.
 - `features/insights/`: Insights hub module aggregator (Blog, Investment, Liverpool FC, Utils) with top telemetry summary strip.
 - `features/investment/`: Actions, types, Fear & Greed market sentiment telemetry, and historical trends.
 - `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureSkeleton.tsx`, `View.tsx`).
@@ -97,6 +97,7 @@ Strictly for routing and page definitions.
 - `app/api/strava/`: Strava OAuth callback, sync, and split routes.
 - `app/api/auth/refresh-session/`: Proactive Redis session & Supabase token synchronizer.
 - `app/sitemap.ts` & `app/robots.ts`: Centralized search indexing and crawler configuration. All public navigation routes (`/`, `/portfolio`, `/work-experience`, `/adventures/*`, `/blog`, `/liverpool`, `/insights`, `/investment`, `/utils`, `/contact`) are registered in `sitemap.ts`. Internal administrative and API endpoints (`/admin/`, `/api/`, `/tasks`, `/login`, `/private/`) are explicitly disallowed in `robots.ts` to focus crawl budgets on public content.
+- `app/page.tsx` (Home): Injects `PERSON_SCHEMA` JSON-LD (`<script type="application/ld+json">`) for Google Knowledge Panel and rich result eligibility. Metadata title: `"Polma Tambunan | Software Engineer & Distance Runner"`. Description pulls `SITE.description` (keyword-rich ~150-char SEO copy). Keywords injected from `SEO.baseKeywords`.
 
 ## 🔑 Security & Authorization
 - **Environment Variables:** Always use `ENV_GLOBAL` from `@/lib/core/env`.
@@ -126,7 +127,7 @@ Strictly for routing and page definitions.
   - Anchored by an elevated domain icon squircle (`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-<domain>-50 border border-<domain>-200/70 text-<domain>-600 shadow-2xs`) paired with thematic domain badge pills (e.g. `OPERATIONS HUB • daily task orchestration`, `FINANCIAL REGISTRY • idx market synchronization`, `DEVELOPMENT & CODE • text comparison & similarity`), bold title typography `h1`, contextual breadcrumbs (`Admin Dashboard › ...` or `Home › Utilities › ...`), and aligned action/telemetry controls.
   - **Spacious 3-Tier Utility Header Standard (`UtilHeader.tsx`)**: Applied across all 21 utility tools to eliminate title squishing and horizontal action collisions:
     - *Tier 1 (Navigation Bar)*: Contextual breadcrumbs (`Home › Utilities › Tool Name`) left-aligned and clean, compact `← Back to Utilities` right-aligned, separated from content by a subtle bottom divider (`pb-4 border-b border-slate-100`).
-    - *Tier 2 (Hero Title & Context Stage)*: Large domain squircle anchor, domain theme badge with explicit `whitespace-nowrap` (preventing awkward multi-line badge wrapping), full-width `h1` headline with 100% horizontal width clearance, and lede description directly underneath.
+    - *Tier 2 (Hero Title & Context Stage)*: Large domain squircle anchor (`w-11 h-11 sm:w-14 sm:h-14`), domain theme badge with defensive `max-w-full` and label truncation on mobile (sublabel cleanly scoped to `hidden sm:inline` to prevent badge blowout on narrow handheld viewports), full-width `h1` headline (`text-xl sm:text-3xl lg:text-4xl break-words`), and lede description directly underneath.
     - *Tier 3 (Dedicated Actions/Presets Toolbar)*: When interactive presets, scenarios, or export controls are provided, they span a dedicated full-width strip (`pt-4 border-t border-slate-100/90`), keeping the title area spacious and completely unconstrained.
   - Declares calibrated top clearance (`pt-20 sm:pt-24` or `pt-24 sm:pt-28`) ensuring fixed floating navigation switchers (such as `QuickNav` in Tasks) never overlap or clip header titles.
   - **Single Canonical Floating Card Architecture**: Parent admin views (e.g., `/admin/blog`) must NEVER wrap already-contained card components in nested card containers with duplicate borders. Lists, tables, and consoles maintain a single canonical `rounded-3xl border border-slate-200/80 shadow-xs` surface.
@@ -151,9 +152,12 @@ Strictly for routing and page definitions.
 
 ## 🗺 Navigation
 - **Data-Driven:** Driven by the `NAV_ITEMS` constant in `CompactBottomBar.tsx`.
-- **Sub-Menu Strategy**: 
+- **2-Color Palette Mandate:** The nav bar strictly uses only `slate-900` (active pill) and `slate-*` neutrals (inactive). `rose-500` is the sole permitted accent, reserved exclusively for the admin pending badge pip. Per-section accent colors (indigo, emerald, amber, rose per nav group) are **forbidden** — the `accentColor` field has been removed from the `NavItem` type entirely.
+- **Compact Footprint:** Bar padding is `p-1`, icon containers are `w-7 h-7` (15–16px icons), button min-width is `44–52px`. Shell is `bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/70` with a lightweight shadow.
+- **Sub-Menu Strategy:**
   - "Insights" contains Blog, Investment, Liverpool FC, and Utils.
   - "Admin" contains Tasks, Blog Editor, Stock Manager, and Quick Reminders with dynamic count badges.
+  - Submenu pop-over is `bg-white rounded-xl w-48` (compact). Active rows use unified `bg-slate-900 text-white rounded-lg` — no per-category accent colors.
 - **Click Pass-through**: Outer `<motion.nav>` uses `pointer-events-none` and the inner bar uses `pointer-events-auto` to prevent the floating workspace container from blocking clicks on underlying page content.
 - **SSR & Hydration Strategy**: Avoids returning `null` before mounting. Default public navigation links render server-side (SSR) to preserve SEO internal links and prevent a visual pop-in layout shift, updating dynamically after client-side authentication checks.
 - **Optimized Queries**: Pending task count queries only fetch on auth status changes, rather than firing on every page navigation.

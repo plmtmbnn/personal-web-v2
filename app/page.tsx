@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
+import { PERSON_SCHEMA, SITE, SEO } from "@/lib/shared/constants";
 import HomeView from "@/features/home/components/HomeView";
 import { getAthleteStats } from "@/services/strava/service";
 
@@ -7,10 +8,10 @@ import { getAthleteStats } from "@/services/strava/service";
 export const revalidate = 3600;
 
 export const metadata: Metadata = createMetadata({
-	title: "Polma Tambunan | Software Engineer & Fintech Expert",
-	description:
-		"Specializing in building secure, high-performance software for the global fintech landscape. Thoughtful Engineering. Intentional Running.",
+	title: "Polma Tambunan | Software Engineer & Distance Runner",
+	description: SITE.description,
 	path: "/",
+	keywords: SEO.baseKeywords,
 });
 
 export default async function HomePage() {
@@ -24,5 +25,14 @@ export default async function HomePage() {
 		console.error("Error fetching running stats for home page:", err);
 	}
 
-	return <HomeView initialRunningKm={runningKm} />;
+	return (
+		<>
+			{/* Person JSON-LD — signals Google Knowledge Panel & rich results */}
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_SCHEMA) }}
+			/>
+			<HomeView initialRunningKm={runningKm} />
+		</>
+	);
 }

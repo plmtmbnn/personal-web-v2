@@ -6,15 +6,13 @@ import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	Compass,
-	Map as MapIcon,
-	CheckCircle2,
-	Star,
 	Search,
 	SearchX,
 	X,
 	ChevronRight,
-	Globe,
-	Navigation,
+	CheckCircle2,
+	Eye,
+	EyeOff,
 } from "lucide-react";
 import { destinations } from "@/features/travel/data";
 import dynamic from "next/dynamic";
@@ -50,6 +48,7 @@ function TravelContent() {
 		useState<Destination | null>(null);
 	const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 	const [searchQuery, setSearchQuery] = useState("");
+	const [spoilerMode, setSpoilerMode] = useState(true);
 
 	// Automatically open postcard modal when ?postcard=<id> or ?destination=<id> is present
 	useEffect(() => {
@@ -150,15 +149,25 @@ function TravelContent() {
 			});
 	}, [searchQuery, activeFilter]);
 
+	const filteredVisited = useMemo(
+		() => filteredDestinations.filter((d) => d.isVisited),
+		[filteredDestinations],
+	);
+
+	const filteredWishlist = useMemo(
+		() => filteredDestinations.filter((d) => !d.isVisited),
+		[filteredDestinations],
+	);
+
 	const handleResetFilters = () => {
 		setActiveFilter("all");
 		setSearchQuery("");
 	};
 
 	return (
-		<main className="min-h-screen relative pb-32 sm:pb-36 overflow-x-hidden">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-5 sm:space-y-6">
-				{/* ── Modern Floating Card Header ─────────────────────────── */}
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-4 sm:space-y-5">
+				{/* ── Floating Card Header ─────────────────────────────────── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -166,7 +175,7 @@ function TravelContent() {
 					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
 					{/* Breadcrumb */}
-					<nav className="flex items-center gap-1.5 mb-4 text-xs font-semibold text-slate-400">
+					<nav className="flex items-center gap-1.5 mb-5 text-xs font-semibold text-slate-400">
 						<Link
 							href="/adventures"
 							className="hover:text-slate-700 transition-colors !no-underline"
@@ -177,15 +186,15 @@ function TravelContent() {
 						<span className="text-slate-700">Travel</span>
 					</nav>
 
-					<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 						{/* Title block */}
 						<div className="flex-1 min-w-0">
 							<div className="flex items-center gap-2.5 mb-3">
-								<div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0">
+								<div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
 									<Compass className="w-5 h-5" />
 								</div>
 								<div>
-									<p className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400 whitespace-nowrap">
+									<p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400 whitespace-nowrap">
 										EXPEDITION LOG · GLOBAL TRAVEL &amp; POSTCARD STUDIO
 									</p>
 									<p className="text-[10px] font-medium text-slate-400 mt-0.5">
@@ -202,43 +211,46 @@ function TravelContent() {
 							</p>
 						</div>
 
-						{/* Compact stat strip */}
-						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
-							<div className="text-center">
-								<p className="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums">
-									{totalCountries}
-								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-									Countries
-								</p>
-							</div>
-							<div className="w-px h-8 bg-slate-100" />
-							<div className="text-center">
-								<p className="text-xl sm:text-2xl font-extrabold text-emerald-600 tabular-nums">
-									{visitedDestinations.length}
-								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-									Explored
-								</p>
-							</div>
-							<div className="w-px h-8 bg-slate-100" />
-							<div className="text-center">
-								<p className="text-xl sm:text-2xl font-extrabold text-amber-500 tabular-nums">
-									{wishlistDestinations.length}
-								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-									Wishlist
-								</p>
-							</div>
-							<div className="w-px h-8 bg-slate-100" />
-							<div className="text-center">
-								<p className="text-xl sm:text-2xl font-extrabold text-indigo-600 tabular-nums">
-									{completionRate}%
-								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-									Done
-								</p>
-							</div>
+						{/* Stat strip */}
+						<div className="flex items-center gap-5 shrink-0 sm:pl-5 sm:border-l sm:border-slate-100">
+							{[
+								{
+									value: totalCountries,
+									label: "Countries",
+									color: "text-slate-900",
+								},
+								{
+									value: visitedDestinations.length,
+									label: "Explored",
+									color: "text-emerald-600",
+								},
+								{
+									value: wishlistDestinations.length,
+									label: "Wishlist",
+									color: "text-amber-500",
+								},
+								{
+									value: `${completionRate}%`,
+									label: "Progress",
+									color: "text-indigo-600",
+								},
+							].map((stat, i, arr) => (
+								<div key={stat.label} className="flex items-center gap-5">
+									<div className="text-center">
+										<p
+											className={`text-xl sm:text-2xl font-extrabold tabular-nums ${stat.color}`}
+										>
+											{stat.value}
+										</p>
+										<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
+											{stat.label}
+										</p>
+									</div>
+									{i < arr.length - 1 && (
+										<div className="w-px h-8 bg-slate-100" />
+									)}
+								</div>
+							))}
 						</div>
 					</div>
 
@@ -252,7 +264,7 @@ function TravelContent() {
 								{visitedDestinations.length} / {totalDestinations} destinations
 							</span>
 						</div>
-						<div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+						<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
 							<motion.div
 								className="h-full bg-emerald-500 rounded-full"
 								initial={{ width: 0 }}
@@ -263,72 +275,11 @@ function TravelContent() {
 					</div>
 				</motion.div>
 
-				{/* ── Summary Cards Row ─────────────────────────────────────── */}
+				{/* ── Filter & Search Toolbar ─────────────────────────────── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.4, delay: 0.07, ease: "easeOut" }}
-					className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-				>
-					{[
-						{
-							label: "Countries",
-							value: totalCountries,
-							sublabel: "across the globe",
-							icon: Globe,
-							color: "text-emerald-600 bg-emerald-50 border-emerald-200/70",
-						},
-						{
-							label: "Explored",
-							value: visitedDestinations.length,
-							sublabel: `${completionRate}% of bucket list`,
-							icon: CheckCircle2,
-							color: "text-indigo-600 bg-indigo-50 border-indigo-200/70",
-						},
-						{
-							label: "Wishlist",
-							value: wishlistDestinations.length,
-							sublabel: "on future radar",
-							icon: Star,
-							color: "text-amber-600 bg-amber-50 border-amber-200/70",
-						},
-						{
-							label: "Postcards",
-							value: visitedDestinations.length,
-							sublabel: "vintage 3D canvas",
-							icon: MapIcon,
-							color: "text-cyan-600 bg-cyan-50 border-cyan-200/70",
-						},
-					].map((stat) => (
-						<div
-							key={stat.label}
-							className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3"
-						>
-							<div
-								className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${stat.color}`}
-							>
-								<stat.icon className="w-4.5 h-4.5" />
-							</div>
-							<div className="min-w-0">
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">
-									{stat.label}
-								</p>
-								<p className="text-base font-extrabold text-slate-900 tabular-nums leading-tight">
-									{stat.value}
-								</p>
-								<p className="text-[10px] text-slate-400 font-medium truncate">
-									{stat.sublabel}
-								</p>
-							</div>
-						</div>
-					))}
-				</motion.div>
-
-				{/* ── Filter & Search Toolbar ────────────────────────────────── */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.4, delay: 0.12, ease: "easeOut" }}
 					className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5"
 				>
 					<div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
@@ -413,29 +364,7 @@ function TravelContent() {
 					)}
 				</motion.div>
 
-				{/* ── Wishlist section header (shown when any wishlist cards visible) ── */}
-				{(activeFilter === "all" || activeFilter === "wishlist") &&
-					filteredDestinations.some((d) => !d.isVisited) &&
-					!searchQuery && (
-						<motion.div
-							initial={reduceMotion ? false : { opacity: 0 }}
-							animate={{ opacity: 1 }}
-							className="flex items-center gap-3"
-						>
-							<div className="flex items-center gap-2">
-								<Navigation className="w-4 h-4 text-amber-500" />
-								<span className="text-sm font-extrabold text-slate-700">
-									On the Radar
-								</span>
-								<span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full uppercase tracking-wider">
-									{wishlistDestinations.length} planned
-								</span>
-							</div>
-							<div className="flex-1 h-px bg-slate-200/60" />
-						</motion.div>
-					)}
-
-				{/* ── Destination Cards Grid ─────────────────────────────────── */}
+				{/* ── Destination Cards Content ─────────────────────────────── */}
 				<AnimatePresence mode="wait">
 					{filteredDestinations.length === 0 ? (
 						<motion.div
@@ -465,13 +394,15 @@ function TravelContent() {
 								</button>
 							)}
 						</motion.div>
-					) : (
+					) : searchQuery ? (
+						/* Search results: unified grid */
 						<motion.div
-							key={`${activeFilter}-${searchQuery}`}
+							key="search-results"
 							initial={reduceMotion ? false : { opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.25 }}
+							className="space-y-4"
 						>
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
 								{filteredDestinations.map((dest, i) => (
@@ -480,15 +411,121 @@ function TravelContent() {
 										destination={dest}
 										index={i}
 										onSelect={handleSelectDestination}
+										spoilerMode={spoilerMode}
 									/>
 								))}
 							</div>
+						</motion.div>
+					) : (
+						/* Structured editorial flow with Explored Journeys & On the Radar Spoiler mode */
+						<motion.div
+							key={`${activeFilter}-${spoilerMode}`}
+							initial={reduceMotion ? false : { opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							transition={{ duration: 0.25 }}
+							className="space-y-8"
+						>
+							{/* Section 1: Explored Journeys (visited) */}
+							{filteredVisited.length > 0 && activeFilter !== "wishlist" && (
+								<section className="space-y-4">
+									<div className="flex items-center justify-between">
+										<div className="flex items-center gap-2">
+											<div className="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0">
+												<CheckCircle2 className="w-3.5 h-3.5" />
+											</div>
+											<h2 className="text-sm font-extrabold text-slate-900">
+												Explored Journeys
+											</h2>
+											<span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-wider">
+												{filteredVisited.length} completed
+											</span>
+										</div>
+										<span className="text-xs text-slate-400 font-medium hidden sm:inline">
+											Click card to generate 3D Postcard
+										</span>
+									</div>
+
+									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+										{filteredVisited.map((dest, i) => (
+											<DestinationCard
+												key={dest.id}
+												destination={dest}
+												index={i}
+												onSelect={handleSelectDestination}
+											/>
+										))}
+									</div>
+								</section>
+							)}
+
+							{/* Section 2: On the Radar (Wishlist with Spoiler Mode) */}
+							{filteredWishlist.length > 0 && activeFilter !== "completed" && (
+								<section className="space-y-4 pt-2">
+									{/* Wishlist Header & Spoiler Mode Toggle */}
+									<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1 border-t border-slate-200/60 pt-6">
+										<div className="flex items-center gap-2">
+											<div className="w-7 h-7 rounded-xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0">
+												<Compass className="w-3.5 h-3.5" />
+											</div>
+											<h2 className="text-sm font-extrabold text-slate-900">
+												On the Radar
+											</h2>
+											<span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full uppercase tracking-wider">
+												{filteredWishlist.length} planned
+											</span>
+										</div>
+
+										{/* Spoiler Mode Toggle */}
+										<div className="flex items-center gap-2 self-start sm:self-auto">
+											<button
+												type="button"
+												onClick={() => setSpoilerMode((prev) => !prev)}
+												className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+													spoilerMode
+														? "bg-amber-50 text-amber-800 border-amber-200/80 shadow-2xs hover:bg-amber-100/70"
+														: "bg-white text-slate-700 border-slate-200/80 shadow-2xs hover:bg-slate-50"
+												}`}
+												title={
+													spoilerMode
+														? "Spoiler mode active: unmask cards individually or disable"
+														: "Spoiler mode disabled: all cards revealed"
+												}
+											>
+												{spoilerMode ? (
+													<>
+														<EyeOff className="w-3.5 h-3.5 text-amber-600" />
+														<span>Spoiler Mode: ON</span>
+													</>
+												) : (
+													<>
+														<Eye className="w-3.5 h-3.5 text-slate-500" />
+														<span>Spoiler Mode: OFF</span>
+													</>
+												)}
+											</button>
+										</div>
+									</div>
+
+									{/* Wishlist Cards Grid with Spoiler Mode */}
+									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+										{filteredWishlist.map((dest, i) => (
+											<DestinationCard
+												key={dest.id}
+												destination={dest}
+												index={i}
+												spoilerMode={spoilerMode}
+											/>
+										))}
+									</div>
+								</section>
+							)}
 						</motion.div>
 					)}
 				</AnimatePresence>
 			</div>
 
-			{/* ── Postcard & Sticker Modal ────────────────────────────── */}
+			{/* ── Postcard & Sticker Modal ──────────────────────────────── */}
 			<PostcardModal
 				destination={selectedDestination}
 				onClose={handleCloseModal}

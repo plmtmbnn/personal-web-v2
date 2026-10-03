@@ -157,10 +157,10 @@ export default function FearAndGreedGauge({
 			animate={{ opacity: 1, scale: 1 }}
 			className="w-full"
 		>
-			<div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+			<div className="flex flex-col lg:flex-row items-center gap-8 sm:gap-12 lg:gap-20">
 				{/* Main Gauge Visual - RingProgress Component */}
 				<div className="flex flex-col items-center flex-1">
-					<div className="relative w-64 h-64 flex items-center justify-center mb-8">
+					<div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center mb-6 sm:mb-8">
 						<RingProgress
 							score={score}
 							rating={rating}
@@ -168,13 +168,13 @@ export default function FearAndGreedGauge({
 						/>
 					</div>
 
-					<div className="text-center space-y-3">
-						<div className="flex items-center justify-center gap-4">
-							<span className="text-5xl font-black text-slate-900 tracking-tighter">
+					<div className="text-center space-y-2.5 sm:space-y-3">
+						<div className="flex items-center justify-center gap-3 sm:gap-4">
+							<span className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter">
 								{Math.round(score)}
 							</span>
 							<div
-								className={`px-4 py-2 rounded-xl font-medium text-xs uppercase tracking-wider shadow-sm ${getRatingBadge(
+								className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl font-medium text-xs uppercase tracking-wider shadow-xs ${getRatingBadge(
 									rating,
 								)} border`}
 							>
@@ -188,7 +188,7 @@ export default function FearAndGreedGauge({
 				</div>
 
 				{/* Integrated History Panel */}
-				<div className="flex-1 w-full max-w-md space-y-6">
+				<div className="flex-1 w-full max-w-md space-y-5 sm:space-y-6">
 					<div className="space-y-3">
 						<div className="flex items-center gap-2 text-slate-400">
 							<History className="w-4 h-4" />
@@ -197,36 +197,36 @@ export default function FearAndGreedGauge({
 							</h4>
 						</div>
 
-						<div className="grid grid-cols-2 gap-3">
-							<div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-indigo-100 transition-colors">
+						<div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+							<div className="p-3 sm:p-4 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-indigo-100 transition-colors">
 								<p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
 									<Clock className="w-2 h-2" /> Previous Close
 								</p>
-								<p className="text-lg font-bold text-slate-700">
+								<p className="text-base sm:text-lg font-bold text-slate-700">
 									{Math.round(previousClose)}
 								</p>
 							</div>
-							<div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-emerald-100 transition-colors">
+							<div className="p-3 sm:p-4 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-emerald-100 transition-colors">
 								<p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
 									<TrendingUp className="w-2 h-2" /> 1 Week Ago
 								</p>
-								<p className="text-lg font-bold text-slate-700">
+								<p className="text-base sm:text-lg font-bold text-slate-700">
 									{Math.round(previous1Week)}
 								</p>
 							</div>
-							<div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+							<div className="p-3 sm:p-4 bg-slate-50 border border-slate-100 rounded-2xl">
 								<p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">
 									1 Month Ago
 								</p>
-								<p className="text-lg font-bold text-slate-700">
+								<p className="text-base sm:text-lg font-bold text-slate-700">
 									{Math.round(previous1Month)}
 								</p>
 							</div>
-							<div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+							<div className="p-3 sm:p-4 bg-slate-50 border border-slate-100 rounded-2xl">
 								<p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">
 									1 Year Ago
 								</p>
-								<p className="text-lg font-bold text-slate-700">
+								<p className="text-base sm:text-lg font-bold text-slate-700">
 									{Math.round(previous1Year)}
 								</p>
 							</div>
@@ -245,7 +245,7 @@ export default function FearAndGreedGauge({
 								7D Window
 							</span>
 						</div>
-						<div className="h-20 w-full bg-slate-50/50 rounded-2xl border border-slate-100 p-3 flex items-center justify-center">
+						<div className="h-16 sm:h-20 w-full bg-slate-50/50 rounded-2xl border border-slate-100 p-2.5 sm:p-3 flex items-center justify-center">
 							<TrendVelocitySparkline data={sevenDayData} />
 						</div>
 					</div>

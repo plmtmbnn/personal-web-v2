@@ -37,7 +37,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Tree-Shaking Optimizations:** `experimental.optimizePackageImports` configured for `react-icons`, `framer-motion`, `@supabase/supabase-js`, `recharts`, `lucide-react`, and `date-fns`
 - **Sentry Build & Runtime Isolation:**
   - **Build Plugin:** `withSentryConfig` conditionally enabled only for production releases (`VERCEL_ENV === "production"` or `ENABLE_SENTRY_BUILD=true`) with `deleteSourcemapsAfterUpload: true`.
-  - **Strict Production Runtime Guard:** Sentry error reporting and logging are strictly isolated to production (`enabled: process.env.NODE_ENV === "production"` and `enableLogs: process.env.NODE_ENV === "production"`) across server (`sentry.server.config.ts`), edge (`sentry.edge.config.ts`), and client (`instrumentation-client.ts`).
+  - **Strict Production Runtime Guard:** Sentry error reporting and logging are strictly isolated to production (`enabled: process.env.NODE_ENV === "production"`) across server (`sentry.server.config.ts`), edge (`sentry.edge.config.ts`), and client (`instrumentation-client.ts`).
   - **Request & Exception Interception:** Next.js request error hook (`onRequestError` in `instrumentation.ts`) and global error handler (`GlobalError` in `app/global-error.tsx`) are guarded to only capture exceptions when `NODE_ENV === "production"`, preventing local dev errors and testing crashes from triggering Sentry events or polluting telemetry.
 - **Vercel Serverless Harmony:** Removed custom Webpack `splitChunks` and manual cache directory overrides to let Next.js & Vercel manage route-level chunking and remote caching natively
 - **Bundle Analysis:** `pnpm run build:analyze` for bundle size optimization
@@ -56,7 +56,7 @@ Contains all business logic, components, and types for specific features.
 - `features/contact/`: Compact single-page contact view with real-time Jakarta clock & active status chip.
 - `features/home/`: Landing hero with bold editorial layout — asymmetric `lg:grid-cols-12` two-column split (7/5: content left, photo right). Headline: alternating `text-slate-900` / `text-slate-400` weight typography for editorial contrast (`"Engineering systems by day. Miles everywhere."`). **Bento stat grid** (3 clickable `bg-white rounded-2xl` cards with animated counters, domain icon squircles, and hover lift) replacing the inline stat strip. Photo column: layered depth shadow stack (`translate-x-3 translate-y-3` ghost layers), `TiltCard` 3D perspective tilt-on-hover via Framer Motion springs (`useMotionValue`, `useSpring`, `useTransform`), `grayscale-[15%]` → `grayscale-0` + `scale-[1.03]` hover, two floating accent chips (`Activity / Runner` emerald top-right, `Layers / Engineering` indigo bottom-left). No `"Open to work"` badge. Desktop: `lg:h-screen lg:max-h-[100dvh]` zero-scroll entry. Identity: **Polma Tambunan · Software Engineer · Toba, ID**. Tagline: `"Engineering Systems. Miles Everywhere."` — multi-terrain running (road, trail, peak, treadmill). Each data point appears exactly once.
 - `features/insights/`: Insights hub module aggregator (Blog, Investment, Liverpool FC, Utils) with top telemetry summary strip.
-- `features/investment/`: Actions, types, Fear & Greed market sentiment telemetry, and historical trends.
+- `features/investment/`: Actions, types, centralized deterministic macro decision engine (`engine.ts`), dynamic multi-asset allocation, Traders Cheatsheet with Capital Preservation Mode, SPDR Sector Rotation with IHSG/Crypto proxy translator, overnight delta alerts, and consolidated tabbed market data terminal.
 - `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureSkeleton.tsx`, `View.tsx`).
 - `features/portfolio/` & `features/work-experience/`: Professional showcases, career timeline, interactive project cards, skills radar/metrics.
 - `features/reminders/`: Quick Reminders actions, types, linkified text pills, keyboard shortcuts (<kbd>⌘/Ctrl+Enter</kbd>), one-click note copying, and duration extensions backed by Upstash Redis.
@@ -254,19 +254,63 @@ Strictly for routing and page definitions.
 - **Global Intelligence Telemetry**: Clean 4-stat telemetry strip previewing core platform domains (`Engineering Blueprints`, `Market Sentiment`, `Matchday Center`, `Developer Toolkits`) with high-contrast typography, eliminating duplicate highlight pills.
 - **Curated 2x2 Module Cards**: Floating cards with category pills, topic tags, high-contrast linkout arrows (`ArrowUpRight`), and organic spring hover interactions (`whileHover={{ y: -4 }}`).
 
-### Investment Intelligence & Market Sentiment Hub
-- **Architecture**: Domain-driven feature in `features/investment/` and `/investment` route tracking Fear & Greed sentiment, historical momentum, and composite market intelligence.
-- **Global Telemetry Summary Strip**: 4-stat telemetry strip (`Market Sentiment`, `7-Day Velocity`, `Factor Alignment`, `Historical Anchor`) equipped with straight-to-the-point mobile-friendly tooltips.
-- **Strategic Signal Banner**: Automated regime classification (`Composite Score`) based on sentiment thresholds with downward-opening info tooltip (`position="bottom"`) and accent boundary styling.
-- **Componentized Factor Matrix Breakdown**: 8 individual quantitative indicator cards (`SentimentCard.tsx`) with dynamic Chart.js sparklines, semantic rating badges, and mobile-friendly `FactorTooltip` popovers:
-  - *Market Momentum (S&P 500)*: S&P 500 vs. its 125-day moving average (bullish momentum when above).
-  - *Market Momentum (S&P 125)*: 125-day rate of change in the S&P 500 gauging multi-month trend strength.
-  - *Stock Price Strength*: Net ratio of NYSE stocks hitting new 52-week highs vs. 52-week lows.
-  - *Stock Price Breadth*: McClellan Oscillator tracking advancing vs. declining NYSE trading volume.
-  - *Put and Call Options*: CBOE 5-day put/call ratio measuring market fear vs. bullish call volume.
-  - *Market Volatility (VIX)*: 50-day moving average of the VIX measuring expected 30-day volatility.
-  - *Junk Bond Demand*: Yield spread between junk and investment-grade bonds (tighter spreads signal risk tolerance).
-  - *Safe Haven Demand*: Difference between 20-day stock returns and treasury bond returns (stocks outperforming signals risk-on).
+### Investment Compass & Tactical Macro Engine
+- **Architecture**: Domain-driven feature in `features/investment/` and `/investment` route, completely reimagined from a passive sentiment viewer into an actionable, high-conviction portfolio execution engine for US Equities, Emerging Markets (IHSG), and Crypto.
+- **Centralized Deterministic Macro Engine (`lib/engine.ts`)**:
+  - Pure deterministic function (`generatePlaybook`) acting as the single source of truth for market regime diagnosis, asset class stances, allocations, timeframes, and sector recommendations. Eliminates fragmented calculation logic across UI components.
+  - **4-Quadrant Composite Macro Regime Model**:
+    - Synthesizes CNN Fear & Greed, Alternative.me Crypto Fear & Greed, St. Louis Fed FRED macroeconomic series (Federal Funds Rate `FEDFUNDS`, 10Y Benchmark `DGS10`, 10Y-2Y Inversion `T10Y2Y`, High-Yield Option-Adjusted Spread `BAMLH0A0HYM2`, Unemployment `UNRATE`), Dollar Index (`DXY`), and global equity quotes (`SPX`, `IHSG`).
+    - *Risk-Off Capitulation*: Extreme fear (`cnnScore < 35`) combined with elevated corporate credit stress (`hySpread > 5.0%`). Posture: Defensive (70% equities DCA, 15% crypto, 10% cash/bonds). Directs generational long-term buying, halts short-term swing trading, and flags flight to utilities, staples, and healthcare.
+    - *Goldilocks Expansion*: Elevated greed (`cnnScore > 65`) supported by accommodative benchmark yields (`DGS10 < 4.5%`). Posture: Aggressive (65% equities, 10% crypto, 20% cash/bonds). Rides pro-cyclical growth sectors (Tech, Consumer Discretionary, Communication, Industrials).
+    - *Speculative Decoupling*: Elevated greed (`cnnScore > 65`) diverging from restrictive yields (`DGS10 >= 4.5%`). Posture: Tactical (50% equities, 5% crypto, 10% gold, 35% cash/bonds). Takes profits on extended winners, raises cash reserves, and rotates into inflation/rate beneficiaries (Energy, Financials, Materials).
+    - *Range-Bound Rotation*: Default neutral regime balancing cross-asset crosscurrents (60% equities, 10% crypto, 5% gold, 25% cash/bonds) focusing on dividend growth, domestic consumer staples, and range-bound trading.
+  - **Dynamic Tactical Asset Recommendations**:
+    - Formulates detailed recommendations for 6 major asset classes: US Equities, Europe, Asia / IHSG, Crypto, Gold, and Bonds/Cash.
+    - Specifies explicit Stance (`Overweight`, `Neutral`, `Underweight`), concise summary, data-grounded pros and cons, clear tactical execution directives, and invalidation triggers (e.g. rapid yield breaks or support violations).
+- **Actionable Trader's Cheatsheet & Risk Guard (`TradersCheatsheet.tsx`)**:
+  - **Capital Preservation Mode ("Danger Zone")**: High-priority red alert protocol (`bg-rose-600 rounded-[2rem] border-4 border-rose-500 shadow-xl`) activated when systemic financial stress is detected (e.g., High-Yield spread > 5.0%, VIX panic illiquidity score < 20, or CNN capitulation < 15). Mandates immediate cessation of short-term speculative trading, capital defense, and cash preservation.
+  - **Dynamic Weekly Tactical Checklist**: Real-time actionable answers for active traders:
+    - *Altcoins Purchase*: Dynamic `YES`/`NO` evaluated against Bitcoin Dominance (`BTC.D > 54%` indicates liquidity concentrated in Bitcoin; `<= 54%` signals active alt-season rotation).
+    - *IHSG Swing Safety*: Evaluated against US Dollar strength (`DXY > 104.5` pulls foreign liquidity out of emerging markets; `DXY <= 104.5` provides tailwinds for domestic stocks).
+    - *Lump-Sum Timing*: Recommends `NO` during peak greed (`> 70`), `YES` during extreme fear (`< 30`), and steady `DCA` in neutral environments.
+    - *Scalping Feasibility*: Evaluated against market volatility thresholds to prevent traders from getting chopped out in sideways drift.
+  - **The Golden Rules of Discipline**: Dark solid slate panel (`bg-slate-900 rounded-[2rem] border-slate-800 text-slate-300`) reinforcing 4 non-negotiable psychological guardrails:
+    1. *Never average down on a losing swing trade* (cut losses quickly; DCA is reserved for long-term investments).
+    2. *Respect the Macro Regime* (cut position sizes by 50% during restrictive or defensive regimes; never fight the Fed).
+    3. *Yield Curve Inversion = Flight to Quality* (prioritize cash, BBCA, BMRI, and proven blue-chips; avoid speculative small caps).
+    4. *Do not buy into Extreme Greed* (never buy top FOMO at Greed > 75; harvest profits instead).
+- **SPDR Sector Rotation & "IHSG/Crypto Translator" Proxy (`SectorRotation.tsx`)**:
+  - Tracks all 11 SPDR Sector ETFs (`XLK`, `XLE`, `XLF`, `XLB`, `XLU`, `XLP`, `XLY`, `XLV`, `XLI`, `XLC`, `XLRE`), categorizing them into Overweight / Watch vs. Underweight / Avoid groups with live daily change percentages.
+  - **"IHSG/Crypto Translator" Proxy System**: Bridges global US sector leadership directly to actionable domestic Indonesian stocks and crypto assets:
+    - `XLK` (Technology) → Proxy: Crypto Majors (`BTC`, `ETH`)
+    - `XLE` (Energy) → Proxy: IHSG Energy (`ADRO`, `MEDC`)
+    - `XLF` (Financials) → Proxy: IHSG Banks (`BBCA`, `BMRI`)
+    - `XLB` (Materials) → Proxy: IHSG Metals & Mining (`INCO`, `MDKA`)
+    - `XLU` / `XLP` (Utilities / Staples) → Flight to Cash & Defensives
+    - `XLY` (Consumer Discretionary) → Bullish Consumer Demand
+- **Overnight Market Delta Alerts (`MarketDeltaAlerts.tsx`)**:
+  - Proactive 24-hour anomaly detector surfacing significant market shifts into high-visibility alert pills:
+    - *Volatility Shocks*: VIX intraday spikes (≥ +10%) or volatility crushes (≤ -10%).
+    - *Sentiment Plunges/Surges*: CNN Fear & Greed 24h delta shifts (±15 points overnight).
+    - *Equity Market Shocks*: US S&P 500 selloffs (≤ -2.0%) and domestic IHSG selloffs (≤ -1.5%).
+    - *Currency Shocks*: US Dollar Index surges (DXY ≥ +0.8%) signaling imminent capital flight from emerging markets and crypto.
+- **Consolidated Market Data Terminal (`MarketDataHub.tsx`)**:
+  - Solves vertical page bloat and indicator fragmentation by consolidating raw indicators into a high-density, tabbed dark console (`bg-slate-900 rounded-[2rem]`):
+    - *Macro Lens*: Comprehensive FRED macroeconomic charts (Fed Funds Rate, 10Y Benchmark Yield, 10Y-2Y Inversion, High-Yield Credit Spreads, Unemployment Rate).
+    - *Global Quotes*: Multi-region market quotes (North America, Europe, Asia Pacific, Cryptocurrencies, Commodities, Treasury & Rates).
+    - *Economic Narrative*: High-level top-down macro policy and bottom-up micro corporate health synthesis.
+    - *Sentiment Dials*: Traditional CNN Fear & Greed gauge with historical timeframes and sub-index gauges.
+- **Trading Timeframe Guidelines (`TimeframeGuidelines.tsx`)**:
+  - Actionable status matrix evaluating Scalping (Intraday), Swing Trading (Days-Weeks), and Long-Term Investing (Months-Years) with contextual badges (`Favorable`, `Selective`, `Avoid`, `Hold`) and data-backed rationale.
+- **Mobile-First & Responsiveness Standard**:
+  - Strict compliance with mobile-first and responsive design across all investment modules:
+    - *Floating Header & Telemetry*: Scaled hero container padding down to `p-5 sm:p-7`, wrapped header actions (`flex-wrap gap-2 sm:gap-3`) with touch feedback (`active:scale-95`), scaled KPI grid to `grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4` with defensive truncation on numbers and tickers to eliminate horizontal overflow on 320px–375px screens.
+    - *Stacked Matrices on Mobile*: The Tailwinds vs. Headwinds matrix in `Playbook.tsx` stacks vertically on mobile (`grid-cols-1 sm:grid-cols-2`), preventing cramped ~130px columns.
+    - *Vertical Alert Stacking*: The Danger Zone banner in `TradersCheatsheet.tsx` converts to a stacked vertical layout on mobile (`flex-col sm:flex-row gap-3 sm:gap-4`).
+    - *Defensive Text Truncation*: Ticker names, sector ETF titles, and timeframe labels enforce `min-w-0 flex-1 truncate` to prevent horizontal clipping.
+    - *High-Density Tabbed Terminal Console*: Consolidates 4 deep indicator views into `MarketDataHub.tsx` (`bg-slate-900 rounded-[2rem] p-3 sm:p-4`) with horizontal touch-scroll tab bar (`-mx-1 px-1 sm:mx-0 sm:px-0`) and `active:scale-95` tap feedback, eliminating multi-scroll bloat.
+    - *Zero Blur Glow Orbs*: Complete elimination of `blur-3xl` ambient glow orbs across all investment components (`InvestmentPrinciples.tsx` unified under Modern Floating Card standard `bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8`).
+    - *Safe Bottom Clearance*: Calibrated bottom clearance `pb-32 sm:pb-36` to safely clear `CompactBottomBar`.
 
 ### Second Brain / Knowledge Graph
 - **Architecture**: Local filesystem-backed (`content/brain/*.md`) knowledge management system.
@@ -332,6 +376,12 @@ Strictly for routing and page definitions.
 pnpm run dev              # Start with Turbo + optimizations
 pnpm run dev:debug       # Start with Node.js debugger
 
+# Testing & Quality Assurance
+pnpm test                 # Run Vitest test suite across all domains (37 suites, 384+ tests)
+pnpm vitest run <path>    # Run target test file or domain (e.g. features/investment)
+pnpm run check            # Biome lint and format check across all files
+pnpm run format           # Biome format code across all files
+
 # Build
 pnpm run build           # Production build
 pnpm run build:fast      # Fast build skipping non-critical checks (FAST_BUILD=true)
@@ -341,6 +391,17 @@ pnpm run build:profile   # Build with profiling
 # Analysis
 pnpm run analyze         # Alias for build:analyze
 ```
+
+### 🧪 Testing & Quality Assurance Architecture
+- **Framework & Runner**: **Vitest** with JSDOM environment, providing ultra-fast execution (~2-3s full runs) with zero configuration drift.
+- **Domain-Driven Test Colocation**: All tests are strictly co-located in `__tests__/` subdirectories within their respective domain folders (e.g., `features/<domain>/__tests__/` or `features/<domain>/components/__tests__/`).
+- **Comprehensive Investment Domain Test Suite (`features/investment/`)**:
+  - `features/investment/lib/__tests__/engine.test.ts` (17 tests): Validates 4-quadrant macro regime classification (`capitulation`, `expansion`, `speculative_decoupling`, `defensive_rotation`), multi-asset stance rules (US Equities, Europe, Asia/IHSG, Crypto, Gold, Bonds/Cash), regime-based portfolio allocation balances, timeframe guidelines (Scalping, Swing, Investment), top-down/bottom-up economic backdrop syntheses, and defensive fallback handling for missing macro series or partial quotes.
+  - `features/investment/components/__tests__/MarketDeltaAlerts.test.tsx` (7 tests): Validates overnight anomaly detection (VIX spikes/crushes ±10%, CNN Fear & Greed deltas ±15 points, SPX selloffs ≤ -2.0%, IHSG selloffs ≤ -1.5%, and DXY surges ≥ +0.8%).
+  - `features/investment/components/__tests__/SectorRotation.test.tsx` (4 tests): Validates SPDR ETF overweight/underweight groupings, regime narrative updates, and the "IHSG/Crypto Translator" proxy mappings (`XLK` → Crypto Majors, `XLE` → IHSG Energy, `XLF` → IHSG Banks, `XLB` → IHSG Metals, `XLU`/`XLP` → Defensives, `XLY` → Strong Consumer).
+  - `features/investment/components/__tests__/TradersCheatsheet.test.tsx` (9 tests): Validates Capital Preservation Mode ("Danger Zone") activation (High-Yield spread > 5.0%, VIX panic < 20, CNN capitulation < 15), dynamic weekly checklist answers (Altcoins vs BTC Dominance, IHSG Swing vs DXY, Lump-Sum vs Fear & Greed), and The Golden Rules of Discipline rendering.
+  - `features/investment/components/__tests__/MarketDataHub.test.tsx` (4 tests): Validates tab switching and content mounting across Macro Lens, Global Quotes, Economic Narrative, and Traditional Sentiment Dials.
+- **Full Repository Test Suite Health**: 37 test suites, 384 tests passing with zero failures.
 
 ### Configuration Files
 - `next.config.ts`: Optimized with bundle analyzer, Sentry (configured with `silent: true` to suppress Turbopack warning noise in CI), and caching

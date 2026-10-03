@@ -228,11 +228,11 @@ export default function SentimentCard({
 			transition={{ delay, type: "spring", stiffness: 260, damping: 16 }}
 			className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all group cursor-pointer active:scale-[0.98]"
 		>
-			<div className="p-4 space-y-3">
+			<div className="p-3.5 sm:p-4 space-y-3">
 				<div>
 					<div className="flex items-start justify-between gap-2 mb-2">
-						<h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-indigo-600 transition-colors leading-tight flex items-center">
-							<span>{title}</span>
+						<h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-indigo-600 transition-colors leading-tight flex items-center min-w-0 flex-1 pr-1">
+							<span className="truncate">{title}</span>
 							<FactorTooltip
 								text={
 									description ||

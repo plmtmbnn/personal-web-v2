@@ -19,6 +19,13 @@ export const CACHE_KEYS = {
 	STOCK_SUMMARY: "idx:stock-summary",
 	STOCK_SUMMARY_BACKUP: "idx:stock-summary:backup",
 	LFC_FIXTURES: "liverpool:fixtures:upcoming",
+	MARKET_QUOTES: "compass:quotes:live",
+	MARKET_QUOTES_BACKUP: "compass:quotes:backup",
+	CRYPTO_GLOBAL: "compass:crypto:global",
+	CRYPTO_GLOBAL_BACKUP: "compass:crypto:backup",
+	MACRO_FRED: "compass:macro:fred",
+	MACRO_FRED_BACKUP: "compass:macro:fred:backup",
+	COMPASS_SNAPSHOT: (date: string) => `compass:snapshot:${date}`,
 };
 
 /**

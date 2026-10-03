@@ -147,31 +147,42 @@ const shouldEnableSentry =
 		process.env.ENABLE_SENTRY_BUILD === "true");
 
 if (shouldEnableSentry) {
-	const { withSentryConfig } = require("@sentry/nextjs");
-	finalConfig = withSentryConfig(finalConfig, {
-		org: "peoel-corps",
-		project: "javascript-nextjs",
+	const sentryModule = (() => {
+		try {
+			return require("@sentry/nextjs/config");
+		} catch {
+			return require("@sentry/nextjs");
+		}
+	})();
+	const withSentryConfig =
+		sentryModule.withSentryConfig ?? sentryModule.default?.withSentryConfig;
 
-		// Silence Sentry CLI logs to prevent build log clutter
-		silent: true,
+	if (typeof withSentryConfig === "function") {
+		finalConfig = withSentryConfig(finalConfig, {
+			org: "peoel-corps",
+			project: "javascript-nextjs",
 
-		// Upload a larger set of source maps for prettier stack traces (disabled for fast builds)
-		widenClientFileUpload: false,
+			// Silence Sentry CLI logs to prevent build log clutter
+			silent: true,
 
-		// Delete sourcemaps after upload to keep public bundles lightweight
-		sourcemaps: {
-			deleteSourcemapsAfterUpload: true,
-		},
+			// Upload a larger set of source maps for prettier stack traces (disabled for fast builds)
+			widenClientFileUpload: false,
 
-		webpack: {
-			automaticVercelMonitors: true,
-
-			// Tree-shaking options for reducing bundle size
-			treeshake: {
-				removeDebugLogging: true,
+			// Delete sourcemaps after upload to keep public bundles lightweight
+			sourcemaps: {
+				deleteSourcemapsAfterUpload: true,
 			},
-		},
-	});
+
+			webpack: {
+				automaticVercelMonitors: true,
+
+				// Tree-shaking options for reducing bundle size
+				treeshake: {
+					removeDebugLogging: true,
+				},
+			},
+		});
+	}
 }
 
 export default finalConfig;

@@ -1,3 +1,10 @@
+# [0.95.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.94.0...v0.95.0) (2026-10-03)
+
+
+### Features
+
+* **investment:** reimagine compass as tactical macro engine with mobile UI ([4f426e2](https://github.com/plmtmbnn/personal-web-v2/commit/4f426e27ed3d7524c72170af869fb8055812dc3e))
+
 # [0.94.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.93.0...v0.94.0) (2026-09-30)
 
 

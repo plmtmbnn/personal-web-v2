@@ -1,3 +1,10 @@
+## [0.95.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.95.0...v0.95.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* resolve withSentryConfig import for @sentry/nextjs v11 ([b4962a9](https://github.com/plmtmbnn/personal-web-v2/commit/b4962a9e842ac93d2ea5bbb976943e8fab784632))
+
 # [0.95.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.94.0...v0.95.0) (2026-10-03)
 
 

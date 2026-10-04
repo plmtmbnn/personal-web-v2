@@ -31,6 +31,8 @@ export interface Instrument {
 	inverse?: boolean;
 }
 
+export const IHSG_ID = "JKSE";
+
 export const INSTRUMENTS: readonly Instrument[] = [
 	// ── United States ────────────────────────────────────────────
 	{
@@ -297,6 +299,7 @@ export const INSTRUMENTS: readonly Instrument[] = [
 	{
 		id: "US10Y",
 		cnbc: "US10Y",
+		yahoo: "^TNX",
 		label: "US 10Y Yield",
 		detail: "Discount rate for global assets",
 		group: "rates",

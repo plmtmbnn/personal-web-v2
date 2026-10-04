@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { AreaChart } from "lucide-react";
 import type { InvestmentCompassData } from "@/features/investment/types";
+import { sahmRule } from "../lib/indicators";
 
 export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 	// Helper to extract the latest value from a FRED MacroSeries
@@ -28,11 +29,14 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 		const dgs10 = getLatest("DGS10");
 		const yieldCurve = getLatest("T10Y2Y");
 		const hySpread = getLatest("BAMLH0A0HYM2");
+		const id10y = getLatest("IRLTLT01IDM156N");
 
-		// DXY from quotes
+		const sahm = sahmRule(data.markets.macro?.UNRATE?.data ?? []);
+
+		// DXY & Indonesia from quotes
 		const dxy = data.markets.quotes.DXY;
 		const usdIdr = data.markets.quotes.USDIDR;
-		const ihsg = data.markets.quotes.IHSG;
+		const ihsg = data.markets.quotes.JKSE ?? data.markets.quotes.IHSG;
 
 		const usTiles = [
 			{
@@ -47,14 +51,14 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 						: undefined,
 			},
 			{
-				label: "US CPI (Headline)",
-				value: cpi ? `${cpi.value.toFixed(1)}` : "---",
+				label: "US CPI (YoY %)",
+				value: cpi ? `${cpi.value.toFixed(1)}%` : "---",
 				change: cpi?.change,
-				desc: "Consumer price index gauge.",
+				desc: "Headline inflation year-over-year rate.",
 				isInverse: true,
 				historicalMsg:
 					cpi && cpi.value > 3.0
-						? "Historically, sticky inflation delays rate cuts. Projection: High cost of capital persists."
+						? "Sticky inflation (> 3.0%) delays Fed rate cuts, keeping discount rates elevated."
 						: undefined,
 			},
 			{
@@ -63,10 +67,9 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 				change: unrate?.change,
 				desc: "Labor market strength.",
 				isInverse: true,
-				historicalMsg:
-					unrate?.change && unrate.change > 0.5
-						? "Sahm Rule: A rapid 0.5% rise historically signals an incoming recession."
-						: undefined,
+				historicalMsg: sahm.triggered
+					? `Sahm Rule Triggered (+${sahm.value}% above 12M low): Historically signals an active recession.`
+					: undefined,
 			},
 			{
 				label: "10Y Treasury Yield",
@@ -134,6 +137,13 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 				change: ihsg?.changePct,
 				desc: "Jakarta Composite Index.",
 				isInverse: false,
+			},
+			{
+				label: "Indonesia 10Y Gov Yield",
+				value: id10y ? `${id10y.value.toFixed(2)}%` : "---",
+				change: id10y?.change,
+				desc: "Sovereign borrowing benchmark rate.",
+				isInverse: true,
 			},
 		];
 

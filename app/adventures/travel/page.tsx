@@ -11,8 +11,6 @@ import {
 	X,
 	ChevronRight,
 	CheckCircle2,
-	Eye,
-	EyeOff,
 } from "lucide-react";
 import { destinations } from "@/features/travel/data";
 import dynamic from "next/dynamic";
@@ -48,7 +46,6 @@ function TravelContent() {
 		useState<Destination | null>(null);
 	const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 	const [searchQuery, setSearchQuery] = useState("");
-	const [spoilerMode, setSpoilerMode] = useState(true);
 
 	// Automatically open postcard modal when ?postcard=<id> or ?destination=<id> is present
 	useEffect(() => {
@@ -411,15 +408,14 @@ function TravelContent() {
 										destination={dest}
 										index={i}
 										onSelect={handleSelectDestination}
-										spoilerMode={spoilerMode}
 									/>
 								))}
 							</div>
 						</motion.div>
 					) : (
-						/* Structured editorial flow with Explored Journeys & On the Radar Spoiler mode */
+						/* Structured editorial flow with Explored Journeys & On the Radar */
 						<motion.div
-							key={`${activeFilter}-${spoilerMode}`}
+							key={activeFilter}
 							initial={reduceMotion ? false : { opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
@@ -459,11 +455,11 @@ function TravelContent() {
 								</section>
 							)}
 
-							{/* Section 2: On the Radar (Wishlist with Spoiler Mode) */}
+							{/* Section 2: On the Radar (Wishlist) */}
 							{filteredWishlist.length > 0 && activeFilter !== "completed" && (
 								<section className="space-y-4 pt-2">
-									{/* Wishlist Header & Spoiler Mode Toggle */}
-									<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1 border-t border-slate-200/60 pt-6">
+									{/* Wishlist Header */}
+									<div className="flex items-center justify-between pb-1 border-t border-slate-200/60 pt-6">
 										<div className="flex items-center gap-2">
 											<div className="w-7 h-7 rounded-xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0">
 												<Compass className="w-3.5 h-3.5" />
@@ -475,46 +471,18 @@ function TravelContent() {
 												{filteredWishlist.length} planned
 											</span>
 										</div>
-
-										{/* Spoiler Mode Toggle */}
-										<div className="flex items-center gap-2 self-start sm:self-auto">
-											<button
-												type="button"
-												onClick={() => setSpoilerMode((prev) => !prev)}
-												className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-													spoilerMode
-														? "bg-amber-50 text-amber-800 border-amber-200/80 shadow-2xs hover:bg-amber-100/70"
-														: "bg-white text-slate-700 border-slate-200/80 shadow-2xs hover:bg-slate-50"
-												}`}
-												title={
-													spoilerMode
-														? "Spoiler mode active: unmask cards individually or disable"
-														: "Spoiler mode disabled: all cards revealed"
-												}
-											>
-												{spoilerMode ? (
-													<>
-														<EyeOff className="w-3.5 h-3.5 text-amber-600" />
-														<span>Spoiler Mode: ON</span>
-													</>
-												) : (
-													<>
-														<Eye className="w-3.5 h-3.5 text-slate-500" />
-														<span>Spoiler Mode: OFF</span>
-													</>
-												)}
-											</button>
-										</div>
+										<span className="text-xs text-slate-400 font-medium hidden sm:inline">
+											Future destinations &amp; bucket list expeditions
+										</span>
 									</div>
 
-									{/* Wishlist Cards Grid with Spoiler Mode */}
+									{/* Wishlist Cards Grid */}
 									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
 										{filteredWishlist.map((dest, i) => (
 											<DestinationCard
 												key={dest.id}
 												destination={dest}
 												index={i}
-												spoilerMode={spoilerMode}
 											/>
 										))}
 									</div>

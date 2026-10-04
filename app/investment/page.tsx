@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
+import { SITE } from "@/lib/shared/constants";
 import InvestmentCompassView from "@/features/investment/components/View";
 import { getInvestmentCompass } from "@/features/investment/actions";
 
 export const revalidate = 3600;
 
 export const metadata: Metadata = createMetadata({
-	title: "Investment Compass | Global Markets & Guidelines",
+	title: "Investment Compass | IHSG & Crypto Market Operating System",
 	description:
-		"Top-down global investment guideline covering Macro, Micro, SP500, Europe, Asia, Crypto, and Actionable Playbook.",
+		"Risk-first investment guidelines and operating framework for IHSG and Crypto. Macro regime analysis, permissions matrix, and execution playbooks.",
 	path: "/investment",
 	keywords: [
 		"Investment Compass",
-		"Market Guideline",
-		"Macro Economy",
-		"Global Markets",
-		"Portfolio Strategy",
+		"IHSG Strategy",
+		"Crypto Playbook",
+		"Risk Management",
+		"Market Regime",
+		"Indonesian Equities",
+		"Bitcoin",
 	],
 });
 
@@ -25,10 +28,10 @@ export default async function InvestmentPage() {
 	const jsonLd = {
 		"@context": "https://schema.org",
 		"@type": "WebPage",
-		name: "Investment Compass | Global Markets & Guidelines",
+		name: "Investment Compass | IHSG & Crypto Market Operating System",
 		description:
-			"Top-down global investment guideline covering Macro, Micro, SP500, Europe, Asia, Crypto, and Actionable Playbook.",
-		url: "https://polma.me/investment", // Assuming polma.me, or we can use SITE.url if we import it
+			"Risk-first investment guidelines and operating framework for IHSG and Crypto. Macro regime analysis, permissions matrix, and execution playbooks.",
+		url: `${SITE.url}/investment`,
 	};
 
 	return (

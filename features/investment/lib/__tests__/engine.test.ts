@@ -224,12 +224,12 @@ describe("Investment Compass Engine (generatePlaybook)", () => {
 			expect(output.regime.playbook.favored).toContain("Cash");
 			expect(output.regime.playbook.favored).toContain("Bonds");
 
-			// Allocation in capitulation: aggressive dip-buying posture
+			// Allocation in capitulation: capital preservation posture
 			expect(output.allocation).toEqual({
-				equities: 70,
-				crypto: 15,
-				gold: 5,
-				cashBonds: 10,
+				equities: 30,
+				crypto: 5,
+				gold: 15,
+				cashBonds: 50,
 			});
 
 			// Sector rotation: defensive flight to utilities/staples/healthcare
@@ -492,7 +492,7 @@ describe("Investment Compass Engine (generatePlaybook)", () => {
 		it("recommends Scalping Avoid in low volatility environments", () => {
 			const lowVolData = createMockCompassData();
 			if (lowVolData.sentiment.traditional?.market_volatility_vix) {
-				lowVolData.sentiment.traditional.market_volatility_vix.score = 45;
+				lowVolData.sentiment.traditional.market_volatility_vix.score = 75;
 			}
 			if (lowVolData.markets.cryptoGlobal) {
 				lowVolData.markets.cryptoGlobal.totalVolumeUsd = 30000000000;

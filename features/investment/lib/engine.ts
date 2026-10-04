@@ -294,10 +294,11 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 
 	// Adjust based on regime
 	if (regime.key === "capitulation") {
-		// Buying opportunity, deploy cash
-		equities = 70;
-		crypto = 15;
-		cashBonds = 10;
+		// Capital preservation & dry powder for confirmed bottoms
+		equities = 30;
+		crypto = 5;
+		gold = 15;
+		cashBonds = 50;
 	} else if (regime.key === "expansion") {
 		equities = 65;
 		crypto = 10;
@@ -317,14 +318,14 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 
 	const timeframes: TimeframeGuideline[] = [];
 
-	// 1. Scalping
-	if (vixScore > 60 || cryptoVol > 80_000_000_000) {
+	// 1. Scalping (VIX score on CNN: low score = high volatility/fear; high score = low volatility/calm)
+	if ((vixScore <= 55 && vixScore >= 20) || cryptoVol > 80_000_000_000) {
 		timeframes.push({
 			id: "scalping",
 			style: "Scalping (Intraday)",
 			status: "Favorable",
 			reason:
-				"High volatility and strong crypto volume provide wide intraday trading ranges.",
+				"Active volatility and strong volume provide wide intraday trading ranges.",
 		});
 	} else {
 		timeframes.push({
@@ -332,7 +333,7 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 			style: "Scalping (Intraday)",
 			status: "Avoid",
 			reason:
-				"Low volatility and choppy sideways action; high risk of getting chopped out.",
+				"Low volatility or erratic panic action; high risk of getting chopped out.",
 		});
 	}
 
@@ -542,3 +543,5 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 		sectorRotation,
 	};
 }
+
+export * from "./engine/index";

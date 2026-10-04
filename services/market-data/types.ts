@@ -48,6 +48,25 @@ export interface MacroSeries {
 	data: MacroObservation[];
 }
 
+export interface PricePoint {
+	t: number;
+	c: number;
+}
+
+export interface PriceHistorySeries {
+	symbol: string;
+	interval: string;
+	points: PricePoint[];
+}
+
+export interface CryptoFlowsSnapshot {
+	totalStablecoinSupplyUsd: number | null;
+	stablecoin30dChangePct: number | null;
+	btcFundingRate8hPct: number | null;
+	btcOpenInterestUsd: number | null;
+	updatedAt: number;
+}
+
 /**
  * Fetch caching policy.
  * - `revalidate`: Next.js data cache lifetime in seconds (ISR-friendly).

@@ -8,50 +8,45 @@ import {
 } from "@/lib/shared/constants";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	motion,
 	type Variants,
 	animate,
 	useReducedMotion,
-	useMotionValue,
-	useTransform,
-	useSpring,
 } from "framer-motion";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import { ArrowRight, Mail, Briefcase, Activity, Layers } from "lucide-react";
+import {
+	ArrowRight,
+	ArrowUpRight,
+	Mail,
+	Briefcase,
+	Activity,
+	Layers,
+	MapPin,
+	Cpu,
+	Clock,
+} from "lucide-react";
 
 // ─── Animation Variants ────────────────────────────────────────────────────────
 
-const container: Variants = {
+const containerVariants: Variants = {
 	hidden: {},
-	visible: {
-		transition: { staggerChildren: 0.07, delayChildren: 0.05 },
-	},
+	visible: { transition: { staggerChildren: 0.05 } },
 };
 
-const item: Variants = {
-	hidden: { opacity: 0, y: 18 },
+const itemVariants: Variants = {
+	hidden: { opacity: 0, y: 14 },
 	visible: {
 		opacity: 1,
 		y: 0,
-		transition: { duration: 0.42, ease: [0.25, 0.1, 0.25, 1] },
-	},
-};
-
-const photoVariant: Variants = {
-	hidden: { opacity: 0, scale: 0.92, y: 16 },
-	visible: {
-		opacity: 1,
-		scale: 1,
-		y: 0,
-		transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
+		transition: { duration: 0.38, ease: "easeOut" },
 	},
 };
 
 // ─── Animated Counter ──────────────────────────────────────────────────────────
 
-const useCounter = (to: number, duration = 1.5) => {
+const useCounter = (to: number, duration = 1.2) => {
 	const reduceMotion = useReducedMotion();
 	const [count, setCount] = useState(reduceMotion ? to : 0);
 
@@ -71,94 +66,84 @@ const useCounter = (to: number, duration = 1.5) => {
 	return count;
 };
 
-// ─── Tilt Card ─────────────────────────────────────────────────────────────────
+// ─── Reusable Channel Component ────────────────────────────────────────────────
 
-function TiltCard({ children }: { children: React.ReactNode }) {
-	const ref = useRef<HTMLDivElement>(null);
-	const reduceMotion = useReducedMotion();
-
-	const rawX = useMotionValue(0);
-	const rawY = useMotionValue(0);
-
-	const springConfig = { stiffness: 180, damping: 22 };
-	const springX = useSpring(rawX, springConfig);
-	const springY = useSpring(rawY, springConfig);
-
-	const rotateX = useTransform(springY, [-0.5, 0.5], [6, -6]);
-	const rotateY = useTransform(springX, [-0.5, 0.5], [-6, 6]);
-
-	const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-		if (reduceMotion || !ref.current) return;
-		const rect = ref.current.getBoundingClientRect();
-		rawX.set((e.clientX - rect.left) / rect.width - 0.5);
-		rawY.set((e.clientY - rect.top) / rect.height - 0.5);
-	};
-
-	const handleMouseLeave = () => {
-		rawX.set(0);
-		rawY.set(0);
-	};
-
-	return (
-		<motion.div
-			ref={ref}
-			onMouseMove={handleMouseMove}
-			onMouseLeave={handleMouseLeave}
-			style={
-				reduceMotion ? {} : { rotateX, rotateY, transformStyle: "preserve-3d" }
-			}
-			className="relative cursor-default"
-		>
-			{children}
-		</motion.div>
-	);
-}
-
-// ─── Bento Stat Card ───────────────────────────────────────────────────────────
-
-interface StatCardProps {
-	icon: React.ReactNode;
-	count: number;
-	suffix?: string;
+interface ChannelProps {
+	icon: React.ElementType;
 	label: string;
-	href: string;
-	accentHover: string;
-	iconBgClass: string;
+	value: string;
+	color: string;
+	href?: string;
+	isExternal?: boolean;
+	dark?: boolean;
 }
 
-function StatCard({
-	icon,
-	count,
-	suffix = "+",
+function MetricChannel({
+	icon: Icon,
 	label,
+	value,
+	color,
 	href,
-	accentHover,
-	iconBgClass,
-}: StatCardProps) {
-	return (
-		<motion.div variants={item}>
-			<Link
-				href={href}
-				className={`group/stat block bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-[transform,box-shadow] duration-300 !no-underline ${accentHover}`}
-				tabIndex={0}
-			>
-				<div
-					className={`inline-flex items-center justify-center w-8 h-8 rounded-xl mb-3 ${iconBgClass}`}
-				>
-					{icon}
+	isExternal,
+	dark,
+}: ChannelProps) {
+	const inner = (
+		<div className="flex items-center justify-between w-full">
+			<div className="flex items-center gap-3 min-w-0">
+				<div className={`p-2 rounded-xl border ${color} shrink-0`}>
+					<Icon className="text-sm" />
 				</div>
-				<div className="flex items-baseline gap-0.5">
-					<span className="text-2xl font-extrabold tabular-nums tracking-tight text-slate-900">
-						{count.toLocaleString()}
-					</span>
-					<span className="text-sm font-bold text-slate-400">{suffix}</span>
+				<div className="min-w-0">
+					<p
+						className={`text-[9px] font-black uppercase tracking-widest truncate ${dark ? "text-slate-400" : "text-slate-400"}`}
+					>
+						{label}
+					</p>
+					<p
+						className={`text-xs font-bold truncate ${dark ? "text-white" : "text-slate-900"}`}
+					>
+						{value}
+					</p>
 				</div>
-				<p className="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
-					{label}
-				</p>
-			</Link>
-		</motion.div>
+			</div>
+			{href && (
+				<div className="shrink-0 pl-2">
+					<div
+						className={`p-1.5 rounded-lg transition-colors ${dark ? "text-white/50 group-hover:text-white group-hover:bg-white/10" : "text-slate-400 group-hover:text-indigo-600 group-hover:bg-slate-100"}`}
+					>
+						{isExternal ? (
+							<ArrowUpRight className="w-3.5 h-3.5" />
+						) : (
+							<ArrowRight className="w-3.5 h-3.5" />
+						)}
+					</div>
+				</div>
+			)}
+		</div>
 	);
+
+	const className = `rounded-2xl border shadow-xs p-3.5 flex items-center transition-[border-color,box-shadow,transform] duration-200 group hover:shadow-sm ${dark ? "bg-slate-900 border-slate-800 hover:border-slate-700 hover:-translate-y-0.5" : "bg-white border-slate-200/80 hover:border-slate-300 hover:-translate-y-0.5"}`;
+
+	if (href) {
+		if (isExternal) {
+			return (
+				<a
+					href={href}
+					target="_blank"
+					rel="noopener noreferrer"
+					className={`block w-full !no-underline ${className}`}
+				>
+					{inner}
+				</a>
+			);
+		}
+		return (
+			<Link href={href} className={`block w-full !no-underline ${className}`}>
+				{inner}
+			</Link>
+		);
+	}
+	return <div className={`w-full ${className}`}>{inner}</div>;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -171,200 +156,217 @@ export default function Home({
 	initialRunningKm = AUTHOR_STATS.runningKmPerYear,
 }: HomeProps) {
 	const reduceMotion = useReducedMotion();
-	const yearsCount = useCounter(EXPERIENCE_YEAR, 1.4);
-	const kmCount = useCounter(initialRunningKm, 2.0);
-	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1.2);
+	const yearsCount = useCounter(EXPERIENCE_YEAR, 1.2);
+	const kmCount = useCounter(initialRunningKm, 1.5);
+	const fintechCount = useCounter(AUTHOR_STATS.fintechSystems, 1.0);
 	const year = new Date().getFullYear();
 
+	const [localTime, setLocalTime] = useState("");
+	const [isActive, setIsActive] = useState(false);
+
+	useEffect(() => {
+		const updateStatusAndClock = () => {
+			const now = new Date();
+			const time = new Intl.DateTimeFormat("en-US", {
+				timeZone: "Asia/Jakarta",
+				hour: "2-digit",
+				minute: "2-digit",
+				second: "2-digit",
+				hour12: false,
+			}).format(now);
+			setLocalTime(time);
+
+			const utcHour = now.getUTCHours();
+			const jakartaHour = (utcHour + 7 + 24) % 24;
+			setIsActive(jakartaHour >= 8 && jakartaHour < 22);
+		};
+
+		updateStatusAndClock();
+		const timer = setInterval(updateStatusAndClock, 1000);
+		return () => clearInterval(timer);
+	}, []);
+
 	return (
-		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto lg:overflow-hidden py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
-			<div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center relative z-10 my-auto">
-				{/* ── Right — Photo + floating chips ────────────────────────── */}
+		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
+			<div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 my-auto">
+				{/* ── Left Content (Span 6) ─────────────────────────────────── */}
 				<motion.div
-					className="lg:col-span-5 flex justify-center lg:justify-end order-1 lg:order-2"
-					variants={photoVariant}
+					className="lg:col-span-6 w-full"
+					variants={containerVariants}
 					initial={reduceMotion ? false : "hidden"}
 					animate="visible"
 				>
-					<TiltCard>
-						{/* Depth shadow layers */}
-						<div className="absolute inset-0 translate-x-3 translate-y-3 rounded-[2.5rem] bg-slate-200/50 -z-10" />
-						<div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-[2.5rem] bg-slate-100 border border-slate-200/50 -z-10" />
-
-						{/* Main photo card */}
-						<div className="relative w-64 h-64 sm:w-[288px] sm:h-[288px] lg:w-[300px] lg:h-[300px] rounded-[2.5rem] p-3 bg-white border border-slate-200/80 shadow-sm group/photo transition-shadow duration-500 hover:shadow-lg">
-							<div className="w-full h-full rounded-[2rem] overflow-hidden">
-								<Image
-									src="/profile.jpg"
-									alt={`${AUTHOR.name} — Software Engineer and Distance Runner`}
-									className="w-full h-full object-cover grayscale-[15%] group-hover/photo:grayscale-0 group-hover/photo:scale-[1.03] transition-[filter,transform] duration-500"
-									priority
-									width={400}
-									height={400}
-									sizes="(max-width: 640px) 256px, (max-width: 1024px) 288px, 300px"
-								/>
-							</div>
-
-							{/* Open to work badge — pinned bottom-center */}
-							{AUTHOR.available && (
-								<div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-slate-200/80 rounded-full shadow-xs whitespace-nowrap">
-									<div className="relative flex-shrink-0">
-										<div className="w-2 h-2 bg-emerald-500 rounded-full" />
-										<div className="absolute inset-0 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
-									</div>
-									<span className="text-[10.5px] font-bold text-slate-700">
-										Open to work
-									</span>
-								</div>
-							)}
-						</div>
-
-						{/* Floating accent chip — top-right */}
-						<div className="absolute -top-3 -right-3 flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-full px-3 py-1.5 shadow-xs">
-							<Activity
-								className="w-3 h-3 text-emerald-500"
-								strokeWidth={2.5}
+					{/* Avatar & Status chip */}
+					<motion.div
+						variants={itemVariants}
+						className="flex items-center gap-4 mb-6 sm:mb-8"
+					>
+						<div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs shrink-0 bg-slate-100">
+							<Image
+								src="/profile.jpg"
+								alt={AUTHOR.name}
+								fill
+								className="object-cover grayscale-[20%]"
+								sizes="64px"
 							/>
-							<span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-								Runner
+						</div>
+						<div className="flex flex-col gap-1.5">
+							<h2 className="text-[13px] font-black uppercase tracking-widest text-slate-900">
+								{AUTHOR.name}
+							</h2>
+							<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs text-[10px] font-semibold text-slate-600 w-fit">
+								<span
+									className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}
+								/>
+								{isActive ? "Active & building" : "Resting · offline"}
 							</span>
 						</div>
+					</motion.div>
 
-						{/* Floating accent chip — bottom-left */}
-						<div className="absolute -bottom-3 -left-3 flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-full px-3 py-1.5 shadow-xs">
-							<Layers className="w-3 h-3 text-indigo-500" strokeWidth={2.5} />
-							<span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-								Engineering
-							</span>
-						</div>
-					</TiltCard>
-				</motion.div>
-
-				{/* ── Left — Content ──────────────────────────────────────────── */}
-				<motion.div
-					className="lg:col-span-7 order-2 lg:order-1 w-full max-w-2xl mx-auto lg:mx-0"
-					variants={container}
-					initial={reduceMotion ? false : "hidden"}
-					animate="visible"
-				>
-					{/* Eyebrow */}
-					<motion.p
-						variants={item}
-						className="text-[11px] sm:text-xs font-bold text-slate-400 tracking-[0.12em] uppercase mb-4"
-					>
-						{AUTHOR.name}&nbsp;&nbsp;·&nbsp;&nbsp;{AUTHOR.role}
-						&nbsp;&nbsp;·&nbsp;&nbsp;Toba, ID
-					</motion.p>
-
-					{/* Headline — dominant editorial block */}
+					{/* Headline */}
 					<motion.h1
-						variants={item}
-						className="text-[2.6rem] sm:text-6xl lg:text-[3.9rem] font-extrabold tracking-tight text-slate-900 leading-[1.04] mb-5 sm:mb-6"
+						variants={itemVariants}
+						className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.05] mb-5 sm:mb-6"
 					>
-						Engineering systems
+						Engineering
 						<br />
-						<span className="text-slate-400">by day.</span> Miles
-						<span className="text-slate-400">{" everywhere."}</span>
+						systems <span className="text-slate-400">by day.</span>
+						<br />
+						Miles <span className="text-slate-400">everywhere.</span>
 					</motion.h1>
 
-					{/* Bio */}
+					{/* Sub-copy */}
 					<motion.p
-						variants={item}
-						className="text-sm sm:text-[0.95rem] text-slate-500 leading-relaxed font-medium mb-7 sm:mb-8 max-w-[480px]"
+						variants={itemVariants}
+						className="text-sm text-slate-500 font-medium leading-relaxed mb-6 sm:mb-7 max-w-sm"
 					>
-						Building reliable systems that scale — and logging every kilometre,
-						whether it's road, trail, peak, or treadmill.
+						Software Engineer specializing in fintech core architecture, lending
+						platforms, and scalable data solutions.
 					</motion.p>
 
-					{/* ── Bento stat grid ── */}
+					{/* Location + time strip */}
 					<motion.div
-						variants={container}
-						className="grid grid-cols-3 gap-3 mb-8 sm:mb-9"
+						variants={itemVariants}
+						className="flex flex-col gap-2.5 mt-8"
 					>
-						<StatCard
-							icon={
-								<Briefcase
-									className="w-4 h-4 text-indigo-600"
-									strokeWidth={2}
-								/>
-							}
-							count={yearsCount}
-							label="yrs engineering"
-							href="/work-experience"
-							accentHover="hover:[&_.stat-num]:text-indigo-600"
-							iconBgClass="bg-indigo-50 border border-indigo-200/60"
-						/>
-						<StatCard
-							icon={
-								<Activity
-									className="w-4 h-4 text-emerald-600"
-									strokeWidth={2}
-								/>
-							}
-							count={kmCount}
-							label={`km in ${year}`}
-							href="/adventures/running"
-							accentHover="hover:[&_.stat-num]:text-emerald-600"
-							iconBgClass="bg-emerald-50 border border-emerald-200/60"
-						/>
-						<StatCard
-							icon={
-								<Layers className="w-4 h-4 text-cyan-600" strokeWidth={2} />
-							}
-							count={fintechCount}
-							label="fintech systems"
-							href="/portfolio"
-							accentHover="hover:[&_.stat-num]:text-cyan-600"
-							iconBgClass="bg-cyan-50 border border-cyan-200/60"
-						/>
-					</motion.div>
+						<div className="flex items-center gap-3">
+							<div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
+								<MapPin className="text-[13px] text-indigo-500" />
+							</div>
+							<div>
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Location
+								</p>
+								<p className="text-xs font-bold text-slate-800">
+									Toba, Indonesia · UTC+7
+								</p>
+							</div>
+						</div>
 
-					{/* ── CTAs + social ── */}
-					<motion.div
-						variants={item}
-						className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full"
-					>
-						<Link
-							href="/work-experience"
-							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-slate-900 !text-white !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 hover:-translate-y-0.5 active:scale-95 transition-[transform,box-shadow,background-color] duration-200 shadow-xs hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 cursor-pointer"
-						>
-							<span>Explore Work</span>
-							<ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform duration-200" />
-						</Link>
-
-						<Link
-							href="/contact"
-							className="group/btn flex items-center justify-center gap-2.5 px-6 py-3 bg-white border border-slate-200/80 !text-slate-900 !no-underline rounded-xl font-bold text-xs uppercase tracking-wider hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-[transform,box-shadow,border-color,background-color] duration-200 shadow-xs hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
-						>
-							<Mail className="w-3.5 h-3.5 group-hover/btn:rotate-6 transition-transform duration-200 text-slate-700" />
-							<span>Get in Touch</span>
-						</Link>
-
-						<span className="hidden sm:inline text-slate-200 select-none px-1">
-							|
-						</span>
-
-						<div className="flex items-center justify-center gap-2 pt-1 sm:pt-0">
-							<a
-								href={SOCIAL_LINKS.github}
-								target="_blank"
-								rel="noopener noreferrer"
-								aria-label={`${AUTHOR.name}'s GitHub`}
-								className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:shadow-sm hover:bg-slate-50 transition-[color,box-shadow,background-color] duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
-							>
-								<FaGithub className="w-4 h-4" />
-							</a>
-							<a
-								href={SOCIAL_LINKS.linkedin}
-								target="_blank"
-								rel="noopener noreferrer"
-								aria-label={`${AUTHOR.name}'s LinkedIn`}
-								className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:shadow-sm hover:bg-slate-50 transition-[color,box-shadow,background-color] duration-200 !no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 cursor-pointer"
-							>
-								<FaLinkedin className="w-4 h-4" />
-							</a>
+						<div className="flex items-center gap-3">
+							<div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
+								<Clock className="text-[13px] text-indigo-500" />
+							</div>
+							<div className="flex items-baseline gap-2 min-w-0">
+								<p className="font-mono text-xs font-bold text-slate-800 tabular-nums">
+									{localTime || "--:--:--"}
+								</p>
+								<span className="text-[10px] font-semibold text-slate-400 truncate">
+									Local time
+								</span>
+							</div>
 						</div>
 					</motion.div>
+				</motion.div>
+
+				{/* ── Right Content (Span 6) ─────────────────────────────────── */}
+				<motion.div
+					className="lg:col-span-6 w-full space-y-3 lg:pl-4 mt-10 lg:mt-0"
+					initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{
+						duration: 0.45,
+						delay: 0.1,
+						ease: [0.25, 0.1, 0.25, 1],
+					}}
+				>
+					{/* Metrics Panel */}
+					<div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
+						<div className="flex items-center justify-between mb-4">
+							<span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+								<Layers className="w-3.5 h-3.5 text-indigo-500" />
+								Professional Impact
+							</span>
+						</div>
+
+						<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+							<div className="p-3 rounded-xl bg-slate-50/60 border border-slate-200/70 hover:bg-slate-100/80 hover:border-slate-300 transition-colors flex flex-col gap-2.5">
+								<div className="p-1.5 rounded-lg w-fit bg-white border border-slate-200">
+									<Briefcase className="w-3.5 h-3.5 text-slate-600" />
+								</div>
+								<span className="text-[10px] font-bold text-slate-700 leading-snug">
+									{yearsCount}+ Years
+									<br />
+									Engineering
+								</span>
+							</div>
+							<div className="p-3 rounded-xl bg-slate-50/60 border border-slate-200/70 hover:bg-slate-100/80 hover:border-slate-300 transition-colors flex flex-col gap-2.5">
+								<div className="p-1.5 rounded-lg w-fit bg-white border border-slate-200">
+									<Activity className="w-3.5 h-3.5 text-slate-600" />
+								</div>
+								<span className="text-[10px] font-bold text-slate-700 leading-snug">
+									{kmCount.toLocaleString()}+ Km
+									<br />
+									Run in {year}
+								</span>
+							</div>
+							<div className="p-3 rounded-xl bg-slate-50/60 border border-slate-200/70 hover:bg-slate-100/80 hover:border-slate-300 transition-colors flex flex-col gap-2.5 col-span-2 sm:col-span-1">
+								<div className="p-1.5 rounded-lg w-fit bg-white border border-slate-200">
+									<Cpu className="w-3.5 h-3.5 text-slate-600" />
+								</div>
+								<span className="text-[10px] font-bold text-slate-700 leading-snug">
+									{fintechCount}+ Fintech
+									<br />
+									Systems
+								</span>
+							</div>
+						</div>
+					</div>
+
+					{/* Direct Channels */}
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+						<MetricChannel
+							icon={ArrowRight}
+							label="Explore Work"
+							value="View Experience"
+							color="bg-slate-800 border-slate-700 text-white"
+							dark
+							href="/work-experience"
+						/>
+						<MetricChannel
+							icon={Mail}
+							label="Contact"
+							value="Get in Touch"
+							color="bg-slate-50 border-slate-200 text-slate-600"
+							href="/contact"
+						/>
+						<MetricChannel
+							icon={FaGithub}
+							label="GitHub"
+							value="@plmtmbnn"
+							color="bg-slate-100 border-slate-200 text-slate-700"
+							href={SOCIAL_LINKS.github}
+							isExternal
+						/>
+						<MetricChannel
+							icon={FaLinkedin}
+							label="LinkedIn"
+							value="polma-tambunan"
+							color="bg-blue-50 border-blue-100 text-blue-600"
+							href={SOCIAL_LINKS.linkedin}
+							isExternal
+						/>
+					</div>
 				</motion.div>
 			</div>
 		</main>

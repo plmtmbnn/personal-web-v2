@@ -31,6 +31,7 @@ import {
 	FileText,
 	ArrowUpRight,
 	ChevronRight,
+	Trophy,
 } from "lucide-react";
 
 export interface UtilityCategory {
@@ -283,6 +284,14 @@ const utilities: UtilityItem[] = [
 		description:
 			"Interactive decision wheel & random name picker with audio feedback, presets, and physics.",
 		icon: Dices,
+	},
+	{
+		title: "Football Formation Studio",
+		slug: "football-formation",
+		categoryId: "productivity",
+		description:
+			"Interactive tactical board to draft players, design matchday formations, organize substitutes, and export high-resolution squad sheets.",
+		icon: Trophy,
 	},
 ];
 

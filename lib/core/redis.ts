@@ -25,6 +25,12 @@ export const CACHE_KEYS = {
 	CRYPTO_GLOBAL_BACKUP: "compass:crypto:backup",
 	MACRO_FRED: "compass:macro:fred",
 	MACRO_FRED_BACKUP: "compass:macro:fred:backup",
+	MARKET_HISTORY: (symbol: string, interval: string) =>
+		`compass:history:${symbol}:${interval}`,
+	MARKET_HISTORY_BACKUP: (symbol: string, interval: string) =>
+		`compass:history:${symbol}:${interval}:backup`,
+	CRYPTO_FLOWS: "compass:crypto:flows",
+	CRYPTO_FLOWS_BACKUP: "compass:crypto:flows:backup",
 	COMPASS_SNAPSHOT: (date: string) => `compass:snapshot:${date}`,
 };
 

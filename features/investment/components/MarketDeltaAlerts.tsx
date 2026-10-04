@@ -48,7 +48,7 @@ export default function MarketDeltaAlerts({
 
 		// 3. Equity Market Shocks
 		const spx = data.markets.quotes.SPX;
-		const ihsg = data.markets.quotes.IHSG;
+		const ihsg = data.markets.quotes.JKSE ?? data.markets.quotes.IHSG;
 		if (spx?.changePct && spx.changePct <= -2.0) {
 			activeAlerts.push({
 				message: `US Selloff: S&P 500 is down ${spx.changePct.toFixed(2)}%. Global beta is negative.`,

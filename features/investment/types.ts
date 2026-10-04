@@ -2,6 +2,8 @@ import type {
 	CryptoGlobalSnapshot,
 	MarketQuote,
 	MacroSeries,
+	PriceHistorySeries,
+	CryptoFlowsSnapshot,
 } from "@/services/market-data/types";
 
 /* ─────────────────────────────────────────────────────────────
@@ -126,15 +128,21 @@ export interface RegionSummary {
 	laggardId: string | null;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Page aggregate
-   ───────────────────────────────────────────────────────────── */
-
-export type SourceKey = "cnn" | "cryptoFng" | "quotes" | "coingecko" | "fred";
+export type SourceKey =
+	| "cnn"
+	| "cryptoFng"
+	| "quotes"
+	| "coingecko"
+	| "fred"
+	| "history"
+	| "defillama"
+	| "okx";
 
 export interface SourceStatus {
 	ok: boolean;
 	label: string;
+	stale?: boolean;
+	asOf?: string;
 }
 
 export interface InvestmentCompassData {
@@ -147,9 +155,98 @@ export interface InvestmentCompassData {
 		quotes: Record<string, MarketQuote>;
 		cryptoGlobal: CryptoGlobalSnapshot | null;
 		macro: Record<string, MacroSeries>;
+		history?: Record<string, PriceHistorySeries | null>;
+		cryptoFlows?: CryptoFlowsSnapshot | null;
 	};
-	sources: Record<SourceKey, SourceStatus>;
+	sources: Record<string, SourceStatus>;
 	fetchedAt: string;
+	engineOutput?: CompassOutput;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   V2 Decision Engine & Regime Models
+   ───────────────────────────────────────────────────────────── */
+
+export type RegimeState =
+	| "risk_on"
+	| "selective"
+	| "defensive"
+	| "stress"
+	| "insufficient";
+
+export interface RegimeFactor {
+	key: string;
+	label: string;
+	valueStr: string;
+	score: number; // 0 - 100
+	weight: number;
+	direction: "bullish" | "bearish" | "neutral";
+	note: string;
+	asOf?: string;
+}
+
+export interface MarketRegimeScore {
+	id: "global" | "ihsg" | "crypto";
+	title: string;
+	marketName: string;
+	state: RegimeState;
+	score: number; // 0 - 100
+	coverage: number; // 0.0 - 1.0
+	headline: string;
+	diagnosis: string;
+	tone: Tone;
+	factors: RegimeFactor[];
+	contextFlags: string[];
+}
+
+export type ActionPermission =
+	| "allowed"
+	| "selective"
+	| "not_allowed"
+	| "paused";
+
+export interface MarketPermissions {
+	scalp: { status: ActionPermission; label: string; reason: string };
+	swing: { status: ActionPermission; label: string; reason: string };
+	dca: { status: ActionPermission; label: string; reason: string };
+	maxExposure: string;
+}
+
+export interface PermissionsMatrixData {
+	ihsg: MarketPermissions;
+	crypto: MarketPermissions;
+	altcoins: MarketPermissions;
+	globalStressActive: boolean;
+	summaryNotes: string[];
+}
+
+export interface CompassAlert {
+	id: string;
+	title: string;
+	message: string;
+	type: "danger" | "warning" | "positive";
+	asOf?: string;
+}
+
+export interface CompassOutput {
+	regimes: {
+		global: MarketRegimeScore;
+		ihsg: MarketRegimeScore;
+		crypto: MarketRegimeScore;
+	};
+	permissions: PermissionsMatrixData;
+	playbooks: {
+		ihsg: import("./data/playbooks").MarketPlaybookScript;
+		crypto: import("./data/playbooks").MarketPlaybookScript;
+	};
+	alerts: CompassAlert[];
+	activeSeasonality: import("./data/seasonality").SeasonalityWindow[];
+	upcomingEvents: import("./data/events").MacroCalendarEvent[];
+	halvingCycle: {
+		monthsElapsed: number;
+		phase: string;
+		description: string;
+	};
 }
 
 /* ─────────────────────────────────────────────────────────────

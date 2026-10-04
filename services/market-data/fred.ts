@@ -7,6 +7,7 @@ const FRED_API_URL = "https://api.stlouisfed.org/fred/series/observations";
 export async function fetchFredSeries(
 	seriesId: string,
 	policy: FetchPolicy,
+	options?: { units?: string },
 ): Promise<MacroSeries | null> {
 	const apiKey = ENV_GLOBAL.FRED_API_KEY;
 	if (!apiKey) {
@@ -25,6 +26,9 @@ export async function fetchFredSeries(
 	url.searchParams.set("file_type", "json");
 	url.searchParams.set("observation_start", observationStartStr);
 	url.searchParams.set("sort_order", "asc"); // We want chronological order
+	if (options?.units) {
+		url.searchParams.set("units", options.units);
+	}
 
 	try {
 		const res = await fetch(

@@ -8,7 +8,6 @@ import {
 	Trophy,
 	Wrench,
 	ArrowUpRight,
-	Layers,
 } from "lucide-react";
 
 interface InsightModule {
@@ -178,14 +177,6 @@ export default function InsightsView() {
 				>
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 						<div>
-							<div className="flex items-center gap-2 mb-2">
-								<div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
-									<Layers className="w-3.5 h-3.5 text-indigo-600" />
-								</div>
-								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-									INTELLIGENCE NEXUS · DOMAIN KNOWLEDGE & TELEMETRY
-								</span>
-							</div>
 							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
 								Insights & Intelligence
 							</h1>

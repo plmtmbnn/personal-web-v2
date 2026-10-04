@@ -126,7 +126,7 @@ export default function CronBuilderView() {
 					badges={
 						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
 							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-							<span>POSIX / Quartz Standard • 100% Client-Side</span>
+							<span>POSIX &amp; Quartz Standard</span>
 						</div>
 					}
 					actions={

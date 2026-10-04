@@ -4,7 +4,6 @@ import {
 	BookOpen,
 	CheckSquare,
 	LogOut,
-	ShieldCheck,
 	Database,
 	Bell,
 	ArrowUpRight,
@@ -70,7 +69,6 @@ export default async function AdminDashboardPage() {
 	const adminActions = [
 		{
 			title: "Blog Management",
-			category: "Publishing",
 			description:
 				"Create, edit, and publish technical essays, engineering guides, and endurance race reports.",
 			href: "/admin/blog",
@@ -87,13 +85,11 @@ export default async function AdminDashboardPage() {
 			color: "text-blue-600",
 			bg: "bg-blue-50",
 			border: "border-blue-200/70",
-			badgeText: "text-blue-700",
 			hoverAccent: "group-hover:text-blue-600",
 			tags: ["Markdown WYSIWYG", "SSG Pipeline", "Category Index"],
 		},
 		{
 			title: "Task Management",
-			category: "Execution",
 			description:
 				"Track daily operational objectives, sprint velocity retrospectives, and 6-month horizons.",
 			href: "/tasks",
@@ -103,13 +99,11 @@ export default async function AdminDashboardPage() {
 			color: "text-emerald-600",
 			bg: "bg-emerald-50",
 			border: "border-emerald-200/70",
-			badgeText: "text-emerald-700",
 			hoverAccent: "group-hover:text-emerald-600",
 			tags: ["Sprint Horizon", "Priority Matrix", "Kanban Board"],
 		},
 		{
 			title: "Stock Explorer Manager",
-			category: "Financial Registry",
 			description:
 				"Synchronize IDX instruments with Redis cache, update market telemetry, and purge registries.",
 			href: "/utils/stock-explorer/admin",
@@ -119,13 +113,11 @@ export default async function AdminDashboardPage() {
 			color: "text-indigo-600",
 			bg: "bg-indigo-50",
 			border: "border-indigo-200/70",
-			badgeText: "text-indigo-700",
 			hoverAccent: "group-hover:text-indigo-600",
 			tags: ["Redis Cache Sync", "JSON Ingestion", "Registry Purge"],
 		},
 		{
 			title: "Quick Reminders",
-			category: "Ephemeral Notes",
 			description:
 				"Jot down expiring operational notes, URL links, and daily reminders with automatic Redis TTL.",
 			href: "/admin/reminders",
@@ -135,7 +127,6 @@ export default async function AdminDashboardPage() {
 			color: "text-amber-600",
 			bg: "bg-amber-50",
 			border: "border-amber-200/70",
-			badgeText: "text-amber-700",
 			hoverAccent: "group-hover:text-amber-600",
 			tags: ["Redis Auto-Expiry", "Linkified Pills", "Duration Extend"],
 		},
@@ -150,15 +141,6 @@ export default async function AdminDashboardPage() {
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6 pb-5 border-b border-slate-100">
 						<div className="space-y-2">
-							<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/70 text-indigo-700 text-xs font-bold uppercase tracking-wider shadow-2xs">
-								<ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-								<span>ADMINISTRATIVE GATEWAY</span>
-								<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-								<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal">
-									active session
-								</span>
-							</div>
-
 							<h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
 								Operations &amp; Control Center
 							</h1>
@@ -252,7 +234,7 @@ export default async function AdminDashboardPage() {
 							className="group flex flex-col justify-between p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 hover:border-slate-300 transition-[border-color,box-shadow,transform] duration-200 shadow-xs hover:shadow-lg"
 						>
 							<div>
-								{/* Top Row: Squircle Icon & Category Badge + Metric Pill */}
+								{/* Top Row: Squircle Icon & Real-time Metric Pill */}
 								<div className="flex items-start justify-between gap-4 mb-4 sm:mb-5">
 									<div
 										className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl shrink-0 ${action.bg} ${action.border} border shadow-2xs group-hover:scale-105 transition-transform duration-200`}
@@ -262,32 +244,13 @@ export default async function AdminDashboardPage() {
 										/>
 									</div>
 
-									<div className="flex flex-col items-end gap-1.5">
-										<div className="flex items-center gap-2">
-											<span
-												className={`px-3 py-1 rounded-full ${action.bg} ${action.border} border text-[10px] font-black uppercase tracking-wider ${action.badgeText}`}
-											>
-												{action.category}
-											</span>
-											<Link
-												href={action.href}
-												className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200/70 text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 flex items-center justify-center transition-colors"
-												aria-label={`Open ${action.title}`}
-											>
-												<ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-											</Link>
-										</div>
-
-										{/* Real-time Metric Pill */}
-										<div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-700 bg-slate-50 px-2.5 py-0.5 rounded-md border border-slate-200/70">
-											<span className="text-slate-900">
-												{action.metricLabel}
-											</span>
-											<span className="text-slate-300">•</span>
-											<span className="text-slate-400 font-normal">
-												{action.metricSub}
-											</span>
-										</div>
+									{/* Real-time Metric Pill */}
+									<div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/70">
+										<span className="text-slate-900">{action.metricLabel}</span>
+										<span className="text-slate-300">/</span>
+										<span className="text-slate-400 font-normal">
+											{action.metricSub}
+										</span>
 									</div>
 								</div>
 

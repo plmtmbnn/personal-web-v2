@@ -8,7 +8,6 @@ import {
 	type Variants,
 } from "framer-motion";
 import {
-	PieChart as PieIcon,
 	Briefcase,
 	Layers,
 	ShieldCheck,
@@ -333,14 +332,6 @@ export default function PortfolioView() {
 				>
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 						<div>
-							<div className="flex items-center gap-2 mb-2">
-								<div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
-									<PieIcon className="w-3.5 h-3.5 text-indigo-600" />
-								</div>
-								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-									PORTFOLIO · fintech & platform architecture
-								</span>
-							</div>
 							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
 								Project Portfolio
 							</h1>
@@ -634,7 +625,7 @@ export default function PortfolioView() {
 											Fintech Core Systems
 										</h2>
 										<p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-											LOS & LMS Architectures · 7 modules
+											LOS & LMS Architectures (7 modules)
 										</p>
 									</div>
 								</div>
@@ -739,7 +730,7 @@ export default function PortfolioView() {
 											Notable Platforms
 										</h2>
 										<p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-											Specialized Ecosystems · 4 platforms
+											Specialized Ecosystems (4 platforms)
 										</p>
 									</div>
 								</div>

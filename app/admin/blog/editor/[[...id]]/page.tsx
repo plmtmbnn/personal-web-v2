@@ -1,13 +1,7 @@
 import BlogForm from "@/features/blog/components/BlogForm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import {
-	ShieldCheck,
-	Edit3,
-	Plus,
-	ChevronRight,
-	ArrowLeft,
-} from "lucide-react";
+import { ShieldCheck, ChevronRight, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/core/supabase-server";
 import { checkAdmin } from "@/features/auth/actions";
 import type { Metadata } from "next";
@@ -56,24 +50,7 @@ export default async function BlogEditorPage({ params }: EditorPageProps) {
 				{/* Top Floating Header Card */}
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs mb-6 sm:mb-8">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
-						<div className="space-y-1.5 sm:space-y-2">
-							<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100/80 text-blue-700 text-xs font-bold uppercase tracking-wider">
-								{initialData ? (
-									<Edit3 className="w-3.5 h-3.5 text-blue-600" />
-								) : (
-									<Plus className="w-3.5 h-3.5 text-blue-600" />
-								)}
-								<span>Content Creation Engine</span>
-								<span className="w-1 h-1 rounded-full bg-blue-400" />
-								<span className="text-[11px] font-semibold text-blue-600 lowercase tracking-normal">
-									{initialData ? "edit mode" : "new draft"}
-								</span>
-							</div>
-
-							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-								{initialData ? "Refine Article" : "New Publication"}
-							</h1>
-
+						<div className="space-y-2">
 							<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
 								<Link
 									href="/admin"
@@ -93,6 +70,16 @@ export default async function BlogEditorPage({ params }: EditorPageProps) {
 									{initialData ? "Edit" : "Draft"}
 								</span>
 							</div>
+
+							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+								{initialData ? "Refine Article" : "New Publication"}
+							</h1>
+
+							<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
+								{initialData
+									? "Update content, metadata, tags, and publishing status for this article."
+									: "Draft and compose a new engineering article with live markdown preview."}
+							</p>
 						</div>
 
 						<div className="flex flex-wrap items-center gap-3">

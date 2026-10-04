@@ -322,7 +322,7 @@ export default function FootballFormationView() {
 										{tactics.teamName || "Matchday Line-Up"}
 									</h2>
 									<p className="text-xs text-slate-500 font-medium">
-										{tactics.formation} • {activeFormation.name}
+										{tactics.formation} ({activeFormation.name})
 									</p>
 								</div>
 								<div className="text-right">

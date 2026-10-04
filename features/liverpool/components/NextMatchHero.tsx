@@ -82,7 +82,7 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 							Matchday Hub
 						</span>
 						<span className="text-[10px] sm:text-xs font-medium text-slate-300 shrink-0">
-							•
+							/
 						</span>
 						<span className="text-[10px] sm:text-xs font-semibold text-slate-400 truncate">
 							{fixture.competition}
@@ -224,12 +224,12 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 						<Calendar className="w-3 h-3 text-red-600 shrink-0" />
 						<span>{dateInfo.formattedDate}</span>
 					</div>
-					<span className="text-slate-300 hidden sm:inline">•</span>
+					<span className="text-slate-300 hidden sm:inline">/</span>
 					<div className="flex items-center gap-1.5 text-slate-900 font-bold">
 						<Clock className="w-3 h-3 text-amber-500 shrink-0" />
 						<span>{dateInfo.formattedTime} local</span>
 					</div>
-					<span className="text-slate-300 hidden sm:inline">•</span>
+					<span className="text-slate-300 hidden sm:inline">/</span>
 					<div className="flex items-center gap-1.5 text-slate-500">
 						<MapPin className="w-3 h-3 text-slate-400 shrink-0" />
 						<span className="truncate max-w-[160px] sm:max-w-none">
@@ -238,7 +238,7 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 					</div>
 					{dateInfo.relativeTime && (
 						<>
-							<span className="text-slate-300 hidden sm:inline">•</span>
+							<span className="text-slate-300 hidden sm:inline">/</span>
 							<span className="text-slate-500 font-semibold">
 								{dateInfo.relativeTime}
 							</span>

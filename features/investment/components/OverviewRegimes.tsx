@@ -208,7 +208,7 @@ export default function OverviewRegimes({
 								{activeFactor.label}
 							</span>
 							<span className="text-[10px] font-bold text-slate-400">
-								Current: {activeFactor.valueStr} · Sub-score:{" "}
+								Current: {activeFactor.valueStr} | Sub-score:{" "}
 								{activeFactor.score}/100
 							</span>
 						</div>

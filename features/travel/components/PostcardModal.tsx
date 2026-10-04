@@ -268,7 +268,7 @@ export default function PostcardModal({
 								{/* Vertical Divider */}
 								<div className="absolute top-4 sm:top-12 bottom-4 sm:bottom-12 left-1/2 w-px bg-black/15 -translate-x-1/2" />
 								<div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 text-[4px] sm:text-[7px] font-bold text-black/30 tracking-[0.2em] whitespace-nowrap pointer-events-none select-none">
-									C-C.CO <span className="mx-2">·</span> TRAVEL SERIES
+									C-C.CO <span className="mx-2">—</span> TRAVEL SERIES
 								</div>
 
 								{/* Left Pane (Handwriting) */}

@@ -83,7 +83,7 @@ export const PLAYBOOK_SCRIPTS: Record<
 			],
 			sizing: "Active trading closed. Long-term DCA at half pace only.",
 			tranchePlan:
-				"Tranche 1: 25% at 200-day MA · Tranche 2: 25% at -10% drawdown · Tranche 3: 50% only after confirmed reclaim of 50-day MA.",
+				"Tranche 1: 25% at 200-day MA | Tranche 2: 25% at -10% drawdown | Tranche 3: 50% only after confirmed reclaim of 50-day MA.",
 			invalidation:
 				"Sustained USD/IDR cooling below 50-day MA and IHSG reclaim of 200-day MA.",
 			focusSectors: [
@@ -186,7 +186,7 @@ export const PLAYBOOK_SCRIPTS: Record<
 			],
 			sizing: "Slow DCA (50% normal pace) into Bitcoin spot only.",
 			tranchePlan:
-				"Tranche 1: 25% at 200-day MA · Tranche 2: 25% at 200-week MA · Tranche 3: 50% only after weekly close back above 200-day MA.",
+				"Tranche 1: 25% at 200-day MA | Tranche 2: 25% at 200-week MA | Tranche 3: 50% only after weekly close back above 200-day MA.",
 			invalidation: "Sustained weekly reclaim of the 200-day moving average.",
 			focusSectors: ["Bitcoin Spot (BTC)", "Cash / Stablecoins"],
 		},

@@ -17,7 +17,7 @@ import {
 import QuickNav, {
 	type TaskViewTab,
 } from "@/features/tasks/components/shared/QuickNav";
-import { LayoutList, Target, Plus, Kanban, ChevronRight } from "lucide-react";
+import { LayoutList, Plus, Kanban, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { Task } from "@/features/tasks/types";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -176,18 +176,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 					<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 mb-6 sm:mb-8 relative z-10">
 						<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
 							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
-								<div className="space-y-1.5 sm:space-y-2">
-									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100/80 text-emerald-700 text-xs font-bold uppercase tracking-wider">
-										<Target className="w-3.5 h-3.5 text-emerald-600" />
-										<span>Operations Hub</span>
-										<span className="w-1 h-1 rounded-full bg-emerald-400" />
-										<span className="text-[11px] font-semibold text-emerald-600 lowercase tracking-normal">
-											daily task orchestration
-										</span>
-									</div>
-									<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-										Daily Objectives
-									</h1>
+								<div className="space-y-2">
 									<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
 										<Link
 											href="/admin"
@@ -200,6 +189,13 @@ export default function TasksView({ tasks }: TasksViewProps) {
 											Tasks & Execution
 										</span>
 									</div>
+									<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+										Daily Objectives
+									</h1>
+									<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
+										Organize, track, and execute daily priorities and weekly
+										review goals.
+									</p>
 								</div>
 
 								<div className="flex items-center gap-3">

@@ -3,7 +3,6 @@ import { getBlogsAdmin, getBlogStats } from "@/features/blog/actions";
 import {
 	Plus,
 	ChevronRight,
-	BookOpen,
 	ArrowUpRight,
 	Globe,
 	FileEdit,
@@ -60,33 +59,24 @@ export default async function AdminBlogPage({
 				{/* Top Floating Header Card */}
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
-						<div className="flex items-start sm:items-center gap-4">
-							<div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200/70 text-blue-600 flex items-center justify-center shrink-0 shadow-2xs">
-								<BookOpen className="w-6 h-6" />
+						<div className="space-y-2">
+							<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+								<Link
+									href="/admin"
+									className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+								>
+									Admin Dashboard
+								</Link>
+								<ChevronRight className="w-3 h-3 text-slate-400" />
+								<span className="text-slate-900 font-bold">Manage Blog</span>
 							</div>
-							<div className="space-y-1.5">
-								<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100/80 text-blue-700 text-xs font-bold uppercase tracking-wider">
-									<BookOpen className="w-3.5 h-3.5 text-blue-600" />
-									<span>Knowledge Base Management</span>
-									<span className="w-1 h-1 rounded-full bg-blue-400" />
-									<span className="text-[11px] font-semibold text-blue-600 lowercase tracking-normal">
-										publishing console
-									</span>
-								</div>
-								<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-									Blog Articles
-								</h1>
-								<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-									<Link
-										href="/admin"
-										className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
-									>
-										Admin Dashboard
-									</Link>
-									<ChevronRight className="w-3 h-3 text-slate-400" />
-									<span className="text-slate-900 font-bold">Manage Blog</span>
-								</div>
-							</div>
+							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+								Blog Articles
+							</h1>
+							<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
+								Manage, draft, and publish engineering essays and architecture
+								articles.
+							</p>
 						</div>
 
 						<div className="flex items-center gap-2.5 sm:gap-3 self-start sm:self-center">

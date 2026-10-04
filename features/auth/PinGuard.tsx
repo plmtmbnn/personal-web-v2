@@ -297,7 +297,7 @@ export default function PinGuard({ children }: PinGuardProps) {
 
 				<div className="mt-6 text-center pt-5 border-t border-slate-100">
 					<small className="text-slate-500 text-[10px] uppercase tracking-wider font-bold">
-						Encrypted Session • 12 Hours
+						Encrypted 12-Hour Session
 					</small>
 				</div>
 			</motion.div>

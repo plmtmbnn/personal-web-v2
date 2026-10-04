@@ -10,6 +10,22 @@ import {
 	Vault,
 } from "lucide-react";
 import type { MarketPlaybookScript } from "../data/playbooks";
+import type { RegimeState } from "../types";
+
+const getStateBadge = (state: RegimeState) => {
+	switch (state) {
+		case "risk_on":
+			return "bg-emerald-50 text-emerald-700 border-emerald-200/80";
+		case "selective":
+			return "bg-amber-50 text-amber-700 border-amber-200/80";
+		case "defensive":
+			return "bg-rose-50 text-rose-700 border-rose-200/80";
+		case "stress":
+			return "bg-rose-100 text-rose-800 border-rose-300";
+		default:
+			return "bg-slate-50 text-slate-700 border-slate-200/80";
+	}
+};
 
 export default function MarketPlaybook({
 	playbooks,
@@ -30,21 +46,30 @@ export default function MarketPlaybook({
 				<div className="space-y-4">
 					{/* Header */}
 					<div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
-						<div>
-							<div className="flex items-center gap-2">
-								<span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md">
-									{isIhsg ? "Indonesian Equities" : "Digital Assets"}
-								</span>
-								<span className="text-[10px] font-bold text-slate-400 uppercase">
-									{script.state.replace("_", " ")}
-								</span>
-							</div>
-							<h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight mt-1">
+						<div className="min-w-0">
+							<h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
 								{script.market} Tactical Playbook
 							</h3>
+							<p className="text-xs text-slate-500 font-medium mt-0.5">
+								{isIhsg ? "Indonesian Equities" : "Digital Assets"}
+							</p>
 						</div>
 
-						<span className="px-3 py-1 bg-slate-900 text-white rounded-xl text-xs font-black tracking-wide shrink-0">
+						<span
+							className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider border shrink-0 ${getStateBadge(
+								script.state,
+							)}`}
+						>
+							{script.state.replace("_", " ")}
+						</span>
+					</div>
+
+					{/* Tactical Stance */}
+					<div className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between gap-2.5">
+						<span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
+							Tactical Stance
+						</span>
+						<span className="text-xs font-extrabold text-slate-900 text-right">
 							{script.posture}
 						</span>
 					</div>
@@ -157,16 +182,16 @@ export default function MarketPlaybook({
 	return (
 		<div className="space-y-6">
 			{/* Playbook Header */}
-			<div className="flex items-center gap-3">
-				<div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+			<div className="flex items-start sm:items-center gap-3">
+				<div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
 					<Briefcase className="w-5 h-5" />
 				</div>
-				<div>
+				<div className="min-w-0 flex-1">
 					<h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
 						Execution Playbook
 					</h2>
-					<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-						Actionable Dos, Avoids, Sizing, and Invalidation Conditions
+					<p className="text-xs text-slate-500 font-medium leading-relaxed">
+						Actionable dos, avoids, sizing, and invalidation conditions
 					</p>
 				</div>
 			</div>
@@ -189,7 +214,7 @@ export default function MarketPlaybook({
 								Safe Yield &amp; Preservation Anchor (40% Target)
 							</h3>
 							<p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-								Retail SBN · Bank Deposits · Physical Gold
+								Retail SBN, Bank Deposits, Physical Gold
 							</p>
 						</div>
 					</div>

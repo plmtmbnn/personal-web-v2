@@ -44,7 +44,7 @@ function LoginContent() {
 				<div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xs max-w-xs w-full flex flex-col items-center gap-3">
 					<Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
 					<p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-						Authentication Bypassed • Redirecting...
+						Redirecting to dashboard...
 					</p>
 				</div>
 			</div>

@@ -250,7 +250,7 @@ export default function DeviceInspectorView() {
 					badges={
 						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
 							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-							<span>WebGL & Web Audio • 100% In-Browser</span>
+							<span>Client-Side Diagnostics</span>
 						</div>
 					}
 					actions={
@@ -474,7 +474,7 @@ export default function DeviceInspectorView() {
 									<span className="font-mono font-extrabold text-indigo-600">
 										Grade {suitability.grade}
 									</span>
-									<span className="text-slate-400">•</span>
+									<span className="text-slate-300">/</span>
 									<span className="text-slate-600">
 										{suitability.gradeLabel}
 									</span>
@@ -554,7 +554,7 @@ export default function DeviceInspectorView() {
 							<span className="font-mono font-bold text-slate-800 truncate block">
 								{networkInfo.publicIp || "127.0.0.1"}
 								{networkInfo.city
-									? ` • ${networkInfo.city}, ${networkInfo.countryCode || networkInfo.country}`
+									? ` (${networkInfo.city}, ${networkInfo.countryCode || networkInfo.country})`
 									: ""}
 							</span>
 						</div>

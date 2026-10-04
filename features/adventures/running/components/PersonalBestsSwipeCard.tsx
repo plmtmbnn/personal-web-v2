@@ -145,13 +145,13 @@ export default function PersonalBestsSwipeCard() {
 	};
 
 	return (
-		<div className="w-full h-full bg-white border border-slate-200/80 rounded-[2rem] p-5 sm:p-7 shadow-xs select-none relative overflow-hidden flex flex-col justify-between gap-5">
+		<div className="w-full h-full bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 shadow-xs select-none relative overflow-hidden flex flex-col justify-between gap-5">
 			{/* ═══════════════════════════════════════
 			    HEADER & CONTROLS
 			═══════════════════════════════════════ */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10 pb-4 border-b border-slate-100">
 				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0 shadow-xs">
+					<div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">
 						<Trophy className="w-5 h-5 text-amber-500" />
 					</div>
 					<div>
@@ -213,7 +213,7 @@ export default function PersonalBestsSwipeCard() {
 								key={item.id}
 								type="button"
 								onClick={() => goToIndex(idx)}
-								className={`group relative h-12 sm:h-14 px-1 sm:px-2 rounded-xl text-center transition-[background-color,color,border-color,box-shadow,transform] duration-150 cursor-pointer flex flex-col items-center justify-center gap-0.5 overflow-hidden min-w-0 active:scale-95 ${
+								className={`group relative h-12 sm:h-14 px-1 sm:px-2 rounded-xl text-center transition-[background-color,color,border-color,box-shadow,transform] duration-150 cursor-pointer flex flex-col items-center justify-center gap-0.5 overflow-hidden min-w-0 active:scale-95 touch-manipulation ${
 									isActive
 										? "bg-white text-slate-900 border border-slate-200/90 shadow-xs font-black"
 										: "text-slate-500 hover:text-slate-900 hover:bg-white/60 border border-transparent font-bold"
@@ -343,7 +343,7 @@ export default function PersonalBestsSwipeCard() {
 								</div>
 							</div>
 							<div className="flex items-baseline gap-3 flex-wrap">
-								<p className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-none font-mono">
+								<p className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-none font-mono">
 									{currentItem.time}
 								</p>
 								<span className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wide">

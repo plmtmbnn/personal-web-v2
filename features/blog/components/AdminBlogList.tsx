@@ -1604,7 +1604,7 @@ function AdminBlogListInner({
 								<span className="text-slate-900">{showTo}</span>
 							</>
 						)}
-						<span className="mx-2 opacity-30">•</span>
+						<span className="mx-2 opacity-30">/</span>
 						<span className="text-slate-900">{totalCount}</span> Total
 					</div>
 

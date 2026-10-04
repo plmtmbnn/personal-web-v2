@@ -612,7 +612,7 @@ export default function ActivityDetailModal({
 				? `${window.location.origin}/adventures/running?activity=${activity.id}`
 				: `https://polmatambunan.my.id/adventures/running?activity=${activity.id}`;
 
-		const shareText = `🏃 ${activity.name} • ${derivedData.distanceKm} km in ${derivedData.formattedMovingDuration} (Avg ${derivedData.formattedPace})`;
+		const shareText = `🏃 ${activity.name} — ${derivedData.distanceKm} km in ${derivedData.formattedMovingDuration} (Avg ${derivedData.formattedPace})`;
 
 		if (typeof navigator !== "undefined" && navigator.share) {
 			try {
@@ -702,7 +702,7 @@ export default function ActivityDetailModal({
 									<div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
 										<Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
 										<span className="truncate">
-											{formattedDate} · {formattedTime}
+											{formattedDate}, {formattedTime}
 										</span>
 									</div>
 									<h3 className="text-base font-black text-slate-900 truncate leading-tight tracking-tight">

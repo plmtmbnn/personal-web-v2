@@ -206,7 +206,7 @@ export default function Playbook({ data }: { data: InvestmentCompassData }) {
 
 			<div className="text-center pt-6 border-t border-slate-100">
 				<p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-					Personal Guideline • Not Financial Advice
+					Personal Guideline (Not Financial Advice)
 				</p>
 			</div>
 		</div>

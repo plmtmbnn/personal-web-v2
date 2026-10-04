@@ -100,7 +100,7 @@ export function derivePermissions(
 					reason:
 						"Halve monthly DCA pace to preserve dry powder in SBN / cash.",
 				},
-				maxExposure: "50% of Core Allocation · Zero Active Swings",
+				maxExposure: "50% of Core Allocation — Zero Active Swings",
 			};
 			break;
 
@@ -200,7 +200,7 @@ export function derivePermissions(
 					label: "Slow (Half Pace)",
 					reason: "Accumulate Bitcoin spot only at 50% normal pace.",
 				},
-				maxExposure: "10% of net wealth · Hold Stablecoins",
+				maxExposure: "10% of net wealth — Hold Stablecoins",
 			};
 			break;
 
@@ -222,7 +222,7 @@ export function derivePermissions(
 					reason:
 						"Spot accumulation restricted to 200-week MA deep value zones.",
 				},
-				maxExposure: "Trading Frozen · Maximum Stablecoin Defense",
+				maxExposure: "Trading Frozen — Maximum Stablecoin Defense",
 			};
 			break;
 	}

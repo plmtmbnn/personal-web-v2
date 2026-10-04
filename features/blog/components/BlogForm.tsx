@@ -991,7 +991,7 @@ export default function BlogForm({ initialData }: BlogFormProps) {
 							{initialData ? "Edit Article" : "New Article"}
 						</h1>
 						<p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
-							Content Management • Editor
+							Content Management Editor
 						</p>
 					</div>
 

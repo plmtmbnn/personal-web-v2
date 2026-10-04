@@ -1283,7 +1283,7 @@ function TaskItem({
 									<kbd className="bg-slate-100 px-1 rounded font-bold">
 										Ctrl+Enter
 									</kbd>{" "}
-									to save •{" "}
+									to save,{" "}
 									<kbd className="bg-slate-100 px-1 rounded font-bold">Esc</kbd>{" "}
 									to cancel
 								</span>
@@ -1782,7 +1782,7 @@ function TaskItem({
 							{optimisticStatus !== "done" &&
 								optimisticStatus !== "cancelled" && (
 									<p className="mt-1.5 text-[8px] text-slate-300 font-medium sm:hidden">
-										Double-tap title to edit · Hold status to block
+										Double-tap title to edit, hold status to block
 									</p>
 								)}
 						</>

@@ -47,7 +47,7 @@ export const AUTHOR_STATS = {
 
 export const SEO = {
 	defaultTitle: SITE.name,
-	titleTemplate: "%s · Polma Tambunan",
+	titleTemplate: "%s | Polma Tambunan",
 	defaultDescription: SITE.description,
 	twitterHandle: "@plmtmbnn",
 

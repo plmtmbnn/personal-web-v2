@@ -127,7 +127,7 @@ export default function DestinationCard({
 							<div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400 font-medium">
 								<MapPin className="w-3.5 h-3.5 shrink-0" />
 								<span className="truncate">{destination.location}</span>
-								<span className="shrink-0 text-slate-300">·</span>
+								<span className="shrink-0 text-slate-400">,</span>
 								<span className="shrink-0">{destination.country}</span>
 							</div>
 							{destination.description && (
@@ -214,7 +214,7 @@ export default function DestinationCard({
 						<div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400 font-medium">
 							<MapPin className="w-3.5 h-3.5 shrink-0 text-slate-400" />
 							<span className="truncate">{destination.location}</span>
-							<span className="shrink-0 text-slate-300">·</span>
+							<span className="shrink-0 text-slate-400">,</span>
 							<span className="shrink-0 text-slate-600 font-semibold">
 								{destination.country}
 							</span>

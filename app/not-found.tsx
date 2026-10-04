@@ -13,7 +13,7 @@ export default function NotFound() {
 						<div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-full border border-slate-200/80 shadow-2xs">
 							<FileQuestion className="w-3.5 h-3.5 text-slate-500" />
 							<span className="text-[10px] font-black uppercase tracking-wider">
-								Error 404 • Missing Resource
+								Error 404: Page Not Found
 							</span>
 						</div>
 

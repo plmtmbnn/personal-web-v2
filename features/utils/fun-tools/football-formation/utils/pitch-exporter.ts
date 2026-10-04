@@ -51,7 +51,7 @@ export async function renderTacticsToCanvas(
 	ctx.fillStyle = "#94a3b8";
 	ctx.font = "500 13px system-ui, -apple-system, sans-serif";
 	const manager = config.tactics.manager
-		? `Manager: ${config.tactics.manager} • `
+		? `Manager: ${config.tactics.manager} | `
 		: "";
 	ctx.fillText(
 		`${manager}Formation: ${config.formation.name}`,
@@ -294,7 +294,7 @@ export async function renderTacticsToCanvas(
 	if (config.bench.length > 0) {
 		const benchNames = config.bench
 			.map((p) => `#${p.number} ${p.name}`)
-			.join("  •  ");
+			.join("  /  ");
 		ctx.fillStyle = "#cbd5e1";
 		ctx.font = "500 12px system-ui, -apple-system, sans-serif";
 		ctx.fillText(benchNames, 40, benchY + 32);
@@ -309,7 +309,7 @@ export async function renderTacticsToCanvas(
 	ctx.fillStyle = "#64748b";
 	ctx.font = "bold 10px system-ui, -apple-system, sans-serif";
 	ctx.fillText(
-		"POLMA UTILITIES  •  FOOTBALL FORMATION STUDIO",
+		"POLMA UTILITIES — FOOTBALL FORMATION STUDIO",
 		width - 40,
 		benchY + 32,
 	);

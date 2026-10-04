@@ -303,7 +303,7 @@ export default function MarketDataHub({
 										</p>
 									</div>
 									<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
-										BTC · ETH · SOL
+										BTC / ETH / SOL
 									</span>
 								</div>
 

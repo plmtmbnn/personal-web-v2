@@ -60,7 +60,7 @@ export async function runTaskReminders() {
 		.map((task) => {
 			const rescheduleText =
 				task.reschedule_count > 0 ? ` (🔄 ${task.reschedule_count})` : "";
-			return `• ${task.title}${rescheduleText}`;
+			return `- ${task.title}${rescheduleText}`;
 		})
 		.join("\n");
 

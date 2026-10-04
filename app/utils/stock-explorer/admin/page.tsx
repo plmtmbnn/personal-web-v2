@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
-	Database,
 	Upload,
 	ArrowLeft,
 	Trash2,
@@ -27,7 +26,6 @@ import {
 	LayoutTemplate,
 	Layers,
 	ShieldCheck,
-	TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -780,35 +778,26 @@ export default function StockImportAdmin() {
 					{/* Top Floating Header Card */}
 					<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
 						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
-							<div className="flex items-start sm:items-center gap-4">
-								<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200/70 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
-									<Database className="w-6 h-6" />
+							<div className="space-y-2">
+								<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+									<Link
+										href="/admin"
+										className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+									>
+										Admin Dashboard
+									</Link>
+									<ChevronRight className="w-3 h-3 text-slate-400" />
+									<span className="text-slate-900 font-bold">
+										Stock Registry
+									</span>
 								</div>
-								<div className="space-y-1.5">
-									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider">
-										<TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
-										<span>Financial Registry</span>
-										<span className="w-1 h-1 rounded-full bg-indigo-400" />
-										<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal">
-											idx market synchronization
-										</span>
-									</div>
-									<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-										Stock Explorer Manager
-									</h1>
-									<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-										<Link
-											href="/admin"
-											className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
-										>
-											Admin Dashboard
-										</Link>
-										<ChevronRight className="w-3 h-3 text-slate-400" />
-										<span className="text-slate-900 font-bold">
-											Stock Registry
-										</span>
-									</div>
-								</div>
+								<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+									Stock Explorer Manager
+								</h1>
+								<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
+									Synchronize IDX equity instruments, inspect cache payloads,
+									and update market data.
+								</p>
 							</div>
 
 							<div className="flex items-center gap-3 self-start sm:self-center">

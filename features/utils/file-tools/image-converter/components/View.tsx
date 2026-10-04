@@ -352,7 +352,7 @@ export default function ImageConverterView() {
 					badges={
 						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
 							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-							<span>100% Client-Side • Zero Server Uploads</span>
+							<span>100% Client-Side Processed</span>
 						</div>
 					}
 					actions={
@@ -719,13 +719,13 @@ export default function ImageConverterView() {
 															</span>
 															{item.validation.dimensions && (
 																<span>
-																	• {item.validation.dimensions.width} ×{" "}
-																	{item.validation.dimensions.height} px
+																	({item.validation.dimensions.width} ×{" "}
+																	{item.validation.dimensions.height} px)
 																</span>
 															)}
 															{item.convertedSize && (
 																<span className="text-indigo-600 font-bold">
-																	• Converted:{" "}
+																	Converted:{" "}
 																	<strong className="font-mono">
 																		{formatBytes(item.convertedSize)}
 																	</strong>

@@ -111,9 +111,7 @@ export default function DiffViewerView() {
 					badges={
 						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
 							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-							<span>
-								LCS Algorithm • Sub-Word Granularity • 100% In-Browser
-							</span>
+							<span>LCS Algorithm (Sub-Word)</span>
 						</div>
 					}
 					actions={
@@ -283,7 +281,7 @@ export default function DiffViewerView() {
 							{stats.unchanged} unchanged
 						</span>
 						<span className="text-xs font-bold text-slate-500">
-							• Similarity:{" "}
+							Similarity:{" "}
 							<strong className="font-mono text-indigo-600 font-extrabold">
 								{stats.similarityPercent}%
 							</strong>

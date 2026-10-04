@@ -88,19 +88,19 @@ function MetricChannel({
 	dark,
 }: ChannelProps) {
 	const inner = (
-		<div className="flex items-center justify-between w-full">
-			<div className="flex items-center gap-3 min-w-0">
-				<div className={`p-2 rounded-xl border ${color} shrink-0`}>
-					<Icon className="text-sm" />
+		<div className="flex items-center justify-between w-full relative z-10">
+			<div className="flex items-center gap-3.5 min-w-0">
+				<div className={`p-2.5 rounded-xl border ${color} shrink-0`}>
+					<Icon className="w-4 h-4" />
 				</div>
 				<div className="min-w-0">
 					<p
-						className={`text-[9px] font-black uppercase tracking-widest truncate ${dark ? "text-slate-400" : "text-slate-400"}`}
+						className={`text-[10px] font-black uppercase tracking-widest truncate ${dark ? "text-slate-400" : "text-slate-400"}`}
 					>
 						{label}
 					</p>
 					<p
-						className={`text-xs font-bold truncate ${dark ? "text-white" : "text-slate-900"}`}
+						className={`text-sm font-bold truncate ${dark ? "text-white" : "text-slate-900"}`}
 					>
 						{value}
 					</p>
@@ -109,12 +109,12 @@ function MetricChannel({
 			{href && (
 				<div className="shrink-0 pl-2">
 					<div
-						className={`p-1.5 rounded-lg transition-colors ${dark ? "text-white/50 group-hover:text-white group-hover:bg-white/10" : "text-slate-400 group-hover:text-indigo-600 group-hover:bg-slate-100"}`}
+						className={`p-1.5 rounded-lg transition-transform duration-300 group-hover:translate-x-0.5 ${dark ? "text-white/50 group-hover:text-white" : "text-slate-400 group-hover:text-slate-900"}`}
 					>
 						{isExternal ? (
-							<ArrowUpRight className="w-3.5 h-3.5" />
+							<ArrowUpRight className="w-4 h-4" />
 						) : (
-							<ArrowRight className="w-3.5 h-3.5" />
+							<ArrowRight className="w-4 h-4" />
 						)}
 					</div>
 				</div>
@@ -122,7 +122,7 @@ function MetricChannel({
 		</div>
 	);
 
-	const className = `rounded-2xl border shadow-xs p-3.5 flex items-center transition-[border-color,box-shadow,transform] duration-200 group hover:shadow-sm ${dark ? "bg-slate-900 border-slate-800 hover:border-slate-700 hover:-translate-y-0.5" : "bg-white border-slate-200/80 hover:border-slate-300 hover:-translate-y-0.5"}`;
+	const className = `group relative overflow-hidden rounded-2xl border p-4 flex items-center transition-all duration-300 ${dark ? "bg-slate-900 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/20" : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/50"}`;
 
 	if (href) {
 		if (isExternal) {
@@ -188,7 +188,7 @@ export default function Home({
 
 	return (
 		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
-			<div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 my-auto">
+			<div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center relative z-10 my-auto">
 				{/* ── Left Content (Span 6) ─────────────────────────────────── */}
 				<motion.div
 					className="lg:col-span-6 w-full"
@@ -199,26 +199,31 @@ export default function Home({
 					{/* Avatar & Status chip */}
 					<motion.div
 						variants={itemVariants}
-						className="flex items-center gap-4 mb-6 sm:mb-8"
+						className="flex items-center gap-4 sm:gap-5 mb-7 sm:mb-8"
 					>
-						<div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs shrink-0 bg-slate-100">
+						<div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-[1.25rem] overflow-hidden border border-slate-200/80 shadow-sm shrink-0 bg-slate-100">
 							<Image
 								src="/profile.jpg"
 								alt={AUTHOR.name}
 								fill
-								className="object-cover grayscale-[20%]"
-								sizes="64px"
+								className="object-cover grayscale-[15%] transition-all duration-500 hover:grayscale-0 hover:scale-105"
+								sizes="(max-width: 640px) 64px, 80px"
 							/>
 						</div>
 						<div className="flex flex-col gap-1.5">
-							<h2 className="text-[13px] font-black uppercase tracking-widest text-slate-900">
+							<h2 className="text-[14px] font-black uppercase tracking-[0.2em] text-slate-900">
 								{AUTHOR.name}
 							</h2>
-							<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs text-[10px] font-semibold text-slate-600 w-fit">
-								<span
-									className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}
-								/>
-								{isActive ? "Active & building" : "Resting · offline"}
+							<span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-xs text-[10px] font-semibold text-slate-600 w-fit">
+								<span className="relative flex h-2 w-2">
+									{isActive && (
+										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+									)}
+									<span
+										className={`relative inline-flex rounded-full h-2 w-2 ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}
+									></span>
+								</span>
+								{isActive ? "Active & building" : "Resting (offline)"}
 							</span>
 						</div>
 					</motion.div>
@@ -226,7 +231,7 @@ export default function Home({
 					{/* Headline */}
 					<motion.h1
 						variants={itemVariants}
-						className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.05] mb-5 sm:mb-6"
+						className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1] mb-5 sm:mb-6"
 					>
 						Engineering
 						<br />
@@ -238,42 +243,41 @@ export default function Home({
 					{/* Sub-copy */}
 					<motion.p
 						variants={itemVariants}
-						className="text-sm text-slate-500 font-medium leading-relaxed mb-6 sm:mb-7 max-w-sm"
+						className="text-sm sm:text-base text-slate-500 font-medium leading-relaxed mb-8 sm:mb-10 max-w-sm"
 					>
 						Software Engineer specializing in fintech core architecture, lending
 						platforms, and scalable data solutions.
 					</motion.p>
 
-					{/* Location + time strip */}
+					{/* Location + time strip (Reimagined as compact cards) */}
 					<motion.div
 						variants={itemVariants}
-						className="flex flex-col gap-2.5 mt-8"
+						className="grid grid-cols-2 gap-3 max-w-md"
 					>
-						<div className="flex items-center gap-3">
-							<div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
-								<MapPin className="text-[13px] text-indigo-500" />
+						<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+							<div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
+								<MapPin className="w-3.5 h-3.5 text-indigo-500" />
 							</div>
-							<div>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-									Location
+							<div className="min-w-0">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5 truncate">
+									Base
 								</p>
-								<p className="text-xs font-bold text-slate-800">
-									Toba, Indonesia · UTC+7
+								<p className="text-xs font-bold text-slate-800 truncate">
+									Toba, ID
 								</p>
 							</div>
 						</div>
-
-						<div className="flex items-center gap-3">
-							<div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
-								<Clock className="text-[13px] text-indigo-500" />
+						<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+							<div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+								<Clock className="w-3.5 h-3.5 text-emerald-500" />
 							</div>
-							<div className="flex items-baseline gap-2 min-w-0">
-								<p className="font-mono text-xs font-bold text-slate-800 tabular-nums">
+							<div className="min-w-0">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5 truncate">
+									Local Time
+								</p>
+								<p className="font-mono text-xs font-bold text-slate-800 tabular-nums truncate">
 									{localTime || "--:--:--"}
 								</p>
-								<span className="text-[10px] font-semibold text-slate-400 truncate">
-									Local time
-								</span>
 							</div>
 						</div>
 					</motion.div>
@@ -281,7 +285,7 @@ export default function Home({
 
 				{/* ── Right Content (Span 6) ─────────────────────────────────── */}
 				<motion.div
-					className="lg:col-span-6 w-full space-y-3 lg:pl-4 mt-10 lg:mt-0"
+					className="lg:col-span-6 w-full space-y-4 lg:pl-6 mt-12 lg:mt-0"
 					initial={reduceMotion ? false : { opacity: 0, y: 18 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{
@@ -291,42 +295,39 @@ export default function Home({
 					}}
 				>
 					{/* Metrics Panel */}
-					<div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
-						<div className="flex items-center justify-between mb-4">
-							<span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-								<Layers className="w-3.5 h-3.5 text-indigo-500" />
+					<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-5 sm:p-6">
+						<div className="flex items-center justify-between mb-5">
+							<span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+								<Layers className="w-4 h-4 text-indigo-500" />
 								Professional Impact
 							</span>
 						</div>
 
-						<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-							<div className="p-3 rounded-xl bg-slate-50/60 border border-slate-200/70 hover:bg-slate-100/80 hover:border-slate-300 transition-colors flex flex-col gap-2.5">
-								<div className="p-1.5 rounded-lg w-fit bg-white border border-slate-200">
-									<Briefcase className="w-3.5 h-3.5 text-slate-600" />
-								</div>
-								<span className="text-[10px] font-bold text-slate-700 leading-snug">
-									{yearsCount}+ Years
-									<br />
-									Engineering
+						<div className="grid grid-cols-3 gap-2 sm:gap-3">
+							<div className="px-2 py-4 rounded-2xl bg-slate-50/50 border border-slate-100 flex flex-col items-center justify-center text-center gap-1.5 transition-colors hover:bg-slate-50">
+								<Briefcase className="w-4 h-4 text-slate-400 mb-1" />
+								<span className="text-xl sm:text-2xl font-bold text-slate-900 leading-none">
+									{yearsCount}+
+								</span>
+								<span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+									Years
 								</span>
 							</div>
-							<div className="p-3 rounded-xl bg-slate-50/60 border border-slate-200/70 hover:bg-slate-100/80 hover:border-slate-300 transition-colors flex flex-col gap-2.5">
-								<div className="p-1.5 rounded-lg w-fit bg-white border border-slate-200">
-									<Activity className="w-3.5 h-3.5 text-slate-600" />
-								</div>
-								<span className="text-[10px] font-bold text-slate-700 leading-snug">
-									{kmCount.toLocaleString()}+ Km
-									<br />
-									Run in {year}
+							<div className="px-2 py-4 rounded-2xl bg-slate-50/50 border border-slate-100 flex flex-col items-center justify-center text-center gap-1.5 transition-colors hover:bg-slate-50">
+								<Activity className="w-4 h-4 text-slate-400 mb-1" />
+								<span className="text-xl sm:text-2xl font-bold text-slate-900 leading-none">
+									{kmCount.toLocaleString()}+
+								</span>
+								<span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+									Km / {year}
 								</span>
 							</div>
-							<div className="p-3 rounded-xl bg-slate-50/60 border border-slate-200/70 hover:bg-slate-100/80 hover:border-slate-300 transition-colors flex flex-col gap-2.5 col-span-2 sm:col-span-1">
-								<div className="p-1.5 rounded-lg w-fit bg-white border border-slate-200">
-									<Cpu className="w-3.5 h-3.5 text-slate-600" />
-								</div>
-								<span className="text-[10px] font-bold text-slate-700 leading-snug">
-									{fintechCount}+ Fintech
-									<br />
+							<div className="px-2 py-4 rounded-2xl bg-slate-50/50 border border-slate-100 flex flex-col items-center justify-center text-center gap-1.5 transition-colors hover:bg-slate-50">
+								<Cpu className="w-4 h-4 text-slate-400 mb-1" />
+								<span className="text-xl sm:text-2xl font-bold text-slate-900 leading-none">
+									{fintechCount}+
+								</span>
+								<span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
 									Systems
 								</span>
 							</div>
@@ -334,7 +335,7 @@ export default function Home({
 					</div>
 
 					{/* Direct Channels */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 						<MetricChannel
 							icon={ArrowRight}
 							label="Explore Work"

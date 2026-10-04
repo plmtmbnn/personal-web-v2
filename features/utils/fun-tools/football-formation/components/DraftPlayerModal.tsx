@@ -122,7 +122,7 @@ export default function DraftPlayerModal({
 								<p className="text-xs text-slate-500 font-medium">
 									Slot Role:{" "}
 									<span className="font-bold text-slate-700">{slot.role}</span>{" "}
-									• Default #{slot.defaultNumber}
+									(Default #{slot.defaultNumber})
 								</p>
 							</div>
 						</div>

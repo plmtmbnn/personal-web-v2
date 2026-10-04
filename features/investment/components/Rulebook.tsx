@@ -156,17 +156,20 @@ export default function Rulebook() {
 							{CIRCUIT_BREAKERS.map((cb, idx) => (
 								<div
 									key={idx}
-									className="p-3.5 rounded-2xl bg-rose-50/50 border border-rose-100 space-y-1"
+									className="p-3.5 sm:p-4 rounded-2xl bg-rose-50/40 border border-rose-200/70 space-y-2 transition-colors"
 								>
-									<div className="flex items-center justify-between gap-1">
-										<span className="text-xs font-black text-rose-900">
-											{cb.drawdown}
-										</span>
-										<span className="text-[10px] font-black uppercase text-rose-700 bg-rose-100 px-2 py-0.5 rounded">
+									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
+										<div className="flex items-center gap-2">
+											<span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+											<h4 className="text-xs sm:text-sm font-black text-rose-950 tracking-tight">
+												{cb.drawdown}
+											</h4>
+										</div>
+										<span className="inline-flex items-center self-start sm:self-auto text-[11px] font-bold text-rose-800 bg-rose-100/90 px-2.5 py-0.5 rounded-md border border-rose-200/80 shrink-0">
 											{cb.action}
 										</span>
 									</div>
-									<p className="text-[11px] text-slate-700 font-semibold leading-relaxed pt-0.5">
+									<p className="text-xs text-slate-700 font-medium leading-relaxed pt-1.5 border-t border-rose-100/80">
 										{cb.protocol}
 									</p>
 								</div>
@@ -176,16 +179,16 @@ export default function Rulebook() {
 				</div>
 
 				{/* Hard Bans While Rebuilding */}
-				<div className="bg-slate-900 text-white rounded-[2rem] border border-slate-800 shadow-xl p-5 sm:p-7 space-y-4 flex flex-col justify-between">
+				<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 space-y-4 flex flex-col justify-between">
 					<div>
-						<div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-							<ShieldAlert className="w-4 h-4 text-amber-400" />
-							<h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight">
+						<div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+							<ShieldAlert className="w-4 h-4 text-rose-600" />
+							<h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
 								4. Non-Negotiable Hard Bans
 							</h3>
 						</div>
 
-						<p className="text-xs text-slate-400 font-medium leading-relaxed my-3">
+						<p className="text-xs text-slate-500 font-medium leading-relaxed my-3">
 							Violating these rules invalidates your trading license. Total zero
 							tolerance during the rebuild.
 						</p>
@@ -194,10 +197,12 @@ export default function Rulebook() {
 							{HARD_BANS.map((ban, idx) => (
 								<li
 									key={idx}
-									className="flex items-start gap-2.5 text-xs font-semibold text-slate-200 p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/60 leading-snug"
+									className="flex items-start gap-3 text-xs sm:text-sm font-semibold text-slate-800 p-3 sm:p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/70 leading-relaxed"
 								>
-									<span className="text-rose-400 font-black shrink-0">✕</span>
-									<span>{ban}</span>
+									<div className="w-5 h-5 rounded-md bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center shrink-0 mt-0.5 text-xs font-black">
+										✕
+									</div>
+									<span className="flex-1 min-w-0 pt-0.5">{ban}</span>
 								</li>
 							))}
 						</ul>

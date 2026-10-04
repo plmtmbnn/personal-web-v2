@@ -192,13 +192,13 @@ export default function ExperienceDetailModal({
 														<Award className="w-4 h-4 text-amber-600" />
 														<span>Key Achievements</span>
 													</div>
-													<ul className="space-y-1">
+													<ul className="space-y-1 list-disc pl-4">
 														{pos.highlights.map((h, hIdx) => (
 															<li
 																key={String(hIdx)}
 																className="text-xs font-semibold text-amber-950 leading-relaxed italic"
 															>
-																• {h}
+																{h}
 															</li>
 														))}
 													</ul>

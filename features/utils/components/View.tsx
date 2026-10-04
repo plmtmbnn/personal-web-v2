@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
 	Timer,
-	Wrench,
 	Calculator,
 	Braces,
 	ArrowRightLeft,
@@ -29,7 +28,6 @@ import {
 	X,
 	Layers,
 	FileText,
-	ArrowUpRight,
 	ChevronRight,
 	Trophy,
 } from "lucide-react";
@@ -350,34 +348,25 @@ export default function UtilsLanding() {
 					transition={{ duration: 0.4, ease: "easeOut" }}
 					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
-					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-						<div className="flex items-start sm:items-center gap-4">
-							<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200/70 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
-								<Wrench className="w-6 h-6 text-indigo-600" />
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 sm:gap-6">
+						<div className="space-y-2">
+							<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+								<Link
+									href="/"
+									className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+								>
+									Home
+								</Link>
+								<ChevronRight className="w-3 h-3 text-slate-400" />
+								<span className="text-slate-900 font-bold">Utilities</span>
 							</div>
-							<div className="space-y-1.5">
-								<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider">
-									<Wrench className="w-3.5 h-3.5 text-indigo-600" />
-									<span>Utility Registry</span>
-									<span className="w-1 h-1 rounded-full bg-indigo-400" />
-									<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal">
-										developer & operational engines
-									</span>
-								</div>
-								<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-									Developer & Tech Utilities
-								</h1>
-								<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-									<Link
-										href="/"
-										className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
-									>
-										Home
-									</Link>
-									<ChevronRight className="w-3 h-3 text-slate-400" />
-									<span className="text-slate-900 font-bold">Utilities</span>
-								</div>
-							</div>
+							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+								Developer &amp; Tech Utilities
+							</h1>
+							<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
+								High-fidelity developer utilities, data converters, and security
+								tools running 100% client-side in your browser.
+							</p>
 						</div>
 
 						{/* Telemetry Quick Strip */}
@@ -557,15 +546,12 @@ export default function UtilsLanding() {
 													className={`group flex flex-col justify-between p-5 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-[border-color,box-shadow] duration-200 !no-underline h-full`}
 												>
 													<div>
-														{/* Card Head: Squircle Icon + Action Arrow */}
-														<div className="flex items-center justify-between gap-3 mb-3.5">
+														{/* Card Head: Squircle Icon */}
+														<div className="mb-3.5">
 															<div
 																className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 ${category.badgeColor} group-hover:scale-105 transition-transform duration-200`}
 															>
 																<util.icon className="w-5 h-5" />
-															</div>
-															<div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 flex items-center justify-center transition-colors shrink-0">
-																<ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
 															</div>
 														</div>
 

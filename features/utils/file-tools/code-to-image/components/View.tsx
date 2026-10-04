@@ -132,7 +132,7 @@ export default function CodeToImageView() {
 					badges={
 						<div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100/80 rounded-full text-xs font-bold text-emerald-700">
 							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-							High-DPI Retina • 100% In-Browser
+							High-DPI Retina Ready
 						</div>
 					}
 					actions={
@@ -441,7 +441,7 @@ export default function CodeToImageView() {
 							</div>
 
 							<span className="text-xs font-mono font-bold text-slate-400">
-								{config.code.split("\n").length} lines • {config.code.length}{" "}
+								{config.code.split("\n").length} lines, {config.code.length}{" "}
 								chars
 							</span>
 						</div>

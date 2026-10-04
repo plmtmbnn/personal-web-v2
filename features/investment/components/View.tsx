@@ -119,28 +119,28 @@ export default function InvestmentCompassView({
 						</div>
 					</div>
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 relative z-10">
-						<div className="space-y-1.5 sm:space-y-2">
-							<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-bold uppercase tracking-wider max-w-full">
-								<Compass className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-								<span className="truncate">Market Guideline</span>
-								<span className="w-1 h-1 rounded-full bg-indigo-400 shrink-0" />
-								<span className="text-[11px] font-semibold text-indigo-600 lowercase tracking-normal truncate hidden xs:inline">
-									ihsg &amp; crypto playbook
-								</span>
-							</div>
-							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-								Investment Compass
-							</h1>
-							<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+						<div className="flex-1 min-w-0">
+							<nav
+								aria-label="Breadcrumb"
+								className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 mb-2"
+							>
 								<Link
 									href="/"
-									className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+									className="hover:text-slate-700 transition-colors !no-underline"
 								>
 									Home
 								</Link>
-								<ChevronRight className="w-3 h-3 text-slate-400" />
+								<ChevronRight className="w-3.5 h-3.5 shrink-0" />
 								<span className="text-slate-900 font-bold">Investments</span>
-							</div>
+							</nav>
+							<h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
+								Investment Compass
+							</h1>
+							<p className="text-sm sm:text-base text-slate-500 font-medium mt-1.5 max-w-2xl leading-relaxed">
+								Risk-first market intelligence, disciplined execution playbooks,
+								and macroeconomic telemetry across Indonesian equities and
+								crypto majors.
+							</p>
 						</div>
 
 						{/* Header Actions */}
@@ -425,7 +425,7 @@ export default function InvestmentCompassView({
 				{/* Disclaimer Footer */}
 				<div className="text-center pt-6 border-t border-slate-200/80">
 					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-						Personal Guideline &amp; Operating System • Not Financial Advice
+						Personal Guideline &amp; Operating System (Not Financial Advice)
 					</p>
 				</div>
 			</div>

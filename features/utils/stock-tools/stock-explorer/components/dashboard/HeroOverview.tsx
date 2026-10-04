@@ -77,7 +77,7 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 						IHSG Proxy
 					</span>
 					<span className="text-[10px] font-bold text-slate-400">
-						{advancers} Up · {decliners} Down
+						{advancers} Up / {decliners} Down
 					</span>
 				</div>
 			</motion.div>

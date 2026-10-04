@@ -13,7 +13,6 @@ import {
 	Image as ImageIcon,
 	Layers,
 	Route,
-	Compass,
 } from "lucide-react";
 
 const cardVariants: Variants = {
@@ -71,14 +70,6 @@ export default function AdventuresLanding() {
 				>
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 						<div>
-							<div className="flex items-center gap-2 mb-2">
-								<div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-									<Compass className="w-3.5 h-3.5 text-emerald-600" />
-								</div>
-								<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-									ADVENTURES & EXPEDITIONS · ENDURANCE & GLOBAL TRAVEL
-								</span>
-							</div>
 							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
 								Adventures & Journeys
 							</h1>

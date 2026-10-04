@@ -186,19 +186,6 @@ function TravelContent() {
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 						{/* Title block */}
 						<div className="flex-1 min-w-0">
-							<div className="flex items-center gap-2.5 mb-3">
-								<div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
-									<Compass className="w-5 h-5" />
-								</div>
-								<div>
-									<p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400 whitespace-nowrap">
-										EXPEDITION LOG · GLOBAL TRAVEL &amp; POSTCARD STUDIO
-									</p>
-									<p className="text-[10px] font-medium text-slate-400 mt-0.5">
-										Bucket list tracker
-									</p>
-								</div>
-							</div>
 							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
 								Travel Bucket List
 							</h1>

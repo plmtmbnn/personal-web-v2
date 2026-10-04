@@ -164,7 +164,7 @@ export default function JWTInspectorView() {
 					badges={
 						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
 							<Lock className="w-3 h-3 text-emerald-600" />
-							<span>100% Client-Side Decoded • Zero Server Telemetry</span>
+							<span>100% Client-Side Decoded</span>
 						</div>
 					}
 				/>
@@ -258,11 +258,11 @@ export default function JWTInspectorView() {
 									<span className="px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold">
 										Header
 									</span>
-									<span className="text-slate-400">•</span>
+									<span className="text-slate-400 font-bold">.</span>
 									<span className="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-700 font-bold">
 										Payload
 									</span>
-									<span className="text-slate-400">•</span>
+									<span className="text-slate-400 font-bold">.</span>
 									<span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold">
 										Signature
 									</span>

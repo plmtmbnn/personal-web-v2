@@ -1128,7 +1128,7 @@ export default function TextCompareView() {
 							<span className="w-2 h-2 rounded-full bg-emerald-500" />
 							{metrics.similarityPercent}% Overlap
 						</span>
-						<span>•</span>
+						<span className="text-slate-300">/</span>
 						<span>{metrics.totalChanges} modifications detected</span>
 					</div>
 

@@ -140,7 +140,7 @@ function LinkifiedText({ text }: { text: string }) {
 								<button
 									type="button"
 									onClick={(e) => handleCopy(e, matchedUrl)}
-									className="inline-flex items-center justify-center shrink-0 w-6 h-6 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all cursor-pointer active:scale-90"
+									className="inline-flex items-center justify-center shrink-0 w-6 h-6 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all cursor-pointer active:scale-90 touch-manipulation"
 									title="Copy link address"
 									aria-label="Copy link address"
 								>
@@ -169,7 +169,9 @@ const TTL_CONFIG: Record<
 		badgeBg: string;
 		badgeText: string;
 		badgeBorder: string;
-		solidAccent: string;
+		iconBg: string;
+		iconColor: string;
+		iconBorder: string;
 		icon: React.ElementType;
 	}
 > = {
@@ -179,7 +181,9 @@ const TTL_CONFIG: Record<
 		badgeBg: "bg-sky-50",
 		badgeText: "text-sky-700",
 		badgeBorder: "border-sky-200/80",
-		solidAccent: "bg-sky-500",
+		iconBg: "bg-sky-50",
+		iconColor: "text-sky-600",
+		iconBorder: "border-sky-200/70",
 		icon: Clock,
 	},
 	week: {
@@ -188,7 +192,9 @@ const TTL_CONFIG: Record<
 		badgeBg: "bg-indigo-50",
 		badgeText: "text-indigo-700",
 		badgeBorder: "border-indigo-200/80",
-		solidAccent: "bg-indigo-500",
+		iconBg: "bg-indigo-50",
+		iconColor: "text-indigo-600",
+		iconBorder: "border-indigo-200/70",
 		icon: Calendar,
 	},
 	month: {
@@ -197,7 +203,9 @@ const TTL_CONFIG: Record<
 		badgeBg: "bg-purple-50",
 		badgeText: "text-purple-700",
 		badgeBorder: "border-purple-200/80",
-		solidAccent: "bg-purple-500",
+		iconBg: "bg-purple-50",
+		iconColor: "text-purple-600",
+		iconBorder: "border-purple-200/70",
 		icon: CalendarDays,
 	},
 };
@@ -676,29 +684,30 @@ export default function RemindersView({
 									isExpiringSoon
 										? "border-amber-300 ring-1 ring-amber-200/70"
 										: "border-slate-200/80 hover:border-slate-300"
-								} shadow-xs hover:shadow-md transition-[box-shadow,border-color,transform] p-5 sm:p-6 relative overflow-hidden flex flex-col justify-between h-full`}
+								} shadow-xs hover:shadow-lg transition-all duration-300 p-5 sm:p-6 flex flex-col justify-between h-full relative cursor-default`}
 							>
-								{/* Solid Accent Top Bar (Strict Anti-Gradient mandate) */}
-								<div
-									className={`absolute top-0 left-0 right-0 h-1.5 ${
-										isExpiringSoon ? "bg-amber-500" : ttlMeta.solidAccent
-									}`}
-								/>
-
 								<div>
-									{/* Top Metadata Header */}
-									<div className="flex items-center justify-between gap-2 mb-3.5">
-										{/* Lifespan category badge */}
-										<span
-											className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border ${ttlMeta.badgeBg} ${ttlMeta.badgeText} ${ttlMeta.badgeBorder}`}
-										>
-											<TTLIcon className="w-3.5 h-3.5" />
-											<span>{ttlMeta.label}</span>
-										</span>
+									{/* Top Header: Duration Squircle + Lifespan info + Expiry status pill */}
+									<div className="flex items-center justify-between gap-3 mb-4">
+										<div className="flex items-center gap-2.5 min-w-0">
+											<div
+												className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs transition-colors ${ttlMeta.iconBg} ${ttlMeta.iconColor} ${ttlMeta.iconBorder}`}
+											>
+												<TTLIcon className="w-4 h-4" />
+											</div>
+											<div className="min-w-0">
+												<span className="text-xs font-black uppercase tracking-wider text-slate-900 block leading-tight">
+													{ttlMeta.label} TTL
+												</span>
+												<span className="text-[10px] font-mono text-slate-400 block leading-tight">
+													{formatCreatedTime(reminder.createdAt)}
+												</span>
+											</div>
+										</div>
 
-										{/* Expiry status */}
+										{/* Expiry status badge */}
 										{isExpiringSoon ? (
-											<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-black tracking-tight">
+											<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-black tracking-tight shrink-0 shadow-2xs">
 												<span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
 												<span>
 													Expires in{" "}
@@ -706,7 +715,7 @@ export default function RemindersView({
 												</span>
 											</span>
 										) : (
-											<span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/70">
+											<span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200/70 shrink-0">
 												<Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 												<span>
 													{formatDistanceToNow(new Date(reminder.expiresAt))}{" "}
@@ -716,7 +725,7 @@ export default function RemindersView({
 										)}
 									</div>
 
-									{/* Message Body Text: Revamped with bold high-contrast font */}
+									{/* Message Body Text */}
 									<div className="text-base sm:text-lg font-bold text-slate-900 leading-snug sm:leading-relaxed tracking-tight break-words whitespace-pre-wrap mb-5">
 										<LinkifiedText text={reminder.text} />
 									</div>
@@ -724,43 +733,38 @@ export default function RemindersView({
 
 								{/* Card Footer Actions */}
 								<div className="flex flex-wrap items-center justify-between mt-auto gap-2 pt-3.5 border-t border-slate-100">
-									{/* Creation timestamp */}
-									<span className="text-[11px] font-mono text-slate-400 whitespace-nowrap">
-										{formatCreatedTime(reminder.createdAt)}
-									</span>
+									{/* Copy Note Button */}
+									<button
+										type="button"
+										onClick={() => handleCopyNote(reminder)}
+										className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200/70 transition-all cursor-pointer active:scale-95 touch-manipulation shadow-2xs group/copy"
+										title="Copy full note text"
+										aria-label="Copy note text"
+									>
+										{copiedNoteId === reminder.id ? (
+											<>
+												<Check className="w-3.5 h-3.5 text-emerald-600" />
+												<span className="text-emerald-700 font-extrabold">
+													Copied
+												</span>
+											</>
+										) : (
+											<>
+												<Copy className="w-3.5 h-3.5 text-slate-400 group-hover/copy:text-slate-600 transition-colors" />
+												<span>Copy Note</span>
+											</>
+										)}
+									</button>
 
-									{/* Quick Action Buttons */}
+									{/* Action Tray: Extensions + Delete */}
 									<div className="flex items-center gap-1.5 shrink-0">
-										{/* Copy Note Button */}
-										<button
-											type="button"
-											onClick={() => handleCopyNote(reminder)}
-											className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-slate-950 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer active:scale-95"
-											title="Copy full note"
-											aria-label="Copy note text"
-										>
-											{copiedNoteId === reminder.id ? (
-												<>
-													<Check className="w-3.5 h-3.5 text-emerald-600" />
-													<span className="text-emerald-700 font-extrabold">
-														Copied
-													</span>
-												</>
-											) : (
-												<>
-													<Copy className="w-3.5 h-3.5" />
-													<span>Copy</span>
-												</>
-											)}
-										</button>
-
-										{/* Duration Extension Badges */}
-										<div className="flex items-center gap-0.5 bg-slate-100/90 border border-slate-200/80 rounded-lg p-0.5">
+										{/* Duration Extension Segmented Track */}
+										<div className="flex items-center gap-0.5 bg-slate-100/90 border border-slate-200/80 rounded-xl p-0.5">
 											<button
 												type="button"
 												onClick={() => handleExtend(reminder.id, "day")}
 												disabled={isPending}
-												className="px-2 py-0.5 text-[11px] font-mono font-bold text-slate-700 hover:text-slate-950 hover:bg-white rounded-md transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+												className="px-2 py-1 text-[11px] font-mono font-bold text-slate-600 hover:text-slate-950 hover:bg-white rounded-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
 												title="Extend +1 Day"
 											>
 												+1D
@@ -769,7 +773,7 @@ export default function RemindersView({
 												type="button"
 												onClick={() => handleExtend(reminder.id, "week")}
 												disabled={isPending}
-												className="px-2 py-0.5 text-[11px] font-mono font-bold text-slate-700 hover:text-slate-950 hover:bg-white rounded-md transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+												className="px-2 py-1 text-[11px] font-mono font-bold text-slate-600 hover:text-slate-950 hover:bg-white rounded-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
 												title="Extend +1 Week"
 											>
 												+1W
@@ -778,7 +782,7 @@ export default function RemindersView({
 												type="button"
 												onClick={() => handleExtend(reminder.id, "month")}
 												disabled={isPending}
-												className="px-2 py-0.5 text-[11px] font-mono font-bold text-slate-700 hover:text-slate-950 hover:bg-white rounded-md transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+												className="px-2 py-1 text-[11px] font-mono font-bold text-slate-600 hover:text-slate-950 hover:bg-white rounded-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
 												title="Extend +1 Month"
 											>
 												+1M
@@ -790,7 +794,7 @@ export default function RemindersView({
 											type="button"
 											onClick={() => handleDelete(reminder.id)}
 											disabled={isPending || isDeleting}
-											className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0 cursor-pointer disabled:opacity-50 active:scale-95"
+											className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-xl transition-all shrink-0 cursor-pointer disabled:opacity-50 active:scale-90 touch-manipulation"
 											title="Delete reminder"
 											aria-label="Delete reminder"
 										>

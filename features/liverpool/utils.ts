@@ -141,7 +141,7 @@ export function formatMatchDate(isoString: string) {
 		minute: "2-digit",
 	});
 
-	const fullDateTime = `${formattedDate} • ${formattedTime}`;
+	const fullDateTime = `${formattedDate}, ${formattedTime}`;
 
 	// Month key for grouping e.g. "2026-09"
 	const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;

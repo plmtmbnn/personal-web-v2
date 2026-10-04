@@ -1,28 +1,33 @@
-import { Loader2 } from "lucide-react";
-
 /**
  * GlobalLoading (Root Page Suspense Fallback)
  *
- * Lightweight, minimalist loading state:
+ * Subtle, brand-aligned loading state:
  * - Server Component with 0 client JS bundle overhead
- * - Single crisp GPU-accelerated indicator (no visual clutter)
- * - Modern Floating Card standard with optical bottom-bar clearance
+ * - Minimalist brand monogram mark floating over the textured canvas
+ * - No aggressive spinners or explicit "Loading" text labels
+ * - Soft ambient breathing halo with optical bottom-bar clearance
  */
 export default function GlobalLoading() {
 	return (
 		<div
-			className="fixed inset-0 z-40 bg-slate-50/80 backdrop-blur-xs bg-dot-pattern flex items-center justify-center p-4 pb-24 sm:pb-28 select-none pointer-events-none"
+			className="fixed inset-0 z-40 bg-slate-50/70 backdrop-blur-xs bg-dot-pattern flex items-center justify-center p-4 pb-24 sm:pb-28 select-none pointer-events-none"
 			role="status"
 			aria-live="polite"
-			aria-label="Loading"
 		>
-			<div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xl shadow-slate-900/5 flex flex-col items-center gap-3 max-w-[180px] w-full text-center">
-				<div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200/70 text-indigo-600 flex items-center justify-center shadow-2xs">
-					<Loader2 className="w-5 h-5 animate-spin motion-reduce:animate-none" />
+			<div className="relative flex items-center justify-center">
+				{/* Soft ambient breathing ring */}
+				<div className="absolute -inset-1.5 rounded-2xl bg-indigo-500/10 animate-ping opacity-35 motion-reduce:hidden" />
+
+				{/* Elevated Floating Brand Mark */}
+				<div className="relative w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-900/5 flex items-center justify-center">
+					<span className="text-sm font-black tracking-tight text-slate-900 font-mono select-none">
+						PT
+					</span>
+					<span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+						<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden" />
+						<span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-white" />
+					</span>
 				</div>
-				<p className="text-xs font-bold text-slate-500 tracking-wider uppercase">
-					Loading...
-				</p>
 			</div>
 		</div>
 	);

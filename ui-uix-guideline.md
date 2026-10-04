@@ -17,6 +17,7 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
 * **Strict Anti-Gradient Mandate (Headers, Modals & Surfaces):** NEVER use gradient headers, gradient modal dialogs, multi-color gradient text (`bg-clip-text text-transparent bg-gradient-to-*`), colored drop-shadow glow filters (`filter: drop-shadow(...)`), or large ambient blurred orbs (`blur-3xl`, `blur-[100px]`). All page headers, modal containers, cards, and interactive components MUST strictly use clean solid surfaces (`bg-white`, `bg-slate-50`), solid borders (`border border-slate-200/80`), solid semantic badge tints (`bg-indigo-50`, `bg-purple-50`, `bg-blue-50`, `bg-amber-50`, `bg-emerald-50`, `bg-rose-50`), and high-contrast solid typography (`text-slate-900`, `text-indigo-600`).
 * **Strict Iconography Standard (Anti-Emoji Mandate):** NEVER use raw unicode emojis (e.g., 🤝, 💼, 🚀, ☕, ⚡, 🏆, 🌍) in UI components, topic selectors, headers, or cards. Always use dedicated, scalable SVG icons from `lucide-react` or `react-icons` (e.g., `Handshake`, `Briefcase`, `Cpu`, `Coffee`, `Zap`, `Award`, `Globe`). Emojis render inconsistently across operating systems and degrade the clean, professional engineering aesthetic.
 * **Global Telemetry Summary Strip Pattern:** Domain entry points (such as Adventures Landing Hub and Insights Hub) employ a prominent 4-column desktop / 2-column mobile telemetry strip (`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4`) directly beneath the hero header. Each telemetry item is housed in a `bg-white rounded-2xl border border-slate-200/80 shadow-xs` card with a solid semantic squircle icon badge, uppercase tracking label, bold metric value, and descriptive subtext.
+* **Direct Icon-Beside-Title Card Layout (Hub & Aggregator Cards):** Navigation and aggregator cards (in `/insights`, `/adventures`, `/admin`) MUST position the domain icon squircle **directly beside the title text** in a single horizontal `flex items-start gap-3` row — NOT stacked above it. The icon anchor (`w-10 h-10 sm:w-11 sm:h-11 rounded-xl`) and bold title (`font-bold text-slate-900`) form a cohesive visual unit. Metric/telemetry pills (e.g. count badges) are right-aligned in the same row via `ml-auto`. Avoid floating the icon into a separate decorative zone or stacking it above the title with redundant category badges — the icon IS the visual anchor for the title.
 * **Pure Light Explorer, Matchday & Market Intelligence Hub Standards:** Aesthetic hubs employ domain-calibrated architectures:
   - **Travel Bucket List Tracker (`/adventures/travel`)**: Airy centered hero (`pt-24 sm:pt-32`), quick stat pill rows (`px-4 py-2.5 bg-white border border-slate-200/80 rounded-full shadow-xs`), responsive search & filter toolbars (venue, competition, month), and `rounded-[2rem]` floating cards with organic spring hover interactions (`whileHover={{ y: -4 }}`). Wishlist and future expedition cards maintain a clean, inspiring future expedition card layout without "spoiler themes" (no image blurring or manual reveal toggles).
   - **Liverpool FC Matchday Hub (`/liverpool`)**: **Zero-Scroll Full Viewport Standard** (`h-[100dvh] max-h-[100dvh] overflow-hidden` on both mobile and desktop), compact breadcrumb navigation, 3-zone floating match card (`NextMatchHero.tsx`) — Head Strip (domain badge + home/away chip), Clash Arena (prominent `w-28 h-28` crests; LFC home side tinted `bg-red-50/70`; dark VS pill), and Countdown Tray (4-tile HUD; seconds tile turns `bg-red-600` when imminent; `MATCHDAY IN PROGRESS` pulsing badge). No redundant fixture headline — team names shown only beneath crests. Calibrated bottom clearance (`pb-24 sm:pb-28`) above `CompactBottomBar`.
@@ -88,8 +89,9 @@ The following patterns are **strictly forbidden** in this codebase:
     - Telemetry badges must use compact, high-contrast, discrete containers (`rounded-lg` or `rounded-md`, e.g. `bg-slate-50 border border-slate-200/70 text-[11px] font-mono`) and represent concrete state (counts, ratios, connection status), not ornamental category labels.
 
 * **Loading & Skeleton States:**
-  - NEVER show a full-screen spinner with a brand logo in the center. Use targeted, in-component skeleton placeholders that match the exact shape and dimensions of the incoming content.
+  - NEVER show a full-screen spinner with a brand logo and an explicit **"Loading"** text label. The word "Loading" adds no information and clutters the UI. Loading states must be implicit, ambient, and brand-aligned.
   - NEVER use a generic `CircleLoader` or `BounceLoader` from external spinner libraries. Skeletons must use `animate-pulse bg-slate-200 rounded-*` blocks mirroring real content dimensions.
+  - **Brand-Monogram Global Fallback (Next.js `loading.tsx`):** The root page-transition loading fallback uses a minimalist brand monogram mark (`PT`) in a `w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-md` floating card, centered over the textured canvas (`bg-slate-50/70 backdrop-blur-xs bg-dot-pattern`). A soft ambient breathing ring (`animate-ping opacity-35`) surrounds the card, and a small emerald pulsing liveness dot (`animate-ping bg-emerald-400`) sits at the top-right corner of the card. No text label, no spinner wheel — only the brand mark and the liveness pulse signal an active transition. The entire overlay is `pointer-events-none` to prevent interaction blocking.
 
 * **Section Dividers & Spacers:**
   - NEVER use decorative SVG wave/curve dividers between page sections. These are template-kit artifacts.
@@ -374,12 +376,13 @@ Operational views (e.g., Admin Dashboard, Task Agenda, Quick Reminders, Stock Ma
 
 ## 17. Insights & Aggregation Hub Standards
 
-Hub and aggregator pages (e.g., `/insights`, `/adventures`) provide curated entry points into the platform's analytical subsystems.
+Hub and aggregator pages (e.g., `/insights`, `/adventures`, `/admin`) provide curated entry points into the platform's analytical subsystems.
 
 * **Global Intelligence Telemetry Strip:** Top 4-stat telemetry strip previewing core platform domains with solid icon squircles and high-contrast numbers.
-* **Module Cards:** Encapsulated in `rounded-[2rem]` floating cards with category badges, high-contrast linkout arrows (`ArrowUpRight`), descriptive body text, and thematic topic tags.
+* **Module Cards — Direct Icon-Beside-Title Standard:** Cards MUST use the **Direct Icon-Beside-Title** layout: the domain icon squircle (`w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-<domain>-50 border border-<domain>-200/70 text-<domain>-600`) is placed **inline and directly to the left of the card title** in a single `flex items-start gap-3` row. Metric pills (e.g. telemetry counts) are right-aligned via `ml-auto`. **Do NOT** float the icon above the title or surround it with a separate `rounded-full` category badge. The icon-and-title form a single, cohesive visual unit. Card body below the header contains a concise description and a row of topic/tag pills.
 * **Spring Hover Physics:** Cards lift organically on hover (`whileHover={{ y: -4 }}`) with subtle shadow expansion (`shadow-md`).
 * **Thematic Accents:** Use distinct badge color pairings to reinforce domain boundaries (Indigo for Architecture/Blog, Emerald for Financial/Investments, Rose for Liverpool FC, Cyan for Developer Utilities).
+* **Encapsulation:** `rounded-[2rem]` or `rounded-3xl` floating cards with `border border-slate-200/80 shadow-xs` resting on the signature dot-pattern canvas.
 * **Navigation Clearance:** Standardize bottom padding clearance to `pb-32 sm:pb-36` to ensure comfortable clearance above `CompactBottomBar`.
 
 ---
@@ -516,6 +519,17 @@ Before submitting any AI-generated or AI-assisted component for code review, ver
 - [ ] Button labels are action-specific verbs, not generic ("Submit", "Click Here", "Learn More")
 - [ ] No Lorem ipsum placeholder text anywhere
 
+### Loading & Transition States
+- [ ] No explicit "Loading" text label rendered during page transitions
+- [ ] Global `loading.tsx` uses brand-monogram mark (`PT`) with ambient breathing ring and emerald liveness dot — no spinner wheel, no text
+- [ ] In-component skeleton placeholders match the exact shape/dimensions of incoming content
+
+### Hub & Aggregator Card Layout
+- [ ] Module cards use Direct Icon-Beside-Title layout (icon squircle inline-left of title in `flex gap-3` row)
+- [ ] No icon floating above the title in a separate decorative zone
+- [ ] No `rounded-full` category badge stacked above or beside the title as a separate element
+- [ ] Telemetry metric pills right-aligned in the same header row via `ml-auto`
+
 ### Code Structure
 - [ ] Component lives in the correct `features/<domain>/` directory
 - [ ] No orphaned files in root-level `components/` directory
@@ -524,3 +538,51 @@ Before submitting any AI-generated or AI-assisted component for code review, ver
 - [ ] Numeric and currency formatting uses explicit locale strings (`.toLocaleString("id-ID")` for IDR/IDX, `.toLocaleString("en-US")` for USD/Crypto/percentages) to prevent SSR/CSR hydration mismatches
 
 ---
+
+## 24. Global Page Transition Loading Standard (`app/loading.tsx`)
+
+The root-level `app/loading.tsx` is the Next.js App Router Suspense fallback rendered during all page-level navigations. It MUST follow the **Brand-Monogram Loading Standard**:
+
+### Architecture
+* **Overlay Layer:** `fixed inset-0 z-40 pointer-events-none select-none` — full viewport coverage, invisible to interactions, non-blocking.
+* **Canvas:** `bg-slate-50/70 backdrop-blur-xs bg-dot-pattern` — the signature textured canvas with a light frost, creating continuity with the destination page.
+* **Brand Mark Floating Card:** `w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-900/5` — the same "Floating Card" unit used throughout the application, centered in the viewport.
+* **Monogram:** `text-sm font-black tracking-tight text-slate-900 font-mono` — the owner's initials (`PT`) in a tight, high-contrast monospace weight. No text label, no subtitle.
+* **Ambient Breathing Ring:** `absolute -inset-1.5 rounded-2xl bg-indigo-500/10 animate-ping opacity-35 motion-reduce:hidden` — a barely-visible breathing halo that signals activity without agitation.
+* **Emerald Liveness Dot:** `absolute -top-1 -right-1` corner pip with outer `animate-ping bg-emerald-400 opacity-75` and inner `bg-emerald-500 border border-white` — communicates "alive and responding."
+* **Bottom Bar Clearance:** `pb-24 sm:pb-28` optical clearance so the centered mark doesn't overlap `CompactBottomBar`.
+* **Accessibility:** `role="status"` and `aria-live="polite"` on the root wrapper.
+
+### Strict Prohibitions
+- NEVER add the text "Loading" or any loading copy to this component.
+- NEVER use a traditional CSS spinner wheel or third-party loader.
+- NEVER make this component interactive (keep `pointer-events-none` on the overlay).
+- NEVER use gradient backgrounds or gradient text in this component.
+- Animated elements MUST respect `motion-reduce:hidden` for accessibility.
+
+### Implementation Reference
+```tsx
+// app/loading.tsx
+export default function GlobalLoading() {
+  return (
+    <div
+      className="fixed inset-0 z-40 bg-slate-50/70 backdrop-blur-xs bg-dot-pattern flex items-center justify-center p-4 pb-24 sm:pb-28 select-none pointer-events-none"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="relative flex items-center justify-center">
+        {/* Soft ambient breathing ring */}
+        <div className="absolute -inset-1.5 rounded-2xl bg-indigo-500/10 animate-ping opacity-35 motion-reduce:hidden" />
+        {/* Elevated Floating Brand Mark */}
+        <div className="relative w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-900/5 flex items-center justify-center">
+          <span className="text-sm font-black tracking-tight text-slate-900 font-mono select-none">PT</span>
+          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-white" />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+```

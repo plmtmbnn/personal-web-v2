@@ -28,31 +28,25 @@ export default async function AdminDashboardPage() {
 	}
 
 	// Fetch live operational telemetry in parallel
-	let totalBlogs = 0;
 	let publishedBlogs = 0;
 	let pendingTasks = 0;
 	let reminderCount = 0;
 
 	try {
 		const supabase = await createAdminClient();
-		const [blogTotalRes, blogPublishedRes, taskRes, reminders] =
-			await Promise.allSettled([
-				supabase.from("blogs").select("id", { count: "exact", head: true }),
-				supabase
-					.from("blogs")
-					.select("id", { count: "exact", head: true })
-					.eq("published", true),
-				supabase
-					.from("tasks")
-					.select("id", { count: "exact", head: true })
-					.neq("status", "done")
-					.neq("status", "cancelled"),
-				getReminderCount(),
-			]);
+		const [blogPublishedRes, taskRes, reminders] = await Promise.allSettled([
+			supabase
+				.from("blogs")
+				.select("id", { count: "exact", head: true })
+				.eq("published", true),
+			supabase
+				.from("tasks")
+				.select("id", { count: "exact", head: true })
+				.neq("status", "done")
+				.neq("status", "cancelled"),
+			getReminderCount(),
+		]);
 
-		if (blogTotalRes.status === "fulfilled") {
-			totalBlogs = blogTotalRes.value.count ?? 0;
-		}
 		if (blogPublishedRes.status === "fulfilled") {
 			publishedBlogs = blogPublishedRes.value.count ?? 0;
 		}
@@ -76,11 +70,6 @@ export default async function AdminDashboardPage() {
 				label: "New Article",
 				href: "/admin/blog/editor",
 			},
-			metricLabel: `${publishedBlogs} Published`,
-			metricSub:
-				totalBlogs > publishedBlogs
-					? `${totalBlogs - publishedBlogs} Draft`
-					: "SSG Ready",
 			icon: BookOpen,
 			color: "text-blue-600",
 			bg: "bg-blue-50",
@@ -93,8 +82,6 @@ export default async function AdminDashboardPage() {
 			description:
 				"Track daily operational objectives, sprint velocity retrospectives, and 6-month horizons.",
 			href: "/tasks",
-			metricLabel: `${pendingTasks} Pending`,
-			metricSub: "Active Backlog",
 			icon: CheckSquare,
 			color: "text-emerald-600",
 			bg: "bg-emerald-50",
@@ -107,8 +94,6 @@ export default async function AdminDashboardPage() {
 			description:
 				"Synchronize IDX instruments with Redis cache, update market telemetry, and purge registries.",
 			href: "/utils/stock-explorer/admin",
-			metricLabel: "IDX Live",
-			metricSub: "Redis Engine",
 			icon: Database,
 			color: "text-indigo-600",
 			bg: "bg-indigo-50",
@@ -121,8 +106,6 @@ export default async function AdminDashboardPage() {
 			description:
 				"Jot down expiring operational notes, URL links, and daily reminders with automatic Redis TTL.",
 			href: "/admin/reminders",
-			metricLabel: `${reminderCount} Active`,
-			metricSub: "TTL Expiration",
 			icon: Bell,
 			color: "text-amber-600",
 			bg: "bg-amber-50",
@@ -234,39 +217,29 @@ export default async function AdminDashboardPage() {
 							className="group flex flex-col justify-between p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 hover:border-slate-300 transition-[border-color,box-shadow,transform] duration-200 shadow-xs hover:shadow-lg"
 						>
 							<div>
-								{/* Top Row: Squircle Icon & Real-time Metric Pill */}
-								<div className="flex items-start justify-between gap-4 mb-4 sm:mb-5">
+								{/* Header: Icon direct beside Title */}
+								<div className="flex items-center gap-3.5 mb-2.5">
 									<div
-										className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl shrink-0 ${action.bg} ${action.border} border shadow-2xs group-hover:scale-105 transition-transform duration-200`}
+										className={`w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-2xl shrink-0 ${action.bg} ${action.border} border shadow-2xs group-hover:scale-105 transition-transform duration-200`}
 									>
 										<action.icon
-											className={`w-6 h-6 sm:w-7 sm:h-7 ${action.color}`}
+											className={`w-5 h-5 sm:w-6 sm:h-6 ${action.color}`}
 										/>
 									</div>
 
-									{/* Real-time Metric Pill */}
-									<div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/70">
-										<span className="text-slate-900">{action.metricLabel}</span>
-										<span className="text-slate-300">/</span>
-										<span className="text-slate-400 font-normal">
-											{action.metricSub}
-										</span>
-									</div>
-								</div>
-
-								{/* Title & Description */}
-								<div className="mb-4">
-									<Link href={action.href} className="!no-underline">
+									<Link href={action.href} className="!no-underline min-w-0">
 										<h2
-											className={`text-xl font-black text-slate-900 tracking-tight leading-snug ${action.hoverAccent} transition-colors mb-2`}
+											className={`text-xl font-black text-slate-900 tracking-tight leading-snug ${action.hoverAccent} transition-colors`}
 										>
 											{action.title}
 										</h2>
 									</Link>
-									<p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed">
-										{action.description}
-									</p>
 								</div>
+
+								{/* Description */}
+								<p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed mb-4">
+									{action.description}
+								</p>
 
 								{/* Capability Tags */}
 								<div className="flex flex-wrap gap-1.5 mb-5">

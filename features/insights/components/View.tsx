@@ -12,7 +12,6 @@ import {
 
 interface InsightModule {
 	title: string;
-	category: string;
 	href: string;
 	description: string;
 	icon: React.ComponentType<{ className?: string }>;
@@ -24,14 +23,12 @@ interface InsightModule {
 	dotColor: string;
 	tags: string[];
 	highlight: string;
-	statusBadge: string;
 	actionLabel: string;
 }
 
 const INSIGHT_MODULES: InsightModule[] = [
 	{
 		title: "Blog & Engineering Notes",
-		category: "Technical Architecture",
 		href: "/blog",
 		description:
 			"Deep dives into distributed fintech engines, transactional integrity, state machines, and modern frontend architecture.",
@@ -46,12 +43,10 @@ const INSIGHT_MODULES: InsightModule[] = [
 		tags: ["Fintech Core", "Distributed Systems", "Technical Essays", "SSG"],
 		highlight:
 			"System design patterns, high-concurrency ledger design & culture",
-		statusBadge: "Deep Technical Reads",
 		actionLabel: "Explore Articles",
 	},
 	{
 		title: "Investments & Market Regimes",
-		category: "Financial Telemetry",
 		href: "/investment",
 		description:
 			"Live Fear & Greed market sentiment telemetry, crypto volatility regimes, historical trends, and macro liquidity tracking.",
@@ -70,12 +65,10 @@ const INSIGHT_MODULES: InsightModule[] = [
 			"Telemetry",
 		],
 		highlight: "Real-time market sentiment & historical regime transitions",
-		statusBadge: "Live Telemetry Feed",
 		actionLabel: "View Market Telemetry",
 	},
 	{
 		title: "Liverpool FC Matchday Hub",
-		category: "Sports Analytics",
 		href: "/liverpool",
 		description:
 			"Complete match schedule, live kickoff countdown, official matchday reports, final scores, and calendar integration.",
@@ -93,12 +86,10 @@ const INSIGHT_MODULES: InsightModule[] = [
 			"Calendar Sync",
 		],
 		highlight: "Kickoff timers, match recaps & Google Calendar export",
-		statusBadge: "Anfield & Away Intel",
 		actionLabel: "Open Matchday Hub",
 	},
 	{
 		title: "Developer & Adventure Utilities",
-		category: "Toolkits & Generators",
 		href: "/utils",
 		description:
 			"High-precision developer toolkits including JWT Inspector, Stock Explorer, Mock API Engine, Schema Forge, and Interval Timers.",
@@ -117,7 +108,6 @@ const INSIGHT_MODULES: InsightModule[] = [
 		],
 		highlight:
 			"20+ developer engines, formatters, converters & analyzers across 7 categories",
-		statusBadge: "20+ Interactive Tools",
 		actionLabel: "Launch Utility Suite",
 	},
 ];
@@ -285,41 +275,24 @@ export default function InsightsView() {
 									className={`group block h-full bg-white border border-slate-200/80 ${module.accentHover} rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-[border-color,box-shadow] duration-200 !no-underline flex flex-col justify-between`}
 								>
 									<div>
-										{/* Top Row: Squircle Icon + Category Pill + Status Pill */}
-										<div className="flex items-center justify-between gap-3 mb-5">
-											<div className="flex items-center gap-3">
-												<div
-													className={`w-12 h-12 rounded-2xl flex items-center justify-center ${module.badgeBg} ${module.badgeBorder} ${module.badgeText} border shrink-0 group-hover:scale-105 transition-transform duration-200`}
-												>
-													<Icon className="w-6 h-6" />
-												</div>
-												<div>
-													<span
-														className={`inline-block px-2.5 py-0.5 rounded-full ${module.badgeBg} ${module.badgeBorder} border text-[10px] font-bold uppercase tracking-wider ${module.badgeText}`}
-													>
-														{module.category}
-													</span>
-												</div>
+										{/* Header: Icon direct beside Title */}
+										<div className="flex items-center gap-3.5 mb-2.5">
+											<div
+												className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center ${module.badgeBg} ${module.badgeBorder} ${module.badgeText} border shrink-0 group-hover:scale-105 transition-transform duration-200`}
+											>
+												<Icon className="w-5 h-5 sm:w-6 sm:h-6" />
 											</div>
-
-											{/* Status chip */}
-											<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border border-slate-200/60 px-2.5 py-1 rounded-full shrink-0">
-												{module.statusBadge}
-											</span>
-										</div>
-
-										{/* Title & Description */}
-										<div>
 											<h2
 												className={`text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight ${module.accentText} transition-colors leading-snug`}
 											>
 												{module.title}
 											</h2>
-
-											<p className="mt-2 text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-												{module.description}
-											</p>
 										</div>
+
+										{/* Description */}
+										<p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+											{module.description}
+										</p>
 
 										{/* Subtle Highlight Callout */}
 										<div className="mt-4 text-xs text-slate-600 bg-slate-50 border border-slate-200/70 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5">

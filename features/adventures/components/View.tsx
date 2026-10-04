@@ -174,32 +174,22 @@ export default function AdventuresLanding() {
 							className="group block h-full bg-white border border-slate-200/80 hover:border-emerald-200 hover:shadow-md transition-[border-color,box-shadow] duration-200 rounded-3xl p-6 sm:p-7 shadow-xs !no-underline flex flex-col justify-between"
 						>
 							<div>
-								{/* Header & Icon */}
-								<div className="flex items-center justify-between gap-3 mb-5">
-									<div className="flex items-center gap-3">
-										<div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-105 transition-transform duration-200">
-											<Activity className="w-6 h-6" />
-										</div>
-										<span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
-											Strava Telemetry
-										</span>
+								{/* Header: Icon direct beside Title */}
+								<div className="flex items-center gap-3.5 mb-2.5">
+									<div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-105 transition-transform duration-200">
+										<Activity className="w-5 h-5 sm:w-6 sm:h-6" />
 									</div>
-									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border border-slate-200/60 px-2.5 py-1 rounded-full shrink-0">
-										Endurance Logs
-									</span>
-								</div>
-
-								{/* Title & Description */}
-								<div>
 									<h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight group-hover:text-emerald-600 transition-colors leading-snug">
 										Running Performance
 									</h2>
-									<p className="mt-2 text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-										Endurance training logs, race benchmarks, and mountain trail
-										milestones with live split pacing telemetry and Instagram
-										canvas exports.
-									</p>
 								</div>
+
+								{/* Description */}
+								<p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+									Endurance training logs, race benchmarks, and mountain trail
+									milestones with live split pacing telemetry and Instagram
+									canvas exports.
+								</p>
 
 								{/* Benchmark Milestones Snapshot */}
 								<div className="grid grid-cols-3 divide-x divide-slate-200/60 p-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl text-center my-4">
@@ -279,32 +269,22 @@ export default function AdventuresLanding() {
 							className="group block h-full bg-white border border-slate-200/80 hover:border-indigo-200 hover:shadow-md transition-[border-color,box-shadow] duration-200 rounded-3xl p-6 sm:p-7 shadow-xs !no-underline flex flex-col justify-between"
 						>
 							<div>
-								{/* Header & Icon */}
-								<div className="flex items-center justify-between gap-3 mb-5">
-									<div className="flex items-center gap-3">
-										<div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform duration-200">
-											<Camera className="w-6 h-6" />
-										</div>
-										<span className="px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
-											Postcard Studio
-										</span>
+								{/* Header: Icon direct beside Title */}
+								<div className="flex items-center gap-3.5 mb-2.5">
+									<div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform duration-200">
+										<Camera className="w-5 h-5 sm:w-6 sm:h-6" />
 									</div>
-									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border border-slate-200/60 px-2.5 py-1 rounded-full shrink-0">
-										Global Journeys
-									</span>
-								</div>
-
-								{/* Title & Description */}
-								<div>
 									<h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors leading-snug">
 										Travel Bucket List
 									</h2>
-									<p className="mt-2 text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-										Curated global destinations, cultural memories, and vintage
-										airmail postcard generators with 3D flip polaroid sticker
-										exports.
-									</p>
 								</div>
+
+								{/* Description */}
+								<p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+									Curated global destinations, cultural memories, and vintage
+									airmail postcard generators with 3D flip polaroid sticker
+									exports.
+								</p>
 
 								{/* Travel Exploration Snapshot */}
 								<div className="grid grid-cols-3 divide-x divide-slate-200/60 p-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl text-center my-4">

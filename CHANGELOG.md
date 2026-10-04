@@ -1,3 +1,10 @@
+# [0.96.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.95.1...v0.96.0) (2026-10-04)
+
+
+### Features
+
+* **utils:** add interactive football formation and lineup studio ([e98aa47](https://github.com/plmtmbnn/personal-web-v2/commit/e98aa476759611eb44463b2f80e29bb4b9476b7e))
+
 ## [0.95.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.95.0...v0.95.1) (2026-10-03)
 
 

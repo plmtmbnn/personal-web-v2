@@ -7,6 +7,7 @@ import type {
 	TimeframeGuideline,
 	SectorGuidance,
 } from "../types";
+import { DEFAULT_THRESHOLDS } from "../config/thresholds";
 
 /**
  * Helper to get the latest value of a FRED series
@@ -40,7 +41,11 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 
 	// Calculate Regime based on composite signals
 	let regime: MarketRegime;
-	if (cnnScore < 35 && hySpread && hySpread > 5.0) {
+	if (
+		cnnScore < DEFAULT_THRESHOLDS.scoring.defensiveMin &&
+		hySpread &&
+		hySpread > DEFAULT_THRESHOLDS.hySpread.stress
+	) {
 		regime = {
 			key: "capitulation",
 			title: "Risk-Off Capitulation",
@@ -57,7 +62,11 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 				posture: "Defensive",
 			},
 		};
-	} else if (cnnScore > 65 && dgs10 && dgs10 < 4.5) {
+	} else if (
+		cnnScore > DEFAULT_THRESHOLDS.scoring.riskOnMin &&
+		dgs10 &&
+		dgs10 < DEFAULT_THRESHOLDS.us10y.stress
+	) {
 		regime = {
 			key: "expansion",
 			title: "Goldilocks Expansion",
@@ -73,7 +82,11 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 				posture: "Aggressive",
 			},
 		};
-	} else if (cnnScore > 65 && dgs10 && dgs10 >= 4.5) {
+	} else if (
+		cnnScore > DEFAULT_THRESHOLDS.scoring.riskOnMin &&
+		dgs10 &&
+		dgs10 >= DEFAULT_THRESHOLDS.us10y.stress
+	) {
 		regime = {
 			key: "speculative_decoupling",
 			title: "Speculative Decoupling",
@@ -131,10 +144,10 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 				: "Earnings growth remains resilient.",
 		],
 		cons: [
-			dgs10 && dgs10 > 4.2
+			dgs10 && dgs10 > DEFAULT_THRESHOLDS.us10y.stress
 				? `10Y Yield at ${dgs10.toFixed(2)}% pressures multiples.`
 				: "Complacency creeping in.",
-			hySpread && hySpread > 4.0
+			hySpread && hySpread > DEFAULT_THRESHOLDS.hySpread.healthy
 				? "Credit spreads widening, signaling corporate stress."
 				: "Narrow market breadth.",
 		],
@@ -166,7 +179,8 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 
 	// 3. Asia / IHSG
 	const ihsg = data.markets.quotes.IHSG;
-	const asiaStance = dxy > 104 ? "Underweight" : "Neutral";
+	const asiaStance =
+		dxy > DEFAULT_THRESHOLDS.dxy.strong ? "Underweight" : "Neutral";
 	recommendations.push({
 		assetClass: "Asia / IHSG",
 		stance: asiaStance,
@@ -233,7 +247,10 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 	});
 
 	// 5. Gold
-	const goldStance = dgs10 && dgs10 > 4.5 ? "Underweight" : "Overweight";
+	const goldStance =
+		dgs10 && dgs10 > DEFAULT_THRESHOLDS.us10y.stress
+			? "Underweight"
+			: "Overweight";
 	recommendations.push({
 		assetClass: "Gold",
 		stance: goldStance,
@@ -245,10 +262,10 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 				: "Geopolitical premium.",
 		],
 		cons: [
-			dgs10 && dgs10 > 4.5
+			dgs10 && dgs10 > DEFAULT_THRESHOLDS.us10y.stress
 				? `High 10Y nominal yield (${dgs10.toFixed(2)}%) raises opportunity cost.`
 				: "Lacks yield.",
-			dxy > 105
+			dxy > DEFAULT_THRESHOLDS.dxy.strong
 				? "Strong dollar suppresses USD gold price."
 				: "Retail crowding.",
 		],
@@ -312,14 +329,16 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 	}
 
 	// --- Calculate Timeframe Guidelines ---
-	const vixScore =
-		data.sentiment.traditional?.market_volatility_vix?.score ?? 50;
+	const vixQuote = data.markets.quotes.VIX?.last ?? 15.0;
 	const cryptoVol = data.markets.cryptoGlobal?.totalVolumeUsd ?? 0;
 
 	const timeframes: TimeframeGuideline[] = [];
 
-	// 1. Scalping (VIX score on CNN: low score = high volatility/fear; high score = low volatility/calm)
-	if ((vixScore <= 55 && vixScore >= 20) || cryptoVol > 80_000_000_000) {
+	// 1. Scalping (VIX price: higher = more intraday volatility)
+	if (
+		vixQuote >= DEFAULT_THRESHOLDS.vix.elevated ||
+		cryptoVol > 80_000_000_000
+	) {
 		timeframes.push({
 			id: "scalping",
 			style: "Scalping (Intraday)",
@@ -421,7 +440,7 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 		);
 	}
 
-	if (dxy > 104) {
+	if (dxy > DEFAULT_THRESHOLDS.dxy.strong) {
 		macroKeynotes.push(
 			`Strong US Dollar (DXY ${dxy.toFixed(2)}): Pressures emerging markets (like IHSG) and corporate foreign earnings.`,
 		);
@@ -437,12 +456,12 @@ export function generatePlaybook(data: InvestmentCompassData): EngineOutput {
 	let microTone: "positive" | "negative" | "neutral" | "caution" = "neutral";
 	let microHeadline = "Balanced Corporate Fundamentals";
 
-	if (hySpread && hySpread < 4.0) {
+	if (hySpread && hySpread <= DEFAULT_THRESHOLDS.hySpread.healthy) {
 		microKeynotes.push(
 			`Healthy Corporate Credit: Low high-yield spread (${hySpread.toFixed(2)}%) indicates businesses are easily servicing debt.`,
 		);
 		microTone = "positive";
-	} else if (hySpread && hySpread > 5.0) {
+	} else if (hySpread && hySpread >= DEFAULT_THRESHOLDS.hySpread.stress) {
 		microKeynotes.push(
 			`Corporate Stress: Elevated high-yield spread (${hySpread.toFixed(2)}%) points to rising default risks and tight lending.`,
 		);

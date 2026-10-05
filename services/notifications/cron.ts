@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/core/supabase-server";
+import { getInvestmentCompass } from "@/features/investment/actions";
 import { notificationDispatcher } from "./dispatcher";
 import { TelegramChannel } from "./channels/telegram";
 import { BrowserChannel } from "./channels/browser";
@@ -75,4 +76,60 @@ export async function runTaskReminders() {
 	await notificationDispatcher.dispatch(payload);
 
 	console.log("[Cron] Task reminders complete.");
+}
+
+/**
+ * Market Regime Alerts Cron Job.
+ * Fetches the Investment Compass and dispatches a summary.
+ */
+export async function runRegimeAlerts() {
+	console.log("[Cron] Starting regime alerts...");
+
+	// 1. Fetch Remote Config
+	const enableTelegram = await remoteConfigService.getConfigValue(
+		"enable_telegram_notifications",
+	);
+
+	if (enableTelegram) {
+		notificationDispatcher.registerChannel(new TelegramChannel());
+	} else {
+		console.log("[Cron] Telegram notifications disabled via Remote Config.");
+		return; // No point fetching if notifications are disabled
+	}
+
+	// 2. Fetch the Engine Output
+	const compass = await getInvestmentCompass(true); // force refresh
+	const engine = compass.engineOutput;
+
+	if (!engine) {
+		console.error("[Cron] Engine output missing.");
+		return;
+	}
+
+	// 3. Format the Message
+	const formatRegime = (title: string, state: string) => {
+		let icon = "⚪";
+		if (state === "risk_on") icon = "🟢";
+		if (state === "selective") icon = "🟡";
+		if (state === "defensive") icon = "🟠";
+		if (state === "stress") icon = "🔴";
+
+		return `${icon} <b>${title}</b>: ${state.toUpperCase().replace("_", " ")}`;
+	};
+
+	const body = [
+		formatRegime("Global Macro", engine.regimes.global.state),
+		formatRegime("Crypto Markets", engine.regimes.crypto.state),
+		formatRegime("IHSG / Asia", engine.regimes.ihsg.state),
+		"",
+		`<b>Global Posture</b>: ${engine.regimes.global.headline}`,
+	].join("\n");
+
+	const payload = {
+		title: "Daily Market Intel",
+		body,
+	};
+
+	await notificationDispatcher.dispatch(payload);
+	console.log("[Cron] Regime alerts complete.");
 }

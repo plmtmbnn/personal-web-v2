@@ -1,33 +1,22 @@
 /**
- * GlobalLoading (Root Page Suspense Fallback)
+ * Root Suspense Fallback
  *
- * Subtle, brand-aligned loading state:
- * - Server Component with 0 client JS bundle overhead
- * - Minimalist brand monogram mark floating over the textured canvas
- * - No aggressive spinners or explicit "Loading" text labels
- * - Soft ambient breathing halo with optical bottom-bar clearance
+ * Designed to be practically invisible as a "loading" state.
+ * No spinners, no pulsing dots, no progress bars, no explicit text.
+ * Just a confident, static floating monogram on a pristine canvas,
+ * providing a seamless, elegant optical bridge between routes.
  */
-export default function GlobalLoading() {
+export default function Loading() {
 	return (
 		<div
-			className="fixed inset-0 z-40 bg-slate-50/70 backdrop-blur-xs bg-dot-pattern flex items-center justify-center p-4 pb-24 sm:pb-28 select-none pointer-events-none"
-			role="status"
-			aria-live="polite"
+			className="fixed inset-0 z-50 bg-slate-50/60 backdrop-blur-md bg-dot-pattern flex items-center justify-center pointer-events-none select-none"
+			aria-hidden="true"
 		>
-			<div className="relative flex items-center justify-center">
-				{/* Soft ambient breathing ring */}
-				<div className="absolute -inset-1.5 rounded-2xl bg-indigo-500/10 animate-ping opacity-35 motion-reduce:hidden" />
-
-				{/* Elevated Floating Brand Mark */}
-				<div className="relative w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-900/5 flex items-center justify-center">
-					<span className="text-sm font-black tracking-tight text-slate-900 font-mono select-none">
-						PT
-					</span>
-					<span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-						<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden" />
-						<span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-white" />
-					</span>
-				</div>
+			{/* A single, quiet monogram card. Zero movement. */}
+			<div className="w-12 h-12 rounded-[1.25rem] bg-white border border-slate-200/80 shadow-lg shadow-slate-200/40 flex items-center justify-center">
+				<span className="text-[11px] font-black tracking-widest text-slate-400 font-mono relative left-[1px]">
+					PT
+				</span>
 			</div>
 		</div>
 	);

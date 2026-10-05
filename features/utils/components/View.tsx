@@ -291,6 +291,14 @@ const utilities: UtilityItem[] = [
 			"Interactive tactical board to draft players, design matchday formations, organize substitutes, and export high-resolution squad sheets.",
 		icon: Trophy,
 	},
+	{
+		title: "Faceless Social Canvas",
+		slug: "social-canvas",
+		categoryId: "productivity",
+		description:
+			"Generate clean, high-fidelity social media images and templates tailored for faceless accounts.",
+		icon: ImageIcon,
+	},
 ];
 
 export default function UtilsLanding() {

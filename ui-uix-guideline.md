@@ -13,7 +13,7 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
 
 * **Floating Cards:** The core architectural unit is the "Floating Card." Components are encapsulated within panels featuring large border radii (e.g., `rounded-2xl`, `rounded-3xl`, or `rounded-[2rem]`), subtle border rings (`border border-slate-200/80`), and soft drop shadows (`shadow-xs` to `shadow-xl`) to create a distinct layering effect over the canvas.
 * **Subtle Textures:** The global background utilizes an off-white or very light gray canvas (`bg-slate-50/80`) enhanced with a subtle dot-grid pattern (`bg-dot-pattern`), providing tactile depth without distracting from content.
-* **Contrast Mastery:** Standard panels rely on pure white containers (`bg-white`). Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) are strictly obsoleted in favor of the unified **Modern Floating Card Header Standard** (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`). Dark slate panels (`bg-slate-900`) are reserved exclusively for isolated high-priority metric widgets (such as the Total Pending backlog counter in Tasks) or technical code blocks.
+* **Contrast Mastery & Pure White Container Standard (Anti-Monolithic Dark Mode):** Standard panels, telemetry showcases, and operational cards rely strictly on pure white containers (`bg-white border border-slate-200/80 rounded-3xl shadow-xs`). Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) and monolithic dark-mode content dashboards are strictly prohibited — they feel oppressive, clash with the signature light textured canvas (`bg-slate-50/80 bg-dot-pattern`), and degrade legibility. Dark slate panels (`bg-slate-900`) are reserved exclusively for isolated high-priority metric widgets (such as the Total Pending backlog counter in Tasks), technical code blocks, or specialized transparent sticker canvas exports.
 * **Strict Anti-Gradient Mandate (Headers, Modals & Surfaces):** NEVER use gradient headers, gradient modal dialogs, multi-color gradient text (`bg-clip-text text-transparent bg-gradient-to-*`), colored drop-shadow glow filters (`filter: drop-shadow(...)`), or large ambient blurred orbs (`blur-3xl`, `blur-[100px]`). All page headers, modal containers, cards, and interactive components MUST strictly use clean solid surfaces (`bg-white`, `bg-slate-50`), solid borders (`border border-slate-200/80`), solid semantic badge tints (`bg-indigo-50`, `bg-purple-50`, `bg-blue-50`, `bg-amber-50`, `bg-emerald-50`, `bg-rose-50`), and high-contrast solid typography (`text-slate-900`, `text-indigo-600`).
 * **Strict Iconography Standard (Anti-Emoji Mandate):** NEVER use raw unicode emojis (e.g., 🤝, 💼, 🚀, ☕, ⚡, 🏆, 🌍) in UI components, topic selectors, headers, or cards. Always use dedicated, scalable SVG icons from `lucide-react` or `react-icons` (e.g., `Handshake`, `Briefcase`, `Cpu`, `Coffee`, `Zap`, `Award`, `Globe`). Emojis render inconsistently across operating systems and degrade the clean, professional engineering aesthetic.
 * **Global Telemetry Summary Strip Pattern:** Domain entry points (such as Adventures Landing Hub and Insights Hub) employ a prominent 4-column desktop / 2-column mobile telemetry strip (`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4`) directly beneath the hero header. Each telemetry item is housed in a `bg-white rounded-2xl border border-slate-200/80 shadow-xs` card with a solid semantic squircle icon badge, uppercase tracking label, bold metric value, and descriptive subtext.
@@ -35,7 +35,7 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
     - **Deterministic Number & Currency Locale Standard**: NEVER call bare `.toLocaleString()` without an explicit locale string. All Rupiah amounts and Indonesian share volumes must use `.toLocaleString("id-ID")`. All USD values, crypto prices, and percentages must use `.toLocaleString("en-US")` to prevent Next.js SSR/CSR hydration mismatches across client browser locales.
     - **Safe Bottom Clearance**: Calibrated bottom clearance `pb-32 sm:pb-36` to safely clear `CompactBottomBar`.
   - **Contact & Direct Inquiry Hub (`/contact`)**: Desktop Entry Screen Standard (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden`), centered 12-column stage (`lg:grid-cols-12`, 5/7 split). Left context column: active status chip with `animate-ping` pulsing dot, solid headline (`"Let's build something worth shipping."`), 2-column Location & Jakarta Clock widget, system version pill, and relative timezone calculator. Right action panel: floating inquiry topic selector card (`rounded-[2rem]`) with 4 presets (`Consulting & Advisory`, `Engineering Leadership`, `Fintech Core (LOS/LMS)`, `General Tech Chat`) using domain SVG icons (`Handshake`, `Briefcase`, `Cpu`, `Coffee`) compiling dynamic `mailto:` parameters, and a 2x2 grid of direct contact channels (Email, Telegram, LinkedIn, GitHub) featuring domain icon squircles, 1-click clipboard copying (`FaRegCopy` → `FaCheck`), and external linkout arrows (`ArrowUpRight`).
-  - **Running Performance Hub (`/adventures/running`)**: High-fidelity endurance telemetry and Strava activity hub on signature dot-pattern canvas (`bg-slate-50/80 bg-dot-pattern`). Floating card header standard with emerald squircle anchor (`w-12 h-12 sm:w-14 sm:h-14`), domain theme badge (`Performance Hub`), and responsive 3-column mobile telemetry box. 12-column arena split: left column (5 cols) `Training Load & Intel` with live pulsing telemetry indicator, dynamic `PaceRing` gauge, 2x2 intel metric tiles, and proportional distance distribution; right column (7 cols) `PersonalBestsSwipeCard` (`rounded-3xl`) with tactile 5-item segmented milestone track (`touch-manipulation`), official chip time, 4-metric grid, keyboard/swipe navigation, and 1-click record copy. Activities feed with 2-tier mobile-first controls toolbar, 3-column responsive activity cards with uniform rounded-3xl floating card architecture, domain squircle anchor, recessed 3-metric instrument tray (zero truncation), elevation/heart rate badges, and `ArrowUpRight` interaction cue triggering `ActivityDetailModal`.
+  - **Running Performance Hub (`/adventures/running`)**: High-fidelity endurance telemetry and Strava activity hub on signature dot-pattern canvas (`bg-slate-50/80 bg-dot-pattern`). Floating card header standard with emerald squircle anchor (`w-12 h-12 sm:w-14 sm:h-14`), clean domain breadcrumbs and title (zero marketing slogan badges), and responsive 3-column mobile telemetry box. 12-column arena split: left column (5 cols) `Training Load & Intel` with live pulsing telemetry indicator, dynamic `PaceRing` gauge, 2x2 intel metric tiles, and proportional distance distribution; right column (7 cols) `PersonalBestsSwipeCard` (`bg-white rounded-3xl border border-slate-200/80 shadow-xs`) with minimalist frameless milestone track with sliding underline indicator (`layoutId="activeMilestoneIndicatorLight"`), official monospace chip time (`text-5xl sm:text-6xl font-black font-mono`), clean 3-metric functional strip (Pace, Distance, Elevation — strictly zero speed redundancy), zero marketing slogans/taglines, keyboard (<kbd>←</kbd> <kbd>→</kbd>) and touch swipe navigation, and 1-click record copy. Activities feed with 2-tier mobile-first controls toolbar, 3-column responsive activity cards with uniform rounded-3xl floating card architecture, domain squircle anchor, recessed 3-metric instrument tray (zero truncation), elevation/heart rate badges, and `ArrowUpRight` interaction cue triggering `ActivityDetailModal`.
 
 ---
 
@@ -87,6 +87,15 @@ The following patterns are **strictly forbidden** in this codebase:
       - Top-right corners are reserved strictly for real-time telemetry metrics (`6 Published / 9 Draft`, `4 Pending`) or distinct secondary actions (`+ New Article`).
     - Banish generic `rounded-full` pills for repetitive category names in card corners (e.g., `PUBLISHING`, `EXECUTION`). These create visual noise and dilute real data.
     - Telemetry badges must use compact, high-contrast, discrete containers (`rounded-lg` or `rounded-md`, e.g. `bg-slate-50 border border-slate-200/70 text-[11px] font-mono`) and represent concrete state (counts, ratios, connection status), not ornamental category labels.
+
+  - **METRIC ANTI-REDUNDANCY MANDATE (FUNCTIONAL DATA HYGIENE):**
+    - NEVER display duplicate, converted, or functionally redundant metrics in the same telemetry tray or card. For example, in running/endurance logs, NEVER show both "Pace" (min/km) AND "Speed" (km/h) simultaneously — pace is already the endurance domain standard for velocity; displaying both wastes horizontal space and creates visual clutter.
+    - Metric grids must remain lean, essential, and strictly non-repetitive (e.g., a balanced 3-metric strip: Pace, Distance, Elevation).
+    - If a secondary conversion is truly needed by users, provide an interactive toggle or tooltip rather than bloating the default grid with duplicate dimensional data.
+
+  - **ZERO MARKETING FLUFF IN DATA DISPLAYS (ANTI-TAGLINE MANDATE):**
+    - NEVER inject compound marketing taglines, decorative benchmark labels, or pompous slogans into functional data cards (e.g., "Tempo Benchmark", "Pinnacle Achievement", "Elite Velocity", "Next-Gen Performance", "Ultimate Endurance").
+    - Data cards must let raw numbers and verified telemetry speak for themselves. State the record type plainly (e.g. `10K`, `Chip Time`, `All-Time`), verified status, and verified metric values. Zero marketing hype or AI-generated fluff.
 
 * **Loading & Skeleton States:**
   - NEVER show a full-screen spinner with a brand logo and an explicit **"Loading"** text label. The word "Loading" adds no information and clutters the UI. Loading states must be implicit, ambient, and brand-aligned.
@@ -201,9 +210,9 @@ Animations are used purposefully to guide attention and provide feedback. **Less
 
 ## 7. Typography & Text Contrast
 
-* **Metric Typography:** Primary values use large font sizes and extra-bold weights (`text-xl sm:text-3xl font-extrabold text-slate-900`) for immediate legibility.
+* **Metric Typography & Restrained Scale:** Primary values use large font sizes and extra-bold weights (`text-xl sm:text-3xl font-extrabold text-slate-900`, or `text-5xl sm:text-6xl font-black font-mono` for hero times/records) for immediate legibility. Avoid over-scaled, brutalist typography (such as `text-7xl` or `text-8xl` giants) inside standard cards — typography must remain confident, well-proportioned, and leave generous breathing room.
 * **High Contrast Hierarchy:** Primary labels use `text-slate-700 font-bold`, while secondary units and sublabels use `text-slate-500 font-semibold`.
-* **Dark Mode & Dark Panels:** When using dark containers (`bg-slate-900`), text MUST be set to pure white or vibrant glowing accents (`text-indigo-400`, `text-emerald-400`, `text-cyan-400`, `text-red-400`) with sufficient contrast.
+* **Dark Mode & Dark Panels Restriction:** Standard content cards MUST NOT use full-card dark slate backgrounds (`bg-slate-900`). Dark containers are strictly limited to code blocks, high-priority backlog counters, or specialized transparent sticker canvas exports. When using dark containers, text MUST be set to pure white or vibrant glowing accents (`text-indigo-400`, `text-emerald-400`, `text-cyan-400`, `text-red-400`) with sufficient contrast.
 * **Zero Gradient Text:** Multi-color gradient text (`bg-clip-text text-transparent`) is absolutely prohibited on any headline, badge, or label. All text must be a single, deliberate solid color.
 * **Authentic Microcopy:** All button labels, tooltips, placeholders, and section headings must be written in plain, direct language. No AI-speak marketing phrases (see §2.1).
 
@@ -491,6 +500,8 @@ Before submitting any AI-generated or AI-assisted component for code review, ver
 - [ ] No `Sparkles` icon used anywhere in the component (strictly blacklisted forever sitewide)
 - [ ] Single canonical card architecture respected (zero nested duplicate card borders on admin portals)
 - [ ] Floating cards hosting dropdowns or popovers do NOT declare `overflow-hidden` (decorative watermarks wrapped in dedicated inner clipping wrapper)
+- [ ] Standard dashboard/telemetry cards use pure white containers (`bg-white rounded-3xl`) — no monolithic dark-slate content cards
+- [ ] Typography inside cards is restrained and well-proportioned (e.g. `text-5xl/6xl`, no disproportionate `7xl/8xl` giant text)
 - [ ] No raw unicode emojis in UI surfaces
 - [ ] No more than 3 accent colors in a single card
 
@@ -498,6 +509,9 @@ Before submitting any AI-generated or AI-assisted component for code review, ver
 - [ ] Clean Header Standard followed: contextual breadcrumbs at top, bold title `h1`, straight-to-the-point description, and right-aligned buttons or telemetry stats
 - [ ] No repetitive decorative category section pills or squircles (`Market Guideline`, `Engineering Journal`, `Performance Hub`, `Utility Registry`) above page titles
 - [ ] No redundant action triggers in cards (never declare both a top-right arrow button `↗` and a bottom `Launch Console ↗` / `Launch →` action in the same card)
+- [ ] No redundant metrics in telemetry trays (never pair duplicate physical dimensions like Pace and Speed in the same card)
+- [ ] Zero marketing fluff, decorative benchmark slogans, or AI taglines in data cards (no "Tempo Benchmark", "Pinnacle Achievement")
+- [ ] Interactive milestone/timeline switchers favor the frameless underline track with Framer Motion `layoutId` over bulky enclosed pill boxes
 - [ ] No generic `rounded-full` category pills in card corners (reserve badges strictly for real-time telemetry metrics with discrete `rounded-lg`/`rounded-md` borders)
 - [ ] Hero section does NOT follow: emoji → gradient headline → subtitle → CTA button pattern
 - [ ] Card grid items are NOT all structurally identical (icon + title + description + link)
@@ -586,3 +600,83 @@ export default function GlobalLoading() {
   );
 }
 ```
+
+---
+
+## 25. Minimalist Milestone & Timeline Selector Standard (Frameless Underline Pattern)
+
+Interactive timeframe, milestone, or record selectors (such as the distance benchmark switcher in `PersonalBestsSwipeCard.tsx`) must avoid heavy, boxed-in segmented pill containers that clutter the card surface. Instead, they must follow the **Minimalist Frameless Underline Track Standard**:
+
+### Visual & Interaction Architecture
+* **Frameless Open Layout:** No heavy background enclosure box (e.g. avoid nested `bg-slate-100 p-1.5 rounded-2xl border border-slate-200/60`). The milestones sit directly on the card canvas, creating an airy and uncluttered interface.
+* **Continuous Background Track Line:** A subtle, hairline guide spanning the selector row:
+  ```tsx
+  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-100 rounded-full" />
+  ```
+* **Milestone Triggers:** Clean, lightweight interactive buttons with domain iconography, compact typography, and responsive touch feedback:
+  ```tsx
+  <button
+    type="button"
+    onClick={() => goToIndex(idx)}
+    className={`group relative pb-2 sm:pb-3 px-2 sm:px-4 flex flex-col items-center justify-center transition-[color,transform] duration-300 cursor-pointer active:scale-90 touch-manipulation z-10 ${
+      isActive ? "text-slate-900 font-black" : "text-slate-400 hover:text-slate-600 font-bold"
+    }`}
+  >
+  ```
+* **Sliding Underline Indicator:** When active, a razor-thin sliding indicator line animated via Framer Motion `layoutId` sits directly atop the track line:
+  ```tsx
+  {isActive && (
+    <motion.div
+      layoutId="activeMilestoneIndicatorLight"
+      className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 rounded-full z-20"
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+    />
+  )}
+  ```
+* **Multi-Modal Navigation:**
+  - **Keyboard Support:** Listen to keyboard arrow keys (`ArrowLeft` / `ArrowRight`) to cycle records smoothly.
+  - **Touch Swipe Gestures:** Combine with horizontal swipe gesture handling on the display stage (`drag="x"` with threshold checks `offset.x < -40` or `velocity.x < -250`).
+  - **1-Click Copy Ergonomics:** Provide a header or footer copy trigger (`handleCopyRecord`) to copy structured telemetry to the clipboard with visual checkmark confirmation.
+
+### Prohibitions
+- NEVER encase simple benchmark / milestone switchers in chunky nested pill-box frames that fight with card borders.
+- NEVER use generic `'•'` or middot characters between milestone buttons.
+- NEVER animate full bounding boxes when a clean underline indicator communicates selection with far higher sophistication.
+
+---
+
+## 26. Faceless Social Canvas & Social Media Visual Studio Standards (`/utils/social-canvas`)
+
+To provide content creators and developers with a high-fidelity visual generation engine tailored for faceless channels, quotes, threads, and editorial statements:
+
+### 26.1 Categorized Template Taxonomy & Grouping Standard
+* **Anti-Flat-List Mandate**: NEVER dump extensive template options (10+ designs) into an unorganized, monolithic list or unindexed dropdown. Templates must be categorized into clear, purpose-driven groups to streamline workflow discovery.
+* **4-Tier Functional Groups (`TEMPLATE_GROUPS`)**:
+  1. *Editorial & Social (`editorial-social`)*: High-impact media layouts, Cable Breaking News (`breaking-news`), Thread Starters (`thread-starter` with avatar support), Floating Cards (`floating-card`), and Hero Overlays (`hero-overlay`).
+  2. *Modern & Structural (`modern-structural`)*: Asymmetric Bento Grids (`flat-bento`), Swiss Typography (`swiss-grid`), and Neo-Brutalist cards (`neo-brutalist`, `polaroid-brutalist`).
+  3. *Narrative & Text (`narrative-text`)*: High-conviction message cards, Typographic Posters (`typography-poster`), The Manifesto (`manifesto-block`), Narrative Focus (`narrative-focus`), and Minimal Chapters (`minimal-chapter`).
+  4. *Minimal & Focus (`minimal-focus`)*: Minimalist Split (`minimalist-split`), Minimal Quotes (`quote-minimal`), Duotone Overlays (`duotone-overlay`), Split Monochrome (`split-monochrome`), and Classy Offset (`classy-offset`).
+* **Interactive Category Filter Bar**: Provide an ergonomic category switcher (`All` + group buttons with domain icons) utilizing `touch-manipulation` and smooth layout transitions (`framer-motion`).
+
+### 26.2 Broadcast & Editorial Standards
+* **Cable News Lower-Third Pattern (`breaking-news`)**:
+  - Recreates a clean, high-urgency television news lower-third banner across standard social ratios.
+  - Features a bold red breaking banner band (`#DC2626`), high-contrast monospace time/ticker elements (`font-mono tracking-wider`), and an extra-bold all-caps headline banner.
+  - Proportional image scaling with optional vignette gradients guaranteeing headline readability regardless of photo complexity.
+* **Classy Offset & High-Contrast Left-Align Standard (`classy-offset`)**:
+  - **Dual Text Theme Switcher (`theme?: "light" | "dark"`)**: Provides an explicit theme toggle for templates designed over dynamic photo backgrounds, allowing users to switch typography between crisp light (`#FFFFFF` with `#94A3B8` accents) and sleek dark (`#0F172A` with `#475569` accents).
+  - **Consistent Left-Aligned Optical Flow**: Both the small lead-in text and the primary headline statement MUST align to a single, consistent left margin origin (`textAlign = "left"`). NEVER set lead-in text to `textAlign = "right"` when the headline is left-aligned — this causes awkward edge displacement and breaks visual reading cadence.
+
+### 26.3 Client-Side Canvas 2D Engine Architecture
+* **Pure In-Browser Rendering**: 100% client-side HTML5 Canvas API execution. Zero external rendering microservices, zero Puppeteer serverless bottlenecks, zero cloud storage bandwidth costs.
+* **Standard Aspect Ratios**:
+  - `1:1` Square (1080 × 1080 px) — Instagram Grid, LinkedIn Posts.
+  - `4:5` Portrait (1080 × 1350 px) — Instagram Feed optimal vertical size.
+  - `9:16` Story / Reel (1080 × 1920 px) — TikTok, Instagram Stories, YouTube Shorts.
+  - `16:9` Landscape (1920 × 1080 px) — X (Twitter) Cards, YouTube Thumbnails.
+* **Defensive Typography & Wrapping (`wrapText`)**:
+  - Intelligent word wrapping respecting dynamic `maxWidth` constraints.
+  - Preservation of explicit newlines (`\n`) and double paragraph breaks without collapsing whitespace.
+  - Unbroken word protection: Words exceeding `maxWidth` (such as long URLs, hashes, or technical terms) are split gracefully across lines rather than overflowing outside card bounds.
+* **Focal Point Object-Position Controls**:
+  - Provides intuitive position offset controls (`imageOffsetX`, `imageOffsetY`, `avatarOffsetX`, `avatarOffsetY` from `0.0` to `1.0`, centered at `0.5`) allowing users to adjust photo focus when adapting across wildly different aspect ratios (e.g. 16:9 landscape to 9:16 story).

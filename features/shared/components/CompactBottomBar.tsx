@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,6 +43,69 @@ function isPathActive(currentPath: string, targetPath?: string): boolean {
 	if (!targetPath) return false;
 	if (targetPath === "/") return currentPath === "/";
 	return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+}
+
+/**
+ * Resolves the single most specific active sub-item href within a submenu.
+ * Prevents root routes like '/adventures' from simultaneously highlighting
+ * when a child sub-route like '/adventures/running' is active.
+ */
+function getActiveSubHref(
+	currentPath: string,
+	subItems?: SubNavItem[],
+): string | undefined {
+	if (!subItems || subItems.length === 0) return undefined;
+	const matches = subItems.filter(
+		(sub) => sub.href && isPathActive(currentPath, sub.href),
+	);
+	if (matches.length === 0) return undefined;
+	matches.sort((a, b) => (b.href?.length ?? 0) - (a.href?.length ?? 0));
+	return matches[0].href;
+}
+
+/**
+ * Resolves the single most specific active top-level nav item label.
+ * Prevents multiple top-level buttons from highlighting simultaneously.
+ */
+function getActiveNavLabel(
+	currentPath: string,
+	visibleItems: NavItem[],
+): string | null {
+	let bestLabel: string | null = null;
+	let longestMatch = -1;
+
+	for (const item of visibleItems) {
+		let maxMatch = -1;
+		if (isPathActive(currentPath, item.href)) {
+			maxMatch = Math.max(maxMatch, item.href.length);
+		}
+		if (item.subItems) {
+			for (const sub of item.subItems) {
+				if (sub.href && isPathActive(currentPath, sub.href)) {
+					maxMatch = Math.max(maxMatch, sub.href.length);
+				}
+			}
+		}
+		if (maxMatch > longestMatch) {
+			longestMatch = maxMatch;
+			bestLabel = item.label;
+		}
+	}
+
+	return bestLabel;
+}
+
+function getSubmenuSubtitle(label: string, count: number): string {
+	switch (label) {
+		case "Adventures":
+			return `${count} destinations`;
+		case "Work":
+			return `${count} sections`;
+		case "Admin":
+			return `${count} controls`;
+		default:
+			return `${count} modules`;
+	}
 }
 
 /**
@@ -438,271 +501,282 @@ export default function CompactBottomBar() {
 							"0 4px 24px -4px rgba(15,23,42,0.10), 0 1px 6px -1px rgba(15,23,42,0.06), 0 0 0 0.5px rgba(15,23,42,0.04)",
 					}}
 				>
-					{visibleItems.map((navItem, index) => {
-						const Icon = navItem.icon;
-						const subItems = navItem.subItems?.filter(
-							(sub) => isGoogleAuthEnabled || sub.label !== "Logout",
-						);
-						const isActive =
-							isPathActive(pathname, navItem.href) ||
-							subItems?.some((sub) => isPathActive(pathname, sub.href));
-						const isExpanded = expandedItem === navItem.label;
-						const hasSubItems = Boolean(subItems && subItems.length > 0);
+					{(() => {
+						const activeNavLabel = getActiveNavLabel(pathname, visibleItems);
 
-						const prevItem = visibleItems[index - 1];
-						const showDivider = navItem.adminOnly && index > 0 && prevItem;
+						return visibleItems.map((navItem, index) => {
+							const Icon = navItem.icon;
+							const subItems = navItem.subItems?.filter(
+								(sub) => isGoogleAuthEnabled || sub.label !== "Logout",
+							);
+							const isActive = navItem.label === activeNavLabel;
+							const isExpanded = expandedItem === navItem.label;
+							const hasSubItems = Boolean(subItems && subItems.length > 0);
 
-						const isLeft = index <= 1;
-						const isRight = index >= visibleItems.length - 2;
-						const alignClass = isLeft
-							? "left-0 sm:left-1/2 sm:-translate-x-1/2 origin-bottom-left sm:origin-bottom"
-							: isRight
-								? "right-0 sm:left-1/2 sm:-translate-x-1/2 origin-bottom-right sm:origin-bottom"
-								: "left-1/2 -translate-x-1/2 origin-bottom";
+							const prevItem = visibleItems[index - 1];
+							const showDivider = navItem.adminOnly && index > 0 && prevItem;
 
-						return (
-							<div key={navItem.label} className="flex items-center">
-								{showDivider && (
-									<div className="w-px h-5 bg-slate-200/80 mx-0.5 shrink-0" />
-								)}
+							const isLeft = index <= 1;
+							const isRight = index >= visibleItems.length - 2;
+							const alignClass = isLeft
+								? "left-0 sm:left-1/2 sm:-translate-x-1/2 origin-bottom-left sm:origin-bottom"
+								: isRight
+									? "right-0 sm:left-1/2 sm:-translate-x-1/2 origin-bottom-right sm:origin-bottom"
+									: "left-1/2 -translate-x-1/2 origin-bottom";
 
-								<div
-									className="relative flex-shrink-0"
-									onMouseEnter={
-										hasHover && hasSubItems
-											? () => setExpandedItem(navItem.label)
-											: undefined
-									}
-									onMouseLeave={
-										hasHover && hasSubItems ? () => closeSubMenu() : undefined
-									}
-								>
-									{/* Submenu Pop-over */}
-									<AnimatePresence>
-										{hasSubItems && isExpanded && subItems && (
-											<motion.div
-												variants={submenuVariants}
-												initial={reduceMotion ? false : "hidden"}
-												animate="visible"
-												exit="exit"
-												className={`absolute bottom-[calc(100%+10px)] ${alignClass} w-48 bg-white rounded-xl overflow-hidden border border-slate-200/70 z-50`}
-												style={{
-													boxShadow:
-														"0 12px 40px -6px rgba(15,23,42,0.14), 0 3px 12px -3px rgba(15,23,42,0.07)",
-												}}
-												role="menu"
-												aria-label={`${navItem.label} Submenu`}
-											>
-												{/* Submenu header */}
-												<div className="px-2.5 pt-2.5 pb-2">
-													<div className="flex items-center gap-2">
-														<div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200/70 flex items-center justify-center shrink-0 text-slate-600">
-															<Icon className="w-3 h-3" />
-														</div>
-														<div className="min-w-0">
-															<p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-800 leading-none">
-																{navItem.label}
-															</p>
-															<p className="text-[9px] text-slate-400 font-medium mt-0.5 leading-none">
-																{subItems.length} destinations
-															</p>
+							return (
+								<div key={navItem.label} className="flex items-center">
+									{showDivider && (
+										<div className="w-px h-5 bg-slate-200/80 mx-0.5 shrink-0" />
+									)}
+
+									<div
+										className="relative flex-shrink-0"
+										onMouseEnter={
+											hasHover && hasSubItems
+												? () => setExpandedItem(navItem.label)
+												: undefined
+										}
+										onMouseLeave={
+											hasHover && hasSubItems ? () => closeSubMenu() : undefined
+										}
+									>
+										{/* Submenu Pop-over */}
+										<AnimatePresence>
+											{hasSubItems && isExpanded && subItems && (
+												<motion.div
+													variants={submenuVariants}
+													initial={reduceMotion ? false : "hidden"}
+													animate="visible"
+													exit="exit"
+													className={`absolute bottom-[calc(100%+10px)] ${alignClass} w-48 bg-white rounded-xl overflow-hidden border border-slate-200/70 z-50`}
+													style={{
+														boxShadow:
+															"0 12px 40px -6px rgba(15,23,42,0.14), 0 3px 12px -3px rgba(15,23,42,0.07)",
+													}}
+													role="menu"
+													aria-label={`${navItem.label} Submenu`}
+												>
+													{/* Submenu header */}
+													<div className="px-2.5 pt-2.5 pb-2">
+														<div className="flex items-center gap-2">
+															<div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200/70 flex items-center justify-center shrink-0 text-slate-600">
+																<Icon className="w-3 h-3" />
+															</div>
+															<div className="min-w-0">
+																<p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-800 leading-none">
+																	{navItem.label}
+																</p>
+																<p className="text-[9px] text-slate-400 font-medium mt-0.5 leading-none">
+																	{getSubmenuSubtitle(
+																		navItem.label,
+																		subItems.length,
+																	)}
+																</p>
+															</div>
 														</div>
 													</div>
-												</div>
 
-												<div className="mx-2 border-t border-slate-100 mb-1" />
+													<div className="mx-2 border-t border-slate-100 mb-1" />
 
-												<div className="px-1 pb-1 space-y-px">
-													{subItems.map((sub) => {
-														const SubIcon = sub.icon;
-														const isSubActive = isPathActive(
-															pathname,
-															sub.href,
-														);
-														const badgeCount = getSubItemBadge(sub.label);
+													<div className="px-1 pb-1 space-y-px">
+														{(() => {
+															const activeSubHref = getActiveSubHref(
+																pathname,
+																subItems,
+															);
 
-														const content = (
-															<>
-																<div
-																	className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-																		isSubActive
-																			? "bg-white/20 text-white"
-																			: "bg-slate-100 text-slate-500"
-																	}`}
-																>
-																	<SubIcon className="w-3 h-3" />
-																</div>
-																<div className="min-w-0 flex-1">
-																	<span
-																		className={`block text-[11px] font-semibold leading-tight truncate ${
-																			isSubActive
-																				? "text-white"
-																				: "text-slate-800"
-																		}`}
-																	>
-																		{sub.label}
-																	</span>
-																	{sub.description && (
-																		<span
-																			className={`block text-[10px] leading-tight truncate mt-0.5 ${
+															return subItems.map((sub) => {
+																const SubIcon = sub.icon;
+																const isSubActive = sub.href
+																	? sub.href === activeSubHref
+																	: false;
+																const badgeCount = getSubItemBadge(sub.label);
+
+																const content = (
+																	<>
+																		<div
+																			className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
 																				isSubActive
-																					? "text-white/60"
-																					: "text-slate-400"
+																					? "bg-white/20 text-white"
+																					: "bg-slate-100 text-slate-500 group-hover/sub:bg-slate-200/80 group-hover/sub:text-slate-700"
 																			}`}
 																		>
-																			{sub.description}
-																		</span>
-																	)}
-																</div>
-																{badgeCount !== null && (
-																	<span
-																		className={`shrink-0 flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[9px] font-black ${
-																			isSubActive
-																				? "bg-white/20 text-white"
-																				: "bg-slate-900 text-white"
-																		}`}
+																			<SubIcon className="w-3 h-3" />
+																		</div>
+																		<div className="min-w-0 flex-1">
+																			<span
+																				className={`block text-[11px] font-semibold leading-tight truncate transition-colors ${
+																					isSubActive
+																						? "text-white"
+																						: "text-slate-800 group-hover/sub:text-slate-950"
+																				}`}
+																			>
+																				{sub.label}
+																			</span>
+																			{sub.description && (
+																				<span
+																					className={`block text-[10px] leading-tight truncate mt-0.5 transition-colors ${
+																						isSubActive
+																							? "text-white/60"
+																							: "text-slate-400 group-hover/sub:text-slate-600"
+																					}`}
+																				>
+																					{sub.description}
+																				</span>
+																			)}
+																		</div>
+																		{badgeCount !== null && (
+																			<span
+																				className={`shrink-0 flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[9px] font-black ${
+																					isSubActive
+																						? "bg-white/20 text-white"
+																						: "bg-slate-900 text-white"
+																				}`}
+																			>
+																				{badgeCount}
+																			</span>
+																		)}
+																		{isSubActive &&
+																			badgeCount === null &&
+																			sub.href && (
+																				<ArrowUpRight className="w-3 h-3 shrink-0 opacity-50" />
+																			)}
+																	</>
+																);
+
+																const rowClass = `group/sub flex w-full text-left items-center gap-2 px-1.5 py-1.5 rounded-lg transition-[background-color,color] duration-150 !no-underline select-none touch-manipulation active:scale-[0.98] ${
+																	isSubActive
+																		? "bg-slate-900 text-white shadow-sm"
+																		: "text-slate-700 hover:bg-slate-100/70"
+																}`;
+
+																return (
+																	<motion.div
+																		key={sub.label}
+																		variants={itemVariants}
 																	>
-																		{badgeCount}
-																	</span>
-																)}
-																{isSubActive &&
-																	badgeCount === null &&
-																	sub.href && (
-																		<ArrowUpRight className="w-3 h-3 shrink-0 opacity-50" />
-																	)}
-															</>
-														);
-
-														const rowClass = `flex w-full text-left items-center gap-2 px-1.5 py-1.5 rounded-lg transition-[background-color,color] duration-150 !no-underline select-none touch-manipulation active:scale-[0.98] ${
-															isSubActive
-																? "bg-slate-900 text-white shadow-sm"
-																: "text-slate-700 hover:bg-slate-50"
-														}`;
-
-														return (
-															<motion.div
-																key={sub.label}
-																variants={itemVariants}
-															>
-																{sub.href ? (
-																	<Link
-																		href={sub.href}
-																		onClick={() => {
-																			sub.onClick?.();
-																			closeSubMenu();
-																		}}
-																		className={rowClass}
-																		role="menuitem"
-																	>
-																		{content}
-																	</Link>
-																) : (
-																	<button
-																		type="button"
-																		onClick={() => {
-																			sub.onClick?.();
-																			closeSubMenu();
-																		}}
-																		className={rowClass}
-																		role="menuitem"
-																	>
-																		{content}
-																	</button>
-																)}
-															</motion.div>
-														);
-													})}
-												</div>
-											</motion.div>
-										)}
-									</AnimatePresence>
-
-									{/* Nav button */}
-									<Link
-										href={navItem.href}
-										aria-current={isActive ? "page" : undefined}
-										aria-label={navItem.label}
-										aria-haspopup={hasSubItems ? "true" : undefined}
-										aria-expanded={hasSubItems ? isExpanded : undefined}
-										onClick={(e) => handleItemClick(e, navItem, hasSubItems)}
-										className="group relative flex flex-col items-center justify-center py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-[0.8rem] transition-colors duration-150 !no-underline select-none min-w-[44px] sm:min-w-[52px] touch-manipulation active:scale-95"
-									>
-										{/* Hover background for inactive items */}
-										{!isActive && (
-											<span className="absolute inset-0 rounded-[0.8rem] bg-slate-100/0 group-hover:bg-slate-100/60 transition-colors duration-150 pointer-events-none" />
-										)}
-
-										{/* Icon container */}
-										<div className="relative flex items-center justify-center w-7 h-7 rounded-[0.625rem]">
-											{isActive && (
-												<motion.div
-													layoutId="nav-active-icon"
-													transition={{
-														type: "spring",
-														stiffness: 440,
-														damping: 34,
-													}}
-													className="absolute inset-0 bg-slate-900 rounded-[0.625rem] z-0"
-												/>
+																		{sub.href ? (
+																			<Link
+																				href={sub.href}
+																				onClick={() => {
+																					sub.onClick?.();
+																					closeSubMenu();
+																				}}
+																				className={rowClass}
+																				role="menuitem"
+																			>
+																				{content}
+																			</Link>
+																		) : (
+																			<button
+																				type="button"
+																				onClick={() => {
+																					sub.onClick?.();
+																					closeSubMenu();
+																				}}
+																				className={rowClass}
+																				role="menuitem"
+																			>
+																				{content}
+																			</button>
+																		)}
+																	</motion.div>
+																);
+															});
+														})()}
+													</div>
+												</motion.div>
 											)}
-											<Icon
-												className={`relative z-10 w-[15px] h-[15px] sm:w-[16px] sm:h-[16px] shrink-0 transition-colors duration-150 ${
-													isActive
-														? "!text-white"
-														: "!text-slate-400 group-hover:!text-slate-700"
-												}`}
-											/>
+										</AnimatePresence>
 
-											{/* Admin pending badge pip */}
-											{navItem.label === "Admin" &&
-												!isExpanded &&
-												totalAdminBadge > 0 && (
-													<motion.span
-														key={totalAdminBadge}
-														initial={{ scale: 0.6, opacity: 0 }}
-														animate={{ scale: 1, opacity: 1 }}
+										{/* Nav button */}
+										<Link
+											href={navItem.href}
+											aria-current={isActive ? "page" : undefined}
+											aria-label={navItem.label}
+											aria-haspopup={hasSubItems ? "true" : undefined}
+											aria-expanded={hasSubItems ? isExpanded : undefined}
+											onClick={(e) => handleItemClick(e, navItem, hasSubItems)}
+											className="group relative flex flex-col items-center justify-center py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-[0.8rem] transition-colors duration-150 !no-underline select-none min-w-[44px] sm:min-w-[52px] touch-manipulation active:scale-95"
+										>
+											{/* Hover background for inactive items */}
+											{!isActive && (
+												<span className="absolute inset-0 rounded-[0.8rem] bg-slate-100/0 group-hover:bg-slate-100/60 transition-colors duration-150 pointer-events-none" />
+											)}
+
+											{/* Icon container */}
+											<div className="relative flex items-center justify-center w-7 h-7 rounded-[0.625rem]">
+												{isActive && (
+													<motion.div
+														layoutId="nav-active-icon"
 														transition={{
 															type: "spring",
-															stiffness: 500,
-															damping: 28,
+															stiffness: 440,
+															damping: 34,
 														}}
-														className="absolute -top-1 -right-1 z-20 flex h-[12px] min-w-[12px] px-0.5 items-center justify-center rounded-full bg-rose-500 text-[7px] font-black !text-white ring-[1.5px] ring-white"
-													>
-														{totalAdminBadge}
-													</motion.span>
+														className="absolute inset-0 bg-slate-900 rounded-[0.625rem] z-0"
+													/>
 												)}
-										</div>
-
-										{/* Label + chevron indicator */}
-										<div className="mt-0.5 flex items-center justify-center gap-0.5 max-w-full">
-											<span
-												className={`text-[9px] tracking-tight leading-none transition-colors duration-150 truncate ${
-													isActive
-														? "font-bold text-slate-900"
-														: "font-medium text-slate-400 group-hover:text-slate-600"
-												}`}
-											>
-												{navItem.label}
-											</span>
-											{hasSubItems && (
-												<motion.span
-													animate={{ rotate: isExpanded ? 180 : 0 }}
-													transition={{ duration: 0.18, ease: "easeInOut" }}
-													className={`shrink-0 transition-colors duration-150 ${
+												<Icon
+													className={`relative z-10 w-[15px] h-[15px] sm:w-[16px] sm:h-[16px] shrink-0 transition-colors duration-150 ${
 														isActive
-															? "text-slate-600"
-															: "text-slate-300 group-hover:text-slate-500"
+															? "!text-white"
+															: "!text-slate-400 group-hover:!text-slate-700"
+													}`}
+												/>
+
+												{/* Admin pending badge pip */}
+												{navItem.label === "Admin" &&
+													!isExpanded &&
+													totalAdminBadge > 0 && (
+														<motion.span
+															key={totalAdminBadge}
+															initial={{ scale: 0.6, opacity: 0 }}
+															animate={{ scale: 1, opacity: 1 }}
+															transition={{
+																type: "spring",
+																stiffness: 500,
+																damping: 28,
+															}}
+															className="absolute -top-1 -right-1 z-20 flex h-[12px] min-w-[12px] px-0.5 items-center justify-center rounded-full bg-rose-500 text-[7px] font-black !text-white ring-[1.5px] ring-white"
+														>
+															{totalAdminBadge}
+														</motion.span>
+													)}
+											</div>
+
+											{/* Label + chevron indicator */}
+											<div className="mt-0.5 flex items-center justify-center gap-0.5 max-w-full">
+												<span
+													className={`text-[9px] tracking-tight leading-none transition-colors duration-150 truncate ${
+														isActive
+															? "font-bold text-slate-900"
+															: "font-medium text-slate-400 group-hover:text-slate-600"
 													}`}
 												>
-													<ChevronUp className="w-2 h-2" strokeWidth={2.5} />
-												</motion.span>
-											)}
-										</div>
-									</Link>
+													{navItem.label}
+												</span>
+												{hasSubItems && (
+													<motion.span
+														animate={{ rotate: isExpanded ? 180 : 0 }}
+														transition={{ duration: 0.18, ease: "easeInOut" }}
+														className={`shrink-0 transition-colors duration-150 ${
+															isActive
+																? "text-slate-600"
+																: "text-slate-300 group-hover:text-slate-500"
+														}`}
+													>
+														<ChevronUp className="w-2 h-2" strokeWidth={2.5} />
+													</motion.span>
+												)}
+											</div>
+										</Link>
+									</div>
 								</div>
-							</div>
-						);
-					})}
+							);
+						});
+					})()}
 				</div>
 			</motion.nav>
 		</>

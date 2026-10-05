@@ -686,11 +686,11 @@ export default function ActivityDetailModal({
 					animate={{ opacity: 1, scale: 1, y: 0 }}
 					exit={{ opacity: 0, scale: 0.95, y: 16 }}
 					transition={{ type: "spring", damping: 28, stiffness: 350 }}
-					className="relative w-full max-w-md sm:max-w-lg bg-[#FAFBFD] rounded-[32px] border border-slate-200/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] overflow-hidden z-10 text-slate-900"
+					className="relative w-full max-w-md sm:max-w-lg bg-slate-50/95 backdrop-blur-xl rounded-[2rem] border border-slate-200/80 shadow-2xl overflow-hidden z-10 text-slate-900 flex flex-col"
 					onClick={(e) => e.stopPropagation()}
 				>
 					{/* ── TOP HEADER ── */}
-					<div className="p-5 pb-3.5 border-b border-slate-100/90 bg-white/70 backdrop-blur-md">
+					<div className="p-5 pb-3.5 border-b border-slate-200/80 bg-white relative z-20">
 						<div className="flex items-start justify-between gap-3">
 							<div className="flex items-center gap-3 min-w-0">
 								{/* Icon Badge */}
@@ -740,16 +740,22 @@ export default function ActivityDetailModal({
 						{/* Segmented Tab Controls & Copy Image Button */}
 						<div className="flex items-center justify-between gap-2 mt-3.5 pt-0.5">
 							{/* Segmented Pill Tabs */}
-							<div className="flex items-center gap-1 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60 shadow-2xs">
+							<div className="flex items-center gap-1 p-1 bg-slate-100/90 rounded-[1.25rem] border border-slate-200/60 shadow-inner">
 								<button
 									type="button"
 									onClick={() => setActiveTab("overview")}
-									className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-[background-color,color,box-shadow] active:scale-95 cursor-pointer ${
+									className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-[color,transform] active:scale-95 cursor-pointer z-10 ${
 										activeTab === "overview"
-											? "bg-white text-slate-900 shadow-xs ring-1 ring-slate-900/5"
+											? "text-slate-900 shadow-sm ring-1 ring-slate-900/5"
 											: "text-slate-500 hover:text-slate-800"
 									}`}
 								>
+									{activeTab === "overview" && (
+										<motion.div
+											layoutId="activeRunTabBg"
+											className="absolute inset-0 bg-white rounded-xl -z-10"
+										/>
+									)}
 									<BarChart3 className="w-3.5 h-3.5" />
 									<span>Overview</span>
 								</button>
@@ -757,12 +763,18 @@ export default function ActivityDetailModal({
 								<button
 									type="button"
 									onClick={() => setActiveTab("splits")}
-									className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-[background-color,color,box-shadow] active:scale-95 cursor-pointer ${
+									className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-[color,transform] active:scale-95 cursor-pointer z-10 ${
 										activeTab === "splits"
-											? "bg-slate-900 text-white shadow-xs"
+											? "text-slate-900 shadow-sm ring-1 ring-slate-900/5"
 											: "text-slate-500 hover:text-slate-800"
 									}`}
 								>
+									{activeTab === "splits" && (
+										<motion.div
+											layoutId="activeRunTabBg"
+											className="absolute inset-0 bg-white rounded-xl -z-10"
+										/>
+									)}
 									<BarChart3 className="w-3.5 h-3.5" />
 									<span>Splits ({splits.length} km)</span>
 								</button>
@@ -831,49 +843,48 @@ export default function ActivityDetailModal({
 					<div className="p-5 space-y-3.5 max-h-[calc(85vh-150px)] overflow-y-auto">
 						{activeTab === "overview" ? (
 							/* ── TAB 1: OVERVIEW METRICS (SIMPLE & STRAIGHT TO THE POINT) ── */
-							<div className="space-y-3">
-								{/* 1. Floating Hero Card (Distance & Moving Duration) */}
-								<div className="relative rounded-3xl bg-white p-5 border border-slate-200/80 shadow-[0_10px_24px_-6px_rgba(0,0,0,0.05),0_2px_6px_rgba(0,0,0,0.03)] space-y-3">
-									<div className="flex items-start justify-between gap-4">
+							<div className="space-y-4">
+								{/* 1. High-Priority Floating Hero Widget */}
+								<div className="relative rounded-[2rem] bg-slate-900 p-6 border border-slate-800 shadow-xl overflow-hidden group hover:shadow-2xl hover:border-slate-700/80 transition-all duration-500">
+									<div className="flex items-start justify-between gap-4 relative z-10">
 										<div className="space-y-1">
-											<span className="text-[10.5px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-												<Route className="w-3.5 h-3.5 text-emerald-500" />
-												Total Distance
+											<span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+												<Route className="w-4 h-4 text-emerald-400" />
+												Distance
 											</span>
 											<div className="flex items-baseline gap-1.5">
-												<span className="text-4xl font-black text-slate-950 font-mono tracking-tight leading-none">
+												<span className="text-5xl font-black text-white font-mono tracking-tighter leading-none drop-shadow-sm">
 													{distanceKm}
 												</span>
-												<span className="text-sm font-black text-emerald-600 font-mono">
+												<span className="text-sm font-black text-emerald-400 font-mono tracking-tight">
 													km
 												</span>
 											</div>
 										</div>
 
 										<div className="text-right space-y-1">
-											<span className="text-[10.5px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-end gap-1.5">
-												<Clock className="w-3.5 h-3.5 text-blue-500" />
+											<span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center justify-end gap-1.5">
+												<Clock className="w-4 h-4 text-blue-400" />
 												Moving Time
 											</span>
-											<p className="text-2xl font-black text-slate-900 font-mono tracking-tight leading-none">
+											<p className="text-3xl font-black text-white font-mono tracking-tighter leading-none drop-shadow-sm">
 												{formattedMovingDuration}
 											</p>
 										</div>
 									</div>
 
 									{/* Alert / Highlight Badge */}
-									<div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
-										<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200/70 shadow-2xs">
-											<Gauge className="w-3.5 h-3.5 text-amber-500" />
+									<div className="mt-5 pt-3.5 border-t border-slate-800/80 flex items-center justify-between gap-2 relative z-10">
+										<div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 text-white border border-white/5 backdrop-blur-md">
+											<Gauge className="w-3 h-3 text-emerald-400" />
 											<span>
 												{fastestSplit
 													? `Best Split: KM ${fastestSplit.split} at ${fastestSplit.paceFormatted}/km`
 													: "Pace Consistency: Stable"}
 											</span>
 										</div>
-
-										<div className="text-[11px] font-bold text-slate-400 font-mono">
-											Avg {formattedPace}
+										<div className="text-[12px] font-bold text-slate-300 font-mono tracking-tight">
+											Avg <span className="text-white">{formattedPace}</span>
 										</div>
 									</div>
 								</div>
@@ -882,26 +893,26 @@ export default function ActivityDetailModal({
 								<div
 									className={`grid ${
 										hasHeartRate ? "grid-cols-3" : "grid-cols-2"
-									} gap-2.5`}
+									} gap-3`}
 								>
 									{/* Average Pace */}
-									<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-											<Gauge className="w-3.5 h-3.5 text-amber-500" />
+									<div className="group p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-amber-200/80 hover:-translate-y-0.5 transition-all duration-300 space-y-1.5">
+										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-500 transition-colors flex items-center gap-1.5">
+											<Gauge className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
 											Avg Pace
 										</span>
-										<p className="text-base sm:text-lg font-black text-slate-900 font-mono">
+										<p className="text-lg sm:text-xl font-black text-slate-900 font-mono tracking-tight">
 											{formattedPace}
 										</p>
 									</div>
 
 									{/* Elevation Gain */}
-									<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-											<Mountain className="w-3.5 h-3.5 text-purple-500" />
+									<div className="group p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-purple-200/80 hover:-translate-y-0.5 transition-all duration-300 space-y-1.5">
+										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-purple-500 transition-colors flex items-center gap-1.5">
+											<Mountain className="w-4 h-4 text-purple-500 group-hover:scale-110 transition-transform" />
 											Elevation
 										</span>
-										<p className="text-base sm:text-lg font-black text-purple-900 font-mono">
+										<p className="text-lg sm:text-xl font-black text-slate-900 font-mono tracking-tight">
 											{hasElevation
 												? `+${activity.total_elevation_gain} m`
 												: "Flat"}
@@ -910,14 +921,14 @@ export default function ActivityDetailModal({
 
 									{/* Heart Rate (if available) */}
 									{hasHeartRate && (
-										<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-											<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-												<Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+										<div className="group p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-rose-200/80 hover:-translate-y-0.5 transition-all duration-300 space-y-1.5">
+											<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-rose-500 transition-colors flex items-center gap-1.5">
+												<Flame className="w-4 h-4 text-rose-500 animate-pulse group-hover:scale-110 transition-transform" />
 												Avg HR
 											</span>
-											<p className="text-base sm:text-lg font-black text-rose-900 font-mono">
+											<p className="text-lg sm:text-xl font-black text-slate-900 font-mono tracking-tight">
 												{Math.round(activity.average_heartrate!)}{" "}
-												<span className="text-xs font-normal text-slate-400">
+												<span className="text-xs font-bold text-slate-400">
 													bpm
 												</span>
 											</p>
@@ -975,13 +986,19 @@ export default function ActivityDetailModal({
 													: "bg-amber-400 text-slate-950";
 
 											return (
-												<div
+												<motion.div
+													initial={{ opacity: 0, y: 10 }}
+													animate={{ opacity: 1, y: 0 }}
+													transition={{
+														duration: 0.3,
+														delay: Math.min(item.split * 0.04, 0.4),
+													}}
 													key={item.split}
-													className="p-2.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3"
+													className="group p-2.5 rounded-2xl bg-white border border-slate-200/70 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-3"
 												>
 													{/* KM Badge */}
 													<div className="w-10 shrink-0 text-left">
-														<span className="font-black text-slate-900 text-xs font-mono">
+														<span className="font-black text-slate-900 text-xs font-mono group-hover:text-indigo-600 transition-colors">
 															KM {item.split}
 														</span>
 														{item.distanceKm < 1.0 && (
@@ -997,8 +1014,8 @@ export default function ActivityDetailModal({
 															initial={{ width: 0 }}
 															animate={{ width: `${barWidthPercent}%` }}
 															transition={{
-																duration: 0.35,
-																delay: item.split * 0.02,
+																duration: 0.4,
+																delay: Math.min(item.split * 0.04, 0.4),
 															}}
 															className={`absolute left-0 top-0 bottom-0 rounded-xl ${barBg}`}
 														/>
@@ -1023,7 +1040,7 @@ export default function ActivityDetailModal({
 													{/* Right Metric: HR or Moving Duration */}
 													{item.heartrate ? (
 														<div className="w-16 shrink-0 flex items-center justify-end gap-1 text-[11px] font-black text-rose-600 font-mono">
-															<Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500 shrink-0" />
+															<Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500 shrink-0 group-hover:scale-110 transition-transform" />
 															<span>{item.heartrate}</span>
 															<span className="text-[9px] text-slate-400 font-normal">
 																bpm
@@ -1034,7 +1051,7 @@ export default function ActivityDetailModal({
 															{item.movingTimeFormatted}
 														</div>
 													)}
-												</div>
+												</motion.div>
 											);
 										})}
 									</div>

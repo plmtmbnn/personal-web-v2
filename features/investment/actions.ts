@@ -462,8 +462,16 @@ export async function getInvestmentCompass(
 			cryptoFlows: flowsData.data,
 		},
 		sources: {
-			cnn: { ok: !!traditional, label: "CNN Fear & Greed" },
-			cryptoFng: { ok: !!crypto, label: "Alternative.me" },
+			cnn: {
+				ok: !!traditional,
+				label: "CNN Fear & Greed",
+				stale: !traditional,
+			},
+			cryptoFng: {
+				ok: !!crypto,
+				label: "Alternative.me",
+				stale: !crypto,
+			},
 			quotes: {
 				ok: quotesData.sourceOk,
 				label: "Global Quotes",
@@ -487,10 +495,12 @@ export async function getInvestmentCompass(
 			defillama: {
 				ok: !!flowsData.data?.totalStablecoinSupplyUsd,
 				label: "DefiLlama Stablecoins",
+				stale: !flowsData.data?.totalStablecoinSupplyUsd,
 			},
 			okx: {
 				ok: flowsData.data?.btcFundingRate8hPct != null,
 				label: "Crypto Derivatives",
+				stale: flowsData.data?.btcFundingRate8hPct == null,
 			},
 		},
 		fetchedAt: new Date().toISOString(),

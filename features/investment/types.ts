@@ -145,6 +145,19 @@ export interface SourceStatus {
 	asOf?: string;
 }
 
+export interface IhsgForeignFlowSnapshot {
+	netBuySell1dIdr?: number | null; // e.g. -500_000_000_000 (net sell 500B IDR)
+	netBuySell5dIdr?: number | null;
+	streakDays?: number | null; // e.g. -3 for 3 consecutive days of net foreign selling
+	asOf?: string;
+}
+
+export interface CryptoOnChainSnapshot {
+	mvrvZScore?: number | null; // e.g. 1.8 (fair), > 4.0 (cycle top danger), < 0.1 (historical accumulation floor)
+	nupl?: number | null; // Net Unrealized Profit/Loss (-1.0 to 1.0)
+	asOf?: string;
+}
+
 export interface InvestmentCompassData {
 	sentiment: {
 		traditional: FearAndGreedData | null;
@@ -157,6 +170,8 @@ export interface InvestmentCompassData {
 		macro: Record<string, MacroSeries>;
 		history?: Record<string, PriceHistorySeries | null>;
 		cryptoFlows?: CryptoFlowsSnapshot | null;
+		ihsgFlows?: IhsgForeignFlowSnapshot | null;
+		cryptoOnChain?: CryptoOnChainSnapshot | null;
 	};
 	sources: Record<string, SourceStatus>;
 	fetchedAt: string;
@@ -210,6 +225,7 @@ export interface MarketPermissions {
 	swing: { status: ActionPermission; label: string; reason: string };
 	dca: { status: ActionPermission; label: string; reason: string };
 	maxExposure: string;
+	riskPerTrade?: string;
 }
 
 export interface PermissionsMatrixData {

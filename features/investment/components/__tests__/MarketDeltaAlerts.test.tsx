@@ -243,4 +243,14 @@ describe("MarketDeltaAlerts Component", () => {
 		expect(container.textContent).toContain("Dollar Rally: DXY surged +0.95%");
 		expect(container.textContent).toContain("headwinds for Crypto and IHSG");
 	});
+
+	it("renders Data Telemetry Alert when a source is stale or offline", () => {
+		const data = createMockData();
+		data.sources.quotes = { ok: false, label: "Global Quotes", stale: true };
+
+		const { container } = render(<MarketDeltaAlerts data={data} />);
+		expect(container.textContent).toContain("Data Telemetry Alert");
+		expect(container.textContent).toContain("Global Quotes");
+		expect(container.textContent).toContain("Operating on cached backup data");
+	});
 });

@@ -34,7 +34,13 @@ export function scoreIhsg(
 		factors.push({
 			key: "ihsg_200ma",
 			label: "IHSG vs 200-Day Moving Average",
-			valueStr: `${ihsgPrice.toLocaleString("id-ID")} (MA: ${Math.round(ma200).toLocaleString("id-ID")})`,
+			valueStr: `${ihsgPrice.toLocaleString("en-US", {
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2,
+			})} (MA: ${ma200.toLocaleString("en-US", {
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2,
+			})})`,
 			score,
 			weight: 25,
 			direction: dir,
@@ -86,7 +92,7 @@ export function scoreIhsg(
 		});
 	}
 
-	// 3. USD/IDR Trend vs 50-Day MA (FX Pressure) - Weight 20
+	// 3. USD/IDR Dual-Condition Matrix: Level + 50-Day MA Momentum - Weight 20
 	const usdIdrQuote = data.markets.quotes.USDIDR;
 	const usdIdrPrice = usdIdrQuote?.last ?? null;
 	const usdIdrHistory = data.markets.history?.["IDR=X"]?.points ?? [];
@@ -95,31 +101,63 @@ export function scoreIhsg(
 	if (usdIdrPrice != null) {
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		let note = "Rupiah trading within standard central bank tolerance bands.";
 
-		if (idrMa50 != null) {
-			const idrDist = distancePct(usdIdrPrice, idrMa50);
-			// Inverse: USD/IDR falling (below MA) means strong Rupiah = Bullish for stocks!
+		const idrDist = idrMa50 != null ? distancePct(usdIdrPrice, idrMa50) : null;
+
+		// Dual-condition evaluation: absolute level + 50-day MA momentum
+		if (usdIdrPrice >= 16400) {
+			// Restrictive/Stress Zone (> Rp 16.400)
 			if (idrDist != null && idrDist < -0.5) {
-				score = 85;
-				dir = "bullish";
-			} else if (idrDist != null && idrDist > 1.0) {
+				score = 50;
+				dir = "neutral";
+				note =
+					"Rupiah recovering below 50D MA but remains in elevated stress territory (> Rp 16.400).";
+			} else if (idrDist != null && idrDist > 0.5) {
+				score = 20;
+				dir = "bearish";
+				note =
+					"Severe Rupiah depreciation above 50D MA in stress territory (> Rp 16.400); triggers foreign capital flight.";
+			} else {
 				score = 25;
 				dir = "bearish";
+				note =
+					"Rupiah remains elevated above Rp 16.400; currency headwinds pressure valuations.";
+			}
+		} else if (usdIdrPrice >= 15900) {
+			// Watch Zone (Rp 15.900 - 16.400)
+			if (idrDist != null && idrDist < -0.5) {
+				score = 75;
+				dir = "bullish";
+				note =
+					"Rupiah strengthening below 50D MA; foreign outflow pressure easing.";
+			} else if (idrDist != null && idrDist > 1.0) {
+				score = 30;
+				dir = "bearish";
+				note =
+					"Rupiah weakening above 50D MA towards critical resistance bands.";
 			} else {
 				score = 55;
 				dir = "neutral";
+				note = "Rupiah consolidating within intermediate tolerance range.";
 			}
 		} else {
-			// Level fallback if history not yet loaded
-			if (usdIdrPrice > 16400) {
-				score = 25;
-				dir = "bearish";
-			} else if (usdIdrPrice < 15800) {
-				score = 80;
+			// Favorable Zone (< Rp 15.900)
+			if (idrDist != null && idrDist < -0.5) {
+				score = 85;
 				dir = "bullish";
-			} else {
-				score = 50;
+				note =
+					"Strong Rupiah below 50D MA provides broad macro liquidity tailwinds for IDX.";
+			} else if (idrDist != null && idrDist > 1.0) {
+				score = 55;
 				dir = "neutral";
+				note =
+					"Minor Rupiah pullback within a structurally favorable exchange rate zone.";
+			} else {
+				score = 75;
+				dir = "bullish";
+				note =
+					"Favorable Rupiah exchange rate (< Rp 15.900) anchors domestic market stability.";
 			}
 		}
 
@@ -130,12 +168,7 @@ export function scoreIhsg(
 			score,
 			weight: 20,
 			direction: dir,
-			note:
-				dir === "bearish"
-					? "Rupiah depreciation triggers foreign outflows and tightens domestic liquidity."
-					: dir === "bullish"
-						? "Stable or strengthening Rupiah attracts foreign institutional capital into big banks."
-						: "Rupiah trading within standard central bank tolerance bands.",
+			note,
 			asOf: usdIdrQuote?.lastTime ?? undefined,
 		});
 	}
@@ -205,6 +238,16 @@ export function scoreIhsg(
 		if (latestIdYield > 7.2) {
 			contextFlags.push(`Elevated ID 10Y Yield (${latestIdYield.toFixed(2)}%)`);
 		}
+	}
+
+	// Context Check: Foreign Institutional Net Flow
+	if (data.markets.ihsgFlows?.streakDays != null) {
+		const streak = data.markets.ihsgFlows.streakDays;
+		contextFlags.push(
+			streak > 0
+				? `Foreign Capital: +${streak}D Inflow Streak`
+				: `Foreign Capital: ${streak}D Outflow Streak`,
+		);
 	}
 
 	// Compute Weighted Composite

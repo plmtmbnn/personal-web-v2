@@ -135,17 +135,18 @@ export default function OverviewRegimes({
 							{regime.factors.map((factor) => {
 								const isBull = factor.direction === "bullish";
 								const isBear = factor.direction === "bearish";
+								const isSelected = activeFactor?.key === factor.key;
 
 								return (
 									<button
 										key={factor.key}
 										type="button"
-										onClick={() =>
-											setActiveFactor(
-												activeFactor?.key === factor.key ? null : factor,
-											)
-										}
-										className={`p-2 rounded-xl border text-left transition-all cursor-pointer active:scale-95 touch-manipulation ${
+										onClick={() => setActiveFactor(isSelected ? null : factor)}
+										className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer active:scale-95 touch-manipulation ${
+											isSelected
+												? "ring-2 ring-slate-900 border-transparent shadow-xs"
+												: ""
+										} ${
 											isBull
 												? "bg-emerald-50/40 border-emerald-100/80 hover:bg-emerald-50"
 												: isBear
@@ -158,11 +159,11 @@ export default function OverviewRegimes({
 												{factor.label}
 											</span>
 											{isBull ? (
-												<TrendingUp className="w-3 h-3 text-emerald-600 shrink-0" />
+												<TrendingUp className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
 											) : isBear ? (
-												<TrendingDown className="w-3 h-3 text-rose-600 shrink-0" />
+												<TrendingDown className="w-3.5 h-3.5 text-rose-600 shrink-0" />
 											) : (
-												<Info className="w-3 h-3 text-slate-400 shrink-0" />
+												<Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 											)}
 										</div>
 										<div className="flex items-baseline justify-between gap-1">
@@ -177,6 +178,34 @@ export default function OverviewRegimes({
 								);
 							})}
 						</div>
+
+						{/* Inline Factor Detail Card */}
+						{activeFactor &&
+							regime.factors.some((f) => f.key === activeFactor.key) && (
+								<div className="mt-3 bg-slate-900 text-white rounded-2xl p-3.5 sm:p-4 shadow-lg border border-slate-800 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+									<div className="flex items-center justify-between gap-2">
+										<div className="flex items-center gap-2 min-w-0">
+											<span className="text-xs font-black text-amber-400 uppercase tracking-wider truncate">
+												{activeFactor.label}
+											</span>
+											<span className="text-[10px] font-bold text-slate-400 truncate">
+												{activeFactor.valueStr} (Score: {activeFactor.score}
+												/100)
+											</span>
+										</div>
+										<button
+											type="button"
+											onClick={() => setActiveFactor(null)}
+											className="text-[10px] font-bold text-slate-300 hover:text-white px-2 py-0.5 bg-slate-800 rounded-md cursor-pointer shrink-0"
+										>
+											Close
+										</button>
+									</div>
+									<p className="text-xs text-slate-300 font-medium leading-relaxed">
+										{activeFactor.note}
+									</p>
+								</div>
+							)}
 					</div>
 				</div>
 
@@ -199,33 +228,6 @@ export default function OverviewRegimes({
 
 	return (
 		<div className="space-y-4">
-			{/* Factor Detail Popover Banner if tapped */}
-			{activeFactor && (
-				<div className="bg-slate-900 text-white rounded-2xl p-4 shadow-xl border border-slate-800 flex items-start justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-					<div className="space-y-1">
-						<div className="flex items-center gap-2">
-							<span className="text-xs font-black text-amber-400 uppercase tracking-wider">
-								{activeFactor.label}
-							</span>
-							<span className="text-[10px] font-bold text-slate-400">
-								Current: {activeFactor.valueStr} | Sub-score:{" "}
-								{activeFactor.score}/100
-							</span>
-						</div>
-						<p className="text-xs text-slate-300 font-medium leading-relaxed">
-							{activeFactor.note}
-						</p>
-					</div>
-					<button
-						type="button"
-						onClick={() => setActiveFactor(null)}
-						className="text-xs font-bold text-slate-400 hover:text-white px-2 py-1 bg-slate-800 rounded-lg shrink-0 cursor-pointer"
-					>
-						Close
-					</button>
-				</div>
-			)}
-
 			<div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
 				{/* 1. IHSG Regime Card (Span 6) */}
 				<div className="lg:col-span-6">
@@ -284,16 +286,59 @@ export default function OverviewRegimes({
 						</p>
 
 						<div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 text-[10px] font-semibold text-slate-500">
-							{globalRegime.factors.map((f) => (
-								<span
-									key={f.key}
-									className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-700"
-								>
-									{f.label}:{" "}
-									<strong className="text-slate-900">{f.valueStr}</strong>
-								</span>
-							))}
+							{globalRegime.factors.map((f) => {
+								const isSelected = activeFactor?.key === f.key;
+								return (
+									<button
+										key={f.key}
+										type="button"
+										onClick={() => setActiveFactor(isSelected ? null : f)}
+										className={`px-2.5 py-1 rounded-lg text-left transition-all cursor-pointer active:scale-95 touch-manipulation ${
+											isSelected
+												? "bg-slate-900 text-white shadow-2xs"
+												: "bg-slate-50 border border-slate-200/60 text-slate-700 hover:bg-slate-100"
+										}`}
+									>
+										{f.label}:{" "}
+										<strong
+											className={
+												isSelected ? "text-amber-300" : "text-slate-900"
+											}
+										>
+											{f.valueStr}
+										</strong>
+									</button>
+								);
+							})}
 						</div>
+
+						{/* Inline Factor Detail for Global Macro */}
+						{activeFactor &&
+							globalRegime.factors.some((f) => f.key === activeFactor.key) && (
+								<div className="mt-3 bg-slate-900 text-white rounded-2xl p-3.5 sm:p-4 shadow-lg border border-slate-800 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+									<div className="flex items-center justify-between gap-2">
+										<div className="flex items-center gap-2 min-w-0">
+											<span className="text-xs font-black text-amber-400 uppercase tracking-wider truncate">
+												{activeFactor.label}
+											</span>
+											<span className="text-[10px] font-bold text-slate-400 truncate">
+												{activeFactor.valueStr} (Score: {activeFactor.score}
+												/100)
+											</span>
+										</div>
+										<button
+											type="button"
+											onClick={() => setActiveFactor(null)}
+											className="text-[10px] font-bold text-slate-300 hover:text-white px-2 py-0.5 bg-slate-800 rounded-md cursor-pointer shrink-0"
+										>
+											Close
+										</button>
+									</div>
+									<p className="text-xs text-slate-300 font-medium leading-relaxed">
+										{activeFactor.note}
+									</p>
+								</div>
+							)}
 					</div>
 				</div>
 			</div>

@@ -160,7 +160,7 @@ export default function FearAndGreedGauge({
 			<div className="flex flex-col lg:flex-row items-center gap-8 sm:gap-12 lg:gap-20">
 				{/* Main Gauge Visual - RingProgress Component */}
 				<div className="flex flex-col items-center flex-1">
-					<div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center mb-6 sm:mb-8">
+					<div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center mb-3 sm:mb-4">
 						<RingProgress
 							score={score}
 							rating={rating}

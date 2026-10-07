@@ -58,7 +58,7 @@ export const DEFAULT_THRESHOLDS: InvestmentThresholds = {
 	dxy: {
 		strong: 104.5,
 		neutral: 101.5,
-		weak: 99.0,
+		weak: 100.0,
 	},
 	us10y: {
 		stress: 4.5,
@@ -85,7 +85,7 @@ export const DEFAULT_THRESHOLDS: InvestmentThresholds = {
 		overnightShockPct: 5.0,
 		fundingOverheated: 0.03, // 0.03% per 8h
 		fundingHeavilyNegative: -0.02,
-		stablecoinExpansionPct: 2.0,
+		stablecoinExpansionPct: 1.5,
 		stablecoinContractionPct: -1.0,
 		altcoinBtcDominanceMax: 54.0,
 	},

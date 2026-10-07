@@ -186,10 +186,10 @@ export default function InvestmentCompassView({
 										<div
 											role="presentation"
 											aria-hidden="true"
-											className="fixed inset-0 z-40 cursor-default"
+											className="fixed inset-0 z-40 bg-slate-900/10 sm:bg-transparent cursor-default"
 											onClick={() => setShowSourcesPopover(false)}
 										/>
-										<div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl border border-slate-200/90 shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+										<div className="fixed inset-x-4 top-28 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-72 max-w-sm mx-auto sm:mx-0 bg-white rounded-2xl border border-slate-200/90 shadow-2xl sm:shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
 											<div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
 												<span className="text-xs font-black text-slate-900">
 													Data Stream Sources
@@ -261,10 +261,13 @@ export default function InvestmentCompassView({
 								<Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 shrink-0" />
 							</div>
 							<div>
-								<div className="flex items-baseline gap-1.5 sm:gap-2">
+								<div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2">
 									<span className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight truncate">
 										{ihsgQuote?.last
-											? Math.round(ihsgQuote.last).toLocaleString("id-ID")
+											? ihsgQuote.last.toLocaleString("en-US", {
+													minimumFractionDigits: 2,
+													maximumFractionDigits: 2,
+												})
 											: "---"}
 									</span>
 									{ihsgQuote?.changePct != null && (
@@ -275,8 +278,14 @@ export default function InvestmentCompassView({
 													: "text-rose-600"
 											}`}
 										>
-											{ihsgQuote.changePct >= 0 ? "+" : ""}
-											{ihsgQuote.changePct.toFixed(2)}%
+											{ihsgQuote.change != null && (
+												<span className="mr-1">
+													{ihsgQuote.change >= 0 ? "+" : ""}
+													{ihsgQuote.change.toFixed(1)}
+												</span>
+											)}
+											({ihsgQuote.changePct >= 0 ? "+" : ""}
+											{ihsgQuote.changePct.toFixed(2)}%)
 										</span>
 									)}
 								</div>
@@ -299,7 +308,7 @@ export default function InvestmentCompassView({
 								<DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
 							</div>
 							<div>
-								<div className="flex items-baseline gap-1.5 sm:gap-2">
+								<div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2">
 									<span className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight truncate">
 										{usdIdrQuote?.last
 											? `Rp ${Math.round(usdIdrQuote.last).toLocaleString("id-ID")}`
@@ -337,7 +346,7 @@ export default function InvestmentCompassView({
 								<Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
 							</div>
 							<div>
-								<div className="flex items-baseline gap-1.5 sm:gap-2">
+								<div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2">
 									<span className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight truncate">
 										{btcQuote?.last
 											? `$${Math.round(btcQuote.last).toLocaleString("en-US")}`
@@ -375,7 +384,7 @@ export default function InvestmentCompassView({
 								<Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 shrink-0" />
 							</div>
 							<div>
-								<div className="flex items-baseline gap-1.5 sm:gap-2">
+								<div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2">
 									<span className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
 										{cryptoScore ?? "---"}
 									</span>

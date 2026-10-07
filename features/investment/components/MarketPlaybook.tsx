@@ -203,53 +203,53 @@ export default function MarketPlaybook({
 			</div>
 
 			{/* Safe Bucket Preservation Anchor Card */}
-			<div className="bg-slate-900 text-white rounded-[2rem] p-5 sm:p-7 shadow-xl border border-slate-800 space-y-4">
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+			<div className="bg-white rounded-[2rem] p-5 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 text-amber-400 flex items-center justify-center shrink-0 shadow-2xs">
+						<div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
 							<Vault className="w-5 h-5" />
 						</div>
 						<div>
-							<h3 className="text-base sm:text-lg font-black tracking-tight text-white">
+							<h3 className="text-base sm:text-lg font-black tracking-tight text-slate-900">
 								Safe Yield &amp; Preservation Anchor (40% Target)
 							</h3>
-							<p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+							<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
 								Retail SBN, Bank Deposits, Physical Gold
 							</p>
 						</div>
 					</div>
 
-					<span className="px-3 py-1 bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded-xl text-xs font-black tracking-wide shrink-0 self-start sm:self-auto">
+					<span className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-xl text-xs font-black tracking-wide shrink-0 self-start sm:self-auto">
 						Risk-Free Baseline
 					</span>
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
-					<div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 space-y-1">
-						<span className="text-[10px] font-black uppercase text-amber-400 block">
+					<div className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+						<span className="text-[10px] font-black uppercase text-amber-800 block">
 							Retail SBN (ORI / SBR / ST)
 						</span>
-						<p className="text-slate-300 font-medium leading-relaxed">
+						<p className="text-slate-600 font-medium leading-relaxed">
 							Sovereign guarantee backing 6.0% - 6.75% coupon yield. Provides
 							dependable monthly cash flow immune to equity drawdowns.
 						</p>
 					</div>
 
-					<div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 space-y-1">
-						<span className="text-[10px] font-black uppercase text-amber-400 block">
+					<div className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+						<span className="text-[10px] font-black uppercase text-amber-800 block">
 							Liquid Bank Deposits (RDN)
 						</span>
-						<p className="text-slate-300 font-medium leading-relaxed">
+						<p className="text-slate-600 font-medium leading-relaxed">
 							Instant liquidity dry powder. Ready to be deployed into planned
 							tranches when blue-chips reach multi-year support.
 						</p>
 					</div>
 
-					<div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 space-y-1">
-						<span className="text-[10px] font-black uppercase text-amber-400 block">
+					<div className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+						<span className="text-[10px] font-black uppercase text-amber-800 block">
 							Physical Gold (LM Antam)
 						</span>
-						<p className="text-slate-300 font-medium leading-relaxed">
+						<p className="text-slate-600 font-medium leading-relaxed">
 							Hedge against Rupiah depreciation and long-term fiat monetary
 							debasement. Rebalance when weight exceeds 15%.
 						</p>

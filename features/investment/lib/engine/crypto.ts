@@ -20,11 +20,47 @@ export function scoreCrypto(
 	const factors: RegimeFactor[] = [];
 	const contextFlags: string[] = [];
 
+	const halving = getHalvingCyclePhase();
+
+	// Dynamic weight calibration based on 4-year Halving Cycle phase
+	let wBtc200 = 25;
+	let wBtc50 = 10;
+	let wStablecoins = 20;
+	let wFunding = 15;
+	let wFng = 10;
+	let wMacro = 20;
+
+	if (halving.monthsElapsed >= 6 && halving.monthsElapsed < 18) {
+		// Parabolic / Euphoria window: Elevate contrarian exhaustion risk (funding + extreme greed)
+		wBtc200 = 20;
+		wBtc50 = 5;
+		wStablecoins = 20;
+		wFunding = 20;
+		wFng = 15;
+		wMacro = 20;
+	} else if (halving.monthsElapsed >= 18 && halving.monthsElapsed < 30) {
+		// Late-Cycle Distribution: Liquidity redemptions and macro discount rate matter most
+		wBtc200 = 25;
+		wBtc50 = 5;
+		wStablecoins = 25;
+		wFunding = 10;
+		wFng = 10;
+		wMacro = 25;
+	} else if (halving.monthsElapsed >= 30) {
+		// Bear Market Floor & Reset: Structural 200D MA baseline reclaim and deep value
+		wBtc200 = 30;
+		wBtc50 = 10;
+		wStablecoins = 15;
+		wFunding = 10;
+		wFng = 15;
+		wMacro = 20;
+	}
+
 	const btcQuote = data.markets.quotes.BTC;
 	const btcPrice = btcQuote?.last ?? null;
 	const btcDaily = data.markets.history?.["BTC-USD"]?.points ?? [];
 
-	// 1. BTC vs 200-Day Moving Average - Weight 25
+	// 1. BTC vs 200-Day Moving Average
 	const ma200 = sma(btcDaily, 200);
 	if (btcPrice != null && ma200 != null) {
 		const dist200 = distancePct(btcPrice, ma200);
@@ -37,7 +73,7 @@ export function scoreCrypto(
 			label: "Bitcoin vs 200-Day Moving Average",
 			valueStr: `$${Math.round(btcPrice).toLocaleString("en-US")} (MA: $${Math.round(ma200).toLocaleString("en-US")})`,
 			score,
-			weight: 25,
+			weight: wBtc200,
 			direction: dir,
 			note: isAbove
 				? `BTC trades +${dist200?.toFixed(1)}% above 200D MA. Macro cycle structure is bullish.`
@@ -46,7 +82,7 @@ export function scoreCrypto(
 		});
 	}
 
-	// 2. BTC 50-Day MA Momentum - Weight 10
+	// 2. BTC 50-Day MA Momentum
 	const ma50 = sma(btcDaily, 50);
 	const slope50 = maSlopePct(btcDaily, 50, 10);
 	if (btcPrice != null && ma50 != null) {
@@ -62,7 +98,7 @@ export function scoreCrypto(
 			label: "BTC Intermediate Momentum (50D MA)",
 			valueStr: `${isAbove50 ? "Above" : "Below"} (${dist50 != null && dist50 > 0 ? "+" : ""}${dist50?.toFixed(1)}%)`,
 			score,
-			weight: 10,
+			weight: wBtc50,
 			direction: dir,
 			note: isAbove50
 				? "Intermediate momentum supportive; moving averages stacked in bullish alignment."
@@ -71,7 +107,7 @@ export function scoreCrypto(
 		});
 	}
 
-	// 3. Stablecoin Net Issuance / Supply 30D Trend - Weight 20
+	// 3. Stablecoin Net Issuance / Supply 30D Trend
 	const flows = data.markets.cryptoFlows;
 	if (flows?.stablecoin30dChangePct != null) {
 		const change = flows.stablecoin30dChangePct;
@@ -94,7 +130,7 @@ export function scoreCrypto(
 			label: "Stablecoin 30-Day Net Liquidity Flow",
 			valueStr: `${change >= 0 ? "+" : ""}${change.toFixed(2)}%`,
 			score,
-			weight: 20,
+			weight: wStablecoins,
 			direction: dir,
 			note:
 				change > 0
@@ -103,7 +139,7 @@ export function scoreCrypto(
 		});
 	}
 
-	// 4. BTC Perpetual Funding Rate - Weight 15
+	// 4. BTC Perpetual Funding Rate
 	if (flows?.btcFundingRate8hPct != null) {
 		const funding = flows.btcFundingRate8hPct;
 		let score = 50;
@@ -125,7 +161,7 @@ export function scoreCrypto(
 			label: "Perpetual Swap Funding Rate (8h)",
 			valueStr: `${funding >= 0 ? "+" : ""}${funding.toFixed(3)}%`,
 			score,
-			weight: 15,
+			weight: wFunding,
 			direction: dir,
 			note:
 				funding >= thresholds.crypto.fundingOverheated
@@ -134,7 +170,7 @@ export function scoreCrypto(
 		});
 	}
 
-	// 5. Crypto Fear & Greed Index (Contrarian) - Weight 10
+	// 5. Crypto Fear & Greed Index (Contrarian)
 	const cryptoFngStr = data.sentiment.crypto?.data?.[0]?.value;
 	if (cryptoFngStr) {
 		const fngNum = parseInt(cryptoFngStr, 10);
@@ -157,7 +193,7 @@ export function scoreCrypto(
 				label: "Crypto Fear & Greed Index",
 				valueStr: `${fngNum}/100`,
 				score,
-				weight: 10,
+				weight: wFng,
 				direction: dir,
 				note:
 					fngNum >= 75
@@ -169,20 +205,19 @@ export function scoreCrypto(
 		}
 	}
 
-	// 6. Global Liquidity Carry-in - Weight 20
+	// 6. Global Liquidity Carry-in
 	factors.push({
 		key: "crypto_macro_carry",
 		label: "Global Macro Liquidity Carry-In",
 		valueStr: `${globalScore}/100`,
 		score: globalScore,
-		weight: 20,
+		weight: wMacro,
 		direction:
 			globalScore >= 60 ? "bullish" : globalScore <= 40 ? "bearish" : "neutral",
 		note: "Global dollar liquidity strongly dictates high-beta risk asset flows.",
 	});
 
 	// Context Check: Halving Cycle Phase
-	const halving = getHalvingCyclePhase();
 	contextFlags.push(
 		`Halving Month +${halving.monthsElapsed}: ${halving.phase}`,
 	);
@@ -199,6 +234,18 @@ export function scoreCrypto(
 				`Softening BTC Dominance (${btcDom.toFixed(1)}%) — Alt-Rotation Watch`,
 			);
 		}
+	}
+
+	// Context Check: On-Chain Valuation (MVRV Z-Score)
+	if (data.markets.cryptoOnChain?.mvrvZScore != null) {
+		const z = data.markets.cryptoOnChain.mvrvZScore;
+		contextFlags.push(
+			z > 4.0
+				? `MVRV Z-Score (${z.toFixed(2)}) — Historic Cycle Overheat`
+				: z < 0.1
+					? `MVRV Z-Score (${z.toFixed(2)}) — Generational Accumulation Floor`
+					: `MVRV Z-Score (${z.toFixed(2)}) — Fair Value Range`,
+		);
 	}
 
 	// Compute Weighted Composite

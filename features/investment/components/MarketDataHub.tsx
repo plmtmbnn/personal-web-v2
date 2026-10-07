@@ -80,7 +80,7 @@ export default function MarketDataHub({
 					</div>
 				</div>
 
-				<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar -mx-1 px-1 sm:mx-0 sm:px-0">
+				<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-2 px-2 sm:mx-0 sm:px-0">
 					{TABS.map((tab) => {
 						const isActive = activeTab === tab.id;
 						const Icon = tab.icon;
@@ -117,7 +117,7 @@ export default function MarketDataHub({
 						{/* ── 1. Indonesia (IDX) Tab ──────────────────────────── */}
 						{activeTab === "indonesia" && (
 							<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
-								<div className="flex items-center justify-between border-b border-slate-100 pb-4">
+								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
 									<div>
 										<h4 className="text-base sm:text-lg font-black text-slate-900">
 											Indonesia Domestic Market Data
@@ -126,7 +126,7 @@ export default function MarketDataHub({
 											Composite Index (IHSG), Currency, and Sovereign Rates
 										</p>
 									</div>
-									<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
+									<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 self-start sm:self-auto">
 										IDX Composite (^JKSE)
 									</span>
 								</div>
@@ -137,9 +137,14 @@ export default function MarketDataHub({
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
 											IHSG Index Level
 										</span>
-										<div className="flex items-baseline gap-2">
+										<div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
 											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{ihsgPrice ? ihsgPrice.toLocaleString("id-ID") : "---"}
+												{ihsgPrice
+													? ihsgPrice.toLocaleString("en-US", {
+															minimumFractionDigits: 2,
+															maximumFractionDigits: 2,
+														})
+													: "---"}
 											</span>
 											{ihsgQuote?.changePct != null && (
 												<span
@@ -149,15 +154,26 @@ export default function MarketDataHub({
 															: "text-rose-600"
 													}`}
 												>
-													{ihsgQuote.changePct >= 0 ? "+" : ""}
-													{ihsgQuote.changePct.toFixed(2)}%
+													{ihsgQuote.change != null && (
+														<span className="mr-1">
+															{ihsgQuote.change >= 0 ? "+" : ""}
+															{ihsgQuote.change.toFixed(1)}
+														</span>
+													)}
+													({ihsgQuote.changePct >= 0 ? "+" : ""}
+													{ihsgQuote.changePct.toFixed(2)}%)
 												</span>
 											)}
 										</div>
 										<p className="text-[11px] text-slate-500">
 											52W High:{" "}
 											<strong>
-												{ihsgQuote?.high52w?.toLocaleString("id-ID") ?? "---"}
+												{ihsgQuote?.high52w
+													? ihsgQuote.high52w.toLocaleString("en-US", {
+															minimumFractionDigits: 2,
+															maximumFractionDigits: 2,
+														})
+													: "---"}
 											</strong>
 										</p>
 									</div>
@@ -167,10 +183,13 @@ export default function MarketDataHub({
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
 											200-Day Moving Average
 										</span>
-										<div className="flex items-baseline gap-2">
+										<div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
 											<span className="text-xl sm:text-2xl font-black text-slate-900">
 												{ihsgMa200
-													? Math.round(ihsgMa200).toLocaleString("id-ID")
+													? ihsgMa200.toLocaleString("en-US", {
+															minimumFractionDigits: 2,
+															maximumFractionDigits: 2,
+														})
 													: "---"}
 											</span>
 											{ihsgPrice && ihsgMa200 && (
@@ -196,10 +215,13 @@ export default function MarketDataHub({
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
 											50-Day Moving Average
 										</span>
-										<div className="flex items-baseline gap-2">
+										<div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
 											<span className="text-xl sm:text-2xl font-black text-slate-900">
 												{ihsgMa50
-													? Math.round(ihsgMa50).toLocaleString("id-ID")
+													? ihsgMa50.toLocaleString("en-US", {
+															minimumFractionDigits: 2,
+															maximumFractionDigits: 2,
+														})
 													: "---"}
 											</span>
 											{ihsgPrice && ihsgMa50 && (

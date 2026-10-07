@@ -9,6 +9,10 @@ interface YahooChartMeta {
 	regularMarketPrice?: number;
 	chartPreviousClose?: number;
 	previousClose?: number;
+	regularMarketChange?: number;
+	regularMarketChangePercent?: number;
+	fulldayChange?: number;
+	fulldayChangePercent?: number;
 	regularMarketDayHigh?: number;
 	regularMarketDayLow?: number;
 	fiftyTwoWeekHigh?: number;
@@ -21,7 +25,8 @@ const finite = (value: unknown): number | null =>
 
 /**
  * Normalises Yahoo chart metadata into a MarketQuote.
- * Uses a 1-day range so `chartPreviousClose` equals the prior session close.
+ * Prefers explicit change and percentage figures provided by Yahoo,
+ * falling back to calculated differences against previous close.
  */
 export function normalizeYahooMeta(
 	meta: YahooChartMeta,
@@ -30,11 +35,31 @@ export function normalizeYahooMeta(
 	const last = finite(meta?.regularMarketPrice);
 	if (last === null) return null;
 
+	// Prefer official market change metrics reported by Yahoo Finance
+	const explicitChange =
+		finite(meta.regularMarketChange) ?? finite(meta.fulldayChange);
+	const explicitChangePct =
+		finite(meta.regularMarketChangePercent) ??
+		finite(meta.fulldayChangePercent);
+
 	const previousClose =
-		finite(meta.previousClose) ?? finite(meta.chartPreviousClose);
-	const change = previousClose !== null ? last - previousClose : null;
+		finite(meta.previousClose) ??
+		(explicitChange !== null ? last - explicitChange : null) ??
+		finite(meta.chartPreviousClose);
+
+	const change =
+		explicitChange !== null
+			? explicitChange
+			: previousClose !== null
+				? last - previousClose
+				: null;
+
 	const changePct =
-		previousClose && change !== null ? (change / previousClose) * 100 : null;
+		explicitChangePct !== null
+			? explicitChangePct
+			: previousClose && change !== null
+				? (change / previousClose) * 100
+				: null;
 
 	return {
 		symbol: meta.symbol || requestedSymbol,

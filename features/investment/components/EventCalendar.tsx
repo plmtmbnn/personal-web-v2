@@ -84,7 +84,7 @@ export default function EventCalendar() {
 					</div>
 
 					{/* Filter Pills */}
-					<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+					<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-1 px-1 sm:mx-0 sm:px-0">
 						{filters.map((f) => (
 							<button
 								type="button"

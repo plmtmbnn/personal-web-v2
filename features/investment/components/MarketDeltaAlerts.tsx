@@ -71,6 +71,20 @@ export default function MarketDeltaAlerts({
 			});
 		}
 
+		// 5. Data Telemetry Stale / Offline Check
+		if (data.sources) {
+			const degradedSources = Object.entries(data.sources)
+				.filter(([_, s]) => s.stale || !s.ok)
+				.map(([_, s]) => s.label);
+
+			if (degradedSources.length > 0) {
+				activeAlerts.push({
+					message: `Data Telemetry Alert: Operating on cached backup data for ${degradedSources.join(", ")}. Verify live broker prices before trading.`,
+					type: "warning",
+				});
+			}
+		}
+
 		return activeAlerts;
 	}, [data]);
 

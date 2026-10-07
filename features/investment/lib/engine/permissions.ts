@@ -56,6 +56,7 @@ export function derivePermissions(
 					reason: "Accumulate core blue-chip tranches on regular schedule.",
 				},
 				maxExposure: "100% of Trading Bucket (Risk max 1% per setup)",
+				riskPerTrade: "Risk max 1.0% per setup",
 			};
 			break;
 
@@ -78,6 +79,7 @@ export function derivePermissions(
 					reason: "Continue scheduled blue-chip DCA near key support levels.",
 				},
 				maxExposure: "75% of Trading Bucket Cap",
+				riskPerTrade: "Risk max 0.5% - 0.75% per setup",
 			};
 			break;
 
@@ -101,6 +103,7 @@ export function derivePermissions(
 						"Halve monthly DCA pace to preserve dry powder in SBN / cash.",
 				},
 				maxExposure: "50% of Core Allocation — Zero Active Swings",
+				riskPerTrade: "0% (Swing Trading Closed)",
 			};
 			break;
 
@@ -124,6 +127,7 @@ export function derivePermissions(
 						"Pause market orders. Deploy only predetermined tranches on multi-year support.",
 				},
 				maxExposure: "Trading Bucket Frozen (0% active risk)",
+				riskPerTrade: "0% (Trading Frozen)",
 			};
 			break;
 	}
@@ -156,6 +160,7 @@ export function derivePermissions(
 					reason: "Regular DCA into BTC/ETH cold storage.",
 				},
 				maxExposure: "Standard Allocation (<= 20% of net wealth)",
+				riskPerTrade: "Risk max 1.0% per setup (Spot only)",
 			};
 			break;
 
@@ -179,6 +184,7 @@ export function derivePermissions(
 					reason: "Disciplined accumulation near range support.",
 				},
 				maxExposure: "15% of net wealth max",
+				riskPerTrade: "Risk max 0.5% per setup (Strict stop)",
 			};
 			break;
 
@@ -201,6 +207,7 @@ export function derivePermissions(
 					reason: "Accumulate Bitcoin spot only at 50% normal pace.",
 				},
 				maxExposure: "10% of net wealth — Hold Stablecoins",
+				riskPerTrade: "0% (Spot DCA only at deep cycle)",
 			};
 			break;
 
@@ -223,30 +230,67 @@ export function derivePermissions(
 						"Spot accumulation restricted to 200-week MA deep value zones.",
 				},
 				maxExposure: "Trading Frozen — Maximum Stablecoin Defense",
+				riskPerTrade: "0% (Trading Frozen)",
 			};
 			break;
 	}
 
 	// ── 3. Altcoin Gating Protocol ──────────────────────────────
-	// Hard Gate: Altcoins are locked unless ALL 3 conditions pass:
-	// 1. Crypto regime is risk_on
-	// 2. BTC is above 200D MA
-	// 3. BTC Dominance <= altcoinBtcDominanceMax (54%)
+	// Hard Gate: Altcoins are locked unless BTC is above 200D MA and Dominance is below cap
 	const btcDom = options?.btcDominance ?? 55;
 	const btcAbove200 = options?.btcAbove200Ma ?? false;
-	const altcoinGatingPass =
-		cryptoRegime.state === "risk_on" &&
-		btcAbove200 &&
-		btcDom <= thresholds.crypto.altcoinBtcDominanceMax;
 
 	let altcoinPerms: MarketPermissions;
 
-	if (altcoinGatingPass) {
+	if (!btcAbove200) {
+		altcoinPerms = {
+			scalp: {
+				status: "not_allowed",
+				label: "Locked Out",
+				reason: "Bitcoin is trading below its 200-Day moving average.",
+			},
+			swing: {
+				status: "not_allowed",
+				label: "Locked Out",
+				reason:
+					"Macro crypto structure is bearish; altcoins face severe drawdown risk.",
+			},
+			dca: {
+				status: "not_allowed",
+				label: "Forbidden",
+				reason: "Never DCA into downtrending altcoins.",
+			},
+			maxExposure: "0% (Hard Locked Below BTC 200D MA)",
+			riskPerTrade: "0% (Hard Locked)",
+		};
+	} else if (btcDom > thresholds.crypto.altcoinBtcDominanceMax) {
+		altcoinPerms = {
+			scalp: {
+				status: "not_allowed",
+				label: "Locked Out",
+				reason: `BTC Dominance is high (${btcDom.toFixed(1)}% > ${thresholds.crypto.altcoinBtcDominanceMax}%). Capital is concentrating in Bitcoin.`,
+			},
+			swing: {
+				status: "not_allowed",
+				label: "Locked Out",
+				reason: `BTC Dominance is high (${btcDom.toFixed(1)}%). Bitcoin absorbing market liquidity; altcoins underperforming BTC.`,
+			},
+			dca: {
+				status: "not_allowed",
+				label: "Forbidden",
+				reason: "Altcoins strictly non-DCA assets.",
+			},
+			maxExposure: "0% (Capital Concentrating in BTC)",
+			riskPerTrade: "0% (Concentrated in BTC)",
+		};
+	} else if (cryptoRegime.state === "risk_on") {
+		// Full Alt-Season expansion conditions met
 		altcoinPerms = {
 			scalp: {
 				status: "selective",
 				label: "Selective (Major L1s)",
-				reason: "Alt-season liquidity rotation active. High-beta majors only.",
+				reason:
+					"Alt-season liquidity rotation active. High-beta ecosystem majors only.",
 			},
 			swing: {
 				status: "selective",
@@ -261,24 +305,50 @@ export function derivePermissions(
 					"Altcoins are momentum trading vehicles, not multi-cycle DCA assets.",
 			},
 			maxExposure: "Hard Cap <= 3.0% of Total Wealth",
+			riskPerTrade: "Risk max 0.5% per setup (Strict trailing stop)",
 		};
-	} else {
-		let reason = "Crypto regime is not Risk-On.";
-		if (btcDom > thresholds.crypto.altcoinBtcDominanceMax) {
-			reason = `BTC Dominance is high (${btcDom.toFixed(1)}%). Liquidity is concentrated in Bitcoin.`;
-		} else if (!btcAbove200) {
-			reason = "Bitcoin is trading below its 200-Day moving average.";
-		}
-
+	} else if (cryptoRegime.state === "selective") {
+		// BTC range consolidation with low dominance -> tactical major rotation
 		altcoinPerms = {
-			scalp: { status: "not_allowed", label: "Locked Out", reason },
-			swing: { status: "not_allowed", label: "Locked Out", reason },
+			scalp: {
+				status: "selective",
+				label: "Selective (Top 10)",
+				reason:
+					"BTC consolidating with softening dominance. Intraday setups on liquid majors only.",
+			},
+			swing: {
+				status: "selective",
+				label: "Selective (Tight Trailing)",
+				reason:
+					"Tactical swings on Top-10 majors with strict breakeven stops at +1.5R.",
+			},
 			dca: {
 				status: "not_allowed",
 				label: "Forbidden",
-				reason: "Never DCA into downtrending altcoins.",
+				reason: "Never DCA into altcoins during consolidation.",
 			},
-			maxExposure: "0% (Banned in Current Regime)",
+			maxExposure: "Hard Cap <= 1.5% of Total Wealth (Top 10 Majors Spot Only)",
+			riskPerTrade: "Risk max 0.25% per setup (Tight stop)",
+		};
+	} else {
+		altcoinPerms = {
+			scalp: {
+				status: "not_allowed",
+				label: "Locked Out",
+				reason: "Crypto macro regime is defensive/stress.",
+			},
+			swing: {
+				status: "not_allowed",
+				label: "Locked Out",
+				reason: "Risk-off regime; preserve capital in BTC or stablecoins.",
+			},
+			dca: {
+				status: "not_allowed",
+				label: "Forbidden",
+				reason: "Zero altcoin accumulation allowed in risk-off.",
+			},
+			maxExposure: "0% (Locked in Risk-Off)",
+			riskPerTrade: "0% (Locked in Risk-Off)",
 		};
 	}
 

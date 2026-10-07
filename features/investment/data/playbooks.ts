@@ -38,8 +38,8 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"IHSG closes below 50-day MA or USD/IDR spikes above 50-day MA on heavy volume.",
 			focusSectors: [
 				"Big 4 Banks (BBCA, BMRI, BBNI, BBRI)",
-				"Infrastructure & Telco (TLKM)",
-				"Consumer Non-Cyclical (ICBP, INDF)",
+				"New Economy & Energy Proxies (BREN, AMMN, ADRO)",
+				"Consumer & Infrastructure Leaders (ICBP, ASII, TLKM)",
 			],
 		},
 		selective: {
@@ -61,9 +61,9 @@ export const PLAYBOOK_SCRIPTS: Record<
 			invalidation:
 				"Daily breakdown below 200-day MA with foreign net selling streak.",
 			focusSectors: [
-				"Defensive Banks (BBCA, BMRI)",
-				"Consumer Staples (ICBP)",
-				"Essential Telco (TLKM)",
+				"Defensive Tier-1 Banks (BBCA, BMRI)",
+				"Consumer Staples (ICBP, MYOR)",
+				"High-Yield Dividend Aristocrats (ADRO, ASII)",
 			],
 		},
 		defensive: {

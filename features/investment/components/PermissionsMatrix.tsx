@@ -210,15 +210,20 @@ export default function PermissionsMatrix({
 											</div>
 										</td>
 
-										{/* Max Exposure */}
+										{/* Max Exposure & Sizing */}
 										<td className="py-4 pl-4 align-top w-1/6">
 											<div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
 												<span className="text-[10px] font-black uppercase text-slate-400 block mb-0.5">
-													Cap
+													Cap &amp; Risk
 												</span>
 												<span className="text-[11px] font-extrabold text-slate-800 leading-snug block">
 													{row.data.maxExposure}
 												</span>
+												{row.data.riskPerTrade && (
+													<span className="text-[10px] font-bold text-indigo-600 mt-1 block">
+														{row.data.riskPerTrade}
+													</span>
+												)}
 											</div>
 										</td>
 									</tr>
@@ -238,73 +243,87 @@ export default function PermissionsMatrix({
 						return (
 							<div
 								key={idx}
-								className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/80 space-y-3"
+								className="bg-slate-50/60 rounded-2xl p-4 border border-slate-200/80 space-y-3"
 							>
-								<div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+								{/* Card Header */}
+								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-200/70 pb-3">
 									<div>
-										<h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+										<h4 className="font-black text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
 											{row.isGated && (
-												<Lock className="w-3.5 h-3.5 text-rose-500" />
+												<Lock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
 											)}
-											{row.market}
+											<span>{row.market}</span>
 										</h4>
-										<p className="text-[10px] text-slate-500">{row.subtitle}</p>
+										<p className="text-[11px] text-slate-500 font-medium">
+											{row.subtitle}
+										</p>
 									</div>
-									<span className="text-[10px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
-										{row.data.maxExposure}
-									</span>
+									<div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
+										<span className="text-[10px] font-bold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+											Cap: {row.data.maxExposure}
+										</span>
+										{row.data.riskPerTrade && (
+											<span className="text-[10px] font-bold text-indigo-700 bg-indigo-50/90 px-2.5 py-1 rounded-lg border border-indigo-100">
+												{row.data.riskPerTrade}
+											</span>
+										)}
+									</div>
 								</div>
 
-								<div className="grid grid-cols-1 gap-2 pt-1 text-xs">
-									<div className="flex items-start justify-between gap-2 p-2 bg-white rounded-xl border border-slate-100">
-										<span className="text-[11px] font-extrabold text-slate-500">
-											Scalping
-										</span>
-										<div className="text-right">
+								{/* Action Rows */}
+								<div className="space-y-2 pt-0.5">
+									{/* Scalping */}
+									<div className="p-3 bg-white rounded-xl border border-slate-200/70 space-y-1.5 shadow-2xs">
+										<div className="flex items-center justify-between gap-2">
+											<span className="text-xs font-bold text-slate-700">
+												Scalping (Intraday)
+											</span>
 											<span
-												className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black border ${scalpBadge.bg}`}
+												className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${scalpBadge.bg}`}
 											>
 												{scalpBadge.icon}
 												{row.data.scalp.label}
 											</span>
-											<p className="text-[9px] text-slate-400 mt-0.5 max-w-[180px]">
-												{row.data.scalp.reason}
-											</p>
 										</div>
+										<p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+											{row.data.scalp.reason}
+										</p>
 									</div>
 
-									<div className="flex items-start justify-between gap-2 p-2 bg-white rounded-xl border border-slate-100">
-										<span className="text-[11px] font-extrabold text-slate-500">
-											Swing Trade
-										</span>
-										<div className="text-right">
+									{/* Swing */}
+									<div className="p-3 bg-white rounded-xl border border-slate-200/70 space-y-1.5 shadow-2xs">
+										<div className="flex items-center justify-between gap-2">
+											<span className="text-xs font-bold text-slate-700">
+												Swing Trade
+											</span>
 											<span
-												className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black border ${swingBadge.bg}`}
+												className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${swingBadge.bg}`}
 											>
 												{swingBadge.icon}
 												{row.data.swing.label}
 											</span>
-											<p className="text-[9px] text-slate-400 mt-0.5 max-w-[180px]">
-												{row.data.swing.reason}
-											</p>
 										</div>
+										<p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+											{row.data.swing.reason}
+										</p>
 									</div>
 
-									<div className="flex items-start justify-between gap-2 p-2 bg-white rounded-xl border border-slate-100">
-										<span className="text-[11px] font-extrabold text-slate-500">
-											Core DCA
-										</span>
-										<div className="text-right">
+									{/* DCA */}
+									<div className="p-3 bg-white rounded-xl border border-slate-200/70 space-y-1.5 shadow-2xs">
+										<div className="flex items-center justify-between gap-2">
+											<span className="text-xs font-bold text-slate-700">
+												Core DCA
+											</span>
 											<span
-												className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black border ${dcaBadge.bg}`}
+												className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${dcaBadge.bg}`}
 											>
 												{dcaBadge.icon}
 												{row.data.dca.label}
 											</span>
-											<p className="text-[9px] text-slate-400 mt-0.5 max-w-[180px]">
-												{row.data.dca.reason}
-											</p>
 										</div>
+										<p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+											{row.data.dca.reason}
+										</p>
 									</div>
 								</div>
 							</div>

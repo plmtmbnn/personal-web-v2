@@ -181,9 +181,11 @@ export function scoreGlobalLiquidity(
 			weight: 15,
 			direction: dir,
 			note:
-				rate >= 5.0
-					? "Restrictive policy stance keeping global borrowing costs elevated."
-					: "Neutral or easing central bank monetary policy.",
+				rate >= 5.25
+					? "Peak restrictive policy stance keeping global borrowing costs elevated."
+					: rate <= 4.5
+						? "Easing monetary policy providing supportive global liquidity tailwinds."
+						: "Transitioning interest rate policy within neutral-to-restrictive bounds.",
 			asOf: fedFundsObj.date,
 		});
 	}

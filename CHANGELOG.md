@@ -1,3 +1,10 @@
+# [0.99.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.98.0...v0.99.0) (2026-10-07)
+
+
+### Features
+
+* **stock-explorer:** enhance idx microstructure, bandarmology and telemetry strip ([2ef9bd3](https://github.com/plmtmbnn/personal-web-v2/commit/2ef9bd3156f771b8314128a767ea5b7f6a71d073))
+
 # [0.98.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.97.0...v0.98.0) (2026-10-07)
 
 

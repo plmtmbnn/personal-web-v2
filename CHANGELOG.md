@@ -1,3 +1,10 @@
+# [0.98.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.97.0...v0.98.0) (2026-10-07)
+
+
+### Features
+
+* **investment:** enhance decision engine v2, mobile responsiveness and market telemetry ([07ca209](https://github.com/plmtmbnn/personal-web-v2/commit/07ca2098314fe631a45816c09f9a66add0a06f56))
+
 # [0.97.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.96.2...v0.97.0) (2026-10-05)
 
 

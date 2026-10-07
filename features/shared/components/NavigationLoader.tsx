@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 /**
@@ -10,24 +10,17 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
  * Inspired by NProgress but built with Framer Motion — no extra dependencies.
  *
  * Detection strategy:
- *  - Watch `pathname` and `searchParams` changes.
+ *  - Watch `pathname` changes (cross-page routing).
  *  - On change, show a progress bar that animates to ~85%.
  *  - Hide it shortly after the new route settles.
  */
 export default function NavigationLoader() {
 	const pathname = usePathname();
-	const searchParams = useSearchParams();
 	const reduceMotion = useReducedMotion();
 	const [isLoading, setIsLoading] = useState(false);
 	const isFirstMount = useRef(true);
 
-	// Derive a stable key for the current location
-	const locationKey = useMemo(() => {
-		const params = searchParams?.toString() ?? "";
-		return `${pathname}?${params}`;
-	}, [pathname, searchParams]);
-
-	// Trigger loader on location change (skip first mount)
+	// Trigger loader on route navigation (skip first mount and ignore shallow query changes)
 	useEffect(() => {
 		if (isFirstMount.current) {
 			isFirstMount.current = false;
@@ -36,7 +29,7 @@ export default function NavigationLoader() {
 		setIsLoading(true);
 		const timeout = setTimeout(() => setIsLoading(false), 800);
 		return () => clearTimeout(timeout);
-	}, [locationKey]);
+	}, [pathname]);
 
 	return (
 		<AnimatePresence>

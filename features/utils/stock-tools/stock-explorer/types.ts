@@ -64,12 +64,24 @@ export type OpportunityCategory =
 	| "Value"
 	| "Blue Chip"
 	| "Foreign Accumulation"
+	| "Bandar Accumulation"
+	| "ARB Reversal"
 	| "Watchlist"
 	| "Weak Trend";
 
+export type TurnoverTier = "Illiquid" | "Low" | "Mid" | "High" | "Mega";
+export type AutoRejectionStatus =
+	| "ARA"
+	| "Near ARA"
+	| "ARB"
+	| "Near ARB"
+	| "Normal";
+
 export interface ProcessedStock extends IDXStock {
 	ForeignNet: number;
+	ForeignNetVol: number;
 	ChangePct: number;
+	MarketCap: number;
 	IsHighVolume: boolean;
 	Sector: Sector;
 	CompositeScore: number;
@@ -77,6 +89,31 @@ export interface ProcessedStock extends IDXStock {
 	Fundamentals: FundamentalData;
 	// Technical signals
 	Trend: "Up" | "Down" | "Sideways";
+	// Indonesian Microstructure & Bandarmology Telemetry
+	TurnoverTier: TurnoverTier;
+	BidOfferPressure: number; // 0-100%
+	AvgValuePerTx: number; // IDR per transaction (Whale proxy)
+	NegoRatio: number; // 0-100% (Non-regular crossing share)
+	ARALimitPrice: number;
+	ARBLimitPrice: number;
+	ARARisk: AutoRejectionStatus;
+}
+
+export interface MarketHealth {
+	marketReturn: number;
+	avgReturn: number;
+	sentimentScore: number;
+	sentimentLabel: string;
+	netForeign: number;
+	netForeignValue: number;
+	netForeignVolume: number;
+	totalForeignBuy: number;
+	totalForeignSell: number;
+	totalVolume: number;
+	totalValue: number;
+	advancers: number;
+	decliners: number;
+	unchanged: number;
 }
 
 export type SortKey = keyof ProcessedStock;

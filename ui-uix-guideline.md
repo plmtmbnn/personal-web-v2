@@ -729,3 +729,52 @@ The Investment Compass is an executive-level, risk-first capital preservation hu
   - In accordance with §1.3, operational dashboard cards and capital anchors (such as the Safe Yield & Preservation 40% Anchor in `MarketPlaybook.tsx`) MUST use pure white containers (`bg-white rounded-[2rem] border border-slate-200/80 shadow-xs`).
   - Dark slate monoliths (`bg-slate-900`) are strictly forbidden as full cards in dashboard flows — they create oppressive visual dead zones and clash with the signature light textured canvas (`bg-slate-50/80 bg-dot-pattern`).
   - Accentuate high-priority safe anchors using high-contrast warm amber badge squircles, clean slate sub-cards (`bg-slate-50 border border-slate-100/80 rounded-2xl`), and confident typographic contrast.
+
+---
+
+## 28. Indonesian Stock Explorer & Microstructure Telemetry Standards (`/utils/stock-explorer`)
+
+The Indonesian Stock Explorer provides algorithmic screening, institutional foreign flow tracking, and market microstructure analysis calibrated specifically for IDX (Indonesia Stock Exchange) trading dynamics.
+
+### 28.1 Symmetrical Auto-Rejection (ARA/ARB) & Board Price Limits
+* **Symmetrical Percentage Boundaries**:
+  - IDX enforces symmetrical price limit tiers:
+    - **Price < Rp 200**: ±35% limit.
+    - **Price Rp 200 – Rp 5,000**: ±25% limit.
+    - **Price > Rp 5,000**: ±20% limit.
+* **Acceleration Board & Special Monitoring Board (PPK) Tolerance**:
+  - Stocks listed on the Acceleration Board or Special Monitoring Board trade below the traditional Rp 50 floor down to Rp 1.
+  - Auto-rejection calculation logic MUST NEVER enforce a hardcoded `Math.max(50, ...)` floor. Hardcoding Rp 50 creates critical misclassification bugs (e.g., mislabeling ASMI at Rp 44 as `ARB` when it is actually surging +35% at `ARA`). The mathematical lower bound is `Math.max(1, ...)`.
+* **Directional Safeguards & Order Book Highs**:
+  - A stock with positive momentum (`ChangePct > 0`), trading at its intraday high (`High === Close`), with 0 remaining ask orders (`OfferVolume === 0`), is locked at Auto-Rejection Upper Limit (**ARA**).
+  - Classification algorithms must enforce strict directional guards: positive returns must NEVER trigger `ARB`, and negative returns must NEVER trigger `ARA`.
+  - Display near-limit proximity badges (`Near ARA` when within 2 ticks / 1.5% of upper limit, `Near ARB` when within 2 ticks / 1.5% of lower limit) to highlight immediate volatility risk.
+
+### 28.2 6-Factor Telemetry Strip & Constrained Drawer Layout Standard (`AIInsights.tsx`)
+* **Constrained Container Anti-Truncation Mandate**:
+  - In constrained containers such as side sheets, detail drawers (`StockDetailDrawer` with `max-w-xl` ~576px), or mobile viewports (~320–380px usable width), **NEVER force 6 telemetry cards into a single horizontal row (`grid-cols-6`)**.
+  - A 6-column grid inside a ~480px inner container yields barely ~70px per card, causing severe ellipsis truncation (`Forei...`, `Meg...`, `29.7x...`), overlapping text, and unreadable labels.
+* **Responsive 2x3 Matrix Standard**:
+  - Telemetry strips inside constrained containers MUST use a responsive `grid-cols-2 sm:grid-cols-3 gap-3` layout.
+  - Each factor is housed in an elevated pure white container (`bg-white rounded-2xl border border-slate-200/80 shadow-2xs min-h-[72px] p-3.5`).
+  - Factor titles use domain-specific SVG icons paired with compact uppercase tracking labels (`text-[10px] font-extrabold uppercase text-slate-400`).
+  - Primary values use bold, tabular numerals with restrained sizing (`text-xs sm:text-sm font-black`) to guarantee zero text truncation.
+  - Secondary descriptions (`/ trade`, `> 100T`, `Growth Premium`, `Ask %`) must sit cleanly on a sub-baseline or discrete right slot without overlapping the primary metric.
+
+### 28.3 Indonesian Market Microstructure & Bandarmology Telemetry
+* **Turnover Value & Frequency Over Raw Lots**:
+  - Ambiguous raw share lot counts without nominal context obscure liquidity reality. Replace raw volume columns with **Turnover Value in IDR** (`Rp Billions` / `Rp Millions`) paired with **Transaction Frequency** (`X tx`).
+* **Bid/Offer Order Book Pressure Micro-Bar**:
+  - Provide a visual microstructure ratio bar (`h-1.5` or `h-2` rounded track with `bg-emerald-500` Bid vs `bg-rose-500` Offer) displaying real-time supply/demand absorption (`Bid X%` vs `Y% Ask`).
+* **Whale Ticket Proxy (Average Value per Transaction)**:
+  - Calculate `AvgValuePerTx = TotalTurnoverIDR / Frequency`.
+  - Highlights institutional block-trade presence (elevated ticket > Rp 35M/tx) versus fragmented retail participation (< Rp 10M/tx).
+* **Non-Regular (Nego) Crossing Share**:
+  - Track off-market crossing transactions via `NegoRatio = (NegoValue / TotalTurnover) * 100` to alert traders when volume is dominated by pre-negotiated wholesale transfers rather than regular board demand.
+* **Turnover Liquidity Floor Tiers**:
+  - Classify stocks into actionable liquidity tiers:
+    - **Mega Liquidity**: > Rp 25B daily turnover (Blue chips, high capacity).
+    - **High Liquidity**: Rp 5B – Rp 25B (Institutional swing candidates).
+    - **Mid Liquidity**: Rp 1B – Rp 5B (Active mid-caps, retail momentum).
+    - **Low Liquidity**: Rp 100M – Rp 1B (Caution: slippage risk).
+    - **Illiquid**: < Rp 100M (Hard warning: high liquidity risk).

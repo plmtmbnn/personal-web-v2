@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import type { ProcessedStock } from "../../types";
-import { TrendingUp, TrendingDown, Zap, ChevronRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap } from "lucide-react";
+import { fmtLots } from "../../utils";
+import { useScreener } from "../../context/ScreenerContext";
 
 interface TopMoversProps {
 	stocks: ProcessedStock[];
@@ -10,6 +12,9 @@ interface TopMoversProps {
 }
 
 export default function TopMovers({ stocks, onSelectStock }: TopMoversProps) {
+	const screener = useScreener();
+	const handleSelect = onSelectStock || screener.setSelectedStock;
+
 	const topGainers = useMemo(
 		() => [...stocks].sort((a, b) => b.ChangePct - a.ChangePct).slice(0, 5),
 		[stocks],
@@ -22,12 +27,6 @@ export default function TopMovers({ stocks, onSelectStock }: TopMoversProps) {
 		() => [...stocks].sort((a, b) => b.Volume - a.Volume).slice(0, 5),
 		[stocks],
 	);
-
-	const formatNumber = (n: number) => {
-		if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
-		if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-		return n.toLocaleString();
-	};
 
 	const renderColumn = (
 		title: string,
@@ -58,7 +57,7 @@ export default function TopMovers({ stocks, onSelectStock }: TopMoversProps) {
 				{data.map((s, idx) => (
 					<div
 						key={s.StockCode}
-						onClick={() => onSelectStock?.(s)}
+						onClick={() => handleSelect(s)}
 						className="flex justify-between items-center group cursor-pointer hover:bg-slate-50 p-2.5 rounded-xl transition-all border border-transparent hover:border-slate-200/60"
 					>
 						<div className="flex items-center gap-3">
@@ -80,18 +79,15 @@ export default function TopMovers({ stocks, onSelectStock }: TopMoversProps) {
 							</div>
 						</div>
 
-						<div className="flex items-center gap-2 text-right">
-							<div>
-								<p className="text-xs font-black text-slate-900">
-									{s.Close.toLocaleString()}
-								</p>
-								<p className={`text-[11px] font-black ${colorClass}`}>
-									{metric === "ChangePct"
-										? `${s.ChangePct > 0 ? "+" : ""}${s.ChangePct.toFixed(1)}%`
-										: `${formatNumber(s.Volume)} vol`}
-								</p>
-							</div>
-							<ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all" />
+						<div className="text-right">
+							<p className="text-xs font-black text-slate-900">
+								{s.Close.toLocaleString()}
+							</p>
+							<p className={`text-[11px] font-black ${colorClass}`}>
+								{metric === "ChangePct"
+									? `${s.ChangePct > 0 ? "+" : ""}${s.ChangePct.toFixed(1)}%`
+									: fmtLots(s.Volume)}
+							</p>
 						</div>
 					</div>
 				))}

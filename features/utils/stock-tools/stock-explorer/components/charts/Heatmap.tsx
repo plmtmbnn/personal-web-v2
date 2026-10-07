@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import type { ProcessedStock, Sector } from "../../types";
 import { LayoutGrid, Filter, Award } from "lucide-react";
+import { fmtLots } from "../../utils";
+import { useScreener } from "../../context/ScreenerContext";
+import ScreenerDropdown from "../shared/ScreenerDropdown";
 
 interface HeatmapProps {
 	stocks: ProcessedStock[];
@@ -13,8 +17,13 @@ interface HeatmapProps {
 export default function Heatmap({
 	stocks,
 	onSelectStock,
-	minScore = 0,
+	minScore: minScoreProp,
 }: HeatmapProps) {
+	const screener = useScreener();
+	const handleSelect = onSelectStock || screener.setSelectedStock;
+	const minScore =
+		minScoreProp !== undefined ? minScoreProp : screener.minScore;
+
 	const [volumeLimit, setVolumeLimit] = useState<50 | 100 | 200>(100);
 	const [selectedSector, setSelectedSector] = useState<Sector | "ALL">("ALL");
 	const [filterByScore, setFilterByScore] = useState(false);
@@ -48,12 +57,6 @@ export default function Heatmap({
 		if (change > -2) return "bg-rose-400 text-rose-950 hover:bg-rose-500";
 		if (change > -5) return "bg-rose-500 text-white hover:bg-rose-600";
 		return "bg-rose-600 text-white hover:bg-rose-700 shadow-xs";
-	};
-
-	const formatVolume = (val: number) => {
-		if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B`;
-		if (val >= 1e6) return `${(val / 1e6).toFixed(1)}M`;
-		return val.toLocaleString();
 	};
 
 	return (
@@ -91,40 +94,48 @@ export default function Heatmap({
 						</button>
 					)}
 
-					{/* Sector Filter */}
-					<div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5">
-						<Filter className="w-3.5 h-3.5 text-slate-400" />
-						<select
-							value={selectedSector}
-							onChange={(e) =>
-								setSelectedSector(e.target.value as Sector | "ALL")
-							}
-							className="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
-						>
-							<option value="ALL">All Sectors</option>
-							{availableSectors.map((sec) => (
-								<option key={sec} value={sec}>
-									{sec}
-								</option>
-							))}
-						</select>
-					</div>
+					{/* Custom Sector Dropdown */}
+					<ScreenerDropdown
+						icon={Filter}
+						value={selectedSector}
+						onChange={(val) => setSelectedSector(val as Sector | "ALL")}
+						options={[
+							{ value: "ALL", label: "All Sectors" },
+							...availableSectors.map((sec) => ({ value: sec, label: sec })),
+						]}
+						placeholder="All Sectors"
+					/>
 
-					{/* Volume Tier Limit */}
-					<div className="flex bg-slate-100 p-1 rounded-xl">
-						{[50, 100, 200].map((lim) => (
-							<button
-								key={lim}
-								onClick={() => setVolumeLimit(lim as 50 | 100 | 200)}
-								className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-									volumeLimit === lim
-										? "bg-white text-slate-900 shadow-xs"
-										: "text-slate-500 hover:text-slate-900"
-								}`}
-							>
-								Top {lim}
-							</button>
-						))}
+					{/* Minimalist Frameless Milestone Standard: Volume Tier Limit */}
+					<div className="relative flex items-center border-b border-slate-200/60 pb-0.5">
+						{([50, 100, 200] as const).map((lim) => {
+							const isSelected = volumeLimit === lim;
+							return (
+								<button
+									key={lim}
+									type="button"
+									onClick={() => setVolumeLimit(lim)}
+									className={`relative px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+										isSelected
+											? "text-slate-900 font-black"
+											: "text-slate-500 hover:text-slate-800"
+									}`}
+								>
+									<span>Top {lim}</span>
+									{isSelected && (
+										<motion.div
+											layoutId="heatmapVolumeTierUnderline"
+											className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-slate-900 rounded-full z-20"
+											transition={{
+												type: "spring",
+												stiffness: 380,
+												damping: 30,
+											}}
+										/>
+									)}
+								</button>
+							);
+						})}
 					</div>
 				</div>
 			</div>
@@ -177,8 +188,8 @@ export default function Heatmap({
 						return (
 							<div
 								key={s.StockCode}
-								onClick={() => onSelectStock?.(s)}
-								title={`${s.StockCode} (${s.StockName})\nPrice: ${s.Close.toLocaleString()} IDR\nChange: ${s.ChangePct > 0 ? "+" : ""}${s.ChangePct.toFixed(2)}%\nVolume: ${formatVolume(s.Volume)}\nScore: ${s.CompositeScore}\nSector: ${s.Sector}`}
+								onClick={() => handleSelect(s)}
+								title={`${s.StockCode} (${s.StockName})\nPrice: ${s.Close.toLocaleString()} IDR\nChange: ${s.ChangePct > 0 ? "+" : ""}${s.ChangePct.toFixed(2)}%\nVolume: ${fmtLots(s.Volume)}\nScore: ${s.CompositeScore}\nSector: ${s.Sector}`}
 								className={`group cursor-pointer rounded-xl p-2.5 transition-all transform hover:scale-105 hover:z-20 flex flex-col justify-between items-center text-center ${getColorStyle(
 									s.ChangePct,
 								)} ${isLargeVolume ? "ring-1 ring-white/20" : ""}`}

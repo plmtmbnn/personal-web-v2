@@ -12,9 +12,9 @@ import {
 	Bookmark,
 	TrendingDown,
 	Search,
-	ChevronRight,
 	SlidersHorizontal,
 } from "lucide-react";
+import { useScreener } from "../../context/ScreenerContext";
 
 interface OpportunityScannerProps {
 	stocks: ProcessedStock[];
@@ -83,6 +83,8 @@ export default function OpportunityScanner({
 	stocks,
 	onSelectStock,
 }: OpportunityScannerProps) {
+	const screener = useScreener();
+	const handleSelect = onSelectStock || screener.setSelectedStock;
 	const [activeCategory, setActiveCategory] =
 		useState<OpportunityCategory>("Momentum");
 	const [searchQuery, setSearchQuery] = useState("");
@@ -206,7 +208,7 @@ export default function OpportunityScanner({
 					filteredStocks.map((s) => (
 						<div
 							key={s.StockCode}
-							onClick={() => onSelectStock?.(s)}
+							onClick={() => handleSelect(s)}
 							className="flex items-center justify-between p-3.5 bg-slate-50/70 hover:bg-white rounded-2xl border border-slate-200/60 hover:border-indigo-200 hover:shadow-xs transition-all cursor-pointer group"
 						>
 							<div className="flex items-center gap-3">
@@ -272,8 +274,6 @@ export default function OpportunityScanner({
 										{s.CompositeScore}
 									</span>
 								</div>
-
-								<ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
 							</div>
 						</div>
 					))

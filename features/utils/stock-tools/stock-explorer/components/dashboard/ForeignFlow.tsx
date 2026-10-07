@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import type { ProcessedStock } from "../../types";
 import { ArrowDownRight, ArrowUpRight, Globe } from "lucide-react";
+import { useScreener } from "../../context/ScreenerContext";
+import { fmtLots } from "../../utils";
 
 interface ForeignFlowProps {
 	stocks: ProcessedStock[];
@@ -13,6 +15,9 @@ export default function ForeignFlow({
 	stocks,
 	onSelectStock,
 }: ForeignFlowProps) {
+	const screener = useScreener();
+	const handleSelect = onSelectStock || screener.setSelectedStock;
+
 	const topBuy = useMemo(
 		() => [...stocks].sort((a, b) => b.ForeignNet - a.ForeignNet).slice(0, 5),
 		[stocks],
@@ -24,7 +29,7 @@ export default function ForeignFlow({
 
 	const formatBillions = (val: number) => {
 		const isNeg = val < 0;
-		return `${isNeg ? "-" : "+"}${(Math.abs(val) / 1e9).toFixed(1)}B`;
+		return `${isNeg ? "-" : "+"}${(Math.abs(val) / 1e9).toFixed(2)}B`;
 	};
 
 	const renderList = (
@@ -51,7 +56,8 @@ export default function ForeignFlow({
 					{data.map((s, idx) => (
 						<div
 							key={s.StockCode}
-							onClick={() => onSelectStock?.(s)}
+							onClick={() => handleSelect(s)}
+							title={`${s.StockCode} (${s.StockName})\nNet Foreign Value: ${formatBillions(s.ForeignNet)} IDR\nNet Foreign Volume: ${(s.ForeignNetVol / 1e6).toFixed(2)}M shares (${fmtLots(s.ForeignNetVol)})`}
 							className="group cursor-pointer hover:bg-slate-50 p-2 rounded-xl transition-all border border-transparent hover:border-slate-200/60"
 						>
 							<div className="flex justify-between items-center mb-1">
@@ -61,13 +67,15 @@ export default function ForeignFlow({
 									</span>
 									{s.StockCode}
 								</span>
-								<span
-									className={`text-xs font-black tabular-nums ${
-										isBuy ? "text-emerald-600" : "text-rose-600"
-									}`}
-								>
-									{formatBillions(s.ForeignNet)}
-								</span>
+								<div className="text-right">
+									<span
+										className={`text-xs font-black tabular-nums block ${
+											isBuy ? "text-emerald-600" : "text-rose-600"
+										}`}
+									>
+										{formatBillions(s.ForeignNet)}
+									</span>
+								</div>
 							</div>
 							<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
 								<div
@@ -98,12 +106,12 @@ export default function ForeignFlow({
 							Foreign Capital Flow
 						</h3>
 						<p className="text-[10px] font-bold text-slate-400">
-							Institutional Net Inflow & Outflow
+							Institutional Net Inflow &amp; Outflow
 						</p>
 					</div>
 				</div>
 				<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-					IDR Net
+					Regular IDR
 				</span>
 			</div>
 

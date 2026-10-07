@@ -9,40 +9,37 @@ import {
 	BarChart2,
 	Coins,
 } from "lucide-react";
+import type { MarketHealth } from "../../types";
 
 interface HeroOverviewProps {
-	marketHealth: {
-		avgReturn: number;
-		sentimentScore: number;
-		sentimentLabel: string;
-		netForeign: number;
-		totalVolume: number;
-		totalValue: number;
-		advancers: number;
-		decliners: number;
-		unchanged: number;
-	};
+	marketHealth: MarketHealth;
 }
 
 export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 	const reduceMotion = useReducedMotion();
 	const {
-		avgReturn,
+		marketReturn,
 		sentimentScore,
 		sentimentLabel,
-		netForeign,
+		netForeignValue,
+		netForeignVolume,
 		totalVolume,
 		totalValue,
 		advancers,
 		decliners,
 	} = marketHealth;
 
-	const formatBillions = (val: number) => `${(val / 1e9).toFixed(1)}B`;
-	const formatTrillions = (val: number) => `${(val / 1e12).toFixed(1)}T`;
+	const formatBillions = (val: number, decimals = 2) => {
+		const abs = Math.abs(val);
+		const sign = val < 0 ? "-" : "";
+		return `${sign}${(abs / 1e9).toFixed(decimals)}B`;
+	};
+
+	const formatTrillions = (val: number) => `${(val / 1e12).toFixed(2)}T`;
 
 	return (
 		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-			{/* IHSG Return */}
+			{/* IHSG Return (Cap-Weighted) */}
 			<motion.div
 				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -51,21 +48,21 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 				<div className="flex justify-between items-start mb-4">
 					<div>
 						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-							Market Return (Avg)
+							Market Return (IHSG)
 						</p>
 						<h2 className="text-3xl font-black text-slate-900 mt-1 tracking-tight">
-							{avgReturn > 0 ? "+" : ""}
-							{avgReturn.toFixed(2)}%
+							{marketReturn > 0 ? "+" : ""}
+							{marketReturn.toFixed(2)}%
 						</h2>
 					</div>
 					<div
 						className={`p-3 rounded-2xl ${
-							avgReturn >= 0
+							marketReturn >= 0
 								? "bg-emerald-50 text-emerald-600 border border-emerald-100"
 								: "bg-rose-50 text-rose-600 border border-rose-100"
 						}`}
 					>
-						{avgReturn >= 0 ? (
+						{marketReturn >= 0 ? (
 							<TrendingUp className="w-5 h-5" />
 						) : (
 							<TrendingDown className="w-5 h-5" />
@@ -74,7 +71,7 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 				</div>
 				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
 					<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
-						IHSG Proxy
+						Cap-Weighted IHSG
 					</span>
 					<span className="text-[10px] font-bold text-slate-400">
 						{advancers} Up / {decliners} Down
@@ -123,7 +120,7 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 				</div>
 			</motion.div>
 
-			{/* Foreign Net Flow */}
+			{/* Foreign Net Flow (Dual Value & Volume) */}
 			<motion.div
 				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -132,17 +129,33 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 			>
 				<div className="flex justify-between items-start mb-4">
 					<div>
-						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-							Foreign Net Flow
-						</p>
+						<div className="flex items-center gap-1.5">
+							<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+								Foreign Net Flow
+							</p>
+							<span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.2 rounded">
+								Regular
+							</span>
+						</div>
 						<h2
 							className={`text-3xl font-black mt-1 tracking-tight ${
-								netForeign > 0 ? "text-emerald-600" : "text-rose-600"
+								netForeignValue > 0 ? "text-emerald-600" : "text-rose-600"
 							}`}
 						>
-							{netForeign > 0 ? "+" : ""}
-							{formatBillions(netForeign)}
+							{netForeignValue > 0 ? "+" : ""}
+							{formatBillions(netForeignValue)}
 						</h2>
+						<p className="text-[11px] font-bold text-slate-500 mt-0.5">
+							{netForeignVolume < 0 ? "Net Sell" : "Net Buy"}:{" "}
+							<span
+								className={`font-black ${
+									netForeignVolume < 0 ? "text-rose-600" : "text-emerald-600"
+								}`}
+							>
+								{formatBillions(netForeignVolume)}
+							</span>{" "}
+							vol
+						</p>
 					</div>
 					<div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600">
 						<Globe className="w-5 h-5" />
@@ -150,10 +163,14 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 				</div>
 				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
 					<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
-						IDR (Billions)
+						Value (Rp)
 					</span>
-					<span className="text-[10px] font-bold text-slate-400">
-						{netForeign > 0 ? "Accumulation" : "Net Selling"}
+					<span
+						className={`text-[10px] font-extrabold ${
+							netForeignVolume < 0 ? "text-rose-600" : "text-emerald-600"
+						}`}
+					>
+						Regular: {formatBillions(netForeignVolume)}
 					</span>
 				</div>
 			</motion.div>
@@ -184,7 +201,7 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 					</span>
 					<span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
 						<BarChart2 className="w-3.5 h-3.5 text-slate-400" />
-						{formatBillions(totalVolume)} Vol
+						{formatBillions(totalVolume, 1)} Vol
 					</span>
 				</div>
 			</motion.div>

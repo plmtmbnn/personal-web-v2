@@ -13,10 +13,17 @@ import {
 	RotateCcw,
 	TrendingUp,
 	Filter,
+	Coins,
 } from "lucide-react";
 import UtilHeader from "@/features/utils/components/UtilHeader";
-import type { IDXStock, ProcessedStock, ScoreWeights } from "../types";
+import type { IDXStock } from "../types";
+import { fmtIDRValue } from "../utils";
 import { useMarketData } from "../hooks/useMarketData";
+import {
+	ScreenerProvider,
+	useScreener,
+	STRATEGY_PRESETS,
+} from "../context/ScreenerContext";
 
 // Dashboard Components
 import HeroOverview from "./dashboard/HeroOverview";
@@ -33,112 +40,26 @@ import SmartTable from "./table/SmartTable";
 // Analyst Experience
 import StockDetailDrawer from "./analyst/StockDetailDrawer";
 
-const DEFAULT_WEIGHTS: ScoreWeights = {
-	price: 25,
-	volume: 25,
-	foreign: 20,
-	liquidity: 15,
-	volatility: 15,
-};
-
-const STRATEGY_PRESETS = [
-	{
-		name: "Balanced",
-		weights: DEFAULT_WEIGHTS,
-	},
-	{
-		name: "Whale Accumulation",
-		weights: {
-			price: 10,
-			volume: 10,
-			foreign: 60,
-			liquidity: 20,
-			volatility: 0,
-		},
-	},
-	{
-		name: "Momentum Hunter",
-		weights: {
-			price: 45,
-			volume: 45,
-			foreign: 0,
-			liquidity: 10,
-			volatility: 0,
-		},
-	},
-	{
-		name: "Stability & Value",
-		weights: {
-			price: 10,
-			volume: 10,
-			foreign: 10,
-			liquidity: 30,
-			volatility: 40,
-		},
-	},
-];
-
-export default function StockExplorerView() {
+function StockExplorerDashboard() {
 	const [rawStocks, setRawStocks] = useState<IDXStock[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [lastSync, setLastSync] = useState<string | null>(null);
 	const [dataSource, setDataSource] = useState<string | null>(null);
 
-	const [selectedStock, setSelectedStock] = useState<ProcessedStock | null>(
-		null,
-	);
-
-	// Watchlist, Custom Weights, and Hard Filter States
-	const [watchlist, setWatchlist] = useState<string[]>([]);
-	const [weights, setWeights] = useState<ScoreWeights>(DEFAULT_WEIGHTS);
-	const [minScore, setMinScore] = useState<number>(0);
-	const [isScorerExpanded, setIsScorerExpanded] = useState(false);
-
-	// Load stored states from localStorage on mount
-	useEffect(() => {
-		const storedWeights = localStorage.getItem("idx:weights");
-		if (storedWeights) {
-			try {
-				setWeights(JSON.parse(storedWeights));
-			} catch (_e) {}
-		}
-		const storedWatchlist = localStorage.getItem("idx:watchlist");
-		if (storedWatchlist) {
-			try {
-				setWatchlist(JSON.parse(storedWatchlist));
-			} catch (_e) {}
-		}
-	}, []);
-
-	const handleWeightChange = (key: keyof ScoreWeights, val: number) => {
-		setWeights((prev) => {
-			const updated = { ...prev, [key]: val };
-			localStorage.setItem("idx:weights", JSON.stringify(updated));
-			return updated;
-		});
-	};
-
-	const applyPreset = (preset: ScoreWeights) => {
-		setWeights(preset);
-		localStorage.setItem("idx:weights", JSON.stringify(preset));
-	};
-
-	const resetWeights = () => {
-		setWeights(DEFAULT_WEIGHTS);
-		setMinScore(0);
-		localStorage.setItem("idx:weights", JSON.stringify(DEFAULT_WEIGHTS));
-	};
-
-	const toggleWatchlist = (code: string) => {
-		setWatchlist((prev) => {
-			const updated = prev.includes(code)
-				? prev.filter((c) => c !== code)
-				: [...prev, code];
-			localStorage.setItem("idx:watchlist", JSON.stringify(updated));
-			return updated;
-		});
-	};
+	const {
+		weights,
+		handleWeightChange,
+		applyPreset,
+		resetWeights,
+		activePresetName,
+		minScore,
+		setMinScore,
+		minTurnover,
+		setMinTurnover,
+		isScorerExpanded,
+		setIsScorerExpanded,
+	} = useScreener();
 
 	const fetchData = useCallback(async () => {
 		setIsLoading(true);
@@ -164,9 +85,11 @@ export default function StockExplorerView() {
 			} else {
 				setLastSync(new Date().toLocaleTimeString());
 			}
-		} catch (err: any) {
+		} catch (err: unknown) {
+			const message =
+				err instanceof Error ? err.message : "Failed to load stock data";
 			console.error("Data fetch error:", err);
-			setError(err.message || "Failed to load stock data");
+			setError(message);
 		} finally {
 			setIsLoading(false);
 		}
@@ -179,25 +102,16 @@ export default function StockExplorerView() {
 	const { processed, marketHealth } = useMarketData(rawStocks, weights);
 	const totalWeightsSum = Object.values(weights).reduce((a, b) => a + b, 0);
 
-	// Count how many stocks pass the active minimum score threshold
+	// Count how many stocks pass active score AND turnover liquidity floor
 	const qualifyingStocksCount = processed.filter(
-		(s) => s.CompositeScore >= minScore,
+		(s) =>
+			s.CompositeScore >= minScore &&
+			(minTurnover === 0 || s.Value >= minTurnover),
 	).length;
 	const qualifyingPct =
 		processed.length > 0
 			? Math.round((qualifyingStocksCount / processed.length) * 100)
 			: 0;
-
-	// Check if active weights match a preset
-	const activePresetName =
-		STRATEGY_PRESETS.find(
-			(p) =>
-				p.weights.price === weights.price &&
-				p.weights.volume === weights.volume &&
-				p.weights.foreign === weights.foreign &&
-				p.weights.liquidity === weights.liquidity &&
-				p.weights.volatility === weights.volatility,
-		)?.name || "Custom Blend";
 
 	return (
 		<div className="min-h-screen bg-slate-50/80 bg-dot-pattern relative text-slate-900 pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
@@ -295,6 +209,7 @@ export default function StockExplorerView() {
 								{error}
 							</p>
 							<button
+								type="button"
 								onClick={fetchData}
 								className="mt-6 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-bold text-xs shadow-md hover:bg-rose-700 transition-colors cursor-pointer"
 							>
@@ -319,10 +234,7 @@ export default function StockExplorerView() {
 
 							{/* Top Movers Strip (Full Width) */}
 							<div>
-								<TopMovers
-									stocks={processed}
-									onSelectStock={setSelectedStock}
-								/>
+								<TopMovers stocks={processed} />
 							</div>
 
 							{/* Deep Market Intelligence Matrix: Balanced 2-Column Grid */}
@@ -335,33 +247,24 @@ export default function StockExplorerView() {
 										unchanged={marketHealth.unchanged}
 									/>
 									<SectorRotation stocks={processed} />
-									<ForeignFlow
-										stocks={processed}
-										onSelectStock={setSelectedStock}
-									/>
+									<ForeignFlow stocks={processed} />
 								</div>
 
 								{/* Right Column: Opportunity Scanner */}
 								<div className="lg:col-span-6 h-full">
-									<OpportunityScanner
-										stocks={processed}
-										onSelectStock={setSelectedStock}
-									/>
+									<OpportunityScanner stocks={processed} />
 								</div>
 							</div>
 
 							{/* Market Heatmap (Full Width) */}
 							<div>
-								<Heatmap
-									stocks={processed}
-									onSelectStock={setSelectedStock}
-									minScore={minScore}
-								/>
+								<Heatmap stocks={processed} />
 							</div>
 
-							{/* Custom Scoring Engine & Hard Filter Control Panel (Moved directly above SmartTable) */}
+							{/* Custom Scoring Engine & Hard Filter Control Panel */}
 							<div className="bg-white border border-slate-200/80 rounded-3xl shadow-xs overflow-hidden">
 								<button
+									type="button"
 									onClick={() => setIsScorerExpanded(!isScorerExpanded)}
 									className="w-full p-6 sm:p-7 flex justify-between items-center bg-white hover:bg-slate-50/80 transition-colors focus:outline-none cursor-pointer border-none text-left"
 								>
@@ -370,7 +273,7 @@ export default function StockExplorerView() {
 											<Sliders className="w-5 h-5" />
 										</div>
 										<div>
-											<div className="flex items-center gap-2">
+											<div className="flex flex-wrap items-center gap-2">
 												<h3 className="text-base sm:text-lg font-black tracking-tight text-slate-900">
 													Custom Factor Scoring &amp; Hard Filter Engine
 												</h3>
@@ -379,7 +282,12 @@ export default function StockExplorerView() {
 												</span>
 												{minScore > 0 && (
 													<span className="inline-flex text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-														Filter: Score ≥ {minScore} ({qualifyingStocksCount})
+														Score ≥ {minScore}
+													</span>
+												)}
+												{minTurnover > 0 && (
+													<span className="inline-flex text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full">
+														Turnover ≥ Rp {fmtIDRValue(minTurnover)}
 													</span>
 												)}
 											</div>
@@ -423,6 +331,7 @@ export default function StockExplorerView() {
 												{STRATEGY_PRESETS.map((preset) => (
 													<button
 														key={preset.name}
+														type="button"
 														onClick={() => applyPreset(preset.weights)}
 														className={`px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-tight transition-all cursor-pointer border ${
 															activePresetName === preset.name
@@ -436,6 +345,7 @@ export default function StockExplorerView() {
 											</div>
 
 											<button
+												type="button"
 												onClick={resetWeights}
 												className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
 											>
@@ -536,6 +446,7 @@ export default function StockExplorerView() {
 												].map((preset) => (
 													<button
 														key={preset.value}
+														type="button"
 														onClick={() => setMinScore(preset.value)}
 														className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
 															minScore === preset.value
@@ -564,6 +475,56 @@ export default function StockExplorerView() {
 											</div>
 										</div>
 
+										{/* Hard Filter Minimum Liquidity Floor Section */}
+										<div className="pt-6 border-t border-slate-200/70 space-y-3">
+											<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+												<div className="flex items-center gap-2">
+													<Coins className="w-4 h-4 text-emerald-600" />
+													<span className="text-xs font-black uppercase tracking-wider text-slate-800">
+														Hard Filter: Liquidity Floor (Turnover)
+													</span>
+													<span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md">
+														{minTurnover > 0
+															? `Turnover ≥ Rp ${fmtIDRValue(minTurnover)}`
+															: "Disabled (Showing All)"}
+													</span>
+												</div>
+												<span className="text-xs font-bold text-slate-500">
+													Eliminates illiquid penny stock traps (saham tidur /
+													gorengan)
+												</span>
+											</div>
+
+											<div className="flex flex-wrap items-center gap-2">
+												{[
+													{ label: "All (Rp 0)", value: 0 },
+													{ label: "≥ Rp 1B (Active)", value: 1000000000 },
+													{ label: "≥ Rp 5B (Liquid)", value: 5000000000 },
+													{
+														label: "≥ Rp 20B (Institutional)",
+														value: 20000000000,
+													},
+													{
+														label: "≥ Rp 50B (Mega Cap)",
+														value: 50000000000,
+													},
+												].map((preset) => (
+													<button
+														key={preset.value}
+														type="button"
+														onClick={() => setMinTurnover(preset.value)}
+														className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+															minTurnover === preset.value
+																? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+																: "bg-white hover:bg-slate-100 border-slate-200 text-slate-700"
+														}`}
+													>
+														{preset.label}
+													</button>
+												))}
+											</div>
+										</div>
+
 										{/* Warning if not summing to 100 */}
 										{totalWeightsSum !== 100 && (
 											<div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex items-center gap-3 text-xs font-bold">
@@ -581,14 +542,7 @@ export default function StockExplorerView() {
 
 							{/* Smart Screener Table (Full Width) */}
 							<div>
-								<SmartTable
-									stocks={processed}
-									onSelectStock={setSelectedStock}
-									watchlist={watchlist}
-									onToggleWatchlist={toggleWatchlist}
-									minScore={minScore}
-									onMinScoreChange={setMinScore}
-								/>
+								<SmartTable stocks={processed} />
 							</div>
 						</>
 					)}
@@ -596,10 +550,15 @@ export default function StockExplorerView() {
 			</div>
 
 			{/* Analyst Drawer */}
-			<StockDetailDrawer
-				stock={selectedStock}
-				onClose={() => setSelectedStock(null)}
-			/>
+			<StockDetailDrawer />
 		</div>
+	);
+}
+
+export default function StockExplorerView() {
+	return (
+		<ScreenerProvider>
+			<StockExplorerDashboard />
+		</ScreenerProvider>
 	);
 }

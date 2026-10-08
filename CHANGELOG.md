@@ -1,3 +1,10 @@
+# [0.100.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.99.0...v0.100.0) (2026-10-08)
+
+
+### Features
+
+* **investment:** implement engine v3 guardrails and fix onchain valuation stream ([5605c3c](https://github.com/plmtmbnn/personal-web-v2/commit/5605c3ce29174b5cc6473cfe041c0f736e5f82d8))
+
 # [0.99.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.98.0...v0.99.0) (2026-10-07)
 
 

@@ -44,6 +44,22 @@ export interface InvestmentThresholds {
 		altcoinBtcDominanceMax: number;
 	};
 
+	// Macro Liquidity & Policy Indicators
+	macro: {
+		m2YoY: {
+			contraction: number;
+			expansion: number;
+		};
+		cpiYoY: {
+			benign: number;
+			sticky: number;
+		};
+		biRate: {
+			restrictive: number;
+			neutral: number;
+		};
+	};
+
 	// Scoring & Coverage
 	scoring: {
 		riskOnMin: number;
@@ -72,6 +88,20 @@ export const DEFAULT_THRESHOLDS: InvestmentThresholds = {
 		calm: 16.0,
 		elevated: 22.0,
 		panic: 28.0,
+	},
+	macro: {
+		m2YoY: {
+			contraction: 0.0,
+			expansion: 4.0,
+		},
+		cpiYoY: {
+			benign: 2.5,
+			sticky: 3.5,
+		},
+		biRate: {
+			restrictive: 6.0,
+			neutral: 5.5,
+		},
 	},
 	ihsg: {
 		correctionDrawdownPct: 10.0,

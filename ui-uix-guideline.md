@@ -101,7 +101,7 @@ The following patterns are **strictly forbidden** in this codebase:
 * **Loading & Skeleton States:**
   - NEVER show a full-screen spinner with a brand logo and an explicit **"Loading"** text label. The word "Loading" adds no information and clutters the UI. Loading states must be implicit, ambient, and brand-aligned.
   - NEVER use a generic `CircleLoader` or `BounceLoader` from external spinner libraries. Skeletons must use `animate-pulse bg-slate-200 rounded-*` blocks mirroring real content dimensions.
-  - **Brand-Monogram Global Fallback (Next.js `loading.tsx`):** The root page-transition loading fallback uses a minimalist brand monogram mark (`PT`) in a `w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-md` floating card, centered over the textured canvas (`bg-slate-50/70 backdrop-blur-xs bg-dot-pattern`). A soft ambient breathing ring (`animate-ping opacity-35`) surrounds the card, and a small emerald pulsing liveness dot (`animate-ping bg-emerald-400`) sits at the top-right corner of the card. No text label, no spinner wheel — only the brand mark and the liveness pulse signal an active transition. The entire overlay is `pointer-events-none` to prevent interaction blocking.
+  - **Brand-Monogram Global Fallback (Next.js `loading.tsx`):** The root page-transition loading fallback uses a minimalist brand monogram mark (`PT`) in a `w-16 h-16 sm:w-[4.25rem] sm:h-[4.25rem] rounded-[1.25rem] bg-white border border-slate-200/80 shadow-xl shadow-slate-900/5` floating card, centered over the textured canvas (`bg-slate-50/75 backdrop-blur-xs bg-dot-pattern`). A soft ambient breathing ring (`animate-ping opacity-35`) surrounds the card, a small emerald pulsing liveness beacon (`animate-ping bg-emerald-400` + solid `bg-emerald-500 border-2 border-white`) sits at the top-right corner, and an integrated hairline micro-track (`w-7 h-[2px] bg-slate-100 mt-1.5`) hosts a smooth GPU-accelerated scanning beam (`animate-scan-glide`). No text label, no spinner wheel — only the brand mark, liveness pulse, and micro-activity track signal an active transition. The entire overlay is `pointer-events-none` to prevent interaction blocking. Server Component with 0 client JS bundle overhead.
 
 * **Section Dividers & Spacers:**
   - NEVER use decorative SVG wave/curve dividers between page sections. These are template-kit artifacts.
@@ -560,40 +560,54 @@ The root-level `app/loading.tsx` is the Next.js App Router Suspense fallback ren
 
 ### Architecture
 * **Overlay Layer:** `fixed inset-0 z-40 pointer-events-none select-none` — full viewport coverage, invisible to interactions, non-blocking.
-* **Canvas:** `bg-slate-50/70 backdrop-blur-xs bg-dot-pattern` — the signature textured canvas with a light frost, creating continuity with the destination page.
-* **Brand Mark Floating Card:** `w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-900/5` — the same "Floating Card" unit used throughout the application, centered in the viewport.
-* **Monogram:** `text-sm font-black tracking-tight text-slate-900 font-mono` — the owner's initials (`PT`) in a tight, high-contrast monospace weight. No text label, no subtitle.
-* **Ambient Breathing Ring:** `absolute -inset-1.5 rounded-2xl bg-indigo-500/10 animate-ping opacity-35 motion-reduce:hidden` — a barely-visible breathing halo that signals activity without agitation.
-* **Emerald Liveness Dot:** `absolute -top-1 -right-1` corner pip with outer `animate-ping bg-emerald-400 opacity-75` and inner `bg-emerald-500 border border-white` — communicates "alive and responding."
+* **Canvas:** `bg-slate-50/75 backdrop-blur-xs bg-dot-pattern` — signature textured canvas with a light frost, creating continuity with destination routes.
+* **Brand Mark Floating Card:** `w-16 h-16 sm:w-[4.25rem] sm:h-[4.25rem] rounded-[1.25rem] bg-white border border-slate-200/80 shadow-xl shadow-slate-900/5` — elevated floating card with confident proportions, centered in the viewport.
+* **Monogram:** `text-base sm:text-lg font-black tracking-widest text-slate-900 font-mono select-none` — initials (`PT`) in high-contrast monospace weight. No text label, no subtitle.
+* **Ambient Breathing Ring:** `absolute -inset-2.5 rounded-3xl bg-indigo-500/10 animate-ping opacity-35 motion-reduce:hidden` — barely-visible breathing halo that signals activity without agitation.
+* **Emerald Liveness Beacon:** `absolute -top-1 -right-1 flex h-3 w-3` corner pip with outer `animate-ping bg-emerald-400 opacity-75` and inner `bg-emerald-500 border-2 border-white shadow-2xs` — communicates "alive and responding."
+* **Precision Micro-Activity Track:** `w-7 h-[2px] rounded-full bg-slate-100 mt-1.5 overflow-hidden relative` containing an indeterminate micro-indicator pill (`w-3 bg-slate-900 animate-scan-glide motion-reduce:animate-none`) driven by GPU-composited CSS keyframes.
 * **Bottom Bar Clearance:** `pb-24 sm:pb-28` optical clearance so the centered mark doesn't overlap `CompactBottomBar`.
-* **Accessibility:** `role="status"` and `aria-live="polite"` on the root wrapper.
+* **Zero Client JS Overhead:** Pure Server Component with 0 client JS bundle cost and 0 hydration delay.
+* **Accessibility:** `role="status"`, `aria-live="polite"`, and `aria-label="Loading page"` on the root wrapper.
 
 ### Strict Prohibitions
 - NEVER add the text "Loading" or any loading copy to this component.
 - NEVER use a traditional CSS spinner wheel or third-party loader.
 - NEVER make this component interactive (keep `pointer-events-none` on the overlay).
 - NEVER use gradient backgrounds or gradient text in this component.
-- Animated elements MUST respect `motion-reduce:hidden` for accessibility.
+- Animated elements MUST respect `motion-reduce:hidden` or `motion-reduce:animate-none` for accessibility.
 
 ### Implementation Reference
 ```tsx
 // app/loading.tsx
-export default function GlobalLoading() {
+export default function Loading() {
   return (
     <div
-      className="fixed inset-0 z-40 bg-slate-50/70 backdrop-blur-xs bg-dot-pattern flex items-center justify-center p-4 pb-24 sm:pb-28 select-none pointer-events-none"
+      className="fixed inset-0 z-40 bg-slate-50/75 backdrop-blur-xs bg-dot-pattern flex items-center justify-center p-4 pb-24 sm:pb-28 select-none pointer-events-none"
       role="status"
       aria-live="polite"
+      aria-label="Loading page"
     >
       <div className="relative flex items-center justify-center">
-        {/* Soft ambient breathing ring */}
-        <div className="absolute -inset-1.5 rounded-2xl bg-indigo-500/10 animate-ping opacity-35 motion-reduce:hidden" />
-        {/* Elevated Floating Brand Mark */}
-        <div className="relative w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-900/5 flex items-center justify-center">
-          <span className="text-sm font-black tracking-tight text-slate-900 font-mono select-none">PT</span>
-          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+        {/* Soft ambient breathing halo */}
+        <div className="absolute -inset-2.5 rounded-3xl bg-indigo-500/10 animate-ping opacity-35 motion-reduce:hidden" />
+
+        {/* Elevated Floating Brand Mark Card */}
+        <div className="relative w-16 h-16 sm:w-[4.25rem] sm:h-[4.25rem] rounded-[1.25rem] bg-white border border-slate-200/80 shadow-xl shadow-slate-900/5 flex flex-col items-center justify-center">
+          {/* Brand Monogram */}
+          <span className="text-base sm:text-lg font-black tracking-widest text-slate-900 font-mono select-none">
+            PT
+          </span>
+
+          {/* Precision Micro-Activity Scanning Track */}
+          <div className="w-7 h-[2px] rounded-full bg-slate-100 mt-1.5 overflow-hidden relative">
+            <span className="absolute inset-y-0 w-3 rounded-full bg-slate-900 animate-scan-glide motion-reduce:animate-none" />
+          </div>
+
+          {/* Emerald Liveness Beacon */}
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-white" />
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white shadow-2xs" />
           </span>
         </div>
       </div>
@@ -653,13 +667,13 @@ To provide content creators and developers with a high-fidelity visual generatio
 ### 26.1 Categorized Template Taxonomy & Grouping Standard
 * **Anti-Flat-List Mandate**: NEVER dump extensive template options (10+ designs) into an unorganized, monolithic list or unindexed dropdown. Templates must be categorized into clear, purpose-driven groups to streamline workflow discovery.
 * **4-Tier Functional Groups (`TEMPLATE_GROUPS`)**:
-  1. *Editorial & Social (`editorial-social`)*: High-impact media layouts, Cable Breaking News (`breaking-news`), Thread Starters (`thread-starter` with avatar support), Floating Cards (`floating-card`), and Hero Overlays (`hero-overlay`).
-  2. *Modern & Structural (`modern-structural`)*: Asymmetric Bento Grids (`flat-bento`), Swiss Typography (`swiss-grid`), and Neo-Brutalist cards (`neo-brutalist`, `polaroid-brutalist`).
-  3. *Narrative & Text (`narrative-text`)*: High-conviction message cards, Typographic Posters (`typography-poster`), The Manifesto (`manifesto-block`), Narrative Focus (`narrative-focus`), and Minimal Chapters (`minimal-chapter`).
+  1. *Editorial & Social (`editorial-social`)*: High-impact media layouts, Cable Breaking News (`breaking-news`), Now Playing Vinyl Player (`vinyl-now-playing`), Thread Starters (`thread-starter` with avatar support), Floating Cards (`floating-card`), and Hero Overlays (`hero-overlay`).
+  2. *Modern & Structural (`modern-structural`)*: Asymmetric Bento Grids (`flat-bento`), Optical Frosted Glass (`premium-glass`), Code Terminal (`terminal-window`), Swiss Typography (`swiss-grid`), and Neo-Brutalist cards (`neo-brutalist`, `polaroid-brutalist`).
+  3. *Narrative & Text (`narrative-text`)*: High-conviction message cards, Cinematic Subtitles (`cinematic-subtitles`), Typographic Posters (`typography-poster`), The Manifesto (`manifesto-block`), Narrative Focus (`narrative-focus`), and Minimal Chapters (`minimal-chapter`).
   4. *Minimal & Focus (`minimal-focus`)*: Minimalist Split (`minimalist-split`), Minimal Quotes (`quote-minimal`), Duotone Overlays (`duotone-overlay`), Split Monochrome (`split-monochrome`), and Classy Offset (`classy-offset`).
 * **Interactive Category Filter Bar**: Provide an ergonomic category switcher (`All` + group buttons with domain icons) utilizing `touch-manipulation` and smooth layout transitions (`framer-motion`).
 
-### 26.2 Broadcast & Editorial Standards
+### 26.2 Broadcast, Media & Optical Standards
 * **Cable News Lower-Third Pattern (`breaking-news`)**:
   - Recreates a clean, high-urgency television news lower-third banner across standard social ratios.
   - Features a bold red breaking banner band (`#DC2626`), high-contrast monospace time/ticker elements (`font-mono tracking-wider`), and an extra-bold all-caps headline banner.
@@ -667,6 +681,14 @@ To provide content creators and developers with a high-fidelity visual generatio
 * **Classy Offset & High-Contrast Left-Align Standard (`classy-offset`)**:
   - **Dual Text Theme Switcher (`theme?: "light" | "dark"`)**: Provides an explicit theme toggle for templates designed over dynamic photo backgrounds, allowing users to switch typography between crisp light (`#FFFFFF` with `#94A3B8` accents) and sleek dark (`#0F172A` with `#475569` accents).
   - **Consistent Left-Aligned Optical Flow**: Both the small lead-in text and the primary headline statement MUST align to a single, consistent left margin origin (`textAlign = "left"`). NEVER set lead-in text to `textAlign = "right"` when the headline is left-aligned — this causes awkward edge displacement and breaks visual reading cadence.
+* **Optical Frosted Glass Pattern (`premium-glass`)**:
+  - Simulates native CSS `backdrop-filter: blur()` in 2D Canvas via clipping paths, background re-rendering with intense canvas blur and saturation filters, theme tints (dark/light), and subtle rim-light strokes.
+* **Authentic Cinematic Subtitle Pattern (`cinematic-subtitles`)**:
+  - 4K/24FPS camera telemetry strip (`● REC`, scene timecode metadata), vignette bottom gradient, and dual-theme high-contrast subtitles (classic film yellow or crisp white with black outer outline stroke) guaranteeing 100% legibility over any photography.
+* **Audio Player & Vinyl Record Pattern (`vinyl-now-playing`)**:
+  - Ambient blurred album backdrop, album art sleeve with concentric-grooved vinyl disc peeking from behind, scrubbed audio timeline, and minimalist vector playback controls (`|◀`, `▶`, `▶|`).
+* **Technical Code Terminal Pattern (`terminal-window`)**:
+  - macOS window chrome with authentic traffic light controls (`Red`, `Yellow`, `Green`), tab title bar, prompt line (`➜ ~/workspace`), line-numbered log output with contextual badge coloring (`[SUCCESS]`, `[ERROR]`, `[INFO]`), and an emerald terminal cursor block.
 
 ### 26.3 Client-Side Canvas 2D Engine Architecture
 * **Pure In-Browser Rendering**: 100% client-side HTML5 Canvas API execution. Zero external rendering microservices, zero Puppeteer serverless bottlenecks, zero cloud storage bandwidth costs.
@@ -730,6 +752,16 @@ The Investment Compass is an executive-level, risk-first capital preservation hu
   - Dark slate monoliths (`bg-slate-900`) are strictly forbidden as full cards in dashboard flows — they create oppressive visual dead zones and clash with the signature light textured canvas (`bg-slate-50/80 bg-dot-pattern`).
   - Accentuate high-priority safe anchors using high-contrast warm amber badge squircles, clean slate sub-cards (`bg-slate-50 border border-slate-100/80 rounded-2xl`), and confident typographic contrast.
 
+* **Hard Circuit Breaker Lockdown Standard**:
+  - When the macro-environment deteriorates below acceptable thresholds (e.g., `Composite Score < 40`), the UI MUST visually intercept standard workflows.
+  - Tactical idea lists ("Tactical Dos") MUST be entirely hidden from the DOM to prevent fatal execution errors.
+  - Replace operational lists with a **No Trade Zone** banner: a prominent, full-width high-contrast container (`bg-rose-600 border border-rose-700 shadow-inner`) centered with a `ShieldAlert` icon and strict white/rose text indicating "Circuit breaker active. All tactical trading locked."
+  - Never use passive `opacity-50` fading for a hard lockdown; make the denial of service explicitly visible.
+
+* **Sizing Mandate & Telemetry Strip Standard**:
+  - Functional sizing mandates (e.g., Risk per Trade, Max Exposure limits) MUST be injected via isolated horizontal telemetry strips (`bg-indigo-50/50 border border-indigo-100`) directly beneath the Tactical Stance.
+  - Critical numerical caps must utilize heavy monospace typography (`font-mono font-extrabold`) for absolute clarity.
+
 ---
 
 ## 28. Indonesian Stock Explorer & Microstructure Telemetry Standards (`/utils/stock-explorer`)
@@ -778,3 +810,38 @@ The Indonesian Stock Explorer provides algorithmic screening, institutional fore
     - **Mid Liquidity**: Rp 1B – Rp 5B (Active mid-caps, retail momentum).
     - **Low Liquidity**: Rp 100M – Rp 1B (Caution: slippage risk).
     - **Illiquid**: < Rp 100M (Hard warning: high liquidity risk).
+
+---
+
+## 29. Route Not Found & Error Recovery Standard (`app/not-found.tsx`)
+
+The application's 404 page MUST adhere to the **Strict Zero-Redundancy Floating Card Standard**:
+
+### Visual & Architectural Structure
+* **Floating Card Unit:** `bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs sm:shadow-md max-w-md w-full` centered over the signature textured canvas (`bg-slate-50/80 bg-dot-pattern`).
+* **Strict Anti-Redundancy Mandate:** Every data point appears strictly ONCE.
+  - **No Triple Duplication:** NEVER combine an `"Error 404: Page Not Found"` pill, a giant brutalist `"404"`, and a `"Page Not Found"` headline in the same view.
+  - **Single Status Placement:** HTTP status is declared strictly ONCE via a discrete top-right monospace telemetry pill:
+    ```tsx
+    <span className="text-[11px] font-mono font-bold text-slate-600 bg-slate-50 border border-slate-200/80 px-2.5 py-0.5 rounded-lg">
+      HTTP 404
+    </span>
+    ```
+  - **Clean Contextual Breadcrumbs:** `Home / 404` left-aligned in the top header divider row (`flex items-center justify-between pb-4 border-b border-slate-100`).
+  - **Singular Title:** Bold headline stated once as `Route Not Found` (`text-xl sm:text-2xl font-black text-slate-900 tracking-tight`).
+* **Domain Icon Squircle Anchor:** Elevated squircle with domain-accurate `RouteOff` icon (`w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100/80 text-rose-600 flex items-center justify-center mx-auto shadow-2xs`). Never use generic `FileQuestion` pills or emojis.
+* **Restrained Typographic Scale:** Strictly prohibits oversized brutalist typography (`text-7xl` or `text-8xl` giants). Keeps primary typography balanced and legible within the card frame.
+* **Actionable Path Telemetry:** Includes dynamic pathname resolution (`usePathname()`) displaying the exact requested URL (`Path: /requested-path`) inside a clean monospace telemetry tray, converting generic errors into concrete system diagnosis.
+* **Action Hygiene (Single Primary Trigger):**
+  - Provides exactly ONE unambiguous primary recovery action:
+    ```tsx
+    <Link
+      href="/"
+      className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-slate-900 hover:bg-slate-800 !text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-xs active:scale-95 transition-all !no-underline"
+    >
+      <ArrowLeft className="w-4 h-4 !text-white" />
+      <span className="!text-white">Return to Home</span>
+    </Link>
+    ```
+  - Strictly prohibits duplicate stacked buttons (`Go to Home` + `Go Back`), which clutter the card and duplicate the persistent bottom dock.
+* **Calibrated Bottom Clearance:** `pb-28 sm:pb-36` optical clearance ensuring the floating card rests at the true optical focal center without colliding with or crowding `CompactBottomBar` on desktop and mobile viewports.

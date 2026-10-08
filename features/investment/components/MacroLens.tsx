@@ -25,11 +25,13 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 	const macroTiles = useMemo(() => {
 		const fedFunds = getLatest("FEDFUNDS");
 		const cpi = getLatest("CPIAUCSL");
+		const m2 = getLatest("M2SL");
 		const unrate = getLatest("UNRATE");
 		const dgs10 = getLatest("DGS10");
 		const yieldCurve = getLatest("T10Y2Y");
 		const hySpread = getLatest("BAMLH0A0HYM2");
 		const id10y = getLatest("IRLTLT01IDM156N");
+		const biRate = getLatest("IRSTCB01IDM156N");
 
 		const sahm = sahmRule(data.markets.macro?.UNRATE?.data ?? []);
 
@@ -59,6 +61,17 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 				historicalMsg:
 					cpi && cpi.value > 3.0
 						? "Sticky inflation (> 3.0%) delays Fed rate cuts, keeping discount rates elevated."
+						: undefined,
+			},
+			{
+				label: "US M2 Money Supply",
+				value: m2 ? `${m2.value > 0 ? "+" : ""}${m2.value.toFixed(1)}%` : "---",
+				change: m2?.change,
+				desc: "Broad liquidity expansion YoY rate.",
+				isInverse: false,
+				historicalMsg:
+					m2 && m2.value < 0
+						? "Historically, money supply contractions drain systemic liquidity and cap multiple expansions."
 						: undefined,
 			},
 			{
@@ -137,6 +150,17 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 				change: ihsg?.changePct,
 				desc: "Jakarta Composite Index.",
 				isInverse: false,
+			},
+			{
+				label: "Bank Indonesia Rate",
+				value: biRate ? `${biRate.value.toFixed(2)}%` : "---",
+				change: biRate?.change,
+				desc: "Central bank benchmark policy rate.",
+				isInverse: true,
+				historicalMsg:
+					biRate && biRate.value >= 6.0
+						? "Historically, high BI rates increase borrowing costs and pressure real estate/bank lending."
+						: undefined,
 			},
 			{
 				label: "Indonesia 10Y Gov Yield",

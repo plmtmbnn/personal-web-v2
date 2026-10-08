@@ -208,6 +208,30 @@ function createMockData(
 					units: "Percent",
 					data: [{ date: "2026-10-02", value: 3.85 }],
 				},
+				M2SL: {
+					id: "M2SL",
+					name: "M2 Money Supply",
+					frequency: "Monthly",
+					units: "Percent Change from Year Ago",
+					data: [{ date: "2026-09-01", value: 4.8 }],
+				},
+				CPIAUCSL: {
+					id: "CPIAUCSL",
+					name: "Consumer Price Index",
+					frequency: "Monthly",
+					units: "Percent Change from Year Ago",
+					data: [{ date: "2026-09-01", value: 2.3 }],
+				},
+				IRSTCB01IDM156N: {
+					id: "IRSTCB01IDM156N",
+					name: "Bank Indonesia Policy Rate",
+					frequency: "Monthly",
+					units: "Percent",
+					data: [
+						{ date: "2026-08-01", value: 6.0 },
+						{ date: "2026-09-01", value: 5.75 },
+					],
+				},
 			},
 			history: {
 				"^JKSE": {
@@ -286,10 +310,12 @@ describe("Engine v2 computeCompass", () => {
 
 	it("caps permissions to defensive when global liquidity is in stress", () => {
 		const mockData = createMockData();
-		// High credit spread + soaring dollar + high VIX
+		// High credit spread + soaring dollar + high VIX + contracting liquidity
 		mockData.markets.macro.BAMLH0A0HYM2.data = [
 			{ date: "2026-10-02", value: 6.2 },
 		]; // Stress
+		mockData.markets.macro.M2SL.data = [{ date: "2026-10-02", value: -2.5 }]; // Liquidity contraction
+		mockData.markets.macro.CPIAUCSL.data = [{ date: "2026-10-02", value: 4.2 }]; // Hot inflation
 		mockData.markets.quotes.DXY.last = 106.5; // Severe headwind
 		mockData.markets.quotes.VIX.last = 32.0; // Panic
 
@@ -329,11 +355,89 @@ describe("Engine v2 computeCompass", () => {
 		mockData.markets.macro.BAMLH0A0HYM2.data = [
 			{ date: "2026-10-02", value: 6.5 },
 		]; // Global stress
+		mockData.markets.macro.M2SL.data = [{ date: "2026-10-02", value: -2.5 }]; // Liquidity contraction
+		mockData.markets.macro.CPIAUCSL.data = [{ date: "2026-10-02", value: 4.2 }];
+		mockData.markets.macro.IRSTCB01IDM156N.data = [
+			{ date: "2026-08-01", value: 6.0 },
+			{ date: "2026-09-01", value: 6.5 },
+		]; // BI hiking rate
 		mockData.markets.quotes.DXY.last = 106.5;
+		mockData.markets.quotes.VIX.last = 35.0;
 
 		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
 		// IHSG DCA must be paused / tranche plan only, NEVER "allowed" or "lump sum"
 		expect(output.permissions.ihsg.dca.status).toBe("paused");
 		expect(output.permissions.ihsg.swing.status).toBe("not_allowed");
+	});
+
+	it("evaluates M2 expansion and cooling CPI as bullish factors in global liquidity", () => {
+		const mockData = createMockData();
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+
+		const m2Factor = output.regimes.global.factors.find(
+			(f) => f.key === "m2_growth",
+		);
+		const cpiFactor = output.regimes.global.factors.find(
+			(f) => f.key === "cpi_yoy",
+		);
+
+		expect(m2Factor).toBeDefined();
+		expect(m2Factor?.direction).toBe("bullish");
+		expect(m2Factor?.weight).toBe(15);
+		expect(m2Factor?.valueStr).toBe("+4.8%");
+
+		expect(cpiFactor).toBeDefined();
+		expect(cpiFactor?.direction).toBe("bullish");
+		expect(cpiFactor?.weight).toBe(10);
+		expect(cpiFactor?.valueStr).toBe("2.3%");
+	});
+
+	it("flags sticky inflation when US CPI exceeds thresholds", () => {
+		const mockData = createMockData();
+		mockData.markets.macro.CPIAUCSL.data = [{ date: "2026-09-01", value: 3.9 }];
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		const cpiFactor = output.regimes.global.factors.find(
+			(f) => f.key === "cpi_yoy",
+		);
+
+		expect(cpiFactor?.direction).toBe("bearish");
+		expect(output.regimes.global.contextFlags).toContain(
+			"Sticky Inflation (3.9% YoY)",
+		);
+	});
+
+	it("evaluates Bank Indonesia rate cuts as bullish for IHSG", () => {
+		const mockData = createMockData();
+		// Mock cutting: 6.0% -> 5.75%
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+
+		const biFactor = output.regimes.ihsg.factors.find(
+			(f) => f.key === "bi_rate",
+		);
+		expect(biFactor).toBeDefined();
+		expect(biFactor?.direction).toBe("bullish");
+		expect(biFactor?.weight).toBe(15);
+		expect(biFactor?.note).toContain("cutting benchmark rate");
+	});
+
+	it("evaluates Bank Indonesia rate hikes and restrictive levels as bearish for IHSG", () => {
+		const mockData = createMockData();
+		// Mock hiking: 6.0% -> 6.25%
+		mockData.markets.macro.IRSTCB01IDM156N.data = [
+			{ date: "2026-08-01", value: 6.0 },
+			{ date: "2026-09-01", value: 6.25 },
+		];
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		const biFactor = output.regimes.ihsg.factors.find(
+			(f) => f.key === "bi_rate",
+		);
+
+		expect(biFactor?.direction).toBe("bearish");
+		expect(biFactor?.note).toContain("hiking benchmark rate");
+		expect(output.regimes.ihsg.contextFlags).toContain(
+			"Restrictive BI Rate (6.25%)",
+		);
 	});
 });

@@ -80,29 +80,6 @@ export interface FactorItem {
 	data: CnnSubIndex;
 }
 
-export type RegimeKey =
-	| "expansion"
-	| "speculative_decoupling"
-	| "defensive_rotation"
-	| "capitulation";
-
-export interface MarketRegime {
-	key: RegimeKey;
-	title: string;
-	/** Short stance label for header chips (e.g. "Risk-On"). */
-	stance: string;
-	headline: string;
-	diagnosis: string;
-	tone: Tone;
-	riskAppetite: number;
-	divergence: number;
-	playbook: {
-		favored: string[];
-		risks: string[];
-		posture: string;
-	};
-}
-
 export type TrendKey =
 	| "near_high"
 	| "uptrend"
@@ -156,6 +133,7 @@ export interface CryptoOnChainSnapshot {
 	mvrvZScore?: number | null; // e.g. 1.8 (fair), > 4.0 (cycle top danger), < 0.1 (historical accumulation floor)
 	nupl?: number | null; // Net Unrealized Profit/Loss (-1.0 to 1.0)
 	asOf?: string;
+	updatedAt?: number;
 }
 
 export interface InvestmentCompassData {
@@ -232,6 +210,7 @@ export interface PermissionsMatrixData {
 	ihsg: MarketPermissions;
 	crypto: MarketPermissions;
 	altcoins: MarketPermissions;
+	ihsgSectorGates: string[];
 	globalStressActive: boolean;
 	summaryNotes: string[];
 }
@@ -263,65 +242,4 @@ export interface CompassOutput {
 		phase: string;
 		description: string;
 	};
-}
-
-/* ─────────────────────────────────────────────────────────────
-   Advanced Playbook Engine Types
-   ───────────────────────────────────────────────────────────── */
-
-export type AssetStance = "Overweight" | "Neutral" | "Underweight";
-export type ConfidenceLevel = "High" | "Medium" | "Low";
-
-export interface PlaybookRecommendation {
-	assetClass: string;
-	stance: AssetStance;
-	summary: string;
-	pros: string[];
-	cons: string[];
-	action: string;
-	invalidation: string;
-	confidence: ConfidenceLevel;
-}
-
-export interface AllocationPosture {
-	equities: number; // percentage
-	crypto: number; // percentage
-	gold: number; // percentage
-	cashBonds: number; // percentage
-}
-
-export type TimeframeStatus = "Favorable" | "Selective" | "Avoid" | "Hold";
-
-export interface TimeframeGuideline {
-	id: "scalping" | "swing" | "investment";
-	style: string;
-	status: TimeframeStatus;
-	reason: string;
-}
-
-export interface EconomySummarySection {
-	headline: string;
-	keynotes: string[];
-	tone: Tone;
-}
-
-export interface EconomySummary {
-	macro: EconomySummarySection;
-	micro: EconomySummarySection;
-}
-
-export interface SectorGuidance {
-	overweight: string[];
-	underweight: string[];
-	neutral: string[];
-	narrative: string;
-}
-
-export interface EngineOutput {
-	regime: MarketRegime;
-	recommendations: PlaybookRecommendation[];
-	allocation: AllocationPosture;
-	timeframes: TimeframeGuideline[];
-	economySummary: EconomySummary;
-	sectorRotation: SectorGuidance;
 }

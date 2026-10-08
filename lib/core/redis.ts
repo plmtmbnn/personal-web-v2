@@ -31,6 +31,8 @@ export const CACHE_KEYS = {
 		`compass:history:${symbol}:${interval}:backup`,
 	CRYPTO_FLOWS: "compass:crypto:flows",
 	CRYPTO_FLOWS_BACKUP: "compass:crypto:flows:backup",
+	CRYPTO_ONCHAIN: "compass:crypto:onchain",
+	CRYPTO_ONCHAIN_BACKUP: "compass:crypto:onchain:backup",
 	COMPASS_SNAPSHOT: (date: string) => `compass:snapshot:${date}`,
 };
 

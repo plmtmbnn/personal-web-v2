@@ -1,53 +1,71 @@
 "use client";
 
 import Link from "next/link";
-import { Home, ArrowLeft, FileQuestion } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ArrowLeft, RouteOff } from "lucide-react";
 
 export default function NotFound() {
+	const pathname = usePathname();
+
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern flex items-center justify-center p-4 sm:p-6">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern flex items-center justify-center p-4 pb-28 sm:pb-36">
 			<div className="max-w-md w-full">
-				<div className="bg-white border border-slate-200/80 rounded-3xl sm:rounded-[2rem] p-7 sm:p-10 shadow-xs text-center space-y-6">
-					{/* Status Pill & 404 Hero */}
-					<div className="space-y-3">
-						<div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-full border border-slate-200/80 shadow-2xs">
-							<FileQuestion className="w-3.5 h-3.5 text-slate-500" />
-							<span className="text-[10px] font-black uppercase tracking-wider">
-								Error 404: Page Not Found
-							</span>
+				<div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs sm:shadow-md space-y-6">
+					{/* Clean Header & Telemetry Status Row */}
+					<div className="flex items-center justify-between pb-4 border-b border-slate-100">
+						<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+							<Link
+								href="/"
+								className="hover:text-slate-900 transition-colors !no-underline"
+							>
+								Home
+							</Link>
+							<span className="text-slate-300">/</span>
+							<span className="text-slate-900 font-bold">404</span>
 						</div>
-
-						<div className="text-7xl sm:text-8xl font-black text-slate-900 tracking-tight select-none">
-							404
-						</div>
-
-						<div>
-							<h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-1">
-								Page Not Found
-							</h1>
-							<p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-xs mx-auto">
-								The page you are looking for does not exist or has been moved.
-							</p>
-						</div>
+						<span className="text-[11px] font-mono font-bold text-slate-600 bg-slate-50 border border-slate-200/80 px-2.5 py-0.5 rounded-lg">
+							HTTP 404
+						</span>
 					</div>
 
-					{/* Dual Actions */}
-					<div className="pt-2 space-y-2.5">
+					{/* Hero Identity Stage */}
+					<div className="text-center space-y-3.5">
+						<div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100/80 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
+							<RouteOff className="w-6 h-6" />
+						</div>
+
+						<div className="space-y-1">
+							<h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+								Route Not Found
+							</h1>
+							<p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-xs mx-auto">
+								The requested path does not exist or has been relocated within
+								the system.
+							</p>
+						</div>
+
+						{/* Concrete Path Telemetry */}
+						{pathname && (
+							<div className="bg-slate-50 border border-slate-200/70 rounded-xl px-3.5 py-2 text-left flex items-center gap-2 overflow-hidden">
+								<span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 shrink-0">
+									Path
+								</span>
+								<code className="text-xs font-mono font-semibold text-slate-800 truncate">
+									{pathname}
+								</code>
+							</div>
+						)}
+					</div>
+
+					{/* Single Unambiguous Recovery Action */}
+					<div className="pt-1">
 						<Link
 							href="/"
-							className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-slate-900 hover:bg-slate-800 !text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-xs active:scale-95 transition-[background-color,transform] !no-underline"
+							className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-slate-900 hover:bg-slate-800 !text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-xs active:scale-95 transition-all !no-underline"
 						>
-							<Home className="w-4 h-4 !text-white" />
-							<span className="!text-white">Go to Home</span>
+							<ArrowLeft className="w-4 h-4 !text-white" />
+							<span className="!text-white">Return to Home</span>
 						</Link>
-						<button
-							type="button"
-							onClick={() => window.history.back()}
-							className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-2xl active:scale-95 transition-[background-color,transform] cursor-pointer"
-						>
-							<ArrowLeft className="w-4 h-4 text-slate-500" />
-							<span>Go Back</span>
-						</button>
 					</div>
 				</div>
 			</div>

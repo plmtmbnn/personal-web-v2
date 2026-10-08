@@ -233,3 +233,23 @@ export function getHalvingCyclePhase(now = new Date()): {
 		description,
 	};
 }
+
+/**
+ * Checks if short-term volatility (14d) is significantly higher than baseline volatility (90d).
+ * Returns true if 14d Vol > 1.5x 90d Vol.
+ */
+export function checkVolatilityExpansion(points: PricePointLike[]): {
+	isExpanded: boolean;
+	shortVol: number | null;
+	baselineVol: number | null;
+} {
+	const shortVol = realizedVol(points, 14);
+	const baselineVol = realizedVol(points, 90);
+
+	if (shortVol != null && baselineVol != null && baselineVol > 0) {
+		const isExpanded = shortVol > baselineVol * 1.5;
+		return { isExpanded, shortVol, baselineVol };
+	}
+
+	return { isExpanded: false, shortVol, baselineVol };
+}

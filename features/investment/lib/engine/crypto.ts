@@ -11,6 +11,7 @@ import {
 	maSlopePct,
 	getHalvingCyclePhase,
 } from "../indicators";
+import { getActiveSeasonality } from "../../data/seasonality";
 
 export function scoreCrypto(
 	data: InvestmentCompassData,
@@ -217,6 +218,37 @@ export function scoreCrypto(
 		note: "Global dollar liquidity strongly dictates high-beta risk asset flows.",
 	});
 
+	// 7. Active Seasonality - Weight 10
+	const activeSeasons = getActiveSeasonality();
+	const cryptoSeason = activeSeasons.find((s) => s.market === "Crypto");
+	if (cryptoSeason) {
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+
+		if (cryptoSeason.status === "Bullish Tendency") {
+			score = 80;
+			dir = "bullish";
+		} else if (cryptoSeason.status === "Defensive / Consolidation") {
+			score = 30;
+			dir = "bearish";
+		} else if (cryptoSeason.status === "Event Driven") {
+			score = 65;
+			dir = "bullish";
+		}
+
+		factors.push({
+			key: "crypto_seasonality",
+			label: "Historical Crypto Seasonality",
+			valueStr: cryptoSeason.title,
+			score,
+			weight: 10,
+			direction: dir,
+			note: cryptoSeason.description,
+		});
+
+		contextFlags.push(`${cryptoSeason.title}`);
+	}
+
 	// Context Check: Halving Cycle Phase
 	contextFlags.push(
 		`Halving Month +${halving.monthsElapsed}: ${halving.phase}`,
@@ -236,15 +268,15 @@ export function scoreCrypto(
 		}
 	}
 
-	// Context Check: On-Chain Valuation (MVRV Z-Score)
+	// Context Check: On-Chain Valuation (MVRV Ratio)
 	if (data.markets.cryptoOnChain?.mvrvZScore != null) {
-		const z = data.markets.cryptoOnChain.mvrvZScore;
+		const mvrv = data.markets.cryptoOnChain.mvrvZScore;
 		contextFlags.push(
-			z > 4.0
-				? `MVRV Z-Score (${z.toFixed(2)}) — Historic Cycle Overheat`
-				: z < 0.1
-					? `MVRV Z-Score (${z.toFixed(2)}) — Generational Accumulation Floor`
-					: `MVRV Z-Score (${z.toFixed(2)}) — Fair Value Range`,
+			mvrv > 3.7
+				? `MVRV Ratio (${mvrv.toFixed(2)}) — Historic Cycle Overheat`
+				: mvrv < 1.0
+					? `MVRV Ratio (${mvrv.toFixed(2)}) — Generational Accumulation Floor`
+					: `MVRV Ratio (${mvrv.toFixed(2)}) — Fair Value Range`,
 		);
 	}
 

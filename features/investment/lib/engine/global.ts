@@ -24,7 +24,7 @@ export function scoreGlobalLiquidity(
 	const factors: RegimeFactor[] = [];
 	const contextFlags: string[] = [];
 
-	// 1. US Dollar Index (DXY) - Weight 25
+	// 1. US Dollar Index (DXY) - Weight 20
 	const dxyQuote = data.markets.quotes.DXY;
 	const dxyVal = dxyQuote?.last ?? null;
 	if (dxyVal != null) {
@@ -49,7 +49,7 @@ export function scoreGlobalLiquidity(
 			label: "US Dollar Index (DXY)",
 			valueStr: dxyVal.toFixed(2),
 			score,
-			weight: 25,
+			weight: 20,
 			direction: dir,
 			note:
 				dxyVal >= thresholds.dxy.strong
@@ -59,7 +59,7 @@ export function scoreGlobalLiquidity(
 		});
 	}
 
-	// 2. High Yield Spread (Credit Risk) - Weight 25
+	// 2. High Yield Spread (Credit Risk) - Weight 15
 	const hySpreadObj = getFredLatest(data, "BAMLH0A0HYM2");
 	if (hySpreadObj) {
 		const spread = hySpreadObj.value;
@@ -81,7 +81,7 @@ export function scoreGlobalLiquidity(
 			label: "US High-Yield OAS Spread",
 			valueStr: `${spread.toFixed(2)}%`,
 			score,
-			weight: 25,
+			weight: 15,
 			direction: dir,
 			note:
 				spread >= thresholds.hySpread.stress
@@ -91,7 +91,7 @@ export function scoreGlobalLiquidity(
 		});
 	}
 
-	// 3. US 10-Year Treasury Yield - Weight 20
+	// 3. US 10-Year Treasury Yield - Weight 15
 	const dgs10Obj = getFredLatest(data, "DGS10");
 	const us10yQuote = data.markets.quotes.US10Y;
 	const yield10y = dgs10Obj?.value ?? us10yQuote?.last ?? null;
@@ -114,7 +114,7 @@ export function scoreGlobalLiquidity(
 			label: "10-Year Treasury Yield",
 			valueStr: `${yield10y.toFixed(2)}%`,
 			score,
-			weight: 20,
+			weight: 15,
 			direction: dir,
 			note:
 				yield10y >= thresholds.us10y.stress
@@ -124,39 +124,7 @@ export function scoreGlobalLiquidity(
 		});
 	}
 
-	// 4. Market Volatility (VIX) - Weight 15
-	const vixQuote = data.markets.quotes.VIX;
-	const vixVal = vixQuote?.last ?? null;
-	if (vixVal != null) {
-		let score = 50;
-		let dir: "bullish" | "bearish" | "neutral" = "neutral";
-		if (vixVal <= thresholds.vix.calm) {
-			score = 85;
-			dir = "bullish";
-		} else if (vixVal >= thresholds.vix.panic) {
-			score = 10;
-			dir = "bearish";
-		} else {
-			score = 55;
-			dir = "neutral";
-		}
-
-		factors.push({
-			key: "vix",
-			label: "CBOE Volatility Index (VIX)",
-			valueStr: vixVal.toFixed(2),
-			score,
-			weight: 15,
-			direction: dir,
-			note:
-				vixVal >= thresholds.vix.panic
-					? `Market volatility spike (${vixVal.toFixed(1)}) indicates sudden risk repricing.`
-					: `Complacent or orderly volatility (${vixVal.toFixed(1)}).`,
-			asOf: vixQuote?.lastTime ?? undefined,
-		});
-	}
-
-	// 5. Fed Funds Rate - Weight 15
+	// 4. Fed Funds Rate - Weight 15
 	const fedFundsObj = getFredLatest(data, "FEDFUNDS");
 	if (fedFundsObj) {
 		const rate = fedFundsObj.value;
@@ -187,6 +155,110 @@ export function scoreGlobalLiquidity(
 						? "Easing monetary policy providing supportive global liquidity tailwinds."
 						: "Transitioning interest rate policy within neutral-to-restrictive bounds.",
 			asOf: fedFundsObj.date,
+		});
+	}
+
+	// 5. US M2 Money Supply YoY Growth - Weight 15
+	const m2Obj = getFredLatest(data, "M2SL");
+	if (m2Obj) {
+		const m2YoY = m2Obj.value;
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		if (m2YoY >= thresholds.macro.m2YoY.expansion) {
+			score = 85;
+			dir = "bullish";
+		} else if (m2YoY <= thresholds.macro.m2YoY.contraction) {
+			score = 20;
+			dir = "bearish";
+		} else {
+			score = 55;
+			dir = "neutral";
+		}
+
+		factors.push({
+			key: "m2_growth",
+			label: "US M2 Money Supply (YoY)",
+			valueStr: `${m2YoY > 0 ? "+" : ""}${m2YoY.toFixed(1)}%`,
+			score,
+			weight: 15,
+			direction: dir,
+			note:
+				m2YoY >= thresholds.macro.m2YoY.expansion
+					? `Broad money supply expanding (+${m2YoY.toFixed(1)}% YoY), boosting systemic liquidity.`
+					: m2YoY <= thresholds.macro.m2YoY.contraction
+						? `Money supply contracting (${m2YoY.toFixed(1)}% YoY), draining systemic liquidity.`
+						: `Money supply growing at modest pace (+${m2YoY.toFixed(1)}% YoY).`,
+			asOf: m2Obj.date,
+		});
+	}
+
+	// 6. US CPI YoY Inflation - Weight 10
+	const cpiObj = getFredLatest(data, "CPIAUCSL");
+	if (cpiObj) {
+		const cpiYoY = cpiObj.value;
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		if (cpiYoY <= thresholds.macro.cpiYoY.benign) {
+			score = 85;
+			dir = "bullish";
+		} else if (cpiYoY >= thresholds.macro.cpiYoY.sticky) {
+			score = 25;
+			dir = "bearish";
+		} else {
+			score = 55;
+			dir = "neutral";
+		}
+
+		factors.push({
+			key: "cpi_yoy",
+			label: "US CPI Inflation (YoY)",
+			valueStr: `${cpiYoY.toFixed(1)}%`,
+			score,
+			weight: 10,
+			direction: dir,
+			note:
+				cpiYoY <= thresholds.macro.cpiYoY.benign
+					? `Cooling inflation (${cpiYoY.toFixed(1)}% YoY) opens path for central bank rate cuts.`
+					: cpiYoY >= thresholds.macro.cpiYoY.sticky
+						? `Sticky inflation (${cpiYoY.toFixed(1)}% YoY) restricts Fed easing and keeps yields elevated.`
+						: `Inflation within moderate bounds (${cpiYoY.toFixed(1)}% YoY).`,
+			asOf: cpiObj.date,
+		});
+
+		if (cpiYoY >= thresholds.macro.cpiYoY.sticky) {
+			contextFlags.push(`Sticky Inflation (${cpiYoY.toFixed(1)}% YoY)`);
+		}
+	}
+
+	// 7. Market Volatility (VIX) - Weight 10
+	const vixQuote = data.markets.quotes.VIX;
+	const vixVal = vixQuote?.last ?? null;
+	if (vixVal != null) {
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		if (vixVal <= thresholds.vix.calm) {
+			score = 85;
+			dir = "bullish";
+		} else if (vixVal >= thresholds.vix.panic) {
+			score = 10;
+			dir = "bearish";
+		} else {
+			score = 55;
+			dir = "neutral";
+		}
+
+		factors.push({
+			key: "vix",
+			label: "CBOE Volatility Index (VIX)",
+			valueStr: vixVal.toFixed(2),
+			score,
+			weight: 10,
+			direction: dir,
+			note:
+				vixVal >= thresholds.vix.panic
+					? `Market volatility spike (${vixVal.toFixed(1)}) indicates sudden risk repricing.`
+					: `Complacent or orderly volatility (${vixVal.toFixed(1)}).`,
+			asOf: vixQuote?.lastTime ?? undefined,
 		});
 	}
 

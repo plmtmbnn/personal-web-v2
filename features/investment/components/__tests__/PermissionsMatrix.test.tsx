@@ -58,6 +58,7 @@ const mockPermissions: PermissionsMatrixData = {
 		},
 		maxExposure: "0% (Hard Lock)",
 	},
+	ihsgSectorGates: ["Consumer Non-Cyclicals", "Healthcare"],
 	globalStressActive: false,
 	summaryNotes: ["Selective market environment"],
 };

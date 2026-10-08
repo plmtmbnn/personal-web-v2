@@ -15,7 +15,11 @@ export type TemplateId =
 	| "manifesto-block"
 	| "narrative-focus"
 	| "minimal-chapter"
-	| "classy-offset";
+	| "classy-offset"
+	| "premium-glass"
+	| "cinematic-subtitles"
+	| "vinyl-now-playing"
+	| "terminal-window";
 
 export type AspectRatio = "1:1" | "4:5" | "9:16" | "16:9";
 
@@ -249,6 +253,50 @@ export const TEMPLATES: {
 			titleLabel: "Main Statement",
 			descriptionLabel: "Lead-in text",
 			imageLabel: "Background Image",
+			hasTheme: true,
+		},
+	},
+	{
+		id: "premium-glass",
+		label: "Premium Glass",
+		group: "modern-structural",
+		fields: {
+			titleLabel: "Hero Headline",
+			descriptionLabel: "Secondary Detail",
+			imageLabel: "Background Image",
+			hasTheme: true,
+		},
+	},
+	{
+		id: "cinematic-subtitles",
+		label: "Cinematic Subtitle",
+		group: "narrative-text",
+		fields: {
+			titleLabel: "Subtitle Text",
+			descriptionLabel: "Scene / Timecode",
+			imageLabel: "Cinematic Still",
+			hasTheme: true,
+		},
+	},
+	{
+		id: "vinyl-now-playing",
+		label: "Now Playing",
+		group: "editorial-social",
+		fields: {
+			titleLabel: "Track / Main Title",
+			descriptionLabel: "Artist / Author",
+			imageLabel: "Album Cover Art",
+			hasTheme: true,
+		},
+	},
+	{
+		id: "terminal-window",
+		label: "Code Terminal",
+		group: "modern-structural",
+		fields: {
+			titleLabel: "Command / File Header",
+			descriptionLabel: "Code / Terminal Output",
+			imageLabel: "Backdrop (Optional)",
 			hasTheme: true,
 		},
 	},

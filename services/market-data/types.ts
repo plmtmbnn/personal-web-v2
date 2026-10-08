@@ -73,6 +73,6 @@ export interface CryptoFlowsSnapshot {
  * - `fresh`: bypass the data cache entirely (manual refresh).
  */
 export interface FetchPolicy {
-	revalidate: number;
+	revalidate?: number;
 	fresh?: boolean;
 }

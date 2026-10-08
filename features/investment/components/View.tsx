@@ -16,7 +16,7 @@ import {
 import Link from "next/link";
 import { getInvestmentCompass } from "@/features/investment/actions";
 import type { InvestmentCompassData } from "@/features/investment/types";
-import { computeCompass } from "../lib/engine";
+import { computeCompass } from "../lib/engine/index";
 import { sma } from "../lib/indicators";
 
 import OverviewRegimes from "./OverviewRegimes";
@@ -419,7 +419,14 @@ export default function InvestmentCompassView({
 
 				{/* ── 3. Execution Playbook (IHSG, Crypto, Safe Bucket) ──────── */}
 				{!isLoading && engineOutput && (
-					<MarketPlaybook playbooks={engineOutput.playbooks} />
+					<MarketPlaybook
+						playbooks={engineOutput.playbooks}
+						compassData={data || undefined}
+						scores={{
+							ihsg: engineOutput.regimes.ihsg.score,
+							crypto: engineOutput.regimes.crypto.score,
+						}}
+					/>
 				)}
 
 				{/* ── 4. Market Data Terminal (Consolidated Hub) ─────────────── */}

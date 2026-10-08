@@ -1539,6 +1539,624 @@ export const CanvasRenderer = forwardRef<
 						"center",
 					);
 				}
+			} else if (template === "premium-glass") {
+				// 1. Base Background
+				if (img) {
+					drawImageProp(
+						ctx,
+						img,
+						0,
+						0,
+						CANVAS_WIDTH,
+						CANVAS_HEIGHT,
+						inputs.imageOffsetX ?? 0.5,
+						inputs.imageOffsetY ?? 0.5,
+					);
+				} else {
+					ctx.fillStyle = "#cbd5e1";
+					ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+				}
+
+				const isDark = inputs.theme === "dark";
+
+				// 2. Glass Card Bounds
+				const cardW = CANVAS_WIDTH - 160;
+				// Height depends on aspect ratio, make it proportionate
+				const cardH = CANVAS_HEIGHT > 1080 ? 600 : 500;
+				const cardX = 80;
+				// Place in lower third
+				const cardY = CANVAS_HEIGHT - cardH - 80;
+
+				ctx.save();
+				roundRect(ctx, cardX, cardY, cardW, cardH, 48);
+				ctx.clip();
+
+				// 3. Draw blurred background inside the clip
+				if (img) {
+					ctx.filter = "blur(40px) saturate(150%)";
+					// We redraw the EXACT same background image to ensure alignment
+					drawImageProp(
+						ctx,
+						img,
+						0,
+						0,
+						CANVAS_WIDTH,
+						CANVAS_HEIGHT,
+						inputs.imageOffsetX ?? 0.5,
+						inputs.imageOffsetY ?? 0.5,
+					);
+					ctx.filter = "none";
+				} else {
+					ctx.fillStyle = isDark ? "#475569" : "#e2e8f0";
+					ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+				}
+
+				// 4. Draw Tint & Rim Light
+				ctx.fillStyle = isDark
+					? "rgba(0, 0, 0, 0.4)"
+					: "rgba(255, 255, 255, 0.15)";
+				ctx.fill();
+
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = isDark
+					? "rgba(255, 255, 255, 0.15)"
+					: "rgba(255, 255, 255, 0.5)";
+				ctx.stroke();
+
+				ctx.restore(); // remove clipping
+
+				// 5. Draw Text
+				ctx.textAlign = "center";
+				ctx.textBaseline = "top";
+
+				ctx.fillStyle = isDark ? "#ffffff" : "#0f172a";
+				ctx.font = "800 84px Inter, sans-serif";
+
+				const textPadding = 64;
+				const titleW = cardW - textPadding * 2;
+				// Estimate height to center things a bit
+				const titleY = cardY + 120;
+
+				const endY = wrapText(
+					ctx,
+					title || "Your Premium Headline",
+					cardX + textPadding,
+					titleY,
+					titleW,
+					100,
+					"center",
+				);
+
+				if (description) {
+					ctx.fillStyle = isDark
+						? "rgba(255, 255, 255, 0.8)"
+						: "rgba(15, 23, 42, 0.8)";
+					ctx.font = "500 36px Inter, sans-serif";
+					wrapText(
+						ctx,
+						description,
+						cardX + textPadding,
+						endY + 60,
+						titleW,
+						52,
+						"center",
+					);
+				}
+			} else if (template === "cinematic-subtitles") {
+				// 1. Full-bleed background image
+				if (img) {
+					drawImageProp(
+						ctx,
+						img,
+						0,
+						0,
+						CANVAS_WIDTH,
+						CANVAS_HEIGHT,
+						inputs.imageOffsetX ?? 0.5,
+						inputs.imageOffsetY ?? 0.5,
+					);
+				} else {
+					ctx.fillStyle = "#090d16";
+					ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+				}
+
+				// 2. Cinematic letterbox bars & vignette gradient
+				const bottomGrad = ctx.createLinearGradient(
+					0,
+					CANVAS_HEIGHT * 0.45,
+					0,
+					CANVAS_HEIGHT,
+				);
+				bottomGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
+				bottomGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.45)");
+				bottomGrad.addColorStop(1, "rgba(0, 0, 0, 0.92)");
+				ctx.fillStyle = bottomGrad;
+				ctx.fillRect(
+					0,
+					CANVAS_HEIGHT * 0.45,
+					CANVAS_WIDTH,
+					CANVAS_HEIGHT * 0.55,
+				);
+
+				// Top gradient for camera status bar
+				const topGrad = ctx.createLinearGradient(0, 0, 0, 160);
+				topGrad.addColorStop(0, "rgba(0, 0, 0, 0.7)");
+				topGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+				ctx.fillStyle = topGrad;
+				ctx.fillRect(0, 0, CANVAS_WIDTH, 160);
+
+				// 3. Top Cinematic Camera Telemetry
+				const recY = 60;
+				// Red recording dot
+				ctx.fillStyle = "#ef4444";
+				ctx.beginPath();
+				ctx.arc(60, recY, 8, 0, Math.PI * 2);
+				ctx.fill();
+
+				ctx.textAlign = "left";
+				ctx.textBaseline = "middle";
+				ctx.fillStyle = "#ffffff";
+				ctx.font = "700 22px 'JetBrains Mono', monospace";
+				ctx.fillText("REC", 78, recY);
+
+				// Scene / timecode or user description
+				const metaText = description || "SCENE 04 · TAKE 02 · 24FPS · 4K";
+				ctx.textAlign = "right";
+				ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+				ctx.font = "600 22px 'JetBrains Mono', monospace";
+				ctx.fillText(metaText, CANVAS_WIDTH - 60, recY);
+
+				// 4. Authentic Subtitle Typography (Bottom Centered)
+				const isYellow = inputs.theme !== "dark";
+				const subtitleColor = isYellow ? "#fef08a" : "#ffffff";
+				const subtitleText =
+					title || "We only have the moments we dare to live.";
+
+				ctx.textAlign = "center";
+				ctx.textBaseline = "bottom";
+				ctx.font = "700 52px Inter, ui-sans-serif, sans-serif";
+
+				const subMaxWidth = CANVAS_WIDTH - 200;
+				const subY = CANVAS_HEIGHT - 120;
+
+				const words = subtitleText.split(" ");
+				const lines: string[] = [];
+				let curLine = "";
+				for (const w of words) {
+					const test = curLine ? `${curLine} ${w}` : w;
+					if (ctx.measureText(test).width > subMaxWidth) {
+						if (curLine) lines.push(curLine);
+						curLine = w;
+					} else {
+						curLine = test;
+					}
+				}
+				if (curLine) lines.push(curLine);
+
+				const lineHeight = 68;
+				const totalH = lines.length * lineHeight;
+				const startY = subY - totalH + lineHeight;
+
+				lines.forEach((line, idx) => {
+					const yPos = startY + idx * lineHeight;
+					// Outer black outline for 100% film legibility
+					ctx.strokeStyle = "rgba(0, 0, 0, 0.95)";
+					ctx.lineWidth = 10;
+					ctx.lineJoin = "round";
+					ctx.strokeText(line, CANVAS_WIDTH / 2, yPos);
+
+					// Main subtitle fill
+					ctx.fillStyle = subtitleColor;
+					ctx.fillText(line, CANVAS_WIDTH / 2, yPos);
+				});
+			} else if (template === "vinyl-now-playing") {
+				const isDark = inputs.theme !== "light";
+
+				// 1. Ambient Backdrop
+				if (img) {
+					ctx.filter = "blur(70px) saturate(1.4) brightness(0.4)";
+					drawImageProp(
+						ctx,
+						img,
+						-100,
+						-100,
+						CANVAS_WIDTH + 200,
+						CANVAS_HEIGHT + 200,
+						inputs.imageOffsetX ?? 0.5,
+						inputs.imageOffsetY ?? 0.5,
+					);
+					ctx.filter = "none";
+					ctx.fillStyle = isDark
+						? "rgba(10, 15, 30, 0.65)"
+						: "rgba(255, 255, 255, 0.75)";
+					ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+				} else {
+					const bgGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+					if (isDark) {
+						bgGrad.addColorStop(0, "#0f172a");
+						bgGrad.addColorStop(1, "#020617");
+					} else {
+						bgGrad.addColorStop(0, "#f8fafc");
+						bgGrad.addColorStop(1, "#e2e8f0");
+					}
+					ctx.fillStyle = bgGrad;
+					ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+				}
+
+				// 2. Floating Player Card Container
+				const playerW = CANVAS_WIDTH - 160;
+				const playerH = CANVAS_HEIGHT - 200;
+				const playerX = 80;
+				const playerY = 100;
+
+				ctx.save();
+				ctx.shadowColor = isDark ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.08)";
+				ctx.shadowBlur = 50;
+				ctx.shadowOffsetY = 25;
+				ctx.fillStyle = isDark
+					? "rgba(15, 23, 42, 0.88)"
+					: "rgba(255, 255, 255, 0.95)";
+				roundRect(ctx, playerX, playerY, playerW, playerH, 44);
+				ctx.fill();
+
+				ctx.lineWidth = 1.5;
+				ctx.strokeStyle = isDark
+					? "rgba(255, 255, 255, 0.12)"
+					: "rgba(226, 232, 240, 0.9)";
+				ctx.stroke();
+				ctx.restore();
+
+				// 3. Album Cover & Vinyl Record Combo
+				const artSize = Math.min(playerW - 200, 420);
+				const artX = playerX + (playerW - artSize) / 2 - 30;
+				const artY = playerY + 80;
+
+				// Vinyl disc peeking from behind the cover sleeve
+				const vinylCenterX = artX + artSize + 30;
+				const vinylCenterY = artY + artSize / 2;
+				const vinylRadius = artSize * 0.46;
+
+				ctx.save();
+				ctx.beginPath();
+				ctx.arc(vinylCenterX, vinylCenterY, vinylRadius, 0, Math.PI * 2);
+				ctx.fillStyle = "#12141a";
+				ctx.fill();
+
+				// Concentric groove rings
+				ctx.lineWidth = 1.5;
+				ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+				for (let r = vinylRadius - 20; r > 50; r -= 18) {
+					ctx.beginPath();
+					ctx.arc(vinylCenterX, vinylCenterY, r, 0, Math.PI * 2);
+					ctx.stroke();
+				}
+
+				// Vinyl center label
+				ctx.beginPath();
+				ctx.arc(vinylCenterX, vinylCenterY, 44, 0, Math.PI * 2);
+				ctx.fillStyle = isDark ? "#4f46e5" : "#6366f1";
+				ctx.fill();
+
+				// Spindle hole
+				ctx.beginPath();
+				ctx.arc(vinylCenterX, vinylCenterY, 10, 0, Math.PI * 2);
+				ctx.fillStyle = isDark ? "#0f172a" : "#ffffff";
+				ctx.fill();
+				ctx.restore();
+
+				// Album Cover Sleeve
+				ctx.save();
+				ctx.shadowColor = "rgba(0, 0, 0, 0.25)";
+				ctx.shadowBlur = 30;
+				ctx.shadowOffsetY = 15;
+				roundRect(ctx, artX, artY, artSize, artSize, 28);
+				ctx.clip();
+				if (img) {
+					drawImageProp(
+						ctx,
+						img,
+						artX,
+						artY,
+						artSize,
+						artSize,
+						inputs.imageOffsetX ?? 0.5,
+						inputs.imageOffsetY ?? 0.5,
+					);
+				} else {
+					const sleeveGrad = ctx.createLinearGradient(
+						artX,
+						artY,
+						artX + artSize,
+						artY + artSize,
+					);
+					sleeveGrad.addColorStop(0, "#4338ca");
+					sleeveGrad.addColorStop(1, "#312e81");
+					ctx.fillStyle = sleeveGrad;
+					ctx.fillRect(artX, artY, artSize, artSize);
+				}
+				ctx.restore();
+
+				// 4. Track Metadata
+				const textY = artY + artSize + 60;
+				ctx.textAlign = "center";
+				ctx.textBaseline = "top";
+
+				ctx.fillStyle = isDark ? "#ffffff" : "#0f172a";
+				ctx.font = "800 52px Inter, sans-serif";
+				const endTrackY = wrapText(
+					ctx,
+					title || "Midnight Reverie",
+					playerX + 60,
+					textY,
+					playerW - 120,
+					64,
+					"center",
+				);
+
+				ctx.fillStyle = isDark ? "#94a3b8" : "#64748b";
+				ctx.font = "500 32px Inter, sans-serif";
+				wrapText(
+					ctx,
+					description || "Polma Tambunan · Studio Sessions",
+					playerX + 60,
+					endTrackY + 16,
+					playerW - 120,
+					42,
+					"center",
+				);
+
+				// 5. Audio Scrubber Bar
+				const barW = playerW - 160;
+				const barX = playerX + 80;
+				const barY = playerY + playerH - 150;
+				const barH = 8;
+				const progress = 0.64;
+
+				// Background track
+				ctx.fillStyle = isDark
+					? "rgba(255, 255, 255, 0.15)"
+					: "rgba(0, 0, 0, 0.08)";
+				roundRect(ctx, barX, barY, barW, barH, 4);
+				ctx.fill();
+
+				// Filled progress
+				ctx.fillStyle = isDark ? "#818cf8" : "#4f46e5";
+				roundRect(ctx, barX, barY, barW * progress, barH, 4);
+				ctx.fill();
+
+				// Scrub Knob
+				ctx.beginPath();
+				ctx.arc(barX + barW * progress, barY + barH / 2, 10, 0, Math.PI * 2);
+				ctx.fillStyle = "#ffffff";
+				ctx.fill();
+
+				// Timestamps
+				ctx.font = "600 22px 'JetBrains Mono', monospace";
+				ctx.fillStyle = isDark ? "#94a3b8" : "#64748b";
+				ctx.textAlign = "left";
+				ctx.fillText("02:18", barX, barY + 28);
+				ctx.textAlign = "right";
+				ctx.fillText("-01:14", barX + barW, barY + 28);
+
+				// 6. Minimalist Playback Controls
+				const controlsY = playerY + playerH - 70;
+				const cCenter = playerX + playerW / 2;
+
+				// Play Button Circle
+				ctx.beginPath();
+				ctx.arc(cCenter, controlsY, 32, 0, Math.PI * 2);
+				ctx.fillStyle = isDark ? "#ffffff" : "#0f172a";
+				ctx.fill();
+
+				// Play Triangle
+				ctx.beginPath();
+				ctx.moveTo(cCenter - 7, controlsY - 12);
+				ctx.lineTo(cCenter + 12, controlsY);
+				ctx.lineTo(cCenter - 7, controlsY + 12);
+				ctx.closePath();
+				ctx.fillStyle = isDark ? "#0f172a" : "#ffffff";
+				ctx.fill();
+
+				// Prev / Next icons
+				ctx.fillStyle = isDark ? "#94a3b8" : "#64748b";
+				// Prev |◀
+				ctx.fillRect(cCenter - 96, controlsY - 10, 3, 20);
+				ctx.beginPath();
+				ctx.moveTo(cCenter - 76, controlsY - 10);
+				ctx.lineTo(cCenter - 92, controlsY);
+				ctx.lineTo(cCenter - 76, controlsY + 10);
+				ctx.closePath();
+				ctx.fill();
+
+				// Next ▶|
+				ctx.fillRect(cCenter + 93, controlsY - 10, 3, 20);
+				ctx.beginPath();
+				ctx.moveTo(cCenter + 76, controlsY - 10);
+				ctx.lineTo(cCenter + 92, controlsY);
+				ctx.lineTo(cCenter + 76, controlsY + 10);
+				ctx.closePath();
+				ctx.fill();
+			} else if (template === "terminal-window") {
+				const isDark = inputs.theme !== "light";
+
+				// 1. Background
+				if (img) {
+					ctx.filter = "blur(50px) brightness(0.4)";
+					drawImageProp(
+						ctx,
+						img,
+						-80,
+						-80,
+						CANVAS_WIDTH + 160,
+						CANVAS_HEIGHT + 160,
+						inputs.imageOffsetX ?? 0.5,
+						inputs.imageOffsetY ?? 0.5,
+					);
+					ctx.filter = "none";
+					ctx.fillStyle = isDark
+						? "rgba(13, 17, 23, 0.7)"
+						: "rgba(241, 245, 249, 0.8)";
+					ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+				} else {
+					ctx.fillStyle = isDark ? "#090d16" : "#f1f5f9";
+					ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+					// Technical grid dots
+					ctx.fillStyle = isDark
+						? "rgba(255, 255, 255, 0.05)"
+						: "rgba(0, 0, 0, 0.04)";
+					const step = 48;
+					for (let x = 24; x < CANVAS_WIDTH; x += step) {
+						for (let y = 24; y < CANVAS_HEIGHT; y += step) {
+							ctx.fillRect(x, y, 2, 2);
+						}
+					}
+				}
+
+				// 2. Terminal Window Container
+				const winW = CANVAS_WIDTH - 160;
+				const winH = CANVAS_HEIGHT - 220;
+				const winX = 80;
+				const winY = 110;
+
+				ctx.save();
+				ctx.shadowColor = isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(0, 0, 0, 0.12)";
+				ctx.shadowBlur = 60;
+				ctx.shadowOffsetY = 24;
+				ctx.fillStyle = isDark ? "#0d1117" : "#ffffff";
+				roundRect(ctx, winX, winY, winW, winH, 36);
+				ctx.fill();
+
+				ctx.lineWidth = 1.5;
+				ctx.strokeStyle = isDark
+					? "rgba(255, 255, 255, 0.12)"
+					: "rgba(203, 213, 225, 0.8)";
+				ctx.stroke();
+				ctx.restore();
+
+				// 3. macOS Title Bar
+				const titleBarH = 72;
+				ctx.save();
+				roundRect(ctx, winX, winY, winW, winH, 36);
+				ctx.clip();
+
+				// Header background
+				ctx.fillStyle = isDark ? "#161b22" : "#f8fafc";
+				ctx.fillRect(winX, winY, winW, titleBarH);
+
+				// Bottom header divider
+				ctx.fillStyle = isDark
+					? "rgba(255, 255, 255, 0.08)"
+					: "rgba(0, 0, 0, 0.08)";
+				ctx.fillRect(winX, winY + titleBarH - 1, winW, 1);
+
+				// Traffic light dots
+				const dotY = winY + titleBarH / 2;
+				// Close (Red)
+				ctx.beginPath();
+				ctx.arc(winX + 40, dotY, 9, 0, Math.PI * 2);
+				ctx.fillStyle = "#ff5f56";
+				ctx.fill();
+				// Minimize (Yellow)
+				ctx.beginPath();
+				ctx.arc(winX + 70, dotY, 9, 0, Math.PI * 2);
+				ctx.fillStyle = "#ffbd2e";
+				ctx.fill();
+				// Maximize (Green)
+				ctx.beginPath();
+				ctx.arc(winX + 100, dotY, 9, 0, Math.PI * 2);
+				ctx.fillStyle = "#27c93f";
+				ctx.fill();
+
+				// Center Tab Title
+				const tabTitle = title || "main.sh — polma-engine";
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.fillStyle = isDark ? "#c9d1d9" : "#334155";
+				ctx.font = "600 24px 'JetBrains Mono', monospace";
+				ctx.fillText(tabTitle, winX + winW / 2, dotY);
+
+				// Right Branch Pill
+				ctx.textAlign = "right";
+				ctx.fillStyle = isDark ? "#58a6ff" : "#2563eb";
+				ctx.font = "700 20px 'JetBrains Mono', monospace";
+				ctx.fillText("git:(main) ⚡", winX + winW - 36, dotY);
+
+				// 4. Terminal Code / Log Body
+				const bodyPaddingX = 48;
+				const bodyStartY = winY + titleBarH + 54;
+				const contentW = winW - bodyPaddingX * 2;
+
+				// Prompt Line
+				ctx.textAlign = "left";
+				ctx.textBaseline = "top";
+
+				// Emerald prompt arrow
+				ctx.fillStyle = "#10b981";
+				ctx.font = "800 32px 'JetBrains Mono', monospace";
+				ctx.fillText("➜", winX + bodyPaddingX, bodyStartY);
+
+				// Directory context
+				ctx.fillStyle = isDark ? "#38bdf8" : "#0284c7";
+				ctx.fillText("~/workspace", winX + bodyPaddingX + 36, bodyStartY);
+
+				// Command text in bold
+				const cmdText = title ? `$ ${title}` : "$ run telemetry:production";
+				ctx.fillStyle = isDark ? "#f0f6fc" : "#0f172a";
+				ctx.font = "700 32px 'JetBrains Mono', monospace";
+				ctx.fillText(cmdText, winX + bodyPaddingX + 270, bodyStartY);
+
+				// Output Content
+				const outStartY = bodyStartY + 64;
+				const outputText =
+					description ||
+					"[INFO] Initializing high-speed Edge runtime...\n[SUCCESS] Loaded 22 verified developer utilities.\n[METRICS] LCP: 0.8s · FID: 12ms · CLS: 0.00\n[STATUS] Ready for zero-regression deployment.";
+
+				const outLines = outputText.split("\n");
+				let curOutY = outStartY;
+				const outLineHeight = 48;
+
+				ctx.font = "500 28px 'JetBrains Mono', monospace";
+
+				outLines.forEach((l, index) => {
+					// Line number
+					ctx.fillStyle = isDark ? "#484f58" : "#94a3b8";
+					ctx.textAlign = "right";
+					ctx.fillText(
+						String(index + 1).padStart(2, "0"),
+						winX + bodyPaddingX + 24,
+						curOutY,
+					);
+
+					// Text color highlighting
+					ctx.textAlign = "left";
+					if (l.includes("[SUCCESS]") || l.includes("✔")) {
+						ctx.fillStyle = "#34d399";
+					} else if (l.includes("[ERROR]") || l.includes("✘")) {
+						ctx.fillStyle = "#f87171";
+					} else if (l.includes("[INFO]") || l.includes("ℹ")) {
+						ctx.fillStyle = isDark ? "#60a5fa" : "#2563eb";
+					} else {
+						ctx.fillStyle = isDark ? "#c9d1d9" : "#334155";
+					}
+
+					wrapText(
+						ctx,
+						l,
+						winX + bodyPaddingX + 54,
+						curOutY,
+						contentW - 60,
+						outLineHeight,
+						"left",
+					);
+					curOutY += outLineHeight;
+				});
+
+				// Blinking Terminal Cursor Block
+				ctx.fillStyle = "#10b981";
+				ctx.fillRect(winX + bodyPaddingX + 54, curOutY + 12, 16, 32);
+
+				ctx.restore();
 			}
 		};
 

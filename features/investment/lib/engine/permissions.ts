@@ -352,10 +352,23 @@ export function derivePermissions(
 		};
 	}
 
+	const ihsgSectorGates: string[] = [];
+	const usdidrFactor = ihsgRegime.factors.find((f) => f.key === "usdidr_trend");
+	if (usdidrFactor && usdidrFactor.direction === "bearish") {
+		ihsgSectorGates.push(
+			"STRICT AVOID: Heavy Importers & Consumer Retail (Weak IDR Pressure)",
+		);
+	} else if (usdidrFactor && usdidrFactor.direction === "bullish") {
+		ihsgSectorGates.push(
+			"FAVORED: Banking & Consumer Staples (Favorable IDR Liquidity)",
+		);
+	}
+
 	return {
 		ihsg: ihsgPerms,
 		crypto: cryptoPerms,
 		altcoins: altcoinPerms,
+		ihsgSectorGates,
 		globalStressActive,
 		summaryNotes,
 	};

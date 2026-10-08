@@ -10,7 +10,9 @@ import {
 	Vault,
 } from "lucide-react";
 import type { MarketPlaybookScript } from "../data/playbooks";
-import type { RegimeState } from "../types";
+import type { RegimeState, InvestmentCompassData } from "../types";
+import { getSizingMandate } from "../lib/engine/sizing";
+import { checkVolatilityExpansion } from "../lib/indicators";
 
 const getStateBadge = (state: RegimeState) => {
 	switch (state) {
@@ -29,14 +31,75 @@ const getStateBadge = (state: RegimeState) => {
 
 export default function MarketPlaybook({
 	playbooks,
+	compassData,
+	scores,
 }: {
 	playbooks: {
 		ihsg: MarketPlaybookScript;
 		crypto: MarketPlaybookScript;
 	};
+	compassData?: InvestmentCompassData;
+	scores?: { ihsg: number; crypto: number };
 }) {
 	const renderScriptCard = (script: MarketPlaybookScript) => {
 		const isIhsg = script.market === "IHSG";
+		let tacticalAlert = null;
+
+		if (isIhsg && compassData?.markets.ihsgFlows?.streakDays != null) {
+			const streak = compassData.markets.ihsgFlows.streakDays;
+			if (streak <= -3) {
+				tacticalAlert = {
+					color: "rose",
+					message: `Caution: Sustained Institutional Distribution (${streak}D Outflow Streak)`,
+					action:
+						"Prioritize defensive sizing and tighten stop losses immediately.",
+				};
+			} else if (streak >= 3) {
+				tacticalAlert = {
+					color: "emerald",
+					message: `Institutional Accumulation Confirmed (+${streak}D Inflow Streak)`,
+					action: "Favor trend-following setups and ride momentum leaders.",
+				};
+			}
+		}
+
+		if (!isIhsg && compassData?.markets.cryptoOnChain?.mvrvZScore != null) {
+			const mvrv = compassData.markets.cryptoOnChain.mvrvZScore;
+			if (mvrv < 1.0) {
+				tacticalAlert = {
+					color: "emerald",
+					message: `Generational Spot Accumulation Triggered (MVRV: ${mvrv.toFixed(2)})`,
+					action: "Deploy spot tranches aggressively. Deep cycle value zone.",
+				};
+			} else if (mvrv > 3.7) {
+				tacticalAlert = {
+					color: "rose",
+					message: `Historic Cycle Overheat (MVRV: ${mvrv.toFixed(2)})`,
+					action: "De-risk heavy altcoin exposure. Move towards stablecoins.",
+				};
+			}
+		}
+
+		const currentScore = isIhsg ? scores?.ihsg : scores?.crypto;
+		const sizingMandate =
+			currentScore != null ? getSizingMandate(currentScore) : null;
+
+		let volatilityAlert = null;
+		const historySymbol = isIhsg ? "^JKSE" : "BTC-USD";
+		const historySeries = compassData?.markets.history?.[historySymbol];
+		if (historySeries && historySeries.points.length > 30) {
+			const { isExpanded } = checkVolatilityExpansion(historySeries.points);
+			if (isExpanded) {
+				volatilityAlert = {
+					message: "EXPANDED VOLATILITY DETECTED",
+					action:
+						"14-day volatility exceeds 1.5x baseline. Widen stop-losses and reduce position sizing to avoid chop.",
+					color: "amber",
+				};
+			}
+		}
+
+		const isCircuitBreakerActive = sizingMandate?.isTradingLocked ?? false;
 
 		return (
 			<div
@@ -74,30 +137,114 @@ export default function MarketPlaybook({
 						</span>
 					</div>
 
+					{/* Sizing Mandate Strip */}
+					{sizingMandate && (
+						<div className="px-3.5 py-3 rounded-xl bg-indigo-50/50 border border-indigo-100 flex items-center justify-between gap-2.5">
+							<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800/70 shrink-0 flex items-center gap-1.5">
+								<Target className="w-3.5 h-3.5 text-indigo-500" />
+								Sizing Target
+							</span>
+							<span className="text-xs font-extrabold text-indigo-950 text-right font-mono">
+								Risk: {sizingMandate.maxRiskPerTradePct}% | Exp:{" "}
+								{sizingMandate.maxPortfolioExposurePct}%
+							</span>
+						</div>
+					)}
+
 					{/* Headline description */}
 					<p className="text-xs sm:text-sm font-semibold text-slate-700 leading-relaxed">
 						{script.headline}
 					</p>
 
-					{/* Dos & Avoids Grid */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-						<div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-100/80 space-y-2">
-							<span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-								<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-								Tactical Dos
-							</span>
-							<ul className="space-y-1.5">
-								{script.dos.map((item, idx) => (
-									<li
-										key={idx}
-										className="text-xs font-semibold text-slate-700 flex items-start gap-1.5 leading-snug"
-									>
-										<span className="w-1 h-1 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-										<span>{item}</span>
-									</li>
-								))}
-							</ul>
+					{/* Tactical Override Alert */}
+					{tacticalAlert && (
+						<div
+							className={`p-3.5 rounded-xl border flex items-start gap-2.5 shadow-sm ${
+								tacticalAlert.color === "rose"
+									? "bg-rose-50/50 border-rose-200"
+									: "bg-emerald-50/50 border-emerald-200"
+							}`}
+						>
+							<ShieldAlert
+								className={`w-4 h-4 shrink-0 mt-0.5 ${
+									tacticalAlert.color === "rose"
+										? "text-rose-600"
+										: "text-emerald-600"
+								}`}
+							/>
+							<div className="space-y-0.5">
+								<span
+									className={`text-[10px] sm:text-xs font-black uppercase tracking-wider block ${
+										tacticalAlert.color === "rose"
+											? "text-rose-800"
+											: "text-emerald-800"
+									}`}
+								>
+									{tacticalAlert.message}
+								</span>
+								<p
+									className={`text-[10px] sm:text-xs font-semibold leading-relaxed ${
+										tacticalAlert.color === "rose"
+											? "text-rose-700/80"
+											: "text-emerald-700/80"
+									}`}
+								>
+									{tacticalAlert.action}
+								</p>
+							</div>
 						</div>
+					)}
+
+					{/* Volatility Alert */}
+					{volatilityAlert && !isCircuitBreakerActive && (
+						<div className="p-3.5 rounded-xl border flex items-start gap-2.5 shadow-sm bg-amber-50/50 border-amber-200">
+							<ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+							<div className="space-y-0.5">
+								<span className="text-[10px] sm:text-xs font-black uppercase tracking-wider block text-amber-800">
+									{volatilityAlert.message}
+								</span>
+								<p className="text-[10px] sm:text-xs font-semibold leading-relaxed text-amber-700/80">
+									{volatilityAlert.action}
+								</p>
+							</div>
+						</div>
+					)}
+
+					{/* Dos & Avoids Grid */}
+					<div
+						className={`grid ${sizingMandate?.isTradingLocked ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"} gap-3 pt-2`}
+					>
+						{sizingMandate?.isTradingLocked ? (
+							<div className="p-4 rounded-2xl bg-rose-600 border border-rose-700 shadow-inner flex flex-col items-center justify-center text-center space-y-2">
+								<ShieldAlert className="w-8 h-8 text-rose-100" />
+								<div>
+									<h4 className="text-sm font-black tracking-wide uppercase text-white">
+										No Trade Zone
+									</h4>
+									<p className="text-xs font-semibold text-rose-200 mt-0.5">
+										Circuit breaker active. All tactical trading locked.
+									</p>
+								</div>
+							</div>
+						) : (
+							<div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-100/80 space-y-2">
+								<span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+									<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+									Tactical Dos
+								</span>
+								<ul className="space-y-1.5">
+									{script.dos.map((item, idx) => (
+										<li
+											key={idx}
+											className="text-xs font-semibold text-slate-700 flex items-start gap-1.5 leading-snug"
+										>
+											<span className="w-1 h-1 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+											<span>{item}</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
 
 						<div className="p-3.5 rounded-2xl bg-rose-50/50 border border-rose-100/80 space-y-2">
 							<span className="text-[10px] font-black uppercase tracking-wider text-rose-800 flex items-center gap-1.5">

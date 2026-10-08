@@ -20,8 +20,8 @@ describe("Social Canvas Templates & Groups Configuration", () => {
 		}
 	});
 
-	it("has 17 templates with valid groupings and field definitions", () => {
-		expect(TEMPLATES).toHaveLength(17);
+	it("has 21 templates with valid groupings and field definitions", () => {
+		expect(TEMPLATES).toHaveLength(21);
 
 		const validGroupIds = new Set(TEMPLATE_GROUPS.map((g) => g.id));
 		const templateIds = new Set<string>();

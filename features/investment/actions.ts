@@ -23,6 +23,9 @@ import type {
 	PriceHistorySeries,
 	CryptoFlowsSnapshot,
 } from "@/services/market-data/types";
+import { fetchBitcoinMvrv } from "@/services/market-data/onchain";
+import { fetchIhsgForeignFlow } from "@/services/market-data/idx-flows";
+import type { CryptoOnChainSnapshot, IhsgForeignFlowSnapshot } from "./types";
 
 /**
  * Fetch Fear and Greed Index data from CNN
@@ -259,16 +262,20 @@ async function getMacroData(
 	}
 
 	try {
-		// Key US macro series to fetch
-		// FEDFUNDS (Fed Funds Rate), CPIAUCSL (CPI YoY), UNRATE (Unemployment)
+		// Key macro series to fetch:
+		// FEDFUNDS (Fed Funds Rate), CPIAUCSL (CPI YoY), M2SL (M2 YoY Money Supply), UNRATE (Unemployment)
 		// DGS10 (10Y Treasury), T10Y2Y (Yield Curve), BAMLH0A0HYM2 (HY OAS Spread)
+		// IRSTCB01IDM156N (Bank Indonesia Policy Rate), IRLTLT01IDM156N (Indonesia 10Y Yield)
 		const seriesConfigs: Array<{ id: string; units?: string }> = [
 			{ id: "FEDFUNDS" },
 			{ id: "CPIAUCSL", units: "pc1" },
+			{ id: "M2SL", units: "pc1" },
 			{ id: "UNRATE" },
 			{ id: "DGS10" },
 			{ id: "T10Y2Y" },
 			{ id: "BAMLH0A0HYM2" },
+			{ id: "IRSTCB01IDM156N" },
+			{ id: "IRLTLT01IDM156N" },
 		];
 		const macroData: Record<string, MacroSeries> = {};
 
@@ -359,8 +366,11 @@ async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
 
 	if (!forceRefresh) {
 		try {
-			const cached = await redis.get<CryptoFlowsSnapshot>(cacheKey);
-			if (cached) return { data: cached, sourceOk: true };
+			const cached = await redis.get<CryptoFlowsSnapshot | string>(cacheKey);
+			if (cached) {
+				const parsed = typeof cached === "string" ? JSON.parse(cached) : cached;
+				if (parsed) return { data: parsed, sourceOk: true };
+			}
 		} catch (e) {
 			console.warn("[Investment] Crypto flows cache read failed:", e);
 		}
@@ -394,12 +404,97 @@ async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
 	}
 
 	try {
-		const backup = await redis.get<CryptoFlowsSnapshot>(backupKey);
-		if (backup) return { data: backup, sourceOk: false };
+		const backup = await redis.get<CryptoFlowsSnapshot | string>(backupKey);
+		if (backup) {
+			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
+			if (parsed) return { data: parsed, sourceOk: false };
+		}
 	} catch (e) {
 		console.warn("[Investment] Crypto flows backup read failed:", e);
 	}
 
+	return { data: null, sourceOk: false };
+}
+
+/**
+ * Retrieves crypto on-chain valuation metrics.
+ */
+async function getCryptoOnChainData(forceRefresh: boolean): Promise<{
+	data: CryptoOnChainSnapshot | null;
+	sourceOk: boolean;
+}> {
+	const cacheKey = CACHE_KEYS.CRYPTO_ONCHAIN;
+	const backupKey = CACHE_KEYS.CRYPTO_ONCHAIN_BACKUP;
+
+	if (!forceRefresh) {
+		try {
+			const cached = await redis.get<CryptoOnChainSnapshot | string>(cacheKey);
+			if (cached) {
+				const parsed = typeof cached === "string" ? JSON.parse(cached) : cached;
+				if (parsed && typeof parsed.mvrvZScore === "number") {
+					return { data: parsed, sourceOk: true };
+				}
+			}
+		} catch (e) {
+			console.warn("[Investment] Crypto onchain cache read failed:", e);
+		}
+	}
+
+	try {
+		const mvrv = await fetchBitcoinMvrv({
+			revalidate: 21600,
+			fresh: forceRefresh,
+		});
+
+		if (mvrv != null) {
+			const snapshot: CryptoOnChainSnapshot = {
+				mvrvZScore: mvrv,
+				updatedAt: Math.floor(Date.now() / 1000),
+			};
+
+			await redis.set(cacheKey, JSON.stringify(snapshot), { ex: 21600 }); // 6 hour TTL
+			await redis.set(backupKey, JSON.stringify(snapshot));
+			return { data: snapshot, sourceOk: true };
+		}
+	} catch (e) {
+		console.warn("[Investment] Live crypto onchain fetch failed:", e);
+	}
+
+	try {
+		const backup = await redis.get<CryptoOnChainSnapshot | string>(backupKey);
+		if (backup) {
+			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
+			if (parsed && typeof parsed.mvrvZScore === "number") {
+				return { data: parsed, sourceOk: false };
+			}
+		}
+	} catch (e) {
+		console.warn("[Investment] Crypto onchain backup read failed:", e);
+	}
+
+	return { data: null, sourceOk: false };
+}
+
+/**
+ * Retrieves IHSG Net Foreign Flow and Streak.
+ */
+async function getIhsgFlowsData(forceRefresh: boolean): Promise<{
+	data: IhsgForeignFlowSnapshot | null;
+	sourceOk: boolean;
+}> {
+	// Flows calculated locally using Redis history and stock summary cache.
+	// We still provide a sourceOk flag for telemetry.
+	try {
+		const flows = await fetchIhsgForeignFlow({
+			revalidate: 21600,
+			fresh: forceRefresh,
+		});
+		if (flows != null) {
+			return { data: flows, sourceOk: true };
+		}
+	} catch (e) {
+		console.warn("[Investment] IHSG flows fetch failed:", e);
+	}
 	return { data: null, sourceOk: false };
 }
 
@@ -418,6 +513,8 @@ export async function getInvestmentCompass(
 		macroResult,
 		historyResult,
 		cryptoFlowsResult,
+		cryptoOnChainResult,
+		ihsgFlowsResult,
 	] = await Promise.allSettled([
 		getFearAndGreedData(),
 		getCryptoFearAndGreedData(),
@@ -426,6 +523,8 @@ export async function getInvestmentCompass(
 		getMacroData(forceRefresh),
 		getHistoryData(forceRefresh),
 		getCryptoFlowsData(forceRefresh),
+		getCryptoOnChainData(forceRefresh),
+		getIhsgFlowsData(forceRefresh),
 	]);
 
 	const traditional = cnnResult.status === "fulfilled" ? cnnResult.value : null;
@@ -451,6 +550,14 @@ export async function getInvestmentCompass(
 		cryptoFlowsResult.status === "fulfilled"
 			? cryptoFlowsResult.value
 			: { data: null, sourceOk: false };
+	const onChainData =
+		cryptoOnChainResult.status === "fulfilled"
+			? cryptoOnChainResult.value
+			: { data: null, sourceOk: false };
+	const ihsgFlowData =
+		ihsgFlowsResult.status === "fulfilled"
+			? ihsgFlowsResult.value
+			: { data: null, sourceOk: false };
 
 	const compassData: InvestmentCompassData = {
 		sentiment: { traditional, crypto },
@@ -460,6 +567,8 @@ export async function getInvestmentCompass(
 			macro: macroData.data,
 			history: historyData.history,
 			cryptoFlows: flowsData.data,
+			cryptoOnChain: onChainData.data,
+			ihsgFlows: ihsgFlowData.data,
 		},
 		sources: {
 			cnn: {
@@ -501,6 +610,16 @@ export async function getInvestmentCompass(
 				ok: flowsData.data?.btcFundingRate8hPct != null,
 				label: "Crypto Derivatives",
 				stale: flowsData.data?.btcFundingRate8hPct == null,
+			},
+			onchain: {
+				ok: onChainData.sourceOk,
+				label: "On-Chain Valuation",
+				stale: !onChainData.sourceOk,
+			},
+			idxFlows: {
+				ok: ihsgFlowData.sourceOk,
+				label: "IDX Foreign Flow",
+				stale: !ihsgFlowData.sourceOk,
 			},
 		},
 		fetchedAt: new Date().toISOString(),

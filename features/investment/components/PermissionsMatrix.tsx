@@ -53,6 +53,7 @@ export default function PermissionsMatrix({
 			market: "Indonesia (IHSG)",
 			subtitle: "Equities & LQ45 Constituents",
 			data: permissions.ihsg,
+			gates: permissions.ihsgSectorGates,
 		},
 		{
 			market: "Crypto Majors",
@@ -63,7 +64,7 @@ export default function PermissionsMatrix({
 			market: "Speculative Altcoins",
 			subtitle: "High-Beta Tokens & Non-Majors",
 			data: permissions.altcoins,
-			isGated: true,
+			isGated: permissions.altcoins.scalp.status === "not_allowed",
 		},
 	];
 
@@ -163,6 +164,18 @@ export default function PermissionsMatrix({
 											<span className="text-[11px] text-slate-400 font-medium block mt-0.5">
 												{row.subtitle}
 											</span>
+											{row.gates && row.gates.length > 0 && (
+												<div className="mt-2 space-y-1">
+													{row.gates.map((gate, gIdx) => (
+														<span
+															key={gIdx}
+															className={`block text-[9px] font-bold px-1.5 py-0.5 rounded border ${gate.includes("AVOID") ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-emerald-50 text-emerald-600 border-emerald-200"}`}
+														>
+															{gate}
+														</span>
+													))}
+												</div>
+											)}
 										</td>
 
 										{/* Scalping */}
@@ -257,6 +270,18 @@ export default function PermissionsMatrix({
 										<p className="text-[11px] text-slate-500 font-medium">
 											{row.subtitle}
 										</p>
+										{row.gates && row.gates.length > 0 && (
+											<div className="mt-2 space-y-1">
+												{row.gates.map((gate, gIdx) => (
+													<span
+														key={gIdx}
+														className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded border ${gate.includes("AVOID") ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-emerald-50 text-emerald-600 border-emerald-200"}`}
+													>
+														{gate}
+													</span>
+												))}
+											</div>
+										)}
 									</div>
 									<div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
 										<span className="text-[10px] font-bold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">

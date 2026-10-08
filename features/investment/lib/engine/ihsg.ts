@@ -23,7 +23,7 @@ export function scoreIhsg(
 		data.markets.history?.JKSE?.points ??
 		[];
 
-	// 1. IHSG vs 200-Day Moving Average - Weight 25
+	// 1. IHSG vs 200-Day Moving Average - Weight 20
 	const ma200 = sma(ihsgHistory, 200);
 	if (ihsgPrice != null && ma200 != null) {
 		const dist200 = distancePct(ihsgPrice, ma200);
@@ -42,7 +42,7 @@ export function scoreIhsg(
 				maximumFractionDigits: 2,
 			})})`,
 			score,
-			weight: 25,
+			weight: 20,
 			direction: dir,
 			note: isAbove
 				? `Trading +${dist200?.toFixed(1)}% above the 200-day baseline. Primary structural bull trend intact.`
@@ -51,7 +51,7 @@ export function scoreIhsg(
 		});
 	}
 
-	// 2. IHSG vs 50-Day Moving Average & Momentum - Weight 20
+	// 2. IHSG vs 50-Day Moving Average & Momentum - Weight 15
 	const ma50 = sma(ihsgHistory, 50);
 	const slope50 = maSlopePct(ihsgHistory, 50, 10);
 	if (ihsgPrice != null && ma50 != null) {
@@ -80,7 +80,7 @@ export function scoreIhsg(
 			label: "IHSG Intermediate Trend (50-Day MA)",
 			valueStr: `${isAbove50 ? "Above" : "Below"} (${dist50 != null && dist50 > 0 ? "+" : ""}${dist50?.toFixed(1)}%)`,
 			score,
-			weight: 20,
+			weight: 15,
 			direction: dir,
 			note:
 				isAbove50 && isRising
@@ -173,7 +173,59 @@ export function scoreIhsg(
 		});
 	}
 
-	// 4. Drawdown from 52-Week High - Weight 10
+	// 4. Bank Indonesia Policy Rate & Stance - Weight 15
+	const biRateSeries = data.markets.macro?.IRSTCB01IDM156N?.data;
+	if (biRateSeries && biRateSeries.length > 0) {
+		const latestBi = biRateSeries[biRateSeries.length - 1];
+		const prevBi =
+			biRateSeries.length > 1 ? biRateSeries[biRateSeries.length - 2] : null;
+		const rate = latestBi.value;
+		const isCutting = prevBi ? rate < prevBi.value : false;
+		const isHiking = prevBi ? rate > prevBi.value : false;
+
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		let note = `Bank Indonesia policy rate steady at ${rate.toFixed(2)}%.`;
+
+		if (isCutting) {
+			score = 85;
+			dir = "bullish";
+			note = `Bank Indonesia cutting benchmark rate (${rate.toFixed(2)}%), stimulating credit expansion and corporate multiples.`;
+		} else if (isHiking) {
+			score = 25;
+			dir = "bearish";
+			note = `Bank Indonesia hiking benchmark rate (${rate.toFixed(2)}%) to defend Rupiah stability; tightening domestic credit.`;
+		} else if (rate <= thresholds.macro.biRate.neutral) {
+			score = 75;
+			dir = "bullish";
+			note = `Accommodative domestic rate stance (${rate.toFixed(2)}%) supportive of banking NIM and corporate growth.`;
+		} else if (rate >= thresholds.macro.biRate.restrictive) {
+			score = 35;
+			dir = "bearish";
+			note = `Restrictive domestic interest rate (${rate.toFixed(2)}%) maintained to defend FX stability.`;
+		} else {
+			score = 55;
+			dir = "neutral";
+			note = `Bank Indonesia benchmark rate steady within neutral policy corridor (${rate.toFixed(2)}%).`;
+		}
+
+		factors.push({
+			key: "bi_rate",
+			label: "Bank Indonesia Policy Rate",
+			valueStr: `${rate.toFixed(2)}%`,
+			score,
+			weight: 15,
+			direction: dir,
+			note,
+			asOf: latestBi.date,
+		});
+
+		if (rate >= thresholds.macro.biRate.restrictive) {
+			contextFlags.push(`Restrictive BI Rate (${rate.toFixed(2)}%)`);
+		}
+	}
+
+	// 5. Drawdown from 52-Week High - Weight 10
 	const high52 = ihsgQuote?.high52w ?? null;
 	if (ihsgPrice != null && high52 != null) {
 		const dd = drawdownFromHigh(ihsgPrice, high52);
@@ -212,22 +264,46 @@ export function scoreIhsg(
 		}
 	}
 
-	// 5. Global Macro Liquidity Carry-in - Weight 25
+	// 6. Global Macro Liquidity Carry-in - Weight 20
 	factors.push({
 		key: "global_liquidity_carry",
 		label: "Global Liquidity Signal Carry-In",
 		valueStr: `${globalScore}/100`,
 		score: globalScore,
-		weight: 25,
+		weight: 20,
 		direction:
 			globalScore >= 60 ? "bullish" : globalScore <= 40 ? "bearish" : "neutral",
 		note: "Global dollar liquidity strongly dictates foreign institutional flows into IDX.",
 	});
 
-	// Context Check: Active Seasonality
+	// 7. Active Seasonality - Weight 10
 	const activeSeasons = getActiveSeasonality();
 	const idSeason = activeSeasons.find((s) => s.market === "ID");
 	if (idSeason) {
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+
+		if (idSeason.status === "Bullish Tendency") {
+			score = 80;
+			dir = "bullish";
+		} else if (idSeason.status === "Defensive / Consolidation") {
+			score = 30;
+			dir = "bearish";
+		} else if (idSeason.status === "Event Driven") {
+			score = 65;
+			dir = "bullish";
+		}
+
+		factors.push({
+			key: "ihsg_seasonality",
+			label: "Historical Market Seasonality",
+			valueStr: idSeason.title,
+			score,
+			weight: 10,
+			direction: dir,
+			note: idSeason.description,
+		});
+
 		contextFlags.push(`${idSeason.title} (${idSeason.status})`);
 	}
 

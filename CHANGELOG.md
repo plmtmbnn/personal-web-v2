@@ -1,3 +1,10 @@
+# [0.101.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.100.1...v0.101.0) (2026-10-09)
+
+
+### Features
+
+* **ui:** implement localized skeleton loading architecture and fix liverpool hydration ([fec8267](https://github.com/plmtmbnn/personal-web-v2/commit/fec8267c5277629c8f74e079185375e457ce0961))
+
 ## [0.100.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.100.0...v0.100.1) (2026-10-09)
 
 # [0.100.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.99.0...v0.100.0) (2026-10-08)

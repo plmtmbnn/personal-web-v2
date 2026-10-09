@@ -84,30 +84,6 @@ export const getBlogBySlugStatic = cache(
 );
 
 /**
- * Fetch all published blogs, ordered by date DESC. (Dynamic/Server-Side)
- */
-export async function getBlogs(): Promise<Blog[]> {
-	const supabase = await createClient();
-	try {
-		const { data, error } = await supabase
-			.from("blogs")
-			.select("*")
-			.eq("published", true)
-			.order("date", { ascending: false });
-
-		if (error) {
-			console.error("Supabase error fetching blogs:", error);
-			return [];
-		}
-
-		return data as Blog[];
-	} catch (error) {
-		console.error("Unexpected error fetching blogs:", error);
-		return [];
-	}
-}
-
-/**
  * Fetch a single blog by its unique slug. (Dynamic/Server-Side)
  * Allows admins to fetch draft/unpublished posts for previewing.
  * Wrapped in React cache() to deduplicate concurrent calls within
@@ -141,53 +117,6 @@ export const getBlogBySlug = cache(
 );
 
 /**
- * Fetch all blogs (published and drafts) for admin.
- */
-export async function getAdminBlogs(): Promise<Blog[]> {
-	const supabase = await createClient();
-	try {
-		const { data, error } = await supabase
-			.from("blogs")
-			.select("*")
-			.order("date", { ascending: false });
-
-		if (error) {
-			console.error("Supabase error fetching admin blogs:", error);
-			return [];
-		}
-
-		return data as Blog[];
-	} catch (error) {
-		console.error("Unexpected error fetching admin blogs:", error);
-		return [];
-	}
-}
-
-/**
- * Fetch a single blog by ID (for editing).
- */
-export async function getBlogById(id: string): Promise<Blog | null> {
-	const supabase = await createClient();
-	try {
-		const { data, error } = await supabase
-			.from("blogs")
-			.select("*")
-			.eq("id", id)
-			.single();
-
-		if (error) {
-			console.error(`Error fetching blog by ID ${id}:`, error.message);
-			return null;
-		}
-
-		return data as Blog;
-	} catch (error) {
-		console.error(`Unexpected error fetching blog by ID: ${id}`, error);
-		return null;
-	}
-}
-
-/**
  * Fetch related posts from the same category for static generation (no cookies accessed).
  */
 export const getRelatedPostsStatic = cache(
@@ -217,37 +146,3 @@ export const getRelatedPostsStatic = cache(
 		}
 	},
 );
-
-/**
- * Fetch related posts from the same category, excluding the current slug.
- * Used for the "More from the Journal" section at the bottom of blog detail pages.
- */
-export async function getRelatedPosts(
-	currentSlug: string,
-	category: string,
-	limit = 3,
-): Promise<Blog[]> {
-	const supabase = await createClient();
-	try {
-		const { data, error } = await supabase
-			.from("blogs")
-			.select(
-				"id, title, slug, description, date, category, image_url, is_headline, is_private, published, content",
-			)
-			.eq("published", true)
-			.eq("category", category)
-			.neq("slug", currentSlug)
-			.order("date", { ascending: false })
-			.limit(limit);
-
-		if (error) {
-			console.error("Error fetching related posts:", error.message);
-			return [];
-		}
-
-		return (data as Blog[]) || [];
-	} catch (error) {
-		console.error("Unexpected error fetching related posts:", error);
-		return [];
-	}
-}

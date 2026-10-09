@@ -21,10 +21,10 @@ export function computeCompass(
 	const globalRegime = scoreGlobalLiquidity(data, thresholds);
 
 	// 2. Score IHSG (takes global score as carry-in weight)
-	const ihsgRegime = scoreIhsg(data, thresholds, globalRegime.score);
+	const ihsgRegime = scoreIhsg(data, thresholds, globalRegime);
 
 	// 3. Score Crypto (takes global score as carry-in weight)
-	const cryptoRegime = scoreCrypto(data, thresholds, globalRegime.score);
+	const cryptoRegime = scoreCrypto(data, thresholds, globalRegime);
 
 	// 4. Calculate Realized Volatilities & Indicators for Gating
 	const ihsgHistory =

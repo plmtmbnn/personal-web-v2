@@ -356,17 +356,6 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus) {
 }
 
 /**
- * Toggle task completion — delegates to updateTaskStatus.
- */
-export async function toggleTask(
-	taskId: string,
-	isCurrentlyCompleted: boolean,
-) {
-	const newStatus: TaskStatus = isCurrentlyCompleted ? "todo" : "done";
-	await updateTaskStatus(taskId, newStatus);
-}
-
-/**
  * Update task details (title, priority, etc.)
  */
 export async function updateTask(taskId: string, updates: Partial<Task>) {
@@ -484,52 +473,6 @@ export async function getStaleTasks(): Promise<Task[]> {
 	}
 
 	return data as Task[];
-}
-
-/**
- * Permanently delete completed tasks older than 36 months (3 years).
- */
-export async function cleanupOldTasks() {
-	const threeYearsAgo = new Date();
-	threeYearsAgo.setMonth(threeYearsAgo.getMonth() - 36);
-	const dateStr = threeYearsAgo.toISOString();
-
-	const { error } = await SupabaseConn.from("tasks")
-		.delete()
-		.eq("status", "done")
-		.lt("completed_at", dateStr);
-
-	if (error) {
-		console.error("Error cleaning up old tasks:", error);
-		throw new Error("Failed to cleanup old tasks");
-	}
-
-	revalidatePath("/tasks");
-	await invalidateStatsCache();
-}
-
-/**
- * Bulk update due_date for a set of tasks.
- */
-export async function rescheduleStaleTasks(taskIds: string[], newDate: string) {
-	const { error } = await SupabaseConn.from("tasks")
-		.update({ due_date: newDate })
-		.in("id", taskIds);
-
-	if (error) {
-		console.error("Failed to reschedule tasks:", {
-			taskIds,
-			newDate,
-			error: error.message,
-			code: error.code,
-		});
-		throw new Error(
-			`Failed to reschedule ${taskIds.length} tasks. ${error.message || "Please try again."}`,
-		);
-	}
-
-	revalidatePath("/tasks");
-	await invalidateStatsCache();
 }
 
 /**
@@ -665,23 +608,6 @@ export async function archiveTask(taskId: string) {
 }
 
 /**
- * Unarchive a task.
- */
-export async function unarchiveTask(taskId: string) {
-	const { error } = await SupabaseConn.from("tasks")
-		.update({ archived_at: null })
-		.eq("id", taskId);
-
-	if (error) {
-		console.error("Failed to unarchive task:", error);
-		throw new Error("Failed to unarchive task");
-	}
-
-	revalidatePath("/tasks");
-	await invalidateStatsCache();
-}
-
-/**
  * Add a task dependency (TaskId depends on DependsOnId).
  * Automatically marks the dependent task as blocked if the blocker is incomplete.
  */
@@ -742,25 +668,6 @@ export async function getTaskDependencies(taskId: string): Promise<Task[]> {
 	if (error || !deps || deps.length === 0) return [];
 
 	const ids = deps.map((d) => d.depends_on);
-	const { data: tasks, error: tasksError } = await SupabaseConn.from("tasks")
-		.select("*")
-		.in("id", ids);
-
-	if (tasksError) return [];
-	return tasks as Task[];
-}
-
-/**
- * Get all tasks that depend on this task (tasks that are blocked by this task).
- */
-export async function getTasksThatDependOn(taskId: string): Promise<Task[]> {
-	const { data: deps, error } = await SupabaseConn.from("task_dependencies")
-		.select("task_id")
-		.eq("depends_on", taskId);
-
-	if (error || !deps || deps.length === 0) return [];
-
-	const ids = deps.map((d) => d.task_id);
 	const { data: tasks, error: tasksError } = await SupabaseConn.from("tasks")
 		.select("*")
 		.in("id", ids);

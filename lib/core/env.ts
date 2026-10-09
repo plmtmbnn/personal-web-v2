@@ -170,44 +170,22 @@ const validateEnv = () => {
 };
 
 // ── Export Single Instance ────────────────────────────────────────────────────
-export const ENV = validateEnv() as ReturnType<typeof validateEnv>;
+export const ENV_GLOBAL = validateEnv() as ReturnType<typeof validateEnv>;
 
-// Backward compatibility: ENV_GLOBAL for old imports
-export const ENV_GLOBAL = ENV;
+// ── Environment Telemetry ─────────────────────────────────────────────────────
 
-// ── Helper Functions ──────────────────────────────────────────────────────────
-
-export function isFeatureEnabled(flagName: string): boolean {
-	try {
-		const value = process.env[flagName];
-		if (!value) return false;
-		return ["true", "1", "yes"].some(
-			(v) => v.toLowerCase() === value.toLowerCase(),
-		);
-	} catch (error) {
-		console.warn(`Could not read environment variable: ${flagName}`, error);
-		return false;
-	}
-}
-
-export function getEnv<T>(key: string, defaultValue: T): T {
-	const value = process.env[key];
-	return value !== undefined && value !== ""
-		? (value as unknown as T)
-		: defaultValue;
-}
-
-export function logEnvironmentInfo() {
-	if (!ENV.NEXT_PUBLIC_DEBUG_MODE) return;
+function logEnvironmentInfo() {
+	if (!ENV_GLOBAL.NEXT_PUBLIC_DEBUG_MODE) return;
 
 	console.log("[ENV] Environment info (sensitive values omitted):", {
-		siteUrl: ENV.NEXT_PUBLIC_SITE_URL,
+		siteUrl: ENV_GLOBAL.NEXT_PUBLIC_SITE_URL,
 		mode: typeof window === "undefined" ? "server" : "client",
-		googleAuth: ENV.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH,
-		pinguardEnabled: ENV.NEXT_PUBLIC_ENABLE_PINGUARD,
-		gaId: !!ENV.NEXT_PUBLIC_GA_ID,
+		googleAuth: ENV_GLOBAL.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH,
+		pinguardEnabled: ENV_GLOBAL.NEXT_PUBLIC_ENABLE_PINGUARD,
+		gaId: !!ENV_GLOBAL.NEXT_PUBLIC_GA_ID,
 		hasFirebase: !!(
-			ENV.NEXT_PUBLIC_FIREBASE_API_KEY && ENV.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+			ENV_GLOBAL.NEXT_PUBLIC_FIREBASE_API_KEY &&
+			ENV_GLOBAL.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
 		),
 	});
 }

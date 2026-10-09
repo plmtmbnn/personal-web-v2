@@ -190,6 +190,11 @@ export interface MarketRegimeScore {
 	tone: Tone;
 	factors: RegimeFactor[];
 	contextFlags: string[];
+	asymmetryZone?: {
+		type: "accumulation" | "distribution";
+		title: string;
+		description: string;
+	} | null;
 }
 
 export type ActionPermission =

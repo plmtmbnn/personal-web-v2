@@ -79,6 +79,48 @@ export default function OverviewRegimes({
 						</span>
 					</div>
 
+					{/* Asymmetry Zone Callout Banner */}
+					{regime.asymmetryZone && (
+						<div
+							className={`mb-4 p-3.5 sm:p-4 rounded-2xl border transition-all ${
+								regime.asymmetryZone.type === "accumulation"
+									? "bg-emerald-500/10 border-emerald-500/30 text-emerald-950"
+									: "bg-rose-500/10 border-rose-500/30 text-rose-950"
+							}`}
+						>
+							<div className="flex items-center gap-2 mb-1">
+								<span className="relative flex h-2 w-2">
+									<span
+										className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+											regime.asymmetryZone.type === "accumulation"
+												? "bg-emerald-500"
+												: "bg-rose-500"
+										}`}
+									/>
+									<span
+										className={`relative inline-flex rounded-full h-2 w-2 ${
+											regime.asymmetryZone.type === "accumulation"
+												? "bg-emerald-600"
+												: "bg-rose-600"
+										}`}
+									/>
+								</span>
+								<span
+									className={`text-xs font-black uppercase tracking-wider ${
+										regime.asymmetryZone.type === "accumulation"
+											? "text-emerald-800"
+											: "text-rose-800"
+									}`}
+								>
+									{regime.asymmetryZone.title}
+								</span>
+							</div>
+							<p className="text-[11px] sm:text-xs font-medium leading-relaxed opacity-90 pl-4">
+								{regime.asymmetryZone.description}
+							</p>
+						</div>
+					)}
+
 					{/* Score Gauge Bar */}
 					<div className="space-y-1.5 mb-4 bg-slate-50/60 p-3 sm:p-3.5 rounded-2xl border border-slate-100">
 						<div className="flex items-center justify-between text-xs">

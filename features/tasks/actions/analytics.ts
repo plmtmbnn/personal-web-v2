@@ -10,7 +10,6 @@ import {
 	parseISO,
 	isSameDay,
 	addDays,
-	addMonths,
 } from "date-fns";
 
 export interface AnalyticsStats {
@@ -258,99 +257,13 @@ export async function getTaskStats(
 	return stats;
 }
 
-/**
- * Fetch granular pending metrics for TaskProgress component.
- */
-export async function getTaskProgressMetrics() {
-	const today = startOfToday();
-	const todayStr = format(today, "yyyy-MM-dd");
-
-	const { data: pendingTasks, error: pendingError } = await SupabaseConn.from(
-		"tasks",
-	)
-		.select("due_date, status, estimated_minutes")
-		.neq("status", "done")
-		.is("parent_id", null);
-
-	if (pendingError) {
-		console.error("Error fetching progress metrics:", pendingError);
-		return {
-			today: 0,
-			week: 0,
-			month: 0,
-			allTime: 0,
-			verified: 0,
-			progress: 0,
-			todayEstimatedMinutes: 0,
-			todayCompletedMinutes: 0,
-		};
-	}
-
-	// Also need today's completed for progress calculation
-	const { data: todayCompletedTasks, error: completedError } =
-		await SupabaseConn.from("tasks")
-			.select("estimated_minutes")
-			.eq("status", "done")
-			.is("parent_id", null)
-			.gte("completed_at", `${todayStr}T00:00:00`)
-			.lte("completed_at", `${todayStr}T23:59:59`);
-
-	if (completedError) {
-		console.error("Error fetching completed progress metrics:", completedError);
-	}
-
-	const activePending = (pendingTasks || []).filter(
-		(t) => (t.status || "todo") !== "cancelled",
-	);
-
-	const next7DaysStr = format(addDays(today, 7), "yyyy-MM-dd");
-	const next30DaysStr = format(addMonths(today, 1), "yyyy-MM-dd");
-
-	const pendingToday = activePending.filter((t) => t.due_date === todayStr);
-	const pendingTodayCount = pendingToday.length;
-	const pendingWeek = activePending.filter(
-		(t) => t.due_date >= todayStr && t.due_date <= next7DaysStr,
-	).length;
-	const pendingMonth = activePending.filter(
-		(t) => t.due_date >= todayStr && t.due_date <= next30DaysStr,
-	).length;
-	const allTimePending = activePending.length;
-
-	const completedTodayCount = todayCompletedTasks?.length || 0;
-	const totalToday = pendingTodayCount + completedTodayCount;
-	const progress =
-		totalToday > 0 ? Math.round((completedTodayCount / totalToday) * 100) : 0;
-
-	// Effort tracking for today
-	const pendingTodayEffort = pendingToday.reduce(
-		(acc, t) => acc + (t.estimated_minutes || 0),
-		0,
-	);
-	const completedTodayEffort = (todayCompletedTasks || []).reduce(
-		(acc, t) => acc + (t.estimated_minutes || 0),
-		0,
-	);
-	const todayEstimatedMinutes = pendingTodayEffort + completedTodayEffort;
-
-	return {
-		today: pendingTodayCount,
-		week: pendingWeek,
-		month: pendingMonth,
-		allTime: allTimePending,
-		verified: completedTodayCount,
-		progress,
-		todayEstimatedMinutes,
-		todayCompletedMinutes: completedTodayEffort,
-	};
-}
-
-export interface VelocityDay {
+interface VelocityDay {
 	date: string;
 	completedCount: number;
 	effortMinutes: number;
 }
 
-export interface BurndownDay {
+interface BurndownDay {
 	date: string;
 	actualRemaining: number;
 	idealRemaining: number;

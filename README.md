@@ -10,12 +10,11 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ### Code Quality
 - **Custom Hooks**: `useTags()` for centralized tag state management.
-- **Centralized Constants**: `lib/constants/index.ts` for all feature constants.
+- **Domain Constants**: Colocated domain constants under `features/*/constants` and `lib/shared/constants.ts`.
 
 ### Security
 - **Middleware**: CSP headers (`Content-Security-Policy`), XSS protection, clickjacking prevention (`X-Frame-Options`), referrer policy, permissions policy.
-- **Input Sanitization**: `lib/utils/sanitize.ts` with `DOMPurify` for user content.
-- **Zod Validation**: Added to `/api/utils/stock-data/` route.
+- **Zod Validation**: Input schema validation across API routes and forms.
 
 ### Testing
 - Basic vitest tests for `useTags` hook and task constants (`formatEstimatedTime`).

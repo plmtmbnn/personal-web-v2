@@ -32,7 +32,6 @@
 		"@vercel/speed-insights": "^2.0.0",
 		"cmdk": "^1.1.1",
 		"date-fns": "^4.4.0",
-		"dompurify": "^3.4.16",
 		"firebase": "^12.19.0",
 		"framer-motion": "^14.0.0",
 		"got-scraping": "^4.2.1",

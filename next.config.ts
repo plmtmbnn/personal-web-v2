@@ -85,7 +85,6 @@ const nextConfig: NextConfig = {
 		"node-sql-parser",
 		"papaparse",
 		"sql-formatter",
-		"dompurify",
 		"firebase",
 		"@upstash/redis",
 		"@upstash/ratelimit",

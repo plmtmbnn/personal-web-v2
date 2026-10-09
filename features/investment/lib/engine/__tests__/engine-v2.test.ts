@@ -222,6 +222,13 @@ function createMockData(
 					units: "Percent Change from Year Ago",
 					data: [{ date: "2026-09-01", value: 2.3 }],
 				},
+				PCEPILFE: {
+					id: "PCEPILFE",
+					name: "Core PCE Price Index",
+					frequency: "Monthly",
+					units: "Percent Change from Year Ago",
+					data: [{ date: "2026-09-01", value: 2.1 }],
+				},
 				IRSTCB01IDM156N: {
 					id: "IRSTCB01IDM156N",
 					name: "Bank Indonesia Policy Rate",
@@ -315,7 +322,9 @@ describe("Engine v2 computeCompass", () => {
 			{ date: "2026-10-02", value: 6.2 },
 		]; // Stress
 		mockData.markets.macro.M2SL.data = [{ date: "2026-10-02", value: -2.5 }]; // Liquidity contraction
-		mockData.markets.macro.CPIAUCSL.data = [{ date: "2026-10-02", value: 4.2 }]; // Hot inflation
+		mockData.markets.macro.PCEPILFE.data = [{ date: "2026-10-02", value: 4.2 }]; // Hot inflation
+		mockData.markets.macro.DGS10.data = [{ date: "2026-10-02", value: 5.2 }]; // Yield stress
+		mockData.markets.macro.FEDFUNDS.data = [{ date: "2026-10-02", value: 5.5 }]; // Peak restrictive
 		mockData.markets.quotes.DXY.last = 106.5; // Severe headwind
 		mockData.markets.quotes.VIX.last = 32.0; // Panic
 
@@ -370,40 +379,40 @@ describe("Engine v2 computeCompass", () => {
 		expect(output.permissions.ihsg.swing.status).toBe("not_allowed");
 	});
 
-	it("evaluates M2 expansion and cooling CPI as bullish factors in global liquidity", () => {
+	it("evaluates M2 expansion and cooling Core PCE as bullish factors in global liquidity", () => {
 		const mockData = createMockData();
 		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
 
 		const m2Factor = output.regimes.global.factors.find(
 			(f) => f.key === "m2_growth",
 		);
-		const cpiFactor = output.regimes.global.factors.find(
-			(f) => f.key === "cpi_yoy",
+		const pceFactor = output.regimes.global.factors.find(
+			(f) => f.key === "core_pce_yoy",
 		);
 
 		expect(m2Factor).toBeDefined();
 		expect(m2Factor?.direction).toBe("bullish");
-		expect(m2Factor?.weight).toBe(15);
+		expect(m2Factor?.weight).toBe(10);
 		expect(m2Factor?.valueStr).toBe("+4.8%");
 
-		expect(cpiFactor).toBeDefined();
-		expect(cpiFactor?.direction).toBe("bullish");
-		expect(cpiFactor?.weight).toBe(10);
-		expect(cpiFactor?.valueStr).toBe("2.3%");
+		expect(pceFactor).toBeDefined();
+		expect(pceFactor?.direction).toBe("bullish");
+		expect(pceFactor?.weight).toBe(15);
+		expect(pceFactor?.valueStr).toBe("2.1%");
 	});
 
-	it("flags sticky inflation when US CPI exceeds thresholds", () => {
+	it("flags sticky inflation when US Core PCE exceeds thresholds", () => {
 		const mockData = createMockData();
-		mockData.markets.macro.CPIAUCSL.data = [{ date: "2026-09-01", value: 3.9 }];
+		mockData.markets.macro.PCEPILFE.data = [{ date: "2026-09-01", value: 3.2 }];
 
 		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
-		const cpiFactor = output.regimes.global.factors.find(
-			(f) => f.key === "cpi_yoy",
+		const pceFactor = output.regimes.global.factors.find(
+			(f) => f.key === "core_pce_yoy",
 		);
 
-		expect(cpiFactor?.direction).toBe("bearish");
+		expect(pceFactor?.direction).toBe("bearish");
 		expect(output.regimes.global.contextFlags).toContain(
-			"Sticky Inflation (3.9% YoY)",
+			"Sticky Core PCE (3.2%)",
 		);
 	});
 
@@ -417,7 +426,7 @@ describe("Engine v2 computeCompass", () => {
 		);
 		expect(biFactor).toBeDefined();
 		expect(biFactor?.direction).toBe("bullish");
-		expect(biFactor?.weight).toBe(15);
+		expect(biFactor?.weight).toBe(10);
 		expect(biFactor?.note).toContain("cutting benchmark rate");
 	});
 
@@ -439,5 +448,92 @@ describe("Engine v2 computeCompass", () => {
 		expect(output.regimes.ihsg.contextFlags).toContain(
 			"Restrictive BI Rate (6.25%)",
 		);
+	});
+
+	it("evaluates US 10Y Real Yield as a primary factor in global liquidity", () => {
+		const mockData = createMockData();
+		// DGS10 = 3.85, PCEPILFE = 2.1 => Real Yield = 1.75%
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+
+		const realYieldFactor = output.regimes.global.factors.find(
+			(f) => f.key === "us_real_yield",
+		);
+		expect(realYieldFactor).toBeDefined();
+		expect(realYieldFactor?.weight).toBe(10);
+		expect(realYieldFactor?.valueStr).toBe("1.75%");
+		expect(realYieldFactor?.direction).toBe("neutral");
+	});
+
+	it("evaluates Foreign Institutional Flow streak as a primary factor in IHSG", () => {
+		const baseMock = createMockData();
+		const mockData = createMockData({
+			markets: {
+				...baseMock.markets,
+				ihsgFlows: {
+					netBuySell1dIdr: 450000000000,
+					netBuySell5dIdr: 1200000000000,
+					streakDays: 4,
+					asOf: "2026-10-04",
+				},
+			},
+		});
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		const flowFactor = output.regimes.ihsg.factors.find(
+			(f) => f.key === "ihsg_foreign_flow",
+		);
+
+		expect(flowFactor).toBeDefined();
+		expect(flowFactor?.weight).toBe(10);
+		expect(flowFactor?.direction).toBe("bullish");
+		expect(flowFactor?.valueStr).toBe("+4D Inflow");
+		expect(output.regimes.ihsg.asymmetryZone?.type).toBe("accumulation");
+	});
+
+	it("evaluates Bitcoin MVRV Z-Score as a primary factor and triggers Generational Accumulation asymmetry", () => {
+		const baseMock = createMockData();
+		const mockData = createMockData({
+			markets: {
+				...baseMock.markets,
+				cryptoOnChain: {
+					mvrvZScore: 0.85,
+					asOf: "2026-10-04",
+				},
+			},
+		});
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		const mvrvFactor = output.regimes.crypto.factors.find(
+			(f) => f.key === "crypto_mvrv",
+		);
+
+		expect(mvrvFactor).toBeDefined();
+		expect(mvrvFactor?.direction).toBe("bullish");
+		expect(mvrvFactor?.valueStr).toBe("0.85");
+		expect(output.regimes.crypto.asymmetryZone?.type).toBe("accumulation");
+		expect(output.regimes.crypto.asymmetryZone?.title).toContain(
+			"Generational Asymmetry",
+		);
+	});
+
+	it("triggers Cycle Distribution Alert when MVRV indicates market overheat", () => {
+		const baseMock = createMockData();
+		const mockData = createMockData({
+			markets: {
+				...baseMock.markets,
+				cryptoOnChain: {
+					mvrvZScore: 3.45,
+					asOf: "2026-10-04",
+				},
+			},
+		});
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		const mvrvFactor = output.regimes.crypto.factors.find(
+			(f) => f.key === "crypto_mvrv",
+		);
+
+		expect(mvrvFactor?.direction).toBe("bearish");
+		expect(output.regimes.crypto.asymmetryZone?.type).toBe("distribution");
 	});
 });

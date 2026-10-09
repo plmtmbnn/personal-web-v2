@@ -20,6 +20,7 @@ import { computeCompass } from "../lib/engine/index";
 import { sma } from "../lib/indicators";
 
 import OverviewRegimes from "./OverviewRegimes";
+import ScenarioSandbox from "./ScenarioSandbox";
 import PermissionsMatrix from "./PermissionsMatrix";
 import MarketPlaybook from "./MarketPlaybook";
 import MarketDataHub from "./MarketDataHub";
@@ -410,6 +411,11 @@ export default function InvestmentCompassView({
 						ihsgRegime={engineOutput.regimes.ihsg}
 						cryptoRegime={engineOutput.regimes.crypto}
 					/>
+				)}
+
+				{/* ── Macro Scenario Sandbox ("What-If" Stress-Tester) ──────── */}
+				{!isLoading && data && engineOutput && (
+					<ScenarioSandbox data={data} liveOutput={engineOutput} />
 				)}
 
 				{/* ── 2. Cheatsheet: Unified Permissions Matrix ──────────────── */}

@@ -26,7 +26,10 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
     - **Risk-First Capital Preservation Standard**: Tailored specifically for rebuilding after extreme portfolio drawdowns (~80%). Prioritizes capital survival, strict exposure limits, and capital preservation over reckless high-frequency speculation. Strictly reader-only for visitors (no trade journals or database mutation forms).
     - **Top Floating Header & Live Telemetry**: Elevated header card (`p-5 sm:p-7`) with `Compass` theme badge, active connection indicator dot (`Live`, `Partial`, `Syncing`), live Data Stream Sources popover (adapting to a centered modal card with soft backdrop overlay on mobile: `fixed inset-x-4 top-28 sm:absolute sm:inset-auto sm:right-0`), Stock Explorer CTA link with `active:scale-95`, and a 4-column desktop / 2-column mobile KPI telemetry strip (`grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4`) with live IHSG (`^JKSE`), USD/IDR, Bitcoin spot, and Crypto Fear & Greed.
     - **High-Precision Financial Telemetry Standard**: Index quotes (e.g., IHSG `^JKSE`) strictly declare 2-decimal financial precision (`6,146.72`) and pair nominal point changes with percentage deltas (`-46.2 (-0.75%)`). Yahoo quote parsing (`services/market-data/yahoo.ts`) prioritizes official `regularMarketChange`/`fulldayChange` over stale `chartPreviousClose` baselines to guarantee exact index deltas.
-    - **3-Card Regime Overview Layout (`OverviewRegimes.tsx`)**: Asymmetric grid (`grid-cols-1 lg:grid-cols-12`) featuring IHSG Composite Regime (6-col), Crypto Liquidity Regime (6-col), and Global Macro Dollar Liquidity Context (12-col) with multi-tiered health score bars (`0–100`), diagnosis narratives, and **Contextual Inline Drawer Pattern**: tapping any factor pill highlights the trigger and expands an animated inline drawer directly inside that active card shell with a quick close button, preventing off-screen scroll jumps on mobile viewports.
+    - **Decision Engine V3 Strict Weighting**: Engine factor weights (e.g., in `ihsg.ts`, `crypto.ts`, `global.ts`) MUST ALWAYS sum up to exactly `100`. If global telemetry is insufficient, engines must safely exclude the macro carry-in factor rather than absorbing generic default scores.
+    - **Strict Instrument Registry Standard**: Never hardcode ticker fallbacks or aliases (like mapping JKSE to IHSG manually in data fetching logic). All symbol mappings and API fallbacks must be strictly handled through the central `INSTRUMENTS` registry.
+    - **3-Card Regime Overview Layout (`OverviewRegimes.tsx`)**: Asymmetric grid (`grid-cols-1 lg:grid-cols-12`) featuring IHSG Composite Regime (6-col), Crypto Liquidity Regime (6-col), and Global Macro Dollar Liquidity Context (12-col) with multi-tiered health score bars (`0–100`), diagnosis narratives, and **Contextual Inline Drawer Pattern**: tapping any factor pill highlights the trigger and expands an animated inline drawer directly inside that active card shell with a quick close button, preventing off-screen scroll jumps on mobile viewports. Features prominent **Asymmetry Zone Overrides** with organic pulsing beacons (`animate-ping`) for generational accumulation and distribution tops.
+    - **Macro Scenario Sandbox Simulator (`ScenarioSandbox.tsx`)**: Pure white floating card (`bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs`) with reactive sliders for Fed Funds Rate (0%–10%), USD/IDR FX (Rp 14,000–18,500), and Bitcoin Price ($20,000–$200,000), instant client-side score recomputation, signed delta badges, and 4 one-click stress-test presets (strictly zero emojis).
     - **Tactical Permissions Matrix (`PermissionsMatrix.tsx`)**: Single source of truth driving daily trading permissions (`Allowed`, `Selective`, `Not Allowed`, `Paused`) for Scalp, Swing, and Core DCA across IHSG, Crypto Majors, and Speculative Altcoins. On mobile viewports (`< lg`), employs an **Executive Stacked Action Card Layout**: distinct header row with action label on left and status badge on right, paired with full-width, comfortably readable explanatory text below, completely eliminating cramped multi-column splits and hardcoded `max-w` truncations. Automatically displays the prominent rose-tinted **Capital Preservation Protocol Active** banner during systemic stress with a hard lockdown on new margin/leverage.
     - **Execution Playbook & Pure White Safe Bucket Anchor (`MarketPlaybook.tsx`)**: Dual-card tactical script for IHSG and Crypto detailing actionable Dos, Avoids, position sizing mandates (0.5%–1.0% risk cap, `riskPerTrade`), thesis invalidation triggers, and predetermined tranche accumulation plans. Strictly adheres to the **Pure White Container Standard** via the **Safe Yield & Preservation Anchor Card (40% Target)** (`bg-white rounded-[2rem] border border-slate-200/80 shadow-xs` with high-contrast amber accents and slate sub-cards, prohibiting monolithic dark containers) outlining Retail SBN (ORI/SBR/ST), liquid bank deposits (RDN), and physical gold (LM Antam).
     - **Disciplined Rebuild Rulebook (`Rulebook.tsx`)**: 6 non-negotiable operational sections: Capital Buckets Architecture (Emergency, 40% Safe Yield, 45% Core, 15% Swing), 6 Golden Rules of Trading Discipline, Mechanical Drawdown Circuit Breakers (-5% half size, -10% 14-day pause, -15% freeze), Non-Negotiable Hard Bans (zero crypto perps/futures, zero margin, zero Papan Pemantauan Khusus), Pre-Trade Checklist (5 gates), and Drawdown Recovery Math table (-80% requires +400%) with fully legible, un-truncated reality explanations.
@@ -101,6 +104,7 @@ The following patterns are **strictly forbidden** in this codebase:
 * **Loading & Skeleton States:**
   - NEVER show a full-screen spinner with a brand logo and an explicit **"Loading"** text label. The word "Loading" adds no information and clutters the UI. Loading states must be implicit, ambient, and brand-aligned.
   - NEVER use a generic `CircleLoader` or `BounceLoader` from external spinner libraries. Skeletons must use `animate-pulse bg-slate-200 rounded-*` blocks mirroring real content dimensions.
+  - **Localized Route Skeletons (Anti-Global-Fallback Mandate):** Complex architectural hubs (like `/investment`, `/contact`, `/`) MUST NOT lazily rely on the global `app/loading.tsx` monogram during server-side data fetching or route transitions. They MUST implement precise structural skeleton loaders (e.g. `app/investment/loading.tsx` or `HomeSkeleton.tsx` inside a Suspense boundary) that perfectly mirror the exact floating card layouts, column splits, and visual rhythm of the target page.
   - **Brand-Monogram Global Fallback (Next.js `loading.tsx`):** The root page-transition loading fallback uses a minimalist brand monogram mark (`PT`) in a `w-16 h-16 sm:w-[4.25rem] sm:h-[4.25rem] rounded-[1.25rem] bg-white border border-slate-200/80 shadow-xl shadow-slate-900/5` floating card, centered over the textured canvas (`bg-slate-50/75 backdrop-blur-xs bg-dot-pattern`). A soft ambient breathing ring (`animate-ping opacity-35`) surrounds the card, a small emerald pulsing liveness beacon (`animate-ping bg-emerald-400` + solid `bg-emerald-500 border-2 border-white`) sits at the top-right corner, and an integrated hairline micro-track (`w-7 h-[2px] bg-slate-100 mt-1.5`) hosts a smooth GPU-accelerated scanning beam (`animate-scan-glide`). No text label, no spinner wheel — only the brand mark, liveness pulse, and micro-activity track signal an active transition. The entire overlay is `pointer-events-none` to prevent interaction blocking. Server Component with 0 client JS bundle overhead.
 
 * **Section Dividers & Spacers:**
@@ -453,7 +457,7 @@ For administrative caching engines and backend synchronization portals (such as 
 ## 21. Feature-Module Cleanliness & Dead Code Policy
 
 * **Domain-Driven Isolation:** All application logic and UI components reside under domain folders in `features/<domain>/` (e.g. `features/tasks/`, `features/investment/`, `features/adventures/`).
-* **Shared UI Consolidation:** Reusable global primitives (such as `CustomModal`, `CompactBottomBar`, `StockTicker`, `Skeleton`, `JsonValue`, `InfoTooltip`) reside exclusively in `features/shared/components/`.
+* **Shared UI Consolidation:** Reusable global primitives (such as `CustomModal`, `CompactBottomBar`, `Skeleton`, `JsonValue`, `InfoTooltip`) reside exclusively in `features/shared/components/`.
 * **Zero Orphaned Directories:** Legacy root `components/` folders and dead UI components (such as standalone `Button.tsx`) must be purged to maintain single-source architectural integrity.
 * **Full-Repository Biome Coverage:** The entire codebase must be continuously formatted and linted via Biome, with `biome.json` explicitly including all TypeScript and TSX files across `app/`, `features/`, `lib/`, `services/`, and `types/`.
 
@@ -514,6 +518,9 @@ Before submitting any AI-generated or AI-assisted component for code review, ver
 - [ ] Zero marketing fluff, decorative benchmark slogans, or AI taglines in data cards (no "Tempo Benchmark", "Pinnacle Achievement")
 - [ ] Interactive milestone/timeline switchers favor the frameless underline track with Framer Motion `layoutId` over bulky enclosed pill boxes
 - [ ] No generic `rounded-full` category pills in card corners (reserve badges strictly for real-time telemetry metrics with discrete `rounded-lg`/`rounded-md` borders)
+- [ ] Decision Engine factor weights (`ihsg.ts`, `crypto.ts`, `global.ts`) MUST ALWAYS sum up to exactly 100
+- [ ] Market Asymmetry Zone alert callouts use organic pulsing liveness beacons (`animate-ping`) and domain SVG icons with zero emojis
+- [ ] Macro Scenario Sandbox simulator controls use pure white container architecture, signed score delta badges, and zero-emoji stress presets
 - [ ] Hero section does NOT follow: emoji → gradient headline → subtitle → CTA button pattern
 - [ ] Card grid items are NOT all structurally identical (icon + title + description + link)
 - [ ] No "Feature section" with 6 uniformly identical icon-description blocks in a 3x2 grid
@@ -761,6 +768,42 @@ The Investment Compass is an executive-level, risk-first capital preservation hu
 * **Sizing Mandate & Telemetry Strip Standard**:
   - Functional sizing mandates (e.g., Risk per Trade, Max Exposure limits) MUST be injected via isolated horizontal telemetry strips (`bg-indigo-50/50 border border-indigo-100`) directly beneath the Tactical Stance.
   - Critical numerical caps must utilize heavy monospace typography (`font-mono font-extrabold`) for absolute clarity.
+
+### 27.4 Asymmetry Zone Alert Banner Standard (`OverviewRegimes.tsx`)
+* **Extreme Valuation & Flow Asymmetry Surfacing**:
+  - When the market reaches historic extremes in on-chain valuation (Crypto MVRV Z-Score) or institutional foreign capital flow (IDX Net Foreign Flow), the engine populates `asymmetryZone` (`accumulation` or `distribution`).
+  - Regime cards MUST render a high-contrast alert callout banner directly beneath the diagnostic health bars to immediately focus the user's attention on non-linear risk/reward setups.
+* **Semantic Tints & Liveness Beacons**:
+  - *Generational Accumulation (`accumulation`)*: Encased in a soft emerald container (`bg-emerald-500/10 border border-emerald-500/20 text-emerald-950 rounded-2xl p-4 sm:p-4.5`). Features an emerald pulsing beacon dot (`animate-ping bg-emerald-400` + solid `bg-emerald-500`), a domain `TrendingUp` icon, an extra-bold monospace zone label (`ZONE: GENERATIONAL ACCUMULATION`), and high-clarity historical context copy (e.g. "MVRV Z-Score in deep value territory. Historically asymmetric accumulation zone.").
+  - *Cycle Distribution (`distribution`)*: Encased in a soft rose container (`bg-rose-500/10 border border-rose-500/20 text-rose-950 rounded-2xl p-4 sm:p-4.5`). Features a rose pulsing beacon dot (`animate-ping bg-rose-400` + solid `bg-rose-500`), a domain `AlertTriangle` icon, an extra-bold monospace zone label (`ZONE: CYCLE DISTRIBUTION / BLOWOFF TOP`), and defensive capital preservation directives.
+* **Strict Anti-Emoji Mandate**:
+  - Never use fire or rocket emojis (🔥, 🚀, 💎) in asymmetry banners. Let verified on-chain metrics, domain SVG icons, and clean monospace typography convey market realities.
+
+### 27.5 Macro Scenario Sandbox Standard (`ScenarioSandbox.tsx`)
+* **Real-Time Client-Side Simulator**:
+  - Provides a forward-looking stress-testing sandbox mounted directly beneath the regime overview, allowing users to simulate portfolio and macro regime shifts under hypothetical external shocks.
+  - Client-side deterministic recomputation: Sliders immediately recompute composite scores and derive new states without server roundtrips.
+* **Pure White Floating Card Architecture**:
+  - Encapsulated within a pure white floating card (`bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs`).
+  - Anchored by a domain squircle icon (`w-11 h-11 rounded-2xl bg-slate-100 border border-slate-200/80 text-slate-700`) with `Sliders`, bold title `h3` (`Macro Scenario Sandbox`), and an actionable reset button (`Reset to Baseline` with `RotateCcw`) that appears when parameters drift from live baseline.
+* **3-Parameter Stress Sliders**:
+  - 1. *US Fed Funds Rate* (0.00% to 10.00%, step 0.25%): Controls monetary tightening/easing pressure and real yields.
+  - 2. *USD / IDR Exchange Rate* (Rp 14,000 to Rp 18,500, step Rp 50): Simulates Rupiah currency depreciation/appreciation.
+  - 3. *Bitcoin Spot Price* ($20,000 to $200,000, step $1,000): Simulates crypto liquidity shocks across moving averages.
+  - Sliders feature touch-friendly tracks (`accent-slate-900 cursor-pointer`), min/max boundary labels, and extra-bold monospace values (`font-mono font-black`).
+* **Live Score Deltas & Transition State Chips**:
+  - Simulated regime cards display the baseline score, the simulated score, and a signed point delta pill:
+    - Positive delta (`Δ +14`): `bg-emerald-50 text-emerald-700 border-emerald-200/80`.
+    - Negative delta (`Δ -10`): `bg-rose-50 text-rose-700 border-rose-200/80`.
+    - Neutral delta (`No change`): `bg-slate-50 text-slate-500 border-slate-200/80`.
+  - State transition pill displays `Previous State → Simulated State` when a regime threshold is crossed.
+* **Curated Stress-Test Presets (Strict Anti-Emoji)**:
+  - Provide 4 quick scenario buttons:
+    - *Baseline (Live Data)* (`RotateCcw` icon).
+    - *Aggressive Fed Cut (-150 bps)* (`TrendingDown` icon).
+    - *IDR Currency Shock (Rp 17,200)* (`DollarSign` icon).
+    - *Crypto Liquidity Winter ($45,000)* (`Flame` icon).
+  - Strictly prohibits emojis or `Sparkles` icon in preset pills.
 
 ---
 

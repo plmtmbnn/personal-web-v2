@@ -126,18 +126,6 @@ export async function createSession(userId: string): Promise<string> {
 }
 
 /**
- * Retrieve a userId from session ID.
- */
-export async function getSession(sessionId: string): Promise<string | null> {
-	try {
-		return await redis.get<string>(CACHE_KEYS.SESSION(sessionId));
-	} catch (err) {
-		console.error("Redis Get Session Error:", err);
-		return null;
-	}
-}
-
-/**
  * Refresh session TTL to extend its lifetime (called on token refresh).
  * Extends both session and metadata by 30 weeks from now.
  */
@@ -191,25 +179,6 @@ export async function refreshSession(sessionId: string): Promise<boolean> {
 	} catch (err) {
 		console.error("Redis Refresh Session Error:", err);
 		return false;
-	}
-}
-
-/**
- * Get session metadata for monitoring and debugging.
- */
-export async function getSessionMetadata(
-	sessionId: string,
-): Promise<SessionMetadata | null> {
-	try {
-		const metaKey = CACHE_KEYS.SESSION_META(sessionId);
-		const data = await redis.get<string>(metaKey);
-
-		if (!data) return null;
-
-		return typeof data === "string" ? JSON.parse(data) : data;
-	} catch (err) {
-		console.error("Redis Get Session Metadata Error:", err);
-		return null;
 	}
 }
 

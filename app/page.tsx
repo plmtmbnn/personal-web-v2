@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { createMetadata } from "@/lib/shared/metadata";
 import { PERSON_SCHEMA, SITE, SEO } from "@/lib/shared/constants";
 import HomeView from "@/features/home/components/HomeView";
+import HomeSkeleton from "@/features/home/components/HomeSkeleton";
 import { getAthleteStats } from "@/services/strava/service";
 
 // Edge cache with ISR — revalidate athlete stats at most once every hour
@@ -14,7 +16,7 @@ export const metadata: Metadata = createMetadata({
 	keywords: SEO.baseKeywords,
 });
 
-export default async function HomePage() {
+async function HomeDataWrapper() {
 	let runningKm = 1000;
 	try {
 		const stats = await getAthleteStats();
@@ -25,6 +27,10 @@ export default async function HomePage() {
 		console.error("Error fetching running stats for home page:", err);
 	}
 
+	return <HomeView initialRunningKm={runningKm} />;
+}
+
+export default function HomePage() {
 	return (
 		<>
 			{/* Person JSON-LD — signals Google Knowledge Panel & rich results */}
@@ -32,7 +38,9 @@ export default async function HomePage() {
 				type="application/ld+json"
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_SCHEMA) }}
 			/>
-			<HomeView initialRunningKm={runningKm} />
+			<Suspense fallback={<HomeSkeleton />}>
+				<HomeDataWrapper />
+			</Suspense>
 		</>
 	);
 }

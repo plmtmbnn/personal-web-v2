@@ -24,7 +24,7 @@ export function scoreGlobalLiquidity(
 	const factors: RegimeFactor[] = [];
 	const contextFlags: string[] = [];
 
-	// 1. US Dollar Index (DXY) - Weight 20
+	// 1. US Dollar Index (DXY) - Weight 15
 	const dxyQuote = data.markets.quotes.DXY;
 	const dxyVal = dxyQuote?.last ?? null;
 	if (dxyVal != null) {
@@ -49,7 +49,7 @@ export function scoreGlobalLiquidity(
 			label: "US Dollar Index (DXY)",
 			valueStr: dxyVal.toFixed(2),
 			score,
-			weight: 20,
+			weight: 15,
 			direction: dir,
 			note:
 				dxyVal >= thresholds.dxy.strong
@@ -59,7 +59,7 @@ export function scoreGlobalLiquidity(
 		});
 	}
 
-	// 2. High Yield Spread (Credit Risk) - Weight 15
+	// 2. High Yield Spread (Credit Risk) - Weight 10
 	const hySpreadObj = getFredLatest(data, "BAMLH0A0HYM2");
 	if (hySpreadObj) {
 		const spread = hySpreadObj.value;
@@ -81,7 +81,7 @@ export function scoreGlobalLiquidity(
 			label: "US High-Yield OAS Spread",
 			valueStr: `${spread.toFixed(2)}%`,
 			score,
-			weight: 15,
+			weight: 10,
 			direction: dir,
 			note:
 				spread >= thresholds.hySpread.stress
@@ -91,7 +91,7 @@ export function scoreGlobalLiquidity(
 		});
 	}
 
-	// 3. US 10-Year Treasury Yield - Weight 15
+	// 3. US 10-Year Treasury Yield - Weight 10
 	const dgs10Obj = getFredLatest(data, "DGS10");
 	const us10yQuote = data.markets.quotes.US10Y;
 	const yield10y = dgs10Obj?.value ?? us10yQuote?.last ?? null;
@@ -114,7 +114,7 @@ export function scoreGlobalLiquidity(
 			label: "10-Year Treasury Yield",
 			valueStr: `${yield10y.toFixed(2)}%`,
 			score,
-			weight: 15,
+			weight: 10,
 			direction: dir,
 			note:
 				yield10y >= thresholds.us10y.stress
@@ -124,7 +124,7 @@ export function scoreGlobalLiquidity(
 		});
 	}
 
-	// 4. Fed Funds Rate - Weight 15
+	// 4. Fed Funds Rate - Weight 10
 	const fedFundsObj = getFredLatest(data, "FEDFUNDS");
 	if (fedFundsObj) {
 		const rate = fedFundsObj.value;
@@ -146,7 +146,7 @@ export function scoreGlobalLiquidity(
 			label: "Federal Funds Rate",
 			valueStr: `${rate.toFixed(2)}%`,
 			score,
-			weight: 15,
+			weight: 10,
 			direction: dir,
 			note:
 				rate >= 5.25
@@ -158,7 +158,7 @@ export function scoreGlobalLiquidity(
 		});
 	}
 
-	// 5. US M2 Money Supply YoY Growth - Weight 15
+	// 5. US M2 Money Supply YoY Growth - Weight 10
 	const m2Obj = getFredLatest(data, "M2SL");
 	if (m2Obj) {
 		const m2YoY = m2Obj.value;
@@ -180,7 +180,7 @@ export function scoreGlobalLiquidity(
 			label: "US M2 Money Supply (YoY)",
 			valueStr: `${m2YoY > 0 ? "+" : ""}${m2YoY.toFixed(1)}%`,
 			score,
-			weight: 15,
+			weight: 10,
 			direction: dir,
 			note:
 				m2YoY >= thresholds.macro.m2YoY.expansion
@@ -192,16 +192,16 @@ export function scoreGlobalLiquidity(
 		});
 	}
 
-	// 6. US CPI YoY Inflation - Weight 10
-	const cpiObj = getFredLatest(data, "CPIAUCSL");
-	if (cpiObj) {
-		const cpiYoY = cpiObj.value;
+	// 6. US Core PCE Inflation (YoY) - Weight 15
+	const pceObj = getFredLatest(data, "PCEPILFE");
+	if (pceObj) {
+		const pceYoY = pceObj.value;
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
-		if (cpiYoY <= thresholds.macro.cpiYoY.benign) {
+		if (pceYoY <= 2.2) {
 			score = 85;
 			dir = "bullish";
-		} else if (cpiYoY >= thresholds.macro.cpiYoY.sticky) {
+		} else if (pceYoY >= 3.0) {
 			score = 25;
 			dir = "bearish";
 		} else {
@@ -210,27 +210,95 @@ export function scoreGlobalLiquidity(
 		}
 
 		factors.push({
-			key: "cpi_yoy",
-			label: "US CPI Inflation (YoY)",
-			valueStr: `${cpiYoY.toFixed(1)}%`,
+			key: "core_pce_yoy",
+			label: "US Core PCE Inflation",
+			valueStr: `${pceYoY.toFixed(1)}%`,
+			score,
+			weight: 15,
+			direction: dir,
+			note:
+				pceYoY <= 2.2
+					? `Core PCE (${pceYoY.toFixed(1)}%) at or below Fed target opens path for liquidity easing.`
+					: pceYoY >= 3.0
+						? `Sticky inflation (${pceYoY.toFixed(1)}%) forces restrictive policy.`
+						: `Inflation within moderate bounds (${pceYoY.toFixed(1)}%).`,
+			asOf: pceObj.date,
+		});
+
+		if (pceYoY >= 3.0) {
+			contextFlags.push(`Sticky Core PCE (${pceYoY.toFixed(1)}%)`);
+		}
+	}
+
+	// 7. US Real Yields (10Y Nominal - Core PCE) - Weight 10
+	if (yield10y != null && pceObj != null) {
+		const realYield = yield10y - pceObj.value;
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+
+		if (realYield <= 0.5) {
+			score = 90;
+			dir = "bullish";
+		} else if (realYield >= 2.0) {
+			score = 20;
+			dir = "bearish";
+		} else {
+			score = 50;
+			dir = "neutral";
+		}
+
+		factors.push({
+			key: "us_real_yield",
+			label: "US 10Y Real Yield",
+			valueStr: `${realYield.toFixed(2)}%`,
 			score,
 			weight: 10,
 			direction: dir,
 			note:
-				cpiYoY <= thresholds.macro.cpiYoY.benign
-					? `Cooling inflation (${cpiYoY.toFixed(1)}% YoY) opens path for central bank rate cuts.`
-					: cpiYoY >= thresholds.macro.cpiYoY.sticky
-						? `Sticky inflation (${cpiYoY.toFixed(1)}% YoY) restricts Fed easing and keeps yields elevated.`
-						: `Inflation within moderate bounds (${cpiYoY.toFixed(1)}% YoY).`,
-			asOf: cpiObj.date,
+				realYield >= 2.0
+					? `Highly restrictive Real Yield (${realYield.toFixed(2)}%) drains capital from risk assets.`
+					: realYield <= 0.5
+						? `Accommodative Real Yield (${realYield.toFixed(2)}%) acts as a major tailwind for fiat debasement trades.`
+						: `Neutral cost of capital (${realYield.toFixed(2)}%).`,
+			asOf: pceObj.date,
 		});
-
-		if (cpiYoY >= thresholds.macro.cpiYoY.sticky) {
-			contextFlags.push(`Sticky Inflation (${cpiYoY.toFixed(1)}% YoY)`);
-		}
 	}
 
-	// 7. Market Volatility (VIX) - Weight 10
+	// 8. US Unemployment Rate (UNRATE) - Weight 10
+	const unrateObj = getFredLatest(data, "UNRATE");
+	if (unrateObj) {
+		const unrate = unrateObj.value;
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		if (unrate <= 4.0) {
+			score = 40;
+			dir = "neutral";
+		} else if (unrate > 4.0 && unrate <= 4.4) {
+			score = 80;
+			dir = "bullish";
+		} else {
+			score = 15;
+			dir = "bearish";
+		}
+
+		factors.push({
+			key: "unrate",
+			label: "US Unemployment Rate",
+			valueStr: `${unrate.toFixed(1)}%`,
+			score,
+			weight: 10,
+			direction: dir,
+			note:
+				unrate >= 4.5
+					? `High unemployment (${unrate.toFixed(1)}%) signals severe recession risk and panic.`
+					: unrate <= 4.0
+						? `Strong labor market (${unrate.toFixed(1)}%) keeps Fed policy restrictive.`
+						: `Softening labor market (${unrate.toFixed(1)}%) opens path for rate cuts (Goldilocks).`,
+			asOf: unrateObj.date,
+		});
+	}
+
+	// 9. Market Volatility (VIX) - Weight 10
 	const vixQuote = data.markets.quotes.VIX;
 	const vixVal = vixQuote?.last ?? null;
 	if (vixVal != null) {

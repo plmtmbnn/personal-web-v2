@@ -137,4 +137,30 @@ describe("OverviewRegimes Component", () => {
 			queryByText("Trading below structural long-term average"),
 		).toBeNull();
 	});
+
+	it("renders Asymmetry Zone banner when asymmetryZone is active", () => {
+		const regimeWithAsymmetry: MarketRegimeScore = {
+			...mockCryptoRegime,
+			asymmetryZone: {
+				type: "accumulation",
+				title: "Generational Asymmetry: Accumulation Zone Active",
+				description: "Bitcoin is at a historic valuation floor (MVRV <= 1.0)",
+			},
+		};
+
+		const { container } = render(
+			<OverviewRegimes
+				globalRegime={mockGlobalRegime}
+				ihsgRegime={mockIhsgRegime}
+				cryptoRegime={regimeWithAsymmetry}
+			/>,
+		);
+
+		expect(container.textContent).toContain(
+			"Generational Asymmetry: Accumulation Zone Active",
+		);
+		expect(container.textContent).toContain(
+			"Bitcoin is at a historic valuation floor",
+		);
+	});
 });

@@ -31,7 +31,7 @@ import type { CryptoOnChainSnapshot, IhsgForeignFlowSnapshot } from "./types";
  * Fetch Fear and Greed Index data from CNN
  * Implements robust error handling with fallback mechanisms
  */
-export async function getFearAndGreedData(): Promise<FearAndGreedData | null> {
+async function getFearAndGreedData(): Promise<FearAndGreedData | null> {
 	// Request historical time series starting 30 days ago so Trend Velocity and factor cards have full trend data
 	const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 		.toISOString()
@@ -73,7 +73,7 @@ export async function getFearAndGreedData(): Promise<FearAndGreedData | null> {
 /**
  * Fetch Crypto Fear and Greed Index from Alternative.me (Free API, 30 days history)
  */
-export async function getCryptoFearAndGreedData(): Promise<CryptoFearAndGreedResponse | null> {
+async function getCryptoFearAndGreedData(): Promise<CryptoFearAndGreedResponse | null> {
 	const url = "https://api.alternative.me/fng/?limit=30";
 
 	try {
@@ -168,13 +168,6 @@ async function getMarketQuotes(
 			}
 		}
 
-		if (quotesRecord.JKSE && !quotesRecord.IHSG) {
-			quotesRecord.IHSG = quotesRecord.JKSE;
-		}
-		if (quotesRecord.IHSG && !quotesRecord.JKSE) {
-			quotesRecord.JKSE = quotesRecord.IHSG;
-		}
-
 		if (Object.keys(quotesRecord).length > 0) {
 			await redis.set(cacheKey, JSON.stringify(quotesRecord), { ex: 300 }); // 5 min TTL
 			await redis.set(backupKey, JSON.stringify(quotesRecord)); // Perpetual backup
@@ -188,8 +181,6 @@ async function getMarketQuotes(
 	try {
 		const backup = await redis.get<Record<string, MarketQuote>>(backupKey);
 		if (backup && Object.keys(backup).length > 0) {
-			if (backup.JKSE && !backup.IHSG) backup.IHSG = backup.JKSE;
-			if (backup.IHSG && !backup.JKSE) backup.JKSE = backup.IHSG;
 			return { quotes: backup, sourceOk: false }; // false = using stale backup
 		}
 	} catch (e) {
@@ -269,13 +260,13 @@ async function getMacroData(
 		const seriesConfigs: Array<{ id: string; units?: string }> = [
 			{ id: "FEDFUNDS" },
 			{ id: "CPIAUCSL", units: "pc1" },
+			{ id: "PCEPILFE", units: "pc1" }, // Core PCE
 			{ id: "M2SL", units: "pc1" },
 			{ id: "UNRATE" },
 			{ id: "DGS10" },
 			{ id: "T10Y2Y" },
 			{ id: "BAMLH0A0HYM2" },
 			{ id: "IRSTCB01IDM156N" },
-			{ id: "IRLTLT01IDM156N" },
 		];
 		const macroData: Record<string, MacroSeries> = {};
 
@@ -323,21 +314,31 @@ async function getHistoryData(forceRefresh: boolean): Promise<{
 	history: Record<string, PriceHistorySeries | null>;
 	sourceOk: boolean;
 }> {
-	const symbols = [
+	const coreSymbols = [
 		{ symbol: "^JKSE", range: "2y", interval: "1d" },
 		{ symbol: "IDR=X", range: "2y", interval: "1d" },
 		{ symbol: "BTC-USD", range: "2y", interval: "1d" },
 	];
+	const sectorSymbols = [
+		{ symbol: "BBCA.JK", range: "3mo", interval: "1d" }, // Financials bellwether
+		{ symbol: "ADRO.JK", range: "3mo", interval: "1d" }, // Energy bellwether
+		{ symbol: "ICBP.JK", range: "3mo", interval: "1d" }, // Consumer bellwether
+		{ symbol: "ANTM.JK", range: "3mo", interval: "1d" }, // Basic Materials bellwether
+	];
+	const allItems = [...coreSymbols, ...sectorSymbols];
 	const history: Record<string, PriceHistorySeries | null> = {};
-	let allOk = true;
+	let coreOk = true;
 
-	const promises = symbols.map(async (item) => {
+	const promises = allItems.map(async (item) => {
 		const res = await getOrFetchHistory(
 			item.symbol,
 			{ range: item.range, interval: item.interval },
 			forceRefresh,
 		);
-		if (!res.sourceOk) allOk = false;
+		const isCore = coreSymbols.some((c) => c.symbol === item.symbol);
+		if (isCore && !res.sourceOk) {
+			coreOk = false;
+		}
 		return { symbol: item.symbol, series: res.series };
 	});
 
@@ -347,11 +348,10 @@ async function getHistoryData(forceRefresh: boolean): Promise<{
 			history[r.value.symbol] = r.value.series;
 			if (r.value.symbol === "^JKSE") {
 				history.JKSE = r.value.series;
-				history.IHSG = r.value.series;
 			}
 		}
 	}
-	return { history, sourceOk: allOk && Object.keys(history).length > 0 };
+	return { history, sourceOk: coreOk && Object.keys(history).length > 0 };
 }
 
 /**

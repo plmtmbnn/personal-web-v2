@@ -11,7 +11,7 @@ import { getActiveSeasonality } from "../../data/seasonality";
 export function scoreIhsg(
 	data: InvestmentCompassData,
 	thresholds: InvestmentThresholds,
-	globalScore: number,
+	globalRegime: MarketRegimeScore,
 ): MarketRegimeScore {
 	const factors: RegimeFactor[] = [];
 	const contextFlags: string[] = [];
@@ -23,7 +23,7 @@ export function scoreIhsg(
 		data.markets.history?.JKSE?.points ??
 		[];
 
-	// 1. IHSG vs 200-Day Moving Average - Weight 20
+	// 1. IHSG vs 200-Day Moving Average - Weight 15
 	const ma200 = sma(ihsgHistory, 200);
 	if (ihsgPrice != null && ma200 != null) {
 		const dist200 = distancePct(ihsgPrice, ma200);
@@ -42,7 +42,7 @@ export function scoreIhsg(
 				maximumFractionDigits: 2,
 			})})`,
 			score,
-			weight: 20,
+			weight: 15,
 			direction: dir,
 			note: isAbove
 				? `Trading +${dist200?.toFixed(1)}% above the 200-day baseline. Primary structural bull trend intact.`
@@ -51,7 +51,7 @@ export function scoreIhsg(
 		});
 	}
 
-	// 2. IHSG vs 50-Day Moving Average & Momentum - Weight 15
+	// 2. IHSG vs 50-Day Moving Average & Momentum - Weight 10
 	const ma50 = sma(ihsgHistory, 50);
 	const slope50 = maSlopePct(ihsgHistory, 50, 10);
 	if (ihsgPrice != null && ma50 != null) {
@@ -80,7 +80,7 @@ export function scoreIhsg(
 			label: "IHSG Intermediate Trend (50-Day MA)",
 			valueStr: `${isAbove50 ? "Above" : "Below"} (${dist50 != null && dist50 > 0 ? "+" : ""}${dist50?.toFixed(1)}%)`,
 			score,
-			weight: 15,
+			weight: 10,
 			direction: dir,
 			note:
 				isAbove50 && isRising
@@ -173,7 +173,7 @@ export function scoreIhsg(
 		});
 	}
 
-	// 4. Bank Indonesia Policy Rate & Stance - Weight 15
+	// 4. Bank Indonesia Policy Rate & Stance - Weight 10
 	const biRateSeries = data.markets.macro?.IRSTCB01IDM156N?.data;
 	if (biRateSeries && biRateSeries.length > 0) {
 		const latestBi = biRateSeries[biRateSeries.length - 1];
@@ -214,7 +214,7 @@ export function scoreIhsg(
 			label: "Bank Indonesia Policy Rate",
 			valueStr: `${rate.toFixed(2)}%`,
 			score,
-			weight: 15,
+			weight: 10,
 			direction: dir,
 			note,
 			asOf: latestBi.date,
@@ -264,19 +264,62 @@ export function scoreIhsg(
 		}
 	}
 
-	// 6. Global Macro Liquidity Carry-in - Weight 20
-	factors.push({
-		key: "global_liquidity_carry",
-		label: "Global Liquidity Signal Carry-In",
-		valueStr: `${globalScore}/100`,
-		score: globalScore,
-		weight: 20,
-		direction:
-			globalScore >= 60 ? "bullish" : globalScore <= 40 ? "bearish" : "neutral",
-		note: "Global dollar liquidity strongly dictates foreign institutional flows into IDX.",
-	});
+	// 6. Foreign Institutional Net Flow - Weight 10
+	if (data.markets.ihsgFlows?.streakDays != null) {
+		const streak = data.markets.ihsgFlows.streakDays;
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		if (streak >= 3) {
+			score = 85;
+			dir = "bullish";
+		} else if (streak <= -3) {
+			score = 20;
+			dir = "bearish";
+		} else {
+			score = 50;
+			dir = "neutral";
+		}
 
-	// 7. Active Seasonality - Weight 10
+		factors.push({
+			key: "ihsg_foreign_flow",
+			label: "Foreign Institutional Flow",
+			valueStr:
+				streak > 0
+					? `+${streak}D Inflow`
+					: streak < 0
+						? `${Math.abs(streak)}D Outflow`
+						: "Neutral",
+			score,
+			weight: 10,
+			direction: dir,
+			note:
+				streak >= 3
+					? "Sustained foreign accumulation acts as a strong momentum driver."
+					: streak <= -3
+						? "Persistent foreign distribution adds supply overhead."
+						: "Foreign capital flows lack directional conviction.",
+		});
+	}
+
+	// 7. Global Macro Liquidity Carry-in - Weight 15
+	if (globalRegime.state !== "insufficient") {
+		factors.push({
+			key: "global_liquidity_carry",
+			label: "Global Liquidity Signal Carry-In",
+			valueStr: `${globalRegime.score}/100`,
+			score: globalRegime.score,
+			weight: 15,
+			direction:
+				globalRegime.score >= 60
+					? "bullish"
+					: globalRegime.score <= 40
+						? "bearish"
+						: "neutral",
+			note: "Global dollar liquidity strongly dictates foreign institutional flows into IDX.",
+		});
+	}
+
+	// 8. Active Seasonality - Weight 10
 	const activeSeasons = getActiveSeasonality();
 	const idSeason = activeSeasons.find((s) => s.market === "ID");
 	if (idSeason) {
@@ -307,23 +350,37 @@ export function scoreIhsg(
 		contextFlags.push(`${idSeason.title} (${idSeason.status})`);
 	}
 
-	// Context Check: Indonesia 10Y Yield
-	const idYieldSeries = data.markets.macro?.IRLTLT01IDM156N?.data;
-	if (idYieldSeries && idYieldSeries.length > 0) {
-		const latestIdYield = idYieldSeries[idYieldSeries.length - 1].value;
-		if (latestIdYield > 7.2) {
-			contextFlags.push(`Elevated ID 10Y Yield (${latestIdYield.toFixed(2)}%)`);
-		}
-	}
+	// Context Check: Sector Rotation (Capital Flow via Bellwethers)
+	const sectors = [
+		{ id: "BBCA.JK", label: "Financials (BBCA)" },
+		{ id: "ADRO.JK", label: "Energy (ADRO)" },
+		{ id: "ICBP.JK", label: "Consumer (ICBP)" },
+		{ id: "ANTM.JK", label: "Basic Materials (ANTM)" },
+	];
 
-	// Context Check: Foreign Institutional Net Flow
-	if (data.markets.ihsgFlows?.streakDays != null) {
-		const streak = data.markets.ihsgFlows.streakDays;
-		contextFlags.push(
-			streak > 0
-				? `Foreign Capital: +${streak}D Inflow Streak`
-				: `Foreign Capital: ${streak}D Outflow Streak`,
-		);
+	const sectorPerformance = sectors
+		.map((s) => {
+			const history = data.markets.history?.[s.id]?.points ?? [];
+			if (history.length === 0) return null;
+			const price = history[history.length - 1].c;
+			const ma50 = sma(history, 50);
+			if (!ma50) return null;
+			const dist = distancePct(price, ma50);
+			return { label: s.label, dist };
+		})
+		.filter(Boolean) as { label: string; dist: number }[];
+
+	if (sectorPerformance.length > 1) {
+		sectorPerformance.sort((a, b) => b.dist - a.dist);
+		const leader = sectorPerformance[0];
+		const laggard = sectorPerformance[sectorPerformance.length - 1];
+		if (leader && laggard && leader.dist > 1.5 && laggard.dist < -1.5) {
+			contextFlags.push(
+				`Rotation: Capital favoring ${leader.label}, exiting ${laggard.label}`,
+			);
+		} else if (leader && leader.dist > 3) {
+			contextFlags.push(`Sector Leadership: ${leader.label} Outperforming`);
+		}
 	}
 
 	// Compute Weighted Composite
@@ -359,6 +416,23 @@ export function scoreIhsg(
 			"Broad structural breakdown below 200-day baseline. Avoid dip-buying until stabilization.";
 	}
 
+	// Evaluate Institutional Capital Inflow/Outflow Extremes
+	let asymmetryZone: MarketRegimeScore["asymmetryZone"] = null;
+	const streak = data.markets.ihsgFlows?.streakDays;
+	if (streak != null && streak >= 3) {
+		asymmetryZone = {
+			type: "accumulation",
+			title: "Institutional Inflow Surge: Foreign Accumulation Active",
+			description: `Sustained foreign institutional buying (+${streak} consecutive sessions). Strong liquidity tailwinds favor core banking and commodity bellwethers.`,
+		};
+	} else if (streak != null && streak <= -3) {
+		asymmetryZone = {
+			type: "distribution",
+			title: "Foreign Capital Distribution: Structural Supply Overhead",
+			description: `Persistent institutional selling (${Math.abs(streak)} consecutive sessions of net foreign outflow). Defensive cash allocation advised.`,
+		};
+	}
+
 	return {
 		id: "ihsg",
 		title: "IHSG Market Regime",
@@ -371,5 +445,6 @@ export function scoreIhsg(
 		tone,
 		factors,
 		contextFlags,
+		asymmetryZone,
 	};
 }

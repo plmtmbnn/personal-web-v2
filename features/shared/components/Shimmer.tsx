@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
  * Shimmer Effect Component
  * Adds a subtle shimmer to skeleton loaders for a polished look.
  */
-export function Shimmer() {
+function Shimmer() {
 	const reduceMotion = useReducedMotion();
 	return (
 		<div className="absolute inset-0 overflow-hidden">

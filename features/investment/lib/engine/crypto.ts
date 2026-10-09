@@ -16,45 +16,65 @@ import { getActiveSeasonality } from "../../data/seasonality";
 export function scoreCrypto(
 	data: InvestmentCompassData,
 	thresholds: InvestmentThresholds,
-	globalScore: number,
+	globalRegime: MarketRegimeScore,
 ): MarketRegimeScore {
 	const factors: RegimeFactor[] = [];
 	const contextFlags: string[] = [];
 
 	const halving = getHalvingCyclePhase();
+	const activeSeasons = getActiveSeasonality();
+	const cryptoSeason = activeSeasons.find((s) => s.market === "Crypto");
 
 	// Dynamic weight calibration based on 4-year Halving Cycle phase
-	let wBtc200 = 25;
+	let wBtc200 = 20;
 	let wBtc50 = 10;
-	let wStablecoins = 20;
-	let wFunding = 15;
+	let wStablecoins = 15;
+	let wMvrv = 15;
+	let wFunding = 10;
 	let wFng = 10;
 	let wMacro = 20;
 
 	if (halving.monthsElapsed >= 6 && halving.monthsElapsed < 18) {
-		// Parabolic / Euphoria window: Elevate contrarian exhaustion risk (funding + extreme greed)
+		// Parabolic / Euphoria window: Elevate contrarian exhaustion risk (funding + extreme greed + MVRV)
+		wBtc200 = 20;
+		wBtc50 = 5;
+		wStablecoins = 15;
+		wMvrv = 15;
+		wFunding = 15;
+		wFng = 15;
+		wMacro = 15;
+	} else if (halving.monthsElapsed >= 18 && halving.monthsElapsed < 30) {
+		// Late-Cycle Distribution: Liquidity redemptions and valuation discount
 		wBtc200 = 20;
 		wBtc50 = 5;
 		wStablecoins = 20;
-		wFunding = 20;
-		wFng = 15;
-		wMacro = 20;
-	} else if (halving.monthsElapsed >= 18 && halving.monthsElapsed < 30) {
-		// Late-Cycle Distribution: Liquidity redemptions and macro discount rate matter most
-		wBtc200 = 25;
-		wBtc50 = 5;
-		wStablecoins = 25;
+		wMvrv = 15;
 		wFunding = 10;
 		wFng = 10;
-		wMacro = 25;
+		wMacro = 20;
 	} else if (halving.monthsElapsed >= 30) {
-		// Bear Market Floor & Reset: Structural 200D MA baseline reclaim and deep value
-		wBtc200 = 30;
+		// Bear Market Floor & Reset: Structural 200D MA baseline reclaim and deep value (MVRV)
+		wBtc200 = 25;
 		wBtc50 = 10;
 		wStablecoins = 15;
+		wMvrv = 15;
 		wFunding = 10;
-		wFng = 15;
-		wMacro = 20;
+		wFng = 10;
+		wMacro = 15;
+	}
+
+	// Normalize weights down to 90 if seasonality factor is active to maintain strict 100 sum
+	if (cryptoSeason) {
+		const totalBase =
+			wBtc200 + wBtc50 + wStablecoins + wFunding + wFng + wMacro + wMvrv;
+		const ratio = 90 / totalBase;
+		wBtc200 = Math.round(wBtc200 * ratio);
+		wBtc50 = Math.round(wBtc50 * ratio);
+		wStablecoins = Math.round(wStablecoins * ratio);
+		wFunding = Math.round(wFunding * ratio);
+		wFng = Math.round(wFng * ratio);
+		wMvrv = Math.round(wMvrv * ratio);
+		wMacro = 90 - (wBtc200 + wBtc50 + wStablecoins + wFunding + wFng + wMvrv); // Ensure exact 90
 	}
 
 	const btcQuote = data.markets.quotes.BTC;
@@ -206,21 +226,57 @@ export function scoreCrypto(
 		}
 	}
 
-	// 6. Global Liquidity Carry-in
-	factors.push({
-		key: "crypto_macro_carry",
-		label: "Global Macro Liquidity Carry-In",
-		valueStr: `${globalScore}/100`,
-		score: globalScore,
-		weight: wMacro,
-		direction:
-			globalScore >= 60 ? "bullish" : globalScore <= 40 ? "bearish" : "neutral",
-		note: "Global dollar liquidity strongly dictates high-beta risk asset flows.",
-	});
+	// 6. On-Chain Valuation (MVRV Z-Score)
+	if (data.markets.cryptoOnChain?.mvrvZScore != null) {
+		const mvrv = data.markets.cryptoOnChain.mvrvZScore;
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		if (mvrv <= 1.0) {
+			score = 85;
+			dir = "bullish";
+		} else if (mvrv >= 3.0) {
+			score = 15;
+			dir = "bearish";
+		} else {
+			score = 55;
+			dir = "neutral";
+		}
 
-	// 7. Active Seasonality - Weight 10
-	const activeSeasons = getActiveSeasonality();
-	const cryptoSeason = activeSeasons.find((s) => s.market === "Crypto");
+		factors.push({
+			key: "crypto_mvrv",
+			label: "Bitcoin MVRV Z-Score",
+			valueStr: mvrv.toFixed(2),
+			score,
+			weight: wMvrv,
+			direction: dir,
+			note:
+				mvrv >= 3.0
+					? "Extreme valuation overheat. Generational distribution zone."
+					: mvrv <= 1.0
+						? "Deep value. Historically generational accumulation floor."
+						: "Fair value zone. Neutral momentum.",
+		});
+	}
+
+	// 7. Global Liquidity Carry-in
+	if (globalRegime.state !== "insufficient") {
+		factors.push({
+			key: "crypto_macro_carry",
+			label: "Global Macro Liquidity Carry-In",
+			valueStr: `${globalRegime.score}/100`,
+			score: globalRegime.score,
+			weight: wMacro,
+			direction:
+				globalRegime.score >= 60
+					? "bullish"
+					: globalRegime.score <= 40
+						? "bearish"
+						: "neutral",
+			note: "Global dollar liquidity strongly dictates high-beta risk asset flows.",
+		});
+	}
+
+	// 8. Active Seasonality - Weight 10
 	if (cryptoSeason) {
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
@@ -268,18 +324,6 @@ export function scoreCrypto(
 		}
 	}
 
-	// Context Check: On-Chain Valuation (MVRV Ratio)
-	if (data.markets.cryptoOnChain?.mvrvZScore != null) {
-		const mvrv = data.markets.cryptoOnChain.mvrvZScore;
-		contextFlags.push(
-			mvrv > 3.7
-				? `MVRV Ratio (${mvrv.toFixed(2)}) — Historic Cycle Overheat`
-				: mvrv < 1.0
-					? `MVRV Ratio (${mvrv.toFixed(2)}) — Generational Accumulation Floor`
-					: `MVRV Ratio (${mvrv.toFixed(2)}) — Fair Value Range`,
-		);
-	}
-
 	// Compute Weighted Composite
 	const totalWeight = 100;
 	const availableWeight = factors.reduce((sum, f) => sum + f.weight, 0);
@@ -313,6 +357,35 @@ export function scoreCrypto(
 			"Deleveraging cascade. All active trading halted; preserve capital in cold storage.";
 	}
 
+	// Evaluate Asymmetric Cycle Extremes
+	let asymmetryZone: MarketRegimeScore["asymmetryZone"] = null;
+	const mvrv = data.markets.cryptoOnChain?.mvrvZScore;
+	const fngScore = data.sentiment.crypto?.data?.[0]?.value
+		? parseInt(data.sentiment.crypto.data[0].value, 10)
+		: null;
+
+	if (
+		(mvrv != null && mvrv <= 1.0) ||
+		(fngScore != null && fngScore <= 20 && mvrv != null && mvrv <= 1.25)
+	) {
+		asymmetryZone = {
+			type: "accumulation",
+			title: "Generational Asymmetry: Accumulation Zone Active",
+			description:
+				"Bitcoin is at a historic valuation floor (MVRV <= 1.0) alongside peak sentiment fear. Risk-reward mathematically skews heavily to multi-year spot accumulation.",
+		};
+	} else if (
+		(mvrv != null && mvrv >= 3.0) ||
+		(fngScore != null && fngScore >= 80 && mvrv != null && mvrv >= 2.5)
+	) {
+		asymmetryZone = {
+			type: "distribution",
+			title: "Cycle Distribution Alert: Macro Overheat Warning",
+			description:
+				"On-chain valuation is stretched into historical cycle top bands with extreme market greed. Hard profit preservation protocols active.",
+		};
+	}
+
 	return {
 		id: "crypto",
 		title: "Crypto Market Regime",
@@ -325,5 +398,6 @@ export function scoreCrypto(
 		tone,
 		factors,
 		contextFlags,
+		asymmetryZone,
 	};
 }

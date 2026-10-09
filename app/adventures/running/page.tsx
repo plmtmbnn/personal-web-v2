@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { createMetadata } from "@/lib/shared/metadata";
-import RunningView from "@/features/adventures/running/components/View";
+import RunningView, {
+	RunningSkeleton,
+} from "@/features/adventures/running/components/View";
 import { getStravaData } from "@/services/strava/service";
 import { checkAdmin } from "@/features/auth/actions";
 
@@ -27,7 +29,7 @@ export default async function RunningPage() {
 		checkAdmin(),
 	]);
 	return (
-		<Suspense>
+		<Suspense fallback={<RunningSkeleton />}>
 			<RunningView initialData={stravaData} isAdmin={isAdmin} />
 		</Suspense>
 	);

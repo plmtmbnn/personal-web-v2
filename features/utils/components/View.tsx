@@ -301,7 +301,114 @@ const utilities: UtilityItem[] = [
 	},
 ];
 
-export default function UtilsLanding() {
+export function UtilsSkeleton() {
+	return (
+		<main
+			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading utilities"
+		>
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-6 sm:space-y-8">
+				{/* ── Modern Floating Card Header Skeleton ── */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 sm:gap-6">
+						<div className="space-y-2">
+							<div className="h-3 w-28 bg-slate-200 rounded animate-pulse" />
+							<div className="h-8 sm:h-9 w-64 sm:w-80 bg-slate-200 rounded-xl animate-pulse" />
+							<div className="h-4 w-full max-w-xl bg-slate-200 rounded animate-pulse" />
+						</div>
+
+						{/* Telemetry Quick Strip */}
+						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-12 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-16 bg-slate-200 rounded animate-pulse" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* ── Filter & Search Toolbar Skeleton ── */}
+				<div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5">
+					<div className="h-10 w-full max-w-md bg-slate-100 rounded-xl animate-pulse" />
+
+					{/* Category Filter Pills */}
+					<div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+						{[1, 2, 3, 4, 5, 6].map((i) => (
+							<div
+								key={i}
+								className="h-8 w-24 rounded-xl bg-slate-100 border border-slate-200/60 animate-pulse shrink-0"
+							/>
+						))}
+					</div>
+				</div>
+
+				{/* ── Grouped Category Sections Skeleton ── */}
+				<div className="space-y-10 sm:space-y-12">
+					{[1, 2].map((group) => (
+						<section key={group} className="space-y-4 sm:space-y-5">
+							{/* Category Header Row */}
+							<div className="flex items-center gap-3 pb-3 border-b border-slate-200/80">
+								<div className="w-9 h-9 rounded-xl bg-slate-200 animate-pulse shrink-0" />
+								<div className="space-y-1.5">
+									<div className="flex items-center gap-2.5">
+										<div className="h-5 w-40 bg-slate-200 rounded animate-pulse" />
+										<div className="h-4 w-12 bg-slate-200 rounded-md animate-pulse" />
+									</div>
+									<div className="h-3.5 w-56 bg-slate-200 rounded animate-pulse" />
+								</div>
+							</div>
+
+							{/* Cards Grid */}
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-4.5">
+								{[1, 2, 3].map((card) => (
+									<div
+										key={card}
+										className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between h-44 animate-pulse"
+									>
+										<div>
+											<div className="w-10 h-10 rounded-xl bg-slate-200 mb-3.5" />
+											<div className="h-4 w-36 bg-slate-200 rounded-md mb-2" />
+											<div className="space-y-1.5">
+												<div className="h-3 w-full bg-slate-200 rounded" />
+												<div className="h-3 w-4/5 bg-slate-200 rounded" />
+											</div>
+										</div>
+										<div className="pt-3.5 border-t border-slate-100 flex items-center justify-between">
+											<div className="h-3 w-20 bg-slate-200 rounded" />
+											<div className="h-3 w-14 bg-slate-200 rounded" />
+										</div>
+									</div>
+								))}
+							</div>
+						</section>
+					))}
+				</div>
+			</div>
+		</main>
+	);
+}
+
+export default function UtilsLanding({
+	isLoading = false,
+}: {
+	isLoading?: boolean;
+} = {}) {
+	if (isLoading) {
+		return <UtilsSkeleton />;
+	}
+
 	const [selectedCategory, setSelectedCategory] = useState<string>("all");
 	const [searchQuery, setSearchQuery] = useState<string>("");
 	const reduceMotion = useReducedMotion();

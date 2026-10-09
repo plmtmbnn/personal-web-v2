@@ -35,6 +35,7 @@ function CountdownTile({ value, label, accent = false }: CountdownTileProps) {
 			}`}
 		>
 			<span
+				suppressHydrationWarning
 				className={`text-lg sm:text-2xl font-black leading-tight tabular-nums ${
 					accent ? "text-white" : "text-slate-900"
 				}`}
@@ -222,12 +223,12 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 				<div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10.5px] sm:text-xs font-semibold">
 					<div className="flex items-center gap-1.5 text-slate-900 font-bold">
 						<Calendar className="w-3 h-3 text-red-600 shrink-0" />
-						<span>{dateInfo.formattedDate}</span>
+						<span suppressHydrationWarning>{dateInfo.formattedDate}</span>
 					</div>
 					<span className="text-slate-300 hidden sm:inline">/</span>
 					<div className="flex items-center gap-1.5 text-slate-900 font-bold">
 						<Clock className="w-3 h-3 text-amber-500 shrink-0" />
-						<span>{dateInfo.formattedTime} local</span>
+						<span suppressHydrationWarning>{dateInfo.formattedTime} local</span>
 					</div>
 					<span className="text-slate-300 hidden sm:inline">/</span>
 					<div className="flex items-center gap-1.5 text-slate-500">
@@ -239,7 +240,10 @@ export default function NextMatchHero({ fixture }: NextMatchHeroProps) {
 					{dateInfo.relativeTime && (
 						<>
 							<span className="text-slate-300 hidden sm:inline">/</span>
-							<span className="text-slate-500 font-semibold">
+							<span
+								suppressHydrationWarning
+								className="text-slate-500 font-semibold"
+							>
 								{dateInfo.relativeTime}
 							</span>
 						</>

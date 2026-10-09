@@ -489,9 +489,174 @@ function TravelContent() {
 	);
 }
 
+export function TravelSkeleton() {
+	return (
+		<main
+			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading travel destinations"
+		>
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-4 sm:space-y-5">
+				{/* ── Floating Card Header Skeleton ── */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+					{/* Breadcrumb */}
+					<div className="flex items-center gap-1.5 mb-5">
+						<div className="h-3 w-16 bg-slate-200 rounded animate-pulse" />
+						<div className="w-3.5 h-3.5 bg-slate-200 rounded animate-pulse" />
+						<div className="h-3 w-12 bg-slate-200 rounded animate-pulse" />
+					</div>
+
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+						{/* Title block */}
+						<div className="flex-1 min-w-0 space-y-2">
+							<div className="h-8 sm:h-9 w-60 sm:w-72 bg-slate-200 rounded-xl animate-pulse" />
+							<div className="h-4 w-full max-w-lg bg-slate-200 rounded animate-pulse" />
+						</div>
+
+						{/* Stat strip */}
+						<div className="flex items-center gap-5 shrink-0 sm:pl-5 sm:border-l sm:border-slate-100">
+							<div className="flex flex-col items-center gap-1">
+								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1">
+								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1">
+								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+						</div>
+					</div>
+
+					{/* Progress bar */}
+					<div className="mt-5 pt-4 border-t border-slate-100">
+						<div className="flex items-center justify-between mb-2">
+							<div className="h-2.5 w-28 bg-slate-200 rounded animate-pulse" />
+							<div className="h-2.5 w-32 bg-slate-200 rounded animate-pulse" />
+						</div>
+						<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+							<div className="w-1/3 h-full bg-slate-200 rounded-full animate-pulse" />
+						</div>
+					</div>
+				</div>
+
+				{/* ── Filter & Search Toolbar Skeleton ── */}
+				<div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5">
+					<div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+						{/* Filter pills */}
+						<div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+							{[1, 2, 3, 4, 5].map((tab) => (
+								<div
+									key={tab}
+									className="h-8 w-20 rounded-xl bg-slate-100 border border-slate-200/60 animate-pulse shrink-0"
+								/>
+							))}
+						</div>
+
+						{/* Search */}
+						<div className="h-9 w-full sm:w-64 bg-slate-100 rounded-xl animate-pulse" />
+					</div>
+				</div>
+
+				{/* ── Destination Cards Content Skeleton ── */}
+				<div className="space-y-8">
+					{/* Section 1: Explored Journeys */}
+					<section className="space-y-4">
+						<div className="flex items-center gap-2">
+							<div className="w-7 h-7 rounded-xl bg-slate-200 animate-pulse shrink-0" />
+							<div className="h-4 w-32 bg-slate-200 rounded animate-pulse" />
+							<div className="h-4 w-20 bg-slate-200 rounded-full animate-pulse" />
+						</div>
+
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+							{[1, 2, 3].map((card) => (
+								<div
+									key={card}
+									className="bg-white border border-slate-200/80 rounded-[2rem] overflow-hidden shadow-xs flex flex-col justify-between h-[380px] animate-pulse"
+								>
+									{/* Photo Area */}
+									<div className="w-full aspect-16/10 bg-slate-200 shrink-0" />
+
+									{/* Card Content Area */}
+									<div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+										<div className="space-y-2">
+											<div className="flex items-center justify-between">
+												<div className="h-5 w-32 bg-slate-200 rounded" />
+												<div className="h-4 w-14 bg-slate-200 rounded-full" />
+											</div>
+											<div className="h-3.5 w-24 bg-slate-200 rounded" />
+											<div className="space-y-1 pt-1">
+												<div className="h-3 w-full bg-slate-200 rounded" />
+												<div className="h-3 w-4/5 bg-slate-200 rounded" />
+											</div>
+										</div>
+
+										<div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+											<div className="h-3 w-20 bg-slate-200 rounded" />
+											<div className="h-3 w-16 bg-slate-200 rounded" />
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</section>
+
+					{/* Section 2: On the Radar */}
+					<section className="space-y-4 pt-2">
+						<div className="flex items-center gap-2 pt-6 border-t border-slate-200/60">
+							<div className="w-7 h-7 rounded-xl bg-slate-200 animate-pulse shrink-0" />
+							<div className="h-4 w-28 bg-slate-200 rounded animate-pulse" />
+							<div className="h-4 w-18 bg-slate-200 rounded-full animate-pulse" />
+						</div>
+
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+							{[1, 2, 3].map((card) => (
+								<div
+									key={card}
+									className="bg-white border border-slate-200/80 rounded-[2rem] overflow-hidden shadow-xs flex flex-col justify-between h-[380px] animate-pulse"
+								>
+									<div className="w-full aspect-16/10 bg-slate-200 shrink-0" />
+									<div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+										<div className="space-y-2">
+											<div className="flex items-center justify-between">
+												<div className="h-5 w-32 bg-slate-200 rounded" />
+												<div className="h-4 w-14 bg-slate-200 rounded-full" />
+											</div>
+											<div className="h-3.5 w-24 bg-slate-200 rounded" />
+											<div className="space-y-1 pt-1">
+												<div className="h-3 w-full bg-slate-200 rounded" />
+												<div className="h-3 w-4/5 bg-slate-200 rounded" />
+											</div>
+										</div>
+
+										<div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+											<div className="h-3 w-20 bg-slate-200 rounded" />
+											<div className="h-3 w-16 bg-slate-200 rounded" />
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</section>
+				</div>
+			</div>
+		</main>
+	);
+}
+
 export default function TravelPage() {
 	return (
-		<Suspense fallback={null}>
+		<Suspense fallback={<TravelSkeleton />}>
 			<TravelContent />
 		</Suspense>
 	);

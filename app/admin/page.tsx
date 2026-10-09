@@ -20,6 +20,91 @@ export const metadata = {
 		"Central operational console to manage technical publications, execution agendas, market registries, and expiring notes.",
 };
 
+export function AdminSkeleton() {
+	return (
+		<main
+			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading admin console"
+		>
+			<div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8">
+				{/* ═══════════════════════════════════════
+				    TOP FLOATING HEADER CARD SKELETON
+				═══════════════════════════════════════ */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6 pb-5 border-b border-slate-100">
+						<div className="space-y-2">
+							<div className="h-8 sm:h-9 w-64 sm:w-80 bg-slate-200 rounded-xl animate-pulse" />
+							<div className="h-4 w-full max-w-xl bg-slate-200 rounded animate-pulse" />
+						</div>
+
+						<div className="h-9 w-24 bg-slate-100 rounded-xl animate-pulse shrink-0" />
+					</div>
+
+					{/* System Telemetry Quick Strip Skeleton */}
+					<div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+						{[1, 2, 3, 4].map((i) => (
+							<div
+								key={i}
+								className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/70 space-y-1.5"
+							>
+								<div className="flex items-center gap-1.5">
+									<div className="w-3.5 h-3.5 rounded bg-slate-200 animate-pulse" />
+									<div className="h-2.5 w-16 bg-slate-200 rounded animate-pulse" />
+								</div>
+								<div className="h-5 w-20 bg-slate-200 rounded animate-pulse" />
+							</div>
+						))}
+					</div>
+				</div>
+
+				{/* ═══════════════════════════════════════
+				    2x2 COMMAND MODULES GRID SKELETON
+				═══════════════════════════════════════ */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+					{[1, 2, 3, 4].map((i) => (
+						<div
+							key={i}
+							className="flex flex-col justify-between p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-xs h-[230px] animate-pulse"
+						>
+							<div>
+								{/* Header */}
+								<div className="flex items-center gap-3.5 mb-3">
+									<div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-200 shrink-0" />
+									<div className="h-6 w-44 bg-slate-200 rounded-lg" />
+								</div>
+
+								{/* Description */}
+								<div className="space-y-1.5 mb-4">
+									<div className="h-3.5 w-full bg-slate-200 rounded" />
+									<div className="h-3.5 w-4/5 bg-slate-200 rounded" />
+								</div>
+
+								{/* Capability Tags */}
+								<div className="flex flex-wrap gap-1.5 mb-4">
+									{[1, 2, 3].map((tag) => (
+										<div
+											key={tag}
+											className="h-6 w-20 rounded-lg bg-slate-100 border border-slate-200/60"
+										/>
+									))}
+								</div>
+							</div>
+
+							{/* Bottom Actions Row */}
+							<div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+								<div className="h-4 w-28 bg-slate-200 rounded" />
+								<div className="h-6 w-20 bg-slate-100 rounded-lg" />
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+		</main>
+	);
+}
+
 export default async function AdminDashboardPage() {
 	const isAdmin = await checkAdmin();
 

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { createMetadata } from "@/lib/shared/metadata";
-import LiverpoolView from "@/features/liverpool/components/View";
+import LiverpoolView, {
+	LiverpoolSkeleton,
+} from "@/features/liverpool/components/View";
 
 import { getLiverpoolFixturesStatic } from "@/features/liverpool/actions";
 
@@ -25,5 +28,9 @@ export const metadata: Metadata = createMetadata({
 
 export default async function LiverpoolPage() {
 	const initialData = await getLiverpoolFixturesStatic();
-	return <LiverpoolView initialData={initialData} />;
+	return (
+		<Suspense fallback={<LiverpoolSkeleton />}>
+			<LiverpoolView initialData={initialData} />
+		</Suspense>
+	);
 }

@@ -314,7 +314,140 @@ const cardVariants: Variants = {
 	},
 };
 
-export default function PortfolioView() {
+export function PortfolioSkeleton() {
+	return (
+		<main
+			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading portfolio"
+		>
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10">
+				{/* ── Floating Card Header Skeleton ── */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs mb-8 sm:mb-10">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div className="space-y-2">
+							<div className="h-8 sm:h-9 w-48 sm:w-64 bg-slate-200 rounded-xl animate-pulse" />
+							<div className="h-4 w-full max-w-md bg-slate-200 rounded animate-pulse" />
+						</div>
+
+						{/* Quick stat row */}
+						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* ── Content Grid Skeleton ── */}
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+					{/* Left Column: Analytics Visualizer (4 cols) */}
+					<div className="lg:col-span-4 lg:sticky lg:top-24">
+						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs space-y-5">
+							<div className="h-3 w-32 bg-slate-200 rounded animate-pulse" />
+
+							{/* Donut chart placeholder */}
+							<div className="flex flex-col items-center">
+								<div className="relative w-48 h-48 sm:w-52 sm:h-52 mb-6 rounded-full border-[26px] border-slate-200/70 animate-pulse flex items-center justify-center">
+									<div className="flex flex-col items-center gap-1.5">
+										<div className="h-7 w-14 bg-slate-200 rounded animate-pulse" />
+										<div className="h-2.5 w-20 bg-slate-200 rounded animate-pulse" />
+									</div>
+								</div>
+
+								{/* Legend buttons */}
+								<div className="w-full space-y-2">
+									<div className="h-11 rounded-xl bg-slate-100 border border-slate-200/60 animate-pulse" />
+									<div className="h-11 rounded-xl bg-slate-100 border border-slate-200/60 animate-pulse" />
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Right Column: Detailed Lists (8 cols) */}
+					<div className="lg:col-span-8 space-y-4">
+						{/* Fintech Core Section */}
+						<div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+							<div className="p-5 sm:p-6 flex items-center justify-between">
+								<div className="flex items-center gap-4">
+									<div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-200 animate-pulse shrink-0" />
+									<div className="space-y-1.5">
+										<div className="h-5 w-44 bg-slate-200 rounded animate-pulse" />
+										<div className="h-3 w-36 bg-slate-200 rounded animate-pulse" />
+									</div>
+								</div>
+								<div className="w-7 h-7 rounded-lg bg-slate-100 animate-pulse shrink-0" />
+							</div>
+
+							{/* Modules Grid */}
+							<div className="px-5 sm:px-6 pb-6 pt-1">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+									{[1, 2, 3, 4, 5, 6].map((i) => (
+										<div
+											key={i}
+											className="p-4 bg-slate-50/70 border border-slate-200/80 rounded-xl flex flex-col justify-between h-36 animate-pulse"
+										>
+											<div>
+												<div className="flex items-center justify-between mb-2">
+													<div className="flex items-center gap-2.5">
+														<div className="w-7 h-7 rounded-lg bg-slate-200 shrink-0" />
+														<div className="h-4 w-28 bg-slate-200 rounded" />
+													</div>
+													<div className="w-3.5 h-3.5 bg-slate-200 rounded shrink-0" />
+												</div>
+												<div className="space-y-1.5 mt-2">
+													<div className="h-3 w-full bg-slate-200 rounded" />
+													<div className="h-3 w-4/5 bg-slate-200 rounded" />
+												</div>
+											</div>
+											<div className="pt-2.5 border-t border-slate-200/60">
+												<div className="h-3 w-32 bg-slate-200 rounded" />
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+						</div>
+
+						{/* Notable Platforms Collapsed Section */}
+						<div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 flex items-center justify-between">
+							<div className="flex items-center gap-4">
+								<div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-200 animate-pulse shrink-0" />
+								<div className="space-y-1.5">
+									<div className="h-5 w-40 bg-slate-200 rounded animate-pulse" />
+									<div className="h-3 w-32 bg-slate-200 rounded animate-pulse" />
+								</div>
+							</div>
+							<div className="w-7 h-7 rounded-lg bg-slate-100 animate-pulse shrink-0" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+	);
+}
+
+export default function PortfolioView({
+	isLoading = false,
+}: {
+	isLoading?: boolean;
+} = {}) {
+	if (isLoading) {
+		return <PortfolioSkeleton />;
+	}
+
 	const reduceMotion = useReducedMotion();
 	const [activeSlice, setActiveSlice] = useState<number | null>(null);
 	const [expandedSection, setExpandedSection] = useState<string | null>("los");

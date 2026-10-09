@@ -193,7 +193,175 @@ const cardVariants: Variants = {
 	},
 };
 
-export default function WorkExperience() {
+export function WorkExperienceSkeleton() {
+	return (
+		<main
+			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading work experience"
+		>
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-8 sm:space-y-10">
+				{/* ── Modern Floating Card Header Skeleton ── */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+						<div className="space-y-2">
+							<div className="h-8 sm:h-9 w-60 sm:w-72 bg-slate-200 rounded-xl animate-pulse" />
+							<div className="h-4 w-full max-w-xl bg-slate-200 rounded animate-pulse" />
+						</div>
+
+						{/* Telemetry Quick Strip */}
+						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-16 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-10 bg-slate-200 rounded animate-pulse" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* ── 12-Column Two-Column Split Architecture ── */}
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+					{/* Left Column — Sticky Overview & Honors (4 cols) */}
+					<div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
+						{/* Executive Summary Card */}
+						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs space-y-3">
+							<div className="h-3 w-28 bg-slate-200 rounded animate-pulse" />
+							<div className="h-5 w-44 bg-slate-200 rounded animate-pulse" />
+							<div className="space-y-1.5">
+								<div className="h-3.5 w-full bg-slate-200 rounded animate-pulse" />
+								<div className="h-3.5 w-5/6 bg-slate-200 rounded animate-pulse" />
+							</div>
+
+							{/* Core Competencies */}
+							<div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+								{[1, 2, 3, 4, 5, 6].map((i) => (
+									<div
+										key={i}
+										className="h-6 w-18 rounded-lg bg-slate-100 border border-slate-200/60 animate-pulse"
+									/>
+								))}
+							</div>
+						</div>
+
+						{/* Honors & Recognitions Card */}
+						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs space-y-3">
+							<div className="flex items-center gap-2 mb-1">
+								<div className="w-4 h-4 rounded bg-slate-200 animate-pulse" />
+								<div className="h-3 w-36 bg-slate-200 rounded animate-pulse" />
+							</div>
+
+							<div className="space-y-3">
+								{[1, 2, 3].map((i) => (
+									<div
+										key={i}
+										className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1.5"
+									>
+										<div className="h-3.5 w-40 bg-slate-200 rounded animate-pulse" />
+										<div className="h-3 w-32 bg-slate-200 rounded animate-pulse" />
+									</div>
+								))}
+							</div>
+						</div>
+
+						{/* Connected Work Links */}
+						<div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-center justify-between">
+							<div className="h-3.5 w-24 bg-slate-200 rounded animate-pulse" />
+							<div className="w-px h-4 bg-slate-200" />
+							<div className="h-3.5 w-24 bg-slate-200 rounded animate-pulse" />
+						</div>
+					</div>
+
+					{/* Right Column — Chronological Career Track (8 cols) */}
+					<div className="lg:col-span-8 space-y-5">
+						{[1, 2, 3].map((i) => (
+							<div
+								key={i}
+								className="w-full bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5 animate-pulse"
+							>
+								{/* Company Header Row */}
+								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+									<div className="flex items-center gap-3.5">
+										<div className="w-11 h-11 rounded-2xl bg-slate-200 shrink-0" />
+										<div className="space-y-1.5">
+											<div className="flex items-center gap-2">
+												<div className="h-5 w-28 bg-slate-200 rounded" />
+												<div className="h-4 w-20 bg-slate-200 rounded-md" />
+											</div>
+											<div className="h-3 w-40 bg-slate-200 rounded" />
+										</div>
+									</div>
+
+									<div className="flex items-center gap-3 shrink-0">
+										<div className="h-3.5 w-24 bg-slate-200 rounded" />
+										<div className="w-7 h-7 rounded-lg bg-slate-100" />
+									</div>
+								</div>
+
+								{/* High-Impact Highlight Callout */}
+								<div className="h-10 rounded-xl bg-slate-50 border border-slate-200/70" />
+
+								{/* Positions Progression */}
+								<div className="space-y-4">
+									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+										<div className="h-5 w-44 bg-slate-200 rounded" />
+										<div className="h-5 w-32 bg-slate-200 rounded-full" />
+									</div>
+
+									<div className="space-y-2">
+										<div className="h-3.5 w-full bg-slate-200 rounded" />
+										<div className="h-3.5 w-4/5 bg-slate-200 rounded" />
+									</div>
+
+									{/* Tech Skills Pills */}
+									<div className="flex flex-wrap gap-1.5 pt-1">
+										{[1, 2, 3, 4, 5].map((pill) => (
+											<div
+												key={pill}
+												className="h-5 w-16 rounded-md bg-slate-100 border border-slate-200/60"
+											/>
+										))}
+									</div>
+								</div>
+
+								{/* Bottom Action Affordance */}
+								<div className="pt-3.5 border-t border-slate-100 flex items-center justify-between">
+									<div className="h-3 w-48 bg-slate-200 rounded" />
+									<div className="h-3 w-16 bg-slate-200 rounded" />
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		</main>
+	);
+}
+
+export default function WorkExperience({
+	isLoading = false,
+}: {
+	isLoading?: boolean;
+} = {}) {
+	if (isLoading) {
+		return <WorkExperienceSkeleton />;
+	}
+
 	const reduceMotion = useReducedMotion();
 	const [selectedExp, setSelectedExp] = useState<Experience | null>(null);
 

@@ -13,18 +13,26 @@ import Link from "next/link";
 import { getLiverpoolFixtures } from "../actions";
 import type { LfcFixture } from "../types";
 import NextMatchHero from "./NextMatchHero";
-import FixtureSkeleton from "./FixtureSkeleton";
+import FixtureSkeleton, { LiverpoolSkeleton } from "./FixtureSkeleton";
+
+export { LiverpoolSkeleton, FixtureSkeleton };
 
 interface LiverpoolViewProps {
 	initialData?: {
 		upcoming: LfcFixture[];
 		lastUpdated: string;
 	};
+	isLoading?: boolean;
 }
 
 export default function LiverpoolView({
 	initialData,
+	isLoading: externalIsLoading = false,
 }: LiverpoolViewProps = {}) {
+	if (externalIsLoading) {
+		return <LiverpoolSkeleton />;
+	}
+
 	const reduceMotion = useReducedMotion();
 	const [upcomingFixtures, setUpcomingFixtures] = useState<LfcFixture[]>(
 		initialData?.upcoming || [],
@@ -34,7 +42,19 @@ export default function LiverpoolView({
 	const [lastUpdated, setLastUpdated] = useState<string | null>(
 		initialData?.lastUpdated || null,
 	);
+	const [syncTime, setSyncTime] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (lastUpdated) {
+			setSyncTime(
+				new Date(lastUpdated).toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+				}),
+			);
+		}
+	}, [lastUpdated]);
 
 	const fetchFixtures = useCallback(
 		async (refresh = false) => {
@@ -105,13 +125,12 @@ export default function LiverpoolView({
 
 					{/* Sync status + refresh */}
 					<div className="flex items-center gap-2 shrink-0">
-						{lastUpdated && (
-							<span className="text-[11px] font-medium text-slate-400 hidden sm:inline-block">
-								Synced{" "}
-								{new Date(lastUpdated).toLocaleTimeString([], {
-									hour: "2-digit",
-									minute: "2-digit",
-								})}
+						{syncTime && (
+							<span
+								suppressHydrationWarning
+								className="text-[11px] font-medium text-slate-400 hidden sm:inline-block"
+							>
+								Synced {syncTime}
 							</span>
 						)}
 						<button

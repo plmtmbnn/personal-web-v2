@@ -121,7 +121,121 @@ const cardVariants: Variants = {
 	},
 };
 
-export default function InsightsView() {
+export function InsightsSkeleton() {
+	return (
+		<main
+			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading insights"
+		>
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-8 sm:space-y-10">
+				{/* ── Floating Card Header Skeleton ── */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+						<div className="space-y-2">
+							<div className="h-8 sm:h-9 w-60 sm:w-72 bg-slate-200 rounded-xl animate-pulse" />
+							<div className="h-4 w-full max-w-xl bg-slate-200 rounded animate-pulse" />
+						</div>
+
+						{/* Quick summary strip */}
+						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-10 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="w-px h-8 bg-slate-100" />
+							<div className="flex flex-col items-center gap-1.5">
+								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* ── Telemetry Summary Strip (4-Col Grid) ── */}
+				<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+					{[1, 2, 3, 4].map((i) => (
+						<div
+							key={i}
+							className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3.5"
+						>
+							<div className="w-10 h-10 rounded-xl bg-slate-200 animate-pulse shrink-0" />
+							<div className="min-w-0 space-y-1.5 flex-1">
+								<div className="h-2.5 w-16 bg-slate-200 rounded animate-pulse" />
+								<div className="h-4 w-24 bg-slate-200 rounded animate-pulse" />
+								<div className="h-3 w-28 bg-slate-200 rounded animate-pulse" />
+							</div>
+						</div>
+					))}
+				</div>
+
+				{/* ── 2x2 Balanced Module Cards Grid ── */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-7">
+					{[1, 2, 3, 4].map((i) => (
+						<div
+							key={i}
+							className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col justify-between min-h-[300px] animate-pulse"
+						>
+							<div>
+								{/* Header: Icon + Title */}
+								<div className="flex items-center gap-3.5 mb-4">
+									<div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-200 shrink-0" />
+									<div className="h-6 sm:h-7 w-48 sm:w-60 bg-slate-200 rounded-lg" />
+								</div>
+
+								{/* Description */}
+								<div className="space-y-2 mb-4">
+									<div className="h-3.5 w-full bg-slate-200 rounded" />
+									<div className="h-3.5 w-4/5 bg-slate-200 rounded" />
+								</div>
+
+								{/* Subtle Highlight Callout */}
+								<div className="h-9 rounded-xl bg-slate-50 border border-slate-200/70 mb-4" />
+
+								{/* Topic Tags */}
+								<div className="flex flex-wrap gap-1.5">
+									{[1, 2, 3, 4].map((tag) => (
+										<div
+											key={tag}
+											className="h-6 w-20 rounded-lg bg-slate-100 border border-slate-200/60"
+										/>
+									))}
+								</div>
+							</div>
+
+							{/* Bottom Action Strip */}
+							<div className="pt-5 mt-6 border-t border-slate-100 flex items-center justify-between">
+								<div className="h-4 w-28 bg-slate-200 rounded" />
+								<div className="w-8 h-8 rounded-xl bg-slate-100" />
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+		</main>
+	);
+}
+
+export default function InsightsView({
+	isLoading = false,
+}: {
+	isLoading?: boolean;
+} = {}) {
+	if (isLoading) {
+		return <InsightsSkeleton />;
+	}
+
 	const reduceMotion = useReducedMotion();
 
 	const summaryStats = [

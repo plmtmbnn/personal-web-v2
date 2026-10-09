@@ -67,3 +67,36 @@ export default function FixtureSkeleton() {
 		</div>
 	);
 }
+
+export function LiverpoolSkeleton() {
+	return (
+		<main
+			className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-slate-50/80 bg-dot-pattern flex flex-col px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-24 sm:pb-28"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading Liverpool FC matchday hub"
+		>
+			<div className="max-w-4xl lg:max-w-5xl mx-auto w-full flex-1 flex flex-col min-h-0">
+				{/* ── Breadcrumb & Sync Row ── */}
+				<div className="flex items-center justify-between gap-3 shrink-0 py-1 mb-2 sm:mb-3">
+					<div className="flex items-center gap-1.5 sm:gap-2">
+						<div className="h-3.5 w-10 bg-slate-200 rounded animate-pulse" />
+						<div className="h-3.5 w-3.5 bg-slate-200 rounded animate-pulse" />
+						<div className="h-3.5 w-14 bg-slate-200 rounded animate-pulse" />
+						<div className="h-3.5 w-3.5 bg-slate-200 rounded animate-pulse" />
+						<div className="h-3.5 w-24 bg-slate-200 rounded animate-pulse" />
+					</div>
+					<div className="flex items-center gap-2">
+						<div className="h-3 w-16 bg-slate-200 rounded animate-pulse hidden sm:inline-block" />
+						<div className="h-7 w-20 bg-slate-200 rounded-full animate-pulse" />
+					</div>
+				</div>
+
+				{/* ── Main Content — vertically centered ── */}
+				<div className="flex-1 flex flex-col justify-center min-h-0 py-1 sm:py-2">
+					<FixtureSkeleton />
+				</div>
+			</div>
+		</main>
+	);
+}

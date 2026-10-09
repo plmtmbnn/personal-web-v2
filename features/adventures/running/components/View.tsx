@@ -116,13 +116,291 @@ function PaceRing({
 	);
 }
 
+export function RunningSkeleton() {
+	return (
+		<main
+			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden"
+			role="status"
+			aria-live="polite"
+			aria-label="Loading running activities"
+		>
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 space-y-6 sm:space-y-8 relative z-10">
+				{/* ── Modern Floating Card Header Skeleton ── */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+					{/* Breadcrumb Navigation */}
+					<div className="flex items-center gap-1.5 mb-4">
+						<div className="h-3 w-16 bg-slate-200 rounded animate-pulse" />
+						<div className="w-3.5 h-3.5 bg-slate-200 rounded animate-pulse" />
+						<div className="h-3 w-14 bg-slate-200 rounded animate-pulse" />
+					</div>
+
+					<div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+						{/* Title block */}
+						<div className="flex-1 min-w-0 space-y-2">
+							<div className="h-8 sm:h-10 w-64 sm:w-96 bg-slate-200 rounded-xl animate-pulse" />
+							<div className="h-4 sm:h-5 w-full max-w-xl bg-slate-200 rounded animate-pulse" />
+						</div>
+
+						{/* Telemetry Quick Strip */}
+						<div className="grid grid-cols-3 divide-x divide-slate-100 bg-slate-50/80 border border-slate-200/70 rounded-2xl p-3 sm:bg-transparent sm:border-0 sm:p-0 sm:flex sm:items-center sm:gap-5 shrink-0">
+							<div className="flex flex-col items-center gap-1 px-2 sm:px-0">
+								<div className="h-6 sm:h-7 w-12 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-16 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="flex flex-col items-center gap-1 px-2 sm:px-0">
+								<div className="h-6 sm:h-7 w-14 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-18 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="flex flex-col items-center gap-1 px-2 sm:px-0">
+								<div className="h-6 sm:h-7 w-12 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* ── Benchmarks & Live Telemetry Arena Skeleton ── */}
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
+					{/* LEFT COLUMN: Live Volume Telemetry & Intel */}
+					<div className="lg:col-span-5">
+						<div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs h-full flex flex-col justify-between gap-4 animate-pulse">
+							<div className="space-y-4">
+								{/* Card Header */}
+								<div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+									<div className="flex items-center gap-2.5">
+										<div className="w-8 h-8 rounded-xl bg-slate-200 shrink-0" />
+										<div className="space-y-1">
+											<div className="h-4 w-32 bg-slate-200 rounded" />
+											<div className="h-3 w-44 bg-slate-200 rounded" />
+										</div>
+									</div>
+									<div className="h-6 w-24 rounded-full bg-slate-200 shrink-0" />
+								</div>
+
+								{/* Volume Metrics 2-Col Box */}
+								<div className="grid grid-cols-2 divide-x divide-slate-100 py-2 bg-slate-50/80 border border-slate-200/70 rounded-2xl">
+									<div className="flex flex-col items-center gap-1 px-3 py-1">
+										<div className="h-7 w-16 bg-slate-200 rounded" />
+										<div className="h-2.5 w-20 bg-slate-200 rounded" />
+									</div>
+									<div className="flex flex-col items-center gap-1 px-3 py-1">
+										<div className="h-7 w-16 bg-slate-200 rounded" />
+										<div className="h-2.5 w-20 bg-slate-200 rounded" />
+									</div>
+								</div>
+
+								{/* Average Pace Row */}
+								<div className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70">
+									<div className="w-12 h-12 rounded-full border-4 border-slate-200 shrink-0" />
+									<div className="flex-1 min-w-0 flex items-center justify-between gap-3">
+										<div className="space-y-1">
+											<div className="h-2.5 w-20 bg-slate-200 rounded" />
+											<div className="h-3 w-28 bg-slate-200 rounded" />
+										</div>
+										<div className="space-y-1 text-right">
+											<div className="h-6 w-14 bg-slate-200 rounded ml-auto" />
+											<div className="h-2.5 w-10 bg-slate-200 rounded ml-auto" />
+										</div>
+									</div>
+								</div>
+
+								{/* 4 Intel Metric Tiles (2x2 Grid) */}
+								<div className="grid grid-cols-2 gap-2.5">
+									{[1, 2, 3, 4].map((tile) => (
+										<div
+											key={tile}
+											className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-2.5"
+										>
+											<div className="w-8 h-8 rounded-lg bg-slate-200 shrink-0" />
+											<div className="space-y-1 flex-1">
+												<div className="h-2.5 w-14 bg-slate-200 rounded" />
+												<div className="h-3.5 w-16 bg-slate-200 rounded" />
+											</div>
+										</div>
+									))}
+								</div>
+
+								{/* Distance Distribution */}
+								<div className="space-y-2 pt-1">
+									<div className="flex justify-between">
+										<div className="h-2.5 w-28 bg-slate-200 rounded" />
+										<div className="h-2.5 w-12 bg-slate-200 rounded" />
+									</div>
+									<div className="space-y-1.5">
+										{[1, 2, 3, 4].map((bar) => (
+											<div key={bar} className="flex items-center gap-2">
+												<div className="h-2.5 w-8 bg-slate-200 rounded" />
+												<div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+													<div className="h-full bg-slate-200 rounded-full w-1/2" />
+												</div>
+												<div className="h-2.5 w-4 bg-slate-200 rounded" />
+											</div>
+										))}
+									</div>
+								</div>
+							</div>
+
+							{/* Status indicator footer */}
+							<div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+								<div className="h-3 w-28 bg-slate-200 rounded" />
+								<div className="h-3 w-24 bg-slate-200 rounded" />
+							</div>
+						</div>
+					</div>
+
+					{/* RIGHT COLUMN: Personal Bests Showcase Skeleton */}
+					<div className="lg:col-span-7">
+						<div className="w-full h-full bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 shadow-xs flex flex-col justify-between animate-pulse min-h-[380px]">
+							{/* Header & Controls */}
+							<div className="flex items-center justify-between pb-4 border-b border-slate-100">
+								<div className="flex items-center gap-3">
+									<div className="w-11 h-11 rounded-2xl bg-slate-200 shrink-0" />
+									<div className="space-y-1">
+										<div className="h-4 w-28 bg-slate-200 rounded" />
+										<div className="h-3 w-40 bg-slate-200 rounded" />
+									</div>
+								</div>
+								<div className="flex items-center gap-2">
+									<div className="h-8 w-16 bg-slate-100 rounded-xl" />
+									<div className="w-8 h-8 bg-slate-100 rounded-xl" />
+								</div>
+							</div>
+
+							{/* Milestone Selector */}
+							<div className="py-4">
+								<div className="flex items-center justify-between pb-2 border-b border-slate-100">
+									{[1, 2, 3, 4, 5].map((m) => (
+										<div key={m} className="h-4 w-12 bg-slate-200 rounded" />
+									))}
+								</div>
+							</div>
+
+							{/* Record display */}
+							<div className="flex flex-col items-center justify-center my-6 space-y-3">
+								<div className="h-12 sm:h-14 w-48 sm:w-56 bg-slate-200 rounded-2xl" />
+								<div className="h-5 w-24 bg-slate-200 rounded-md" />
+							</div>
+
+							{/* 3-metric strip */}
+							<div className="grid grid-cols-3 divide-x divide-slate-100 pt-4 border-t border-slate-100">
+								{[1, 2, 3].map((s) => (
+									<div
+										key={s}
+										className="flex flex-col items-center gap-1.5 px-2"
+									>
+										<div className="w-5 h-5 rounded-full bg-slate-200" />
+										<div className="h-2.5 w-10 bg-slate-200 rounded" />
+										<div className="h-4 w-14 bg-slate-200 rounded" />
+									</div>
+								))}
+							</div>
+
+							{/* Footer */}
+							<div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-100">
+								<div className="h-3 w-36 bg-slate-200 rounded" />
+								<div className="h-5 w-24 bg-slate-200 rounded-md" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* ── Recent Activities Feed & Controls Skeleton ── */}
+				<div className="space-y-5">
+					{/* Activities Toolbar */}
+					<div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-3">
+								<div className="w-9 h-9 rounded-xl bg-slate-200 animate-pulse shrink-0" />
+								<div className="space-y-1">
+									<div className="h-4 w-32 bg-slate-200 rounded animate-pulse" />
+									<div className="h-2.5 w-24 bg-slate-200 rounded animate-pulse" />
+								</div>
+							</div>
+							<div className="h-8 w-24 bg-slate-100 rounded-xl animate-pulse" />
+						</div>
+
+						{/* Search + Filter + Sort row */}
+						<div className="border-t border-slate-100 pt-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+							<div className="h-9 w-full lg:max-w-xs bg-slate-100 rounded-xl animate-pulse" />
+							<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+								{[1, 2, 3, 4, 5].map((f) => (
+									<div
+										key={f}
+										className="h-8 w-20 rounded-xl bg-slate-100 border border-slate-200/60 animate-pulse shrink-0"
+									/>
+								))}
+							</div>
+							<div className="h-9 w-32 bg-slate-100 rounded-xl animate-pulse" />
+						</div>
+					</div>
+
+					{/* Activities Grid */}
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+						{[1, 2, 3, 4, 5, 6].map((card) => (
+							<div
+								key={card}
+								className="p-5 sm:p-6 bg-white border border-slate-200/80 rounded-3xl shadow-xs flex flex-col justify-between h-[210px] animate-pulse"
+							>
+								<div>
+									{/* Top Header */}
+									<div className="flex items-start justify-between gap-3 mb-4">
+										<div className="flex items-center gap-3 min-w-0">
+											<div className="w-9 h-9 rounded-xl bg-slate-200 shrink-0" />
+											<div className="space-y-1 min-w-0">
+												<div className="h-4 w-32 bg-slate-200 rounded" />
+												<div className="h-3 w-20 bg-slate-200 rounded" />
+											</div>
+										</div>
+										<div className="w-7 h-7 rounded-lg bg-slate-100 shrink-0" />
+									</div>
+
+									{/* 3-Metric Recessed Instrument Tray */}
+									<div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/60 grid grid-cols-3 divide-x divide-slate-200/60">
+										<div className="pr-2.5 space-y-1">
+											<div className="h-2 w-10 bg-slate-200 rounded" />
+											<div className="h-5 w-12 bg-slate-200 rounded" />
+										</div>
+										<div className="px-2.5 space-y-1">
+											<div className="h-2 w-8 bg-slate-200 rounded" />
+											<div className="h-5 w-12 bg-slate-200 rounded" />
+										</div>
+										<div className="pl-2.5 space-y-1">
+											<div className="h-2 w-12 bg-slate-200 rounded" />
+											<div className="h-5 w-14 bg-slate-200 rounded" />
+										</div>
+									</div>
+								</div>
+
+								{/* Bottom Context Strip */}
+								<div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between">
+									<div className="flex items-center gap-2">
+										<div className="h-5 w-14 rounded-lg bg-slate-100" />
+										<div className="h-5 w-16 rounded-lg bg-slate-100" />
+									</div>
+									<div className="h-4 w-12 rounded bg-slate-100" />
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		</main>
+	);
+}
+
 export default function RunningView({
 	initialData,
 	isAdmin = false,
+	isLoading = false,
 }: {
 	initialData?: StravaDataResult;
 	isAdmin?: boolean;
+	isLoading?: boolean;
 }) {
+	if (isLoading) {
+		return <RunningSkeleton />;
+	}
+
 	const [mounted, setMounted] = useState(false);
 	const [dataState, setDataState] = useState<StravaDataResult | undefined>(
 		initialData,

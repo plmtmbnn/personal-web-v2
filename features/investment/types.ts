@@ -242,6 +242,7 @@ export interface CompassOutput {
 	alerts: CompassAlert[];
 	activeSeasonality: import("./data/seasonality").SeasonalityWindow[];
 	upcomingEvents: import("./data/events").MacroCalendarEvent[];
+	criticalPreAlerts?: import("./data/events").CriticalPreAlert[];
 	halvingCycle: {
 		monthsElapsed: number;
 		phase: string;

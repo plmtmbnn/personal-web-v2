@@ -33,8 +33,11 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
     - **Tactical Permissions Matrix (`PermissionsMatrix.tsx`)**: Single source of truth driving daily trading permissions (`Allowed`, `Selective`, `Not Allowed`, `Paused`) for Scalp, Swing, and Core DCA across IHSG, Crypto Majors, and Speculative Altcoins. On mobile viewports (`< lg`), employs an **Executive Stacked Action Card Layout**: distinct header row with action label on left and status badge on right, paired with full-width, comfortably readable explanatory text below, completely eliminating cramped multi-column splits and hardcoded `max-w` truncations. Automatically displays the prominent rose-tinted **Capital Preservation Protocol Active** banner during systemic stress with a hard lockdown on new margin/leverage.
     - **Execution Playbook & Pure White Safe Bucket Anchor (`MarketPlaybook.tsx`)**: Dual-card tactical script for IHSG and Crypto detailing actionable Dos, Avoids, position sizing mandates (0.5%–1.0% risk cap, `riskPerTrade`), thesis invalidation triggers, and predetermined tranche accumulation plans. Strictly adheres to the **Pure White Container Standard** via the **Safe Yield & Preservation Anchor Card (40% Target)** (`bg-white rounded-[2rem] border border-slate-200/80 shadow-xs` with high-contrast amber accents and slate sub-cards, prohibiting monolithic dark containers) outlining Retail SBN (ORI/SBR/ST), liquid bank deposits (RDN), and physical gold (LM Antam).
     - **Disciplined Rebuild Rulebook (`Rulebook.tsx`)**: 6 non-negotiable operational sections: Capital Buckets Architecture (Emergency, 40% Safe Yield, 45% Core, 15% Swing), 6 Golden Rules of Trading Discipline, Mechanical Drawdown Circuit Breakers (-5% half size, -10% 14-day pause, -15% freeze), Non-Negotiable Hard Bans (zero crypto perps/futures, zero margin, zero Papan Pemantauan Khusus), Pre-Trade Checklist (5 gates), and Drawdown Recovery Math table (-80% requires +400%) with fully legible, un-truncated reality explanations.
-    - **Auto-Expiring Event Calendar & Seasonality (`EventCalendar.tsx`)**: High-impact macro dates with automatic expiry filtering by market (All, ID, Crypto, US), active seasonal tendency banners (Window Dressing, Sell in May), and suppressed horizontal scrollbars (`[scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x`) for smooth swipe ergonomics.
-    - **5-Tab Market Data Terminal (`MarketDataHub.tsx`)**: Full-featured terminal console consolidating 5 dedicated data panes: Indonesia (IDX Composite with 2-decimal precision, USD/IDR, 10Y Yield, 200D MA, 52W Drawdown), Crypto Majors (BTC, ETH, Stablecoin 30D flows, Funding Rates, Halving Phase), Global Macro (MacroLens), Global Quotes (GlobalMarkets cross-asset matrix), and Sentiment Dials (CNN Fear & Greed gauge) with native mobile tab swiping.
+    - **Dynamic Recurrent Macro Calendar & Deterministic UTC Parsing (`EventCalendar.tsx`)**: High-impact macro dates with algorithmic recurrence generation across any future year (`generateRecurrentEvents`), market filtering (All, ID, Crypto, US), and active seasonal tendency banners (Window Dressing, Musim Dividen, Sell in May). All calendar and catalyst dates in ISO `YYYY-MM-DD` format MUST be parsed via explicit UTC components (`Date.UTC(y, m - 1, d)`) to prevent local client timezone drift.
+    - **Critical Catalyst Soft Pre-Alert (H-3 Weekday Window)**: Prominent amber/rose pre-alert cards highlighting Critical catalysts approaching within 0–3 business days with domain impact explanations for IHSG and Crypto. Synchronized with the Telegram daily briefing (`runRegimeAlerts`).
+    - **Calibrated Circular SVG Progress Gauge (`RingProgress` in `FearAndGreedGauge.tsx`)**: Standardized circular progress geometry (`radius = 46`, `strokeWidth = 12`) with explicit base initial SVG attributes to eliminate Framer Motion unanimatable value warnings, responsive viewBox scaling, and a centered status indicator.
+    - **Trading Session & Weekend Flow Guard (`idx-flows.ts`)**: Flow records require active market hours (`hour >= 9 WIB` on weekdays) before recording new sessions, and legacy weekend records are automatically pruned to prevent artificial multi-day streak alerts on Mondays.
+    - **5-Tab Market Data Terminal (`MarketDataHub.tsx`)**: Full-featured terminal console consolidating 5 dedicated data panes: Indonesia (IDX Composite with 2-decimal precision, USD/IDR, 10Y Yield, 200D MA, 52W Drawdown, and 4-tile Sector Rotation Bellwethers strip), Crypto Majors (BTC, ETH, Stablecoin 30D flows, Funding Rates, Halving Phase), Global Macro (MacroLens), Global Quotes (GlobalMarkets cross-asset matrix), and Sentiment Dials (CNN Fear & Greed gauge) with native mobile tab swiping.
     - **Floating Card Popover & Watermark Hygiene Standard**: Outer card shells hosting dropdowns or popovers MUST NOT declare `overflow-hidden`. Large background watermarks (e.g., decorative `Compass` SVG) must be wrapped in a dedicated clipping container (`<div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">`). Popovers must feature a full-viewport transparent backdrop overlay (`<div role="presentation" aria-hidden="true" className="fixed inset-0 z-40" onClick={...} />`) behind the popup (`z-50`) to enable seamless click-outside dismissal.
     - **Deterministic Number & Currency Locale Standard**: NEVER call bare `.toLocaleString()` without an explicit locale string. All Rupiah amounts and Indonesian share volumes must use `.toLocaleString("id-ID")`. All USD values, crypto prices, index levels with decimal fractions, and percentages must use `.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })` to prevent Next.js SSR/CSR hydration mismatches across client browser locales.
     - **Safe Bottom Clearance**: Calibrated bottom clearance `pb-32 sm:pb-36` to safely clear `CompactBottomBar`.
@@ -181,6 +184,32 @@ A mobile-first mindset is strictly enforced across the codebase. Layouts gracefu
 * **Mobile-First Scrolling:** On standard multi-card feeds and dashboard views (`< lg`), pages revert to fluid vertical scrolling (`min-h-screen overflow-y-auto py-20 pb-32 sm:py-24 sm:pb-36`) to accommodate the floating bottom navigation bar (`CompactBottomBar`).
 * **Fluid Spacing & Typography:** Margins, padding, and font sizes scale smoothly based on breakpoints (e.g., `pt-24 sm:pt-32`, `text-3xl sm:text-5xl lg:text-6xl`, `px-3 sm:px-4`).
 * **Touch Targets & Feedback:** Interactive elements feature generous touch target areas and active feedback (`active:scale-95`, `active:scale-[0.98]`) for tactile confirmation on mobile devices.
+
+### 4.1 Anti-Forced-Side-by-Side & Anti-Cramping Standard (Top-and-Bottom Flow)
+
+AI assistants exhibit a chronic tendency to force components into side-by-side columns (e.g. cramming Take-Profit and Stop-Loss into side-by-side pillars, forcing 3 mini-cards into a half-width container, or putting form inputs side-by-side in tight spaces). In constrained spaces (< 600px width, mobile screens, or inside split cards/drawers), **forced side-by-side layouts break responsiveness, cause text clipping (`...`), shove badges past card boundaries, and produce messy interfaces**.
+
+* **Mandatory Top-to-Bottom Flow (Vertical Stacking)**: When horizontal space is constrained or when displaying detailed financial/operational data, stack complementary sections vertically (`space-y-4 sm:space-y-6`), giving each section 100% full width to breathe.
+* **Segmented Mode Switchers over Squeezed Dual Pillars**: When comparing or operating two distinct views (e.g., `[ Take-Profit Target ] [ Capital Protection Floor ]`, `[ Buy ] [ Sell ]`, `[ Input ] [ Output ]`), NEVER force them into two 240px cramped side-by-side columns. Standardize on a clean, full-width segmented switcher where the active mode occupies the full width of the card, giving milestone button tracks, detailed key-value rows, and summary highlights ample room.
+* **Full-Width Stages over Narrow Split Panes**: For high-density operational utilities, prefer full-width stacked stages (Hero Header → Global 4-Stat Telemetry Strip → Full-Width Input Ledger → Full-Width Workstation) over rigid 2-column layouts that squeeze complex calculations into narrow columns.
+* **Mobile Text Fallbacks for Segment Controls**: Multi-button segment selectors and tabs must provide responsive text variants (e.g., `<span className="hidden sm:inline">IDX Stock (Lots)</span><span className="sm:hidden truncate">IDX (Lots)</span>`) so that 3-way or 4-way toggles fit without text collisions down to 320px viewports.
+
+### 4.2 Standard 2-Tier Vertical Layout for Small & 2-Column Telemetry Cards
+
+In 2-column mobile grids or cards narrower than ~220px, **NEVER force `[Icon + Category Label + Status Badge]` onto the same horizontal line**. Mathematically, an icon (32px) + label (~100px) + badge (~50px) exceeds ~140px-180px inner card width, shoving badges past the card border and truncating labels into `Gro` or `Min...`.
+
+All compact telemetry cards in 2-column mobile or constrained grid layouts MUST adhere to the **Canonical 4-Tier Internal Structure**:
+1. **Tier 1 (Anchor & Status Row)**: Icon on the left (`w-7 h-7 sm:w-8 sm:h-8`), status or percentage badge on the right (`ml-auto shrink-0`). Only TWO small elements on this line, guaranteeing zero collision and zero border overflow.
+2. **Tier 2 (Category Label)**: Category label sits on its OWN full-width line (`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate`).
+3. **Tier 3 (Primary Metric)**: Monospace tabular numeral with responsive font sizing (`text-sm sm:text-xl lg:text-2xl font-bold font-mono text-slate-900 tracking-tight tabular-nums truncate`), guaranteeing long currencies (`Rp 113.500.000`) never truncate with ellipsis (`Rp 113.500.0...`).
+4. **Tier 4 (Context Sublabel)**: Concise subtext on its own line (`text-[10px] sm:text-[11px] text-slate-400 font-medium truncate`).
+
+### 4.3 Refined Typography Scale & Lighter Weights (Anti-Brutalist Mandate)
+
+* **Banish `font-black` (900 Weight) Overuse**: Avoid heavy brutalist `font-black` typography inside small and medium cards. Chunky weights consume excessive horizontal width, shout at the user, and cause early truncation on narrow screens.
+* **Standardize on `font-semibold` (600) & `font-bold` (700)**: Primary metrics and headers should feel confident yet refined, leaving generous optical breathing room.
+* **Muted Secondary Hierarchy**: Use `font-normal` (400) or `font-medium` (500) for secondary labels and units (`text-slate-500`), creating distinct contrast without visual clutter.
+* **Frameless Summary Highlights over Bulky Colored Alert Boxes**: Banish thick-bordered fluorescent alert boxes (e.g. bright pink `bg-rose-50 border border-rose-200/80` or neon green boxes). Use pure white card containers or subtle tinted card surfaces (`bg-emerald-50/50 border border-emerald-100`) with restrained typography.
 
 ---
 
@@ -888,3 +917,91 @@ The application's 404 page MUST adhere to the **Strict Zero-Redundancy Floating 
     ```
   - Strictly prohibits duplicate stacked buttons (`Go to Home` + `Go Back`), which clutter the card and duplicate the persistent bottom dock.
 * **Calibrated Bottom Clearance:** `pb-28 sm:pb-36` optical clearance ensuring the floating card rests at the true optical focal center without colliding with or crowding `CompactBottomBar` on desktop and mobile viewports.
+
+---
+
+## 30. Asset Averaging & Position Sizing Workstation Standards (`/utils/stock-crypto-calculator`)
+
+The Asset Averaging Calculator provides high-conviction cost basis consolidation, reverse target optimization (Reverse DCA), fixed-budget tranche deployment, and profit realization ladder planning tailored for Indonesian stocks (IDX lots), US equities (shares), and crypto.
+
+### 30.1 Full-Width Stacked Stages Financial Architecture (Strategy A Standard)
+* **Anti-Forced-Side-by-Side & Anti-Fragmented-Card Mandates**:
+  - NEVER force complex financial calculators into side-by-side split columns (< 600px width per column) or fragment them into 4–5 disconnected, arbitrary cards with artificial bar charts. Side-by-side columns crowd milestone button rows, cause numerical truncations, and degrade mobile responsiveness.
+  - Standardize on **Strategy A: Full-Width Stacked Stages** (Header → 4-Card Telemetry Strip → Full-Width Position Blotter → Full-Width Financial Intelligence Workstation):
+    1. **Stage 1: Hero Header (`UtilHeader.tsx`)**: Canonical 3-tier floating card header with breadcrumbs, domain icon squircle (`Calculator`), full-width title, and descriptive subtitle.
+    2. **Stage 2: Global 4-Card Telemetry Strip (`TelemetryStrip.tsx`)**:
+       - 4 essential position KPIs: *Consolidated Average Price*, *Net Breakeven Threshold* (factoring sell broker fee), *Total Outlay Capital*, and *Total Volume & Lots*.
+       - Employs the **Canonical 4-Tier Internal Vertical Hierarchy** (§4.2): Tier 1 (Icon left + Badge right), Tier 2 (Category label full-width), Tier 3 (Monospace tabular numeral), Tier 4 (Descriptive subtext). Guarantees zero text clipping and zero badge border overflow down to 320px viewports.
+    3. **Stage 3: Full-Width Accumulation Blotter (`PositionBlotter.tsx`)**:
+       - Instrument ribbon: Frameless asset toggle (`Stock` vs `Crypto`) with responsive mobile text fallbacks (`hidden sm:inline` / `sm:hidden truncate`), lot/share unit switcher, currency toggle (IDR/USD), and an expandable fee drawer.
+       - Desktop table + Mobile card ledger: Clean order rows with execution price, volume, subtotal outlay, capital weight %, and deletion triggers.
+       - Proportional Capital Allocation Bar: Clean visual weight distribution across entries with an interactive order breakdown legend.
+    4. **Stage 4: Full-Width Financial Intelligence Workstation (`PositionIntelligence.tsx`)**:
+       - Unified workstation card (`bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-7`).
+       - Features an open, **Frameless Tab Switcher** driven by Framer Motion `layoutId` with spring physics across 4 dedicated financial planning modules:
+         - **Tab 1: Realization & Risk (`RealizationTab.tsx`)**: Full-width segmented mode switcher (`[ Take-Profit Target ] [ Capital Protection Floor ]`), single-row milestone pill track (+5% to +50% or -3% to -15%), dynamic Risk:Reward ratio (RRR), and pure white/tinted outcome callouts (§30.5).
+         - **Tab 2: Target Solver (`TargetSolverTab.tsx`)**: Reverse DCA optimizer (`calculateTargetOptimizer`) calculating exact tranches required to achieve a desired blended cost basis.
+         - **Tab 3: Budget Planner (`BudgetPlannerTab.tsx`)**: Fixed-budget capital allocator (`calculateBudgetOptimizer`) computing maximum executable volume, residual cash buffer, and blended cost reduction.
+         - **Tab 4: Stress Matrix (`StressMatrixTab.tsx`)**: Full-width sensitivity matrix simulating asset price shocks (-30% to +50% via `calculateScenarioPoints`) with color-coded P&L deltas and total position value.
+
+### 30.2 Zero Ellipsis & Number Anti-Truncation Mandate
+* **Absolute Precision Requirement**:
+  - NEVER apply `truncate` (`text-overflow: ellipsis`) to financial numbers, lot quantities, currency values, or telemetry labels in calculators and trading tools.
+  - Ellipsis cutoffs (e.g. `Rp 11.1...`, `69 L...`, `CAPITAL NE...`) destroy financial accuracy and leave users uncertain whether figures represent thousands, millions, or billions.
+  - All numerical outputs must render with 100% full fidelity using `font-mono tabular-nums break-words` inside spacious grid cells (`grid-cols-1 sm:grid-cols-2` rather than cramped `grid-cols-4`).
+
+### 30.3 Refined Typography & Anti-Brutalist Hierarchy
+* **Lighter Weights & Readable Proportions (§4.3)**:
+  - Banish overuse of `font-black` (900 weight) inside numbers and card labels. Use `font-semibold` (600) and `font-bold` (700) for primary metrics (`text-2xl sm:text-3xl font-bold font-mono text-slate-900`), and `font-medium` (500) for secondary details.
+  - Keeps financial interfaces calm, professional, and visually uncluttered while saving horizontal space on mobile.
+
+### 30.4 Floating-Point Currency Formatting Hygiene
+* **Float Epsilon Elimination**:
+  - When formatting domestic currencies (such as IDR in `formatCurrency`), floating-point residue (e.g. `46575000.00000001`) can falsely trigger fractional decimals, resulting in bloated numbers with awkward `,00` cents.
+  - Parsers MUST check `Math.abs(value - Math.round(value)) < 0.01` so whole currency amounts format cleanly (e.g. `Rp 46.575.000` rather than `Rp 46.575.000,00`).
+
+### 30.5 Indonesian Market Microstructure Parity
+* **Native Lot Multiplier (1 Lot = 100 Shares)**:
+  - In Stock mode with `stockUnit === "lots"`, all volume inputs and required lot outputs represent Indonesian Stock Exchange (IDX) lots ($1\text{ lot} = 100\text{ shares}$).
+  - Automatically display the underlying normalized share count beneath lot totals to eliminate manual lot-to-share conversion friction.
+* **Broker & Exchange Fee Accounting**:
+  - Provide an optional fee inclusion toggle with standard defaults (0.15% Buy / 0.25% Sell for IDX stocks; 0.1% Buy / 0.1% Sell for crypto).
+  - Calculate true net breakeven: $P_{be} = \frac{C_{net}}{U \times (1 - f_{sell})}$, ensuring investors know the exact exit price required to recover capital after broker commissions and exchange levies.
+
+### 30.6 Dedicated Profit Realization & Downside Risk Blocks
+* **Frameless Non-Squeezed Metric Callouts**:
+  - NEVER force long target calculations and labels into single cramped text rows that squeeze labels into abbreviations (e.g. shortening "Capital at Risk" to "C.").
+  - Encapsulate bottom-line financial outcomes in dedicated, non-squeezed stat containers:
+    - *Projected Net Profit*: Highlighted soft emerald container (`bg-emerald-50/60 border border-emerald-100`) with bold net currency profit and return %.
+    - *Capital at Risk*: Highlighted soft rose container (`bg-rose-50/60 border border-rose-100`) with bold downside risk amount and drawdown %.
+
+### 30.7 Mobile-First Touch & Layout Standard
+* **Input Font Sizing (iOS Preflight)**: All numeric inputs declare `text-base sm:text-sm` to strictly prevent iOS Safari from automatically zooming into the page on focus.
+* **Touch Target Sizing**: All preset chips, tabs, and action buttons maintain $\ge 36\text{px}-44\text{px}$ touch targets with `touch-manipulation` and active tactile feedback (`active:scale-95`).
+* **Calibrated Bottom Clearance**: `pb-32 sm:pb-36` ensuring zero overlap with `CompactBottomBar`.
+
+---
+
+## 31. Spinner Wheel & Decision Randomizer Standards (`/utils/spinner-wheel`)
+
+The Decision Spinner Wheel (`/utils/spinner-wheel`) provides high-engagement, customizable randomized decision-making with authentic physical deceleration physics and sensory feedback.
+
+### 31.1 Modular Architecture
+* **Clean Component Decomposition**:
+  - `WheelStage.tsx`: Pure HTML5 Canvas rendering of the multi-slice color-coded wheel, dynamic pointer indicator, and Framer Motion spring pop-in.
+  - `WheelControls.tsx`: Pure white floating card (`bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-7 shadow-xs`) with entry input management, quick preset chips (`presets.ts`), spin triggers, sound toggles, and item removal switches.
+  - `WinnerModal.tsx`: Frameless winning celebration modal with confetti explosion and domain action buttons.
+  - `Skeleton.tsx`: Layout-perfect localized skeleton loader eliminating global fallback flashes.
+* **Sensory Feedback**: Employs Web Audio API synthesized mechanical clicks during slice traversals and victory fanfare on selection.
+
+---
+
+## 32. Faceless Social Media Card Studio Standards (`/utils/social-canvas`)
+
+The Social Canvas Studio (`/utils/social-canvas`) generates high-resolution, exportable social media card graphics without third-party dependencies.
+
+### 32.1 Modular Architecture & Template Diversity
+* **Clean Studio Separation**:
+  - `CanvasRenderer.tsx`: High-DPI HTML5 Canvas rasterization engine with text auto-wrapping, custom aspect ratios (1:1, 4:5, 9:16, 16:9), and client-side PNG/WebP exports.
+  - `TemplateGallery.tsx`: Interactive template showcase organized across 4 distinct categories: News & Headlines, Offset & Minimalist, Frosted Glass & Optical, and Cinematic & Subtitle.
+  - 21 bespoke designs featuring high-contrast typography, code terminals, vinyl audio players, and dynamic light/dark theme toggles.

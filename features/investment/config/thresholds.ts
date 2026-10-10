@@ -9,6 +9,7 @@ export interface InvestmentThresholds {
 		strong: number;
 		neutral: number;
 		weak: number;
+		overnightRallyPct: number;
 	};
 	us10y: {
 		stress: number;
@@ -42,6 +43,11 @@ export interface InvestmentThresholds {
 		stablecoinExpansionPct: number;
 		stablecoinContractionPct: number;
 		altcoinBtcDominanceMax: number;
+		mvrv: {
+			accumulation: number;
+			overheat: number;
+			extremeOverheat: number;
+		};
 	};
 
 	// Macro Liquidity & Policy Indicators
@@ -75,6 +81,7 @@ export const DEFAULT_THRESHOLDS: InvestmentThresholds = {
 		strong: 104.5,
 		neutral: 101.5,
 		weak: 100.0,
+		overnightRallyPct: 0.7,
 	},
 	us10y: {
 		stress: 4.5,
@@ -118,6 +125,11 @@ export const DEFAULT_THRESHOLDS: InvestmentThresholds = {
 		stablecoinExpansionPct: 1.5,
 		stablecoinContractionPct: -1.0,
 		altcoinBtcDominanceMax: 54.0,
+		mvrv: {
+			accumulation: 1.0,
+			overheat: 3.2,
+			extremeOverheat: 3.7,
+		},
 	},
 	scoring: {
 		riskOnMin: 65,

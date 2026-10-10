@@ -166,6 +166,9 @@ export default function FearAndGreedGauge({
 							rating={rating}
 							reduceMotion={Boolean(reduceMotion)}
 						/>
+						<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+							<Activity className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400" />
+						</div>
 					</div>
 
 					<div className="text-center space-y-2.5 sm:space-y-3">
@@ -266,9 +269,11 @@ function RingProgress({
 	rating?: string;
 	reduceMotion: boolean;
 }) {
-	const radius = 24;
+	const radius = 46;
+	const strokeWidth = 12;
 	const circumference = 2 * Math.PI * radius;
-	const strokeDashoffset = circumference - (score / 100) * circumference;
+	const clampedScore = Math.min(100, Math.max(0, score));
+	const strokeDashoffset = circumference * (1 - clampedScore / 100);
 
 	// Color mapping for the progress stroke
 	const getStrokeColor = (s: number): string => {
@@ -288,15 +293,14 @@ function RingProgress({
 				stiffness: 350,
 				damping: 30,
 			}}
-			className="absolute transform -rotate-90"
-			width="128"
-			height="128"
+			className="absolute inset-0 w-full h-full transform -rotate-90"
 			viewBox="0 0 128 128"
 		>
 			{/* Background Circle */}
 			<circle
 				className="text-slate-100"
-				strokeWidth={48}
+				strokeWidth={strokeWidth}
+				stroke="currentColor"
 				fill="none"
 				r={radius}
 				cx={64}
@@ -304,14 +308,17 @@ function RingProgress({
 			/>
 
 			{/* Progress Arc */}
-			<motion.path
-				d={`M ${64 + radius} ${64} A ${radius} ${radius} 0 1 1 ${64 - radius} ${64}`}
-				className="stroke-current fill-none"
-				style={{ stroke: getStrokeColor(score) }}
-				strokeWidth={48}
+			<motion.circle
+				cx={64}
+				cy={64}
+				r={radius}
+				fill="none"
+				strokeWidth={strokeWidth}
+				stroke={getStrokeColor(clampedScore)}
 				strokeLinecap="round"
-				initial={{ strokeDashoffset: circumference }}
-				animate={{ strokeDashoffset: strokeDashoffset }}
+				strokeDasharray={circumference}
+				initial={reduceMotion ? false : { strokeDashoffset: circumference }}
+				animate={{ strokeDashoffset }}
 				transition={{
 					type: "spring",
 					stiffness: 300,
@@ -319,8 +326,15 @@ function RingProgress({
 				}}
 			/>
 
-			{/* Center Dot */}
-			<circle className="text-white" strokeWidth={4} r={4} cx={64} cy={64} />
+			{/* Center Inset Outline */}
+			<circle
+				className="text-slate-50 fill-white"
+				strokeWidth={1}
+				stroke="#f1f5f9"
+				r={34}
+				cx={64}
+				cy={64}
+			/>
 		</motion.svg>
 	);
 }

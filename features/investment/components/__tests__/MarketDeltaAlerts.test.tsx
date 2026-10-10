@@ -180,9 +180,8 @@ describe("MarketDeltaAlerts Component", () => {
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
 		expect(container.textContent).toContain("Significant Market Shifts");
-		expect(container.textContent).toContain(
-			"Volatility Shock: VIX spiked +14.5%",
-		);
+		expect(container.textContent).toContain("Volatility Shock");
+		expect(container.textContent).toContain("VIX spiked +14.5%");
 	});
 
 	it("renders VIX Crush alert when VIX changePct <= -10%", () => {
@@ -190,9 +189,8 @@ describe("MarketDeltaAlerts Component", () => {
 		data.markets.quotes.VIX.changePct = -11.2;
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
-		expect(container.textContent).toContain(
-			"Volatility Crush: VIX dropped -11.2%",
-		);
+		expect(container.textContent).toContain("Volatility Crush");
+		expect(container.textContent).toContain("VIX compressed -11.2%");
 	});
 
 	it("renders Sentiment Plunge alert when CNN Fear & Greed drops >= 15 points overnight", () => {
@@ -203,8 +201,9 @@ describe("MarketDeltaAlerts Component", () => {
 		}
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
+		expect(container.textContent).toContain("Traditional Sentiment Plunge");
 		expect(container.textContent).toContain(
-			"Sentiment Plunge: CNN Fear & Greed dropped 20 points",
+			"CNN Fear & Greed dropped 20 points overnight to 30/100",
 		);
 	});
 
@@ -216,8 +215,9 @@ describe("MarketDeltaAlerts Component", () => {
 		}
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
+		expect(container.textContent).toContain("Traditional Sentiment Surge");
 		expect(container.textContent).toContain(
-			"Sentiment Surge: CNN Fear & Greed jumped +23 points",
+			"CNN Fear & Greed jumped +23 points overnight to 68/100",
 		);
 	});
 
@@ -227,11 +227,11 @@ describe("MarketDeltaAlerts Component", () => {
 		data.markets.quotes.IHSG.changePct = -1.85;
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
+		expect(container.textContent).toContain("US Equities Sell-Off");
+		expect(container.textContent).toContain("S&P 500 dropped -2.35%");
+		expect(container.textContent).toContain("IHSG Domestic Sell-off");
 		expect(container.textContent).toContain(
-			"US Selloff: S&P 500 is down -2.35%",
-		);
-		expect(container.textContent).toContain(
-			"Domestic Selloff: IHSG is down -1.85%",
+			"Indonesia Composite dropped -1.85%",
 		);
 	});
 
@@ -240,8 +240,13 @@ describe("MarketDeltaAlerts Component", () => {
 		data.markets.quotes.DXY.changePct = 0.95;
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
-		expect(container.textContent).toContain("Dollar Rally: DXY surged +0.95%");
-		expect(container.textContent).toContain("headwinds for Crypto and IHSG");
+		expect(container.textContent).toContain("US Dollar Surge");
+		expect(container.textContent).toContain(
+			"US Dollar Index (DXY) rallied +0.95%",
+		);
+		expect(container.textContent).toContain(
+			"liquidity pressure on Crypto and IDX",
+		);
 	});
 
 	it("renders Data Telemetry Alert when a source is stale or offline", () => {
@@ -249,7 +254,7 @@ describe("MarketDeltaAlerts Component", () => {
 		data.sources.quotes = { ok: false, label: "Global Quotes", stale: true };
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
-		expect(container.textContent).toContain("Data Telemetry Alert");
+		expect(container.textContent).toContain("Data Stream Notice");
 		expect(container.textContent).toContain("Global Quotes");
 		expect(container.textContent).toContain("Operating on cached backup data");
 	});

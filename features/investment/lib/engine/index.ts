@@ -10,7 +10,7 @@ import { derivePermissions } from "./permissions";
 import { deriveAlerts } from "./alerts";
 import { PLAYBOOK_SCRIPTS } from "../../data/playbooks";
 import { getActiveSeasonality } from "../../data/seasonality";
-import { getUpcomingEvents } from "../../data/events";
+import { getUpcomingEvents, getCriticalPreAlerts } from "../../data/events";
 import { getHalvingCyclePhase, realizedVol, sma } from "../indicators";
 
 export function computeCompass(
@@ -68,6 +68,7 @@ export function computeCompass(
 	// 8. Static & Cycle Context
 	const activeSeasonality = getActiveSeasonality();
 	const upcomingEvents = getUpcomingEvents(6);
+	const criticalPreAlerts = getCriticalPreAlerts(upcomingEvents);
 	const halvingCycle = getHalvingCyclePhase();
 
 	return {
@@ -84,6 +85,7 @@ export function computeCompass(
 		alerts,
 		activeSeasonality,
 		upcomingEvents,
+		criticalPreAlerts,
 		halvingCycle,
 	};
 }

@@ -224,13 +224,13 @@ export default function OverviewRegimes({
 						{/* Inline Factor Detail Card */}
 						{activeFactor &&
 							regime.factors.some((f) => f.key === activeFactor.key) && (
-								<div className="mt-3 bg-slate-900 text-white rounded-2xl p-3.5 sm:p-4 shadow-lg border border-slate-800 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+								<div className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex items-center gap-2 min-w-0">
-											<span className="text-xs font-black text-amber-400 uppercase tracking-wider truncate">
+											<span className="text-xs font-black text-indigo-700 uppercase tracking-wider truncate">
 												{activeFactor.label}
 											</span>
-											<span className="text-[10px] font-bold text-slate-400 truncate">
+											<span className="text-[10px] font-bold text-slate-500 truncate">
 												{activeFactor.valueStr} (Score: {activeFactor.score}
 												/100)
 											</span>
@@ -238,12 +238,12 @@ export default function OverviewRegimes({
 										<button
 											type="button"
 											onClick={() => setActiveFactor(null)}
-											className="text-[10px] font-bold text-slate-300 hover:text-white px-2 py-0.5 bg-slate-800 rounded-md cursor-pointer shrink-0"
+											className="text-[10px] font-bold text-slate-600 hover:text-slate-900 px-2 py-0.5 bg-slate-100 hover:bg-slate-200/80 rounded-md cursor-pointer shrink-0"
 										>
 											Close
 										</button>
 									</div>
-									<p className="text-xs text-slate-300 font-medium leading-relaxed">
+									<p className="text-xs text-slate-600 font-medium leading-relaxed">
 										{activeFactor.note}
 									</p>
 								</div>
@@ -357,13 +357,13 @@ export default function OverviewRegimes({
 						{/* Inline Factor Detail for Global Macro */}
 						{activeFactor &&
 							globalRegime.factors.some((f) => f.key === activeFactor.key) && (
-								<div className="mt-3 bg-slate-900 text-white rounded-2xl p-3.5 sm:p-4 shadow-lg border border-slate-800 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+								<div className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex items-center gap-2 min-w-0">
-											<span className="text-xs font-black text-amber-400 uppercase tracking-wider truncate">
+											<span className="text-xs font-black text-indigo-700 uppercase tracking-wider truncate">
 												{activeFactor.label}
 											</span>
-											<span className="text-[10px] font-bold text-slate-400 truncate">
+											<span className="text-[10px] font-bold text-slate-500 truncate">
 												{activeFactor.valueStr} (Score: {activeFactor.score}
 												/100)
 											</span>
@@ -371,12 +371,12 @@ export default function OverviewRegimes({
 										<button
 											type="button"
 											onClick={() => setActiveFactor(null)}
-											className="text-[10px] font-bold text-slate-300 hover:text-white px-2 py-0.5 bg-slate-800 rounded-md cursor-pointer shrink-0"
+											className="text-[10px] font-bold text-slate-600 hover:text-slate-900 px-2 py-0.5 bg-slate-100 hover:bg-slate-200/80 rounded-md cursor-pointer shrink-0"
 										>
 											Close
 										</button>
 									</div>
-									<p className="text-xs text-slate-300 font-medium leading-relaxed">
+									<p className="text-xs text-slate-600 font-medium leading-relaxed">
 										{activeFactor.note}
 									</p>
 								</div>

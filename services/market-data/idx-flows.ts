@@ -114,7 +114,32 @@ export async function fetchIhsgForeignFlow(
 		if (!stocksData || stocksData.length === 0) return null;
 
 		const todayNetIdr = calculateNetFlow(stocksData);
-		const todayDateStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+		// Jakarta timezone & trading day evaluation
+		const now = new Date();
+		const formatter = new Intl.DateTimeFormat("en-US", {
+			timeZone: "Asia/Jakarta",
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
+			weekday: "short",
+			hour: "2-digit",
+			hour12: false,
+		});
+		const parts = formatter.formatToParts(now);
+		const year = parts.find((p) => p.type === "year")?.value;
+		const month = parts.find((p) => p.type === "month")?.value;
+		const day = parts.find((p) => p.type === "day")?.value;
+		const weekday = parts.find((p) => p.type === "weekday")?.value;
+		const hour = Number.parseInt(
+			parts.find((p) => p.type === "hour")?.value ?? "0",
+			10,
+		);
+
+		const dateStr = `${year}-${month}-${day}`;
+		const isWeekday = weekday !== "Sat" && weekday !== "Sun";
+		// Only record as today's new trading session if market has actually started trading (>= 9:00 WIB)
+		const isTradingSession = isWeekday && hour >= 9;
 
 		// 2. Fetch history from Redis
 		let historyMap: Record<string, number> = {};
@@ -131,36 +156,52 @@ export async function fetchIhsgForeignFlow(
 			console.warn("Failed to read flow history from Redis", e);
 		}
 
-		// 3. Update history with today's value
-		historyMap[todayDateStr] = todayNetIdr;
+		// Prune any legacy weekend entries to preserve true trading day streak
+		for (const d of Object.keys(historyMap)) {
+			const dayOfWeek = new Date(`${d}T12:00:00Z`).getUTCDay();
+			if (dayOfWeek === 0 || dayOfWeek === 6) {
+				delete historyMap[d];
+			}
+		}
 
-		// Keep only last 10 trading days to prevent unbound growth
+		// 3. Update history only on active trading sessions to prevent weekend streak inflation
+		if (isTradingSession) {
+			historyMap[dateStr] = todayNetIdr;
+
+			// Keep only last 10 trading days to prevent unbound growth
+			const sortedDates = Object.keys(historyMap).sort((a, b) =>
+				a > b ? -1 : 1,
+			);
+			if (sortedDates.length > 10) {
+				const prunedMap: Record<string, number> = {};
+				for (let i = 0; i < 10; i++) {
+					prunedMap[sortedDates[i]] = historyMap[sortedDates[i]];
+				}
+				historyMap = prunedMap;
+			}
+
+			// Save updated history
+			await redis.set(FLOW_HISTORY_KEY, JSON.stringify(historyMap));
+		}
+
+		// 4. Calculate metrics from trading day history
 		const sortedDates = Object.keys(historyMap).sort((a, b) =>
 			a > b ? -1 : 1,
 		);
-		if (sortedDates.length > 10) {
-			const prunedMap: Record<string, number> = {};
-			for (let i = 0; i < 10; i++) {
-				prunedMap[sortedDates[i]] = historyMap[sortedDates[i]];
-			}
-			historyMap = prunedMap;
-		}
-
-		// Save updated history
-		await redis.set(FLOW_HISTORY_KEY, JSON.stringify(historyMap));
-
-		// 4. Calculate metrics
 		const recentFlows = sortedDates.slice(0, 5).map((date) => historyMap[date]);
 		const streakDays = calculateStreak(
 			sortedDates.map((date) => historyMap[date]),
 		);
 		const netBuySell5dIdr = recentFlows.reduce((sum, val) => sum + val, 0);
+		const effectiveDateStr = sortedDates.length > 0 ? sortedDates[0] : dateStr;
+		const effective1dNet =
+			sortedDates.length > 0 ? historyMap[sortedDates[0]] : todayNetIdr;
 
 		return {
-			netBuySell1dIdr: todayNetIdr,
+			netBuySell1dIdr: effective1dNet,
 			netBuySell5dIdr,
 			streakDays,
-			asOf: todayDateStr,
+			asOf: effectiveDateStr,
 		};
 	} catch (error) {
 		console.warn("IHSG Foreign Flow fetch failed:", error);

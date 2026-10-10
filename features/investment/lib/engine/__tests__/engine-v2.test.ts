@@ -536,4 +536,62 @@ describe("Engine v2 computeCompass", () => {
 		expect(mvrvFactor?.direction).toBe("bearish");
 		expect(output.regimes.crypto.asymmetryZone?.type).toBe("distribution");
 	});
+
+	it("strictly normalizes Crypto factor weights to exactly 100 when global macro carry is insufficient", () => {
+		const baseMock = createMockData();
+		const mockData = createMockData({
+			markets: {
+				...baseMock.markets,
+				macro: {}, // Clear macro so global regime is insufficient
+				cryptoFlows: {
+					...baseMock.markets.cryptoFlows,
+					stablecoin30dChangePct: 2.1,
+					btcFundingRate8hPct: 0.01,
+				} as any,
+				cryptoOnChain: {
+					mvrvZScore: 1.8,
+				} as any,
+			},
+		});
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		// Verify global regime is insufficient
+		expect(output.regimes.global.state).toBe("insufficient");
+		// Total weight of crypto factors must equal exactly 100
+		const totalCryptoWeight = output.regimes.crypto.factors.reduce(
+			(sum, f) => sum + f.weight,
+			0,
+		);
+		expect(totalCryptoWeight).toBe(100);
+	});
+
+	it("strictly normalizes IHSG factor weights to exactly 100 when global macro carry is insufficient", () => {
+		const baseMock = createMockData();
+		const mockData = createMockData({
+			markets: {
+				...baseMock.markets,
+				macro: {
+					IRSTCB01IDM156N: {
+						id: "IRSTCB01IDM156N",
+						name: "Bank Indonesia Policy Rate",
+						frequency: "Monthly",
+						units: "Percent",
+						data: [{ date: "2026-09-01", value: 6.0 }],
+					},
+				},
+				ihsgFlows: {
+					streakDays: 3,
+					netBuySell1dIdr: 500_000_000_000,
+				},
+			},
+		});
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		expect(output.regimes.global.state).toBe("insufficient");
+		const totalIhsgWeight = output.regimes.ihsg.factors.reduce(
+			(sum, f) => sum + f.weight,
+			0,
+		);
+		expect(totalIhsgWeight).toBe(100);
+	});
 });

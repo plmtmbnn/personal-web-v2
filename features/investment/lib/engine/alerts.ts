@@ -59,7 +59,10 @@ export function deriveAlerts(
 
 	// 4. US Dollar Surge (DXY)
 	const dxyQuote = data.markets.quotes.DXY;
-	if (dxyQuote?.changePct != null && dxyQuote.changePct >= 0.7) {
+	if (
+		dxyQuote?.changePct != null &&
+		dxyQuote.changePct >= (thresholds.dxy.overnightRallyPct ?? 0.7)
+	) {
 		alerts.push({
 			id: "dxy-rally",
 			title: "US Dollar Surge",
@@ -102,6 +105,33 @@ export function deriveAlerts(
 				title: "Traditional Sentiment Surge",
 				message: `CNN Fear & Greed jumped +${delta} points overnight to ${fng.score}/100.`,
 				type: "positive",
+			});
+		}
+	}
+
+	// 7. US Large Cap Equities Shock
+	const spxQuote = data.markets.quotes.SPX;
+	if (spxQuote?.changePct != null && spxQuote.changePct <= -2.0) {
+		alerts.push({
+			id: "spx-selloff",
+			title: "US Equities Sell-Off",
+			message: `S&P 500 dropped ${spxQuote.changePct.toFixed(2)}% in the session. Global equity risk-off pressure.`,
+			type: "danger",
+			asOf: spxQuote.lastTime ?? undefined,
+		});
+	}
+
+	// 8. Data Telemetry Stale / Offline Check
+	if (data.sources) {
+		const degraded = Object.entries(data.sources)
+			.filter(([_, s]) => s.stale || !s.ok)
+			.map(([_, s]) => s.label);
+		if (degraded.length > 0) {
+			alerts.push({
+				id: "telemetry-degraded",
+				title: "Data Stream Notice",
+				message: `Operating on cached backup data for ${degraded.join(", ")}. Verify live broker prices before trading.`,
+				type: "warning",
 			});
 		}
 	}

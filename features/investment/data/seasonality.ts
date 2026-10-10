@@ -10,6 +10,17 @@ export interface SeasonalityWindow {
 
 export const SEASONALITY_WINDOWS: SeasonalityWindow[] = [
 	{
+		id: "ihsg-january-effect",
+		title: "January Effect & Early Year Inflows",
+		market: "ID",
+		months: [1, 2],
+		status: "Bullish Tendency",
+		description:
+			"Institutional rebalancing and annual portfolio budget allocations typically favor liquid LQ45 blue-chips in Q1.",
+		tacticalPlay:
+			"Accumulate high-ROE banking and index heavyweight leaders with established moving average support.",
+	},
+	{
 		id: "ihsg-dividends",
 		title: "Big Dividend Season (Musim Dividen)",
 		market: "ID",
@@ -30,6 +41,17 @@ export const SEASONALITY_WINDOWS: SeasonalityWindow[] = [
 			"Volume typically dries up as domestic institutional managers lock in H1 performance and foreign participation thins.",
 		tacticalPlay:
 			"Reduce trade frequency. Accumulate quality pullbacks near the 200-day moving average. Avoid illiquid second-liners.",
+	},
+	{
+		id: "ihsg-pre-q3",
+		title: "Pre-Q3 Earnings Positioning",
+		market: "ID",
+		months: [9, 10],
+		status: "Defensive / Consolidation",
+		description:
+			"Late Q3 volatility typically prompts portfolio consolidation ahead of 9-month financial disclosures.",
+		tacticalPlay:
+			"Focus on earnings-resilient consumer staples and defensives. Keep cash reserves flexible.",
 	},
 	{
 		id: "ihsg-window-dressing",

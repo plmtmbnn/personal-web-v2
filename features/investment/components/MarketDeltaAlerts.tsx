@@ -2,91 +2,29 @@
 
 import { useMemo } from "react";
 import { BellRing, TrendingDown, TrendingUp, AlertOctagon } from "lucide-react";
-import type { InvestmentCompassData } from "@/features/investment/types";
+import type {
+	InvestmentCompassData,
+	CompassAlert,
+} from "@/features/investment/types";
+import { deriveAlerts } from "../lib/engine/alerts";
+import { DEFAULT_THRESHOLDS } from "../config/thresholds";
 
 export default function MarketDeltaAlerts({
 	data,
+	alerts: propAlerts,
 }: {
 	data: InvestmentCompassData;
+	alerts?: CompassAlert[];
 }) {
-	const alerts = useMemo(() => {
-		const activeAlerts: {
-			message: string;
-			type: "danger" | "warning" | "positive";
-		}[] = [];
-
-		// 1. VIX Spike Check
-		const vix = data.markets.quotes.VIX;
-		if (vix?.changePct && vix.changePct >= 10) {
-			activeAlerts.push({
-				message: `Volatility Shock: VIX spiked +${vix.changePct.toFixed(1)}% today. Markets are pricing in sudden risk.`,
-				type: "danger",
-			});
-		} else if (vix?.changePct && vix.changePct <= -10) {
-			activeAlerts.push({
-				message: `Volatility Crush: VIX dropped ${vix.changePct.toFixed(1)}%. Markets are highly complacent.`,
-				type: "positive",
-			});
+	const alerts: CompassAlert[] = useMemo(() => {
+		if (propAlerts) {
+			return propAlerts;
 		}
-
-		// 2. CNN Fear & Greed Rapid Shifts
-		const fng = data.sentiment.traditional?.fear_and_greed;
-		if (fng) {
-			const delta = fng.score - fng.previous_close;
-			if (delta <= -15) {
-				activeAlerts.push({
-					message: `Sentiment Plunge: CNN Fear & Greed dropped ${Math.abs(delta)} points overnight.`,
-					type: "danger",
-				});
-			} else if (delta >= 15) {
-				activeAlerts.push({
-					message: `Sentiment Surge: CNN Fear & Greed jumped +${delta} points overnight.`,
-					type: "positive",
-				});
-			}
+		if (data.engineOutput?.alerts) {
+			return data.engineOutput.alerts;
 		}
-
-		// 3. Equity Market Shocks
-		const spx = data.markets.quotes.SPX;
-		const ihsg = data.markets.quotes.JKSE ?? data.markets.quotes.IHSG;
-		if (spx?.changePct && spx.changePct <= -2.0) {
-			activeAlerts.push({
-				message: `US Selloff: S&P 500 is down ${spx.changePct.toFixed(2)}%. Global beta is negative.`,
-				type: "danger",
-			});
-		}
-		if (ihsg?.changePct && ihsg.changePct <= -1.5) {
-			activeAlerts.push({
-				message: `Domestic Selloff: IHSG is down ${ihsg.changePct.toFixed(2)}%.`,
-				type: "danger",
-			});
-		}
-
-		// 4. US Dollar Surge (Emerging Market/Crypto Killer)
-		const dxy = data.markets.quotes.DXY;
-		if (dxy?.changePct && dxy.changePct >= 0.8) {
-			activeAlerts.push({
-				message: `Dollar Rally: DXY surged +${dxy.changePct.toFixed(2)}%. Expect heavy headwinds for Crypto and IHSG.`,
-				type: "warning",
-			});
-		}
-
-		// 5. Data Telemetry Stale / Offline Check
-		if (data.sources) {
-			const degradedSources = Object.entries(data.sources)
-				.filter(([_, s]) => s.stale || !s.ok)
-				.map(([_, s]) => s.label);
-
-			if (degradedSources.length > 0) {
-				activeAlerts.push({
-					message: `Data Telemetry Alert: Operating on cached backup data for ${degradedSources.join(", ")}. Verify live broker prices before trading.`,
-					type: "warning",
-				});
-			}
-		}
-
-		return activeAlerts;
-	}, [data]);
+		return deriveAlerts(data, DEFAULT_THRESHOLDS);
+	}, [data, propAlerts]);
 
 	if (alerts.length === 0) return null;
 
@@ -125,9 +63,16 @@ export default function MarketDeltaAlerts({
 							className={`flex items-start gap-2.5 p-3 sm:p-3.5 rounded-xl border ${colors}`}
 						>
 							<div className="mt-0.5 shrink-0">{icon}</div>
-							<span className="text-xs font-bold leading-relaxed min-w-0 flex-1 break-words">
-								{alert.message}
-							</span>
+							<div className="min-w-0 flex-1">
+								{alert.title && (
+									<span className="text-[10px] font-black uppercase tracking-wider block mb-0.5">
+										{alert.title}
+									</span>
+								)}
+								<p className="text-xs font-semibold leading-relaxed break-words">
+									{alert.message}
+								</p>
+							</div>
 						</div>
 					);
 				})}

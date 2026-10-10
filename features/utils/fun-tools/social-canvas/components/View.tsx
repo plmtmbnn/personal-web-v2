@@ -10,14 +10,15 @@ import {
 	FileText,
 	Image as ImageIcon2,
 	LayoutGrid,
+	ArrowDown,
 } from "lucide-react";
 import UtilHeader from "@/features/utils/components/UtilHeader";
 import { CanvasRenderer, type CanvasRendererRef } from "./CanvasRenderer";
+import TemplateGallery from "./TemplateGallery";
 import {
 	type AspectRatio,
 	type CanvasInputs,
 	type TemplateId,
-	type TemplateCategory,
 	TEMPLATES,
 	TEMPLATE_GROUPS,
 } from "../types";
@@ -27,9 +28,6 @@ export default function SocialCanvasView() {
 	const canvasRendererRef = useRef<CanvasRendererRef>(null);
 
 	const [mobileTab, setMobileTab] = useState<"editor" | "preview">("editor");
-	const [selectedGroup, setSelectedGroup] = useState<TemplateCategory | "all">(
-		"all",
-	);
 	const [inputs, setInputs] = useState<CanvasInputs>({
 		title: "",
 		description: "",
@@ -107,135 +105,47 @@ export default function SocialCanvasView() {
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-6 sm:space-y-8">
 				<UtilHeader
 					title="Faceless Social Canvas"
-					description="Generate clean, high-fidelity social media images and templates tailored for faceless accounts."
+					description="Generate clean, high-fidelity social media images and visual templates tailored for faceless channels."
 					icon={ImageIcon}
 					category={{
 						color: "purple",
 					}}
 					actions={
-						<div className="w-full space-y-3">
-							{/* Category Filter Tabs */}
-							<div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-								<span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 shrink-0 mr-1">
-									Group:
+						<div className="flex flex-wrap items-center justify-between gap-3 w-full">
+							<div className="flex items-center gap-2">
+								<span className="text-[11px] font-medium text-slate-500">
+									Selected Layout:
 								</span>
+								<span className="text-xs font-bold text-slate-900 font-mono bg-slate-100 px-2.5 py-1 rounded-lg">
+									{activeTemplate.label}
+								</span>
+								<span className="text-xs font-bold font-mono text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">
+									{inputs.aspectRatio}
+								</span>
+							</div>
+							<div className="flex items-center gap-2">
 								<button
 									type="button"
-									onClick={() => setSelectedGroup("all")}
-									className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 touch-manipulation cursor-pointer active:scale-95 ${
-										selectedGroup === "all"
-											? "bg-slate-900 text-white shadow-xs"
-											: "bg-white hover:bg-slate-100 text-slate-600 border border-slate-200"
-									}`}
+									onClick={() =>
+										document
+											.getElementById("template-gallery")
+											?.scrollIntoView({ behavior: "smooth" })
+									}
+									className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100/80 border border-purple-100 transition-all cursor-pointer active:scale-95 touch-manipulation"
 								>
-									<span>All Templates</span>
-									<span
-										className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-											selectedGroup === "all"
-												? "bg-slate-800 text-slate-300"
-												: "bg-slate-100 text-slate-500"
-										}`}
-									>
-										{TEMPLATES.length}
-									</span>
+									<LayoutGrid className="w-3.5 h-3.5" />
+									<span>Browse All 22 Templates</span>
+									<ArrowDown className="w-3.5 h-3.5" />
 								</button>
-								{TEMPLATE_GROUPS.map((grp) => {
-									const count = TEMPLATES.filter(
-										(t) => t.group === grp.id,
-									).length;
-									const isCurrentGroup = selectedGroup === grp.id;
-									const hasActiveTemplate = activeTemplate.group === grp.id;
-									return (
-										<button
-											key={grp.id}
-											type="button"
-											onClick={() => setSelectedGroup(grp.id)}
-											className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 touch-manipulation cursor-pointer active:scale-95 ${
-												isCurrentGroup
-													? "bg-slate-900 text-white shadow-xs"
-													: "bg-white hover:bg-slate-100 text-slate-600 border border-slate-200"
-											}`}
-										>
-											<span>{grp.label}</span>
-											<span
-												className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-													isCurrentGroup
-														? "bg-slate-800 text-slate-300"
-														: "bg-slate-100 text-slate-500"
-												}`}
-											>
-												{count}
-											</span>
-											{hasActiveTemplate && selectedGroup !== grp.id && (
-												<span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-											)}
-										</button>
-									);
-								})}
+								<button
+									type="button"
+									onClick={handleExport}
+									className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer touch-manipulation"
+								>
+									<Download className="w-3.5 h-3.5" />
+									<span>Export Image</span>
+								</button>
 							</div>
-
-							{/* Template Buttons (Grouped View or Filtered View) */}
-							{selectedGroup === "all" ? (
-								<div className="space-y-2.5 pt-1">
-									{TEMPLATE_GROUPS.map((grp) => {
-										const groupTemplates = TEMPLATES.filter(
-											(t) => t.group === grp.id,
-										);
-										return (
-											<div key={grp.id} className="space-y-1.5">
-												<div className="flex items-center gap-2">
-													<span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-														{grp.label}
-													</span>
-													<div className="h-[1px] flex-1 bg-slate-100" />
-												</div>
-												<div className="flex flex-wrap items-center gap-2">
-													{groupTemplates.map((tpl) => (
-														<button
-															key={tpl.id}
-															type="button"
-															onClick={() =>
-																setInputs((prev) => ({
-																	...prev,
-																	template: tpl.id,
-																}))
-															}
-															className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all touch-manipulation cursor-pointer active:scale-95 ${
-																inputs.template === tpl.id
-																	? "bg-slate-900 text-white shadow-xs ring-2 ring-slate-900/10"
-																	: "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-															}`}
-														>
-															{tpl.label}
-														</button>
-													))}
-												</div>
-											</div>
-										);
-									})}
-								</div>
-							) : (
-								<div className="flex flex-wrap items-center gap-2 pt-1">
-									{TEMPLATES.filter((t) => t.group === selectedGroup).map(
-										(tpl) => (
-											<button
-												key={tpl.id}
-												type="button"
-												onClick={() =>
-													setInputs((prev) => ({ ...prev, template: tpl.id }))
-												}
-												className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all touch-manipulation cursor-pointer active:scale-95 ${
-													inputs.template === tpl.id
-														? "bg-slate-900 text-white shadow-xs ring-2 ring-slate-900/10"
-														: "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-												}`}
-											>
-												{tpl.label}
-											</button>
-										),
-									)}
-								</div>
-							)}
 						</div>
 					}
 				/>
@@ -290,12 +200,17 @@ export default function SocialCanvasView() {
 										<LayoutGrid className="w-3.5 h-3.5" />
 										Template
 									</label>
-									<span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100/80 px-2 py-0.5 rounded-md">
-										{
-											TEMPLATE_GROUPS.find((g) => g.id === activeTemplate.group)
-												?.label
+									<button
+										type="button"
+										onClick={() =>
+											document
+												.getElementById("template-gallery")
+												?.scrollIntoView({ behavior: "smooth" })
 										}
-									</span>
+										className="text-[10px] font-bold text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100/80 border border-purple-100 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+									>
+										Catalog ↓
+									</button>
 								</div>
 								<select
 									id="template-select"
@@ -303,10 +218,6 @@ export default function SocialCanvasView() {
 									onChange={(e) => {
 										const nextId = e.target.value as TemplateId;
 										setInputs((prev) => ({ ...prev, template: nextId }));
-										const found = TEMPLATES.find((t) => t.id === nextId);
-										if (found && selectedGroup !== "all") {
-											setSelectedGroup(found.group);
-										}
 									}}
 									className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 cursor-pointer transition-all"
 								>
@@ -698,6 +609,14 @@ export default function SocialCanvasView() {
 						</div>
 					</motion.div>
 				</div>
+
+				{/* Separated Template Catalog & Group Browser (Bottom Component) */}
+				<TemplateGallery
+					selectedTemplate={inputs.template}
+					onSelectTemplate={(tplId) => {
+						setInputs((prev) => ({ ...prev, template: tplId }));
+					}}
+				/>
 			</div>
 		</main>
 	);

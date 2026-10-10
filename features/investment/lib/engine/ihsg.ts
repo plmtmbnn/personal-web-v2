@@ -16,6 +16,45 @@ export function scoreIhsg(
 	const factors: RegimeFactor[] = [];
 	const contextFlags: string[] = [];
 
+	const activeSeasons = getActiveSeasonality();
+	const idSeason = activeSeasons.find((s) => s.market === "ID");
+	const hasSeasonality = Boolean(idSeason);
+	const hasMacroCarry = globalRegime.state !== "insufficient";
+
+	// Base weights when both Seasonality (10) and Macro Carry (15) are active:
+	// MA200: 15, MA50: 10, USDIDR: 20, BI Rate: 10, Drawdown: 10, Foreign Flow: 10, Carry: 15, Seasonality: 10
+	let wMa200 = 15;
+	let wMa50 = 10;
+	let wUsdIdr = 20;
+	let wBiRate = 10;
+	let wDrawdown = 10;
+	let wForeignFlow = 10;
+	let wCarry = hasMacroCarry ? 15 : 0;
+	const wSeason = hasSeasonality ? 10 : 0;
+
+	// Normalize base factors dynamically to ensure total potential weight is exactly 100
+	const targetBase = 100 - wSeason;
+	const currentBase =
+		wMa200 + wMa50 + wUsdIdr + wBiRate + wDrawdown + wForeignFlow + wCarry;
+	if (currentBase > 0 && currentBase !== targetBase) {
+		const ratio = targetBase / currentBase;
+		wMa200 = Math.round(wMa200 * ratio);
+		wMa50 = Math.round(wMa50 * ratio);
+		wUsdIdr = Math.round(wUsdIdr * ratio);
+		wBiRate = Math.round(wBiRate * ratio);
+		wDrawdown = Math.round(wDrawdown * ratio);
+		wForeignFlow = Math.round(wForeignFlow * ratio);
+		if (hasMacroCarry) {
+			wCarry =
+				targetBase -
+				(wMa200 + wMa50 + wUsdIdr + wBiRate + wDrawdown + wForeignFlow);
+		} else {
+			const allocated =
+				wMa200 + wMa50 + wUsdIdr + wBiRate + wDrawdown + wForeignFlow;
+			wUsdIdr += targetBase - allocated;
+		}
+	}
+
 	const ihsgQuote = data.markets.quotes.JKSE ?? data.markets.quotes.IHSG;
 	const ihsgPrice = ihsgQuote?.last ?? null;
 	const ihsgHistory =
@@ -23,7 +62,7 @@ export function scoreIhsg(
 		data.markets.history?.JKSE?.points ??
 		[];
 
-	// 1. IHSG vs 200-Day Moving Average - Weight 15
+	// 1. IHSG vs 200-Day Moving Average
 	const ma200 = sma(ihsgHistory, 200);
 	if (ihsgPrice != null && ma200 != null) {
 		const dist200 = distancePct(ihsgPrice, ma200);
@@ -42,7 +81,7 @@ export function scoreIhsg(
 				maximumFractionDigits: 2,
 			})})`,
 			score,
-			weight: 15,
+			weight: wMa200,
 			direction: dir,
 			note: isAbove
 				? `Trading +${dist200?.toFixed(1)}% above the 200-day baseline. Primary structural bull trend intact.`
@@ -80,7 +119,7 @@ export function scoreIhsg(
 			label: "IHSG Intermediate Trend (50-Day MA)",
 			valueStr: `${isAbove50 ? "Above" : "Below"} (${dist50 != null && dist50 > 0 ? "+" : ""}${dist50?.toFixed(1)}%)`,
 			score,
-			weight: 10,
+			weight: wMa50,
 			direction: dir,
 			note:
 				isAbove50 && isRising
@@ -92,7 +131,7 @@ export function scoreIhsg(
 		});
 	}
 
-	// 3. USD/IDR Dual-Condition Matrix: Level + 50-Day MA Momentum - Weight 20
+	// 3. USD/IDR Dual-Condition Matrix: Level + 50-Day MA Momentum
 	const usdIdrQuote = data.markets.quotes.USDIDR;
 	const usdIdrPrice = usdIdrQuote?.last ?? null;
 	const usdIdrHistory = data.markets.history?.["IDR=X"]?.points ?? [];
@@ -166,14 +205,14 @@ export function scoreIhsg(
 			label: "USD/IDR Exchange Rate Trend",
 			valueStr: `Rp ${usdIdrPrice.toLocaleString("id-ID")}`,
 			score,
-			weight: 20,
+			weight: wUsdIdr,
 			direction: dir,
 			note,
 			asOf: usdIdrQuote?.lastTime ?? undefined,
 		});
 	}
 
-	// 4. Bank Indonesia Policy Rate & Stance - Weight 10
+	// 4. Bank Indonesia Policy Rate & Stance
 	const biRateSeries = data.markets.macro?.IRSTCB01IDM156N?.data;
 	if (biRateSeries && biRateSeries.length > 0) {
 		const latestBi = biRateSeries[biRateSeries.length - 1];
@@ -214,7 +253,7 @@ export function scoreIhsg(
 			label: "Bank Indonesia Policy Rate",
 			valueStr: `${rate.toFixed(2)}%`,
 			score,
-			weight: 10,
+			weight: wBiRate,
 			direction: dir,
 			note,
 			asOf: latestBi.date,
@@ -225,7 +264,7 @@ export function scoreIhsg(
 		}
 	}
 
-	// 5. Drawdown from 52-Week High - Weight 10
+	// 5. Drawdown from 52-Week High
 	const high52 = ihsgQuote?.high52w ?? null;
 	if (ihsgPrice != null && high52 != null) {
 		const dd = drawdownFromHigh(ihsgPrice, high52);
@@ -251,7 +290,7 @@ export function scoreIhsg(
 				label: "Index 52-Week Drawdown",
 				valueStr: `${dd.toFixed(1)}%`,
 				score,
-				weight: 10,
+				weight: wDrawdown,
 				direction: dir,
 				note:
 					dd <= -thresholds.ihsg.bearDrawdownPct
@@ -264,7 +303,7 @@ export function scoreIhsg(
 		}
 	}
 
-	// 6. Foreign Institutional Net Flow - Weight 10
+	// 6. Foreign Institutional Net Flow
 	if (data.markets.ihsgFlows?.streakDays != null) {
 		const streak = data.markets.ihsgFlows.streakDays;
 		let score = 50;
@@ -290,7 +329,7 @@ export function scoreIhsg(
 						? `${Math.abs(streak)}D Outflow`
 						: "Neutral",
 			score,
-			weight: 10,
+			weight: wForeignFlow,
 			direction: dir,
 			note:
 				streak >= 3
@@ -301,14 +340,14 @@ export function scoreIhsg(
 		});
 	}
 
-	// 7. Global Macro Liquidity Carry-in - Weight 15
-	if (globalRegime.state !== "insufficient") {
+	// 7. Global Macro Liquidity Carry-in
+	if (hasMacroCarry) {
 		factors.push({
 			key: "global_liquidity_carry",
 			label: "Global Liquidity Signal Carry-In",
 			valueStr: `${globalRegime.score}/100`,
 			score: globalRegime.score,
-			weight: 15,
+			weight: wCarry,
 			direction:
 				globalRegime.score >= 60
 					? "bullish"
@@ -319,9 +358,7 @@ export function scoreIhsg(
 		});
 	}
 
-	// 8. Active Seasonality - Weight 10
-	const activeSeasons = getActiveSeasonality();
-	const idSeason = activeSeasons.find((s) => s.market === "ID");
+	// 8. Active Seasonality
 	if (idSeason) {
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
@@ -342,7 +379,7 @@ export function scoreIhsg(
 			label: "Historical Market Seasonality",
 			valueStr: idSeason.title,
 			score,
-			weight: 10,
+			weight: wSeason,
 			direction: dir,
 			note: idSeason.description,
 		});

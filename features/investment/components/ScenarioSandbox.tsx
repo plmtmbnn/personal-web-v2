@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Sliders, RotateCcw, Building, Coins, Globe } from "lucide-react";
+import {
+	Sliders,
+	RotateCcw,
+	Building,
+	Coins,
+	Globe,
+	Lock,
+	Unlock,
+} from "lucide-react";
 import type { InvestmentCompassData, CompassOutput } from "../types";
 import { computeCompass } from "../lib/engine/index";
 
@@ -58,11 +66,50 @@ export default function ScenarioSandbox({
 
 	// Compute simulated output dynamically in real-time
 	const simulatedOutput = useMemo(() => {
+		// Clone and update history series for moving averages and altcoin gating
+		const simulatedHistory = data.markets.history
+			? { ...data.markets.history }
+			: {};
+
+		if (simulatedHistory["BTC-USD"]?.points) {
+			const btcPoints = [...simulatedHistory["BTC-USD"].points];
+			if (btcPoints.length > 0) {
+				const lastPoint = btcPoints[btcPoints.length - 1];
+				btcPoints[btcPoints.length - 1] = { ...lastPoint, c: btcPrice };
+			} else {
+				btcPoints.push({ t: Date.now(), c: btcPrice });
+			}
+			simulatedHistory["BTC-USD"] = {
+				...simulatedHistory["BTC-USD"],
+				points: btcPoints,
+			};
+		}
+
+		const idrKey = simulatedHistory["IDR=X"]
+			? "IDR=X"
+			: simulatedHistory.USDIDR
+				? "USDIDR"
+				: "IDR=X";
+		if (simulatedHistory[idrKey]?.points) {
+			const idrPoints = [...simulatedHistory[idrKey].points];
+			if (idrPoints.length > 0) {
+				const lastPoint = idrPoints[idrPoints.length - 1];
+				idrPoints[idrPoints.length - 1] = { ...lastPoint, c: usdIdr };
+			} else {
+				idrPoints.push({ t: Date.now(), c: usdIdr });
+			}
+			simulatedHistory[idrKey] = {
+				...simulatedHistory[idrKey],
+				points: idrPoints,
+			};
+		}
+
 		// Deep clone data structures for simulation
 		const simulatedData: InvestmentCompassData = {
 			...data,
 			markets: {
 				...data.markets,
+				history: simulatedHistory,
 				quotes: {
 					...data.markets.quotes,
 					...(data.markets.quotes.USDIDR
@@ -437,6 +484,46 @@ export default function ScenarioSandbox({
 							<p className="text-[11px] text-slate-500 font-medium line-clamp-2">
 								{simCrypto.headline}
 							</p>
+						</div>
+					</div>
+
+					{/* Permissions & Altcoin Gating Delta Strip */}
+					<div className="p-4 sm:p-4.5 rounded-2xl bg-slate-50/70 border border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+						<div className="flex items-center gap-2.5">
+							<div className="w-7 h-7 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+								{simulatedOutput.permissions.altcoins.swing.status ===
+								"allowed" ? (
+									<Unlock className="w-3.5 h-3.5 text-emerald-600" />
+								) : (
+									<Lock className="w-3.5 h-3.5 text-rose-500" />
+								)}
+							</div>
+							<div>
+								<span className="font-extrabold text-slate-900">
+									Altcoin Gating Protocol:
+								</span>{" "}
+								<span className="text-slate-600 font-medium">
+									{simulatedOutput.permissions.altcoins.swing.reason}
+								</span>
+							</div>
+						</div>
+						<div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+							<span className="text-[11px] font-bold text-slate-400">
+								Status:
+							</span>
+							<span
+								className={`px-2.5 py-0.5 rounded-full text-[11px] font-black border ${
+									simulatedOutput.permissions.altcoins.swing.status ===
+									"allowed"
+										? "bg-emerald-50 text-emerald-800 border-emerald-200"
+										: simulatedOutput.permissions.altcoins.swing.status ===
+												"selective"
+											? "bg-amber-50 text-amber-800 border-amber-200"
+											: "bg-rose-50 text-rose-800 border-rose-200"
+								}`}
+							>
+								{simulatedOutput.permissions.altcoins.swing.label}
+							</span>
 						</div>
 					</div>
 				</div>

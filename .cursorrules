@@ -199,6 +199,11 @@ pnpm run analyze         # Alias for build:analyze
 - `postcss.config.mjs`: Enhanced with autoprefixer
 
 ## 📏 Engineering Standards
+- **Strict UI/UX Mandate**: All UI design and revamps must strictly adhere to `ui-uix-guideline.md` and `.agents/rules/ui-ux-design-rules.md`.
+  - **Anti-Forced-Side-by-Side**: Never force components side-by-side in constrained viewports (< 600px, mobile, split cards). Flow top-to-bottom or use segmented mode switchers.
+  - **4-Tier Vertical Telemetry**: In 2-column mobile cards (< 220px), strictly isolate Tier 1 (Icon + Badge), Tier 2 (Label), Tier 3 (Monospace Numeral), Tier 4 (Subtext). Never place Icon + Label + Badge horizontally.
+  - **Refined Typography**: Standardize on `font-semibold` (600) and `font-bold` (700) over brutalist `font-black` (900).
+  - **Anti-AI-Slop**: Zero gradients, zero emojis, zero `Sparkles` icons sitewide. Pure white floating cards (`bg-white rounded-3xl border border-slate-200/80 shadow-xs`) over textured canvas (`bg-slate-50/80 bg-dot-pattern`).
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.
 - **Defensive Data Handling**: Always implement safety fallbacks and type-casting (e.g., `String(val || "")`) when processing external API data to prevent runtime `TypeError` on missing fields.
 - **SEO & Metadata**: Every route must implement `generateMetadata` using `createMetadata` helper in `lib/shared/metadata.ts`.
@@ -207,3 +212,4 @@ pnpm run analyze         # Alias for build:analyze
 - **Linter**: **Biome** for formatting and linting.
 - **Performance Tools:** Bundle analyzer, profiling scripts, and optimized configurations.
 - **Commit/Push Policy**: **NEVER** stage, commit, or push changes unless explicitly requested by the user for each occurrence.
+

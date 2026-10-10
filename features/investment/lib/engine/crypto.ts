@@ -63,18 +63,34 @@ export function scoreCrypto(
 		wMacro = 15;
 	}
 
-	// Normalize weights down to 90 if seasonality factor is active to maintain strict 100 sum
-	if (cryptoSeason) {
-		const totalBase =
-			wBtc200 + wBtc50 + wStablecoins + wFunding + wFng + wMacro + wMvrv;
-		const ratio = 90 / totalBase;
+	const hasMacroCarry = globalRegime.state !== "insufficient";
+	const hasSeasonality = Boolean(cryptoSeason);
+	const wSeason = hasSeasonality ? 10 : 0;
+	if (!hasMacroCarry) {
+		wMacro = 0;
+	}
+
+	// Normalize base factors dynamically to ensure total potential weight is exactly 100
+	const targetBase = 100 - wSeason;
+	const currentBase =
+		wBtc200 + wBtc50 + wStablecoins + wFunding + wFng + wMacro + wMvrv;
+	if (currentBase > 0 && currentBase !== targetBase) {
+		const ratio = targetBase / currentBase;
 		wBtc200 = Math.round(wBtc200 * ratio);
 		wBtc50 = Math.round(wBtc50 * ratio);
 		wStablecoins = Math.round(wStablecoins * ratio);
 		wFunding = Math.round(wFunding * ratio);
 		wFng = Math.round(wFng * ratio);
 		wMvrv = Math.round(wMvrv * ratio);
-		wMacro = 90 - (wBtc200 + wBtc50 + wStablecoins + wFunding + wFng + wMvrv); // Ensure exact 90
+		if (hasMacroCarry) {
+			wMacro =
+				targetBase -
+				(wBtc200 + wBtc50 + wStablecoins + wFunding + wFng + wMvrv);
+		} else {
+			const allocated =
+				wBtc200 + wBtc50 + wStablecoins + wFunding + wFng + wMvrv;
+			wBtc200 += targetBase - allocated;
+		}
 	}
 
 	const btcQuote = data.markets.quotes.BTC;
@@ -231,10 +247,10 @@ export function scoreCrypto(
 		const mvrv = data.markets.cryptoOnChain.mvrvZScore;
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
-		if (mvrv <= 1.0) {
+		if (mvrv <= thresholds.crypto.mvrv.accumulation) {
 			score = 85;
 			dir = "bullish";
-		} else if (mvrv >= 3.0) {
+		} else if (mvrv >= thresholds.crypto.mvrv.overheat) {
 			score = 15;
 			dir = "bearish";
 		} else {
@@ -250,9 +266,9 @@ export function scoreCrypto(
 			weight: wMvrv,
 			direction: dir,
 			note:
-				mvrv >= 3.0
+				mvrv >= thresholds.crypto.mvrv.overheat
 					? "Extreme valuation overheat. Generational distribution zone."
-					: mvrv <= 1.0
+					: mvrv <= thresholds.crypto.mvrv.accumulation
 						? "Deep value. Historically generational accumulation floor."
 						: "Fair value zone. Neutral momentum.",
 		});
@@ -297,7 +313,7 @@ export function scoreCrypto(
 			label: "Historical Crypto Seasonality",
 			valueStr: cryptoSeason.title,
 			score,
-			weight: 10,
+			weight: wSeason,
 			direction: dir,
 			note: cryptoSeason.description,
 		});
@@ -365,18 +381,23 @@ export function scoreCrypto(
 		: null;
 
 	if (
-		(mvrv != null && mvrv <= 1.0) ||
-		(fngScore != null && fngScore <= 20 && mvrv != null && mvrv <= 1.25)
+		(mvrv != null && mvrv <= thresholds.crypto.mvrv.accumulation) ||
+		(fngScore != null &&
+			fngScore <= 20 &&
+			mvrv != null &&
+			mvrv <= thresholds.crypto.mvrv.accumulation * 1.25)
 	) {
 		asymmetryZone = {
 			type: "accumulation",
 			title: "Generational Asymmetry: Accumulation Zone Active",
-			description:
-				"Bitcoin is at a historic valuation floor (MVRV <= 1.0) alongside peak sentiment fear. Risk-reward mathematically skews heavily to multi-year spot accumulation.",
+			description: `Bitcoin is at a historic valuation floor (MVRV <= ${thresholds.crypto.mvrv.accumulation.toFixed(1)}) alongside peak sentiment fear. Risk-reward mathematically skews heavily to multi-year spot accumulation.`,
 		};
 	} else if (
-		(mvrv != null && mvrv >= 3.0) ||
-		(fngScore != null && fngScore >= 80 && mvrv != null && mvrv >= 2.5)
+		(mvrv != null && mvrv >= thresholds.crypto.mvrv.overheat) ||
+		(fngScore != null &&
+			fngScore >= 80 &&
+			mvrv != null &&
+			mvrv >= thresholds.crypto.mvrv.overheat * 0.85)
 	) {
 		asymmetryZone = {
 			type: "distribution",

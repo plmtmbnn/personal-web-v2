@@ -2157,6 +2157,190 @@ export const CanvasRenderer = forwardRef<
 				ctx.fillRect(winX + bodyPaddingX + 54, curOutY + 12, 16, 32);
 
 				ctx.restore();
+			} else if (template === "social-post") {
+				// 1. Solid Canvas Background
+				const isLight = inputs.theme !== "dark";
+
+				const grad = ctx.createLinearGradient(
+					0,
+					0,
+					CANVAS_WIDTH,
+					CANVAS_HEIGHT,
+				);
+				if (isLight) {
+					grad.addColorStop(0, "#e2e8f0"); // slate-200
+					grad.addColorStop(1, "#cbd5e1"); // slate-300
+				} else {
+					grad.addColorStop(0, "#0f172a"); // slate-900
+					grad.addColorStop(1, "#1e293b"); // slate-800
+				}
+				ctx.fillStyle = grad;
+				ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+				// 2. Post Card (Floating)
+				const cardPad = 60;
+				const cardW = CANVAS_WIDTH - 200;
+				const cardX = 100;
+
+				const cardH = CANVAS_HEIGHT - 200;
+				const cardY = 100;
+
+				ctx.save();
+				ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
+				ctx.shadowBlur = 60;
+				ctx.shadowOffsetY = 20;
+				ctx.fillStyle = isLight ? "#ffffff" : "#020617"; // card color
+				roundRect(ctx, cardX, cardY, cardW, cardH, 40);
+				ctx.fill();
+
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = isLight ? "#f1f5f9" : "#1e293b";
+				ctx.stroke();
+				ctx.restore();
+
+				// Header: Avatar, Name, Handle, Verified Badge
+				const avatarSize = 100;
+				const avatarX = cardX + cardPad;
+				const avatarY = cardY + cardPad;
+
+				ctx.save();
+				roundRect(ctx, avatarX, avatarY, avatarSize, avatarSize, 50);
+				ctx.clip();
+				if (avatarImg) {
+					drawImageProp(
+						ctx,
+						avatarImg,
+						avatarX,
+						avatarY,
+						avatarSize,
+						avatarSize,
+						inputs.avatarOffsetX ?? 0.5,
+						inputs.avatarOffsetY ?? 0.5,
+					);
+				} else {
+					ctx.fillStyle = isLight ? "#cbd5e1" : "#334155";
+					ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
+				}
+				ctx.restore();
+
+				// Name & Handle
+				const nameX = avatarX + avatarSize + 30;
+				const nameY = avatarY + 20;
+
+				const fullTitle = title || "Polma Tambunan @polma";
+				const titleWords = fullTitle.split(" ");
+				let name = fullTitle;
+				let handle = "@username";
+				if (
+					titleWords.length > 1 &&
+					titleWords[titleWords.length - 1].startsWith("@")
+				) {
+					handle = titleWords.pop()!;
+					name = titleWords.join(" ");
+				}
+
+				ctx.textAlign = "left";
+				ctx.textBaseline = "top";
+				ctx.fillStyle = isLight ? "#0f172a" : "#f8fafc";
+				ctx.font = "700 36px Inter, sans-serif";
+				ctx.fillText(name, nameX, nameY);
+
+				// Draw Verified Badge
+				const nameWidth = ctx.measureText(name).width;
+				const badgeX = nameX + nameWidth + 12;
+				const badgeY = nameY + 4;
+				ctx.fillStyle = "#38bdf8";
+				ctx.beginPath();
+				ctx.arc(badgeX + 14, badgeY + 14, 14, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.fillStyle = "#ffffff";
+				ctx.font = "900 16px Inter, sans-serif";
+				ctx.fillText("✓", badgeX + 8, badgeY + 6);
+
+				// Handle
+				ctx.fillStyle = isLight ? "#64748b" : "#94a3b8";
+				ctx.font = "400 28px Inter, sans-serif";
+				ctx.fillText(handle, nameX, nameY + 44);
+
+				// X logo
+				const logoX = cardX + cardW - cardPad - 40;
+				ctx.fillStyle = isLight ? "#0f172a" : "#f8fafc";
+				ctx.font = "800 40px Inter, sans-serif";
+				ctx.fillText("𝕏", logoX, nameY);
+
+				// Post Body
+				const bodyY = avatarY + avatarSize + 40;
+				ctx.fillStyle = isLight ? "#1e293b" : "#e2e8f0";
+				ctx.font = "400 44px Inter, sans-serif";
+
+				const contentText =
+					description ||
+					"Just shipped a huge update to the decision engine. Vercel builds went from 3 mins down to 30s. Zero caching issues. Pure bliss.";
+
+				const endBodyY = wrapText(
+					ctx,
+					contentText,
+					avatarX,
+					bodyY,
+					cardW - cardPad * 2,
+					64,
+					"left",
+				);
+
+				// Attachment Image
+				if (img) {
+					const attachY = endBodyY + 40;
+					const attachW = cardW - cardPad * 2;
+					const availableHeight = cardY + cardH - attachY - 180;
+					let attachH = availableHeight;
+					if (attachH > attachW * 1.2) attachH = attachW * 1.2;
+					if (attachH < 200) attachH = 200;
+
+					ctx.save();
+					roundRect(ctx, avatarX, attachY, attachW, attachH, 24);
+					ctx.clip();
+					drawImageProp(
+						ctx,
+						img,
+						avatarX,
+						attachY,
+						attachW,
+						attachH,
+						inputs.imageOffsetX ?? 0.5,
+						inputs.imageOffsetY ?? 0.5,
+					);
+					ctx.restore();
+
+					ctx.save();
+					roundRect(ctx, avatarX, attachY, attachW, attachH, 24);
+					ctx.lineWidth = 1;
+					ctx.strokeStyle = isLight ? "#e2e8f0" : "#334155";
+					ctx.stroke();
+					ctx.restore();
+				}
+
+				// Timestamp & Metrics
+				const timestampY = cardY + cardH - 140;
+				ctx.fillStyle = isLight ? "#64748b" : "#94a3b8";
+				ctx.font = "400 28px Inter, sans-serif";
+				const now = new Date();
+				const timeStr = `${now.getHours() % 12 || 12}:${now.getMinutes().toString().padStart(2, "0")} ${now.getHours() >= 12 ? "PM" : "AM"} · ${now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · 14.2M Views`;
+				ctx.fillText(timeStr, avatarX, timestampY);
+
+				// Divider
+				const dividerY = timestampY + 50;
+				ctx.fillStyle = isLight ? "#e2e8f0" : "#334155";
+				ctx.fillRect(avatarX, dividerY, cardW - cardPad * 2, 1);
+
+				// Interaction Metrics
+				const metricsY = dividerY + 24;
+				ctx.fillStyle = isLight ? "#64748b" : "#94a3b8";
+				ctx.font = "500 28px Inter, sans-serif";
+
+				ctx.fillText("💬 1.2K", avatarX, metricsY);
+				ctx.fillText("↻ 2.1K", avatarX + 220, metricsY);
+				ctx.fillText("♡ 14.2K", avatarX + 440, metricsY);
+				ctx.fillText("🔖 850", avatarX + 660, metricsY);
 			}
 		};
 

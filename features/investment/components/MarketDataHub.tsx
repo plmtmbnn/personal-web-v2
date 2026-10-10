@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Globe, LineChart, Building2, Coins } from "lucide-react";
+import {
+	Activity,
+	Globe,
+	LineChart,
+	Building2,
+	Coins,
+	TrendingUp,
+} from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { InvestmentCompassData } from "@/features/investment/types";
 import {
@@ -54,6 +61,49 @@ export default function MarketDataHub({
 			? idYieldSeries[idYieldSeries.length - 1].value
 			: null;
 
+	const sectorBellwethers = [
+		{
+			symbol: "BBCA.JK",
+			ticker: "BBCA",
+			sector: "Financials",
+			label: "Bank Central Asia",
+		},
+		{
+			symbol: "ADRO.JK",
+			ticker: "ADRO",
+			sector: "Energy",
+			label: "Adaro Energy",
+		},
+		{
+			symbol: "ICBP.JK",
+			ticker: "ICBP",
+			sector: "Consumer",
+			label: "Indofood CBP",
+		},
+		{
+			symbol: "ANTM.JK",
+			ticker: "ANTM",
+			sector: "Basic Materials",
+			label: "Aneka Tambang",
+		},
+	].map((item) => {
+		const points = data.markets.history?.[item.symbol]?.points ?? [];
+		if (points.length === 0)
+			return {
+				...item,
+				price: null,
+				ma50: null,
+				dist50: null,
+				changePct: null,
+			};
+		const price = points[points.length - 1].c;
+		const prev = points.length > 1 ? points[points.length - 2].c : price;
+		const changePct = prev > 0 ? ((price - prev) / prev) * 100 : 0;
+		const ma50 = sma(points, 50);
+		const dist50 = ma50 ? distancePct(price, ma50) : null;
+		return { ...item, price, ma50, dist50, changePct };
+	});
+
 	// Calculate live Crypto metrics
 	const btcQuote = data.markets.quotes.BTC;
 	const ethQuote = data.markets.quotes.ETH;
@@ -64,9 +114,9 @@ export default function MarketDataHub({
 
 	return (
 		<div className="space-y-5 sm:space-y-6">
-			{/* Tab Header Card */}
-			<div className="bg-white rounded-[2rem] p-3 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-				<div className="flex items-center gap-3 px-2 sm:px-3">
+			{/* Tab Header Card - Minimalist Frameless Milestone Selector Standard */}
+			<div className="bg-white rounded-[2rem] p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+				<div className="flex items-center gap-3">
 					<div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center shrink-0">
 						<Activity className="w-4 h-4" />
 					</div>
@@ -80,7 +130,10 @@ export default function MarketDataHub({
 					</div>
 				</div>
 
-				<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-2 px-2 sm:mx-0 sm:px-0">
+				<div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-2 px-2 sm:mx-0 sm:px-0 relative">
+					{/* Continuous hairline track line */}
+					<div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-100 rounded-full" />
+
 					{TABS.map((tab) => {
 						const isActive = activeTab === tab.id;
 						const Icon = tab.icon;
@@ -89,13 +142,27 @@ export default function MarketDataHub({
 								type="button"
 								key={tab.id}
 								onClick={() => setActiveTab(tab.id)}
-								className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap active:scale-95 touch-manipulation cursor-pointer ${
+								className={`group relative pb-2.5 px-3 sm:px-4 flex items-center gap-1.5 sm:gap-2 text-xs font-bold transition-all whitespace-nowrap active:scale-95 touch-manipulation cursor-pointer z-10 ${
 									isActive
-										? "bg-slate-900 text-white shadow-2xs"
-										: "bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+										? "text-slate-900 font-black"
+										: "text-slate-400 hover:text-slate-700 font-semibold"
 								}`}
 							>
-								<Icon className="w-3.5 h-3.5 shrink-0" />
+								{/* Razor-thin animated sliding underline indicator */}
+								{isActive && (
+									<motion.div
+										layoutId="marketDataTabIndicator"
+										className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 rounded-full z-20"
+										transition={{ type: "spring", stiffness: 400, damping: 30 }}
+									/>
+								)}
+								<Icon
+									className={`w-3.5 h-3.5 shrink-0 transition-transform ${
+										isActive
+											? "text-slate-900 scale-105"
+											: "text-slate-400 group-hover:text-slate-600"
+									}`}
+								/>
 								<span>{tab.label}</span>
 							</button>
 						);
@@ -306,6 +373,80 @@ export default function MarketDataHub({
 										<p className="text-[11px] text-slate-500">
 											Sovereign cost of capital &amp; benchmark discount rate
 										</p>
+									</div>
+								</div>
+
+								{/* Sector Leadership Strip */}
+								<div className="space-y-3 pt-3 border-t border-slate-100">
+									<div className="flex items-center justify-between">
+										<div className="flex items-center gap-2">
+											<TrendingUp className="w-4 h-4 text-slate-600" />
+											<span className="text-xs font-black text-slate-900 tracking-tight">
+												Sector Rotation Bellwethers (IDX)
+											</span>
+										</div>
+										<span className="text-[10px] font-bold text-slate-400">
+											50D Moving Average Momentum
+										</span>
+									</div>
+
+									<div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+										{sectorBellwethers.map((s) => {
+											const isAbove = s.dist50 != null && s.dist50 >= 0;
+											return (
+												<div
+													key={s.symbol}
+													className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-1.5"
+												>
+													<div className="flex items-center justify-between">
+														<span className="text-xs font-black text-slate-900 font-mono">
+															{s.ticker}
+														</span>
+														<span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+															{s.sector}
+														</span>
+													</div>
+													<div className="flex items-baseline justify-between">
+														<span className="text-sm font-black text-slate-800">
+															{s.price != null
+																? `Rp ${s.price.toLocaleString("id-ID")}`
+																: "---"}
+														</span>
+														{s.changePct != null && (
+															<span
+																className={`text-[11px] font-bold ${
+																	s.changePct >= 0
+																		? "text-emerald-600"
+																		: "text-rose-600"
+																}`}
+															>
+																{s.changePct >= 0 ? "+" : ""}
+																{s.changePct.toFixed(1)}%
+															</span>
+														)}
+													</div>
+													<div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[10px]">
+														<span className="text-slate-400 font-medium">
+															vs 50D MA:
+														</span>
+														{s.dist50 != null ? (
+															<span
+																className={`font-black ${
+																	isAbove ? "text-emerald-700" : "text-rose-600"
+																}`}
+															>
+																{isAbove ? "+" : ""}
+																{s.dist50.toFixed(1)}%
+															</span>
+														) : (
+															<span className="text-slate-400 font-medium">
+																---
+															</span>
+														)}
+													</div>
+												</div>
+											);
+										})}
 									</div>
 								</div>
 							</div>

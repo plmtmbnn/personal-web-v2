@@ -14,6 +14,9 @@ import type { RegimeState, InvestmentCompassData } from "../types";
 import { getSizingMandate } from "../lib/engine/sizing";
 import { checkVolatilityExpansion } from "../lib/indicators";
 
+import Link from "next/link";
+import { DEFAULT_THRESHOLDS } from "../config/thresholds";
+
 const getStateBadge = (state: RegimeState) => {
 	switch (state) {
 		case "risk_on":
@@ -65,13 +68,13 @@ export default function MarketPlaybook({
 
 		if (!isIhsg && compassData?.markets.cryptoOnChain?.mvrvZScore != null) {
 			const mvrv = compassData.markets.cryptoOnChain.mvrvZScore;
-			if (mvrv < 1.0) {
+			if (mvrv <= DEFAULT_THRESHOLDS.crypto.mvrv.accumulation) {
 				tacticalAlert = {
 					color: "emerald",
 					message: `Generational Spot Accumulation Triggered (MVRV: ${mvrv.toFixed(2)})`,
 					action: "Deploy spot tranches aggressively. Deep cycle value zone.",
 				};
-			} else if (mvrv > 3.7) {
+			} else if (mvrv >= DEFAULT_THRESHOLDS.crypto.mvrv.overheat) {
 				tacticalAlert = {
 					color: "rose",
 					message: `Historic Cycle Overheat (MVRV: ${mvrv.toFixed(2)})`,
@@ -139,15 +142,23 @@ export default function MarketPlaybook({
 
 					{/* Sizing Mandate Strip */}
 					{sizingMandate && (
-						<div className="px-3.5 py-3 rounded-xl bg-indigo-50/50 border border-indigo-100 flex items-center justify-between gap-2.5">
-							<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800/70 shrink-0 flex items-center gap-1.5">
-								<Target className="w-3.5 h-3.5 text-indigo-500" />
-								Sizing Target
-							</span>
-							<span className="text-xs font-extrabold text-indigo-950 text-right font-mono">
-								Risk: {sizingMandate.maxRiskPerTradePct}% | Exp:{" "}
-								{sizingMandate.maxPortfolioExposurePct}%
-							</span>
+						<div className="px-3.5 py-2.5 rounded-xl bg-indigo-50/50 border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+							<div className="flex items-center gap-1.5 min-w-0">
+								<Target className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+								<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800/70 shrink-0">
+									Sizing Target:
+								</span>
+								<span className="text-xs font-extrabold text-indigo-950 font-mono truncate">
+									Risk {sizingMandate.maxRiskPerTradePct}% | Exp{" "}
+									{sizingMandate.maxPortfolioExposurePct}%
+								</span>
+							</div>
+							<Link
+								href={`/utils/stock-crypto-calculator?risk=${sizingMandate.maxRiskPerTradePct}`}
+								className="text-[10px] font-extrabold text-indigo-700 hover:text-indigo-900 underline underline-offset-2 shrink-0 self-start sm:self-auto cursor-pointer"
+							>
+								Open Workstation →
+							</Link>
 						</div>
 					)}
 
@@ -215,13 +226,15 @@ export default function MarketPlaybook({
 						className={`grid ${sizingMandate?.isTradingLocked ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"} gap-3 pt-2`}
 					>
 						{sizingMandate?.isTradingLocked ? (
-							<div className="p-4 rounded-2xl bg-rose-600 border border-rose-700 shadow-inner flex flex-col items-center justify-center text-center space-y-2">
-								<ShieldAlert className="w-8 h-8 text-rose-100" />
+							<div className="p-4 rounded-2xl bg-white border-2 border-rose-200/90 shadow-2xs flex flex-col items-center justify-center text-center space-y-2">
+								<div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
+									<ShieldAlert className="w-5 h-5" />
+								</div>
 								<div>
-									<h4 className="text-sm font-black tracking-wide uppercase text-white">
+									<h4 className="text-sm font-black tracking-wide uppercase text-rose-950">
 										No Trade Zone
 									</h4>
-									<p className="text-xs font-semibold text-rose-200 mt-0.5">
+									<p className="text-xs font-semibold text-rose-700/90 mt-0.5">
 										Circuit breaker active. All tactical trading locked.
 									</p>
 								</div>

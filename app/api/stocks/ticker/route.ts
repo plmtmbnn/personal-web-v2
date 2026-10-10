@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { redis } from "@/lib/core/redis";
+import { redis, CACHE_KEYS } from "@/lib/core/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -88,7 +88,7 @@ export async function GET() {
 		);
 	}
 
-	// 2. Try Redis cache if available
+	// 2. Try Redis ticker cache
 	try {
 		const cached = await redis.get(REDIS_TICKER_KEY);
 		if (cached) {
@@ -101,6 +101,52 @@ export async function GET() {
 		console.warn("Redis fallback error:", e);
 	}
 
-	// 3. Fallback to default stock quotes if server fetch and Redis fail
+	// 3. Try Market Quotes Backup from Investment Compass
+	try {
+		const backup = await redis.get<Record<string, any>>(
+			CACHE_KEYS.MARKET_QUOTES_BACKUP,
+		);
+		if (
+			backup &&
+			typeof backup === "object" &&
+			Object.keys(backup).length > 0
+		) {
+			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
+			const mappedStocks = Object.values(parsed)
+				.slice(0, 15)
+				.map((q: any) => ({
+					symbol: q.symbol || q.id,
+					shortName: q.name || q.label || q.id,
+					exchange: q.source || "Market",
+					change:
+						q.change != null
+							? q.change >= 0
+								? `+${q.change.toFixed(2)}`
+								: q.change.toFixed(2)
+							: "0.00",
+					change_pct:
+						q.changePct != null
+							? q.changePct >= 0
+								? `+${q.changePct.toFixed(2)}%`
+								: `${q.changePct.toFixed(2)}%`
+							: "0.00%",
+					last:
+						q.last != null
+							? Number(q.last).toLocaleString("en-US", {
+									minimumFractionDigits: 2,
+									maximumFractionDigits: 2,
+								})
+							: "---",
+				}));
+
+			if (mappedStocks.length > 0) {
+				return NextResponse.json({ stocks: mappedStocks });
+			}
+		}
+	} catch (e) {
+		console.warn("Redis market quotes backup fallback error:", e);
+	}
+
+	// 4. Fallback to default stock quotes if server fetch and Redis fail
 	return NextResponse.json({ stocks: FALLBACK_STOCKS });
 }

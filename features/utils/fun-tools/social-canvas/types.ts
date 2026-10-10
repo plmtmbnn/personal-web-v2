@@ -19,7 +19,8 @@ export type TemplateId =
 	| "premium-glass"
 	| "cinematic-subtitles"
 	| "vinyl-now-playing"
-	| "terminal-window";
+	| "terminal-window"
+	| "social-post";
 
 export type AspectRatio = "1:1" | "4:5" | "9:16" | "16:9";
 
@@ -297,6 +298,18 @@ export const TEMPLATES: {
 			titleLabel: "Command / File Header",
 			descriptionLabel: "Code / Terminal Output",
 			imageLabel: "Backdrop (Optional)",
+			hasTheme: true,
+		},
+	},
+	{
+		id: "social-post",
+		label: "Social Post Mockup",
+		group: "editorial-social",
+		fields: {
+			titleLabel: "Name & Handle (e.g. User @handle)",
+			descriptionLabel: "Post Content",
+			imageLabel: "Attachment (Optional)",
+			hasAvatar: true,
 			hasTheme: true,
 		},
 	},

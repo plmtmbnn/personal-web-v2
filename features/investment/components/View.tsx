@@ -402,7 +402,9 @@ export default function InvestmentCompassView({
 				)}
 
 				{/* ── Delta Alerts (Overnight Volatility Shifts) ──────────────── */}
-				{!isLoading && data && <MarketDeltaAlerts data={data} />}
+				{!isLoading && data && (
+					<MarketDeltaAlerts data={data} alerts={engineOutput?.alerts} />
+				)}
 
 				{/* ── 1. Overview: 3 Regime Health Cards ─────────────────────── */}
 				{!isLoading && engineOutput && (

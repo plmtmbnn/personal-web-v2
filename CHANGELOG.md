@@ -1,3 +1,10 @@
+# [0.103.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.102.0...v0.103.0) (2026-10-11)
+
+
+### Features
+
+* **stock-explorer:** add cloud stockpick simulator and paper trading ledger ([82b55c0](https://github.com/plmtmbnn/personal-web-v2/commit/82b55c011edbe8265ce5cec6d957f2e6941bc963))
+
 # [0.102.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.101.0...v0.102.0) (2026-10-10)
 
 

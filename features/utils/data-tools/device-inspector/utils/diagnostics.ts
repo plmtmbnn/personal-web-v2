@@ -385,3 +385,28 @@ export function generateDiagnosticReport(
 		webApis,
 	};
 }
+
+/**
+ * Formats diagnostic telemetry into a clean Markdown table for GitHub bug reports.
+ */
+export function generateMarkdownReport(report: DeviceDiagnosticReport): string {
+	return [
+		"### Client Device & Environment Diagnostics",
+		"",
+		"| Specification | Telemetry Value |",
+		"| --- | --- |",
+		`| **Display Resolution** | ${report.display.screenWidth} × ${report.display.screenHeight} px (${report.display.dpr}x DPR) |`,
+		`| **Estimated Refresh Rate** | ${report.display.estimatedHz} Hz |`,
+		`| **Color Gamut & HDR** | ${report.display.colorGamut} (${report.display.isHdr ? "HDR Enabled" : "SDR"}) |`,
+		`| **CPU Logical Cores** | ${report.hardware.cpuCores} Threads |`,
+		`| **Estimated Memory** | ~${report.hardware.ramGb || 8} GB RAM |`,
+		`| **GPU Graphics Renderer** | ${report.hardware.gpuRenderer} |`,
+		`| **Max Texture Size** | ${report.hardware.maxTextureSize} × ${report.hardware.maxTextureSize} px |`,
+		`| **Network Type** | ${report.network.effectiveType.toUpperCase()} (Downlink ~${report.network.downlinkMbps} Mbps) |`,
+		`| **Speed Test Metrics** | ${report.speedTest.downloadMbps > 0 ? `${report.speedTest.downloadMbps} Mbps Down, ${report.speedTest.uploadMbps} Mbps Up, ${report.speedTest.pingMs}ms Ping` : "Not measured"} |`,
+		`| **Suitability Grade** | ${report.suitability?.grade ? `Grade ${report.suitability.grade} - ${report.suitability.gradeLabel}` : "N/A"} |`,
+		`| **ISP / ASN** | ${report.network.isp || "N/A"} (${report.network.asn || "N/A"}) |`,
+		`| **User Agent** | \`${report.userAgent}\` |`,
+		`| **Timestamp** | ${report.timestamp} |`,
+	].join("\n");
+}

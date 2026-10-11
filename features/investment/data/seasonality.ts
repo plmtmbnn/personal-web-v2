@@ -77,10 +77,37 @@ export const SEASONALITY_WINDOWS: SeasonalityWindow[] = [
 	},
 ];
 
+import { getHalvingCyclePhase } from "../lib/indicators";
+
 /**
- * Gets currently active seasonal windows based on current month.
+ * Gets currently active seasonal windows based on current month and halving cycle phase.
  */
 export function getActiveSeasonality(now = new Date()): SeasonalityWindow[] {
 	const currentMonth = now.getMonth() + 1; // 1-12
-	return SEASONALITY_WINDOWS.filter((w) => w.months.includes(currentMonth));
+	const halving = getHalvingCyclePhase(now);
+
+	return SEASONALITY_WINDOWS.filter((w) => w.months.includes(currentMonth)).map(
+		(w) => {
+			if (w.id === "crypto-q4-liquidity") {
+				// Halving cycle check: Month 18-36 can be severe distribution/bear market Q4 (e.g. 2018, 2022)
+				const isBearOrLateCycle =
+					halving.cycleMonth >= 18 && halving.cycleMonth < 36;
+				if (isBearOrLateCycle) {
+					return {
+						...w,
+						title: "Crypto Q4 Late-Cycle Liquidity Watch",
+						status: "Defensive / Consolidation" as const,
+						description: `Q4 historically yields strong momentum in post-halving expansions, but experiences sharp drawdowns in late-cycle distribution/bear regimes. Current phase: ${halving.phase}.`,
+						tacticalPlay:
+							"Prioritize capital preservation and dry powder. Do not chase seasonal long setups against macro cycle trend.",
+					};
+				}
+				return {
+					...w,
+					description: `Historically, Q4 provides the strongest quarterly returns for Bitcoin in expansion phases (${halving.phase}).`,
+				};
+			}
+			return w;
+		},
+	);
 }

@@ -168,10 +168,33 @@ async function getMarketQuotes(
 			}
 		}
 
-		if (Object.keys(quotesRecord).length > 0) {
-			await redis.set(cacheKey, JSON.stringify(quotesRecord), { ex: 300 }); // 5 min TTL
-			await redis.set(backupKey, JSON.stringify(quotesRecord)); // Perpetual backup
-			return { quotes: quotesRecord, sourceOk: true };
+		let existingBackup: Record<string, MarketQuote> = {};
+		try {
+			const rawBackup = await redis.get<Record<string, MarketQuote> | string>(
+				backupKey,
+			);
+			if (rawBackup) {
+				existingBackup =
+					typeof rawBackup === "string" ? JSON.parse(rawBackup) : rawBackup;
+			}
+		} catch (e) {
+			console.warn("[Investment] Failed reading quotes backup for merge:", e);
+		}
+
+		const mergedQuotes = { ...existingBackup, ...quotesRecord };
+		const freshCount = Object.keys(quotesRecord).length;
+		const totalMergedCount = Object.keys(mergedQuotes).length;
+
+		if (totalMergedCount > 0) {
+			// Update cache with merged state so stale items don't disappear prematurely
+			await redis.set(cacheKey, JSON.stringify(mergedQuotes), { ex: 300 }); // 5 min TTL
+			// Update permanent backup
+			await redis.set(backupKey, JSON.stringify(mergedQuotes));
+
+			// sourceOk is true if we got healthy fresh data (> 50% of expected symbols)
+			const isComprehensive =
+				freshCount >= Math.round(INSTRUMENTS.length * 0.5);
+			return { quotes: mergedQuotes, sourceOk: isComprehensive };
 		}
 	} catch (e) {
 		console.warn("[Investment] Live quotes fetch failed:", e);
@@ -179,9 +202,14 @@ async function getMarketQuotes(
 
 	// Fallback to backup
 	try {
-		const backup = await redis.get<Record<string, MarketQuote>>(backupKey);
-		if (backup && Object.keys(backup).length > 0) {
-			return { quotes: backup, sourceOk: false }; // false = using stale backup
+		const backup = await redis.get<Record<string, MarketQuote> | string>(
+			backupKey,
+		);
+		if (backup) {
+			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
+			if (parsed && Object.keys(parsed).length > 0) {
+				return { quotes: parsed, sourceOk: false }; // false = using stale backup
+			}
 		}
 	} catch (e) {
 		console.warn("[Investment] Quotes backup read failed:", e);
@@ -286,19 +314,42 @@ async function getMacroData(
 
 		await Promise.allSettled(promises);
 
-		if (Object.keys(macroData).length > 0) {
-			await redis.set(cacheKey, JSON.stringify(macroData), { ex: 3600 }); // 1 hour TTL
-			await redis.set(backupKey, JSON.stringify(macroData));
-			return { data: macroData, sourceOk: true };
+		let existingBackup: Record<string, MacroSeries> = {};
+		try {
+			const rawBackup = await redis.get<Record<string, MacroSeries> | string>(
+				backupKey,
+			);
+			if (rawBackup) {
+				existingBackup =
+					typeof rawBackup === "string" ? JSON.parse(rawBackup) : rawBackup;
+			}
+		} catch (e) {
+			console.warn("[Investment] Failed reading macro backup for merge:", e);
+		}
+
+		const mergedMacro = { ...existingBackup, ...macroData };
+		const freshCount = Object.keys(macroData).length;
+		const totalMergedCount = Object.keys(mergedMacro).length;
+
+		if (totalMergedCount > 0) {
+			await redis.set(cacheKey, JSON.stringify(mergedMacro), { ex: 3600 }); // 1 hour TTL
+			await redis.set(backupKey, JSON.stringify(mergedMacro));
+			// Comprehensive if at least 4 key series succeeded in the fresh batch
+			return { data: mergedMacro, sourceOk: freshCount >= 4 };
 		}
 	} catch (e) {
 		console.warn("[Investment] Live Macro fetch failed:", e);
 	}
 
 	try {
-		const backup = await redis.get<Record<string, MacroSeries>>(backupKey);
-		if (backup && Object.keys(backup).length > 0) {
-			return { data: backup, sourceOk: false };
+		const backup = await redis.get<Record<string, MacroSeries> | string>(
+			backupKey,
+		);
+		if (backup) {
+			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
+			if (parsed && Object.keys(parsed).length > 0) {
+				return { data: parsed, sourceOk: false };
+			}
 		}
 	} catch (e) {
 		console.warn("[Investment] Macro backup read failed:", e);
@@ -449,6 +500,7 @@ async function getCryptoOnChainData(forceRefresh: boolean): Promise<{
 		if (mvrv != null) {
 			const snapshot: CryptoOnChainSnapshot = {
 				mvrvZScore: mvrv,
+				mvrvRatio: mvrv,
 				updatedAt: Math.floor(Date.now() / 1000),
 			};
 

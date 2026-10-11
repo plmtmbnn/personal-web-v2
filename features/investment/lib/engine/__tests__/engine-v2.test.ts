@@ -281,7 +281,7 @@ function createMockData(
 			coingecko: { ok: true, label: "CoinGecko" },
 			fred: { ok: true, label: "FRED" },
 		},
-		fetchedAt: new Date().toISOString(),
+		fetchedAt: "2026-10-04T12:00:00Z",
 		...overrides,
 	};
 }
@@ -486,7 +486,7 @@ describe("Engine v2 computeCompass", () => {
 		expect(flowFactor).toBeDefined();
 		expect(flowFactor?.weight).toBe(10);
 		expect(flowFactor?.direction).toBe("bullish");
-		expect(flowFactor?.valueStr).toBe("+4D Inflow");
+		expect(flowFactor?.valueStr).toContain("+4D Inflow");
 		expect(output.regimes.ihsg.asymmetryZone?.type).toBe("accumulation");
 	});
 
@@ -593,5 +593,51 @@ describe("Engine v2 computeCompass", () => {
 			0,
 		);
 		expect(totalIhsgWeight).toBe(100);
+	});
+
+	it("computes dualAxis separation for IHSG and Crypto (trend gate vs valuation pace)", () => {
+		const mockData = createMockData();
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+
+		// IHSG dualAxis
+		expect(output.regimes.ihsg.dualAxis).toBeDefined();
+		expect(output.regimes.ihsg.dualAxis?.trendState).toBeDefined();
+		expect(output.regimes.ihsg.dualAxis?.valuationState).toBeDefined();
+		expect(typeof output.regimes.ihsg.dualAxis?.trendScore).toBe("number");
+		expect(typeof output.regimes.ihsg.dualAxis?.valuationScore).toBe("number");
+
+		// Crypto dualAxis
+		expect(output.regimes.crypto.dualAxis).toBeDefined();
+		expect(output.regimes.crypto.dualAxis?.trendState).toBeDefined();
+		expect(output.regimes.crypto.dualAxis?.valuationState).toBeDefined();
+		expect(typeof output.regimes.crypto.dualAxis?.trendScore).toBe("number");
+		expect(typeof output.regimes.crypto.dualAxis?.valuationScore).toBe(
+			"number",
+		);
+	});
+
+	it("aligns playbook script posture with effective downgraded state during global stress", () => {
+		const mockData = createMockData();
+		mockData.markets.macro.BAMLH0A0HYM2.data = [
+			{ date: "2026-10-02", value: 6.2 },
+		]; // Stress
+		mockData.markets.macro.M2SL.data = [{ date: "2026-10-02", value: -2.5 }]; // Liquidity contraction
+		mockData.markets.macro.PCEPILFE.data = [{ date: "2026-10-02", value: 4.2 }]; // Hot inflation
+		mockData.markets.macro.DGS10.data = [{ date: "2026-10-02", value: 5.2 }]; // Yield stress
+		mockData.markets.macro.FEDFUNDS.data = [{ date: "2026-10-02", value: 5.5 }]; // Peak restrictive
+		mockData.markets.quotes.DXY.last = 106.5; // Severe headwind
+		mockData.markets.quotes.VIX.last = 32.0; // Panic
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		expect(output.regimes.global.state).toBe("stress");
+		expect(output.permissions.globalStressActive).toBe(true);
+
+		// Playbooks must be synchronized with effective states, NOT raw states
+		expect(output.playbooks.ihsg.state).not.toBe("risk_on");
+		expect(output.playbooks.crypto.state).not.toBe("risk_on");
+		expect(output.permissions.ihsg.mandate?.isTradingLocked).toBe(
+			output.playbooks.ihsg.state === "defensive" ||
+				output.playbooks.ihsg.state === "stress",
+		);
 	});
 });

@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { SupabaseConn } from "@/lib/core/supabase";
 import { invalidateStatsCache } from "@/lib/core/redis";
 import type { Task, TaskPriority, TaskRecurrence, TaskStatus } from "../types";
-import { addDays, addMonths, parseISO, format } from "date-fns";
+import { addDays, addMonths, parseISO, format, isBefore } from "date-fns";
+import { getJakartaDateString } from "../utils";
 
 /**
  * Handle recurrence task instance creation.
@@ -12,15 +13,21 @@ import { addDays, addMonths, parseISO, format } from "date-fns";
 async function handleRecurrenceSpawning(task: Task) {
 	if (!task.recurrence || task.recurrence === "none") return;
 
-	// Calculate next due date
+	const todayStr = getJakartaDateString();
+	const todayDate = parseISO(todayStr);
 	const currentDate = parseISO(task.due_date);
+
+	// If the completed task was overdue, calculate the next instance relative to today
+	// rather than backdating it into the past.
+	const baseDate = isBefore(currentDate, todayDate) ? todayDate : currentDate;
+
 	let nextDate: Date;
 	if (task.recurrence === "daily") {
-		nextDate = addDays(currentDate, 1);
+		nextDate = addDays(baseDate, 1);
 	} else if (task.recurrence === "weekly") {
-		nextDate = addDays(currentDate, 7);
+		nextDate = addDays(baseDate, 7);
 	} else if (task.recurrence === "monthly") {
-		nextDate = addMonths(currentDate, 1);
+		nextDate = addMonths(baseDate, 1);
 	} else {
 		return;
 	}
@@ -43,41 +50,78 @@ async function handleRecurrenceSpawning(task: Task) {
 	let nextStartDateStr: string | null = null;
 	if (task.start_date) {
 		const currentStartDate = parseISO(task.start_date);
+		const baseStartDate = isBefore(currentStartDate, todayDate)
+			? todayDate
+			: currentStartDate;
 		let nextStartDate: Date;
 		if (task.recurrence === "daily") {
-			nextStartDate = addDays(currentStartDate, 1);
+			nextStartDate = addDays(baseStartDate, 1);
 		} else if (task.recurrence === "weekly") {
-			nextStartDate = addDays(currentStartDate, 7);
+			nextStartDate = addDays(baseStartDate, 7);
 		} else {
-			nextStartDate = addMonths(currentStartDate, 1);
+			nextStartDate = addMonths(baseStartDate, 1);
 		}
 		nextStartDateStr = format(nextStartDate, "yyyy-MM-dd");
 	}
 
-	// Insert next task
-	const { error } = await SupabaseConn.from("tasks").insert([
-		{
-			title: task.title,
-			description: task.description,
-			priority: task.priority,
-			category: task.category,
-			status: "todo",
-			due_date: nextDateStr,
-			recurrence: task.recurrence,
-			tags: task.tags || [],
-			estimated_minutes: task.estimated_minutes,
-			parent_id: task.parent_id,
-			start_date: nextStartDateStr,
-			start_time: task.start_time,
-			due_time: task.due_time,
-			recurrence_origin_id: originId,
-			position: task.position,
-			reschedule_count: 0,
-		},
-	]);
+	// Insert next recurring task
+	const { data: spawnedTask, error } = await SupabaseConn.from("tasks")
+		.insert([
+			{
+				title: task.title,
+				description: task.description,
+				priority: task.priority,
+				category: task.category,
+				status: "todo",
+				due_date: nextDateStr,
+				recurrence: task.recurrence,
+				tags: task.tags || [],
+				estimated_minutes: task.estimated_minutes,
+				parent_id: task.parent_id,
+				start_date: nextStartDateStr,
+				start_time: task.start_time,
+				due_time: task.due_time,
+				recurrence_origin_id: originId,
+				position: task.position,
+				reschedule_count: 0,
+			},
+		])
+		.select()
+		.single();
 
 	if (error) {
 		console.error("Failed to spawn recurring task:", error);
+		return;
+	}
+
+	// Clone child subtasks for recurring rituals / checklists
+	if (spawnedTask) {
+		const { data: childSubtasks } = await SupabaseConn.from("tasks")
+			.select("*")
+			.eq("parent_id", task.id);
+
+		if (childSubtasks && childSubtasks.length > 0) {
+			const clonedSubtasks = childSubtasks.map((sub) => ({
+				title: sub.title,
+				parent_id: spawnedTask.id,
+				priority: sub.priority,
+				category: sub.category,
+				due_date: nextDateStr,
+				status: "todo" as TaskStatus,
+				tags: sub.tags || [],
+				recurrence: "none" as TaskRecurrence,
+				reschedule_count: 0,
+				position: sub.position,
+				estimated_minutes: sub.estimated_minutes,
+				completed_at: null,
+			}));
+
+			const { error: subtaskError } =
+				await SupabaseConn.from("tasks").insert(clonedSubtasks);
+			if (subtaskError) {
+				console.error("Failed to clone recurring subtasks:", subtaskError);
+			}
+		}
 	}
 }
 
@@ -94,30 +138,48 @@ export async function getTasks(options?: {
 	category?: string;
 	showCompletedToday?: boolean;
 	includeCompleted?: boolean;
+	includeOverdue?: boolean;
 }): Promise<Task[]> {
-	const today = format(new Date(), "yyyy-MM-dd");
+	const today = getJakartaDateString();
 	const startDate = options?.startDate || today;
 	const endDate = options?.endDate || today;
 	const showCompletedToday = options?.showCompletedToday ?? false;
 	const includeCompleted = options?.includeCompleted ?? false;
+	const includeOverdue = options?.includeOverdue ?? true;
 
 	let query = SupabaseConn.from("tasks").select("*");
 
 	// Handle Completion and Date Filtering
 	if (includeCompleted) {
-		// Show: (Due in range AND NOT done) OR (Completed in range)
-		query = query.or(
-			`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`,
-		);
+		// Show: (Due in range or overdue pending) OR (Completed in range)
+		if (includeOverdue) {
+			query = query.or(
+				`and(due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`,
+			);
+		} else {
+			query = query.or(
+				`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`,
+			);
+		}
 	} else if (showCompletedToday) {
-		query = query.or(
-			`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`,
-		);
+		if (includeOverdue) {
+			query = query.or(
+				`and(due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`,
+			);
+		} else {
+			query = query.or(
+				`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`,
+			);
+		}
 	} else {
-		query = query
-			.neq("status", "done")
-			.gte("due_date", startDate)
-			.lte("due_date", endDate);
+		if (includeOverdue) {
+			query = query.neq("status", "done").lte("due_date", endDate);
+		} else {
+			query = query
+				.neq("status", "done")
+				.gte("due_date", startDate)
+				.lte("due_date", endDate);
+		}
 	}
 
 	// Handle Priority Filter
@@ -326,6 +388,14 @@ export async function addBatchTasks(
 export async function updateTaskStatus(taskId: string, status: TaskStatus) {
 	const completedAt = status === "done" ? new Date().toISOString() : null;
 
+	const { data: currentTask } = await SupabaseConn.from("tasks")
+		.select("status")
+		.eq("id", taskId)
+		.single();
+
+	const wasDone = currentTask?.status === "done";
+	const isNowDone = status === "done";
+
 	const { data, error } = await SupabaseConn.from("tasks")
 		.update({
 			status,
@@ -346,9 +416,11 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus) {
 		);
 	}
 
-	if (status === "done" && data) {
+	if (isNowDone && !wasDone && data) {
 		await handleRecurrenceSpawning(data as Task);
 		await handleDependenciesUnblocking(taskId);
+	} else if (wasDone && !isNowDone) {
+		await handleDependenciesReblocking(taskId);
 	}
 
 	revalidatePath("/tasks");
@@ -360,14 +432,27 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus) {
  */
 export async function updateTask(taskId: string, updates: Partial<Task>) {
 	const payload: Partial<Task> = { ...updates };
-	let newDone = false;
+
+	const { data: currentTask } = await SupabaseConn.from("tasks")
+		.select("status")
+		.eq("id", taskId)
+		.single();
+
+	const wasDone = currentTask?.status === "done";
+	let becameDone = false;
+	let becameUndone = false;
 
 	if (updates.status) {
-		if (updates.status === "done" && !updates.completed_at) {
-			payload.completed_at = new Date().toISOString();
-			newDone = true;
-		} else if (updates.status !== "done") {
+		if (updates.status === "done") {
+			payload.completed_at = updates.completed_at || new Date().toISOString();
+			if (!wasDone) {
+				becameDone = true;
+			}
+		} else {
 			payload.completed_at = null;
+			if (wasDone) {
+				becameUndone = true;
+			}
 		}
 	}
 
@@ -389,9 +474,11 @@ export async function updateTask(taskId: string, updates: Partial<Task>) {
 		);
 	}
 
-	if (newDone && data) {
+	if (becameDone && data) {
 		await handleRecurrenceSpawning(data as Task);
 		await handleDependenciesUnblocking(taskId);
+	} else if (becameUndone) {
+		await handleDependenciesReblocking(taskId);
 	}
 
 	revalidatePath("/tasks");
@@ -401,25 +488,22 @@ export async function updateTask(taskId: string, updates: Partial<Task>) {
 // ─── Reorder ──────────────────────────────────────────────────────────────────
 
 /**
- * Bulk update task positions
+ * Bulk update task positions safely without upsert constraint violations
  */
 export async function reorderTasks(taskIds: string[]) {
 	if (!taskIds.length) return;
 
-	const updates = taskIds.map((id, index) => ({ id, position: index }));
+	const updatePromises = taskIds.map((id, index) =>
+		SupabaseConn.from("tasks").update({ position: index }).eq("id", id),
+	);
 
-	const { error } = await SupabaseConn.from("tasks").upsert(updates, {
-		onConflict: "id",
-	});
+	const results = await Promise.all(updatePromises);
+	const failed = results.find((r) => r.error);
 
-	if (error) {
-		console.error("Failed to reorder tasks:", {
-			taskIds,
-			error: error.message,
-			code: error.code,
-		});
+	if (failed?.error) {
+		console.error("Failed to reorder tasks:", failed.error);
 		throw new Error(
-			`Failed to reorder ${taskIds.length} tasks. ${error.message || "Please refresh the page."}`,
+			`Failed to reorder ${taskIds.length} tasks. ${failed.error.message || "Please refresh the page."}`,
 		);
 	}
 
@@ -456,7 +540,7 @@ export async function deleteTask(taskId: string) {
  * Fetch tasks that are not completed and past their due date.
  */
 export async function getStaleTasks(): Promise<Task[]> {
-	const today = format(new Date(), "yyyy-MM-dd");
+	const today = getJakartaDateString();
 
 	const { data, error } = await SupabaseConn.from("tasks")
 		.select("*")
@@ -480,8 +564,8 @@ export async function getStaleTasks(): Promise<Task[]> {
  * Increments the reschedule_count for each task.
  */
 export async function rescheduleOverdueTasks(daysToAdd: number) {
-	const today = format(new Date(), "yyyy-MM-dd");
-	const newDate = addDays(new Date(), daysToAdd);
+	const today = getJakartaDateString();
+	const newDate = addDays(parseISO(today), daysToAdd);
 	const newDateStr = format(newDate, "yyyy-MM-dd");
 
 	// 1. Fetch overdue tasks
@@ -510,28 +594,24 @@ export async function rescheduleOverdueTasks(daysToAdd: number) {
 	if (overdueTasks.length === 0)
 		return { success: true, message: "No overdue tasks to reschedule" };
 
-	// 2. Perform updates (Due Date + Increment Counter) in a single batch upsert
-	const updates = overdueTasks.map((t) => ({
-		id: t.id,
-		due_date: newDateStr,
-		reschedule_count: (t.reschedule_count || 0) + 1,
-	}));
-
-	const { error: updateError } = await SupabaseConn.from("tasks").upsert(
-		updates,
-		{ onConflict: "id" },
+	// 2. Perform updates using parallel update queries to protect against NOT NULL upsert errors
+	const updatePromises = overdueTasks.map((t) =>
+		SupabaseConn.from("tasks")
+			.update({
+				due_date: newDateStr,
+				reschedule_count: (t.reschedule_count || 0) + 1,
+			})
+			.eq("id", t.id),
 	);
 
-	if (updateError) {
-		console.error("Failed during bulk reschedule:", {
-			daysToAdd,
-			overdueCount: overdueTasks.length,
-			error: updateError.message,
-			code: updateError.code,
-		});
+	const results = await Promise.all(updatePromises);
+	const failed = results.find((r) => r.error);
+
+	if (failed?.error) {
+		console.error("Failed during bulk reschedule:", failed.error);
 		return {
 			success: false,
-			message: `Failed to reschedule ${overdueTasks.length} tasks. ${updateError.message || "Please try again."}`,
+			message: `Failed to reschedule ${overdueTasks.length} tasks. ${failed.error.message || "Please try again."}`,
 		};
 	}
 
@@ -543,7 +623,7 @@ export async function rescheduleOverdueTasks(daysToAdd: number) {
 	};
 }
 
-// ─── Phase 3 Actions ──────────────────────────────────────────────────────────
+// ─── Dependencies & Lifecycle ─────────────────────────────────────────────────
 
 /**
  * Handle unblocking tasks that depend on the completed task.
@@ -591,6 +671,25 @@ async function handleDependenciesUnblocking(completedTaskId: string) {
 }
 
 /**
+ * Handle re-blocking tasks when a blocker is reopened from done back to todo/in_progress.
+ */
+async function handleDependenciesReblocking(reopenedTaskId: string) {
+	const { data: dependents, error: depError } = await SupabaseConn.from(
+		"task_dependencies",
+	)
+		.select("task_id")
+		.eq("depends_on", reopenedTaskId);
+
+	if (depError || !dependents || dependents.length === 0) return;
+
+	const dependentIds = dependents.map((d) => d.task_id);
+	await SupabaseConn.from("tasks")
+		.update({ status: "blocked" })
+		.in("id", dependentIds)
+		.neq("status", "done");
+}
+
+/**
  * Archive a task.
  */
 export async function archiveTask(taskId: string) {
@@ -605,6 +704,41 @@ export async function archiveTask(taskId: string) {
 
 	revalidatePath("/tasks");
 	await invalidateStatsCache();
+}
+
+/**
+ * Unarchive a task.
+ */
+export async function unarchiveTask(taskId: string) {
+	const { error } = await SupabaseConn.from("tasks")
+		.update({ archived_at: null })
+		.eq("id", taskId);
+
+	if (error) {
+		console.error("Failed to unarchive task:", error);
+		throw new Error("Failed to unarchive task");
+	}
+
+	revalidatePath("/tasks");
+	await invalidateStatsCache();
+}
+
+/**
+ * Fetch all archived tasks for review and restoration.
+ */
+export async function getArchivedTasks(): Promise<Task[]> {
+	const { data, error } = await SupabaseConn.from("tasks")
+		.select("*")
+		.not("archived_at", "is", null)
+		.is("parent_id", null)
+		.order("archived_at", { ascending: false });
+
+	if (error) {
+		console.error("Failed to fetch archived tasks:", error);
+		return [];
+	}
+
+	return data as Task[];
 }
 
 /**
@@ -678,7 +812,7 @@ export async function getTaskDependencies(taskId: string): Promise<Task[]> {
 
 /**
  * Fetch all incomplete tasks that can be added as blockers.
- * Excludes the current task itself, its children, and any tasks that already depend on it (to prevent cycles).
+ * Traverses the transitive dependency tree to prevent multi-level cycles.
  */
 export async function getPotentialBlockers(taskId: string): Promise<Task[]> {
 	const { data, error } = await SupabaseConn.from("tasks")
@@ -689,14 +823,27 @@ export async function getPotentialBlockers(taskId: string): Promise<Task[]> {
 		.is("archived_at", null)
 		.order("title", { ascending: true });
 
-	if (error) return [];
+	if (error || !data) return [];
 
-	// Filter out tasks that depend on taskId (to prevent circular blocks)
-	const { data: dependentLinks } = await SupabaseConn.from("task_dependencies")
-		.select("task_id")
-		.eq("depends_on", taskId);
+	// Fetch all existing dependency links to compute full transitive descendant tree
+	const { data: allLinks } = await SupabaseConn.from(
+		"task_dependencies",
+	).select("task_id, depends_on");
 
-	const dependentIds = (dependentLinks || []).map((link) => link.task_id);
+	const links = allLinks || [];
+	const visited = new Set<string>();
+	const queue = [taskId];
 
-	return (data as Task[]).filter((t) => !dependentIds.includes(t.id));
+	// BFS traversal: find all tasks that transitively depend on taskId
+	while (queue.length > 0) {
+		const curr = queue.shift()!;
+		for (const link of links) {
+			if (link.depends_on === curr && !visited.has(link.task_id)) {
+				visited.add(link.task_id);
+				queue.push(link.task_id);
+			}
+		}
+	}
+
+	return (data as Task[]).filter((t) => !visited.has(t.id));
 }

@@ -28,10 +28,10 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
     - **High-Precision Financial Telemetry Standard**: Index quotes (e.g., IHSG `^JKSE`) strictly declare 2-decimal financial precision (`6,146.72`) and pair nominal point changes with percentage deltas (`-46.2 (-0.75%)`). Yahoo quote parsing (`services/market-data/yahoo.ts`) prioritizes official `regularMarketChange`/`fulldayChange` over stale `chartPreviousClose` baselines to guarantee exact index deltas.
     - **Decision Engine V3 Strict Weighting**: Engine factor weights (e.g., in `ihsg.ts`, `crypto.ts`, `global.ts`) MUST ALWAYS sum up to exactly `100`. If global telemetry is insufficient, engines must safely exclude the macro carry-in factor rather than absorbing generic default scores.
     - **Strict Instrument Registry Standard**: Never hardcode ticker fallbacks or aliases (like mapping JKSE to IHSG manually in data fetching logic). All symbol mappings and API fallbacks must be strictly handled through the central `INSTRUMENTS` registry.
-    - **3-Card Regime Overview Layout (`OverviewRegimes.tsx`)**: Asymmetric grid (`grid-cols-1 lg:grid-cols-12`) featuring IHSG Composite Regime (6-col), Crypto Liquidity Regime (6-col), and Global Macro Dollar Liquidity Context (12-col) with multi-tiered health score bars (`0–100`), diagnosis narratives, and **Contextual Inline Drawer Pattern**: tapping any factor pill highlights the trigger and expands an animated inline drawer directly inside that active card shell with a quick close button, preventing off-screen scroll jumps on mobile viewports. Features prominent **Asymmetry Zone Overrides** with organic pulsing beacons (`animate-ping`) for generational accumulation and distribution tops.
+    - **3-Card Regime Overview Layout & Dual-Axis Telemetry (`OverviewRegimes.tsx`)**: Asymmetric grid (`grid-cols-1 lg:grid-cols-12`) featuring IHSG Composite Regime (6-col), Crypto Liquidity Regime (6-col), and Global Macro Dollar Liquidity Context (12-col) with multi-tiered health score bars (`0–100`), diagnosis narratives, and **Contextual Inline Drawer Pattern**: tapping any factor pill highlights the trigger and expands an animated inline drawer directly inside that active card shell with a quick close button, preventing off-screen scroll jumps on mobile viewports. Features prominent **Asymmetry Zone Overrides** with organic pulsing beacons (`animate-ping`) for generational accumulation and distribution tops. Each market card embeds a compact 2-column **Dual-Axis Telemetry Strip** displaying `Trend / Trading Gate` alongside `Valuation / Accumulation Pace`, visually decoupling short-term momentum trading stops from deep-cycle valuation accumulation.
     - **Macro Scenario Sandbox Simulator (`ScenarioSandbox.tsx`)**: Pure white floating card (`bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs`) with reactive sliders for Fed Funds Rate (0%–10%), USD/IDR FX (Rp 14,000–18,500), and Bitcoin Price ($20,000–$200,000), instant client-side score recomputation, signed delta badges, and 4 one-click stress-test presets (strictly zero emojis).
     - **Tactical Permissions Matrix (`PermissionsMatrix.tsx`)**: Single source of truth driving daily trading permissions (`Allowed`, `Selective`, `Not Allowed`, `Paused`) for Scalp, Swing, and Core DCA across IHSG, Crypto Majors, and Speculative Altcoins. On mobile viewports (`< lg`), employs an **Executive Stacked Action Card Layout**: distinct header row with action label on left and status badge on right, paired with full-width, comfortably readable explanatory text below, completely eliminating cramped multi-column splits and hardcoded `max-w` truncations. Automatically displays the prominent rose-tinted **Capital Preservation Protocol Active** banner during systemic stress with a hard lockdown on new margin/leverage.
-    - **Execution Playbook & Pure White Safe Bucket Anchor (`MarketPlaybook.tsx`)**: Dual-card tactical script for IHSG and Crypto detailing actionable Dos, Avoids, position sizing mandates (0.5%–1.0% risk cap, `riskPerTrade`), thesis invalidation triggers, and predetermined tranche accumulation plans. Strictly adheres to the **Pure White Container Standard** via the **Safe Yield & Preservation Anchor Card (40% Target)** (`bg-white rounded-[2rem] border border-slate-200/80 shadow-xs` with high-contrast amber accents and slate sub-cards, prohibiting monolithic dark containers) outlining Retail SBN (ORI/SBR/ST), liquid bank deposits (RDN), and physical gold (LM Antam).
+    - **Contradiction-Free Execution Playbook & Pure White Safe Bucket Anchor (`MarketPlaybook.tsx`)**: Dual-card tactical script for IHSG and Crypto mapped strictly to effective permission states (never raw scores), detailing actionable Dos, Avoids, single-source-of-truth position sizing mandates (`getSizingMandate` 40/45/15 standard), thesis invalidation triggers, and predetermined tranche accumulation plans. Guarantees complete visual and mathematical synchronization with the Permissions Matrix. Strictly adheres to the **Pure White Container Standard** via the **Safe Yield & Preservation Anchor Card (40% Target)** (`bg-white rounded-[2rem] border border-slate-200/80 shadow-xs` with high-contrast amber accents and slate sub-cards, prohibiting monolithic dark containers) outlining Retail SBN (ORI/SBR/ST), liquid bank deposits (RDN), and physical gold (LM Antam).
     - **Disciplined Rebuild Rulebook (`Rulebook.tsx`)**: 6 non-negotiable operational sections: Capital Buckets Architecture (Emergency, 40% Safe Yield, 45% Core, 15% Swing), 6 Golden Rules of Trading Discipline, Mechanical Drawdown Circuit Breakers (-5% half size, -10% 14-day pause, -15% freeze), Non-Negotiable Hard Bans (zero crypto perps/futures, zero margin, zero Papan Pemantauan Khusus), Pre-Trade Checklist (5 gates), and Drawdown Recovery Math table (-80% requires +400%) with fully legible, un-truncated reality explanations.
     - **Dynamic Recurrent Macro Calendar & Deterministic UTC Parsing (`EventCalendar.tsx`)**: High-impact macro dates with algorithmic recurrence generation across any future year (`generateRecurrentEvents`), market filtering (All, ID, Crypto, US), and active seasonal tendency banners (Window Dressing, Musim Dividen, Sell in May). All calendar and catalyst dates in ISO `YYYY-MM-DD` format MUST be parsed via explicit UTC components (`Date.UTC(y, m - 1, d)`) to prevent local client timezone drift.
     - **Critical Catalyst Soft Pre-Alert (H-3 Weekday Window)**: Prominent amber/rose pre-alert cards highlighting Critical catalysts approaching within 0–3 business days with domain impact explanations for IHSG and Crypto. Synchronized with the Telegram daily briefing (`runRegimeAlerts`).
@@ -43,6 +43,11 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
     - **Safe Bottom Clearance**: Calibrated bottom clearance `pb-32 sm:pb-36` to safely clear `CompactBottomBar`.
   - **Contact & Direct Inquiry Hub (`/contact`)**: Desktop Entry Screen Standard (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden`), centered 12-column stage (`lg:grid-cols-12`, 5/7 split). Left context column: active status chip with `animate-ping` pulsing dot, solid headline (`"Let's build something worth shipping."`), 2-column Location & Jakarta Clock widget, system version pill, and relative timezone calculator. Right action panel: floating inquiry topic selector card (`rounded-[2rem]`) with 4 presets (`Consulting & Advisory`, `Engineering Leadership`, `Fintech Core (LOS/LMS)`, `General Tech Chat`) using domain SVG icons (`Handshake`, `Briefcase`, `Cpu`, `Coffee`) compiling dynamic `mailto:` parameters, and a 2x2 grid of direct contact channels (Email, Telegram, LinkedIn, GitHub) featuring domain icon squircles, 1-click clipboard copying (`FaRegCopy` → `FaCheck`), and external linkout arrows (`ArrowUpRight`).
   - **Running Performance Hub (`/adventures/running`)**: High-fidelity endurance telemetry and Strava activity hub on signature dot-pattern canvas (`bg-slate-50/80 bg-dot-pattern`). Floating card header standard with emerald squircle anchor (`w-12 h-12 sm:w-14 sm:h-14`), clean domain breadcrumbs and title (zero marketing slogan badges), and responsive 3-column mobile telemetry box. 12-column arena split: left column (5 cols) `Training Load & Intel` with live pulsing telemetry indicator, dynamic `PaceRing` gauge, 2x2 intel metric tiles, and proportional distance distribution; right column (7 cols) `PersonalBestsSwipeCard` (`bg-white rounded-3xl border border-slate-200/80 shadow-xs`) with minimalist frameless milestone track with sliding underline indicator (`layoutId="activeMilestoneIndicatorLight"`), official monospace chip time (`text-5xl sm:text-6xl font-black font-mono`), clean 3-metric functional strip (Pace, Distance, Elevation — strictly zero speed redundancy), zero marketing slogans/taglines, keyboard (<kbd>←</kbd> <kbd>→</kbd>) and touch swipe navigation, and 1-click record copy. Activities feed with 2-tier mobile-first controls toolbar, 3-column responsive activity cards with uniform rounded-3xl floating card architecture, domain squircle anchor, recessed 3-metric instrument tray (zero truncation), elevation/heart rate badges, and `ArrowUpRight` interaction cue triggering `ActivityDetailModal`.
+  - **Stock Explorer, Paper Trading Simulator & Trade Journal Hub (`/utils/stock-explorer`)**:
+    - **Dual-Mode Workstation Architecture**: Frameless sliding workstation switcher (`layoutId="stockExplorerMode"`) toggling between Screener/Microstructure Workstation and Stockpick Simulator & Paper Trading Ledger without page reload or state loss.
+    - **Supabase Cloud Single Source of Truth**: Positions and closed journal records reside strictly in PostgreSQL (`public.stock_picks`), completely eliminating fragile browser `localStorage` and enabling multi-device synchronization.
+    - **Continuous Watermark Excursion Tracing & Out-of-Band Sync**: Live quote feeds continuously calculate High and Low price watermarks (`highWatermark`, `lowWatermark`) to measure maximum potential peak excursion and worst drawdown exposure during position lifespan. Cloud synchronization of watermarks is dispatched out-of-band via debounced macrotasks, guaranteeing zero `<Router>` state collisions during render passes.
+    - **Trade Journal Alpha Attribution & Performance Ledger**: Post-trade analytical journal calculating holding days, realized P/L (IDR and %), peak gain captured %, maximum drawdown endured %, and exit thesis categorization (`Target Hit`, `Stop Loss`, `Thesis Invalidation`, `Rebalance`, `Time Stop`) with filterable summary metrics.
 
 ---
 
@@ -398,9 +403,11 @@ Operational views (e.g., Admin Dashboard, Task Agenda, Quick Reminders, Stock Ma
   3. *Accessible Labels*: Semantic `aria-label` attributes (e.g. `Copy Email`, `Copy LinkedIn`) and native `type="button"` with `cursor-pointer`.
 
 ### Quick Reminders Standard (`/admin/reminders`)
-* **Full-Width Alignment & Creation Card:** Container uses `w-full space-y-6 sm:space-y-8` inside `max-w-5xl`. Features an elevated creation card with an Amber squircle badge (`w-12 h-12 rounded-2xl bg-amber-50 border-amber-200/70 text-amber-600`), character limit counter, segmented TTL duration track (`1 Day`, `1 Week`, `1 Month`), and solid dark submit button (`bg-slate-900 text-white`) with <kbd>⌘/Ctrl + Enter</kbd>.
-* **Modern Floating Controls Toolbar:** Elevated floating toolbar featuring segmented filter tabs with dynamic count badges (*All, Expiring Soon, 1 Day, 1 Week, 1 Month*), active filter summary text, and search input with explicit icon layering (`pointer-events-none z-10`, `pl-10`).
-* **Accent Line Reminder Cards:** 1.5px solid top border accents indicating expiry state (`amber-500` for expiring soon, `sky-500` for 1D, `indigo-500` for 1W, `purple-500` for 1M), tactile duration extension pills (`+1D`, `+1W`, `+1M`), one-click note text copy with visual checkmark feedback, and interactive linkified URL pills.
+* **Modern Floating Card Header & Live 3-Tile Telemetry Strip:** Clean Header Standard featuring contextual breadcrumbs (`Admin Dashboard › Quick Reminders`), amber domain squircle anchor (`w-12 h-12 sm:w-14 sm:h-14 bg-amber-50 border border-amber-200/70 text-amber-600 shadow-2xs`) with `Bell`, bold `h1` headline, concise lede description, right-aligned Admin Hub return link, and a balanced 3-tile telemetry strip: Total Active Notes, Expiring Soon (< 24h lifespan with urgent/calm status pill), and Redis TTL Engine (with green pulsing liveness beacon `animate-pulse`).
+* **Full-Width Alignment & Creation Card:** Full-width container (`w-full space-y-6 sm:space-y-8`) inside `max-w-5xl`. Features an elevated creation card with an Amber squircle badge (`w-12 h-12 rounded-2xl bg-amber-50 border-amber-200/70 text-amber-600`), character limit counter, iOS-safe font sizing (`text-base sm:text-sm`), segmented TTL duration track (`1 Day`, `1 Week`, `1 Month`), and solid dark submit button (`bg-slate-900 text-white hover:bg-slate-800`) with <kbd>⌘/Ctrl + Enter</kbd>.
+* **Modern Floating Controls Toolbar with Sort Switcher:** Elevated floating toolbar featuring segmented filter tabs with dynamic count badges (*All, Expiring Soon, 1 Day, 1 Week, 1 Month*), touch scrollbar suppression (`[scrollbar-width:none] touch-pan-x`), interactive sort switcher (`Soonest Expiry` vs `Newest Created`), active filter summary text with instant reset, and search input with explicit icon layering (`pointer-events-none z-10`, `pl-10`).
+* **Symmetrical Floating Reminder Cards & Lifespan Micro-Track (Zero Colored Top/Left Bars):** Pure white floating cards (`rounded-3xl border border-slate-200/80 hover:border-slate-300 shadow-xs hover:shadow-lg`) strictly eliminating asymmetric colored strips (`h-1.5` top bars or colored left borders). Cards feature context-aware domain squircle anchors (`Clock` for 1D, `Calendar` for 1W, `CalendarDays` for 1M), uppercase TTL labels, relative creation timestamps (`formatCreatedTime`), and expiry telemetry pills (< 24h with pulsing amber beacon). Embeds a hairline lifespan remaining progress micro-track (0–100% decaying visually in real time, turning amber when < 20% remains). Card footer provides 1-click note copy with multi-modal feedback (in-place checkmark transition + centered floating toast), tactile extension buttons (`+1D`, `+1W`, `+1M` with per-item micro-spinners), and danger-gated deletion with `CustomModal`.
+* **Localized Skeleton Loader (`loading.tsx`):** Route skeleton in `app/admin/reminders/loading.tsx` backed by `RemindersSkeleton.tsx` mirroring the header telemetry strip, creation card, controls toolbar, and 4 reminder cards to eliminate global fallback flashes.
 
 ### Stock Manager Import Protocol (`/utils/stock-explorer/admin`)
 * **Modern Floating Card Header Standard:** Anchored by an indigo squircle icon (`w-12 h-12 rounded-2xl bg-indigo-50 border-indigo-200/70 text-indigo-600 shadow-2xs`) with `Database`, domain badge (`Financial Registry`), breadcrumbs (`Admin Dashboard › Stock Registry`), and `Back to Explorer` button.
@@ -452,8 +459,10 @@ Full-bleed dark slate banners (`bg-slate-900 border-b border-slate-800`) are str
 * **Quick Reminders Modern Floating Card Standard (`/admin/reminders`):**
   - **Zero Colored Accent Strips Mandate:** Reminder cards strictly eliminate asymmetric colored strips (`h-1.5` top bars or colored left borders) in favor of uniform, symmetrical `rounded-3xl border border-slate-200/80 hover:border-slate-300` floating cards.
   - **Context-Aware Domain Squircles:** Each card is anchored by a duration squircle (`Clock` for 1 Day, `Calendar` for 1 Week, `CalendarDays` for 1 Month) paired with uppercase TTL labels and created timestamps.
+  - **Lifespan Micro-Track:** Hairline progress bar (0–100%) showing real-time remaining lifespan, turning amber when < 20% remains.
   - **Expiry Telemetry Pill:** Expiring notes (< 24h) display an amber alert pill (`bg-amber-50 border border-amber-200 text-amber-800`) with an organic pulsing dot indicator (`animate-pulse`).
-  - **Ergonomic Action Tray:** Card footer isolates 1-click note copy (`Copy Note` with checkmark animation), segmented duration extensions (`+1D`, `+1W`, `+1M` with `touch-manipulation`), and danger-gated deletion with `CustomModal`.
+  - **Ergonomic Action Tray:** Card footer isolates 1-click note copy (`Copy Note` with checkmark animation + floating toast), segmented duration extensions (`+1D`, `+1W`, `+1M` with `touch-manipulation`), and danger-gated deletion with `CustomModal`.
+  - **Localized Skeleton Loader:** `RemindersSkeleton.tsx` mirrors the full header and card layout for zero CLS route transitions.
 
 ---
 
@@ -587,6 +596,13 @@ Before submitting any AI-generated or AI-assisted component for code review, ver
 - [ ] Icon imports come exclusively from `lucide-react` or `react-icons/fa`
 - [ ] `gray-*` or `zinc-*` Tailwind classes are NOT used (use `slate-*` only)
 - [ ] Numeric and currency formatting uses explicit locale strings (`.toLocaleString("id-ID")` for IDR/IDX, `.toLocaleString("en-US")` for USD/Crypto/percentages) to prevent SSR/CSR hydration mismatches
+
+### Data & Cloud Persistence
+- [ ] Paper trading ledgers and user portfolios persist to Supabase (`public.stock_picks`), never browser `localStorage`
+- [ ] Database mapping functions (`mapPickToDb` / `mapDbToStockPick`) maintain strict 1:1 parity with PostgreSQL schema and satisfy all `NOT NULL` constraints (`shares`, `high_watermark`, `low_watermark`)
+- [ ] Primary keys destined for PostgreSQL `uuid` columns conform strictly to RFC4122 v4 format (`crypto.randomUUID()`)
+- [ ] Next.js Server Actions are NEVER called inside React render phases or `setState` updater functions; cloud sync uses out-of-band debounced macrotasks (`setTimeout`)
+- [ ] Background or request-independent server actions avoid request-scoped `cookies()` and use `SupabaseConn` from `@/lib/core/supabase`
 
 ---
 
@@ -883,6 +899,33 @@ The Indonesian Stock Explorer provides algorithmic screening, institutional fore
     - **Low Liquidity**: Rp 100M – Rp 1B (Caution: slippage risk).
     - **Illiquid**: < Rp 100M (Hard warning: high liquidity risk).
 
+### 28.4 Stockpick Simulator, Paper Trading Ledger & Trade Journal Architecture Standards (`/utils/stock-explorer?tab=simulator`)
+* **Zero-LocalStorage Single Source of Truth Mandate**:
+  - Paper trading ledgers and trade journal entries MUST NEVER rely on `localStorage` as a primary persistence mechanism. Browser storage causes data fragmentation, fails to synchronize across devices, and loses auditability on cache purges.
+  - All position creations, edits, closes, and deletions MUST persist directly to Supabase (`public.stock_picks`) with instant optimistic client UI feedback and localized error recovery pills.
+* **Physical Schema Parity & Explicit Column Mapping**:
+  - Database persistence mapping (`mapPickToDb` and `mapDbToStockPick` in `actions/stockpicks.ts`) MUST align 1:1 with PostgreSQL column definitions (`ticker`, `company_name`, `buy_price`, `lots`, `shares`, `high_watermark`, `low_watermark`, `high_watermark_date`, `low_watermark_date`, `target_price`, `stop_loss`, `entry_date`, `exit_price`, `exit_date`, `exit_reason`, `realized_pnl_idr`, `realized_pnl_pct`, `peak_gain_pct`, `max_drawdown_pct`, `holding_days`, `thesis`, `notes`).
+  - Never alias or substitute column names (e.g. attempting to send `stock_code` or `highest_price_traced` when the database expects `ticker` or `high_watermark`).
+  - Always enforce `NOT NULL` constraints proactively on the application side (e.g., ensuring `shares = lots * 100`, initializing `high_watermark = buyPrice`, `low_watermark = buyPrice`).
+* **RFC4122 v4 UUID Validation Guard**:
+  - PostgreSQL `UUID` primary key columns strictly reject arbitrary random strings (e.g., `pick_${Date.now()}`). All new records generated on the client or server MUST validate or generate canonical RFC4122 v4 UUIDs via `crypto.randomUUID()` before insertion.
+* **Out-of-Band Watermark Synchronization & React Render Hygiene**:
+  - Live market data watermarks (`highWatermark`, `lowWatermark`) update continuously as new quotes stream in.
+  - **CRITICAL REACT RENDER HYGIENE**: Next.js Server Actions (`syncCloudWatermarksAction`) MUST NEVER be invoked synchronously inside React render methods, `useMemo` hooks, or `setState` updater functions (`setStockPicks((prev) => ...)`). Doing so triggers React's internal dispatcher error: `"Cannot update a component ('Router') while rendering a different component"`.
+  - Watermark batch synchronization to Supabase MUST be evaluated against a stable ref (`stockPicksRef`), updated in local state cleanly, and synced to the cloud via a debounced (1200ms) macrotask timer (`setTimeout`) in a `useEffect` or dedicated handler.
+* **Database Client Context & Serverless Isolation (`SupabaseConn`)**:
+  - Asynchronous background server actions that execute outside the active request lifecycle must NOT call `cookies()` from `@/lib/core/supabase-server`, which throws `"cookies was called outside a request scope"`.
+  - Public or anon database operations must instantiate `SupabaseConn` directly from `@/lib/core/supabase` using the standard project URL and anon public key.
+* **Closed Trade Journal Alpha Attribution & Risk Metrics**:
+  - Closing a simulated position transforms it into an immutable journal entry calculating:
+    - `realized_pnl_idr`: `(exitPrice - buyPrice) * lots * 100`
+    - `realized_pnl_pct`: `((exitPrice - buyPrice) / buyPrice) * 100`
+    - `peak_gain_pct`: `((highWatermark - buyPrice) / buyPrice) * 100` (measuring execution efficiency vs top of move)
+    - `max_drawdown_pct`: `((lowWatermark - buyPrice) / buyPrice) * 100` (measuring adverse excursion and risk endured)
+    - `holding_days`: elapsed calendar days between `entry_date` and `exit_date`
+  - Position exits capture mandatory structured attribution metadata: `exit_reason` (`Target Hit`, `Stop Loss`, `Thesis Invalidation`, `Rebalance`, `Time Stop`), and optional reflective `notes`.
+  - Journal analytics cards present Win Rate %, Profit Factor, Net Realized IDR, Average Hold Time, and a filterable visual ledger.
+
 ---
 
 ## 29. Route Not Found & Error Recovery Standard (`app/not-found.tsx`)
@@ -1005,3 +1048,96 @@ The Social Canvas Studio (`/utils/social-canvas`) generates high-resolution, exp
   - `CanvasRenderer.tsx`: High-DPI HTML5 Canvas rasterization engine with text auto-wrapping, custom aspect ratios (1:1, 4:5, 9:16, 16:9), and client-side PNG/WebP exports.
   - `TemplateGallery.tsx`: Interactive template showcase organized across 4 distinct categories: News & Headlines, Offset & Minimalist, Frosted Glass & Optical, and Cinematic & Subtitle.
   - 21 bespoke designs featuring high-contrast typography, code terminals, vinyl audio players, and dynamic light/dark theme toggles.
+
+---
+
+## 33. Device, Speed & Diagnostics Inspector Standards (`/utils/device-inspector`)
+
+The Device, Speed & Diagnostics Inspector (`/utils/device-inspector`) provides real-time client hardware telemetry, multi-stream bandwidth benchmarks, audio/video peripheral verification, and platform capability audits.
+
+### 33.1 Modular Workstation Architecture & Subsystem Isolation
+* **Clean Component Decomposition**:
+  - `View.tsx`: Main page orchestrator integrating the canonical 3-tier `UtilHeader.tsx` (`Copy Markdown`, `Copy JSON`, `Export JSON`), `TopTelemetryStrip`, and a frameless 5-mode workstation tab switcher with spring indicator (`layoutId="activeInspectorTab"`).
+  - `TopTelemetryStrip.tsx`: Instantaneous 4-card KPI strip adhering strictly to the **Canonical 4-Tier Internal Structure** across Display System, Compute Architecture, Edge Network, and System Memory & Power.
+  - `SpeedTestStudio.tsx`: Bandwidth & Latency testing suite with 4-tier metric cards (Download, Upload, Ping RTT, Jitter variance), real-time phase progress bar, throughput stream sparkline, and real-world Workload Suitability Matrix (Grade A+ to F).
+  - `HardwareDisplayStudio.tsx`: Deep hardware architecture inspection (unmasked GPU vendor/renderer, logical CPU threads, memory, battery power source) paired with an **Interactive Live RAF Frame Stability Benchmark** measuring live FPS, frame delta jitter (`±ms`), dropped frames count, and synchronized hardware fluidity rails.
+  - `PeripheralsStudio.tsx`: Web Audio API stereo separation acoustic player (440Hz Left, 880Hz Right, Center, 200–2000Hz Sweep), **Anti-Gradient Segmented LED VU Meter** (24 discrete LED blocks), 16-band audio spectrum visualizer, and webcam sensor stream inspection.
+  - `CompatibilityMatrixStudio.tsx`: Searchable/filterable media codec support matrix (11 formats with MIME tooltips) and modern Web Platform APIs capability audit (12 APIs across compute, multimedia, storage, security, concurrency).
+  - `Skeleton.tsx` & `loading.tsx`: Localized route skeleton loader complying with the Anti-Global-Fallback Mandate.
+
+### 33.2 Anti-Gradient & Pro-Audio Segmented LED Meter Mandate
+* **Strict Prohibition of Continuous Gradients**: In audio monitoring and telemetry meters, continuous CSS gradients (such as `bg-gradient-to-r from-emerald-500 via-amber-400 to-rose-500`) are strictly forbidden under the Anti-Gradient Mandate.
+* **Pro-Audio Segmented LED Meter Pattern**: Meters must use discrete, state-driven LED blocks (e.g. 24 segmented blocks where $0\%-65\%$ light up in solid `bg-emerald-500`, $65\%-85\%$ in solid `bg-amber-500`, and $>85\%$ in solid `bg-rose-500`, with inactive segments in solid `bg-slate-200`). This mirrors physical broadcast audio gear and maintains clean UI surfaces.
+
+### 33.3 Developer Bug Reporting & Telemetry Export Standard
+* **Markdown GitHub Issue Export**: Telemetry export functions must provide a 1-click **Copy Markdown** action via `generateMarkdownReport()` in `diagnostics.ts`, compiling client specs into a clean Markdown table (`| Specification | Telemetry Value |`) suitable for immediate pasting into GitHub bug reports and technical issue tickets.
+
+---
+
+## 34. Access Control & Authorization Recovery Standards (`/unauthorized`)
+
+The Access Control & Unauthorized route (`/unauthorized`) handles restricted resource access attempts, authentication challenges, and privilege validation failures across the application with zero ambiguity and strict diagnostic clarity.
+
+### 34.1 Decoupled Server Component & Client Presentation Architecture
+* **Server-Side Route Boundary (`app/unauthorized/page.tsx`)**:
+  - Implemented as an async Server Component to declare route-level SEO metadata (`Access Denied | Polma Tambunan`) via `createMetadata` in `lib/shared/metadata.ts`.
+  - Directly awaits Next.js 16 `searchParams` (`Promise<{ code?: string; target?: string; reason?: string }>`), preventing runtime hydration mismatches and client boundary de-optimizations.
+  - Passes parsed query parameters (`code`, `targetPath`, `reason`) as clean props into the client interactive presentation component.
+* **Client Presentation Layer (`features/auth/components/UnauthorizedView.tsx`)**:
+  - Handles client-side routing, query string generation for login redirect flows (`?next=`), and user recovery interactions.
+
+### 34.2 Zero-Redundancy Floating Card Standard (Anti-Duplication Mandate)
+* **Single Canonical Elevated Card**:
+  - Encapsulates the entire error interface within an elevated floating card (`bg-white rounded-3xl border border-slate-200/80 shadow-xs sm:shadow-md p-6 sm:p-8 max-w-md w-full`) centered over the signature textured canvas (`bg-slate-50/80 bg-dot-pattern`).
+* **Status Code & Title Hygiene**:
+  - Mirroring the Zero-Redundancy Route Not Found Standard (§29), the HTTP status code is declared **strictly ONCE** via a discrete top-right monospace telemetry pill (`HTTP 401` for unauthenticated or `HTTP 403` for forbidden/restricted).
+  - Strictly bans triple duplication of status codes and error labels (never combine an `"Error 401: Unauthorized"` pill, brutalist `text-7xl/8xl` giant numbers, and an `"Unauthorized"` headline).
+  - Contextual breadcrumbs sit at the top (`Home › Security › Access Denied`).
+  - Domain visual anchor squircle uses Amber `ShieldAlert` (`w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100/80 text-amber-600 shadow-2xs`).
+  - Confident, clean headline stated once as `Restricted Resource` with a concise explanation.
+
+### 34.3 Security Incident Diagnostics Tray
+* **Monospace Incident Telemetry**:
+  - Renders a discrete diagnostics tray (`bg-slate-50 border border-slate-200/80 rounded-2xl p-4 font-mono text-xs text-slate-600 space-y-1.5`) exposing technical context without exposing private system secrets:
+    - *Incident Code*: Canonical machine identifier (`ERR_AUTH_FORBIDDEN` or `ERR_AUTH_EXPIRED`).
+    - *Target Resource*: Requested protected route path (`targetPath`, e.g., `/admin/reminders` or `/tasks`).
+    - *Access Level*: Required privilege scope (`Administrator / Authenticated Session`).
+    - *Timestamp*: ISO 8601 UTC timestamp of the denial event.
+
+### 34.4 Unambiguous Recovery Trajectory & Destination Preservation
+* **Destination Query Preservation (`?next=`)**:
+  - The primary recovery action (`Sign In to Authenticate`) dynamically links to the login gateway while forwarding the requested target via query parameter (`/login?next=${encodeURIComponent(targetPath)}`).
+  - Upon successful authentication, the user is seamlessly redirected back to their intended destination rather than being dumped at the home screen.
+* **Single Fallback Navigation**:
+  - Provides a clean, secondary return button (`Return to Safety` with `<ArrowLeft className="w-4 h-4" />`) routing back to the public homepage (`/`).
+  - Strictly prohibits duplicate or redundant stacked buttons (`Go to Home` + `Go Back` + `Dismiss`).
+* **Calibrated Bottom Clearance**:
+  - Enforces `pb-28 sm:pb-36` bottom padding to guarantee comfortable clearance above `CompactBottomBar`.
+
+---
+
+## 35. Authentication Infrastructure & Interactive Session Ergonomics (`features/auth/`)
+
+The authentication layer provides session management, administrative TOTP verification, and frictionless user identity transitions across the application.
+
+### 35.1 Session Synchronization & Quiet Log Hygiene (`AuthProvider.tsx`)
+* **Production Log Hygiene**:
+  - Background session refresh synchronizers must strictly eliminate noisy `console.log` statements in both production and development environments.
+  - Session verification logs (e.g. `"Token refresh triggered"`, `"Auth state checked"`) pollute developer tools and browser consoles during standard browsing.
+* **Debounced Session Refresh Guard**:
+  - Proactive session synchronizers (`/api/auth/refresh-session`) enforce a minimum 10-second debounce window (`lastSyncRef.current`) to prevent redundant network bursts during rapid route transitions or multi-tab re-renders.
+* **Tab Focus & Visibility Synchronization**:
+  - Listens to native browser `visibilitychange` and `window.focus` events to detect when a user returns to an inactive or hibernated tab.
+  - Proactively triggers background token validation so returning users never encounter stale session failures.
+* **Safe Unmount Teardown**:
+  - All active `setTimeout` timers and event listeners must be safely cleared in `useEffect` cleanup handlers to prevent unmounted component state updates and memory leaks.
+
+### 35.2 Contextual Target Preservation (`LoginButton.tsx`)
+* **Dynamic Target Query Forwarding (`?next=` / `?redirectTo=`)**:
+  - The login trigger reads the active browser location or incoming `searchParams` (`next` or `redirectTo`) and appends it to the login link: `/login?next=${encodeURIComponent(destination)}`.
+  - Preserves deep-link destinations across the entire authentication lifecycle.
+* **Avatar Loading Resilience & Privacy Hygiene**:
+  - Profile avatar images rendered via Next.js `<Image />` or `<img>` MUST include `referrerPolicy="no-referrer"` to protect user privacy and prevent third-party OAuth providers (Google, GitHub) from blocking cross-origin image requests.
+  - Implements an `onError` fallback state: if an external avatar URL fails to load or is blocked by privacy extensions, it gracefully switches to a stylized initial-letter monogram squircle (`w-8 h-8 rounded-lg bg-slate-900 text-white font-bold text-xs flex items-center justify-center`) without displaying broken image placeholders.
+* **Tactile Button Ergonomics**:
+  - Interactive auth buttons feature `touch-manipulation`, active compression (`active:scale-95`), crisp domain icons (`LogIn`, `LogOut`, `User`), and high-contrast typography conforming to the application design system.

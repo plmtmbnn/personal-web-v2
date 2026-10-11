@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { SupabaseConn } from "@/lib/core/supabase";
 import { useRouter } from "next/navigation";
 
 /**
- * AuthProvider - Manages automatic token refresh and auth state changes
- * Should wrap admin/protected pages to ensure sessions stay fresh
+ * AuthProvider - Manages automatic token refresh and auth state changes.
+ * Wraps root layout to guarantee Supabase & Redis sessions stay fresh
+ * with quiet log hygiene, debounced synchronization, and tab-focus refresh.
  */
 export default function AuthProvider({
 	children,
@@ -14,43 +15,84 @@ export default function AuthProvider({
 	children: React.ReactNode;
 }) {
 	const router = useRouter();
+	const isSyncingRef = useRef(false);
+	const lastSyncTimeRef = useRef(0);
+
+	/**
+	 * Synchronizes Redis session with refreshed Supabase token.
+	 * Debounced to prevent simultaneous duplicate requests.
+	 */
+	const syncRedisSession = useCallback(async () => {
+		const now = Date.now();
+		// Debounce: minimum 10 seconds between sync requests
+		if (isSyncingRef.current || now - lastSyncTimeRef.current < 10000) {
+			return;
+		}
+
+		isSyncingRef.current = true;
+		try {
+			const res = await fetch("/api/auth/refresh-session", { method: "POST" });
+			if (res.ok) {
+				lastSyncTimeRef.current = Date.now();
+				router.refresh();
+			}
+		} catch (error) {
+			if (process.env.NODE_ENV === "development") {
+				console.warn("[AuthProvider] Session sync warning:", error);
+			}
+		} finally {
+			isSyncingRef.current = false;
+		}
+	}, [router]);
+
+	/**
+	 * Checks token expiry and proactively refreshes if less than 5 minutes remain.
+	 */
+	const checkAndRefresh = useCallback(async () => {
+		try {
+			const {
+				data: { session },
+				error,
+			} = await SupabaseConn.auth.getSession();
+
+			if (error || !session) return;
+
+			const expiresAt = session.expires_at;
+			const now = Math.floor(Date.now() / 1000);
+			const timeUntilExpiry = expiresAt ? expiresAt - now : 0;
+
+			// Proactively refresh if < 5 minutes (300 seconds) remain
+			if (timeUntilExpiry < 300) {
+				const { error: refreshError } =
+					await SupabaseConn.auth.refreshSession();
+
+				if (!refreshError) {
+					await syncRedisSession();
+				}
+			}
+		} catch {
+			// Silently ignore transient network drops
+		}
+	}, [syncRedisSession]);
 
 	useEffect(() => {
 		// Set up auth state change listener
 		const {
 			data: { subscription },
-		} = SupabaseConn.auth.onAuthStateChange(async (event, _session) => {
-			console.log("[AuthProvider] Auth event:", event);
-
-			// Handle different auth events
+		} = SupabaseConn.auth.onAuthStateChange(async (event, session) => {
 			switch (event) {
 				case "SIGNED_OUT":
-					console.log("[AuthProvider] User signed out, redirecting to login");
 					router.push("/login");
 					break;
 
 				case "TOKEN_REFRESHED":
-					console.log("[AuthProvider] Token refreshed successfully");
-					// Sync Redis session with refreshed token
-					try {
-						await fetch("/api/auth/refresh-session", { method: "POST" });
-						console.log("[AuthProvider] Redis session synced");
-					} catch (error) {
-						console.error(
-							"[AuthProvider] Failed to sync Redis session:",
-							error,
-						);
-					}
-					// Refresh the page to update server-side session
-					router.refresh();
-					break;
-
-				case "USER_UPDATED":
-					console.log("[AuthProvider] User data updated");
+					await syncRedisSession();
 					break;
 
 				case "SIGNED_IN":
-					console.log("[AuthProvider] User signed in");
+					if (session) {
+						await syncRedisSession();
+					}
 					break;
 
 				default:
@@ -58,61 +100,31 @@ export default function AuthProvider({
 			}
 		});
 
+		// Proactive check on tab visibility change (e.g. user unlocks device or focuses tab)
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "visible") {
+				checkAndRefresh();
+			}
+		};
+
+		const handleWindowFocus = () => {
+			checkAndRefresh();
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		window.addEventListener("focus", handleWindowFocus);
+
 		// Manual token refresh check every 5 minutes
-		const refreshInterval = setInterval(
-			async () => {
-				const {
-					data: { session },
-					error,
-				} = await SupabaseConn.auth.getSession();
+		const refreshInterval = setInterval(checkAndRefresh, 5 * 60 * 1000);
 
-				if (error) {
-					console.error("[AuthProvider] Error checking session:", error);
-					return;
-				}
-
-				if (!session) {
-					return;
-				}
-
-				// Check if token is close to expiration (within 5 minutes)
-				const expiresAt = session.expires_at;
-				const now = Math.floor(Date.now() / 1000);
-				const timeUntilExpiry = expiresAt ? expiresAt - now : 0;
-
-				if (timeUntilExpiry < 300) {
-					// Less than 5 minutes
-					console.log("[AuthProvider] Token expiring soon, refreshing...");
-					const { error: refreshError } =
-						await SupabaseConn.auth.refreshSession();
-
-					if (refreshError) {
-						console.error("[AuthProvider] Token refresh failed:", refreshError);
-					} else {
-						console.log("[AuthProvider] Token refreshed proactively");
-						// Sync Redis session
-						try {
-							await fetch("/api/auth/refresh-session", { method: "POST" });
-							console.log("[AuthProvider] Redis session synced");
-						} catch (syncError) {
-							console.error(
-								"[AuthProvider] Failed to sync Redis session:",
-								syncError,
-							);
-						}
-						router.refresh(); // Update server-side state
-					}
-				}
-			},
-			5 * 60 * 1000,
-		); // Check every 5 minutes
-
-		// Cleanup
+		// Cleanup listeners and timers
 		return () => {
 			subscription.unsubscribe();
 			clearInterval(refreshInterval);
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+			window.removeEventListener("focus", handleWindowFocus);
 		};
-	}, [router]);
+	}, [router, checkAndRefresh, syncRedisSession]);
 
 	return <>{children}</>;
 }

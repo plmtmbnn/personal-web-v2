@@ -64,11 +64,23 @@ export function scoreIhsg(
 
 	// 1. IHSG vs 200-Day Moving Average
 	const ma200 = sma(ihsgHistory, 200);
+	const maHysteresis = thresholds.technical?.maHysteresisPct ?? 1.0;
+
 	if (ihsgPrice != null && ma200 != null) {
 		const dist200 = distancePct(ihsgPrice, ma200);
-		const isAbove = dist200 != null && dist200 >= 0;
-		const score = isAbove ? 85 : 20;
-		const dir = isAbove ? "bullish" : "bearish";
+		let score = 50;
+		let dir: "bullish" | "bearish" | "neutral" = "neutral";
+		let note = `Trading within consolidation buffer (±${maHysteresis}%) of the 200-day baseline.`;
+
+		if (dist200 != null && dist200 >= maHysteresis) {
+			score = 85;
+			dir = "bullish";
+			note = `Trading +${dist200.toFixed(1)}% above the 200-day baseline. Primary structural bull trend intact.`;
+		} else if (dist200 != null && dist200 <= -maHysteresis) {
+			score = 20;
+			dir = "bearish";
+			note = `Trading ${dist200.toFixed(1)}% below the 200-day baseline. Primary macro downtrend.`;
+		}
 
 		factors.push({
 			key: "ihsg_200ma",
@@ -83,9 +95,7 @@ export function scoreIhsg(
 			score,
 			weight: wMa200,
 			direction: dir,
-			note: isAbove
-				? `Trading +${dist200?.toFixed(1)}% above the 200-day baseline. Primary structural bull trend intact.`
-				: `Trading ${dist200?.toFixed(1)}% below the 200-day baseline. Primary macro downtrend.`,
+			note,
 			asOf: ihsgQuote?.lastTime ?? undefined,
 		});
 	}
@@ -95,7 +105,8 @@ export function scoreIhsg(
 	const slope50 = maSlopePct(ihsgHistory, 50, 10);
 	if (ihsgPrice != null && ma50 != null) {
 		const dist50 = distancePct(ihsgPrice, ma50);
-		const isAbove50 = dist50 != null && dist50 >= 0;
+		const isAbove50 = dist50 != null && dist50 >= maHysteresis;
+		const isBelow50 = dist50 != null && dist50 <= -maHysteresis;
 		const isRising = slope50 != null && slope50 > 0;
 
 		let score = 50;
@@ -106,27 +117,30 @@ export function scoreIhsg(
 		} else if (isAbove50) {
 			score = 65;
 			dir = "bullish";
-		} else if (isRising) {
-			score = 40;
-			dir = "neutral";
-		} else {
+		} else if (isBelow50) {
 			score = 25;
 			dir = "bearish";
+		} else if (isRising) {
+			score = 55;
+			dir = "neutral";
+		} else {
+			score = 45;
+			dir = "neutral";
 		}
 
 		factors.push({
 			key: "ihsg_50ma",
 			label: "IHSG Intermediate Trend (50-Day MA)",
-			valueStr: `${isAbove50 ? "Above" : "Below"} (${dist50 != null && dist50 > 0 ? "+" : ""}${dist50?.toFixed(1)}%)`,
+			valueStr: `${dist50 != null && dist50 >= 0 ? "Above" : "Below"} (${dist50 != null && dist50 > 0 ? "+" : ""}${dist50?.toFixed(1)}%)`,
 			score,
 			weight: wMa50,
 			direction: dir,
 			note:
 				isAbove50 && isRising
 					? "Intermediate trend is upward sloping with positive price momentum."
-					: !isAbove50
+					: isBelow50
 						? "Price trades below intermediate average; swing rallies face resistance."
-						: "Intermediate trend is flat or losing momentum.",
+						: "Intermediate trend is consolidating near the 50-day average.",
 			asOf: ihsgQuote?.lastTime ?? undefined,
 		});
 	}
@@ -137,6 +151,9 @@ export function scoreIhsg(
 	const usdIdrHistory = data.markets.history?.["IDR=X"]?.points ?? [];
 	const idrMa50 = sma(usdIdrHistory, 50);
 
+	const stressLevel = thresholds.usdIdr?.stressLevel ?? 16400;
+	const watchLevel = thresholds.usdIdr?.watchLevel ?? 15900;
+
 	if (usdIdrPrice != null) {
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
@@ -145,26 +162,23 @@ export function scoreIhsg(
 		const idrDist = idrMa50 != null ? distancePct(usdIdrPrice, idrMa50) : null;
 
 		// Dual-condition evaluation: absolute level + 50-day MA momentum
-		if (usdIdrPrice >= 16400) {
-			// Restrictive/Stress Zone (> Rp 16.400)
+		if (usdIdrPrice >= stressLevel) {
+			// Restrictive/Stress Zone (> stressLevel)
 			if (idrDist != null && idrDist < -0.5) {
 				score = 50;
 				dir = "neutral";
-				note =
-					"Rupiah recovering below 50D MA but remains in elevated stress territory (> Rp 16.400).";
+				note = `Rupiah recovering below 50D MA but remains in elevated stress territory (> Rp ${stressLevel.toLocaleString("id-ID")}).`;
 			} else if (idrDist != null && idrDist > 0.5) {
 				score = 20;
 				dir = "bearish";
-				note =
-					"Severe Rupiah depreciation above 50D MA in stress territory (> Rp 16.400); triggers foreign capital flight.";
+				note = `Severe Rupiah depreciation above 50D MA in stress territory (> Rp ${stressLevel.toLocaleString("id-ID")}); triggers foreign capital flight.`;
 			} else {
 				score = 25;
 				dir = "bearish";
-				note =
-					"Rupiah remains elevated above Rp 16.400; currency headwinds pressure valuations.";
+				note = `Rupiah remains elevated above Rp ${stressLevel.toLocaleString("id-ID")}; currency headwinds pressure valuations.`;
 			}
-		} else if (usdIdrPrice >= 15900) {
-			// Watch Zone (Rp 15.900 - 16.400)
+		} else if (usdIdrPrice >= watchLevel) {
+			// Watch Zone (watchLevel - stressLevel)
 			if (idrDist != null && idrDist < -0.5) {
 				score = 75;
 				dir = "bullish";
@@ -181,7 +195,7 @@ export function scoreIhsg(
 				note = "Rupiah consolidating within intermediate tolerance range.";
 			}
 		} else {
-			// Favorable Zone (< Rp 15.900)
+			// Favorable Zone (< watchLevel)
 			if (idrDist != null && idrDist < -0.5) {
 				score = 85;
 				dir = "bullish";
@@ -195,8 +209,7 @@ export function scoreIhsg(
 			} else {
 				score = 75;
 				dir = "bullish";
-				note =
-					"Favorable Rupiah exchange rate (< Rp 15.900) anchors domestic market stability.";
+				note = `Favorable Rupiah exchange rate (< Rp ${watchLevel.toLocaleString("id-ID")}) anchors domestic market stability.`;
 			}
 		}
 
@@ -306,27 +319,33 @@ export function scoreIhsg(
 	// 6. Foreign Institutional Net Flow
 	if (data.markets.ihsgFlows?.streakDays != null) {
 		const streak = data.markets.ihsgFlows.streakDays;
+		const net5d = data.markets.ihsgFlows.netBuySell5dIdr;
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
 		if (streak >= 3) {
-			score = 85;
+			score = net5d != null && net5d > 0 ? 85 : 75;
 			dir = "bullish";
 		} else if (streak <= -3) {
-			score = 20;
+			score = net5d != null && net5d < 0 ? 20 : 30;
 			dir = "bearish";
 		} else {
 			score = 50;
 			dir = "neutral";
 		}
 
+		const net5dB =
+			net5d != null
+				? ` (${net5d >= 0 ? "+" : ""}${(net5d / 1e9).toFixed(0)}B 5D)`
+				: "";
+
 		factors.push({
 			key: "ihsg_foreign_flow",
 			label: "Foreign Institutional Flow",
 			valueStr:
 				streak > 0
-					? `+${streak}D Inflow`
+					? `+${streak}D Inflow${net5dB}`
 					: streak < 0
-						? `${Math.abs(streak)}D Outflow`
+						? `${Math.abs(streak)}D Outflow${net5dB}`
 						: "Neutral",
 			score,
 			weight: wForeignFlow,
@@ -470,6 +489,55 @@ export function scoreIhsg(
 		};
 	}
 
+	// Dual-Axis: Trend / Action Gate vs Valuation / Accumulation Pace
+	const trendFactorKeys = [
+		"ihsg_200ma",
+		"ihsg_50ma",
+		"usdidr_trend",
+		"global_liquidity_carry",
+	];
+	const valuationFactorKeys = [
+		"ihsg_drawdown",
+		"ihsg_foreign_flow",
+		"bi_rate",
+		"ihsg_seasonality",
+	];
+
+	const trendFactors = factors.filter((f) => trendFactorKeys.includes(f.key));
+	const valuationFactors = factors.filter((f) =>
+		valuationFactorKeys.includes(f.key),
+	);
+
+	const trendWeight = trendFactors.reduce((sum, f) => sum + f.weight, 0);
+	const trendScore =
+		trendWeight > 0
+			? Math.round(
+					trendFactors.reduce((sum, f) => sum + f.score * f.weight, 0) /
+						trendWeight,
+				)
+			: compositeScore;
+
+	const valWeight = valuationFactors.reduce((sum, f) => sum + f.weight, 0);
+	const valuationScore =
+		valWeight > 0
+			? Math.round(
+					valuationFactors.reduce((sum, f) => sum + f.score * f.weight, 0) /
+						valWeight,
+				)
+			: 50;
+
+	const { state: trendState } = determineState(
+		trendScore,
+		coverage,
+		thresholds,
+	);
+	const valuationState: "accumulation" | "fair" | "distribution" | "neutral" =
+		streak != null && streak >= 3
+			? "accumulation"
+			: streak != null && streak <= -3
+				? "distribution"
+				: "neutral";
+
 	return {
 		id: "ihsg",
 		title: "IHSG Market Regime",
@@ -483,5 +551,11 @@ export function scoreIhsg(
 		factors,
 		contextFlags,
 		asymmetryZone,
+		dualAxis: {
+			trendState,
+			valuationState,
+			trendScore,
+			valuationScore,
+		},
 	};
 }

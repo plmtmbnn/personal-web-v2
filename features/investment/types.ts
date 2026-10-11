@@ -113,7 +113,9 @@ export type SourceKey =
 	| "fred"
 	| "history"
 	| "defillama"
-	| "okx";
+	| "okx"
+	| "onchain"
+	| "idxFlows";
 
 export interface SourceStatus {
 	ok: boolean;
@@ -130,7 +132,8 @@ export interface IhsgForeignFlowSnapshot {
 }
 
 export interface CryptoOnChainSnapshot {
-	mvrvZScore?: number | null; // e.g. 1.8 (fair), > 4.0 (cycle top danger), < 0.1 (historical accumulation floor)
+	mvrvZScore?: number | null; // Kept for backwards compatibility
+	mvrvRatio?: number | null; // Realized MVRV Ratio (< 1.0 accumulation, > 2.8 distribution)
 	nupl?: number | null; // Net Unrealized Profit/Loss (-1.0 to 1.0)
 	asOf?: string;
 	updatedAt?: number;
@@ -195,6 +198,13 @@ export interface MarketRegimeScore {
 		title: string;
 		description: string;
 	} | null;
+	/** Dual-Axis separation: Trend vs Valuation */
+	dualAxis?: {
+		trendState: RegimeState;
+		valuationState: "accumulation" | "fair" | "distribution" | "neutral";
+		trendScore: number;
+		valuationScore: number;
+	};
 }
 
 export type ActionPermission =
@@ -203,12 +213,23 @@ export type ActionPermission =
 	| "not_allowed"
 	| "paused";
 
+export interface SizingMandateDetails {
+	maxRiskPerTradePct: number;
+	maxPortfolioExposurePct: number;
+	cashTargetPct: number;
+	isTradingLocked: boolean;
+	label: string;
+	state?: RegimeState;
+	dcaPace?: "normal" | "half_pace" | "tranche_only" | "paused";
+}
+
 export interface MarketPermissions {
 	scalp: { status: ActionPermission; label: string; reason: string };
 	swing: { status: ActionPermission; label: string; reason: string };
 	dca: { status: ActionPermission; label: string; reason: string };
 	maxExposure: string;
 	riskPerTrade?: string;
+	mandate?: SizingMandateDetails;
 }
 
 export interface PermissionsMatrixData {

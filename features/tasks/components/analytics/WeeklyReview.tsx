@@ -100,36 +100,36 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 const GRADE_CONFIG = {
 	"A+": {
 		bg: "bg-emerald-500",
-		text: "!text-emerald-400",
-		badge: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+		text: "text-emerald-600",
+		badge: "bg-emerald-50 text-emerald-700 border-emerald-200/60",
 		ring: "#10b981",
 		label: "Elite Execution",
 	},
 	A: {
 		bg: "bg-teal-500",
-		text: "!text-teal-400",
-		badge: "bg-teal-400/20 text-teal-300 border-teal-400/30",
+		text: "text-teal-600",
+		badge: "bg-teal-50 text-teal-700 border-teal-200/60",
 		ring: "#14b8a6",
 		label: "High Performer",
 	},
 	B: {
 		bg: "bg-blue-500",
-		text: "!text-blue-400",
-		badge: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+		text: "text-blue-600",
+		badge: "bg-blue-50 text-blue-700 border-blue-200/60",
 		ring: "#3b82f6",
 		label: "Solid Progress",
 	},
 	C: {
 		bg: "bg-amber-500",
-		text: "!text-amber-400",
-		badge: "bg-amber-400/20 text-amber-300 border-amber-400/30",
+		text: "text-amber-600",
+		badge: "bg-amber-50 text-amber-700 border-amber-200/60",
 		ring: "#f59e0b",
 		label: "Moderate Run",
 	},
 	D: {
 		bg: "bg-rose-500",
-		text: "!text-rose-400",
-		badge: "bg-rose-400/20 text-rose-300 border-rose-400/30",
+		text: "text-rose-600",
+		badge: "bg-rose-50 text-rose-700 border-rose-200/60",
 		ring: "#f43f5e",
 		label: "Needs Recovery",
 	},
@@ -194,20 +194,20 @@ export default function WeeklyReview() {
 		return (
 			<div className="space-y-6 sm:space-y-8 animate-pulse pointer-events-none select-none">
 				{/* Hero Banner Skeleton */}
-				<div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 border border-slate-800 p-8 sm:p-10 h-64 sm:h-72 flex flex-col justify-between">
+				<div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-white border border-slate-200/80 p-8 sm:p-10 h-64 sm:h-72 flex flex-col justify-between shadow-xs">
 					<div className="flex justify-between items-start gap-4">
 						<div className="space-y-4">
-							<div className="h-5 w-40 bg-slate-800 rounded-full" />
+							<div className="h-5 w-40 bg-slate-100 rounded-full" />
 							<div className="space-y-2">
-								<div className="h-8 w-64 bg-slate-800 rounded-lg" />
-								<div className="h-8 w-48 bg-slate-800 rounded-lg" />
+								<div className="h-8 w-64 bg-slate-200 rounded-lg" />
+								<div className="h-8 w-48 bg-slate-200 rounded-lg" />
 							</div>
 						</div>
-						<div className="w-20 h-20 bg-slate-800 rounded-3xl" />
+						<div className="w-20 h-20 bg-slate-100 rounded-3xl" />
 					</div>
 					<div className="flex gap-2">
-						<div className="h-5 w-24 bg-slate-800 rounded-full" />
-						<div className="h-5 w-32 bg-slate-800 rounded-full" />
+						<div className="h-5 w-24 bg-slate-100 rounded-full" />
+						<div className="h-5 w-32 bg-slate-100 rounded-full" />
 					</div>
 				</div>
 
@@ -323,19 +323,9 @@ export default function WeeklyReview() {
 					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5 }}
-					className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 shadow-2xl border border-slate-800"
+					className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-white shadow-xs border border-slate-200/80 p-8 sm:p-10"
 				>
-					{/* Decorative grid lines */}
-					<div
-						className="absolute inset-0 opacity-[0.03] pointer-events-none"
-						style={{
-							backgroundImage:
-								"linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)",
-							backgroundSize: "40px 40px",
-						}}
-					/>
-
-					<div className="relative z-10 p-8 sm:p-10">
+					<div className="relative z-10">
 						<div className="flex flex-col lg:flex-row lg:items-center gap-8 lg:gap-12">
 							{/* Left: Title & context */}
 							<div className="flex-1 space-y-4">
@@ -348,40 +338,38 @@ export default function WeeklyReview() {
 									</span>
 									<InfoTooltip
 										text="Composite weekly evaluation assessing completion velocity, focus time, and postponement discipline into a standardized letter grade."
-										iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+										iconColor="text-slate-400 hover:text-slate-700 group-hover/tip:text-slate-700"
 										size="xs"
 									/>
 								</div>
 
 								<div>
-									<h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-none">
-										Weekly
-										<br />
-										<span className={`${grade.text}`}>Review</span>
+									<h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+										Weekly <span className={`${grade.text}`}>Review</span>
 									</h2>
 								</div>
 
-								<p className="!text-slate-400 text-sm font-medium leading-relaxed max-w-sm">
+								<p className="text-slate-500 text-sm font-medium leading-relaxed max-w-sm">
 									{stats.feedbackMessage}
 								</p>
 
 								{/* Quick tag pills */}
 								<div className="flex flex-wrap gap-2 pt-1">
-									<span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-black text-slate-300 uppercase tracking-widest">
-										<Target className="w-2.5 h-2.5" />
+									<span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-full text-[9px] font-black text-slate-600 uppercase tracking-widest">
+										<Target className="w-2.5 h-2.5 text-slate-500" />
 										{stats.completionRate}% Completion Rate
 										<InfoTooltip
 											text="Ratio of planned weekly objectives successfully marked completed."
-											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											iconColor="text-slate-400 hover:text-slate-700 group-hover/tip:text-slate-700"
 											size="xs"
 										/>
 									</span>
-									<span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-black text-slate-300 uppercase tracking-widest">
-										<Flame className="w-2.5 h-2.5 text-orange-400" />
+									<span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-full text-[9px] font-black text-slate-600 uppercase tracking-widest">
+										<Flame className="w-2.5 h-2.5 text-orange-500" />
 										{stats.activeCategory} Most Active
 										<InfoTooltip
 											text="Operational domain with the highest volume of completed tasks and focus time."
-											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											iconColor="text-slate-400 hover:text-slate-700 group-hover/tip:text-slate-700"
 											size="xs"
 										/>
 									</span>
@@ -398,10 +386,10 @@ export default function WeeklyReview() {
 										color={grade.ring}
 									/>
 									<div className="absolute inset-0 flex flex-col items-center justify-center">
-										<span className="text-2xl font-black text-white leading-none">
+										<span className="text-2xl font-black text-slate-900 leading-none">
 											<CountUp target={stats.completionRate} suffix="%" />
 										</span>
-										<span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-0.5">
+										<span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
 											done
 										</span>
 									</div>
@@ -410,7 +398,7 @@ export default function WeeklyReview() {
 								{/* Grade box */}
 								<div className="text-center">
 									<div
-										className={`w-20 h-20 rounded-3xl flex items-center justify-center text-5xl font-black border-2 ${grade.badge} shadow-xl`}
+										className={`w-20 h-20 rounded-3xl flex items-center justify-center text-5xl font-black border-2 ${grade.badge} shadow-xs`}
 									>
 										{stats.performanceGrade}
 									</div>
@@ -422,7 +410,7 @@ export default function WeeklyReview() {
 										</p>
 										<InfoTooltip
 											text="Academic performance grade benchmarked against completion efficiency and postponement frequency."
-											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											iconColor="text-slate-400 hover:text-slate-700 group-hover/tip:text-slate-700"
 											size="xs"
 										/>
 									</div>
@@ -433,34 +421,34 @@ export default function WeeklyReview() {
 							<div className="flex flex-row lg:flex-col gap-4 lg:gap-5 flex-shrink-0">
 								<div className="text-center lg:text-right">
 									<div className="flex items-center justify-center lg:justify-end gap-1">
-										<p className="text-[9px] font-black !text-white uppercase tracking-widest">
+										<p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
 											Tasks Completed
 										</p>
 										<InfoTooltip
 											text="Total count of discrete tasks moved to Done status during this weekly review cycle."
-											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											iconColor="text-slate-400 hover:text-slate-700 group-hover/tip:text-slate-700"
 											size="xs"
 											align="right"
 										/>
 									</div>
-									<p className="text-2xl font-black !text-white mt-0.5">
+									<p className="text-2xl font-black text-slate-900 mt-0.5">
 										<CountUp target={stats.completedCount} />
 									</p>
 								</div>
-								<div className="w-px lg:w-full h-full lg:h-px bg-white/5" />
+								<div className="w-px lg:w-full h-full lg:h-px bg-slate-100" />
 								<div className="text-center lg:text-right">
 									<div className="flex items-center justify-center lg:justify-end gap-1">
-										<p className="text-[9px] font-black !text-white uppercase tracking-widest">
+										<p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
 											Effort Neutralized
 										</p>
 										<InfoTooltip
 											text="Sum of all estimated focus duration cleared through completed tasks this week."
-											iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
+											iconColor="text-slate-400 hover:text-slate-700 group-hover/tip:text-slate-700"
 											size="xs"
 											align="right"
 										/>
 									</div>
-									<p className="text-2xl font-black !text-white mt-0.5">
+									<p className="text-2xl font-black text-slate-900 mt-0.5">
 										{formatMinutes(stats.effortNeutralized)}
 									</p>
 								</div>

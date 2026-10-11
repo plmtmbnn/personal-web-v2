@@ -35,7 +35,7 @@ const getStateBadge = (state: RegimeState) => {
 export default function MarketPlaybook({
 	playbooks,
 	compassData,
-	scores,
+	scores: _scores,
 }: {
 	playbooks: {
 		ihsg: MarketPlaybookScript;
@@ -83,9 +83,7 @@ export default function MarketPlaybook({
 			}
 		}
 
-		const currentScore = isIhsg ? scores?.ihsg : scores?.crypto;
-		const sizingMandate =
-			currentScore != null ? getSizingMandate(currentScore) : null;
+		const sizingMandate = getSizingMandate(script.state);
 
 		let volatilityAlert = null;
 		const historySymbol = isIhsg ? "^JKSE" : "BTC-USD";

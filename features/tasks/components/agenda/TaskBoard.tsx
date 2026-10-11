@@ -12,6 +12,7 @@ import {
 	updateTaskStatus,
 	updateTask,
 	deleteTask,
+	reorderTasks,
 } from "@/features/tasks/actions/tasks";
 import TaskItem from "./TaskItem";
 import { TASK_STATUS_CONFIG } from "@/features/tasks/constants";
@@ -20,12 +21,14 @@ import CustomModal from "@/features/shared/components/CustomModal";
 import { useState } from "react";
 
 interface TaskBoardProps {
+	overdueTasks?: Task[];
 	todayTasks: Task[];
 	upcomingTasks: Task[];
 	completedTasks: Task[];
 }
 
 export default function TaskBoard({
+	overdueTasks = [],
 	todayTasks,
 	upcomingTasks,
 	completedTasks,
@@ -39,13 +42,18 @@ export default function TaskBoard({
 	// Combine all active and completed tasks into one flat array
 	const allTasks = useMemo(() => {
 		const map = new Map<string, Task>();
-		for (const t of [...todayTasks, ...upcomingTasks, ...completedTasks]) {
+		for (const t of [
+			...overdueTasks,
+			...todayTasks,
+			...upcomingTasks,
+			...completedTasks,
+		]) {
 			if (!map.has(t.id)) {
 				map.set(t.id, t);
 			}
 		}
 		return Array.from(map.values());
-	}, [todayTasks, upcomingTasks, completedTasks]);
+	}, [overdueTasks, todayTasks, upcomingTasks, completedTasks]);
 
 	// Optimistic state handles toggle, delete, update, and drag-and-drop
 	const [optimisticTasks, addOptimisticAction] = useOptimistic<
@@ -62,6 +70,12 @@ export default function TaskBoard({
 							}
 						: t,
 				);
+			case "reorder_column": {
+				const otherTasks = state.filter(
+					(t) => (t.status || "todo") !== payload.status,
+				);
+				return [...otherTasks, ...payload.reorderedTasks];
+			}
 			case "toggle":
 				return state.map((t) =>
 					t.id === payload.taskId
@@ -112,24 +126,49 @@ export default function TaskBoard({
 			return;
 		}
 
-		const newStatus = destination.droppableId as TaskStatus;
+		const destStatus = destination.droppableId as TaskStatus;
 
-		startTransition(() => {
+		// 1. Same-column reordering: persist card positions
+		if (source.droppableId === destination.droppableId) {
+			const columnTasks = Array.from(columns[destStatus] || []);
+			const [moved] = columnTasks.splice(source.index, 1);
+			columnTasks.splice(destination.index, 0, moved);
+
+			startTransition(async () => {
+				addOptimisticAction({
+					action: "reorder_column",
+					payload: {
+						status: destStatus,
+						reorderedTasks: columnTasks,
+					},
+				});
+				try {
+					await reorderTasks(columnTasks.map((t) => t.id));
+				} catch (err) {
+					console.error("Failed to reorder column", err);
+					showError("Failed to save card positions.");
+				}
+			});
+			return;
+		}
+
+		// 2. Inter-column move: update status and sync position
+		startTransition(async () => {
 			addOptimisticAction({
 				action: "move",
 				payload: {
 					id: draggableId,
-					status: newStatus,
+					status: destStatus,
 				},
 			});
-		});
 
-		try {
-			await updateTaskStatus(draggableId, newStatus);
-		} catch (err) {
-			console.error("Failed to update status", err);
-			showError("Failed to move task. Please try again.");
-		}
+			try {
+				await updateTaskStatus(draggableId, destStatus);
+			} catch (err) {
+				console.error("Failed to update status", err);
+				showError("Failed to move task. Please try again.");
+			}
+		});
 	};
 
 	const handleDeleteRequest = useCallback((taskId: string) => {

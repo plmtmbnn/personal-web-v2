@@ -32,6 +32,8 @@ export interface InvestmentThresholds {
 		overnightSelloffPct: number;
 	};
 	usdIdr: {
+		stressLevel: number;
+		watchLevel: number;
 		overnightSurgePct: number;
 	};
 
@@ -45,9 +47,15 @@ export interface InvestmentThresholds {
 		altcoinBtcDominanceMax: number;
 		mvrv: {
 			accumulation: number;
+			fairValueMax: number;
 			overheat: number;
 			extremeOverheat: number;
 		};
+	};
+
+	// Technical Filters & Buffers
+	technical: {
+		maHysteresisPct: number;
 	};
 
 	// Macro Liquidity & Policy Indicators
@@ -116,6 +124,8 @@ export const DEFAULT_THRESHOLDS: InvestmentThresholds = {
 		overnightSelloffPct: -1.5,
 	},
 	usdIdr: {
+		stressLevel: 16400,
+		watchLevel: 15900,
 		overnightSurgePct: 0.6,
 	},
 	crypto: {
@@ -127,9 +137,13 @@ export const DEFAULT_THRESHOLDS: InvestmentThresholds = {
 		altcoinBtcDominanceMax: 54.0,
 		mvrv: {
 			accumulation: 1.0,
-			overheat: 3.2,
-			extremeOverheat: 3.7,
+			fairValueMax: 2.4,
+			overheat: 2.8,
+			extremeOverheat: 3.2,
 		},
+	},
+	technical: {
+		maHysteresisPct: 1.0,
 	},
 	scoring: {
 		riskOnMin: 65,

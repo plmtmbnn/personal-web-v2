@@ -4,6 +4,7 @@ import type {
 	MarketPermissions,
 } from "../../types";
 import type { InvestmentThresholds } from "../../config/thresholds";
+import { getSizingMandate } from "./sizing";
 
 export function derivePermissions(
 	globalRegime: MarketRegimeScore,
@@ -21,19 +22,33 @@ export function derivePermissions(
 		globalRegime.state === "stress" || globalRegime.state === "defensive";
 
 	const summaryNotes: string[] = [];
-	if (globalStressActive) {
+	if (globalRegime.state === "stress") {
 		summaryNotes.push(
-			"Global Liquidity is in defensive/stress state — active position sizing across all markets capped.",
+			"Global Macro Liquidity in stress state — cross-asset risk downgraded to capital defense.",
+		);
+	} else if (globalRegime.state === "defensive") {
+		summaryNotes.push(
+			"Global Liquidity is defensive — tactical position sizing across all markets capped.",
 		);
 	}
 
 	// ── 1. IHSG Permissions ─────────────────────────────────────
 	let ihsgEffectiveState = ihsgRegime.state;
-	if (globalRegime.state === "stress" && ihsgEffectiveState === "risk_on") {
+	if (globalStressActive && ihsgEffectiveState === "risk_on") {
 		ihsgEffectiveState = "selective";
 	}
 
+	const isIhsgVolExpanded =
+		options?.ihsgRealizedVol != null && options.ihsgRealizedVol > 26;
+	if (isIhsgVolExpanded && ihsgEffectiveState === "risk_on") {
+		ihsgEffectiveState = "selective";
+		summaryNotes.push(
+			"IHSG realized volatility expanded (> 26%) — swing exposure capped.",
+		);
+	}
+
 	let ihsgPerms: MarketPermissions;
+	const ihsgMandate = getSizingMandate(ihsgEffectiveState);
 
 	switch (ihsgEffectiveState) {
 		case "risk_on":
@@ -55,8 +70,10 @@ export function derivePermissions(
 					label: "Normal Pace",
 					reason: "Accumulate core blue-chip tranches on regular schedule.",
 				},
-				maxExposure: "100% of Trading Bucket (Risk max 1% per setup)",
+				maxExposure:
+					"15% Tactical Swing Cap (100% Active) | 45% Core Compounding",
 				riskPerTrade: "Risk max 1.0% per setup",
+				mandate: ihsgMandate,
 			};
 			break;
 
@@ -71,15 +88,17 @@ export function derivePermissions(
 					status: "selective",
 					label: "Selective",
 					reason:
-						"A+ setups only above 200D MA. Reduce sizing to 0.5% - 0.75% risk per trade.",
+						"A+ setups only above 200D MA. Reduce sizing to 0.5% risk per trade.",
 				},
 				dca: {
 					status: "allowed",
 					label: "Normal Pace",
 					reason: "Continue scheduled blue-chip DCA near key support levels.",
 				},
-				maxExposure: "75% of Trading Bucket Cap",
-				riskPerTrade: "Risk max 0.5% - 0.75% per setup",
+				maxExposure:
+					"10% Tactical Swing Cap (Selective) | 45% Core Compounding",
+				riskPerTrade: "Risk max 0.5% per setup",
+				mandate: ihsgMandate,
 			};
 			break;
 
@@ -102,8 +121,32 @@ export function derivePermissions(
 					reason:
 						"Halve monthly DCA pace to preserve dry powder in SBN / cash.",
 				},
-				maxExposure: "50% of Core Allocation — Zero Active Swings",
-				riskPerTrade: "0% (Swing Trading Closed)",
+				maxExposure: "0% Tactical Swings (Closed) | 55%+ Safe Preservation",
+				riskPerTrade: "0% (Trading Closed)",
+				mandate: ihsgMandate,
+			};
+			break;
+
+		case "insufficient":
+			ihsgPerms = {
+				scalp: {
+					status: "not_allowed",
+					label: "Data Degraded",
+					reason: "Data telemetry incomplete. Pause active trade entries.",
+				},
+				swing: {
+					status: "not_allowed",
+					label: "Data Degraded",
+					reason: "Coverage below verification threshold. Stand aside.",
+				},
+				dca: {
+					status: "selective",
+					label: "Scheduled Only",
+					reason: "Maintain pre-existing automated DCA schedules.",
+				},
+				maxExposure: "0% Active Risk (Data Offline)",
+				riskPerTrade: "0% (Data Offline)",
+				mandate: ihsgMandate,
 			};
 			break;
 
@@ -112,7 +155,7 @@ export function derivePermissions(
 				scalp: {
 					status: "not_allowed",
 					label: "Not Allowed",
-					reason: "Systemic volatility and selling pressure.",
+					reason: "Systemic volatility and severe selling pressure.",
 				},
 				swing: {
 					status: "not_allowed",
@@ -128,17 +171,28 @@ export function derivePermissions(
 				},
 				maxExposure: "Trading Bucket Frozen (0% active risk)",
 				riskPerTrade: "0% (Trading Frozen)",
+				mandate: ihsgMandate,
 			};
 			break;
 	}
 
 	// ── 2. Crypto (BTC / ETH Majors) Permissions ────────────────
 	let cryptoEffectiveState = cryptoRegime.state;
-	if (globalRegime.state === "stress" && cryptoEffectiveState === "risk_on") {
+	if (globalStressActive && cryptoEffectiveState === "risk_on") {
 		cryptoEffectiveState = "selective";
 	}
 
+	const isBtcVolExpanded =
+		options?.btcRealizedVol != null && options.btcRealizedVol > 60;
+	if (isBtcVolExpanded && cryptoEffectiveState === "risk_on") {
+		cryptoEffectiveState = "selective";
+		summaryNotes.push(
+			"Bitcoin realized volatility elevated (> 60%) — swing sizing constrained.",
+		);
+	}
+
 	let cryptoPerms: MarketPermissions;
+	const cryptoMandate = getSizingMandate(cryptoEffectiveState);
 
 	switch (cryptoEffectiveState) {
 		case "risk_on":
@@ -159,8 +213,9 @@ export function derivePermissions(
 					label: "Normal Pace",
 					reason: "Regular DCA into BTC/ETH cold storage.",
 				},
-				maxExposure: "Standard Allocation (<= 20% of net wealth)",
+				maxExposure: "15% Swing Allocation | 45% Core Wealth Allocation",
 				riskPerTrade: "Risk max 1.0% per setup (Spot only)",
+				mandate: cryptoMandate,
 			};
 			break;
 
@@ -183,8 +238,9 @@ export function derivePermissions(
 					label: "Normal Pace",
 					reason: "Disciplined accumulation near range support.",
 				},
-				maxExposure: "15% of net wealth max",
+				maxExposure: "10% Swing Allocation (Selective) | Hold Stablecoins",
 				riskPerTrade: "Risk max 0.5% per setup (Strict stop)",
+				mandate: cryptoMandate,
 			};
 			break;
 
@@ -206,8 +262,32 @@ export function derivePermissions(
 					label: "Slow (Half Pace)",
 					reason: "Accumulate Bitcoin spot only at 50% normal pace.",
 				},
-				maxExposure: "10% of net wealth — Hold Stablecoins",
+				maxExposure: "0% Tactical Swings | Hold Stablecoins",
 				riskPerTrade: "0% (Spot DCA only at deep cycle)",
+				mandate: cryptoMandate,
+			};
+			break;
+
+		case "insufficient":
+			cryptoPerms = {
+				scalp: {
+					status: "not_allowed",
+					label: "Data Degraded",
+					reason: "Crypto flow telemetry incomplete.",
+				},
+				swing: {
+					status: "not_allowed",
+					label: "Data Degraded",
+					reason: "Incomplete on-chain coverage. Stand aside.",
+				},
+				dca: {
+					status: "selective",
+					label: "Scheduled Only",
+					reason: "Scheduled cold-storage spot DCA continues.",
+				},
+				maxExposure: "0% Active Risk (Data Offline)",
+				riskPerTrade: "0% (Data Offline)",
+				mandate: cryptoMandate,
 			};
 			break;
 
@@ -231,13 +311,14 @@ export function derivePermissions(
 				},
 				maxExposure: "Trading Frozen — Maximum Stablecoin Defense",
 				riskPerTrade: "0% (Trading Frozen)",
+				mandate: cryptoMandate,
 			};
 			break;
 	}
 
 	// ── 3. Altcoin Gating Protocol ──────────────────────────────
 	// Hard Gate: Altcoins are locked unless BTC is above 200D MA and Dominance is below cap
-	const btcDom = options?.btcDominance ?? 55;
+	const btcDom = options?.btcDominance ?? null;
 	const btcAbove200 = options?.btcAbove200Ma ?? false;
 
 	let altcoinPerms: MarketPermissions;
@@ -262,8 +343,12 @@ export function derivePermissions(
 			},
 			maxExposure: "0% (Hard Locked Below BTC 200D MA)",
 			riskPerTrade: "0% (Hard Locked)",
+			mandate: getSizingMandate("defensive"),
 		};
-	} else if (btcDom > thresholds.crypto.altcoinBtcDominanceMax) {
+	} else if (
+		btcDom != null &&
+		btcDom > thresholds.crypto.altcoinBtcDominanceMax
+	) {
 		altcoinPerms = {
 			scalp: {
 				status: "not_allowed",
@@ -282,9 +367,10 @@ export function derivePermissions(
 			},
 			maxExposure: "0% (Capital Concentrating in BTC)",
 			riskPerTrade: "0% (Concentrated in BTC)",
+			mandate: getSizingMandate("defensive"),
 		};
-	} else if (cryptoRegime.state === "risk_on") {
-		// Full Alt-Season expansion conditions met
+	} else if (cryptoEffectiveState === "risk_on") {
+		// Full Alt-Season expansion conditions met (respecting global downgrade)
 		altcoinPerms = {
 			scalp: {
 				status: "selective",
@@ -306,8 +392,17 @@ export function derivePermissions(
 			},
 			maxExposure: "Hard Cap <= 3.0% of Total Wealth",
 			riskPerTrade: "Risk max 0.5% per setup (Strict trailing stop)",
+			mandate: {
+				maxRiskPerTradePct: 0.5,
+				maxPortfolioExposurePct: 3.0,
+				cashTargetPct: 40.0,
+				isTradingLocked: false,
+				label: "Alt-Season Expansion (Max 3.0% Wealth Cap)",
+				state: "risk_on",
+				dcaPace: "paused",
+			},
 		};
-	} else if (cryptoRegime.state === "selective") {
+	} else if (cryptoEffectiveState === "selective") {
 		// BTC range consolidation with low dominance -> tactical major rotation
 		altcoinPerms = {
 			scalp: {
@@ -329,6 +424,15 @@ export function derivePermissions(
 			},
 			maxExposure: "Hard Cap <= 1.5% of Total Wealth (Top 10 Majors Spot Only)",
 			riskPerTrade: "Risk max 0.25% per setup (Tight stop)",
+			mandate: {
+				maxRiskPerTradePct: 0.25,
+				maxPortfolioExposurePct: 1.5,
+				cashTargetPct: 45.0,
+				isTradingLocked: false,
+				label: "Selective Alt-Rotation (Max 1.5% Wealth Cap)",
+				state: "selective",
+				dcaPace: "paused",
+			},
 		};
 	} else {
 		altcoinPerms = {
@@ -349,6 +453,7 @@ export function derivePermissions(
 			},
 			maxExposure: "0% (Locked in Risk-Off)",
 			riskPerTrade: "0% (Locked in Risk-Off)",
+			mandate: getSizingMandate("defensive"),
 		};
 	}
 

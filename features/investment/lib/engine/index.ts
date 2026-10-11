@@ -55,11 +55,17 @@ export function computeCompass(
 		},
 	);
 
-	// 6. Actionable Playbook Scripts
+	// 6. Actionable Playbook Scripts (Using effective states to eliminate contradictions)
+	const ihsgEffectiveState =
+		permissions.ihsg.mandate?.state ?? ihsgRegime.state;
+	const cryptoEffectiveState =
+		permissions.crypto.mandate?.state ?? cryptoRegime.state;
+
 	const ihsgScript =
-		PLAYBOOK_SCRIPTS.IHSG[ihsgRegime.state] ?? PLAYBOOK_SCRIPTS.IHSG.defensive;
+		PLAYBOOK_SCRIPTS.IHSG[ihsgEffectiveState] ??
+		PLAYBOOK_SCRIPTS.IHSG.defensive;
 	const cryptoScript =
-		PLAYBOOK_SCRIPTS.Crypto[cryptoRegime.state] ??
+		PLAYBOOK_SCRIPTS.Crypto[cryptoEffectiveState] ??
 		PLAYBOOK_SCRIPTS.Crypto.defensive;
 
 	// 7. Delta and Volatility Alerts

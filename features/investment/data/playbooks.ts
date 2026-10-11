@@ -33,7 +33,7 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"Do not chase speculative non-LQ45 penny stocks.",
 			],
 			sizing:
-				"Standard position sizing: Risk up to 1.0% of trading bucket per setup.",
+				"Standard position sizing: Risk up to 1.0% per setup (Tactical Swing bucket <= 15%).",
 			invalidation:
 				"IHSG closes below 50-day MA or USD/IDR spikes above 50-day MA on heavy volume.",
 			focusSectors: [
@@ -57,7 +57,7 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"Avoid high-beta second-liners sensitive to rising Rupiah yields.",
 			],
 			sizing:
-				"Reduced sizing: Risk max 0.5% - 0.75% of trading bucket per setup.",
+				"Reduced sizing: Risk max 0.5% per setup (Tactical Swing bucket capped at 10%).",
 			invalidation:
 				"Daily breakdown below 200-day MA with foreign net selling streak.",
 			focusSectors: [
@@ -81,7 +81,8 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"Zero new swing trade entries. Stand aside.",
 				"Never average down on failing technical swing positions.",
 			],
-			sizing: "Active trading closed. Long-term DCA at half pace only.",
+			sizing:
+				"Active trading closed. Long-term DCA at half pace only. Maintain 55%+ Safe Bucket (SBN/Cash).",
 			tranchePlan:
 				"Tranche 1: 25% at 200-day MA | Tranche 2: 25% at -10% drawdown | Tranche 3: 50% only after confirmed reclaim of 50-day MA.",
 			invalidation:
@@ -106,7 +107,8 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"Do NOT attempt to catch falling knives during high volatility.",
 				"Zero new margin, zero speculative positions.",
 			],
-			sizing: "Trading bucket completely frozen. Zero active trades.",
+			sizing:
+				"Trading bucket completely frozen. Deploy predetermined tranches only on historical valuation floors.",
 			tranchePlan:
 				"Reserve dry powder. Deploy core tranches only when capitulation volume spike exhausts and VIX collapses.",
 			invalidation:
@@ -146,7 +148,7 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"Do not allocate more than 3% into speculative altcoins.",
 			],
 			sizing:
-				"Spot positions sized strictly within the core crypto cap (<= 20% total).",
+				"Standard sizing: Spot swing max 1.0% risk per setup (Tactical Swing bucket <= 15%, Altcoins <= 3%).",
 			invalidation:
 				"BTC breakdown below the 200-day MA or sudden stablecoin supply contraction.",
 			focusSectors: ["Bitcoin (BTC)", "Ethereum (ETH)", "Major L1s (SOL)"],
@@ -165,7 +167,8 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"Do not chase breakout candles in a sideways chop market.",
 				"Altcoins strictly locked out until confirmed BTC dominance breakdown.",
 			],
-			sizing: "Normal DCA pace for BTC/ETH spot only.",
+			sizing:
+				"Reduced sizing: Spot swing max 0.5% risk per setup (Tactical Swing capped at 10%). Normal DCA pace for BTC/ETH.",
 			invalidation: "BTC loss of critical range low on expanding volume.",
 			focusSectors: ["Bitcoin (BTC)", "Ethereum (ETH)"],
 		},
@@ -184,7 +187,8 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"Zero new altcoin purchases under any circumstance.",
 				"Never attempt to bottom-fish a leverage liquidation cascade.",
 			],
-			sizing: "Slow DCA (50% normal pace) into Bitcoin spot only.",
+			sizing:
+				"Active trading closed. Slow DCA (50% normal pace) into Bitcoin spot only. Maintain 55%+ Safe/Stablecoin defense.",
 			tranchePlan:
 				"Tranche 1: 25% at 200-day MA | Tranche 2: 25% at 200-week MA | Tranche 3: 50% only after weekly close back above 200-day MA.",
 			invalidation: "Sustained weekly reclaim of the 200-day moving average.",
@@ -206,7 +210,7 @@ export const PLAYBOOK_SCRIPTS: Record<
 				"Zero leverage, zero altcoins.",
 			],
 			sizing:
-				"All active trading frozen. Pre-planned generational tranches only.",
+				"All active trading frozen. Tranche buys only at multi-year valuation floors (MVRV <= 1.0).",
 			tranchePlan:
 				"Accumulate Bitcoin spot only at or below the 200-week moving average in 4 equal quarterly tranches.",
 			invalidation:

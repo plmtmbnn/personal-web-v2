@@ -19,6 +19,8 @@ import {
 	Hash,
 	ChevronRight,
 	Archive,
+	Flame,
+	Calendar,
 } from "lucide-react";
 import type { Task, TaskStatus } from "@/features/tasks/types";
 import { StatusSelector } from "./StatusSelector";
@@ -687,30 +689,30 @@ function TaskItem({
 		if (diff < 0)
 			return {
 				text: `${Math.abs(diff)}d overdue`,
-				emoji: "🔥",
+				Icon: AlertTriangle,
 				color: "text-rose-700 bg-rose-50 border-rose-200",
 			};
 		if (diff === 0)
 			return {
 				text: "Due today",
-				emoji: "⚡",
+				Icon: Flame,
 				color: "text-orange-700 bg-orange-50 border-orange-200",
 			};
 		if (diff === 1)
 			return {
 				text: "1 day more",
-				emoji: "⏳",
+				Icon: Clock,
 				color: "text-orange-600 bg-orange-50 border-orange-100",
 			};
 		if (diff <= 3)
 			return {
 				text: `${diff} days more`,
-				emoji: "📅",
+				Icon: Calendar,
 				color: "text-blue-600 bg-blue-50 border-blue-100",
 			};
 		return {
 			text: `${diff} days more`,
-			emoji: "🗓️",
+			Icon: Calendar,
 			color: "text-slate-500 bg-slate-100 border-slate-200",
 		};
 	}, [dueDateInfo, optimisticStatus]);
@@ -1689,7 +1691,7 @@ function TaskItem({
 										<span
 											className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-tight border ${timeLeft.color}`}
 										>
-											<span>{timeLeft.emoji}</span>
+											<timeLeft.Icon className="w-2.5 h-2.5 shrink-0" />
 											{timeLeft.text}
 										</span>
 									)}

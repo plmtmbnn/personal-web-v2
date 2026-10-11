@@ -16,6 +16,8 @@ import {
 	SlidersHorizontal,
 	Coins,
 	Download,
+	BookmarkPlus,
+	ArrowUpRight,
 } from "lucide-react";
 import { fmtIDRNet, fmtIDRValue, fmtCompact } from "../../utils";
 import { useScreener } from "../../context/ScreenerContext";
@@ -75,11 +77,19 @@ export default function SmartTable({
 		return Array.from(set).sort();
 	}, [stocks]);
 
+	const simulatedCodesSet = useMemo(() => {
+		return new Set(screener.stockPicks.map((p) => p.stockCode.toUpperCase()));
+	}, [screener.stockPicks]);
+
 	const filteredStocks = useMemo(() => {
 		let list = stocks;
 
 		if (filterTab === "watchlist") {
-			list = list.filter((s) => watchlist.includes(s.StockCode));
+			list = list.filter(
+				(s) =>
+					watchlist.includes(s.StockCode) ||
+					simulatedCodesSet.has(s.StockCode.toUpperCase()),
+			);
 		}
 
 		if (selectedSector !== "ALL") {
@@ -345,7 +355,11 @@ export default function SmartTable({
 							<Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
 							<span>Watchlist</span>
 							<span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-extrabold">
-								{watchlist.length}
+								{
+									Array.from(
+										new Set([...watchlist, ...Array.from(simulatedCodesSet)]),
+									).length
+								}
 							</span>
 							{filterTab === "watchlist" && (
 								<motion.div
@@ -355,6 +369,17 @@ export default function SmartTable({
 								/>
 							)}
 						</button>
+						{filterTab === "watchlist" && (
+							<button
+								type="button"
+								onClick={() => screener.setWorkstationTab("simulator")}
+								className="ml-2 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+								title="Open Stockpick Simulator Workstation"
+							>
+								<span>Simulator</span>
+								<ArrowUpRight className="w-3 h-3" />
+							</button>
+						)}
 					</div>
 
 					{/* CSV Export Action Button */}
@@ -473,23 +498,44 @@ export default function SmartTable({
 								>
 									<td
 										className="py-3 px-3 text-center"
-										onClick={(e) => {
-											e.stopPropagation();
-											onToggleWatchlist(s.StockCode);
-										}}
+										onClick={(e) => e.stopPropagation()}
 									>
-										<button
-											type="button"
-											className="text-slate-300 hover:text-amber-500 transition-colors cursor-pointer p-1"
-										>
-											<Star
-												className={`w-4 h-4 ${
+										<div className="flex items-center justify-center gap-1.5">
+											<button
+												type="button"
+												onClick={() => onToggleWatchlist(s.StockCode)}
+												className="text-slate-300 hover:text-amber-500 transition-colors cursor-pointer p-0.5"
+												title={
 													watchlist.includes(s.StockCode)
-														? "fill-amber-400 text-amber-400"
-														: "text-slate-300 hover:scale-110 transition-transform"
+														? "Remove from watchlist"
+														: "Add to watchlist"
+												}
+											>
+												<Star
+													className={`w-3.5 h-3.5 ${
+														watchlist.includes(s.StockCode)
+															? "fill-amber-400 text-amber-400"
+															: "text-slate-300 hover:scale-110 transition-transform"
+													}`}
+												/>
+											</button>
+											<button
+												type="button"
+												onClick={() => screener.openAddPickModal(s)}
+												className={`p-0.5 transition-colors cursor-pointer rounded ${
+													simulatedCodesSet.has(s.StockCode.toUpperCase())
+														? "text-emerald-600 hover:text-emerald-700"
+														: "text-slate-300 hover:text-indigo-600 hover:scale-110 transition-transform"
 												}`}
-											/>
-										</button>
+												title={
+													simulatedCodesSet.has(s.StockCode.toUpperCase())
+														? "Tracked in Stockpick Simulator (Click to add another entry)"
+														: "Simulate pick entry price"
+												}
+											>
+												<BookmarkPlus className="w-3.5 h-3.5" />
+											</button>
+										</div>
 									</td>
 
 									<td className="py-3 px-4">

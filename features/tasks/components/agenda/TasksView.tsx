@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { startOfDay, isSameDay, isAfter, parseISO } from "date-fns";
+import { startOfDay, isSameDay, isAfter, isBefore, parseISO } from "date-fns";
 import ComponentLoader from "@/features/tasks/components/shared/ComponentLoader";
 import TaskErrorBoundary from "@/features/tasks/components/shared/TaskErrorBoundary";
 import { ToastProvider } from "@/features/tasks/components/shared/Toast";
@@ -17,7 +17,7 @@ import {
 import QuickNav, {
 	type TaskViewTab,
 } from "@/features/tasks/components/shared/QuickNav";
-import { LayoutList, Plus, Kanban, ChevronRight } from "lucide-react";
+import { LayoutList, Plus, Kanban, ChevronRight, Archive } from "lucide-react";
 import Link from "next/link";
 import type { Task } from "@/features/tasks/types";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -92,6 +92,13 @@ const DynamicWeeklyReview = dynamic(
 	},
 );
 
+const DynamicArchiveModal = dynamic(
+	() => import("@/features/tasks/components/agenda/ArchiveModal"),
+	{
+		ssr: false,
+	},
+);
+
 interface TasksViewProps {
 	tasks: Task[];
 }
@@ -106,6 +113,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
 
 	const [mounted, setMounted] = useState(false);
 	const [isFormOpen, setIsFormOpen] = useState(false);
+	const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState<TaskViewTab>("agenda");
 	const [viewMode, setViewMode] = useState<"list" | "board">("list");
 	const reduceMotion = useReducedMotion();
@@ -114,44 +122,53 @@ export default function TasksView({ tasks }: TasksViewProps) {
 		setMounted(true);
 	}, []);
 
-	const { todayTasks, upcomingTasks, completedTasks, todayStats } =
-		useMemo(() => {
-			let filtered = tasks;
-			if (selectedCategory) {
-				filtered = filtered.filter((t) => t.category === selectedCategory);
-			}
-			if (selectedPriority) {
-				filtered = filtered.filter((t) => t.priority === selectedPriority);
-			}
+	const {
+		overdueTasks,
+		todayTasks,
+		upcomingTasks,
+		completedTasks,
+		todayStats,
+	} = useMemo(() => {
+		let filtered = tasks;
+		if (selectedCategory) {
+			filtered = filtered.filter((t) => t.category === selectedCategory);
+		}
+		if (selectedPriority) {
+			filtered = filtered.filter((t) => t.priority === selectedPriority);
+		}
 
-			const todayRef = startOfDay(new Date());
-			const todayList = filtered.filter((t) =>
-				isSameDay(parseISO(t.due_date), todayRef),
-			);
-			const upcomingList = filtered.filter((t) =>
-				isAfter(parseISO(t.due_date), todayRef),
-			);
+		const todayRef = startOfDay(new Date());
+		const overdueList = filtered.filter((t) =>
+			isBefore(parseISO(t.due_date), todayRef),
+		);
+		const todayList = filtered.filter((t) =>
+			isSameDay(parseISO(t.due_date), todayRef),
+		);
+		const upcomingList = filtered.filter((t) =>
+			isAfter(parseISO(t.due_date), todayRef),
+		);
 
-			// Exclude cancelled tasks from active lists
-			const isActive = (t: Task) => (t.status || "todo") !== "cancelled";
-			const isDone = (t: Task) => t.status === "done";
-			const isActionable = (t: Task) => {
-				if (!t.start_date) return true;
-				return !isAfter(parseISO(t.start_date), todayRef);
-			};
+		// Exclude cancelled tasks from active lists
+		const isActive = (t: Task) => (t.status || "todo") !== "cancelled";
+		const isDone = (t: Task) => t.status === "done";
+		const isActionable = (t: Task) => {
+			if (!t.start_date) return true;
+			return !isAfter(parseISO(t.start_date), todayRef);
+		};
 
-			return {
-				todayTasks: todayList.filter(
-					(t) => !isDone(t) && isActive(t) && isActionable(t),
-				),
-				upcomingTasks: upcomingList.filter((t) => !isDone(t) && isActive(t)),
-				completedTasks: filtered.filter((t) => isDone(t)),
-				todayStats: {
-					completed: todayList.filter((t) => isDone(t)).length,
-					total: todayList.filter((t) => isActive(t) && isActionable(t)).length,
-				},
-			};
-		}, [tasks, selectedCategory, selectedPriority]);
+		return {
+			overdueTasks: overdueList.filter((t) => !isDone(t) && isActive(t)),
+			todayTasks: todayList.filter(
+				(t) => !isDone(t) && isActive(t) && isActionable(t),
+			),
+			upcomingTasks: upcomingList.filter((t) => !isDone(t) && isActive(t)),
+			completedTasks: filtered.filter((t) => isDone(t)),
+			todayStats: {
+				completed: todayList.filter((t) => isDone(t)).length,
+				total: todayList.filter((t) => isActive(t) && isActionable(t)).length,
+			},
+		};
+	}, [tasks, selectedCategory, selectedPriority]);
 
 	if (!mounted) return null;
 
@@ -322,6 +339,14 @@ export default function TasksView({ tasks }: TasksViewProps) {
 														>
 															<Kanban className="w-3.5 h-3.5" /> Board
 														</button>
+														<button
+															type="button"
+															onClick={() => setIsArchiveOpen(true)}
+															className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+															title="View Archived Tasks"
+														>
+															<Archive className="w-3.5 h-3.5" /> Archive
+														</button>
 													</div>
 												</div>
 
@@ -335,12 +360,14 @@ export default function TasksView({ tasks }: TasksViewProps) {
 												>
 													{viewMode === "board" ? (
 														<DynamicTaskBoard
+															overdueTasks={overdueTasks}
 															todayTasks={todayTasks}
 															upcomingTasks={upcomingTasks}
 															completedTasks={completedTasks}
 														/>
 													) : (
 														<DynamicTaskList
+															overdueTasks={overdueTasks}
 															todayTasks={todayTasks}
 															upcomingTasks={upcomingTasks}
 															completedTasks={completedTasks}
@@ -354,6 +381,14 @@ export default function TasksView({ tasks }: TasksViewProps) {
 							)}
 						</AnimatePresence>
 					</div>
+
+					{/* Archived Tasks Modal */}
+					<Suspense fallback={null}>
+						<DynamicArchiveModal
+							isOpen={isArchiveOpen}
+							onClose={() => setIsArchiveOpen(false)}
+						/>
+					</Suspense>
 
 					{/* Mobile-Only FAB */}
 					<button

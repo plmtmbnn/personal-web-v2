@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { X, ExternalLink } from "lucide-react";
+import { X, ExternalLink, BookmarkPlus } from "lucide-react";
 import type { ProcessedStock } from "../../types";
 import {
 	fmtLots,
@@ -334,6 +334,17 @@ export default function StockDetailDrawer({
 							</p>
 						</div>
 						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								onClick={() => {
+									screener.openAddPickModal(stock);
+								}}
+								className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+								title="Simulate pick entry price"
+							>
+								<BookmarkPlus className="w-3.5 h-3.5" />
+								<span className="hidden sm:inline">Simulate Entry</span>
+							</button>
 							<a
 								href={`https://finance.yahoo.com/quote/${stock.StockCode}.JK`}
 								target="_blank"

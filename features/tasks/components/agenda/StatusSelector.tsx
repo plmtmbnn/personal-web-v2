@@ -1,9 +1,28 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Check } from "lucide-react";
+import {
+	ChevronDown,
+	Check,
+	Circle,
+	Clock,
+	CheckCircle2,
+	Ban,
+	XCircle,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { TaskStatus } from "@/features/tasks/types";
 import { TASK_STATUS_CONFIG } from "@/features/tasks/constants";
+
+const STATUS_ICONS: Record<
+	TaskStatus,
+	React.ComponentType<{ className?: string }>
+> = {
+	todo: Circle,
+	in_progress: Clock,
+	done: CheckCircle2,
+	blocked: Ban,
+	cancelled: XCircle,
+};
 
 interface StatusSelectorProps {
 	value: TaskStatus;
@@ -110,6 +129,8 @@ export function StatusSelector({
 		}
 	};
 
+	const CurrentIcon = STATUS_ICONS[value] || Circle;
+
 	return (
 		<>
 			<button
@@ -124,7 +145,7 @@ export function StatusSelector({
 				} ${currentConfig.color}`}
 				title="Change Task Status"
 			>
-				<span className="text-sm leading-none">{currentConfig.emoji}</span>
+				<CurrentIcon className="w-3.5 h-3.5 shrink-0" />
 				<span className="hidden sm:inline">{currentConfig.label}</span>
 				<ChevronDown
 					className={`w-3 h-3 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -156,6 +177,7 @@ export function StatusSelector({
 										][]
 									).map(([key, config]) => {
 										const isSelected = key === value;
+										const OptionIcon = STATUS_ICONS[key] || Circle;
 										return (
 											<button
 												key={key}
@@ -167,9 +189,7 @@ export function StatusSelector({
 														: "text-slate-700 hover:bg-slate-50"
 												}`}
 											>
-												<span className="text-base leading-none w-4 text-center">
-													{config.emoji}
-												</span>
+												<OptionIcon className="w-4 h-4 shrink-0" />
 												<span className="flex-1 text-xs font-bold uppercase tracking-wide">
 													{config.label}
 												</span>

@@ -152,6 +152,50 @@ export default function OverviewRegimes({
 						</div>
 					</div>
 
+					{/* Dual-Axis Trend vs Valuation Separation */}
+					{regime.dualAxis && (
+						<div className="mb-4 grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60">
+							<div className="space-y-0.5">
+								<span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+									Trend / Trading Gate
+								</span>
+								<div className="flex items-center gap-1.5">
+									<span
+										className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${getStateBadge(
+											regime.dualAxis.trendState,
+										)}`}
+									>
+										{regime.dualAxis.trendState.replace("_", " ")}
+									</span>
+									<span className="text-[10px] font-bold text-slate-500 font-mono">
+										{regime.dualAxis.trendScore}
+									</span>
+								</div>
+							</div>
+							<div className="space-y-0.5 border-l border-slate-200/60 pl-2.5">
+								<span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+									Valuation / Accumulation
+								</span>
+								<div className="flex items-center gap-1.5">
+									<span
+										className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
+											regime.dualAxis.valuationState === "accumulation"
+												? "bg-emerald-50 text-emerald-800 border-emerald-200/80"
+												: regime.dualAxis.valuationState === "distribution"
+													? "bg-rose-50 text-rose-800 border-rose-200/80"
+													: "bg-slate-100 text-slate-800 border-slate-200"
+										}`}
+									>
+										{regime.dualAxis.valuationState}
+									</span>
+									<span className="text-[10px] font-bold text-slate-500 font-mono">
+										{regime.dualAxis.valuationScore}
+									</span>
+								</div>
+							</div>
+						</div>
+					)}
+
 					{/* Diagnosis Narrative */}
 					<div className="space-y-1 mb-5">
 						<h4 className="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug">

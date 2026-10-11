@@ -71,7 +71,19 @@ export function generateRecurrentEvents(
 				"BI benchmark policy rate decision and Rupiah stability interventions directly impacting banking liquidity.",
 		});
 
-		// 2. US CPI Inflation Print (2nd Wednesday of each month)
+		// 2. US Non-Farm Payrolls & Unemployment Print (1st Friday of each month)
+		const usNfpDate = getNthWeekdayOfMonth(y, m, 5, 1);
+		events.push({
+			id: `us-nfp-${y}-${monthNum}`,
+			date: toIsoDate(usNfpDate),
+			title: "US Non-Farm Payrolls & Unemployment Rate",
+			market: "US",
+			impact: "High",
+			notes:
+				"Monthly labor market telemetry drives Fed dual-mandate policy expectations and Sahm Rule recession triggers.",
+		});
+
+		// 3. US CPI Inflation Print (2nd Wednesday of each month)
 		const usCpiDate = getNthWeekdayOfMonth(y, m, 3, 2);
 		events.push({
 			id: `us-cpi-${y}-${monthNum}`,
@@ -81,6 +93,18 @@ export function generateRecurrentEvents(
 			impact: "Critical",
 			notes:
 				"Headline and core inflation trends dictate Federal Reserve terminal rate trajectory and discount rates. Drives cross-asset volatility in Bitcoin and USD/IDR.",
+		});
+
+		// 4. US Core PCE Price Index (Last Friday of each month)
+		const usPceDate = getLastWeekdayOfMonth(y, m, 5);
+		events.push({
+			id: `us-pce-${y}-${monthNum}`,
+			date: toIsoDate(usPceDate),
+			title: "US Core PCE Price Index",
+			market: "US",
+			impact: "High",
+			notes:
+				"The Federal Reserve's primary gauge of underlying consumer inflation, setting real interest rate trajectory.",
 		});
 
 		// 3. Crypto Derivatives Monthly / Quarterly Expiry (Last Friday of each month)

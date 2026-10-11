@@ -1,6 +1,23 @@
 import type { InvestmentCompassData, CompassAlert } from "../../types";
 import type { InvestmentThresholds } from "../../config/thresholds";
 
+function isFreshQuote(
+	lastTime?: string | null,
+	referenceTime?: string | number,
+	maxHours = 72,
+): boolean {
+	if (!lastTime) return true;
+	try {
+		const t = new Date(lastTime).getTime();
+		if (Number.isNaN(t)) return true;
+		const ref = referenceTime ? new Date(referenceTime).getTime() : Date.now();
+		if (Number.isNaN(ref)) return true;
+		return Math.abs(ref - t) <= maxHours * 3600 * 1000;
+	} catch {
+		return true;
+	}
+}
+
 export function deriveAlerts(
 	data: InvestmentCompassData,
 	thresholds: InvestmentThresholds,
@@ -11,12 +28,13 @@ export function deriveAlerts(
 	const ihsgQuote = data.markets.quotes.JKSE ?? data.markets.quotes.IHSG;
 	if (
 		ihsgQuote?.changePct != null &&
-		ihsgQuote.changePct <= thresholds.ihsg.overnightSelloffPct
+		ihsgQuote.changePct <= thresholds.ihsg.overnightSelloffPct &&
+		isFreshQuote(ihsgQuote.lastTime, data.fetchedAt)
 	) {
 		alerts.push({
 			id: "ihsg-selloff",
 			title: "IHSG Domestic Sell-off",
-			message: `Indonesia Composite dropped ${ihsgQuote.changePct.toFixed(2)}% today. Emerging market risk-off pressure.`,
+			message: `Indonesia Composite dropped ${ihsgQuote.changePct.toFixed(2)}% in the latest session. Emerging market risk-off pressure.`,
 			type: "danger",
 			asOf: ihsgQuote.lastTime ?? undefined,
 		});
@@ -26,7 +44,8 @@ export function deriveAlerts(
 	const usdIdrQuote = data.markets.quotes.USDIDR;
 	if (
 		usdIdrQuote?.changePct != null &&
-		usdIdrQuote.changePct >= thresholds.usdIdr.overnightSurgePct
+		usdIdrQuote.changePct >= thresholds.usdIdr.overnightSurgePct &&
+		isFreshQuote(usdIdrQuote.lastTime, data.fetchedAt)
 	) {
 		alerts.push({
 			id: "usdidr-spike",

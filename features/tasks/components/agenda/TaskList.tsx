@@ -10,7 +10,14 @@ import {
 	useEffect,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Inbox, Flame, Calendar, CheckCircle2, RotateCcw } from "lucide-react";
+import {
+	Inbox,
+	Flame,
+	Calendar,
+	CheckCircle2,
+	RotateCcw,
+	AlertTriangle,
+} from "lucide-react";
 import {
 	DragDropContext,
 	Droppable,
@@ -22,6 +29,7 @@ import {
 	deleteTask,
 	reorderTasks,
 	updateTask,
+	rescheduleOverdueTasks,
 } from "@/features/tasks/actions/tasks";
 import { useToast } from "@/features/tasks/components/shared/Toast";
 import TaskItem from "./TaskItem";
@@ -42,12 +50,14 @@ import {
 import CustomModal from "@/features/shared/components/CustomModal";
 
 interface TaskListProps {
+	overdueTasks?: Task[];
 	todayTasks: Task[];
 	upcomingTasks: Task[];
 	completedTasks: Task[];
 }
 
 export default function TaskList({
+	overdueTasks = [],
 	todayTasks,
 	upcomingTasks,
 	completedTasks,
@@ -60,20 +70,24 @@ export default function TaskList({
 	// Modal State
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
-	// Undo state for delete operations
-	const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	// Multi-task undo timers keyed by task ID
+	const undoTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-	// Cleanup any pending undo deletion timer on unmount
+	// Flush any pending deletions immediately on unmount so they persist
 	useEffect(() => {
 		return () => {
-			if (undoTimeoutRef.current) {
-				clearTimeout(undoTimeoutRef.current);
-			}
+			undoTimeoutsRef.current.forEach((timer, taskId) => {
+				clearTimeout(timer);
+				deleteTask(taskId).catch((err) =>
+					console.error("Failed to delete task on unmount:", err),
+				);
+			});
+			undoTimeoutsRef.current.clear();
 		};
 	}, []);
 
-	// Trigger load for Completed Tasks Section
-	const [isCompletedLoaded, setIsCompletedLoaded] = useState(false);
+	// Completed Tasks Section loaded by default to avoid artificial gating
+	const [isCompletedLoaded, setIsCompletedLoaded] = useState(true);
 
 	// Request deduplication to prevent race conditions
 	const pendingRequests = useRef(new Set<string>());
@@ -94,18 +108,20 @@ export default function TaskList({
 	const upcomingFilters = getFilters("upcoming");
 	const completedFilters = getFilters("completed");
 
-	// Optimistic state for the task lists
+	// Optimistic state for all task lists including overdue
 	const [optimisticState, addOptimisticAction] = useOptimistic<
 		{
+			overdueTasks: Task[];
 			todayTasks: Task[];
 			upcomingTasks: Task[];
 			completedTasks: Task[];
 		},
 		{ action: string; payload: any }
 	>(
-		{ todayTasks, upcomingTasks, completedTasks },
+		{ overdueTasks, todayTasks, upcomingTasks, completedTasks },
 		(state, { action, payload }) => {
 			const updateInLists = (updater: (t: Task) => Task) => ({
+				overdueTasks: state.overdueTasks.map(updater),
 				todayTasks: state.todayTasks.map(updater),
 				upcomingTasks: state.upcomingTasks.map(updater),
 				completedTasks: state.completedTasks.map(updater),
@@ -124,6 +140,9 @@ export default function TaskList({
 					);
 				case "delete":
 					return {
+						overdueTasks: state.overdueTasks.filter(
+							(t: Task) => t.id !== payload.taskId,
+						),
 						todayTasks: state.todayTasks.filter(
 							(t: Task) => t.id !== payload.taskId,
 						),
@@ -135,9 +154,12 @@ export default function TaskList({
 						),
 					};
 				case "restore": {
-					// Restore a deleted task to its original list
 					const { task, listType } = payload;
 					return {
+						overdueTasks:
+							listType === "overdue"
+								? [...state.overdueTasks, task]
+								: state.overdueTasks.filter((t) => t.id !== task.id),
 						todayTasks:
 							listType === "today"
 								? [...state.todayTasks, task]
@@ -158,6 +180,7 @@ export default function TaskList({
 							? "todayTasks"
 							: "upcomingTasks";
 					return {
+						overdueTasks: state.overdueTasks,
 						todayTasks:
 							listKey === "todayTasks" ? payload.newTasks : state.todayTasks,
 						upcomingTasks:
@@ -169,6 +192,7 @@ export default function TaskList({
 				}
 				case "move":
 					return {
+						overdueTasks: state.overdueTasks,
 						todayTasks: payload.newTodayTasks,
 						upcomingTasks: payload.newUpcomingTasks,
 						completedTasks: state.completedTasks,
@@ -274,6 +298,11 @@ export default function TaskList({
 	);
 
 	// Derived display lists
+	const displayOverdueTasks = useMemo(
+		() => applyFilters(optimisticState.overdueTasks, todayFilters),
+		[optimisticState.overdueTasks, todayFilters, applyFilters],
+	);
+
 	const displayTodayTasks = useMemo(
 		() => applyFilters(optimisticState.todayTasks, todayFilters),
 		[optimisticState.todayTasks, todayFilters, applyFilters],
@@ -298,6 +327,26 @@ export default function TaskList({
 		completedFilters,
 		applyFilters,
 	]);
+
+	const handleBatchRollover = (daysToAdd: number) => {
+		startTransition(async () => {
+			try {
+				const res = await rescheduleOverdueTasks(daysToAdd);
+				if (res.success) {
+					showSuccess(
+						daysToAdd === 0 ? "Rolled over to Today" : "Pushed to Tomorrow",
+						res.message,
+					);
+					router.refresh();
+				} else {
+					showError(res.message);
+				}
+			} catch (err) {
+				console.error(err);
+				showError("Failed to reschedule overdue tasks.");
+			}
+		});
+	};
 
 	const resetSectionFilters = (prefix: string) => {
 		startTransition(() => {
@@ -353,12 +402,19 @@ export default function TaskList({
 
 		// Find the task being deleted and its list type
 		let taskToDelete: Task | undefined;
-		let listType: "today" | "upcoming" | "completed" = "today";
+		let listType: "overdue" | "today" | "upcoming" | "completed" = "today";
 
-		taskToDelete = optimisticState.todayTasks.find(
+		taskToDelete = optimisticState.overdueTasks.find(
 			(t: Task) => t.id === deleteTaskId,
 		);
-		if (taskToDelete) listType = "today";
+		if (taskToDelete) listType = "overdue";
+
+		if (!taskToDelete) {
+			taskToDelete = optimisticState.todayTasks.find(
+				(t: Task) => t.id === deleteTaskId,
+			);
+			if (taskToDelete) listType = "today";
+		}
 
 		if (!taskToDelete) {
 			taskToDelete = optimisticState.upcomingTasks.find(
@@ -380,11 +436,13 @@ export default function TaskList({
 			return;
 		}
 
+		const targetId = deleteTaskId;
+
 		// Optimistically remove the task
 		startTransition(() => {
 			addOptimisticAction({
 				action: "delete",
-				payload: { taskId: deleteTaskId },
+				payload: { taskId: targetId },
 			});
 		});
 
@@ -395,8 +453,10 @@ export default function TaskList({
 			{
 				label: "Undo",
 				onClick: () => {
-					if (undoTimeoutRef.current) {
-						clearTimeout(undoTimeoutRef.current);
+					const existingTimer = undoTimeoutsRef.current.get(targetId);
+					if (existingTimer) {
+						clearTimeout(existingTimer);
+						undoTimeoutsRef.current.delete(targetId);
 					}
 					// Restore the task
 					startTransition(() => {
@@ -410,10 +470,11 @@ export default function TaskList({
 		);
 
 		// Set timeout to actually delete the task
-		undoTimeoutRef.current = setTimeout(async () => {
+		const deleteTimer = setTimeout(async () => {
+			undoTimeoutsRef.current.delete(targetId);
 			try {
-				pendingRequests.current.add(`delete-${deleteTaskId}`);
-				await deleteTask(deleteTaskId);
+				pendingRequests.current.add(`delete-${targetId}`);
+				await deleteTask(targetId);
 			} catch (error) {
 				console.error("Failed to delete task:", error);
 				showError(
@@ -427,10 +488,11 @@ export default function TaskList({
 					});
 				});
 			} finally {
-				pendingRequests.current.delete(`delete-${deleteTaskId}`);
+				pendingRequests.current.delete(`delete-${targetId}`);
 			}
 		}, UNDO_TOAST_DURATION_MS);
 
+		undoTimeoutsRef.current.set(targetId, deleteTimer);
 		setDeleteTaskId(null);
 	};
 
@@ -554,6 +616,66 @@ export default function TaskList({
 					variant="danger"
 					isLoading={false}
 				/>
+
+				{/* Overdue Section */}
+				{displayOverdueTasks.length > 0 && (
+					<section
+						id="overdue-section"
+						className="rounded-3xl border border-rose-200/80 bg-rose-50/30 p-4 sm:p-6 shadow-xs"
+					>
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-rose-100/80 pb-4">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-600 shadow-sm border border-rose-200/50">
+									<AlertTriangle className="w-5 h-5 text-rose-600" />
+								</div>
+								<div>
+									<div className="flex items-center gap-2">
+										<h3 className="text-xl font-black text-rose-950 uppercase tracking-tight leading-tight">
+											Overdue Tasks
+										</h3>
+										<span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-100 text-rose-700 border border-rose-200">
+											{displayOverdueTasks.length}{" "}
+											{displayOverdueTasks.length === 1 ? "task" : "tasks"}
+										</span>
+									</div>
+									<p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mt-0.5">
+										Action required to resolve backlog
+									</p>
+								</div>
+							</div>
+							<div className="flex items-center gap-2">
+								<button
+									type="button"
+									onClick={() => handleBatchRollover(0)}
+									className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 active:scale-95"
+								>
+									<RotateCcw className="w-3.5 h-3.5" />
+									Roll to Today
+								</button>
+								<button
+									type="button"
+									onClick={() => handleBatchRollover(1)}
+									className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 active:scale-95"
+								>
+									<Calendar className="w-3.5 h-3.5" />
+									Push to Tomorrow
+								</button>
+							</div>
+						</div>
+
+						<div className="space-y-3">
+							{displayOverdueTasks.map((task: Task, index: number) => (
+								<TaskItem
+									key={task.id}
+									task={task}
+									index={index}
+									onUpdate={handleUpdate}
+									onDelete={handleDeleteRequest}
+								/>
+							))}
+						</div>
+					</section>
+				)}
 
 				{/* Today Section */}
 				<section id="today-section">

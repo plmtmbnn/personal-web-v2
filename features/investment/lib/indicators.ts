@@ -197,11 +197,30 @@ export function sahmRule(unrateSeries: Array<{ value: number }>): {
 }
 
 /**
+ * Evaluates whether price is decisively above or below an SMA with a hysteresis buffer (e.g. 1.0%).
+ * Returns "above" if price > MA * (1 + buffer), "below" if price < MA * (1 - buffer),
+ * or "neutral" if price is consolidating inside the buffer band.
+ */
+export function evalMaHysteresis(
+	price: number,
+	ma: number | null,
+	bufferPct = 1.0,
+): "above" | "below" | "neutral" {
+	if (ma == null || ma <= 0 || price <= 0) return "neutral";
+	const diffPct = ((price - ma) / ma) * 100;
+	if (diffPct >= bufferPct) return "above";
+	if (diffPct <= -bufferPct) return "below";
+	return "neutral";
+}
+
+/**
  * Calculates elapsed months since the Bitcoin halving (April 20, 2024).
  * Returns phase interpretation according to historical 4-year cycle patterns.
+ * Implements modular 48-month cycle wrapping so it remains accurate perpetually.
  */
 export function getHalvingCyclePhase(now = new Date()): {
 	monthsElapsed: number;
+	cycleMonth: number;
 	phase: string;
 	description: string;
 } {
@@ -209,19 +228,20 @@ export function getHalvingCyclePhase(now = new Date()): {
 	const diffTime = now.getTime() - halvingDate.getTime();
 	const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 	const monthsElapsed = Math.floor(diffDays / 30.4375);
+	const cycleMonth = ((monthsElapsed % 48) + 48) % 48;
 
 	let phase = "Early Post-Halving Accumulation";
 	let description = "Re-accumulation zone following supply issuance reduction.";
 
-	if (monthsElapsed >= 6 && monthsElapsed < 18) {
+	if (cycleMonth >= 6 && cycleMonth < 18) {
 		phase = "Parabolic / Euphoria Window";
 		description =
 			"Historically the strongest momentum phase of the 4-year cycle.";
-	} else if (monthsElapsed >= 18 && monthsElapsed < 30) {
+	} else if (cycleMonth >= 18 && cycleMonth < 30) {
 		phase = "Late-Cycle Distribution & Correction";
 		description =
 			"Historical cycle peak window and subsequent macro liquidity pullback.";
-	} else if (monthsElapsed >= 30) {
+	} else if (cycleMonth >= 30) {
 		phase = "Bear Market Floor & Reset";
 		description =
 			"Cyclical bottoming process approaching the next 200-week moving average.";
@@ -229,6 +249,7 @@ export function getHalvingCyclePhase(now = new Date()): {
 
 	return {
 		monthsElapsed,
+		cycleMonth,
 		phase,
 		description,
 	};

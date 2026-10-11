@@ -6,10 +6,12 @@ import {
 	subMonths,
 	addMonths,
 	format,
+	parseISO,
 } from "date-fns";
 import PinGuard from "@/features/auth/PinGuard";
 import TasksView from "@/features/tasks/components/agenda/TasksView";
 import { getTasks } from "@/features/tasks/actions/tasks";
+import { getJakartaDateString } from "@/features/tasks/utils";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import { redis } from "@/lib/core/redis";
 import type { TaskPriority } from "@/features/tasks/types";
@@ -59,18 +61,20 @@ export default async function TasksPage({ searchParams }: PageProps) {
 
 	// 2. Data Fetching
 	// Fetch from past month (for execution history) through future months (for upcoming awareness)
-	const today = new Date();
-	const rangeStart = startOfMonth(subMonths(today, 1));
-	const rangeEnd = endOfMonth(addMonths(today, 6));
+	const todayStr = getJakartaDateString();
+	const todayDate = parseISO(todayStr);
+	const rangeStart = startOfMonth(subMonths(todayDate, 1));
+	const rangeEnd = endOfMonth(addMonths(todayDate, 6));
 
 	const startDate = date || format(rangeStart, "yyyy-MM-dd");
-	const endDate = date || format(rangeEnd, "yyyy-MM-dd");
+	const endDate = format(rangeEnd, "yyyy-MM-dd");
 
 	const tasks = await getTasks({
 		startDate,
 		endDate,
 		priority,
 		includeCompleted: true,
+		includeOverdue: true,
 	});
 
 	return (

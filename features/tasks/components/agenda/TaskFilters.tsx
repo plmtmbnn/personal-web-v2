@@ -274,7 +274,7 @@ export default function TaskFilters({
 							className="w-full h-full bg-slate-100 rounded-full relative overflow-hidden"
 						>
 							<motion.div
-								className="absolute top-0 bottom-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 rounded-full w-1/3 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+								className="absolute top-0 bottom-0 bg-slate-900 rounded-full w-1/3"
 								animate={{ x: ["-100%", "300%"] }}
 								transition={{
 									repeat: Infinity,

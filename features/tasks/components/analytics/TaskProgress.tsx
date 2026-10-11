@@ -230,7 +230,7 @@ export default function TaskProgress({ tasks }: TaskProgressProps) {
 								</div>
 								<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
 									<div
-										className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-500"
+										className="h-full bg-emerald-500 rounded-full transition-all duration-500"
 										style={{
 											width: `${Math.min(
 												100,

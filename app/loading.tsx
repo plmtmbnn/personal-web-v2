@@ -1,7 +1,7 @@
 /**
  * Root Suspense Fallback (Next.js App Router Global Page Transition)
  *
- * Adheres strictly to the Brand-Monogram Loading Standard (ui-uix-guideline.md §24):
+ * Adheres strictly to the Brand-Monogram Loading Standard (ui-ux-guideline.md §24):
  * - Server Component with 0 client JS bundle overhead
  * - Minimalist brand monogram mark (PT) in a pure white Floating Card
  * - Soft ambient breathing halo with optical bottom-bar clearance

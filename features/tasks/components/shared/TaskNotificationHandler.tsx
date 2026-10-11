@@ -23,6 +23,7 @@ export default function TaskNotificationHandler({
 
 	// Load mute state and Register Browser Channel
 	useEffect(() => {
+		let isMounted = true;
 		const storedMute = localStorage.getItem("tasks-notifications-muted");
 		if (storedMute === "true") {
 			setIsMuted(true);
@@ -33,12 +34,15 @@ export default function TaskNotificationHandler({
 			const isBrowserEnabled = await remoteConfigService.getConfigValue(
 				"enable_browser_notifications",
 			);
-			if (isBrowserEnabled) {
+			if (isMounted && isBrowserEnabled) {
 				notificationDispatcher.registerChannel(new BrowserChannel());
 			}
 		};
 
 		initChannels();
+		return () => {
+			isMounted = false;
+		};
 	}, []);
 
 	const toggleMute = () => {
@@ -83,7 +87,7 @@ export default function TaskNotificationHandler({
 			if (progress === 100 && tasks.length > 0 && !goalReachedRef.current) {
 				notificationDispatcher.dispatch({
 					title: "Goal Reached!",
-					body: "All tasks completed! You've crushed it. 🎉",
+					body: "All tasks completed successfully.",
 				});
 				goalReachedRef.current = true;
 			} else if (progress < 100) {
@@ -100,10 +104,10 @@ export default function TaskNotificationHandler({
 	if (!isSupported) return null;
 
 	return (
-		<div className="flex items-center justify-between mb-6 glass-card p-4">
+		<div className="flex items-center justify-between mb-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4">
 			<div className="flex items-center gap-3">
 				<div
-					className={`p-2 rounded-xl ${permission === "granted" && !isMuted ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground"}`}
+					className={`p-2 rounded-xl ${permission === "granted" && !isMuted ? "bg-emerald-50 text-emerald-600 border border-emerald-200/60" : "bg-slate-100 text-slate-400"}`}
 				>
 					{permission === "granted" && !isMuted ? (
 						<BellRing className="w-5 h-5" />
@@ -112,8 +116,10 @@ export default function TaskNotificationHandler({
 					)}
 				</div>
 				<div>
-					<h3 className="text-sm font-bold">Desktop Notifications</h3>
-					<p className="text-xs text-muted-foreground">
+					<h3 className="text-sm font-bold text-slate-900">
+						Desktop Notifications
+					</h3>
+					<p className="text-xs text-slate-500">
 						{permission === "default"
 							? "Stay updated with task alerts."
 							: permission === "denied"
@@ -127,8 +133,9 @@ export default function TaskNotificationHandler({
 
 			{permission === "default" && (
 				<button
+					type="button"
 					onClick={requestPermission}
-					className="px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent/90 transition-all text-sm font-medium shadow-sm"
+					className="px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-xs font-bold uppercase tracking-wider shadow-xs cursor-pointer"
 				>
 					Enable Alerts
 				</button>
@@ -136,11 +143,12 @@ export default function TaskNotificationHandler({
 
 			{permission === "granted" && (
 				<button
+					type="button"
 					onClick={toggleMute}
-					className={`px-4 py-2 rounded-xl transition-all text-sm font-medium border ${
+					className={`px-4 py-2 rounded-xl transition-all text-xs font-bold uppercase tracking-wider border cursor-pointer ${
 						isMuted
-							? "bg-background hover:bg-muted text-foreground border-border"
-							: "bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+							? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+							: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
 					}`}
 				>
 					{isMuted ? "Unmute" : "Mute"}

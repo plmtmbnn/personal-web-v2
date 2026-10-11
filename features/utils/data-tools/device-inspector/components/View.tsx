@@ -4,30 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
 	Gauge,
-	Cpu,
-	Monitor,
-	Zap,
+	ShieldCheck,
+	LayoutGrid,
 	Wifi,
-	Radio,
-	ArrowDown,
-	ArrowUp,
-	CheckCircle2,
-	XCircle,
+	Cpu,
+	Sliders,
+	Layers,
 	Copy,
 	Check,
 	Download,
-	RefreshCw,
-	Layers,
-	BatteryCharging,
-	Battery,
-	Play,
-	Sliders,
-	Tv,
-	Gamepad2,
-	Video,
-	CloudUpload,
-	Award,
-	ShieldCheck,
+	FileText,
 } from "lucide-react";
 import UtilHeader from "@/features/utils/components/UtilHeader";
 import type {
@@ -41,6 +27,7 @@ import type {
 import {
 	estimateRefreshRate,
 	generateDiagnosticReport,
+	generateMarkdownReport,
 	getCodecSupportMatrix,
 	getDisplayDiagnostics,
 	getHardwareDiagnostics,
@@ -53,10 +40,23 @@ import {
 	measureUploadSpeed,
 } from "../utils/speed-test";
 import { calculateConnectionSuitability } from "../utils/suitability";
+
+import TopTelemetryStrip from "./TopTelemetryStrip";
+import SpeedTestStudio from "./SpeedTestStudio";
+import HardwareDisplayStudio from "./HardwareDisplayStudio";
 import PeripheralsStudio from "./PeripheralsStudio";
+import CompatibilityMatrixStudio from "./CompatibilityMatrixStudio";
+
+type InspectorTab =
+	| "all"
+	| "speed"
+	| "hardware"
+	| "peripherals"
+	| "compatibility";
 
 export default function DeviceInspectorView() {
 	const reduceMotion = useReducedMotion();
+	const [activeTab, setActiveTab] = useState<InspectorTab>("all");
 
 	const [networkInfo, setNetworkInfo] = useState<NetworkInfo>({
 		online: true,
@@ -102,11 +102,12 @@ export default function DeviceInspectorView() {
 	});
 
 	const [throughputHistory, setThroughputHistory] = useState<number[]>([]);
-	const [isReportCopied, setIsReportCopied] = useState(false);
+	const [isJsonCopied, setIsJsonCopied] = useState(false);
+	const [isMarkdownCopied, setIsMarkdownCopied] = useState(false);
 
 	const suitability = calculateConnectionSuitability(speedMetrics);
 
-	// Load initial telemetry
+	// Load initial telemetry on mount
 	useEffect(() => {
 		async function initDiagnostics() {
 			const net = await fetchNetworkDiagnostics();
@@ -194,8 +195,8 @@ export default function DeviceInspectorView() {
 		}
 	}, [throughputHistory]);
 
-	// Copy full diagnostic report
-	const handleCopyReport = () => {
+	// Copy full diagnostic report as JSON
+	const handleCopyJson = () => {
 		const report = generateDiagnosticReport(
 			networkInfo,
 			speedMetrics,
@@ -206,11 +207,28 @@ export default function DeviceInspectorView() {
 			suitability,
 		);
 		navigator.clipboard.writeText(JSON.stringify(report, null, 2));
-		setIsReportCopied(true);
-		setTimeout(() => setIsReportCopied(false), 2000);
+		setIsJsonCopied(true);
+		setTimeout(() => setIsJsonCopied(false), 2000);
 	};
 
-	// Download full diagnostic report
+	// Copy Markdown table format for GitHub bug reports
+	const handleCopyMarkdown = () => {
+		const report = generateDiagnosticReport(
+			networkInfo,
+			speedMetrics,
+			hardwareInfo,
+			displayInfo,
+			codecs,
+			webApis,
+			suitability,
+		);
+		const md = generateMarkdownReport(report);
+		navigator.clipboard.writeText(md);
+		setIsMarkdownCopied(true);
+		setTimeout(() => setIsMarkdownCopied(false), 2000);
+	};
+
+	// Download full diagnostic report as JSON
 	const handleDownloadReport = () => {
 		const report = generateDiagnosticReport(
 			networkInfo,
@@ -234,12 +252,25 @@ export default function DeviceInspectorView() {
 		URL.revokeObjectURL(url);
 	};
 
+	const tabs: Array<{
+		id: InspectorTab;
+		label: string;
+		icon: typeof LayoutGrid;
+	}> = [
+		{ id: "all", label: "All Systems", icon: LayoutGrid },
+		{ id: "speed", label: "Speed & Latency", icon: Wifi },
+		{ id: "hardware", label: "Hardware & Display", icon: Cpu },
+		{ id: "peripherals", label: "Peripherals Studio", icon: Sliders },
+		{ id: "compatibility", label: "Compatibility Matrix", icon: Layers },
+	];
+
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-[1400px] mx-auto space-y-6 sm:space-y-8">
+				{/* ── 1. Canonical 3-Tier Floating Card Header ── */}
 				<UtilHeader
 					title="Device, Speed & Diagnostics Inspector"
-					description="Real-time internet speed test, hardware telemetry, display & refresh rate analysis, and media codec audit."
+					description="Real-time internet speed test, hardware telemetry, display and refresh rate analysis, and media codec audit."
 					category={{
 						label: "Security & Diagnostics",
 						sublabel: "hardware telemetry & speed test",
@@ -248,7 +279,7 @@ export default function DeviceInspectorView() {
 					}}
 					icon={Gauge}
 					badges={
-						<div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
+						<div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200/80 text-[10px] font-bold text-emerald-800">
 							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
 							<span>Client-Side Diagnostics</span>
 						</div>
@@ -257,20 +288,36 @@ export default function DeviceInspectorView() {
 						<>
 							<button
 								type="button"
-								onClick={handleCopyReport}
-								className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+								onClick={handleCopyMarkdown}
+								className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
 							>
-								{isReportCopied ? (
+								{isMarkdownCopied ? (
+									<Check className="w-3.5 h-3.5 text-emerald-600" />
+								) : (
+									<FileText className="w-3.5 h-3.5 text-slate-500" />
+								)}
+								<span>
+									{isMarkdownCopied ? "Markdown Copied" : "Copy Markdown"}
+								</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={handleCopyJson}
+								className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+							>
+								{isJsonCopied ? (
 									<Check className="w-3.5 h-3.5 text-emerald-600" />
 								) : (
 									<Copy className="w-3.5 h-3.5 text-slate-500" />
 								)}
-								<span>{isReportCopied ? "Copied" : "Copy Report"}</span>
+								<span>{isJsonCopied ? "JSON Copied" : "Copy JSON"}</span>
 							</button>
+
 							<button
 								type="button"
 								onClick={handleDownloadReport}
-								className="flex items-center gap-2 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+								className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
 							>
 								<Download className="w-3.5 h-3.5" />
 								<span>Export JSON</span>
@@ -279,555 +326,84 @@ export default function DeviceInspectorView() {
 					}
 				/>
 
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				{/* SECTION 1: INTERNET SPEED TEST & LATENCY STUDIO                     */}
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.1 }}
-					className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6"
-				>
-					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-						<div className="space-y-0.5">
-							<div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-700">
-								<Wifi className="w-4 h-4 text-indigo-600" />
-								<span>Internet Speed & Latency Telemetry</span>
-							</div>
-							<p className="text-[11px] font-medium text-slate-500">
-								Bandwidth measured in Megabits per second (Mbps)
-							</p>
-						</div>
-						<button
-							type="button"
-							onClick={handleRunSpeedTest}
-							disabled={
-								speedMetrics.phase === "ping" ||
-								speedMetrics.phase === "download" ||
-								speedMetrics.phase === "upload"
-							}
-							className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-sm disabled:opacity-50"
-						>
-							{speedMetrics.phase === "ping" ||
-							speedMetrics.phase === "download" ||
-							speedMetrics.phase === "upload" ? (
-								<RefreshCw className="w-4 h-4 animate-spin" />
-							) : (
-								<Play className="w-4 h-4 fill-white" />
-							)}
-							<span>
-								{speedMetrics.phase === "idle"
-									? "Start Speed Test"
-									: speedMetrics.phase === "completed"
-										? "Test Again"
-										: "Testing..."}
-							</span>
-						</button>
-					</div>
+				{/* ── 2. Top Telemetry KPI Strip (4-Tier Internal Structure) ── */}
+				<TopTelemetryStrip
+					displayInfo={displayInfo}
+					hardwareInfo={hardwareInfo}
+					networkInfo={networkInfo}
+				/>
 
-					{/* 4 Metrics Grid */}
-					<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-						{/* Download */}
-						<div className="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-1">
-							<div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
-								<span className="flex items-center gap-1.5 text-indigo-900">
-									<ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
-									Download
-								</span>
-								<span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-100/70 px-1.5 py-0.5 rounded">
-									Mbps
-								</span>
-							</div>
-							<p className="font-mono text-3xl sm:text-4xl font-extrabold text-slate-900">
-								{speedMetrics.downloadMbps > 0
-									? speedMetrics.downloadMbps
-									: "--"}
-							</p>
-							<p className="text-[10px] font-semibold text-slate-500">
-								Megabits per second
-							</p>
-						</div>
-
-						{/* Upload */}
-						<div className="p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl space-y-1">
-							<div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
-								<span className="flex items-center gap-1.5 text-emerald-900">
-									<ArrowUp className="w-3.5 h-3.5 text-emerald-600" />
-									Upload
-								</span>
-								<span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">
-									Mbps
-								</span>
-							</div>
-							<p className="font-mono text-3xl sm:text-4xl font-extrabold text-slate-900">
-								{speedMetrics.uploadMbps > 0 ? speedMetrics.uploadMbps : "--"}
-							</p>
-							<p className="text-[10px] font-semibold text-slate-500">
-								Megabits per second
-							</p>
-						</div>
-
-						{/* Ping / Latency */}
-						<div className="p-5 bg-amber-50/50 border border-amber-100 rounded-2xl space-y-1">
-							<div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
-								<span className="flex items-center gap-1.5 text-amber-900">
-									<Radio className="w-3.5 h-3.5 text-amber-600" />
-									Ping (RTT)
-								</span>
-								<span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100/70 px-1.5 py-0.5 rounded">
-									ms
-								</span>
-							</div>
-							<p className="font-mono text-3xl sm:text-4xl font-extrabold text-slate-900">
-								{speedMetrics.pingMs > 0 ? speedMetrics.pingMs : "--"}
-							</p>
-							<p className="text-[10px] font-semibold text-slate-500">
-								Milliseconds
-							</p>
-						</div>
-
-						{/* Jitter */}
-						<div className="p-5 bg-purple-50/50 border border-purple-100 rounded-2xl space-y-1">
-							<div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
-								<span className="flex items-center gap-1.5 text-purple-900">
-									<Sliders className="w-3.5 h-3.5 text-purple-600" />
-									Jitter
-								</span>
-								<span className="text-[10px] font-mono font-bold text-purple-700 bg-purple-100/70 px-1.5 py-0.5 rounded">
-									ms
-								</span>
-							</div>
-							<p className="font-mono text-3xl sm:text-4xl font-extrabold text-slate-900">
-								{speedMetrics.jitterMs > 0 ? speedMetrics.jitterMs : "--"}
-							</p>
-							<p className="text-[10px] font-semibold text-slate-500">
-								Variation (ms)
-							</p>
-						</div>
-					</div>
-
-					{/* Progress Bar & Real-time Throughput Sparkline (when testing) */}
-					{speedMetrics.phase !== "idle" &&
-						speedMetrics.phase !== "completed" && (
-							<div className="space-y-2.5 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
-								<div className="flex items-center justify-between text-xs font-bold text-slate-700">
-									<span className="uppercase tracking-wider flex items-center gap-2">
-										<RefreshCw className="w-3.5 h-3.5 text-indigo-600 animate-spin" />
-										Active Phase: {speedMetrics.phase.toUpperCase()}
-									</span>
-									<span className="font-mono text-indigo-600 font-extrabold">
-										{speedMetrics.progressPercent}% Completed
-									</span>
-								</div>
-
-								<div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-									<div
-										className="h-full bg-indigo-600 transition-all duration-200"
-										style={{ width: `${speedMetrics.progressPercent}%` }}
+				{/* ── 3. Frameless Workstation Tab Switcher ── */}
+				<div className="flex items-center gap-1.5 p-1.5 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-x-auto">
+					{tabs.map((tab) => {
+						const Icon = tab.icon;
+						const isActive = activeTab === tab.id;
+						return (
+							<button
+								key={tab.id}
+								type="button"
+								onClick={() => setActiveTab(tab.id)}
+								className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
+									isActive
+										? "text-slate-950"
+										: "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+								}`}
+							>
+								{isActive && (
+									<motion.div
+										layoutId="activeInspectorTab"
+										transition={{ type: "spring", stiffness: 380, damping: 30 }}
+										className="absolute inset-0 bg-slate-100/90 rounded-xl border border-slate-200/80"
 									/>
-								</div>
-
-								{/* Live Throughput Sparkline */}
-								{throughputHistory.length > 2 && (
-									<div className="pt-2 flex items-center justify-between gap-4 text-[10px] text-slate-400 font-mono">
-										<span>Real-time Stream Fluctuation:</span>
-										<div className="flex items-end gap-1 h-5 flex-1 max-w-[200px]">
-											{throughputHistory.map((val, idx) => {
-												const maxVal = Math.max(...throughputHistory, 1);
-												const barHeight = Math.max(
-													15,
-													Math.round((val / maxVal) * 100),
-												);
-												return (
-													<div
-														key={`sparkline-${idx}`}
-														className="w-full bg-indigo-500 rounded-t-xs transition-all duration-75"
-														style={{ height: `${barHeight}%` }}
-													/>
-												);
-											})}
-										</div>
-										<span className="font-bold text-slate-700">
-											{throughputHistory[throughputHistory.length - 1]} Mbps
-										</span>
-									</div>
 								)}
-							</div>
-						)}
-
-					{/* ─── Connection Suitability Matrix (Completed) ─────────────── */}
-					{speedMetrics.phase === "completed" && (
-						<motion.div
-							initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
-							animate={{ opacity: 1, scale: 1 }}
-							className="p-5 bg-white border border-slate-200/80 rounded-2xl space-y-4 shadow-xs"
-						>
-							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-								<div className="flex items-center gap-2">
-									<Award className="w-4 h-4 text-indigo-600" />
-									<span className="text-xs font-extrabold uppercase tracking-wider text-slate-800">
-										Real-World Connection Suitability Matrix
-									</span>
-								</div>
-								<div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-indigo-200 rounded-full text-xs font-bold text-indigo-950 shadow-2xs">
-									<span className="w-2 h-2 rounded-full bg-emerald-500" />
-									<span className="font-mono font-extrabold text-indigo-600">
-										Grade {suitability.grade}
-									</span>
-									<span className="text-slate-300">/</span>
-									<span className="text-slate-600">
-										{suitability.gradeLabel}
-									</span>
-								</div>
-							</div>
-
-							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-								{suitability.metrics.map((item) => (
-									<div
-										key={item.title}
-										className="p-3.5 bg-white border border-slate-200/80 rounded-xl space-y-1.5 shadow-2xs"
-									>
-										<div className="flex items-center justify-between">
-											<span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase">
-												{item.iconName === "tv" && (
-													<Tv className="w-3.5 h-3.5 text-indigo-600" />
-												)}
-												{item.iconName === "gamepad" && (
-													<Gamepad2 className="w-3.5 h-3.5 text-purple-600" />
-												)}
-												{item.iconName === "video" && (
-													<Video className="w-3.5 h-3.5 text-emerald-600" />
-												)}
-												{item.iconName === "cloud-upload" && (
-													<CloudUpload className="w-3.5 h-3.5 text-cyan-600" />
-												)}
-												{item.title}
-											</span>
-											<span
-												className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
-													item.status === "optimal"
-														? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-														: item.status === "good"
-															? "bg-indigo-50 text-indigo-700 border border-indigo-200"
-															: item.status === "moderate"
-																? "bg-amber-50 text-amber-700 border border-amber-200"
-																: "bg-rose-50 text-rose-700 border border-rose-200"
-												}`}
-											>
-												{item.status}
-											</span>
-										</div>
-										<p className="text-xs font-extrabold text-slate-900">
-											{item.verdict}
-										</p>
-										<p className="text-[10px] text-slate-500 leading-tight">
-											{item.details}
-										</p>
-									</div>
-								))}
-							</div>
-						</motion.div>
-					)}
-
-					{/* Connection Meta Badges */}
-					<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100 text-xs">
-						<div>
-							<span className="text-slate-400 block text-[10px] font-bold uppercase">
-								Connection Type
-							</span>
-							<span className="font-mono font-bold text-slate-800 uppercase">
-								{networkInfo.effectiveType}
-							</span>
-						</div>
-						<div>
-							<span className="text-slate-400 block text-[10px] font-bold uppercase">
-								Network Downlink
-							</span>
-							<span className="font-mono font-bold text-slate-800">
-								~{networkInfo.downlinkMbps} Megabits per second
-							</span>
-						</div>
-						<div>
-							<span className="text-slate-400 block text-[10px] font-bold uppercase">
-								Public IP & Geo
-							</span>
-							<span className="font-mono font-bold text-slate-800 truncate block">
-								{networkInfo.publicIp || "127.0.0.1"}
-								{networkInfo.city
-									? ` (${networkInfo.city}, ${networkInfo.countryCode || networkInfo.country})`
-									: ""}
-							</span>
-						</div>
-						<div>
-							<span className="text-slate-400 block text-[10px] font-bold uppercase">
-								ISP & Organization
-							</span>
-							<span className="font-mono font-bold text-slate-800 truncate block">
-								{networkInfo.isp || networkInfo.org || "Detecting..."}
-							</span>
-						</div>
-					</div>
-				</motion.div>
-
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				{/* SECTION 2: PERIPHERALS & MEDIA HARDWARE DIAGNOSTICS                 */}
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				<PeripheralsStudio reduceMotion={reduceMotion} />
-
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				{/* SECTION 3 & 4: HARDWARE & DISPLAY TELEMETRY                         */}
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-					{/* Hardware Diagnostics Card */}
-					<motion.div
-						initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5 flex flex-col justify-between"
-					>
-						<div className="space-y-4">
-							<div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-700">
-								<Cpu className="w-4 h-4 text-indigo-600" />
-								<span>Hardware & GPU Architecture</span>
-							</div>
-
-							<div className="space-y-3">
-								<div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1">
-									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-										GPU Graphics Renderer (Unmasked WebGL)
-									</span>
-									<p className="font-mono text-xs sm:text-sm font-extrabold text-slate-900 break-words">
-										{hardwareInfo.gpuRenderer}
-									</p>
-								</div>
-
-								<div className="grid grid-cols-2 gap-3">
-									<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											Logical CPU Cores
-										</span>
-										<span className="font-mono text-lg font-extrabold text-slate-900">
-											{hardwareInfo.cpuCores} Threads
-										</span>
-									</div>
-
-									<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											Estimated RAM Memory
-										</span>
-										<span className="font-mono text-lg font-extrabold text-slate-900">
-											~{hardwareInfo.ramGb || 8} GB
-										</span>
-									</div>
-								</div>
-
-								<div className="grid grid-cols-2 gap-3">
-									<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											Max Texture Dimension
-										</span>
-										<span className="font-mono text-sm font-extrabold text-slate-900">
-											{hardwareInfo.maxTextureSize} ×{" "}
-											{hardwareInfo.maxTextureSize} px
-										</span>
-									</div>
-
-									<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											Battery Status
-										</span>
-										<div className="flex items-center gap-1.5 font-mono text-sm font-extrabold text-slate-900">
-											{hardwareInfo.isCharging ? (
-												<BatteryCharging className="w-4 h-4 text-emerald-600" />
-											) : (
-												<Battery className="w-4 h-4 text-slate-600" />
-											)}
-											<span>
-												{hardwareInfo.batteryLevel !== undefined
-													? `${hardwareInfo.batteryLevel}%`
-													: "Desktop / Connected"}
-											</span>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</motion.div>
-
-					{/* Display & Screen Capabilities */}
-					<motion.div
-						initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5 flex flex-col justify-between"
-					>
-						<div className="space-y-4">
-							<div className="flex items-center justify-between">
-								<div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-700">
-									<Monitor className="w-4 h-4 text-indigo-600" />
-									<span>Screen & Display Analysis</span>
-								</div>
-								<span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-extrabold bg-indigo-600 text-white shadow-2xs">
-									{displayInfo.estimatedHz} Hz Display
-								</span>
-							</div>
-
-							<div className="space-y-3">
-								<div className="grid grid-cols-2 gap-3">
-									<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											Native Resolution
-										</span>
-										<span className="font-mono text-sm sm:text-base font-extrabold text-slate-900">
-											{displayInfo.screenWidth} × {displayInfo.screenHeight} px
-										</span>
-									</div>
-
-									<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											Device Pixel Ratio (DPR)
-										</span>
-										<span className="font-mono text-sm sm:text-base font-extrabold text-slate-900">
-											{displayInfo.dpr}x{" "}
-											{displayInfo.dpr > 1 ? "(Retina/HiDPI)" : "(Standard)"}
-										</span>
-									</div>
-								</div>
-
-								<div className="grid grid-cols-2 gap-3">
-									<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											Color Gamut
-										</span>
-										<span className="font-mono text-sm font-extrabold text-slate-900">
-											{displayInfo.colorGamut}
-										</span>
-									</div>
-
-									<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											High Dynamic Range (HDR)
-										</span>
-										<span
-											className={`font-mono text-sm font-extrabold ${
-												displayInfo.isHdr
-													? "text-emerald-600"
-													: "text-slate-700"
-											}`}
-										>
-											{displayInfo.isHdr ? "✓ Supported (HDR)" : "SDR Standard"}
-										</span>
-									</div>
-								</div>
-
-								<div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between">
-									<div>
-										<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-											Viewport Canvas Bounds
-										</span>
-										<span className="font-mono text-xs sm:text-sm font-extrabold text-slate-900">
-											{displayInfo.viewportWidth} × {displayInfo.viewportHeight}{" "}
-											px
-										</span>
-									</div>
-									<span className="text-xs font-mono font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-lg">
-										{displayInfo.colorDepth}-bit Color
-									</span>
-								</div>
-							</div>
-						</div>
-					</motion.div>
+								<Icon
+									className={`w-3.5 h-3.5 relative z-10 ${
+										isActive ? "text-indigo-600" : "text-slate-400"
+									}`}
+								/>
+								<span className="relative z-10">{tab.label}</span>
+							</button>
+						);
+					})}
 				</div>
 
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				{/* SECTION 4: MEDIA CODEC COMPATIBILITY MATRIX                         */}
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5"
-				>
-					<div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-700">
-						<Layers className="w-4 h-4 text-indigo-600" />
-						<span>Audio & Video Media Codec Decoding Matrix</span>
-					</div>
+				{/* ── 4. Main Diagnostic Studios ── */}
+				<div className="space-y-6 sm:space-y-8">
+					{/* Studio A: Speed & Latency */}
+					{(activeTab === "all" || activeTab === "speed") && (
+						<SpeedTestStudio
+							speedMetrics={speedMetrics}
+							networkInfo={networkInfo}
+							throughputHistory={throughputHistory}
+							suitability={suitability}
+							onRunTest={handleRunSpeedTest}
+							reduceMotion={reduceMotion}
+						/>
+					)}
 
-					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-						{codecs.map((codec) => (
-							<div
-								key={codec.name}
-								className={`p-3 rounded-2xl border flex flex-col justify-between space-y-2 ${
-									codec.isSupported
-										? "bg-emerald-50/40 border-emerald-200/80 text-emerald-950"
-										: "bg-slate-50 border-slate-200/70 text-slate-500 opacity-60"
-								}`}
-							>
-								<div>
-									<span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">
-										{codec.type}
-									</span>
-									<h4 className="text-xs font-extrabold truncate">
-										{codec.name}
-									</h4>
-								</div>
-								<span
-									className={`inline-flex items-center gap-1 text-[10px] font-bold ${
-										codec.isSupported ? "text-emerald-700" : "text-slate-400"
-									}`}
-								>
-									{codec.isSupported ? (
-										<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-									) : (
-										<XCircle className="w-3.5 h-3.5 text-slate-400" />
-									)}
-									{codec.isSupported ? "Supported" : "Unsupported"}
-								</span>
-							</div>
-						))}
-					</div>
-				</motion.div>
+					{/* Studio B: Hardware & Display */}
+					{(activeTab === "all" || activeTab === "hardware") && (
+						<HardwareDisplayStudio
+							hardwareInfo={hardwareInfo}
+							displayInfo={displayInfo}
+							reduceMotion={reduceMotion}
+						/>
+					)}
 
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				{/* SECTION 5: MODERN WEB PLATFORM APIS AUDIT                           */}
-				{/* ═══════════════════════════════════════════════════════════════════ */}
-				<motion.div
-					initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-					animate={{ opacity: 1, y: 0 }}
-					className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5"
-				>
-					<div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-700">
-						<Zap className="w-4 h-4 text-indigo-600" />
-						<span>Browser Web Platform API Capability Audit</span>
-					</div>
+					{/* Studio C: Peripherals & Media */}
+					{(activeTab === "all" || activeTab === "peripherals") && (
+						<PeripheralsStudio reduceMotion={reduceMotion} />
+					)}
 
-					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-						{webApis.map((api) => (
-							<div
-								key={api.name}
-								className={`p-4 rounded-2xl border space-y-1.5 ${
-									api.isSupported
-										? "bg-slate-50/80 border-slate-200/80"
-										: "bg-rose-50/30 border-rose-200/60"
-								}`}
-							>
-								<div className="flex items-center justify-between">
-									<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-										{api.category}
-									</span>
-									{api.isSupported ? (
-										<CheckCircle2 className="w-4 h-4 text-emerald-600" />
-									) : (
-										<XCircle className="w-4 h-4 text-rose-500" />
-									)}
-								</div>
-								<h4 className="text-xs font-extrabold text-slate-900">
-									{api.name}
-								</h4>
-								<p className="text-[11px] text-slate-500 leading-relaxed">
-									{api.desc}
-								</p>
-							</div>
-						))}
-					</div>
-				</motion.div>
+					{/* Studio D: Media Codecs & Modern Web Platform APIs */}
+					{(activeTab === "all" || activeTab === "compatibility") && (
+						<CompatibilityMatrixStudio
+							codecs={codecs}
+							webApis={webApis}
+							reduceMotion={reduceMotion}
+						/>
+					)}
+				</div>
 			</div>
 		</main>
 	);

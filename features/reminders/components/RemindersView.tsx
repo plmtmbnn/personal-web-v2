@@ -18,10 +18,15 @@ import {
 	Search,
 	X,
 	CornerDownLeft,
+	ArrowLeft,
+	ChevronRight,
+	ArrowUpDown,
+	Server,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import CustomModal from "@/features/shared/components/CustomModal";
+import Link from "next/link";
 
 /**
  * Regex to detect URLs in text (http, https, or bare www.)
@@ -166,9 +171,7 @@ const TTL_CONFIG: Record<
 	{
 		label: string;
 		shortLabel: string;
-		badgeBg: string;
-		badgeText: string;
-		badgeBorder: string;
+		approxSeconds: number;
 		iconBg: string;
 		iconColor: string;
 		iconBorder: string;
@@ -178,9 +181,7 @@ const TTL_CONFIG: Record<
 	day: {
 		label: "1 Day",
 		shortLabel: "1D",
-		badgeBg: "bg-sky-50",
-		badgeText: "text-sky-700",
-		badgeBorder: "border-sky-200/80",
+		approxSeconds: 86400,
 		iconBg: "bg-sky-50",
 		iconColor: "text-sky-600",
 		iconBorder: "border-sky-200/70",
@@ -189,9 +190,7 @@ const TTL_CONFIG: Record<
 	week: {
 		label: "1 Week",
 		shortLabel: "1W",
-		badgeBg: "bg-indigo-50",
-		badgeText: "text-indigo-700",
-		badgeBorder: "border-indigo-200/80",
+		approxSeconds: 604800,
 		iconBg: "bg-indigo-50",
 		iconColor: "text-indigo-600",
 		iconBorder: "border-indigo-200/70",
@@ -200,9 +199,7 @@ const TTL_CONFIG: Record<
 	month: {
 		label: "1 Month",
 		shortLabel: "1M",
-		badgeBg: "bg-purple-50",
-		badgeText: "text-purple-700",
-		badgeBorder: "border-purple-200/80",
+		approxSeconds: 2592000,
 		iconBg: "bg-purple-50",
 		iconColor: "text-purple-600",
 		iconBorder: "border-purple-200/70",
@@ -223,9 +220,11 @@ export default function RemindersView({
 	const [filterTtl, setFilterTtl] = useState<
 		"all" | "expiring_soon" | ReminderTTL
 	>("all");
+	const [sortBy, setSortBy] = useState<"expiry" | "created">("expiry");
 	const [copiedNoteId, setCopiedNoteId] = useState<string | null>(null);
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
 	const [deleteReminderId, setDeleteReminderId] = useState<string | null>(null);
+	const [extendingId, setExtendingId] = useState<string | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [isPending, startTransition] = useTransition();
 
@@ -257,6 +256,7 @@ export default function RemindersView({
 				}
 			} catch (error) {
 				console.error("Failed to add reminder", error);
+				showToast("Failed to create reminder");
 			}
 		});
 	};
@@ -295,7 +295,9 @@ export default function RemindersView({
 	};
 
 	const handleExtend = (id: string, extendBy: ReminderTTL) => {
-		if (isPending) return;
+		if (isPending || extendingId) return;
+		setExtendingId(id);
+
 		startTransition(async () => {
 			try {
 				const { success, reminder } = await extendReminder(id, extendBy);
@@ -315,6 +317,9 @@ export default function RemindersView({
 				}
 			} catch (error) {
 				console.error("Failed to extend reminder", error);
+				showToast("Failed to extend reminder");
+			} finally {
+				setExtendingId(null);
 			}
 		});
 	};
@@ -340,9 +345,9 @@ export default function RemindersView({
 		{ value: "month", label: "1 Month", icon: CalendarDays },
 	];
 
-	// Filtered list
+	// Filtered & Sorted list
 	const filteredReminders = useMemo(() => {
-		return reminders.filter((r) => {
+		const filtered = reminders.filter((r) => {
 			const matchesSearch = r.text
 				.toLowerCase()
 				.includes(searchQuery.toLowerCase());
@@ -355,7 +360,17 @@ export default function RemindersView({
 			}
 			return r.ttl === filterTtl;
 		});
-	}, [reminders, searchQuery, filterTtl]);
+
+		return filtered.sort((a, b) => {
+			if (sortBy === "created") {
+				return (
+					new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+				);
+			}
+			// Default: soonest expiry first
+			return new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime();
+		});
+	}, [reminders, searchQuery, filterTtl, sortBy]);
 
 	const expiringCount = useMemo(() => {
 		const now = Date.now();
@@ -375,6 +390,130 @@ export default function RemindersView({
 
 	return (
 		<div className="w-full space-y-6 sm:space-y-8">
+			{/* ═══════════════════════════════════════
+			    TOP FLOATING HEADER CARD (Clean Header Standard)
+			═══════════════════════════════════════ */}
+			<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
+				<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5 sm:gap-6 pb-6 border-b border-slate-100">
+					<div className="flex items-start gap-4">
+						<div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-50 border border-amber-200/70 flex items-center justify-center shrink-0 shadow-2xs text-amber-600">
+							<Bell className="w-6 h-6 sm:w-7 sm:h-7" />
+						</div>
+						<div className="space-y-1.5">
+							{/* Contextual Breadcrumbs */}
+							<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+								<Link
+									href="/admin"
+									className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
+								>
+									Admin Dashboard
+								</Link>
+								<ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />
+								<span className="text-slate-900 font-bold">
+									Quick Reminders
+								</span>
+							</div>
+							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+								Quick Reminders
+							</h1>
+							<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
+								Manage ephemeral notes and URL bookmarks with automatic Redis
+								expiration and duration extensions.
+							</p>
+						</div>
+					</div>
+
+					<div className="flex items-center gap-2.5 sm:gap-3 self-start sm:self-center shrink-0">
+						<Link
+							href="/admin"
+							className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline group"
+						>
+							<ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 group-hover:-translate-x-0.5 transition-transform" />
+							<span>Admin Hub</span>
+						</Link>
+					</div>
+				</div>
+
+				{/* Header Telemetry Quick Strip (Canonical 4-Tier Internal Structure) */}
+				<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+					{/* Tile 1: Total Active Notes */}
+					<div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/70 space-y-1.5">
+						<div className="flex items-center justify-between gap-2">
+							<div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0">
+								<Bell className="w-3.5 h-3.5" />
+							</div>
+							<span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60 shrink-0">
+								Live
+							</span>
+						</div>
+						<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+							Active Notes
+						</span>
+						<span className="text-lg sm:text-2xl font-bold font-mono text-slate-900 tracking-tight tabular-nums block truncate">
+							{reminders.length}
+						</span>
+						<span className="text-[10px] sm:text-[11px] text-slate-400 font-medium block truncate">
+							In-memory cache
+						</span>
+					</div>
+
+					{/* Tile 2: Expiring Soon */}
+					<div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/70 space-y-1.5">
+						<div className="flex items-center justify-between gap-2">
+							<div
+								className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+									expiringCount > 0
+										? "bg-rose-50 border-rose-200/70 text-rose-600"
+										: "bg-emerald-50 border-emerald-200/70 text-emerald-600"
+								}`}
+							>
+								<Clock className="w-3.5 h-3.5" />
+							</div>
+							<span
+								className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border shrink-0 ${
+									expiringCount > 0
+										? "text-rose-700 bg-rose-50 border-rose-200/60"
+										: "text-emerald-700 bg-emerald-50 border-emerald-200/60"
+								}`}
+							>
+								{expiringCount > 0 ? "Urgent" : "Calm"}
+							</span>
+						</div>
+						<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+							Expiring Soon
+						</span>
+						<span className="text-lg sm:text-2xl font-bold font-mono text-slate-900 tracking-tight tabular-nums block truncate">
+							{expiringCount}
+						</span>
+						<span className="text-[10px] sm:text-[11px] text-slate-400 font-medium block truncate">
+							&lt; 24h lifespan
+						</span>
+					</div>
+
+					{/* Tile 3: Redis TTL Storage Engine */}
+					<div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/70 space-y-1.5 col-span-2 sm:col-span-1">
+						<div className="flex items-center justify-between gap-2">
+							<div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200/70 text-indigo-600 flex items-center justify-center shrink-0">
+								<Server className="w-3.5 h-3.5" />
+							</div>
+							<span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 shrink-0">
+								<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+								<span>Active</span>
+							</span>
+						</div>
+						<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+							Redis TTL Engine
+						</span>
+						<span className="text-sm sm:text-base font-bold font-mono text-slate-900 tracking-tight block truncate">
+							1D / 1W / 1M
+						</span>
+						<span className="text-[10px] sm:text-[11px] text-slate-400 font-medium block truncate">
+							Auto-eviction active
+						</span>
+					</div>
+				</div>
+			</div>
+
 			{/* ═══════════════════════════════════════
 			    NEW REMINDER CREATION CARD
 			═══════════════════════════════════════ */}
@@ -407,20 +546,32 @@ export default function RemindersView({
 							value={text}
 							onChange={(e) => setText(e.target.value)}
 							onKeyDown={handleKeyDown}
-							placeholder="What do you need to remember? (e.g. review https://github.com/org/repo/pull/123 or check server logs)..."
-							className="w-full h-28 sm:h-32 p-4 text-sm sm:text-base font-medium text-slate-900 bg-slate-50/70 border border-slate-200/80 rounded-2xl focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none placeholder:text-slate-400 leading-relaxed shadow-inner"
+							placeholder="What do you need to remember? (e.g. review PR https://github.com/org/repo/pull/123 or check server logs)..."
+							className="w-full h-28 sm:h-32 p-4 text-base sm:text-sm font-medium text-slate-900 bg-slate-50/70 border border-slate-200/80 rounded-2xl focus:outline-none focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none placeholder:text-slate-400 leading-relaxed shadow-inner"
 							maxLength={150}
 						/>
-						<div
-							className={`absolute bottom-3.5 right-4 text-xs font-mono font-bold px-2 py-0.5 rounded-md ${
-								charsLeft < 0
-									? "bg-rose-50 text-rose-600 border border-rose-200"
-									: charsLeft <= 20
-										? "bg-amber-50 text-amber-700 border border-amber-200"
-										: "text-slate-400 bg-white/80"
-							}`}
-						>
-							{charsLeft} left
+						<div className="absolute bottom-3.5 right-4 flex items-center gap-2">
+							{text.length > 0 && (
+								<button
+									type="button"
+									onClick={() => setText("")}
+									className="text-xs font-semibold text-slate-400 hover:text-slate-600 px-2 py-0.5 rounded-md hover:bg-slate-200/60 transition-colors cursor-pointer"
+									title="Clear text"
+								>
+									Clear
+								</button>
+							)}
+							<div
+								className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${
+									charsLeft < 0
+										? "bg-rose-50 text-rose-600 border border-rose-200"
+										: charsLeft <= 20
+											? "bg-amber-50 text-amber-700 border border-amber-200"
+											: "text-slate-400 bg-white/80"
+								}`}
+							>
+								{charsLeft} left
+							</div>
 						</div>
 					</div>
 
@@ -435,7 +586,7 @@ export default function RemindersView({
 										key={opt.value}
 										type="button"
 										onClick={() => setTtl(opt.value)}
-										className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow] cursor-pointer ${
+										className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow] cursor-pointer touch-manipulation active:scale-95 ${
 											isActive
 												? "bg-white text-slate-900 shadow-xs border border-slate-200/80 font-black"
 												: "text-slate-600 hover:text-slate-900 hover:bg-white/60"
@@ -453,7 +604,7 @@ export default function RemindersView({
 							type="button"
 							onClick={handleAdd}
 							disabled={!text.trim() || isOverLimit || isPending}
-							className="flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl transition-[background-color,transform] shadow-xs active:scale-95 cursor-pointer"
+							className="flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl transition-[background-color,transform] shadow-xs active:scale-95 cursor-pointer touch-manipulation"
 						>
 							{isPending ? (
 								<Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -471,8 +622,8 @@ export default function RemindersView({
 			═══════════════════════════════════════ */}
 			<div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-3.5 sm:p-4 shadow-xs space-y-3">
 				<div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
-					{/* Filter Pills Track */}
-					<div className="flex items-center gap-1.5 overflow-x-auto max-w-full no-scrollbar py-0.5">
+					{/* Filter Pills Track (Defensive scrollbar suppression) */}
+					<div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
 						<button
 							type="button"
 							onClick={() => setFilterTtl("all")}
@@ -582,26 +733,50 @@ export default function RemindersView({
 						</button>
 					</div>
 
-					{/* Search Input (Strict UI hygiene: pointer-events-none z-10 with pl-10) */}
-					<div className="relative w-full md:w-72 group">
-						<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10 group-focus-within:text-indigo-600 transition-colors" />
-						<input
-							type="text"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							placeholder="Search notes or links..."
-							className="w-full pl-10 pr-9 py-1.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200/80 focus:border-indigo-500 rounded-xl text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all shadow-xs"
-						/>
-						{searchQuery && (
+					<div className="flex items-center gap-2.5 w-full md:w-auto">
+						{/* Sort Switcher */}
+						<div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/70 shrink-0">
 							<button
 								type="button"
-								onClick={() => setSearchQuery("")}
-								className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 cursor-pointer z-10"
-								title="Clear search"
+								onClick={() =>
+									setSortBy((prev) =>
+										prev === "expiry" ? "created" : "expiry",
+									)
+								}
+								className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors cursor-pointer"
+								title={`Currently sorted by: ${sortBy === "expiry" ? "Soonest Expiry" : "Newest Created"}`}
 							>
-								<X className="w-2.5 h-2.5" />
+								<ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+								<span className="hidden sm:inline">
+									{sortBy === "expiry" ? "Soonest Expiry" : "Newest Created"}
+								</span>
+								<span className="sm:hidden">
+									{sortBy === "expiry" ? "Expiry" : "Newest"}
+								</span>
 							</button>
-						)}
+						</div>
+
+						{/* Search Input (Strict UI hygiene: pointer-events-none z-10 with pl-10) */}
+						<div className="relative flex-1 md:w-64 group">
+							<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10 group-focus-within:text-amber-600 transition-colors" />
+							<input
+								type="text"
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								placeholder="Search notes or URLs..."
+								className="w-full pl-10 pr-9 py-1.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200/80 focus:border-amber-500 rounded-xl text-base sm:text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all shadow-xs"
+							/>
+							{searchQuery && (
+								<button
+									type="button"
+									onClick={() => setSearchQuery("")}
+									className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 cursor-pointer z-10"
+									title="Clear search"
+								>
+									<X className="w-2.5 h-2.5" />
+								</button>
+							)}
+						</div>
 					</div>
 				</div>
 
@@ -623,7 +798,7 @@ export default function RemindersView({
 								setSearchQuery("");
 								setFilterTtl("all");
 							}}
-							className="inline-flex items-center gap-1 font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer active:scale-95"
+							className="inline-flex items-center gap-1 font-bold text-amber-700 hover:text-amber-800 cursor-pointer active:scale-95"
 						>
 							<X className="w-3.5 h-3.5" />
 							<span>Reset Filters</span>
@@ -668,9 +843,19 @@ export default function RemindersView({
 			) : (
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
 					{filteredReminders.map((reminder) => {
+						const expiresAtMs = new Date(reminder.expiresAt).getTime();
+						const createdAtMs = new Date(reminder.createdAt).getTime();
+						const nowMs = Date.now();
+						const remainingMs = expiresAtMs - nowMs;
+						const totalMs = Math.max(1, expiresAtMs - createdAtMs);
+						const remainingPercent = Math.min(
+							100,
+							Math.max(0, Math.round((remainingMs / totalMs) * 100)),
+						);
 						const isExpiringSoon =
-							new Date(reminder.expiresAt).getTime() - Date.now() <
-							86400 * 1000; // < 1 day
+							remainingMs > 0 && remainingMs < 86400 * 1000;
+						const isExpired = remainingMs <= 0;
+
 						const ttlMeta = TTL_CONFIG[reminder.ttl] || TTL_CONFIG.day;
 						const TTLIcon = ttlMeta.icon;
 
@@ -688,7 +873,7 @@ export default function RemindersView({
 							>
 								<div>
 									{/* Top Header: Duration Squircle + Lifespan info + Expiry status pill */}
-									<div className="flex items-center justify-between gap-3 mb-4">
+									<div className="flex items-center justify-between gap-3 mb-3">
 										<div className="flex items-center gap-2.5 min-w-0">
 											<div
 												className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs transition-colors ${ttlMeta.iconBg} ${ttlMeta.iconColor} ${ttlMeta.iconBorder}`}
@@ -706,7 +891,11 @@ export default function RemindersView({
 										</div>
 
 										{/* Expiry status badge */}
-										{isExpiringSoon ? (
+										{isExpired ? (
+											<span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-black tracking-tight shrink-0 shadow-2xs">
+												Expired
+											</span>
+										) : isExpiringSoon ? (
 											<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-black tracking-tight shrink-0 shadow-2xs">
 												<span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
 												<span>
@@ -725,6 +914,21 @@ export default function RemindersView({
 										)}
 									</div>
 
+									{/* Lifespan Remaining Micro-Bar */}
+									<div
+										className="w-full bg-slate-100 h-1 rounded-full overflow-hidden mb-4"
+										title={`${remainingPercent}% lifespan remaining`}
+									>
+										<div
+											className={`h-full rounded-full transition-all duration-500 ${
+												isExpiringSoon
+													? "bg-amber-500"
+													: "bg-slate-300 group-hover:bg-slate-400"
+											}`}
+											style={{ width: `${remainingPercent}%` }}
+										/>
+									</div>
+
 									{/* Message Body Text */}
 									<div className="text-base sm:text-lg font-bold text-slate-900 leading-snug sm:leading-relaxed tracking-tight break-words whitespace-pre-wrap mb-5">
 										<LinkifiedText text={reminder.text} />
@@ -733,7 +937,7 @@ export default function RemindersView({
 
 								{/* Card Footer Actions */}
 								<div className="flex flex-wrap items-center justify-between mt-auto gap-2 pt-3.5 border-t border-slate-100">
-									{/* Copy Note Button */}
+									{/* Copy Note Button with Multi-Modal In-Place Feedback */}
 									<button
 										type="button"
 										onClick={() => handleCopyNote(reminder)}
@@ -763,16 +967,20 @@ export default function RemindersView({
 											<button
 												type="button"
 												onClick={() => handleExtend(reminder.id, "day")}
-												disabled={isPending}
+												disabled={isPending || extendingId === reminder.id}
 												className="px-2 py-1 text-[11px] font-mono font-bold text-slate-600 hover:text-slate-950 hover:bg-white rounded-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
 												title="Extend +1 Day"
 											>
-												+1D
+												{extendingId === reminder.id ? (
+													<Loader2 className="w-3 h-3 animate-spin text-slate-600 inline" />
+												) : (
+													"+1D"
+												)}
 											</button>
 											<button
 												type="button"
 												onClick={() => handleExtend(reminder.id, "week")}
-												disabled={isPending}
+												disabled={isPending || extendingId === reminder.id}
 												className="px-2 py-1 text-[11px] font-mono font-bold text-slate-600 hover:text-slate-950 hover:bg-white rounded-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
 												title="Extend +1 Week"
 											>
@@ -781,7 +989,7 @@ export default function RemindersView({
 											<button
 												type="button"
 												onClick={() => handleExtend(reminder.id, "month")}
-												disabled={isPending}
+												disabled={isPending || extendingId === reminder.id}
 												className="px-2 py-1 text-[11px] font-mono font-bold text-slate-600 hover:text-slate-950 hover:bg-white rounded-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
 												title="Extend +1 Month"
 											>
@@ -827,13 +1035,13 @@ export default function RemindersView({
 				isLoading={isDeleting}
 			/>
 
-			{/* Toast Notification Alert */}
+			{/* Multi-Modal Floating Confirmation Toast */}
 			<AnimatePresence>
 				{toastMessage && (
 					<motion.div
-						initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+						initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
 						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: 15 }}
+						exit={{ opacity: 0, y: 12 }}
 						className="fixed bottom-24 left-1/2 -translate-x-1/2 w-auto px-4 py-2.5 bg-slate-900 text-white rounded-2xl font-bold shadow-xl z-[100] flex items-center gap-2 border border-slate-800"
 					>
 						<Check className="w-4 h-4 text-emerald-400 shrink-0" />

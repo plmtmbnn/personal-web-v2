@@ -115,31 +115,37 @@ export async function fetchIhsgForeignFlow(
 
 		const todayNetIdr = calculateNetFlow(stocksData);
 
-		// Jakarta timezone & trading day evaluation
-		const now = new Date();
-		const formatter = new Intl.DateTimeFormat("en-US", {
-			timeZone: "Asia/Jakarta",
-			year: "numeric",
-			month: "2-digit",
-			day: "2-digit",
-			weekday: "short",
-			hour: "2-digit",
-			hour12: false,
-		});
-		const parts = formatter.formatToParts(now);
-		const year = parts.find((p) => p.type === "year")?.value;
-		const month = parts.find((p) => p.type === "month")?.value;
-		const day = parts.find((p) => p.type === "day")?.value;
-		const weekday = parts.find((p) => p.type === "weekday")?.value;
-		const hour = Number.parseInt(
-			parts.find((p) => p.type === "hour")?.value ?? "0",
-			10,
-		);
+		// 1b. Determine true trading session date from payload
+		let sessionDateStr = "";
+		const rawPayloadDate = stocksData[0]?.Date;
+		if (rawPayloadDate && typeof rawPayloadDate === "string") {
+			const clean = rawPayloadDate.split("T")[0];
+			if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+				sessionDateStr = clean;
+			}
+		}
 
-		const dateStr = `${year}-${month}-${day}`;
-		const isWeekday = weekday !== "Sat" && weekday !== "Sun";
-		// Only record as today's new trading session if market has actually started trading (>= 9:00 WIB)
-		const isTradingSession = isWeekday && hour >= 9;
+		// Fallback to Jakarta timezone wall-clock if payload date is absent
+		if (!sessionDateStr) {
+			const now = new Date();
+			const formatter = new Intl.DateTimeFormat("en-US", {
+				timeZone: "Asia/Jakarta",
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+			});
+			const parts = formatter.formatToParts(now);
+			const year = parts.find((p) => p.type === "year")?.value;
+			const month = parts.find((p) => p.type === "month")?.value;
+			const day = parts.find((p) => p.type === "day")?.value;
+			sessionDateStr = `${year}-${month}-${day}`;
+		}
+
+		// Validate that session date is not a weekend
+		const sessionDayOfWeek = new Date(
+			`${sessionDateStr}T12:00:00Z`,
+		).getUTCDay();
+		const isTradingDay = sessionDayOfWeek !== 0 && sessionDayOfWeek !== 6;
 
 		// 2. Fetch history from Redis
 		let historyMap: Record<string, number> = {};
@@ -164,9 +170,9 @@ export async function fetchIhsgForeignFlow(
 			}
 		}
 
-		// 3. Update history only on active trading sessions to prevent weekend streak inflation
-		if (isTradingSession) {
-			historyMap[dateStr] = todayNetIdr;
+		// 3. Update history on valid trading day session
+		if (isTradingDay) {
+			historyMap[sessionDateStr] = todayNetIdr;
 
 			// Keep only last 10 trading days to prevent unbound growth
 			const sortedDates = Object.keys(historyMap).sort((a, b) =>
@@ -193,7 +199,8 @@ export async function fetchIhsgForeignFlow(
 			sortedDates.map((date) => historyMap[date]),
 		);
 		const netBuySell5dIdr = recentFlows.reduce((sum, val) => sum + val, 0);
-		const effectiveDateStr = sortedDates.length > 0 ? sortedDates[0] : dateStr;
+		const effectiveDateStr =
+			sortedDates.length > 0 ? sortedDates[0] : sessionDateStr;
 		const effective1dNet =
 			sortedDates.length > 0 ? historyMap[sortedDates[0]] : todayNetIdr;
 

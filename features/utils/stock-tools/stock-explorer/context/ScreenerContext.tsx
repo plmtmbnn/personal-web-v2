@@ -10,7 +10,22 @@ import {
 	useRef,
 	type ReactNode,
 } from "react";
-import type { ProcessedStock, ScoreWeights, Sector } from "../types";
+import type {
+	ProcessedStock,
+	ScoreWeights,
+	Sector,
+	StockPick,
+	StockPickWithMetrics,
+	ClosePickPayload,
+} from "../types";
+import { DEFAULT_DEMO_PICKS, traceAndUpdateWatermarks } from "../stockpicks";
+import {
+	fetchCloudStockPicksAction,
+	saveCloudStockPickAction,
+	closeCloudStockPickAction,
+	deleteCloudStockPickAction,
+	syncCloudWatermarksAction,
+} from "../actions/stockpicks";
 
 export const DEFAULT_WEIGHTS: ScoreWeights = {
 	price: 25,
@@ -82,6 +97,12 @@ export const STRATEGY_PRESETS: {
 ];
 
 interface ScreenerContextType {
+	// Workstation Tab Navigation
+	workstationTab: "screener" | "simulator";
+	setWorkstationTab: (tab: "screener" | "simulator") => void;
+	simulatorSubTab: "active" | "journal";
+	setSimulatorSubTab: (subTab: "active" | "journal") => void;
+
 	// Inspector Drawer State
 	selectedStock: ProcessedStock | null;
 	setSelectedStock: (stock: ProcessedStock | null) => void;
@@ -90,6 +111,53 @@ interface ScreenerContextType {
 	watchlist: string[];
 	toggleWatchlist: (code: string) => void;
 	isWatchlisted: (code: string) => boolean;
+
+	// Stockpick Simulator State & Actions (Supabase Cloud Source of Truth)
+	stockPicks: StockPick[];
+	isPicksLoading: boolean;
+	cloudSyncError: string | null;
+	refreshPicksFromCloud: () => Promise<void>;
+	addStockPick: (
+		data: Omit<
+			StockPick,
+			| "id"
+			| "createdAt"
+			| "updatedAt"
+			| "highestPriceTraced"
+			| "lowestPriceTraced"
+			| "status"
+		> & {
+			highestPriceTraced?: number;
+			lowestPriceTraced?: number;
+		},
+	) => StockPick;
+	updateStockPick: (id: string, updates: Partial<StockPick>) => void;
+	removeStockPick: (id: string) => void;
+	closeStockPick: (id: string, exitPrice?: number) => void;
+	closeStockPickWithDetails: (id: string, payload: ClosePickPayload) => void;
+	reopenStockPick: (id: string) => void;
+	resetPickWatermarks: (id: string, currentPrice?: number) => void;
+	resetToDemoPicks: () => void;
+	exportPicksToJson: () => string;
+	importPicksFromJson: (jsonStr: string) => boolean;
+
+	// Simulator Modal State
+	isPickModalOpen: boolean;
+	setIsPickModalOpen: (open: boolean) => void;
+	pickToEdit: StockPick | null;
+	stockToSimulate: ProcessedStock | null;
+	openAddPickModal: (stock?: ProcessedStock | null) => void;
+	openEditPickModal: (pick: StockPick) => void;
+	closePickModal: () => void;
+
+	// Close Position Modal State
+	isCloseModalOpen: boolean;
+	pickToClose: StockPickWithMetrics | null;
+	openClosePickModal: (pick: StockPickWithMetrics) => void;
+	closeClosePickModal: () => void;
+
+	// Live market sync for watermarks
+	syncMarketDataWatermarks: (marketStocks: ProcessedStock[]) => void;
 
 	// Factor Scoring Weights State
 	weights: ScoreWeights;
@@ -118,12 +186,38 @@ interface ScreenerContextType {
 const ScreenerContext = createContext<ScreenerContextType | null>(null);
 
 export function ScreenerProvider({ children }: { children: ReactNode }) {
+	const [workstationTab, setWorkstationTabState] = useState<
+		"screener" | "simulator"
+	>("screener");
+	const [simulatorSubTab, setSimulatorSubTab] = useState<"active" | "journal">(
+		"active",
+	);
 	const [selectedStock, setSelectedStock] = useState<ProcessedStock | null>(
 		null,
 	);
 	const [watchlist, setWatchlist] = useState<string[]>([]);
 	const [weights, setWeights] = useState<ScoreWeights>(DEFAULT_WEIGHTS);
 	const [isScorerExpanded, setIsScorerExpanded] = useState(false);
+
+	// Stockpick Simulator State (retrieved exclusively from Supabase)
+	const [stockPicks, setStockPicks] = useState<StockPick[]>([]);
+	const [isPicksLoading, setIsPicksLoading] = useState<boolean>(true);
+	const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
+	const stockPicksRef = useRef<StockPick[]>(stockPicks);
+	stockPicksRef.current = stockPicks;
+	const cloudWatermarksSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+	const [isPickModalOpen, setIsPickModalOpen] = useState(false);
+	const [pickToEdit, setPickToEdit] = useState<StockPick | null>(null);
+	const [stockToSimulate, setStockToSimulate] = useState<ProcessedStock | null>(
+		null,
+	);
+
+	// Close Position Modal State
+	const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
+	const [pickToClose, setPickToClose] = useState<StockPickWithMetrics | null>(
+		null,
+	);
 
 	// Filters
 	const [minScore, setMinScoreState] = useState<number>(0);
@@ -133,9 +227,14 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 	);
 	const [searchQuery, setSearchQueryState] = useState<string>("");
 
-	// Load stored weights and watchlist from localStorage + URL params on mount
+	// Load stored weights and watchlist on mount + retrieve stockpicks from Supabase Cloud
 	useEffect(() => {
 		if (typeof window === "undefined") return;
+
+		// Clean up any legacy localStorage entry
+		try {
+			localStorage.removeItem("idx:stockpicks:v1");
+		} catch (_e) {}
 
 		try {
 			const storedWeights = localStorage.getItem("idx:weights");
@@ -151,9 +250,50 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			}
 		} catch (_e) {}
 
+		// Primary source of truth: retrieve stockpicks directly from Supabase Cloud
+		let isMounted = true;
+		setIsPicksLoading(true);
+		setCloudSyncError(null);
+
+		fetchCloudStockPicksAction()
+			.then((res) => {
+				if (!isMounted) return;
+				if (res.success && res.data) {
+					stockPicksRef.current = res.data;
+					setStockPicks(res.data);
+				} else if (!res.success) {
+					setCloudSyncError(
+						res.error || "Failed to retrieve picks from Supabase",
+					);
+					stockPicksRef.current = [];
+					setStockPicks([]);
+				}
+			})
+			.catch((err) => {
+				if (!isMounted) return;
+				const msg =
+					err instanceof Error ? err.message : "Database connection error";
+				setCloudSyncError(msg);
+				stockPicksRef.current = [];
+				setStockPicks([]);
+			})
+			.finally(() => {
+				if (isMounted) {
+					setIsPicksLoading(false);
+				}
+			});
+
 		// Sync initial URL search parameters
 		try {
 			const params = new URLSearchParams(window.location.search);
+			const tabParam = params.get("tab");
+			if (tabParam === "simulator" || tabParam === "screener") {
+				setWorkstationTabState(tabParam);
+			}
+			const subParam = params.get("sub");
+			if (subParam === "journal" || subParam === "active") {
+				setSimulatorSubTab(subParam);
+			}
 			const scoreParam = params.get("minScore");
 			if (scoreParam && !Number.isNaN(Number(scoreParam))) {
 				setMinScoreState(Number(scoreParam));
@@ -171,6 +311,10 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 				setSearchQueryState(queryParam);
 			}
 		} catch (_e) {}
+
+		return () => {
+			isMounted = false;
+		};
 	}, []);
 
 	const syncUrlTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -178,6 +322,7 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 	// URL Sync helper (debounced to avoid thrashing history state)
 	const syncUrl = useCallback(
 		(
+			tab: "screener" | "simulator",
 			score: number,
 			turnover: number,
 			sector: Sector | "ALL",
@@ -190,6 +335,12 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			syncUrlTimeoutRef.current = setTimeout(() => {
 				try {
 					const url = new URL(window.location.href);
+					if (tab === "simulator") {
+						url.searchParams.set("tab", "simulator");
+					} else {
+						url.searchParams.delete("tab");
+					}
+
 					if (score > 0) {
 						url.searchParams.set("minScore", String(score));
 					} else {
@@ -226,39 +377,50 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			if (syncUrlTimeoutRef.current) {
 				clearTimeout(syncUrlTimeoutRef.current);
 			}
+			if (cloudWatermarksSyncTimeoutRef.current) {
+				clearTimeout(cloudWatermarksSyncTimeoutRef.current);
+			}
 		};
 	}, []);
+
+	const setWorkstationTab = useCallback(
+		(tab: "screener" | "simulator") => {
+			setWorkstationTabState(tab);
+			syncUrl(tab, minScore, minTurnover, selectedSector, searchQuery);
+		},
+		[minScore, minTurnover, selectedSector, searchQuery, syncUrl],
+	);
 
 	const setMinScore = useCallback(
 		(score: number) => {
 			setMinScoreState(score);
-			syncUrl(score, minTurnover, selectedSector, searchQuery);
+			syncUrl(workstationTab, score, minTurnover, selectedSector, searchQuery);
 		},
-		[minTurnover, selectedSector, searchQuery, syncUrl],
+		[workstationTab, minTurnover, selectedSector, searchQuery, syncUrl],
 	);
 
 	const setMinTurnover = useCallback(
 		(turnover: number) => {
 			setMinTurnoverState(turnover);
-			syncUrl(minScore, turnover, selectedSector, searchQuery);
+			syncUrl(workstationTab, minScore, turnover, selectedSector, searchQuery);
 		},
-		[minScore, selectedSector, searchQuery, syncUrl],
+		[workstationTab, minScore, selectedSector, searchQuery, syncUrl],
 	);
 
 	const setSelectedSector = useCallback(
 		(sector: Sector | "ALL") => {
 			setSelectedSectorState(sector);
-			syncUrl(minScore, minTurnover, sector, searchQuery);
+			syncUrl(workstationTab, minScore, minTurnover, sector, searchQuery);
 		},
-		[minScore, minTurnover, searchQuery, syncUrl],
+		[workstationTab, minScore, minTurnover, searchQuery, syncUrl],
 	);
 
 	const setSearchQuery = useCallback(
 		(query: string) => {
 			setSearchQueryState(query);
-			syncUrl(minScore, minTurnover, selectedSector, query);
+			syncUrl(workstationTab, minScore, minTurnover, selectedSector, query);
 		},
-		[minScore, minTurnover, selectedSector, syncUrl],
+		[workstationTab, minScore, minTurnover, selectedSector, syncUrl],
 	);
 
 	const resetFilters = useCallback(() => {
@@ -266,8 +428,8 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 		setMinTurnoverState(0);
 		setSelectedSectorState("ALL");
 		setSearchQueryState("");
-		syncUrl(0, 0, "ALL", "");
-	}, [syncUrl]);
+		syncUrl(workstationTab, 0, 0, "ALL", "");
+	}, [workstationTab, syncUrl]);
 
 	// Watchlist persistence
 	const toggleWatchlist = useCallback((code: string) => {
@@ -285,6 +447,408 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 	const isWatchlisted = useCallback(
 		(code: string) => watchlist.includes(code),
 		[watchlist],
+	);
+
+	// -------------------------------------------------------------
+	// Stockpick Simulator Cloud Persistence & Mutation Handlers
+	// -------------------------------------------------------------
+
+	const refreshPicksFromCloud = useCallback(async () => {
+		setIsPicksLoading(true);
+		setCloudSyncError(null);
+		try {
+			const res = await fetchCloudStockPicksAction();
+			if (res.success && res.data) {
+				stockPicksRef.current = res.data;
+				setStockPicks(res.data);
+			} else if (!res.success) {
+				setCloudSyncError(
+					res.error || "Failed to retrieve picks from Supabase",
+				);
+			}
+		} catch (err) {
+			const msg =
+				err instanceof Error ? err.message : "Database connection error";
+			setCloudSyncError(msg);
+		} finally {
+			setIsPicksLoading(false);
+		}
+	}, []);
+
+	const savePicks = useCallback((updated: StockPick[]) => {
+		stockPicksRef.current = updated;
+		setStockPicks(updated);
+	}, []);
+
+	const addStockPick = useCallback(
+		(
+			data: Omit<
+				StockPick,
+				| "id"
+				| "createdAt"
+				| "updatedAt"
+				| "highestPriceTraced"
+				| "lowestPriceTraced"
+				| "status"
+			> & {
+				highestPriceTraced?: number;
+				lowestPriceTraced?: number;
+			},
+		) => {
+			const now = Date.now();
+			const newId =
+				typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+					? crypto.randomUUID()
+					: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+							const r = (Math.random() * 16) | 0;
+							const v = c === "x" ? r : (r & 0x3) | 0x8;
+							return v.toString(16);
+						});
+			const newPick: StockPick = {
+				id: newId,
+				stockCode: data.stockCode.toUpperCase().trim(),
+				stockName: data.stockName,
+				sector: data.sector,
+				buyPrice: data.buyPrice,
+				quantityLots: data.quantityLots || 10,
+				entryDate: data.entryDate || new Date().toISOString().split("T")[0],
+				targetPrice: data.targetPrice,
+				stopLossPrice: data.stopLossPrice,
+				thesis: data.thesis || "Compass Core Tranche",
+				notes: data.notes,
+				highestPriceTraced: data.highestPriceTraced || data.buyPrice,
+				highestPriceDate:
+					data.entryDate || new Date().toISOString().split("T")[0],
+				lowestPriceTraced: data.lowestPriceTraced || data.buyPrice,
+				lowestPriceDate:
+					data.entryDate || new Date().toISOString().split("T")[0],
+				status: "active",
+				createdAt: now,
+				updatedAt: now,
+			};
+
+			const updated = [
+				newPick,
+				...stockPicks.filter((p) => p.id !== newPick.id),
+			];
+			savePicks(updated);
+			saveCloudStockPickAction(newPick)
+				.then((res) => {
+					if (!res.success && res.error) setCloudSyncError(res.error);
+				})
+				.catch((err) => {
+					setCloudSyncError(err instanceof Error ? err.message : "Cloud error");
+				});
+			return newPick;
+		},
+		[stockPicks, savePicks],
+	);
+
+	const updateStockPick = useCallback(
+		(id: string, updates: Partial<StockPick>) => {
+			const updated = stockPicks.map((pick) => {
+				if (pick.id !== id) return pick;
+				const newPick = { ...pick, ...updates, updatedAt: Date.now() };
+
+				// If buyPrice changed, adjust high/low watermarks if they violated new entry baseline
+				if (updates.buyPrice !== undefined && updates.buyPrice > 0) {
+					if (
+						!newPick.highestPriceTraced ||
+						newPick.highestPriceTraced < updates.buyPrice
+					) {
+						newPick.highestPriceTraced = updates.buyPrice;
+					}
+					if (
+						!newPick.lowestPriceTraced ||
+						newPick.lowestPriceTraced > updates.buyPrice
+					) {
+						newPick.lowestPriceTraced = updates.buyPrice;
+					}
+				}
+
+				return newPick;
+			});
+			savePicks(updated);
+			const target = updated.find((p) => p.id === id);
+			if (target) {
+				saveCloudStockPickAction(target)
+					.then((res) => {
+						if (!res.success && res.error) setCloudSyncError(res.error);
+					})
+					.catch((err) => {
+						setCloudSyncError(
+							err instanceof Error ? err.message : "Cloud error",
+						);
+					});
+			}
+		},
+		[stockPicks, savePicks],
+	);
+
+	const removeStockPick = useCallback(
+		(id: string) => {
+			const updated = stockPicks.filter((p) => p.id !== id);
+			savePicks(updated);
+			deleteCloudStockPickAction(id)
+				.then((res) => {
+					if (!res.success && res.error) setCloudSyncError(res.error);
+				})
+				.catch((err) => {
+					setCloudSyncError(err instanceof Error ? err.message : "Cloud error");
+				});
+		},
+		[stockPicks, savePicks],
+	);
+
+	const closeStockPick = useCallback(
+		(id: string, exitPrice?: number) => {
+			const updated = stockPicks.map((pick) => {
+				if (pick.id !== id) return pick;
+				const closedPrice = exitPrice || pick.buyPrice;
+				const realizedPlPct =
+					pick.buyPrice > 0
+						? ((closedPrice - pick.buyPrice) / pick.buyPrice) * 100
+						: 0;
+				const totalShares = (pick.quantityLots || 1) * 100;
+				const realizedPlNominal = (closedPrice - pick.buyPrice) * totalShares;
+
+				const closedPick: StockPick = {
+					...pick,
+					status: "closed" as const,
+					closedPrice,
+					closedDate: new Date().toISOString().split("T")[0],
+					realizedPlPct,
+					realizedPlNominal,
+					exitReason: "manual_profit",
+					updatedAt: Date.now(),
+				};
+				saveCloudStockPickAction(closedPick).catch(() => {});
+				return closedPick;
+			});
+			savePicks(updated);
+		},
+		[stockPicks, savePicks],
+	);
+
+	const closeStockPickWithDetails = useCallback(
+		(id: string, payload: ClosePickPayload) => {
+			const targetPick = stockPicks.find((p) => p.id === id);
+			if (!targetPick) return;
+
+			const totalShares = (targetPick.quantityLots || 1) * 100;
+			const exitPrice = payload.exitPrice || targetPick.buyPrice;
+			const realizedPlNominal = (exitPrice - targetPick.buyPrice) * totalShares;
+			const realizedPlPct =
+				targetPick.buyPrice > 0
+					? ((exitPrice - targetPick.buyPrice) / targetPick.buyPrice) * 100
+					: 0;
+
+			const entryTs = targetPick.entryDate
+				? new Date(targetPick.entryDate).getTime()
+				: targetPick.createdAt;
+			const exitDate =
+				payload.exitDate || new Date().toISOString().split("T")[0];
+			const exitTs = new Date(exitDate).getTime();
+			const holdingDays = Math.max(
+				0,
+				Math.floor((exitTs - entryTs) / (1000 * 60 * 60 * 24)),
+			);
+
+			const peakGainPct =
+				targetPick.buyPrice > 0
+					? ((Math.max(
+							targetPick.highestPriceTraced || targetPick.buyPrice,
+							targetPick.buyPrice,
+						) -
+							targetPick.buyPrice) /
+							targetPick.buyPrice) *
+						100
+					: 0;
+			const maxDrawdownPct =
+				targetPick.buyPrice > 0
+					? ((Math.min(
+							targetPick.lowestPriceTraced || targetPick.buyPrice,
+							targetPick.buyPrice,
+						) -
+							targetPick.buyPrice) /
+							targetPick.buyPrice) *
+						100
+					: 0;
+
+			const updatedPick: StockPick = {
+				...targetPick,
+				status: "closed",
+				closedPrice: exitPrice,
+				closedDate: exitDate,
+				realizedPlNominal,
+				realizedPlPct,
+				exitReason: payload.exitReason,
+				exitNotes: payload.exitNotes,
+				updatedAt: Date.now(),
+			};
+
+			const updated = stockPicks.map((p) => (p.id === id ? updatedPick : p));
+			savePicks(updated);
+
+			// Asynchronously push snapshot to Supabase cloud
+			closeCloudStockPickAction(id, {
+				...payload,
+				exitPrice,
+				exitDate,
+				holdingDays,
+				peakGainPct,
+				maxDrawdownPct,
+				realizedPlNominal,
+				realizedPlPct,
+			}).catch(() => {});
+		},
+		[stockPicks, savePicks],
+	);
+
+	const reopenStockPick = useCallback(
+		(id: string) => {
+			const updated = stockPicks.map((pick) => {
+				if (pick.id !== id) return pick;
+				const reopened: StockPick = {
+					...pick,
+					status: "active",
+					closedPrice: undefined,
+					closedDate: undefined,
+					exitReason: undefined,
+					exitNotes: undefined,
+					realizedPlNominal: undefined,
+					realizedPlPct: undefined,
+					updatedAt: Date.now(),
+				};
+				// Sync reopen with cloud
+				saveCloudStockPickAction(reopened).catch(() => {});
+				return reopened;
+			});
+			savePicks(updated);
+		},
+		[stockPicks, savePicks],
+	);
+
+	const resetPickWatermarks = useCallback(
+		(id: string, currentPrice?: number) => {
+			const updated = stockPicks.map((pick) => {
+				if (pick.id !== id) return pick;
+				const baseline = currentPrice || pick.buyPrice;
+				return {
+					...pick,
+					highestPriceTraced: baseline,
+					highestPriceDate: new Date().toISOString().split("T")[0],
+					lowestPriceTraced: baseline,
+					lowestPriceDate: new Date().toISOString().split("T")[0],
+					updatedAt: Date.now(),
+				};
+			});
+			savePicks(updated);
+		},
+		[stockPicks, savePicks],
+	);
+
+	const resetToDemoPicks = useCallback(async () => {
+		savePicks(DEFAULT_DEMO_PICKS);
+		for (const pick of DEFAULT_DEMO_PICKS) {
+			await saveCloudStockPickAction(pick).catch(() => {});
+		}
+	}, [savePicks]);
+
+	const exportPicksToJson = useCallback(() => {
+		return JSON.stringify(stockPicks, null, 2);
+	}, [stockPicks]);
+
+	const importPicksFromJson = useCallback(
+		(jsonStr: string): boolean => {
+			try {
+				const parsed = JSON.parse(jsonStr);
+				if (Array.isArray(parsed) && parsed.length > 0) {
+					savePicks(parsed);
+					for (const pick of parsed) {
+						saveCloudStockPickAction(pick).catch(() => {});
+					}
+					return true;
+				}
+				return false;
+			} catch (_e) {
+				return false;
+			}
+		},
+		[savePicks],
+	);
+
+	// Modal Controls
+	const openAddPickModal = useCallback((stock?: ProcessedStock | null) => {
+		setPickToEdit(null);
+		setStockToSimulate(stock || null);
+		setIsPickModalOpen(true);
+	}, []);
+
+	const openEditPickModal = useCallback((pick: StockPick) => {
+		setStockToSimulate(null);
+		setPickToEdit(pick);
+		setIsPickModalOpen(true);
+	}, []);
+
+	const closePickModal = useCallback(() => {
+		setIsPickModalOpen(false);
+		setPickToEdit(null);
+		setStockToSimulate(null);
+	}, []);
+
+	// Close Position Modal Controls
+	const openClosePickModal = useCallback((pick: StockPickWithMetrics) => {
+		setPickToClose(pick);
+		setIsCloseModalOpen(true);
+	}, []);
+
+	const closeClosePickModal = useCallback(() => {
+		setIsCloseModalOpen(false);
+		setPickToClose(null);
+	}, []);
+
+	// Background watermark synchronization with incoming live quotes
+	const syncMarketDataWatermarks = useCallback(
+		(marketStocks: ProcessedStock[]) => {
+			const currentPicks = stockPicksRef.current;
+			if (
+				!currentPicks ||
+				currentPicks.length === 0 ||
+				!marketStocks ||
+				marketStocks.length === 0
+			) {
+				return;
+			}
+			const { updatedPicks, hasChanges } = traceAndUpdateWatermarks(
+				currentPicks,
+				marketStocks,
+			);
+			if (hasChanges) {
+				savePicks(updatedPicks);
+
+				// Debounce cloud sync and invoke out-of-band via setTimeout to decouple from React render cycles
+				if (cloudWatermarksSyncTimeoutRef.current) {
+					clearTimeout(cloudWatermarksSyncTimeoutRef.current);
+				}
+				cloudWatermarksSyncTimeoutRef.current = setTimeout(() => {
+					const cloudUpdates = updatedPicks
+						.filter((p) => p.status === "active")
+						.map((p) => ({
+							id: p.id,
+							highestPriceTraced: p.highestPriceTraced,
+							lowestPriceTraced: p.lowestPriceTraced,
+							highestPriceDate: p.highestPriceDate,
+							lowestPriceDate: p.lowestPriceDate,
+						}));
+
+					if (cloudUpdates.length > 0) {
+						syncCloudWatermarksAction(cloudUpdates).catch(() => {});
+					}
+				}, 1200);
+			}
+		},
+		[savePicks],
 	);
 
 	// Weights persistence & presets
@@ -312,11 +876,11 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 		setWeights(DEFAULT_WEIGHTS);
 		setMinScoreState(0);
 		setMinTurnoverState(0);
-		syncUrl(0, 0, selectedSector, searchQuery);
+		syncUrl(workstationTab, 0, 0, selectedSector, searchQuery);
 		try {
 			localStorage.setItem("idx:weights", JSON.stringify(DEFAULT_WEIGHTS));
 		} catch (_e) {}
-	}, [selectedSector, searchQuery, syncUrl]);
+	}, [workstationTab, selectedSector, searchQuery, syncUrl]);
 
 	const activePresetName = useMemo(() => {
 		return (
@@ -333,11 +897,41 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 
 	const value = useMemo(
 		() => ({
+			workstationTab,
+			setWorkstationTab,
+			simulatorSubTab,
+			setSimulatorSubTab,
 			selectedStock,
 			setSelectedStock,
 			watchlist,
 			toggleWatchlist,
 			isWatchlisted,
+			stockPicks,
+			isPicksLoading,
+			cloudSyncError,
+			refreshPicksFromCloud,
+			addStockPick,
+			updateStockPick,
+			removeStockPick,
+			closeStockPick,
+			closeStockPickWithDetails,
+			reopenStockPick,
+			resetPickWatermarks,
+			resetToDemoPicks,
+			exportPicksToJson,
+			importPicksFromJson,
+			isPickModalOpen,
+			setIsPickModalOpen,
+			pickToEdit,
+			stockToSimulate,
+			openAddPickModal,
+			openEditPickModal,
+			closePickModal,
+			isCloseModalOpen,
+			pickToClose,
+			openClosePickModal,
+			closeClosePickModal,
+			syncMarketDataWatermarks,
 			weights,
 			setWeights,
 			handleWeightChange,
@@ -357,11 +951,43 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			resetFilters,
 		}),
 		[
+			workstationTab,
+			setWorkstationTab,
+			simulatorSubTab,
+			setSimulatorSubTab,
 			selectedStock,
+			setSelectedStock,
 			watchlist,
 			toggleWatchlist,
 			isWatchlisted,
+			stockPicks,
+			isPicksLoading,
+			cloudSyncError,
+			refreshPicksFromCloud,
+			addStockPick,
+			updateStockPick,
+			removeStockPick,
+			closeStockPick,
+			closeStockPickWithDetails,
+			reopenStockPick,
+			resetPickWatermarks,
+			resetToDemoPicks,
+			exportPicksToJson,
+			importPicksFromJson,
+			isPickModalOpen,
+			setIsPickModalOpen,
+			pickToEdit,
+			stockToSimulate,
+			openAddPickModal,
+			openEditPickModal,
+			closePickModal,
+			isCloseModalOpen,
+			pickToClose,
+			openClosePickModal,
+			closeClosePickModal,
+			syncMarketDataWatermarks,
 			weights,
+			setWeights,
 			handleWeightChange,
 			applyPreset,
 			resetWeights,

@@ -103,14 +103,22 @@ export async function getTaskStats(
 		.gte("completed_at", prevStartDate.toISOString())
 		.lt("completed_at", startDate.toISOString());
 
+	// Fetch current period completed tasks using completed_at for true velocity and comparison
+	const { count: currentCompletedCount } = await SupabaseConn.from("tasks")
+		.select("*", { count: "exact", head: true })
+		.eq("status", "done")
+		.gte("completed_at", startDate.toISOString())
+		.lte("completed_at", new Date().toISOString());
+
 	const tasks = ((currentTasks || []) as Task[]).filter(
 		(t) => (t.status || "todo") !== "cancelled",
 	);
 	const totalTasks = tasks.length;
 	const completedTasks = tasks.filter((t) => t.status === "done").length;
+	const actualCompletedInPeriod = currentCompletedCount ?? completedTasks;
 	const completionRate =
 		totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-	const taskVelocity = parseFloat((completedTasks / days).toFixed(1));
+	const taskVelocity = parseFloat((actualCompletedInPeriod / days).toFixed(1));
 
 	// Reschedule Analytics
 	const { data: rescheduleData } = await SupabaseConn.from("tasks")
@@ -201,10 +209,10 @@ export async function getTaskStats(
 	const prevCount = prevCompletedCount || 0;
 	const comparison =
 		prevCount === 0
-			? completedTasks > 0
+			? actualCompletedInPeriod > 0
 				? 100
 				: 0
-			: Math.round(((completedTasks - prevCount) / prevCount) * 100);
+			: Math.round(((actualCompletedInPeriod - prevCount) / prevCount) * 100);
 
 	// Streak
 	const { data: allCompleted } = await SupabaseConn.from("tasks")
@@ -341,12 +349,13 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 		}).length;
 
 		const remaining = Math.max(0, totalScope - completedSoFar);
-		const ideal = totalScope - (totalScope / (days - 1)) * index;
+		const ideal =
+			totalScope - (days > 1 ? (totalScope / (days - 1)) * index : 0);
 
 		return {
 			date: format(d, "dd MMM"),
 			actualRemaining: remaining,
-			idealRemaining: parseFloat(ideal.toFixed(1)),
+			idealRemaining: Math.max(0, parseFloat(ideal.toFixed(1))),
 		};
 	});
 
@@ -385,17 +394,35 @@ export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
 	const weekStartStr = format(weekStart, "yyyy-MM-dd");
 	const weekEndStr = format(weekEnd, "yyyy-MM-dd");
 
-	const { data: weekTasks, error: weekError } = await SupabaseConn.from("tasks")
-		.select("*")
-		.or(
-			`due_date.gte.${weekStartStr},completed_at.gte.${weekStartStr}T00:00:00`,
-		);
+	const [tasksByDue, tasksByCompleted] = await Promise.all([
+		SupabaseConn.from("tasks")
+			.select("*")
+			.gte("due_date", weekStartStr)
+			.lte("due_date", weekEndStr),
+		SupabaseConn.from("tasks")
+			.select("*")
+			.gte("completed_at", `${weekStartStr}T00:00:00`)
+			.lte("completed_at", `${weekEndStr}T23:59:59`),
+	]);
 
-	if (weekError) {
-		console.error("Error fetching tasks for weekly review:", weekError);
+	if (tasksByDue.error) {
+		console.error("Error fetching tasks by due_date:", tasksByDue.error);
+	}
+	if (tasksByCompleted.error) {
+		console.error(
+			"Error fetching tasks by completed_at:",
+			tasksByCompleted.error,
+		);
 	}
 
-	const allWeekTasks = (weekTasks || []) as Task[];
+	const taskMap = new Map<string, Task>();
+	((tasksByDue.data || []) as Task[]).forEach((t) => {
+		taskMap.set(t.id, t);
+	});
+	((tasksByCompleted.data || []) as Task[]).forEach((t) => {
+		taskMap.set(t.id, t);
+	});
+	const allWeekTasks = Array.from(taskMap.values());
 	const activeWeekTasks = allWeekTasks.filter(
 		(t) => (t.status || "todo") !== "cancelled",
 	);

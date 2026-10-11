@@ -188,6 +188,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 	// ── Draft: Persist on change (debounced) ───────────────────────────────────
 	useEffect(() => {
+		if (isSubmitting || submitSuccess) return;
 		const timer = setTimeout(() => {
 			if (!title && !category && !description) {
 				localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -212,6 +213,8 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		}, DRAFT_AUTOSAVE_DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	}, [
+		isSubmitting,
+		submitSuccess,
 		title,
 		category,
 		priority,
@@ -345,11 +348,11 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 				}
 
 				localStorage.removeItem(DRAFT_STORAGE_KEY);
+				resetForm();
 
 				setSubmitSuccess(true);
 				setTimeout(() => {
 					setSubmitSuccess(false);
-					resetForm();
 					router.refresh();
 					setIsFocused(false);
 					onClose?.();

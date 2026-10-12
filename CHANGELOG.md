@@ -1,3 +1,10 @@
+## [0.104.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.104.0...v0.104.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **stock-explorer:** resolve session watermark date drift and clean nvmrc configuration ([0210c9a](https://github.com/plmtmbnn/personal-web-v2/commit/0210c9a0c5ecfb986b4a18f4928c3729d51ff751))
+
 # [0.104.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.103.0...v0.104.0) (2026-10-12)
 
 

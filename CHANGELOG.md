@@ -1,3 +1,10 @@
+# [0.104.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.103.0...v0.104.0) (2026-10-12)
+
+
+### Features
+
+* **movement:** implement daily movement snacks habit tracker and upgrade dependencies for node 24 ([3b44646](https://github.com/plmtmbnn/personal-web-v2/commit/3b44646cadcdc247db1e4cc0cbf101d0b32aa56d))
+
 # [0.103.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.102.0...v0.103.0) (2026-10-11)
 
 

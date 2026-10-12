@@ -28,6 +28,7 @@ import {
 	Trophy,
 	Bell,
 	ArrowUpRight,
+	Activity,
 } from "lucide-react";
 import {
 	motion,
@@ -267,6 +268,12 @@ const NAV_ITEMS: NavItem[] = [
 				href: "/admin/reminders",
 				icon: Bell,
 				description: "Ephemeral notes",
+			},
+			{
+				label: "Movement Snacks",
+				href: "/admin/movement",
+				icon: Activity,
+				description: "Desk movement breaks",
 			},
 			{ label: "Logout", icon: LogOut, onClick: () => logout() },
 		],

@@ -9,6 +9,7 @@ import {
 	ArrowUpRight,
 	Plus,
 	Server,
+	Activity,
 } from "lucide-react";
 import { logout, checkAdmin } from "@/features/auth/actions";
 import { createAdminClient } from "@/lib/core/supabase-server";
@@ -197,6 +198,18 @@ export default async function AdminDashboardPage() {
 			border: "border-amber-200/70",
 			hoverAccent: "group-hover:text-amber-600",
 			tags: ["Redis Auto-Expiry", "Linkified Pills", "Duration Extend"],
+		},
+		{
+			title: "Daily Movement Snacks",
+			description:
+				"Track micro movement breaks during long desk work sessions. Flexible 6-slot schedule, zero guilt.",
+			href: "/admin/movement",
+			icon: Activity,
+			color: "text-emerald-600",
+			bg: "bg-emerald-50",
+			border: "border-emerald-200/70",
+			hoverAccent: "group-hover:text-emerald-600",
+			tags: ["Desk Mobility", "Habit Tracker", "Rest Day Grace"],
 		},
 	];
 

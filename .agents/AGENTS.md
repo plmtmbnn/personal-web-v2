@@ -73,6 +73,7 @@ Contains all business logic, components, and types for specific features.
   - **Moving Average Hysteresis Buffer (`indicators.ts`)**: 200D and 50D moving averages enforce a ±1.0% buffer (`evalMaHysteresis()`) to prevent high-frequency regime oscillation around flat trendlines.
   - **Halving-Aware Dynamic Seasonality (`seasonality.ts`)**: Q4 crypto seasonality dynamically evaluates `getHalvingCyclePhase()`: late-cycle distribution/bear phases (cycle months 18–36) automatically downgrade Q4 from *"Bullish Tendency"* to *"Defensive / Consolidation"*.
 - `features/liverpool/`: Actions, types, and Matchday Hub components (`NextMatchHero.tsx`, `FixtureSkeleton.tsx`, `View.tsx`).
+- `features/movement/`: Desk-friendly Daily Movement Snacks habit tracker designed to break up prolonged sitting during deep work. Features `MovementView`, `DailyProgressCard` with circular progress ring and pressure-free motivation messaging, `TodayScheduleTimeline` with 6 configurable slots (09:00–17:00), 1-click completion, undo, skip/unskip toggles, and extra break tray, `SessionTimerModal` clean exercise guide with form instructions and Google video demo linkout (zero countdown timer or rep stepper clutter), `MovementLibraryView` with 8 initial desk movements and category filtering, `WeeklyHistoryView` with 4-week calendar consistency heatmap, `RoutineSettingsModal` with target, slot, and Web Audio chime toggles, local timezone date grouping (`YYYY-MM-DD`), JSON backup export/import, and zero-PinGuard admin authentication.
 - `features/portfolio/` & `features/work-experience/`: Professional showcases, career timeline, interactive project cards, skills radar/metrics.
 - `features/reminders/`: Quick Reminders actions, types, linkified text pills with shortened hostnames, keyboard shortcuts (<kbd>⌘/Ctrl+Enter</kbd>), one-click note copying with multi-modal checkmark feedback, hairline lifespan remaining progress micro-track (0–100%), sort switcher (Soonest Expiry vs Newest Created), and duration extensions backed by Upstash Redis.
 - `features/tasks/`: Actions, analytics, types, utils, 6-month date horizon, optimized `TaskProgress`, and task UI components structured under logical `components/` subdirectories (`agenda/`, `analytics/`, `health/`, `shared/`).
@@ -94,7 +95,7 @@ Reserved for feature-agnostic, shared logic.
 
 ### 4. `app/` (Routing Layer)
 Strictly for routing and page definitions.
-- `app/admin/`: Centralized management dashboard and `/admin/reminders` Quick Reminders portal (with localized skeleton loader `app/admin/reminders/loading.tsx` and `RemindersSkeleton.tsx` mirroring the 3-tile header telemetry strip, creation card, and controls toolbar).
+- `app/admin/`: Centralized management dashboard, `/admin/reminders` Quick Reminders portal (with localized skeleton loader `app/admin/reminders/loading.tsx` and `RemindersSkeleton.tsx` mirroring the 3-tile header telemetry strip, creation card, and controls toolbar), and `/admin/movement` Daily Movement Snacks portal (with localized skeleton loader `app/admin/movement/loading.tsx` and `MovementSkeleton.tsx`, protected strictly by `checkAdmin()` with NO PinGuard).
 - `app/adventures/`: Aesthetic content pages for Running (`/adventures/running`) and Travel (`/adventures/travel`) logs.
 - `app/auth/`: Callback route for Supabase authentication.
 - `app/blog/`: SSG-optimized blog system with dynamic routes (`[slug]`).
@@ -103,6 +104,7 @@ Strictly for routing and page definitions.
 - `app/investment/`: Market sentiment and Fear & Greed visualizations.
 - `app/liverpool/`: Matchday Schedule & Fixtures Hub with live countdowns and matchday reports.
 - `app/login/`: Admin PIN login interface.
+- `app/movement/`: Public shortcut / alias route cleanly redirecting to `/admin/movement`.
 - `app/portfolio/` & `app/work-experience/`: Professional showcase and career timeline.
 - `app/tasks/`: Personal task management, 6-month horizon, and analytics agenda.
 - `app/unauthorized/`: Fallback access-denied page decoupled into Server Component declaring SEO metadata and Suspense boundary wrapping client `UnauthorizedView.tsx` with breadcrumbs, monospace HTTP status pill, security telemetry diagnostics tray, and calibrated bottom clearance (`pb-28 sm:pb-36`).
@@ -121,7 +123,7 @@ Strictly for routing and page definitions.
   - Centralized verification via `checkAdmin()` in `features/auth/actions.ts`.
   - **Cron Security**: API routes for crons must check for `CRON_SECRET` via headers or params.
 - **TOTP / Authenticator Protection:** 
-  - `PinGuard.tsx` protects restricted sections (Admin, Tasks) using a 6-digit Google Authenticator code verified via `otplib` (utilizing `TOTP_SECRET` in server environment).
+  - `PinGuard.tsx` protects restricted sections (Tasks, Stock Explorer Admin) using a 6-digit Google Authenticator code verified via `otplib` (utilizing `TOTP_SECRET` in server environment). Sections with only login required (such as `/admin/movement`) bypass PinGuard and rely solely on `checkAdmin()`.
   - Designed for native device numeric keyboards (virtual keypad obsolete).
   - **Session Duration**: 12 hours.
 - **Auth Cookies**: Long-lived sessions (30 weeks).

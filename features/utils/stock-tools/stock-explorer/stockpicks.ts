@@ -175,17 +175,19 @@ export function traceAndUpdateWatermarks(
 		let lowestDate = pick.lowestPriceDate;
 		let pickChanged = false;
 
+		const sessionDate = live.Date || todayStr;
+
 		// Check if new peak was set
 		if (currentSessionHigh > newHighest) {
 			newHighest = currentSessionHigh;
-			highestDate = todayStr;
+			highestDate = sessionDate;
 			pickChanged = true;
 		}
 
 		// Check if new trough was reached
 		if (currentSessionLow < newLowest) {
 			newLowest = currentSessionLow;
-			lowestDate = todayStr;
+			lowestDate = sessionDate;
 			pickChanged = true;
 		}
 

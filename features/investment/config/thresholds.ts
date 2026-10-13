@@ -134,7 +134,7 @@ export const DEFAULT_THRESHOLDS: InvestmentThresholds = {
 		fundingHeavilyNegative: -0.02,
 		stablecoinExpansionPct: 1.5,
 		stablecoinContractionPct: -1.0,
-		altcoinBtcDominanceMax: 54.0,
+		altcoinBtcDominanceMax: 59.0,
 		mvrv: {
 			accumulation: 1.0,
 			fairValueMax: 2.4,

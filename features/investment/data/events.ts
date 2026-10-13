@@ -38,6 +38,23 @@ function getLastWeekdayOfMonth(
 	return new Date(Date.UTC(year, month, targetDay));
 }
 
+function snapToWeekday(d: Date): Date {
+	const day = d.getUTCDay();
+	if (day === 6) {
+		// Saturday -> snap to preceding Friday
+		return new Date(
+			Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - 1),
+		);
+	}
+	if (day === 0) {
+		// Sunday -> snap to preceding Friday (-2 days)
+		return new Date(
+			Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - 2),
+		);
+	}
+	return d;
+}
+
 function toIsoDate(d: Date): string {
 	return d.toISOString().split("T")[0];
 }
@@ -125,8 +142,9 @@ export function generateRecurrentEvents(
 		// 4. FOMC Meetings (8 scheduled yearly meetings)
 		const fomcMonths = [1, 3, 5, 6, 7, 9, 11, 12];
 		if (fomcMonths.includes(monthNum)) {
-			// Approximated near second/third Wednesday of scheduled FOMC months
-			const fomcDate = getNthWeekdayOfMonth(y, m, 3, m === 0 ? 4 : 2);
+			// Approximated: 3rd Wednesday for quarterly projection meetings (Mar, Jun, Sep, Dec), 4th for Jan, 2nd for others
+			const nthWed = [3, 6, 9, 12].includes(monthNum) ? 3 : m === 0 ? 4 : 2;
+			const fomcDate = getNthWeekdayOfMonth(y, m, 3, nthWed);
 			events.push({
 				id: `fomc-${y}-${monthNum}`,
 				date: toIsoDate(fomcDate),
@@ -142,7 +160,8 @@ export function generateRecurrentEvents(
 
 		// 5. MSCI Index Rebalance (End of Feb, May, Aug, Nov)
 		if ([2, 5, 8, 11].includes(monthNum)) {
-			const msciDate = new Date(Date.UTC(y, m + 1, 0)); // Last day of month
+			const rawMsciDate = new Date(Date.UTC(y, m + 1, 0)); // Last day of month
+			const msciDate = snapToWeekday(rawMsciDate);
 			events.push({
 				id: `msci-${y}-${monthNum}`,
 				date: toIsoDate(msciDate),
@@ -158,7 +177,8 @@ export function generateRecurrentEvents(
 
 		// 6. Quarterly Window Dressing (Final trading sessions of Q1, Q2, Q3, Q4)
 		if ([3, 6, 9, 12].includes(monthNum)) {
-			const windowDressingDate = new Date(Date.UTC(y, m, 26));
+			const rawWindowDressingDate = new Date(Date.UTC(y, m, 26));
+			const windowDressingDate = snapToWeekday(rawWindowDressingDate);
 			events.push({
 				id: `window-dressing-${y}-${monthNum}`,
 				date: toIsoDate(windowDressingDate),
@@ -172,7 +192,8 @@ export function generateRecurrentEvents(
 
 		// 7. Indonesian Big 4 Banks Earnings Reports (Jan, Apr, Jul, Oct)
 		if ([1, 4, 7, 10].includes(monthNum)) {
-			const earningsDate = new Date(Date.UTC(y, m, 23));
+			const rawEarningsDate = new Date(Date.UTC(y, m, 23));
+			const earningsDate = snapToWeekday(rawEarningsDate);
 			events.push({
 				id: `earnings-${y}-${monthNum}`,
 				date: toIsoDate(earningsDate),

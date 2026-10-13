@@ -531,12 +531,30 @@ export function scoreIhsg(
 		coverage,
 		thresholds,
 	);
-	const valuationState: "accumulation" | "fair" | "distribution" | "neutral" =
-		streak != null && streak >= 3
-			? "accumulation"
-			: streak != null && streak <= -3
-				? "distribution"
-				: "neutral";
+
+	// Decouple Valuation State from short-term foreign flow momentum:
+	// Evaluate 52-week drawdown discount and valuation composite factors
+	const ddFactor = factors.find((f) => f.key === "ihsg_drawdown");
+	const drawdownVal = ddFactor ? parseFloat(ddFactor.valueStr) : null;
+	const isDeepDiscount =
+		drawdownVal != null && drawdownVal <= -thresholds.ihsg.bearDrawdownPct; // <= -20%
+	const isCorrectionDiscount =
+		drawdownVal != null &&
+		drawdownVal <= -thresholds.ihsg.correctionDrawdownPct; // <= -10%
+
+	let valuationState: "accumulation" | "fair" | "distribution" | "neutral" =
+		"neutral";
+	if (isDeepDiscount) {
+		valuationState = "accumulation";
+	} else if (isCorrectionDiscount) {
+		valuationState = "fair";
+	} else if (drawdownVal != null && drawdownVal >= -2.5 && trendScore >= 75) {
+		valuationState = "distribution";
+	} else if (valuationScore >= 65) {
+		valuationState = "accumulation";
+	} else if (valuationScore <= 35) {
+		valuationState = "distribution";
+	}
 
 	return {
 		id: "ihsg",

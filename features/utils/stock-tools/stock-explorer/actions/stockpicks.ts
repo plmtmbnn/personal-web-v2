@@ -29,30 +29,43 @@ function ensureValidUuid(id?: string | null): string {
 interface DbStockPick {
 	id: string;
 	user_id?: string | null;
-	ticker: string;
-	company_name: string;
-	sector: string | null;
+	ticker?: string;
+	stock_code?: string;
+	company_name?: string;
+	stock_name?: string;
+	sector?: string | null;
 	status: "active" | "closed" | "cancelled";
 	buy_price: number | string;
 	lots?: number | null;
-	shares: number | string;
-	target_price: number | string | null;
-	stop_loss: number | string | null;
+	quantity_lots?: number | null;
+	shares?: number | string | null;
+	target_price?: number | string | null;
+	stop_loss?: number | string | null;
+	stop_loss_price?: number | string | null;
 	entry_date: string;
-	high_watermark: number | string;
-	high_watermark_date: string | null;
-	low_watermark: number | string;
-	low_watermark_date: string | null;
-	thesis: string | null;
-	notes: string | null;
-	exit_price: number | string | null;
-	exit_date: string | null;
+	high_watermark?: number | string;
+	highest_price_traced?: number | string;
+	high_watermark_date?: string | null;
+	highest_price_date?: string | null;
+	low_watermark?: number | string;
+	lowest_price_traced?: number | string;
+	low_watermark_date?: string | null;
+	lowest_price_date?: string | null;
+	thesis?: string | null;
+	notes?: string | null;
+	exit_price?: number | string | null;
+	closed_price?: number | string | null;
+	exit_date?: string | null;
+	closed_date?: string | null;
 	exit_reason: string | null;
-	realized_pnl_idr: number | string | null;
-	realized_pnl_pct: number | string | null;
-	peak_gain_pct: number | string | null;
-	max_drawdown_pct: number | string | null;
-	holding_days: number | null;
+	exit_notes?: string | null;
+	realized_pnl_idr?: number | string | null;
+	realized_pl_nominal?: number | string | null;
+	realized_pnl_pct?: number | string | null;
+	realized_pl_pct?: number | string | null;
+	peak_gain_pct?: number | string | null;
+	max_drawdown_pct?: number | string | null;
+	holding_days?: number | null;
 	created_at: string;
 	updated_at: string;
 }
@@ -60,12 +73,51 @@ interface DbStockPick {
 function mapDbToStockPick(row: DbStockPick): StockPick {
 	const buyPrice = Number(row.buy_price) || 0;
 	const lots =
-		Number(row.lots) ||
+		Number(row.quantity_lots ?? row.lots) ||
 		Math.max(1, Math.round((Number(row.shares) || 100) / 100));
+	const stockCode = (row.stock_code || row.ticker || "").toUpperCase().trim();
+	const stockName = row.stock_name || row.company_name || stockCode;
+	const stopLossPrice =
+		row.stop_loss_price != null
+			? Number(row.stop_loss_price)
+			: row.stop_loss != null
+				? Number(row.stop_loss)
+				: undefined;
+	const highestPriceTraced =
+		Number(row.highest_price_traced ?? row.high_watermark) || buyPrice;
+	const highestPriceDate =
+		(row.highest_price_date || row.high_watermark_date)?.split("T")[0] ||
+		undefined;
+	const lowestPriceTraced =
+		Number(row.lowest_price_traced ?? row.low_watermark) || buyPrice;
+	const lowestPriceDate =
+		(row.lowest_price_date || row.low_watermark_date)?.split("T")[0] ||
+		undefined;
+	const closedPrice =
+		row.closed_price != null
+			? Number(row.closed_price)
+			: row.exit_price != null
+				? Number(row.exit_price)
+				: undefined;
+	const closedDate =
+		(row.closed_date || row.exit_date)?.split("T")[0] || undefined;
+	const realizedPlPct =
+		row.realized_pl_pct != null
+			? Number(row.realized_pl_pct)
+			: row.realized_pnl_pct != null
+				? Number(row.realized_pnl_pct)
+				: undefined;
+	const realizedPlNominal =
+		row.realized_pl_nominal != null
+			? Number(row.realized_pl_nominal)
+			: row.realized_pnl_idr != null
+				? Number(row.realized_pnl_idr)
+				: undefined;
+
 	return {
 		id: row.id,
-		stockCode: row.ticker,
-		stockName: row.company_name,
+		stockCode,
+		stockName,
 		sector: (row.sector as Sector) || "Unknown",
 		status: row.status === "closed" ? "closed" : "active",
 		buyPrice,
@@ -73,23 +125,19 @@ function mapDbToStockPick(row: DbStockPick): StockPick {
 		entryDate:
 			row.entry_date?.split("T")[0] || new Date().toISOString().split("T")[0],
 		targetPrice: row.target_price ? Number(row.target_price) : undefined,
-		stopLossPrice: row.stop_loss ? Number(row.stop_loss) : undefined,
+		stopLossPrice,
 		thesis: (row.thesis as StockPick["thesis"]) || "Custom",
 		notes: row.notes || undefined,
-		highestPriceTraced: Number(row.high_watermark) || buyPrice,
-		highestPriceDate: row.high_watermark_date?.split("T")[0] || undefined,
-		lowestPriceTraced: Number(row.low_watermark) || buyPrice,
-		lowestPriceDate: row.low_watermark_date?.split("T")[0] || undefined,
-		closedPrice: row.exit_price ? Number(row.exit_price) : undefined,
-		closedDate: row.exit_date?.split("T")[0] || undefined,
-		realizedPlPct: row.realized_pnl_pct
-			? Number(row.realized_pnl_pct)
-			: undefined,
-		realizedPlNominal: row.realized_pnl_idr
-			? Number(row.realized_pnl_idr)
-			: undefined,
+		highestPriceTraced,
+		highestPriceDate,
+		lowestPriceTraced,
+		lowestPriceDate,
+		closedPrice,
+		closedDate,
+		realizedPlPct,
+		realizedPlNominal,
 		exitReason: (row.exit_reason as StockPick["exitReason"]) || undefined,
-		exitNotes: undefined,
+		exitNotes: row.exit_notes || undefined,
 		createdAt: new Date(row.created_at).getTime() || Date.now(),
 		updatedAt: new Date(row.updated_at).getTime() || Date.now(),
 	};
@@ -107,7 +155,7 @@ function mapPickToDb(pick: StockPick) {
 
 	return {
 		id: ensureValidUuid(pick.id),
-		ticker: pick.stockCode.toUpperCase().trim(),
+		ticker: (pick.stockCode || "").toUpperCase().trim(),
 		company_name: pick.stockName || pick.stockCode,
 		sector: pick.sector || null,
 		status: pick.status,
@@ -127,7 +175,7 @@ function mapPickToDb(pick: StockPick) {
 		low_watermark_date: pick.lowestPriceDate
 			? new Date(pick.lowestPriceDate).toISOString()
 			: null,
-		thesis: pick.thesis ?? "compass_regime",
+		thesis: pick.thesis ?? "Compass Core Tranche",
 		notes: pick.notes ?? null,
 		exit_price: pick.closedPrice ?? null,
 		exit_date: pick.closedDate ? new Date(pick.closedDate).toISOString() : null,

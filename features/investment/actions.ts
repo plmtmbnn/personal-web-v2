@@ -115,9 +115,15 @@ async function getMarketQuotes(
 
 	if (!forceRefresh) {
 		try {
-			const cached = await redis.get<Record<string, MarketQuote>>(cacheKey);
-			if (cached && Object.keys(cached).length > 0) {
-				return { quotes: cached, sourceOk: true };
+			const cachedRaw = await redis.get<Record<string, MarketQuote> | string>(
+				cacheKey,
+			);
+			if (cachedRaw) {
+				const cached =
+					typeof cachedRaw === "string" ? JSON.parse(cachedRaw) : cachedRaw;
+				if (cached && Object.keys(cached).length > 0) {
+					return { quotes: cached, sourceOk: true };
+				}
 			}
 		} catch (e) {
 			console.warn("[Investment] Quotes cache read failed:", e);
@@ -129,15 +135,23 @@ async function getMarketQuotes(
 		const cnbcSymbols = INSTRUMENTS.filter((i) => Boolean(i.cnbc)).map(
 			(i) => i.cnbc!,
 		);
-		const yahooInsts = INSTRUMENTS.filter((i) => !i.cnbc && Boolean(i.yahoo));
 
-		// Fetch CNBC batch
+		// Fetch CNBC batch with safe error fallback
 		const cnbcQuotes = await fetchCnbcQuotes(cnbcSymbols, {
 			revalidate: 60, // 1 min ISR baseline
 			fresh: forceRefresh,
+		}).catch((e) => {
+			console.warn("[Investment] CNBC batch fetch failed:", e);
+			return new Map<string, MarketQuote>();
 		});
 
-		// Fetch Yahoo missing symbols (e.g., IHSG) in parallel
+		// Fetch Yahoo missing symbols in parallel:
+		// Covers instruments without CNBC identifier (e.g. IHSG) OR any symbol CNBC failed to resolve
+		const yahooInsts = INSTRUMENTS.filter(
+			(inst) =>
+				Boolean(inst.yahoo) && (!inst.cnbc || !cnbcQuotes.has(inst.cnbc)),
+		);
+
 		const yahooPromises = yahooInsts.map(async (inst) => {
 			try {
 				const quote = await fetchYahooQuote(inst.yahoo!, {
@@ -371,10 +385,10 @@ async function getHistoryData(forceRefresh: boolean): Promise<{
 		{ symbol: "BTC-USD", range: "2y", interval: "1d" },
 	];
 	const sectorSymbols = [
-		{ symbol: "BBCA.JK", range: "3mo", interval: "1d" }, // Financials bellwether
-		{ symbol: "ADRO.JK", range: "3mo", interval: "1d" }, // Energy bellwether
-		{ symbol: "ICBP.JK", range: "3mo", interval: "1d" }, // Consumer bellwether
-		{ symbol: "ANTM.JK", range: "3mo", interval: "1d" }, // Basic Materials bellwether
+		{ symbol: "BBCA.JK", range: "6mo", interval: "1d" }, // Financials bellwether
+		{ symbol: "ADRO.JK", range: "6mo", interval: "1d" }, // Energy bellwether
+		{ symbol: "ICBP.JK", range: "6mo", interval: "1d" }, // Consumer bellwether
+		{ symbol: "ANTM.JK", range: "6mo", interval: "1d" }, // Basic Materials bellwether
 	];
 	const allItems = [...coreSymbols, ...sectorSymbols];
 	const history: Record<string, PriceHistorySeries | null> = {};

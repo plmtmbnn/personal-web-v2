@@ -48,14 +48,24 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 
 		// 2. Institutional & Foreign Capital Footprint
 		const absNetIDR = Math.abs(stock.ForeignNet);
+		const vwap =
+			stock.Volume > 0
+				? stock.Value / stock.Volume
+				: stock.Close || stock.Previous || 0;
+		const isForeignNominalValue = stock.ForeignBuy > stock.Volume * 5;
+		const buyVol = isForeignNominalValue
+			? vwap > 0
+				? Math.round(stock.ForeignBuy / vwap)
+				: 0
+			: stock.ForeignBuy;
+		const sellVol = isForeignNominalValue
+			? vwap > 0
+				? Math.round(stock.ForeignSell / vwap)
+				: 0
+			: stock.ForeignSell;
 		const participationPct =
 			stock.Volume > 0
-				? Math.min(
-						Math.round(
-							((stock.ForeignBuy + stock.ForeignSell) / stock.Volume) * 100,
-						),
-						100,
-					)
+				? Math.min(Math.round(((buyVol + sellVol) / stock.Volume) * 100), 100)
 				: 0;
 
 		if (absNetIDR >= 20000000000) {

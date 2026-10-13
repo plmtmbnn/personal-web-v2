@@ -34,7 +34,7 @@ export function scoreCrypto(
 	let wFng = 10;
 	let wMacro = 20;
 
-	if (halving.monthsElapsed >= 6 && halving.monthsElapsed < 18) {
+	if (halving.cycleMonth >= 6 && halving.cycleMonth < 18) {
 		// Parabolic / Euphoria window: Elevate contrarian exhaustion risk (funding + extreme greed + MVRV)
 		wBtc200 = 20;
 		wBtc50 = 5;
@@ -43,7 +43,7 @@ export function scoreCrypto(
 		wFunding = 15;
 		wFng = 15;
 		wMacro = 15;
-	} else if (halving.monthsElapsed >= 18 && halving.monthsElapsed < 30) {
+	} else if (halving.cycleMonth >= 18 && halving.cycleMonth < 30) {
 		// Late-Cycle Distribution: Liquidity redemptions and valuation discount
 		wBtc200 = 20;
 		wBtc50 = 5;
@@ -52,7 +52,7 @@ export function scoreCrypto(
 		wFunding = 10;
 		wFng = 10;
 		wMacro = 20;
-	} else if (halving.monthsElapsed >= 30) {
+	} else if (halving.cycleMonth >= 30) {
 		// Bear Market Floor & Reset: Structural 200D MA baseline reclaim and deep value (MVRV)
 		wBtc200 = 25;
 		wBtc50 = 10;

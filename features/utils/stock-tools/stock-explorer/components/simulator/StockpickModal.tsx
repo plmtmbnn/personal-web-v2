@@ -80,9 +80,11 @@ export default function StockpickModal({
 		const today = new Date().toISOString().split("T")[0];
 
 		if (pickToEdit) {
-			setTickerQuery(pickToEdit.stockCode);
+			setTickerQuery(pickToEdit.stockCode || "");
 			const matched = availableStocks.find(
-				(s) => s.StockCode.toUpperCase() === pickToEdit.stockCode.toUpperCase(),
+				(s) =>
+					s.StockCode.toUpperCase() ===
+					(pickToEdit.stockCode || "").toUpperCase(),
 			);
 			setSelectedStock(matched || null);
 			setBuyPrice(pickToEdit.buyPrice);

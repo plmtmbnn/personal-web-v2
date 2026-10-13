@@ -94,6 +94,30 @@ export const STRATEGY_PRESETS: {
 		description:
 			"Identify oversold bounce candidates testing Auto-Rejection limits",
 	},
+	{
+		name: "Compass Defensive Blue-Chip",
+		weights: {
+			price: 15,
+			volume: 10,
+			foreign: 45,
+			liquidity: 30,
+			volatility: 0,
+		},
+		description:
+			"Investment Compass defensive alignment: safe large-caps with strong institutional liquidity and foreign backing",
+	},
+	{
+		name: "Compass Risk-On Momentum",
+		weights: {
+			price: 35,
+			volume: 35,
+			foreign: 10,
+			liquidity: 15,
+			volatility: 5,
+		},
+		description:
+			"Investment Compass Risk-On alignment: high relative strength price momentum and turnover expansion",
+	},
 ];
 
 interface ScreenerContextType {
@@ -164,6 +188,9 @@ interface ScreenerContextType {
 	setWeights: (weights: ScoreWeights) => void;
 	handleWeightChange: (key: keyof ScoreWeights, val: number) => void;
 	applyPreset: (preset: ScoreWeights) => void;
+	applyCompassRegime: (
+		regimeState: "risk_on" | "selective" | "defensive" | "stress",
+	) => void;
 	resetWeights: () => void;
 	activePresetName: string;
 	isScorerExpanded: boolean;
@@ -872,6 +899,25 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 		} catch (_e) {}
 	}, []);
 
+	const applyCompassRegime = useCallback(
+		(regimeState: "risk_on" | "selective" | "defensive" | "stress") => {
+			if (regimeState === "risk_on") {
+				const preset = STRATEGY_PRESETS.find(
+					(p) => p.name === "Compass Risk-On Momentum",
+				);
+				if (preset) applyPreset(preset.weights);
+			} else if (regimeState === "defensive" || regimeState === "stress") {
+				const preset = STRATEGY_PRESETS.find(
+					(p) => p.name === "Compass Defensive Blue-Chip",
+				);
+				if (preset) applyPreset(preset.weights);
+			} else {
+				applyPreset(DEFAULT_WEIGHTS);
+			}
+		},
+		[applyPreset],
+	);
+
 	const resetWeights = useCallback(() => {
 		setWeights(DEFAULT_WEIGHTS);
 		setMinScoreState(0);
@@ -936,6 +982,7 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			setWeights,
 			handleWeightChange,
 			applyPreset,
+			applyCompassRegime,
 			resetWeights,
 			activePresetName,
 			isScorerExpanded,
@@ -990,6 +1037,7 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			setWeights,
 			handleWeightChange,
 			applyPreset,
+			applyCompassRegime,
 			resetWeights,
 			activePresetName,
 			isScorerExpanded,

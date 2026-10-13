@@ -27,24 +27,28 @@ export default function ScenarioSandbox({
 		data.markets.macro?.FEDFUNDS?.data?.slice(-1)[0]?.value ?? 4.5;
 	const defaultUsdIdr = data.markets.quotes.USDIDR?.last ?? 15850;
 	const defaultBtcPrice = data.markets.quotes.BTC?.last ?? 88000;
+	const defaultIhsgPrice = data.markets.quotes.JKSE?.last ?? 7200;
 
 	// Simulation states
 	const [fedFunds, setFedFunds] = useState<number>(defaultFedFunds);
 	const [usdIdr, setUsdIdr] = useState<number>(defaultUsdIdr);
 	const [btcPrice, setBtcPrice] = useState<number>(defaultBtcPrice);
+	const [ihsgPrice, setIhsgPrice] = useState<number>(defaultIhsgPrice);
 	const [isOpen, setIsOpen] = useState<boolean>(true);
 
 	// Check if simulated parameters have deviated from live data
 	const isModified =
 		fedFunds !== defaultFedFunds ||
 		usdIdr !== defaultUsdIdr ||
-		btcPrice !== defaultBtcPrice;
+		btcPrice !== defaultBtcPrice ||
+		ihsgPrice !== defaultIhsgPrice;
 
 	// Reset all sliders back to live telemetry
 	const handleReset = () => {
 		setFedFunds(defaultFedFunds);
 		setUsdIdr(defaultUsdIdr);
 		setBtcPrice(defaultBtcPrice);
+		setIhsgPrice(defaultIhsgPrice);
 	};
 
 	// Presets for rapid stress-testing
@@ -53,14 +57,17 @@ export default function ScenarioSandbox({
 			setFedFunds(3.25);
 			setUsdIdr(15100);
 			setBtcPrice(105000);
+			setIhsgPrice(7800);
 		} else if (preset === "hawkish") {
 			setFedFunds(5.5);
 			setUsdIdr(17200);
 			setBtcPrice(54000);
+			setIhsgPrice(6600);
 		} else if (preset === "floor") {
 			setFedFunds(4.25);
 			setUsdIdr(15900);
 			setBtcPrice(42000);
+			setIhsgPrice(6100);
 		}
 	};
 
@@ -104,6 +111,25 @@ export default function ScenarioSandbox({
 			};
 		}
 
+		const jkseKey = simulatedHistory["^JKSE"]
+			? "^JKSE"
+			: simulatedHistory.JKSE
+				? "JKSE"
+				: "^JKSE";
+		if (simulatedHistory[jkseKey]?.points) {
+			const jksePoints = [...simulatedHistory[jkseKey].points];
+			if (jksePoints.length > 0) {
+				const lastPoint = jksePoints[jksePoints.length - 1];
+				jksePoints[jksePoints.length - 1] = { ...lastPoint, c: ihsgPrice };
+			} else {
+				jksePoints.push({ t: Date.now(), c: ihsgPrice });
+			}
+			simulatedHistory[jkseKey] = {
+				...simulatedHistory[jkseKey],
+				points: jksePoints,
+			};
+		}
+
 		// Deep clone data structures for simulation
 		const simulatedData: InvestmentCompassData = {
 			...data,
@@ -125,6 +151,14 @@ export default function ScenarioSandbox({
 								BTC: {
 									...data.markets.quotes.BTC,
 									last: btcPrice,
+								},
+							}
+						: {}),
+					...(data.markets.quotes.JKSE
+						? {
+								JKSE: {
+									...data.markets.quotes.JKSE,
+									last: ihsgPrice,
 								},
 							}
 						: {}),
@@ -150,7 +184,7 @@ export default function ScenarioSandbox({
 		};
 
 		return computeCompass(simulatedData);
-	}, [data, fedFunds, usdIdr, btcPrice]);
+	}, [data, fedFunds, usdIdr, btcPrice, ihsgPrice]);
 
 	const getStateBadge = (state: string) => {
 		switch (state) {
@@ -253,9 +287,9 @@ export default function ScenarioSandbox({
 					</div>
 
 					{/* Sliders Grid */}
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 						{/* 1. Fed Funds Rate Slider */}
-						<div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
+						<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
 							<div className="flex items-center justify-between">
 								<span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
 									Fed Funds Rate
@@ -274,14 +308,14 @@ export default function ScenarioSandbox({
 								className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
 							/>
 							<div className="flex justify-between text-[10px] font-semibold text-slate-400">
-								<span>2.00% (Ultra-Dovish)</span>
+								<span>2.00% (Dovish)</span>
 								<span>Live: {defaultFedFunds.toFixed(2)}%</span>
 								<span>6.50% (Tight)</span>
 							</div>
 						</div>
 
 						{/* 2. USD/IDR Slider */}
-						<div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
+						<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
 							<div className="flex items-center justify-between">
 								<span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
 									USD / IDR FX Rate
@@ -309,7 +343,7 @@ export default function ScenarioSandbox({
 						</div>
 
 						{/* 3. Bitcoin Price Slider */}
-						<div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
+						<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
 							<div className="flex items-center justify-between">
 								<span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
 									Bitcoin Price (BTC)
@@ -333,6 +367,34 @@ export default function ScenarioSandbox({
 									Live: ${Math.round(defaultBtcPrice).toLocaleString("en-US")}
 								</span>
 								<span>$150K (Euphoria)</span>
+							</div>
+						</div>
+
+						{/* 4. IHSG Index Level Slider */}
+						<div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-3">
+							<div className="flex items-center justify-between">
+								<span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+									IHSG Index Level
+								</span>
+								<span className="text-sm font-black font-mono text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-2xs">
+									{Math.round(ihsgPrice).toLocaleString("id-ID")}
+								</span>
+							</div>
+							<input
+								type="range"
+								min="5500"
+								max="8500"
+								step="25"
+								value={ihsgPrice}
+								onChange={(e) => setIhsgPrice(parseFloat(e.target.value))}
+								className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
+							/>
+							<div className="flex justify-between text-[10px] font-semibold text-slate-400">
+								<span>5,500 (Deep Bear)</span>
+								<span>
+									Live: {Math.round(defaultIhsgPrice).toLocaleString("id-ID")}
+								</span>
+								<span>8,500 (ATH)</span>
 							</div>
 						</div>
 					</div>

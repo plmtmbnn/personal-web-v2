@@ -78,7 +78,11 @@ export default function SmartTable({
 	}, [stocks]);
 
 	const simulatedCodesSet = useMemo(() => {
-		return new Set(screener.stockPicks.map((p) => p.stockCode.toUpperCase()));
+		return new Set(
+			screener.stockPicks
+				.map((p) => (p.stockCode || "").toUpperCase())
+				.filter(Boolean),
+		);
 	}, [screener.stockPicks]);
 
 	const filteredStocks = useMemo(() => {

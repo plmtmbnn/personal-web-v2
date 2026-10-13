@@ -77,7 +77,7 @@ export default function StockpickSimulator({
 	// Enrich all simulated picks with live session metrics
 	const picksWithMetrics: StockPickWithMetrics[] = useMemo(() => {
 		return stockPicks.map((pick) => {
-			const live = liveStocksMap.get(pick.stockCode.toUpperCase());
+			const live = liveStocksMap.get((pick.stockCode || "").toUpperCase());
 			return calculatePickMetrics(pick, live);
 		});
 	}, [stockPicks, liveStocksMap]);
@@ -99,8 +99,12 @@ export default function StockpickSimulator({
 				// Search filter
 				if (searchQuery.trim()) {
 					const query = searchQuery.toLowerCase().trim();
-					const matchCode = pick.stockCode.toLowerCase().includes(query);
-					const matchName = pick.stockName.toLowerCase().includes(query);
+					const matchCode = (pick.stockCode || "")
+						.toLowerCase()
+						.includes(query);
+					const matchName = (pick.stockName || "")
+						.toLowerCase()
+						.includes(query);
 					const matchThesis = pick.thesis?.toLowerCase().includes(query);
 					if (!matchCode && !matchName && !matchThesis) return false;
 				}

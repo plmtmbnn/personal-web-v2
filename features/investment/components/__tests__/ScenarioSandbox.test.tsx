@@ -219,6 +219,7 @@ describe("ScenarioSandbox Component", () => {
 		expect(container.textContent).toContain("Fed Funds Rate");
 		expect(container.textContent).toContain("USD / IDR FX Rate");
 		expect(container.textContent).toContain("Bitcoin Price (BTC)");
+		expect(container.textContent).toContain("IHSG Index Level");
 		expect(container.textContent).toContain("Global Macro");
 		expect(container.textContent).toContain("IHSG (IDX)");
 		expect(container.textContent).toContain("Crypto (Digital Assets)");
@@ -269,7 +270,7 @@ describe("ScenarioSandbox Component", () => {
 		);
 
 		const sliders = container.querySelectorAll('input[type="range"]');
-		expect(sliders.length).toBe(3);
+		expect(sliders.length).toBe(4);
 
 		// Change Fed Funds slider to 2.50%
 		fireEvent.change(sliders[0], { target: { value: "2.5" } });

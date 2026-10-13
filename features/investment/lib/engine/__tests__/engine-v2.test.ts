@@ -304,9 +304,9 @@ describe("Engine v2 computeCompass", () => {
 		expect(output.permissions.altcoins.maxExposure).toContain("3.0%");
 	});
 
-	it("strictly locks out altcoins when BTC dominance is above 54%", () => {
+	it("strictly locks out altcoins when BTC dominance is above threshold", () => {
 		const mockData = createMockData();
-		mockData.markets.cryptoGlobal!.btcDominance = 58.0;
+		mockData.markets.cryptoGlobal!.btcDominance = 60.5;
 
 		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
 		expect(output.permissions.altcoins.swing.status).toBe("not_allowed");

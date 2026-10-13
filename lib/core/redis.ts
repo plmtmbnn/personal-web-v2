@@ -34,6 +34,7 @@ export const CACHE_KEYS = {
 	CRYPTO_ONCHAIN: "compass:crypto:onchain",
 	CRYPTO_ONCHAIN_BACKUP: "compass:crypto:onchain:backup",
 	COMPASS_SNAPSHOT: (date: string) => `compass:snapshot:${date}`,
+	MOVEMENT_STATE: "admin:movement:state",
 };
 
 /**

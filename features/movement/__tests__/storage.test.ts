@@ -11,6 +11,11 @@ import {
 	getCalendarHeatmapData,
 	importMovementDataFromJson,
 	exportMovementDataAsJson,
+	mergeMovementStates,
+	getThreeMonthCutoffDateKey,
+	pruneExpiredLogs,
+	getMonthlyWeeklyHeatmapData,
+	getMonthlyDayAccumulation,
 } from "../lib/storage";
 import { INITIAL_MOVEMENT_LIBRARY } from "../data/default-library";
 
@@ -144,5 +149,179 @@ describe("Movement Storage & Logic", () => {
 		const restored = importMovementDataFromJson(json);
 		expect(restored).not.toBeNull();
 		expect(restored?.logs["2026-10-12"]).toHaveLength(1);
+	});
+
+	it("merges server and client movement states without duplicating sessions", () => {
+		const serverState = getDefaultMovementState();
+		const clientState = getDefaultMovementState();
+
+		clientState.config.dailyTarget = 8;
+		clientState.logs["2026-10-12"] = [
+			{
+				id: "sess-1",
+				movementId: "desk-pushup",
+				slotId: "slot-1",
+				completedAt: new Date().toISOString(),
+				status: "completed" as const,
+			},
+		];
+
+		// If server is clean, client config and logs are adopted
+		const mergedClean = mergeMovementStates(serverState, clientState);
+		expect(mergedClean.config.dailyTarget).toBe(8);
+		expect(mergedClean.logs["2026-10-12"]).toHaveLength(1);
+
+		// If server already has sessions, it does not duplicate sessions with same ID or slotId
+		const serverWithSessions = {
+			...serverState,
+			logs: {
+				"2026-10-12": [
+					{
+						id: "sess-1",
+						movementId: "desk-pushup",
+						slotId: "slot-1",
+						completedAt: new Date().toISOString(),
+						status: "completed" as const,
+					},
+					{
+						id: "sess-2",
+						movementId: "slow-squat",
+						slotId: "slot-2",
+						completedAt: new Date().toISOString(),
+						status: "completed" as const,
+					},
+				],
+			},
+		};
+
+		const mergedIdempotent = mergeMovementStates(
+			serverWithSessions,
+			clientState,
+		);
+		expect(mergedIdempotent.logs["2026-10-12"]).toHaveLength(2);
+	});
+
+	it("calculates 3-month cutoff date key correctly", () => {
+		// Reference: Oct 13, 2026 -> Cutoff should be Aug 1, 2026
+		const octDate = new Date(2026, 9, 13);
+		expect(getThreeMonthCutoffDateKey(octDate)).toBe("2026-08-01");
+
+		// Reference: Jan 15, 2026 -> Cutoff should cross into Nov 1, 2025
+		const janDate = new Date(2026, 0, 15);
+		expect(getThreeMonthCutoffDateKey(janDate)).toBe("2025-11-01");
+	});
+
+	it("prunes logs older than 3 calendar months", () => {
+		const state = getDefaultMovementState();
+		const refDate = new Date(2026, 9, 13); // Oct 13, 2026 (cutoff is 2026-08-01)
+
+		state.logs["2026-07-31"] = [
+			{
+				id: "old-1",
+				movementId: "desk-pushup",
+				completedAt: "2026-07-31T10:00:00Z",
+				status: "completed" as const,
+			},
+		];
+		state.logs["2026-08-01"] = [
+			{
+				id: "aug-1",
+				movementId: "desk-pushup",
+				completedAt: "2026-08-01T10:00:00Z",
+				status: "completed" as const,
+			},
+		];
+		state.logs["2026-10-12"] = [
+			{
+				id: "oct-1",
+				movementId: "slow-squat",
+				completedAt: "2026-10-12T10:00:00Z",
+				status: "completed" as const,
+			},
+		];
+
+		const { state: pruned, prunedCount } = pruneExpiredLogs(state, refDate);
+		expect(prunedCount).toBe(1);
+		expect(pruned.logs["2026-07-31"]).toBeUndefined();
+		expect(pruned.logs["2026-08-01"]).toHaveLength(1);
+		expect(pruned.logs["2026-10-12"]).toHaveLength(1);
+	});
+
+	it("generates monthly and weekly heatmap data for last 2 months and current month (Mon-Sun)", () => {
+		const state = getDefaultMovementState();
+		const refDate = new Date(2026, 9, 13); // October 13, 2026
+
+		state.logs["2026-10-12"] = [
+			{
+				id: "oct-1",
+				movementId: "slow-squat",
+				completedAt: "2026-10-12T10:00:00Z",
+				status: "completed" as const,
+			},
+		];
+
+		const heatmaps = getMonthlyWeeklyHeatmapData(state, refDate);
+		expect(heatmaps).toHaveLength(3);
+
+		// Order: 2 months ago (August), last month (September), current month (October)
+		expect(heatmaps[0].monthLabel).toBe("August 2026");
+		expect(heatmaps[0].isCurrentMonth).toBe(false);
+
+		expect(heatmaps[1].monthLabel).toBe("September 2026");
+		expect(heatmaps[1].isCurrentMonth).toBe(false);
+
+		expect(heatmaps[2].monthLabel).toBe("October 2026");
+		expect(heatmaps[2].isCurrentMonth).toBe(true);
+		expect(heatmaps[2].totalSessions).toBe(1);
+
+		// Verify every week has 7 days from Mon to Sun
+		for (const month of heatmaps) {
+			for (const week of month.weeks) {
+				expect(week.days).toHaveLength(7);
+				expect(week.days[0].dayName).toBe("Mon");
+				expect(week.days[6].dayName).toBe("Sun");
+			}
+		}
+	});
+
+	it("accumulates volume by day of week (Mon to Sun) without specific date clutter", () => {
+		const state = getDefaultMovementState();
+		const refDate = new Date(2026, 9, 13); // Tuesday, October 13, 2026
+
+		// Monday October 12, 2026
+		state.logs["2026-10-12"] = [
+			{
+				id: "mon-1",
+				movementId: "desk-pushup",
+				completedAt: "2026-10-12T10:00:00Z",
+				status: "completed" as const,
+			},
+			{
+				id: "mon-2",
+				movementId: "slow-squat",
+				completedAt: "2026-10-12T14:00:00Z",
+				status: "completed" as const,
+			},
+		];
+
+		const dayData = getMonthlyDayAccumulation(state, refDate);
+		expect(dayData).toHaveLength(3);
+
+		const currentMonth = dayData[2]; // October 2026
+		expect(currentMonth.monthLabel).toBe("October 2026");
+		expect(currentMonth.isCurrentMonth).toBe(true);
+		expect(currentMonth.days).toHaveLength(7);
+
+		// Check Mon
+		const monday = currentMonth.days[0];
+		expect(monday.dayName).toBe("Mon");
+		expect(monday.totalSessions).toBe(2);
+		expect(monday.occurrencesCount).toBeGreaterThan(0);
+		expect(monday.averagePerDay).toBeGreaterThan(0);
+
+		// Check Tuesday through Sunday
+		const sunday = currentMonth.days[6];
+		expect(sunday.dayName).toBe("Sun");
+		expect(sunday.totalSessions).toBe(0);
 	});
 });

@@ -73,3 +73,55 @@ export interface MovementSummaryStats {
 		count: number;
 	};
 }
+
+export interface HeatmapDayCell {
+	dateKey: string;
+	dayOfMonth: number;
+	dayName: string;
+	dayOfWeekIndex: number; // 0 for Mon, 6 for Sun
+	count: number;
+	metTarget: boolean;
+	isToday: boolean;
+	isFuture: boolean;
+	isPadding: boolean;
+}
+
+export interface HeatmapWeekRow {
+	weekIndex: number;
+	days: HeatmapDayCell[];
+	weekTotal: number;
+}
+
+export interface MonthlyHeatmapData {
+	year: number;
+	month: number; // 0-11
+	monthLabel: string;
+	isCurrentMonth: boolean;
+	totalSessions: number;
+	totalTargetMetDays: number;
+	activeDays: number;
+	totalDaysInMonth: number;
+	targetHitRatePct: number;
+	weeks: HeatmapWeekRow[];
+}
+
+export interface DayOfWeekAccumulation {
+	dayOfWeekIndex: number; // 0 for Mon, 6 for Sun
+	dayName: string; // "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+	dayFullName: string; // "Monday", "Tuesday", etc.
+	totalSessions: number;
+	occurrencesCount: number;
+	averagePerDay: number;
+	targetMetDays: number;
+}
+
+export interface MonthlyDayAccumulationData {
+	year: number;
+	month: number; // 0-11
+	monthLabel: string;
+	isCurrentMonth: boolean;
+	totalSessions: number;
+	totalTargetMetDays: number;
+	activeDays: number;
+	days: DayOfWeekAccumulation[]; // 7 elements, Mon to Sun
+}

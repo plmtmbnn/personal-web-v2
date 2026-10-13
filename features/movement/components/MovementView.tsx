@@ -22,6 +22,11 @@ import {
 } from "../lib/storage";
 import { playChimeSound } from "../lib/sound";
 import { sendMovementNotification } from "../lib/notifications";
+import {
+	saveMovementStateAction,
+	syncLocalMovementStateAction,
+	getMovementStateAction,
+} from "../actions";
 
 import MovementHeader from "./MovementHeader";
 import DailyProgressCard from "./DailyProgressCard";
@@ -33,9 +38,15 @@ import QuickCompleteModal from "./QuickCompleteModal";
 import RoutineSettingsModal from "./RoutineSettingsModal";
 import MovementSkeleton from "./MovementSkeleton";
 
-export default function MovementView() {
+interface MovementViewProps {
+	initialState?: MovementAppState | null;
+}
+
+export default function MovementView({ initialState }: MovementViewProps) {
 	const [isMounted, setIsMounted] = useState<boolean>(false);
-	const [state, setState] = useState<MovementAppState | null>(null);
+	const [state, setState] = useState<MovementAppState | null>(
+		initialState || null,
+	);
 	const [activeTab, setActiveTab] = useState<"today" | "library" | "history">(
 		"today",
 	);
@@ -52,12 +63,59 @@ export default function MovementView() {
 	>(undefined);
 	const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
-	// Load persistent client-side state after mounting
+	// Load and synchronize state on mount
 	useEffect(() => {
-		const initial = loadMovementState();
-		setState(initial);
-		setIsMounted(true);
-	}, []);
+		let isCancelled = false;
+
+		async function init() {
+			if (typeof window === "undefined") return;
+
+			const migrated = localStorage.getItem(
+				"movement:snacks:migrated_to_redis",
+			);
+			const localState = loadMovementState();
+			const hasLocalSessions = Object.keys(localState.logs || {}).some(
+				(k) => (localState.logs[k] || []).length > 0,
+			);
+
+			if (!migrated && hasLocalSessions) {
+				// One-time sync of legacy client-side localStorage data into Redis
+				try {
+					const synced = await syncLocalMovementStateAction(localState);
+					if (!isCancelled) {
+						setState(synced);
+						saveMovementState(synced);
+					}
+				} catch (err) {
+					console.error("Failed to sync local movement state to Redis:", err);
+					if (!isCancelled) {
+						const fallback = initialState || localState;
+						setState(fallback);
+					}
+				} finally {
+					localStorage.setItem("movement:snacks:migrated_to_redis", "true");
+				}
+			} else {
+				// Already migrated or clean slate: prefer server initialState, fall back to localStorage
+				const activeState = initialState || localState;
+				if (!isCancelled) {
+					setState(activeState);
+					saveMovementState(activeState);
+				}
+				localStorage.setItem("movement:snacks:migrated_to_redis", "true");
+			}
+
+			if (!isCancelled) {
+				setIsMounted(true);
+			}
+		}
+
+		init();
+
+		return () => {
+			isCancelled = true;
+		};
+	}, [initialState]);
 
 	const todayKey = useMemo(() => getLocalDateKey(), []);
 
@@ -120,6 +178,40 @@ export default function MovementView() {
 		return () => clearInterval(interval);
 	}, [state, todaySessions, allMovements]);
 
+	// Re-sync with Redis when tab becomes visible if no modal is active
+	useEffect(() => {
+		const handleVisibilityChange = async () => {
+			if (
+				document.visibilityState === "visible" &&
+				!timerModalData &&
+				!isQuickLogOpen &&
+				!isSettingsOpen
+			) {
+				try {
+					const remote = await getMovementStateAction();
+					setState(remote);
+					saveMovementState(remote);
+				} catch (err) {
+					console.error("Tab focus sync error:", err);
+				}
+			}
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () => {
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		};
+	}, [timerModalData, isQuickLogOpen, isSettingsOpen]);
+
+	// Persistent state updater with instant local write & background Redis sync
+	const persistState = useCallback((updated: MovementAppState) => {
+		setState(updated);
+		saveMovementState(updated);
+		saveMovementStateAction(updated).catch((err) => {
+			console.error("Failed to save movement state to Redis:", err);
+		});
+	}, []);
+
 	// 1-Click Fast Complete Slot
 	const handleQuickCompleteSlot = useCallback(
 		(slot: ScheduledMovementSlot, movement: Movement) => {
@@ -132,10 +224,10 @@ export default function MovementView() {
 				durationSeconds: movement.targetSeconds || 60,
 				dateKey: todayKey,
 			});
-			setState(updatedState);
+			persistState(updatedState);
 			if (state.config.soundEnabled) playChimeSound();
 		},
-		[state, todayKey],
+		[state, todayKey, persistState],
 	);
 
 	// Start Interactive Timer for Slot
@@ -170,9 +262,9 @@ export default function MovementView() {
 				durationSeconds: data.durationSeconds,
 				dateKey: todayKey,
 			});
-			setState(updatedState);
+			persistState(updatedState);
 		},
-		[state, timerModalData, todayKey],
+		[state, timerModalData, todayKey, persistState],
 	);
 
 	// Undo Logged Session
@@ -180,9 +272,9 @@ export default function MovementView() {
 		(sessionId: string) => {
 			if (!state) return;
 			const updated = undoMovementSession(state, todayKey, sessionId);
-			setState(updated);
+			persistState(updated);
 		},
-		[state, todayKey],
+		[state, todayKey, persistState],
 	);
 
 	// Toggle Skip Slot
@@ -190,9 +282,9 @@ export default function MovementView() {
 		(slot: ScheduledMovementSlot, movement: Movement) => {
 			if (!state) return;
 			const updated = toggleSlotSkip(state, todayKey, slot.id, movement.id);
-			setState(updated);
+			persistState(updated);
 		},
-		[state, todayKey],
+		[state, todayKey, persistState],
 	);
 
 	// Record Session from Quick Log Modal
@@ -207,9 +299,9 @@ export default function MovementView() {
 				isBonus: true,
 				dateKey: todayKey,
 			});
-			setState(updatedState);
+			persistState(updatedState);
 		},
-		[state, todayKey],
+		[state, todayKey, persistState],
 	);
 
 	// Save Routine Configuration
@@ -220,10 +312,9 @@ export default function MovementView() {
 				...state,
 				config: updatedConfig,
 			};
-			saveMovementState(updated);
-			setState(updated);
+			persistState(updated);
 		},
-		[state],
+		[state, persistState],
 	);
 
 	// Export Data to JSON Download
@@ -242,21 +333,24 @@ export default function MovementView() {
 	}, [state, todayKey]);
 
 	// Import Data from JSON
-	const handleImportJson = useCallback((jsonString: string): boolean => {
-		const restored = importMovementDataFromJson(jsonString);
-		if (restored) {
-			setState(restored);
-			return true;
-		}
-		return false;
-	}, []);
+	const handleImportJson = useCallback(
+		(jsonString: string): boolean => {
+			const restored = importMovementDataFromJson(jsonString);
+			if (restored) {
+				persistState(restored);
+				return true;
+			}
+			return false;
+		},
+		[persistState],
+	);
 
 	// Reset History
 	const handleResetHistory = useCallback(() => {
 		if (!state) return;
 		const cleared = clearMovementHistory(state);
-		setState(cleared);
-	}, [state]);
+		persistState(cleared);
+	}, [state, persistState]);
 
 	if (!isMounted || !state) {
 		return <MovementSkeleton />;

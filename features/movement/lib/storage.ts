@@ -1,6 +1,11 @@
 import { INITIAL_MOVEMENT_LIBRARY } from "../data/default-library";
 import { DEFAULT_ROUTINE_CONFIG } from "../data/default-routine";
 import type {
+	DayOfWeekAccumulation,
+	HeatmapDayCell,
+	HeatmapWeekRow,
+	MonthlyDayAccumulationData,
+	MonthlyHeatmapData,
 	Movement,
 	MovementAppState,
 	MovementSession,
@@ -25,6 +30,50 @@ export function getLocalDateKey(date: Date = new Date()): string {
 export function parseLocalDateKey(dateStr: string): Date {
 	const [year, month, day] = dateStr.split("-").map(Number);
 	return new Date(year, month - 1, day);
+}
+
+/**
+ * Returns the cutoff date key (YYYY-MM-DD) for 3 calendar months retention.
+ * For example, if reference is in October 2026, cutoff is August 1, 2026.
+ */
+export function getThreeMonthCutoffDateKey(
+	referenceDate: Date = new Date(),
+): string {
+	const cutoff = new Date(
+		referenceDate.getFullYear(),
+		referenceDate.getMonth() - 2,
+		1,
+	);
+	return getLocalDateKey(cutoff);
+}
+
+/**
+ * Prunes any daily logs older than 3 calendar months from state.logs.
+ * Returns the sanitized state and count of removed dates.
+ */
+export function pruneExpiredLogs(
+	state: MovementAppState,
+	referenceDate: Date = new Date(),
+): { state: MovementAppState; prunedCount: number } {
+	const cutoffKey = getThreeMonthCutoffDateKey(referenceDate);
+	const sanitizedLogs: Record<string, MovementSession[]> = {};
+	let prunedCount = 0;
+
+	for (const [dateKey, sessions] of Object.entries(state.logs || {})) {
+		if (dateKey >= cutoffKey) {
+			sanitizedLogs[dateKey] = sessions;
+		} else {
+			prunedCount += 1;
+		}
+	}
+
+	return {
+		state: {
+			...state,
+			logs: sanitizedLogs,
+		},
+		prunedCount,
+	};
 }
 
 /**
@@ -75,7 +124,8 @@ export function saveMovementState(state: MovementAppState): void {
 	if (typeof window === "undefined") return;
 
 	try {
-		localStorage.setItem(MOVEMENT_STORAGE_KEY, JSON.stringify(state));
+		const { state: pruned } = pruneExpiredLogs(state);
+		localStorage.setItem(MOVEMENT_STORAGE_KEY, JSON.stringify(pruned));
 	} catch {
 		// Ignore local storage quota errors
 	}
@@ -360,6 +410,287 @@ export function getCalendarHeatmapData(
 }
 
 /**
+ * Generates Weekly Heatmap data (Mon to Sun) grouped by Month for:
+ * - 2 months ago
+ * - Last month
+ * - Current month
+ * (Total 3 calendar months).
+ */
+export function getMonthlyWeeklyHeatmapData(
+	state: MovementAppState,
+	referenceDate: Date = new Date(),
+): MonthlyHeatmapData[] {
+	const result: MonthlyHeatmapData[] = [];
+	const todayKey = getLocalDateKey(referenceDate);
+	const target = state.config.dailyTarget;
+
+	const MONTH_NAMES = [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	];
+	const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+	// Generate for 2 months ago (offset -2), last month (-1), current month (0)
+	for (let offset = -2; offset <= 0; offset++) {
+		const targetMonthDate = new Date(
+			referenceDate.getFullYear(),
+			referenceDate.getMonth() + offset,
+			1,
+		);
+		const year = targetMonthDate.getFullYear();
+		const month = targetMonthDate.getMonth();
+		const monthLabel = `${MONTH_NAMES[month]} ${year}`;
+		const isCurrentMonth = offset === 0;
+
+		const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+		// Calculate start day of week (Monday = 0, Sunday = 6)
+		const firstDayOfMonth = new Date(year, month, 1);
+		const startDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
+
+		const weeks: HeatmapWeekRow[] = [];
+		let currentWeekDays: HeatmapDayCell[] = [];
+		let currentWeekTotal = 0;
+
+		// 1. Add leading padding days before 1st of month
+		for (let pad = 0; pad < startDayOfWeek; pad++) {
+			currentWeekDays.push({
+				dateKey: "",
+				dayOfMonth: 0,
+				dayName: DAY_NAMES[pad],
+				dayOfWeekIndex: pad,
+				count: 0,
+				metTarget: false,
+				isToday: false,
+				isFuture: false,
+				isPadding: true,
+			});
+		}
+
+		let monthlyTotalSessions = 0;
+		let monthlyTargetMetDays = 0;
+		let monthlyActiveDays = 0;
+
+		// 2. Add each day of the month
+		for (let day = 1; day <= totalDaysInMonth; day++) {
+			const dayDate = new Date(year, month, day);
+			const dateKey = getLocalDateKey(dayDate);
+			const dayOfWeekIndex = (dayDate.getDay() + 6) % 7;
+			const dayName = DAY_NAMES[dayOfWeekIndex];
+
+			const sessions = (state.logs[dateKey] || []).filter(
+				(s) => s.status === "completed",
+			);
+			const count = sessions.length;
+			const metTarget = count >= target;
+			const isToday = dateKey === todayKey;
+			const isFuture = isCurrentMonth && dateKey > todayKey;
+
+			if (count > 0) {
+				monthlyTotalSessions += count;
+				monthlyActiveDays += 1;
+				currentWeekTotal += count;
+			}
+			if (metTarget) {
+				monthlyTargetMetDays += 1;
+			}
+
+			currentWeekDays.push({
+				dateKey,
+				dayOfMonth: day,
+				dayName,
+				dayOfWeekIndex,
+				count,
+				metTarget,
+				isToday,
+				isFuture,
+				isPadding: false,
+			});
+
+			// If Sunday or last day of month, close the week
+			if (dayOfWeekIndex === 6 || day === totalDaysInMonth) {
+				// If last day of month and not Sunday, add trailing padding days
+				if (day === totalDaysInMonth && dayOfWeekIndex < 6) {
+					for (let pad = dayOfWeekIndex + 1; pad <= 6; pad++) {
+						currentWeekDays.push({
+							dateKey: "",
+							dayOfMonth: 0,
+							dayName: DAY_NAMES[pad],
+							dayOfWeekIndex: pad,
+							count: 0,
+							metTarget: false,
+							isToday: false,
+							isFuture: false,
+							isPadding: true,
+						});
+					}
+				}
+
+				weeks.push({
+					weekIndex: weeks.length + 1,
+					days: currentWeekDays,
+					weekTotal: currentWeekTotal,
+				});
+
+				currentWeekDays = [];
+				currentWeekTotal = 0;
+			}
+		}
+
+		// Days eligible for target hit rate (passed days for current month, all days for past)
+		const eligibleDays = isCurrentMonth
+			? referenceDate.getDate()
+			: totalDaysInMonth;
+		const targetHitRatePct =
+			eligibleDays > 0
+				? Math.round((monthlyTargetMetDays / eligibleDays) * 100)
+				: 0;
+
+		result.push({
+			year,
+			month,
+			monthLabel,
+			isCurrentMonth,
+			totalSessions: monthlyTotalSessions,
+			totalTargetMetDays: monthlyTargetMetDays,
+			activeDays: monthlyActiveDays,
+			totalDaysInMonth,
+			targetHitRatePct,
+			weeks,
+		});
+	}
+
+	return result;
+}
+
+/**
+ * Simplifies and accumulates movement activity into days of the week (Mon to Sun)
+ * for each of the 3 active months (2 months ago, last month, current month).
+ */
+export function getMonthlyDayAccumulation(
+	state: MovementAppState,
+	referenceDate: Date = new Date(),
+): MonthlyDayAccumulationData[] {
+	const result: MonthlyDayAccumulationData[] = [];
+	const todayKey = getLocalDateKey(referenceDate);
+	const target = state.config.dailyTarget;
+
+	const MONTH_NAMES = [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	];
+	const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+	const DAY_FULL_NAMES = [
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday",
+		"Saturday",
+		"Sunday",
+	];
+
+	// For 2 months ago (-2), last month (-1), current month (0)
+	for (let offset = -2; offset <= 0; offset++) {
+		const targetMonthDate = new Date(
+			referenceDate.getFullYear(),
+			referenceDate.getMonth() + offset,
+			1,
+		);
+		const year = targetMonthDate.getFullYear();
+		const month = targetMonthDate.getMonth();
+		const monthLabel = `${MONTH_NAMES[month]} ${year}`;
+		const isCurrentMonth = offset === 0;
+
+		const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+		// Accumulator structures for 7 days (index 0 = Mon, 6 = Sun)
+		const dayTotals = Array(7).fill(0);
+		const dayOccurrences = Array(7).fill(0);
+		const dayTargetMet = Array(7).fill(0);
+
+		let monthlyTotalSessions = 0;
+		let monthlyTargetMetDays = 0;
+		let monthlyActiveDays = 0;
+
+		for (let d = 1; d <= totalDaysInMonth; d++) {
+			const dayDate = new Date(year, month, d);
+			const dateKey = getLocalDateKey(dayDate);
+			const dayOfWeekIndex = (dayDate.getDay() + 6) % 7; // Mon=0, Sun=6
+
+			const isFuture = isCurrentMonth && dateKey > todayKey;
+			if (!isFuture) {
+				dayOccurrences[dayOfWeekIndex] += 1;
+			}
+
+			const sessions = (state.logs[dateKey] || []).filter(
+				(s) => s.status === "completed",
+			);
+			const count = sessions.length;
+
+			if (count > 0) {
+				dayTotals[dayOfWeekIndex] += count;
+				monthlyTotalSessions += count;
+				monthlyActiveDays += 1;
+			}
+
+			if (count >= target) {
+				dayTargetMet[dayOfWeekIndex] += 1;
+				monthlyTargetMetDays += 1;
+			}
+		}
+
+		const days: DayOfWeekAccumulation[] = DAY_NAMES.map((name, idx) => {
+			const total = dayTotals[idx];
+			const occ = dayOccurrences[idx];
+			const avg = occ > 0 ? Math.round((total / occ) * 10) / 10 : 0;
+			return {
+				dayOfWeekIndex: idx,
+				dayName: name,
+				dayFullName: DAY_FULL_NAMES[idx],
+				totalSessions: total,
+				occurrencesCount: occ,
+				averagePerDay: avg,
+				targetMetDays: dayTargetMet[idx],
+			};
+		});
+
+		result.push({
+			year,
+			month,
+			monthLabel,
+			isCurrentMonth,
+			totalSessions: monthlyTotalSessions,
+			totalTargetMetDays: monthlyTargetMetDays,
+			activeDays: monthlyActiveDays,
+			days,
+		});
+	}
+
+	return result;
+}
+
+/**
  * Exports data to a clean JSON string for local backup.
  */
 export function exportMovementDataAsJson(state: MovementAppState): string {
@@ -409,4 +740,59 @@ export function clearMovementHistory(
 	};
 	saveMovementState(resetState);
 	return resetState;
+}
+
+/**
+ * Merges server and client movement states without duplicating sessions.
+ */
+export function mergeMovementStates(
+	serverState: MovementAppState,
+	clientState: MovementAppState,
+): MovementAppState {
+	const mergedLogs: Record<string, MovementSession[]> = {
+		...(serverState.logs || {}),
+	};
+
+	for (const [dateKey, clientSessions] of Object.entries(
+		clientState.logs || {},
+	)) {
+		const serverSessions = mergedLogs[dateKey] || [];
+		const serverSessionIds = new Set(serverSessions.map((s) => s.id));
+		const serverSlotIds = new Set(
+			serverSessions.map((s) => s.slotId).filter(Boolean),
+		);
+
+		const sessionsToAdd = clientSessions.filter(
+			(cs) =>
+				!serverSessionIds.has(cs.id) &&
+				(!cs.slotId || !serverSlotIds.has(cs.slotId)),
+		);
+
+		mergedLogs[dateKey] = [...serverSessions, ...sessionsToAdd];
+	}
+
+	const serverCustom = serverState.customMovements || [];
+	const clientCustom = clientState.customMovements || [];
+	const customIds = new Set(serverCustom.map((m) => m.id));
+	const mergedCustom = [
+		...serverCustom,
+		...clientCustom.filter((m) => !customIds.has(m.id)),
+	];
+
+	// Config resolution: if server has logged sessions, server config takes precedence; otherwise adopt client config
+	const serverHasLogs = Object.keys(serverState.logs || {}).some(
+		(k) => (serverState.logs[k] || []).length > 0,
+	);
+	const resolvedConfig = serverHasLogs
+		? { ...DEFAULT_ROUTINE_CONFIG, ...(serverState.config || {}) }
+		: {
+				...DEFAULT_ROUTINE_CONFIG,
+				...(clientState.config || serverState.config || {}),
+			};
+
+	return {
+		config: resolvedConfig,
+		logs: mergedLogs,
+		customMovements: mergedCustom,
+	};
 }

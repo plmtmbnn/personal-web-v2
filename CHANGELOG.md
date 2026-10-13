@@ -1,3 +1,15 @@
+# [0.105.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.104.1...v0.105.0) (2026-10-13)
+
+
+### Bug Fixes
+
+* **build:** align node engine to >=20.9.0 and configure nvmrc for node 20 compatibility ([565b98a](https://github.com/plmtmbnn/personal-web-v2/commit/565b98a388b84a8e474599f76889a74305d48661))
+
+
+### Features
+
+* **investment:** enhance compass decision engine, macro sandbox, and stock explorer resilience ([f88c913](https://github.com/plmtmbnn/personal-web-v2/commit/f88c9130300bd58e01bf0c2c21f8010b7ced537e))
+
 ## [0.104.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.104.0...v0.104.1) (2026-10-12)
 
 

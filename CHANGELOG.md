@@ -1,3 +1,10 @@
+# [0.106.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.105.0...v0.106.0) (2026-10-13)
+
+
+### Features
+
+* **movement:** sync to redis with 3-month logic delete and mon-sun day accumulation ([d98454a](https://github.com/plmtmbnn/personal-web-v2/commit/d98454acee9d17761cf8711c709e2688c993f2ab))
+
 # [0.105.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.104.1...v0.105.0) (2026-10-13)
 
 

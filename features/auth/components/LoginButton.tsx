@@ -25,11 +25,13 @@ export default function LoginButton({ user }: LoginButtonProps) {
 		setIsLoading(true);
 		try {
 			let targetPath = "/admin";
+			let modeParam: string | null = null;
 
 			if (typeof window !== "undefined") {
 				const url = new URL(window.location.href);
 				const nextParam =
 					url.searchParams.get("next") || url.searchParams.get("redirectTo");
+				modeParam = url.searchParams.get("mode");
 
 				// Preserve destination if query parameter is a valid internal relative path
 				if (nextParam?.startsWith("/") && !nextParam.startsWith("//")) {
@@ -46,11 +48,21 @@ export default function LoginButton({ user }: LoginButtonProps) {
 				}
 			}
 
-			// Build callback URL with preserved target destination
+			// Build callback URL with preserved target destination and mode
+			const callbackParams = new URLSearchParams();
+			if (targetPath && targetPath !== "/admin") {
+				callbackParams.set("next", targetPath);
+			}
+			if (modeParam) {
+				callbackParams.set("mode", modeParam);
+			}
+			const queryString = callbackParams.toString();
 			const callbackUrl =
-				targetPath !== "/admin"
-					? `${window.location.origin}/auth/callback?next=${encodeURIComponent(targetPath)}`
-					: `${window.location.origin}/auth/callback`;
+				typeof window !== "undefined" && queryString
+					? `${window.location.origin}/auth/callback?${queryString}`
+					: typeof window !== "undefined"
+						? `${window.location.origin}/auth/callback`
+						: "/auth/callback";
 
 			const { error } = await SupabaseConn.auth.signInWithOAuth({
 				provider: "google",

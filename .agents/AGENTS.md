@@ -11,6 +11,14 @@ This document provides foundational context for any AI coding assistant (e.g., C
 > - **Form & Search Hygiene**: Explicit input icon layering (`pointer-events-none z-10` with `pl-10`/`pl-11`).
 > - **Strict Anti-Gradient, Anti-Emoji, Anti-Sparkles, Anti-AI-Slop, Clean Header, Card Action Hygiene, Metric Anti-Redundancy, Pure White Container, Anti-Forced-Side-by-Side & Defensive Responsiveness Mandates**: Zero gradient headers, zero gradient modals, zero multi-color gradient typography, zero ambient blur orbs (`blur-3xl`), zero raw unicode emojis, and zero `Sparkles` / AI-slop icons (`Sparkles` is strictly blacklisted forever sitewide without exception; always use domain-specific icons). Furthermore, strictly forbid `'•'` or `'·'` (middots) as separators, ban compound slogan badges (`CATEGORY • marketing sublabel`), eliminate redundant marketing subtitles, and prohibit repetitive decorative category sections/pills above titles (`Market Guideline`, `Engineering Journal`, `Performance Hub`). Headers follow the **Clean Header Standard**: breadcrumbs at top, bold title `h1`, straight-to-the-point description (`p`), and right-aligned buttons or telemetry stats strip. Cards follow the **Card Action Hygiene Standard**: zero duplicate navigation triggers (never pair a top-right arrow button with a bottom `Launch` action), zero generic `rounded-full` category tags, and top-right slots reserved strictly for real-time metric pills (`rounded-lg`/`rounded-md`). Functional data cards follow the **Metric Anti-Redundancy & Zero Fluff Standard**: zero redundant metrics (never pair Pace and Speed in the same card), zero decorative benchmark slogans/taglines (e.g. no "Tempo Benchmark"), pure white containers for standard dashboard cards (`bg-white rounded-3xl`, strictly prohibiting monolithic dark-mode cards), restrained typography (`text-5xl/6xl`, avoiding `7xl/8xl` giant text, and favoring `font-semibold`/`font-bold` over brutalist `font-black` in cards), the **Minimalist Frameless Milestone Selector** pattern, and the **Anti-Forced-Side-by-Side Standard** (never force components side-by-side in constrained spaces < 600px, mobile, or split cards; always flow top-to-bottom or use segmented mode switchers; and adhere to the 4-tier vertical structure for compact telemetry cards to prevent border overflow and label clipping).
 
+> [!IMPORTANT]
+> **Mandatory CodeGraph First-Touch & Blast Radius Standard**:
+> In this repository (indexed under `.codegraph/`), agents **MUST ALWAYS** reach for CodeGraph (`codegraph explore`, `codegraph node`, `codegraph callers`, `codegraph impact`) **BEFORE** grepping, searching, or making modifications:
+> - **Pre-Develop & Architecture**: Use `codegraph explore "<symbol or task>"` or `codegraph node <symbol>` to discover verbatim on-disk AST source, call paths, and dynamic hops in a single shot.
+> - **Refactor & Blast Radius**: Before changing any function, service, or interface, agents MUST run `codegraph callers "<symbol>"` and `codegraph impact "<symbol-or-file>"` to identify all inbound callers and downstream affected modules.
+> - **Targeted Quality Assurance**: Identify affected tests using `codegraph affected <files...>` to verify changes rapidly without running irrelevant suites.
+> - **Index Synchronization**: Keep the AST graph updated via `codegraph sync -q` after edits.
+
 ## 🛠 Tech Stack
 - **Framework:** Next.js 16.4.0 (App Router) & React 19.3.0
 - **Language:** TypeScript 5.9.3
@@ -23,6 +31,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Styling:** Tailwind CSS v4.3.3 + Framer Motion
 - **Icons:** Lucide-React + React-Icons/Fa
 - **Linter/Formatter:** Biome
+- **Code Intelligence & Graph:** CodeGraph (`@colbymchenry/codegraph` AST knowledge graph, impact analysis, affected tests)
 - **Utilities Integration:** PapaParse (CSV), node-sql-parser, sql-formatter, otplib (TOTP), HTML5 Canvas API (Postcard/Run stickers & Code-to-Image), Clipboard API
 - **Advanced APIs:** Web Share API (Rich Run Activity & Blog Sharing), Wake Lock API (Running Timer), Web Audio API (Timer beeps & Spinner clicks), MediaDevices & WebGL (Device Inspector)
 - **External Integrations:** Strava API (`services/strava/`), Liverpool FC API (`backend.liverpoolfc.com`)
@@ -51,7 +60,7 @@ The project follows a modular, domain-driven structure to ensure scalability and
 ### 1. `features/` (Domain Layer)
 Contains all business logic, components, and types for specific features.
 - `features/adventures/`: Running logs & Strava activity hub (`ActivityDetailModal` with Web Share API, `PersonalBestsSwipeCard` with pure white floating card architecture, minimalist sliding-underline milestone track, clean 3-metric strip, swipe/keyboard navigation, verified data telemetry, run canvas exports, split pacing breakdown).
-- `features/auth/`: Actions, `PinGuard.tsx`, `AuthProvider.tsx` (quiet log hygiene, 10s debounced sync, tab focus re-sync), `LoginButton.tsx` (target URL preservation & avatar referrer policy), and `UnauthorizedView.tsx`.
+- `features/auth/`: Centralized Authentication & Authorization Engine. Supports single-parameter per-page route guarding (`requireAuth("login_only" | "pin_only" | "serial" | "disabled")`), client-side `<AuthGuard mode="...">` and `useAuthGuard(mode)`, backward-compatible `<PinGuard>` convenience wrapper, numeric 6-box `<PinInputForm>`, adaptive `/login` portal with query-driven mode resolution, Upstash Redis session persistence (`createSession`, `updateSessionPinAuth`, `refreshSession`, `getAuthSession`) with rolling `app_session` HTTP-only cookie, Google OAuth PKCE callback handling (`app/auth/callback/route.ts`) preserving mode and return destinations, and session sync utilities.
 - `features/blog/`: Actions, data fetching, dynamic category counts, sort controls, and all blog UI components.
 - `features/contact/`: Compact single-page contact & direct inquiry hub (`ContactView.tsx`) adhering to the Desktop Entry Screen Standard (`lg:h-screen lg:max-h-[100dvh] lg:overflow-hidden`). Left column (5 cols): Active status chip with organic `animate-ping` liveness indicator, bold typography headline (`"Let's build something worth shipping."`), sub-copy, unified 2-column floating card widget for Location (`Toba, ID`) and live Jakarta clock (`Asia/Jakarta`), system version pill, and relative timezone calculator (`{diffHours}h ahead/behind you` or `Same timezone`). Right column (7 cols): Floating inquiry topic card (`rounded-[2rem]`) with 4 pre-composed presets (`Handshake`, `Briefcase`, `Cpu`, `Coffee`) compiling dynamic `mailto:` parameters, and a 2x2 grid of direct contact channels (Email, Telegram, LinkedIn, GitHub) featuring domain icon squircles, one-click clipboard copying with toast feedback, and diagonal external linkout actions (`ArrowUpRight`).
 - `features/home/`: Compact Profile Layout / Widget Dashboard — symmetric `lg:grid-cols-12` split (6/6: content left, metrics right) inspired by ContactView. Left column: scalable 64px to 80px rounded avatar with grayscale-to-color hover transition, active status chip with pulsing dot, bold typographic headline (`"Engineering systems by day. Miles everywhere."`), short bio, and a 2-column floating card widget for Location and live Jakarta time. Right column: "Professional Impact" metrics panel (strict symmetric 3-column dense grid) and Direct Channels grid (Explore Work, Contact, GitHub, LinkedIn) with touch-optimized hover actions. No massive full-bleed photo, no `TiltCard`, no giant bento tiles. Pure, dense, high-contrast dashboard aesthetic. Desktop: `lg:h-screen lg:max-h-[100dvh]` zero-scroll entry. Identity: **Polma Tambunan**. Tagline: `"Engineering Systems. Miles Everywhere."` Each data point appears exactly once.
@@ -545,11 +554,16 @@ pnpm run analyze         # Alias for build:analyze
   - `features/utils/stock-tools/stock-explorer/__tests__/screenerPresets.test.ts` (3 tests): Factor scoring weights summing to 100 and Compass-aligned defensive/risk-on strategy presets.
   - *Full Stock Explorer Domain Health*: 4 test suites, 33 tests passing with zero failures.
 - **Full Investment & Stock Workstations Health**: 14 test suites, 90 tests passing with zero failures.
+- **Centralized Authentication & Authorization Test Suite (`features/auth/`)**:
+  - `features/auth/__tests__/server.test.ts` (16 tests): Server route guarding (`requireAuth`), status evaluations (`disabled`, `login_only`, `pin_only`, `serial`), single-param syntax, and destination query param retention.
+  - `features/auth/__tests__/actions.test.ts` (7 tests): Auth actions, admin checks, and session helpers.
+  - *Full Auth Domain Health*: 2 test suites, 23 tests passing with zero failures.
+- **Total Repository Test Health**: 50 test suites, 498 tests passing across all domains with zero failures.
 
 ### Configuration Files
 - `next.config.ts`: Optimized with bundle analyzer, Sentry (configured with `silent: true` to suppress Turbopack warning noise in CI), and caching
 - `tsconfig.json`: Performance-optimized TypeScript settings
-- `biome.json`: Strict linter and formatter covering all 442 files across `app/`, `features/`, `lib/`, `services/`, `types/`, and root configs
+- `biome.json`: Strict linter and formatter covering all 452 files across `app/`, `features/`, `lib/`, `services/`, `types/`, and root configs
 - `.env.development`: Development-specific environment variables
 - `tailwind.config.js`: Optimized Tailwind CSS v4 configuration
 - `postcss.config.mjs`: Enhanced with autoprefixer
@@ -557,12 +571,14 @@ pnpm run analyze         # Alias for build:analyze
 ## 📏 Engineering Standards
 - **UI/UX Consistency**: All new or modified pages/components MUST strictly conform to [`ui-ux-guideline.md`](file:///c:/Work/Me/personal-web-v2/.agents/ui-ux-guideline.md) (Floating Cards, `bg-slate-50/80 bg-dot-pattern`, `bg-white` containers, `rounded-2xl` to `rounded-[2rem]`, pill badges, mobile-first responsive grids, and `pb-32 sm:pb-36` navigation clearance).
 - **Strict Anti-Gradient, Anti-Emoji, Metric Anti-Redundancy & Pure White Container Mandates**: NEVER use gradient headers, gradient modal dialogs, multi-color gradient text, or ambient blur glow orbs. NEVER use raw unicode emojis in UI components, headers, or cards (always use scalable SVG icons). Standard dashboard cards MUST strictly use pure white containers (`bg-white rounded-3xl`); monolithic dark-mode cards are forbidden. Data displays must strictly eliminate redundant metrics (no Pace + Speed redundancy) and zero marketing fluff taglines.
+- **Centralized Authentication & Authorization Mandate**: All secured routes MUST call `await requireAuth(mode)` at the top of the Server Component page, passing a single string parameter (`"login_only"`, `"pin_only"`, `"serial"`, or `"disabled"`). Client components requiring authorization MUST use `<AuthGuard mode="...">` or `useAuthGuard(mode)`. Inline private content uses `<PinGuard mode="...">`. Never implement ad-hoc cookies checks or custom redirects.
 - **Feature-Module Cleanliness**: Domain logic and UI components strictly reside in `features/<domain>/`. Shared global UI components reside exclusively in `features/shared/components/`. Zero orphaned root `components/` folders.
 - **Component Design**: Prefer clean abstractions. Use `use client` only when necessary.
 - **Defensive Data Handling**: Always implement safety fallbacks and type-casting (e.g., `String(val || "")`) when processing external API data to prevent runtime `TypeError` on missing fields.
 - **SEO & Metadata**: Every route must implement `generateMetadata` using `createMetadata` helper in `lib/shared/metadata.ts`.
 - **Error Tracking & Monitoring**: Sentry is configured for client (`instrumentation-client.ts`), server (`sentry.server.config.ts`), and edge environment tracking (`sentry.edge.config.ts`), integrated via Next.js instrumentation (`instrumentation.ts`). Sentry builds use `silent: true` to suppress noisy missing source map warnings from Turbopack internal chunks.
 - **Git Workflow**: Follow **Conventional Commits**.
-- **Linter & Formatter**: **Biome** for strict full-repository formatting and linting (`360 files, 0 warnings, 0 errors`).
+- **Linter & Formatter**: **Biome** for strict full-repository formatting and linting (`452 files, 0 warnings, 0 errors`).
+- **CodeGraph First-Touch & Impact Mandate**: NEVER guess function signatures, grep blindly, or refactor without impact analysis. Agents MUST inspect the AST knowledge graph via CodeGraph (`codegraph explore`, `codegraph node`, `codegraph callers`, `codegraph impact`) before proposing or implementing changes to maintain architectural consistency and prevent regression cascades.
 - **Performance Tools:** Bundle analyzer, profiling scripts, and optimized configurations.
 - **Commit/Push Policy**: **NEVER** stage, commit, or push changes unless explicitly requested by the user for each occurrence.

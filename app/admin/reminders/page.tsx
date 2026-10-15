@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { checkAdmin } from "@/features/auth/actions";
+import { requireAuth } from "@/features/auth/server";
 import { getReminders } from "@/features/reminders/actions";
 import RemindersView from "@/features/reminders/components/RemindersView";
 import type { Metadata } from "next";
@@ -13,10 +12,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminRemindersPage() {
-	const isAdmin = await checkAdmin();
-	if (!isAdmin) {
-		redirect("/unauthorized");
-	}
+	await requireAuth({ requireAdmin: true, redirectTo: "/admin/reminders" });
 
 	const reminders = await getReminders();
 

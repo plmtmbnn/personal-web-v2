@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
 	BookOpen,
 	CheckSquare,
@@ -11,7 +10,8 @@ import {
 	Server,
 	Activity,
 } from "lucide-react";
-import { logout, checkAdmin } from "@/features/auth/actions";
+import { logout } from "@/features/auth/actions";
+import { requireAuth } from "@/features/auth/server";
 import { createAdminClient } from "@/lib/core/supabase-server";
 import { getReminderCount } from "@/features/reminders/actions";
 
@@ -107,11 +107,7 @@ export function AdminSkeleton() {
 }
 
 export default async function AdminDashboardPage() {
-	const isAdmin = await checkAdmin();
-
-	if (!isAdmin) {
-		redirect("/unauthorized");
-	}
+	await requireAuth({ requireAdmin: true, redirectTo: "/admin" });
 
 	// Fetch live operational telemetry in parallel
 	let publishedBlogs = 0;

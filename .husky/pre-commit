@@ -1,2 +1,28 @@
 #!/bin/sh
+
+# 1. Fast Biome lint and format check
 pnpm check
+
+# 2. Targeted test execution and index sync via CodeGraph (if enabled)
+if [ -d ".codegraph" ]; then
+	CODEGRAPH_CMD=""
+	if command -v codegraph >/dev/null 2>&1; then
+		CODEGRAPH_CMD="codegraph"
+	elif npx --no-install @colbymchenry/codegraph --version >/dev/null 2>&1; then
+		CODEGRAPH_CMD="npx @colbymchenry/codegraph"
+	fi
+
+	if [ -n "$CODEGRAPH_CMD" ]; then
+		STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+		if [ -n "$STAGED_FILES" ]; then
+			AFFECTED_TESTS=$(echo "$STAGED_FILES" | $CODEGRAPH_CMD affected --stdin -q 2>/dev/null)
+			if [ -n "$AFFECTED_TESTS" ]; then
+				echo "🧪 Running affected tests via CodeGraph..."
+				pnpm vitest run $AFFECTED_TESTS
+			fi
+		fi
+
+		# Keep CodeGraph index synchronized silently
+		$CODEGRAPH_CMD sync -q 2>/dev/null || true
+	fi
+fi

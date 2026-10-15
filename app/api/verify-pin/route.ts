@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import { verifySync } from "otplib";
+import {
+	createSession,
+	getAuthSession,
+	updateSessionPinAuth,
+} from "@/lib/core/redis";
 
 /**
  * Redis & Ratelimit Configuration
- * Standardized using ENV_GLOBAL architectual pattern.
+ * Standardized using ENV_GLOBAL architectural pattern.
  */
 const redis =
 	ENV_GLOBAL?.UPSTASH_REDIS_REST_URL && ENV_GLOBAL?.UPSTASH_REDIS_REST_TOKEN
@@ -26,11 +32,11 @@ const ratelimit = redis
 	: null;
 
 /**
- * PIN Verification Endpoint with Rate Limiting
+ * PIN Verification Endpoint with Rate Limiting & Centralized Session Synchronization
  */
 export async function POST(request: Request) {
 	try {
-		// Architectural Guard: If Redis is not configured, bypass rate limiting (or fail shut if preferred)
+		// 1. Sliding Window Rate Limiting (5 attempts / 10 minutes)
 		if (ratelimit) {
 			const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
 			const { success, limit, reset, remaining } = await ratelimit.limit(ip);
@@ -72,14 +78,55 @@ export async function POST(request: Request) {
 
 		const result = verifySync({ token: pin, secret });
 
-		if (result.valid) {
-			return NextResponse.json({ authenticated: true });
+		if (!result.valid) {
+			return NextResponse.json(
+				{ authenticated: false, error: "Incorrect Authenticator Code" },
+				{ status: 401 },
+			);
 		}
 
-		return NextResponse.json(
-			{ authenticated: false, error: "Incorrect Authenticator Code" },
-			{ status: 401 },
-		);
+		// 3. Centralized Session Integration
+		// When PIN is valid, update existing session (e.g. Serial mode Step 2)
+		// or establish a new verified session (e.g. PIN-only mode).
+		const cookieStore = await cookies();
+		let sessionId = cookieStore.get("app_session")?.value;
+
+		if (sessionId) {
+			const existingSession = await getAuthSession(sessionId);
+			if (existingSession) {
+				await updateSessionPinAuth(sessionId);
+			} else {
+				// Re-create session if metadata was missing
+				sessionId = await createSession("pin-admin", {
+					isAdmin: true,
+					pinAuthenticated: true,
+					mode: "pin_only",
+				});
+				cookieStore.set("app_session", sessionId, {
+					httpOnly: true,
+					secure: process.env.NODE_ENV === "production",
+					sameSite: "lax",
+					maxAge: 604800 * 30, // 30 weeks
+					path: "/",
+				});
+			}
+		} else {
+			// No existing session: create a new session with PIN verified (PIN-only flow)
+			sessionId = await createSession("pin-admin", {
+				isAdmin: true,
+				pinAuthenticated: true,
+				mode: "pin_only",
+			});
+			cookieStore.set("app_session", sessionId, {
+				httpOnly: true,
+				secure: process.env.NODE_ENV === "production",
+				sameSite: "lax",
+				maxAge: 604800 * 30, // 30 weeks
+				path: "/",
+			});
+		}
+
+		return NextResponse.json({ authenticated: true });
 	} catch (error) {
 		console.error("PIN Verification Error:", error);
 		return NextResponse.json(

@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import {
 	startOfMonth,
 	endOfMonth,
@@ -8,12 +6,10 @@ import {
 	format,
 	parseISO,
 } from "date-fns";
-import PinGuard from "@/features/auth/PinGuard";
+import { requireAuth } from "@/features/auth/server";
 import TasksView from "@/features/tasks/components/agenda/TasksView";
 import { getTasks } from "@/features/tasks/actions/tasks";
 import { getJakartaDateString } from "@/features/tasks/utils";
-import { ENV_GLOBAL } from "@/lib/core/env";
-import { redis } from "@/lib/core/redis";
 import type { TaskPriority } from "@/features/tasks/types";
 
 export const metadata = {
@@ -31,29 +27,11 @@ interface PageProps {
 
 /**
  * TasksPage (Server Component)
- * Handles data fetching and session protection.
+ * Handles data fetching and centralized session authorization.
  */
 export default async function TasksPage({ searchParams }: PageProps) {
-	// 1. Session Protection (Moving from middleware to resolve routing issues)
-	if (
-		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH &&
-		ENV_GLOBAL?.NEXT_PUBLIC_ENABLE_PINGUARD
-	) {
-		const cookieStore = await cookies();
-		const sessionId = cookieStore.get("app_session")?.value;
-
-		if (!sessionId) {
-			redirect("/login");
-		}
-
-		// Verify session in Redis
-		const userId = await redis.get(`session:${sessionId}`);
-		if (!userId) {
-			// In a Server Component we can't delete the cookie directly via headers easily during render,
-			// but redirecting to /login is the primary security requirement.
-			redirect("/login");
-		}
-	}
+	// 1. Centralized Session & Role Protection
+	await requireAuth({ requireAdmin: true, redirectTo: "/tasks" });
 
 	const params = await searchParams;
 	const date = params.date;
@@ -77,9 +55,5 @@ export default async function TasksPage({ searchParams }: PageProps) {
 		includeOverdue: true,
 	});
 
-	return (
-		<PinGuard>
-			<TasksView tasks={tasks} />
-		</PinGuard>
-	);
+	return <TasksView tasks={tasks} />;
 }

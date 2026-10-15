@@ -4,39 +4,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { deleteSession } from "@/lib/core/redis";
 import { createClient } from "@/lib/core/supabase-server";
-import { ENV_GLOBAL } from "@/lib/core/env";
+import { checkAuth } from "./server";
 
 /**
- * Authorization Helper: Checks if the current user is an admin.
- * Bypasses check if Google Auth or PIN Guard is disabled.
+ * Authorization Helper: Checks if the current user is an authorized admin.
+ * Evaluates active AuthMode (login_only, pin_only, serial, disabled).
  */
-export async function checkAdmin() {
-	// If Google Auth is disabled, bypass the auth check (allow dev/local access)
-	if (!ENV_GLOBAL.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH) {
-		return true;
-	}
-
-	const supabase = await createClient();
-	const {
-		data: { user },
-		error: userError,
-	} = await supabase.auth.getUser();
-
-	if (userError || !user) {
-		return false;
-	}
-
-	const { data: profile, error: profileError } = await supabase
-		.from("profiles")
-		.select("is_admin")
-		.eq("id", user.id)
-		.single();
-
-	if (profileError || !profile) {
-		return false;
-	}
-
-	return !!profile.is_admin;
+export async function checkAdmin(): Promise<boolean> {
+	const result = await checkAuth({ requireAdmin: true });
+	return result.authorized;
 }
 
 /**
@@ -51,8 +27,12 @@ export async function logout() {
 		await deleteSession(sessionId);
 	}
 
-	const supabase = await createClient();
-	await supabase.auth.signOut();
+	try {
+		const supabase = await createClient();
+		await supabase.auth.signOut();
+	} catch {
+		// Ignore if client cannot sign out
+	}
 
 	cookieStore.delete("app_session");
 	redirect("/login");

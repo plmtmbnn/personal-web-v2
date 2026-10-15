@@ -3,6 +3,7 @@ import { createSession } from "@/lib/core/redis";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ENV_GLOBAL } from "@/lib/core/env";
+import { getAuthMode, type AuthMode } from "@/features/auth/types";
 
 /**
  * Auth Callback Route
@@ -60,7 +61,7 @@ export async function GET(request: Request) {
 	console.log("[Auth Callback] Fetching profile for user:", userId);
 	const { data: profile, error: profileError } = await supabase
 		.from("profiles")
-		.select("is_verified")
+		.select("is_verified, is_admin, full_name, avatar_url")
 		.eq("id", userId)
 		.single();
 
@@ -84,10 +85,26 @@ export async function GET(request: Request) {
 
 	// 3. User is verified: Create custom Redis session
 	console.log("[Auth Callback] User verified. Creating Redis session...");
+	const modeParam = searchParams.get("mode") as AuthMode | null;
+	const mode: AuthMode =
+		modeParam === "login_only" ||
+		modeParam === "pin_only" ||
+		modeParam === "serial" ||
+		modeParam === "disabled"
+			? modeParam
+			: getAuthMode();
 
 	let sessionId: string;
 	try {
-		sessionId = await createSession(userId);
+		sessionId = await createSession(userId, {
+			email: data.user.email,
+			name: profile?.full_name || data.user.user_metadata?.full_name,
+			avatarUrl: profile?.avatar_url || data.user.user_metadata?.avatar_url,
+			isAdmin: Boolean(profile?.is_admin),
+			googleAuthenticated: true,
+			pinAuthenticated: mode === "login_only",
+			mode,
+		});
 		console.log("[Auth Callback] Redis session created successfully");
 	} catch (redisError) {
 		console.error("[Auth Callback] Redis session creation failed:", redisError);
@@ -110,6 +127,17 @@ export async function GET(request: Request) {
 
 	// 5. Sanitize and validate redirect target
 	const safeNext = sanitizeRedirectPath(next);
+
+	// In serial mode, Google OAuth was Step 1. Prompt for Step 2 (Authenticator PIN)
+	if (mode === "serial") {
+		console.log("[Auth Callback] Serial mode: Redirecting to PIN step 2");
+		return NextResponse.redirect(
+			new URL(
+				`/login?step=pin&mode=serial&next=${encodeURIComponent(safeNext)}`,
+				siteUrl,
+			),
+		);
+	}
 
 	console.log(
 		"[Auth Callback] Authentication complete. Redirecting to:",

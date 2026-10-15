@@ -29,7 +29,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import PinGuard from "@/features/auth/PinGuard";
 import CustomModal from "@/features/shared/components/CustomModal";
 import { format } from "date-fns";
 
@@ -772,596 +771,590 @@ export default function StockImportAdmin() {
 	};
 
 	return (
-		<PinGuard>
-			<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
-				<div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
-					{/* Top Floating Header Card */}
-					<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
-						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
-							<div className="space-y-2">
-								<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-									<Link
-										href="/admin"
-										className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
-									>
-										Admin Dashboard
-									</Link>
-									<ChevronRight className="w-3 h-3 text-slate-400" />
-									<span className="text-slate-900 font-bold">
-										Stock Registry
-									</span>
-								</div>
-								<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-									Stock Explorer Manager
-								</h1>
-								<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
-									Synchronize IDX equity instruments, inspect cache payloads,
-									and update market data.
-								</p>
-							</div>
-
-							<div className="flex items-center gap-3 self-start sm:self-center">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+				{/* Top Floating Header Card */}
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
+						<div className="space-y-2">
+							<div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
 								<Link
-									href="/utils/stock-explorer"
-									className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline group"
+									href="/admin"
+									className="!text-slate-500 hover:!text-slate-900 transition-colors !no-underline"
 								>
-									<ArrowLeft className="w-4 h-4 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
-									<span>Back to Explorer</span>
+									Admin Dashboard
 								</Link>
+								<ChevronRight className="w-3 h-3 text-slate-400" />
+								<span className="text-slate-900 font-bold">Stock Registry</span>
 							</div>
-						</div>
-					</div>
-
-					{/* Cache Status Indicator Card */}
-					<section className="bg-white border border-slate-200/80 rounded-3xl shadow-xs p-5 sm:p-7 space-y-5 sm:space-y-6">
-						{/* Card Header & Operational Controls */}
-						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
-							<div className="flex items-center gap-3.5">
-								<div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100/80 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
-									<Server className="w-5 h-5" />
-								</div>
-								<div className="space-y-0.5">
-									<div className="flex items-center gap-2.5 flex-wrap">
-										<h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-											Redis In-Memory Registry
-										</h2>
-										{cacheStatus.loading ? (
-											<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
-												<Loader2 className="w-3 h-3 animate-spin text-slate-500" />
-												<span>Verifying</span>
-											</span>
-										) : cacheStatus.available ? (
-											<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-												<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-												<span>Active Cache</span>
-											</span>
-										) : (
-											<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/80">
-												<AlertCircle className="w-3 h-3 text-rose-500" />
-												<span>No Cache / Expired</span>
-											</span>
-										)}
-									</div>
-									<p className="text-xs text-slate-500 font-medium">
-										Real-time IDX equity dataset status and in-memory cache
-										operations
-									</p>
-								</div>
-							</div>
-
-							{/* Cache Actions */}
-							<div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-								<button
-									type="button"
-									onClick={fetchCacheStatus}
-									disabled={cacheStatus.loading}
-									className="flex items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
-									title="Refresh Status"
-									aria-label="Refresh Cache Status"
-								>
-									<RefreshCw
-										className={`w-4 h-4 ${cacheStatus.loading ? "animate-spin text-indigo-600" : ""}`}
-									/>
-								</button>
-
-								<button
-									type="button"
-									onClick={handleLiveSync}
-									disabled={isLiveFetching || cacheStatus.loading}
-									className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
-									title="Trigger Live IDX API Fetch"
-								>
-									{isLiveFetching ? (
-										<Loader2 className="w-3.5 h-3.5 animate-spin" />
-									) : (
-										<Radio className="w-3.5 h-3.5" />
-									)}
-									<span>Sync Live</span>
-								</button>
-
-								<button
-									type="button"
-									onClick={() => setIsPurgeModalOpen(true)}
-									disabled={!cacheStatus.available || cacheStatus.loading}
-									className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
-								>
-									<Trash2 className="w-3.5 h-3.5" />
-									<span>Purge Cache</span>
-								</button>
-							</div>
+							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+								Stock Explorer Manager
+							</h1>
+							<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
+								Synchronize IDX equity instruments, inspect cache payloads, and
+								update market data.
+							</p>
 						</div>
 
-						{/* Telemetry Metrics Grid or Empty/Loading Fallback */}
-						{cacheStatus.loading ? (
-							<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
-								{[1, 2, 3].map((i) => (
-									<div
-										key={i}
-										className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between min-h-[118px] animate-pulse"
-									>
-										<div className="flex items-center justify-between mb-2">
-											<div className="h-3 w-24 bg-slate-200 rounded-md" />
-											<div className="w-7 h-7 rounded-lg bg-slate-200" />
-										</div>
-										<div className="h-7 w-28 bg-slate-200 rounded-lg my-1" />
-										<div className="h-3 w-36 bg-slate-200 rounded-md mt-1" />
-									</div>
-								))}
-							</div>
-						) : cacheStatus.available ? (
-							<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
-								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors min-w-0">
-									<div className="flex items-center justify-between mb-2">
-										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
-											Total Instruments
-										</span>
-										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
-											<Layers className="w-3.5 h-3.5" />
-										</div>
-									</div>
-									<div className="flex items-baseline gap-1.5">
-										<p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-											{cacheStatus.count.toLocaleString()}
-										</p>
-										<span className="text-xs font-bold text-slate-400">
-											equities
-										</span>
-									</div>
-									<p className="text-[11px] font-medium text-slate-500 mt-1 truncate">
-										Active symbols indexed in Redis
-									</p>
-								</div>
-
-								<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors min-w-0">
-									<div className="flex items-center justify-between mb-2">
-										<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
-											Trading Session
-										</span>
-										<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-emerald-600 shadow-2xs shrink-0">
-											<Calendar className="w-3.5 h-3.5" />
-										</div>
-									</div>
-									<p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
-										{formatTradingDate(cacheStatus.lastDate)}
-									</p>
-									<p className="text-[11px] font-medium text-slate-500 mt-1 truncate">
-										Latest IDX market close session
-									</p>
-								</div>
-
-								<div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/90 flex flex-col justify-between group hover:bg-indigo-50/80 transition-colors min-w-0">
-									<div className="flex items-center justify-between mb-2">
-										<span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider truncate">
-											Cache Lifespan
-										</span>
-										<div className="w-7 h-7 rounded-lg bg-white border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
-											<Clock className="w-3.5 h-3.5" />
-										</div>
-									</div>
-									<div className="flex items-baseline gap-1.5">
-										<p className="text-2xl sm:text-3xl font-black text-indigo-950 tracking-tight">
-											12
-										</p>
-										<span className="text-xs font-bold text-indigo-800">
-											Hours
-										</span>
-									</div>
-									<p className="text-[11px] font-medium text-indigo-700/90 mt-1 truncate">
-										Auto-purges via rolling Redis TTL
-									</p>
-								</div>
-							</div>
-						) : (
-							<div className="rounded-2xl bg-amber-50/60 border border-amber-200/80 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-								<div className="flex items-start gap-3.5">
-									<div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0 shadow-2xs">
-										<AlertCircle className="w-5 h-5" />
-									</div>
-									<div className="space-y-1">
-										<h4 className="text-sm font-bold text-amber-950">
-											Redis Cache is Empty or Expired
-										</h4>
-										<p className="text-xs text-amber-800/90 leading-relaxed font-medium max-w-2xl">
-											No equity records are currently stored in Redis. The
-											system will automatically fetch live data on the next
-											query, or you can prime the dataset immediately.
-										</p>
-									</div>
-								</div>
-								<button
-									type="button"
-									onClick={handleLiveSync}
-									disabled={isLiveFetching}
-									className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold tracking-wider uppercase transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shrink-0 shadow-xs"
-								>
-									{isLiveFetching ? (
-										<Loader2 className="w-3.5 h-3.5 animate-spin" />
-									) : (
-										<CloudDownload className="w-3.5 h-3.5" />
-									)}
-									<span>Prime Cache Now</span>
-								</button>
-							</div>
-						)}
-					</section>
-
-					{/* Dismissible Protocol Info Pill */}
-					{showProtocolBanner && (
-						<div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
-							<div className="flex items-center gap-3">
-								<div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-									<ShieldCheck className="w-4 h-4" />
-								</div>
-								<div className="text-xs text-indigo-900/90 leading-relaxed font-medium">
-									<strong className="font-bold text-indigo-950">
-										Manual Override Protocol:
-									</strong>{" "}
-									If cloud datacenter IP is blocked by IDX, drag and drop or
-									paste raw JSON below to manually prime Redis.
-								</div>
-							</div>
-							<button
-								type="button"
-								onClick={() => setShowProtocolBanner(false)}
-								className="text-indigo-400 hover:text-indigo-700 text-xs font-bold px-2 py-1 rounded-lg hover:bg-indigo-100/50 transition-colors"
-								aria-label="Dismiss banner"
+						<div className="flex items-center gap-3 self-start sm:self-center">
+							<Link
+								href="/utils/stock-explorer"
+								className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline group"
 							>
-								✕
-							</button>
-						</div>
-					)}
-
-					{/* Input Area with Drag & Drop */}
-					<div
-						onDragOver={handleDragOver}
-						onDragLeave={handleDragLeave}
-						onDrop={handleDrop}
-						className={`bg-white border rounded-3xl sm:rounded-[2rem] shadow-xs overflow-hidden flex flex-col min-h-[480px] transition-[border-color,box-shadow,background-color] relative ${
-							isDragging
-								? "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/10"
-								: "border-slate-200/80"
-						}`}
-					>
-						{/* Drag & Drop Visual Overlay */}
-						{isDragging && (
-							<div className="absolute inset-0 z-20 bg-indigo-50/90 backdrop-blur-xs border-2 border-dashed border-indigo-500 rounded-3xl sm:rounded-[2rem] flex flex-col items-center justify-center gap-3 pointer-events-none">
-								<div className="w-14 h-14 rounded-2xl bg-white border border-indigo-200 shadow-xs flex items-center justify-center text-indigo-600">
-									<FileUp className="w-7 h-7" />
-								</div>
-								<div className="text-center">
-									<p className="text-sm font-extrabold text-indigo-950 uppercase tracking-wider">
-										Drop JSON File to Load Instruments
-									</p>
-									<p className="text-xs text-indigo-700 font-medium">
-										IDX Trading Summary structure detected automatically
-									</p>
-								</div>
-							</div>
-						)}
-
-						{/* Quick Action Toolbar */}
-						<div className="p-3.5 sm:p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
-							<div className="flex flex-wrap items-center gap-2">
-								<input
-									type="file"
-									ref={fileInputRef}
-									onChange={handleFileUpload}
-									accept=".json,application/json"
-									className="hidden"
-								/>
-								<button
-									type="button"
-									onClick={() => fileInputRef.current?.click()}
-									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-								>
-									<FileUp className="w-3.5 h-3.5 text-indigo-600" />
-									<span>Upload JSON</span>
-								</button>
-
-								<button
-									type="button"
-									onClick={handleFormatJson}
-									disabled={!input.trim()}
-									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:pointer-events-none text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-								>
-									<Code2 className="w-3.5 h-3.5 text-indigo-600" />
-									<span>Format JSON</span>
-								</button>
-
-								<div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
-
-								{/* Multi-preset sample triggers */}
-								<button
-									type="button"
-									onClick={() => handleLoadPreset("banks")}
-									className="px-3 py-1.5 rounded-xl border border-indigo-100 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-								>
-									<LayoutTemplate className="w-3.5 h-3.5 text-indigo-600" />
-									<span>Sample Banks</span>
-								</button>
-
-								<button
-									type="button"
-									onClick={() => handleLoadPreset("tech")}
-									className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-								>
-									<LayoutTemplate className="w-3.5 h-3.5 text-amber-600" />
-									<span>Sample Tech</span>
-								</button>
-							</div>
-
-							<div className="flex items-center gap-3 text-[11px] font-bold text-slate-500 font-mono">
-								{input.length > 0 && (
-									<span className="px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700">
-										{input.length.toLocaleString()} chars
-									</span>
-								)}
-								<span className="hidden sm:inline-flex items-center gap-1 text-slate-500">
-									<kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200/80 text-[10px] text-slate-600 shadow-2xs font-mono">
-										⌘/Ctrl + ↵
-									</kbd>
-									<span className="text-slate-400 font-sans font-semibold">
-										to import
-									</span>
-								</span>
-							</div>
-						</div>
-
-						{/* Pre-Import Inspector Strip */}
-						{previewData && (
-							<div className="p-3.5 sm:p-4 bg-emerald-50/50 border-b border-emerald-100 flex flex-col gap-3">
-								<div className="flex flex-wrap items-center justify-between gap-2.5">
-									<div className="flex flex-wrap items-center gap-2 text-xs">
-										<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-extrabold text-[11px] border border-emerald-200/60 shadow-2xs">
-											<CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-											{previewData.totalCount.toLocaleString()} Instruments
-											Detected
-										</span>
-										<span className="px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-emerald-800 font-bold text-[11px] shadow-2xs">
-											Date: {formatTradingDate(previewData.sampleDate)}
-										</span>
-										<span className="hidden md:inline-flex px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-slate-600 font-medium text-[11px] shadow-2xs">
-											Vol: {formatCompactNumber(previewData.totalVolume)}
-										</span>
-										<span className="hidden md:inline-flex px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-slate-600 font-medium text-[11px] shadow-2xs">
-											Val: Rp {formatCompactNumber(previewData.totalValue)}
-										</span>
-									</div>
-
-									<button
-										type="button"
-										onClick={() => setShowPreviewTable((prev) => !prev)}
-										className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100/60 hover:bg-emerald-100 transition-[background-color,color] active:scale-95 cursor-pointer shadow-2xs"
-									>
-										<Eye className="w-3.5 h-3.5" />
-										<span>
-											{showPreviewTable
-												? "Hide Sample Table"
-												: "Inspect Sample Table"}
-										</span>
-										{showPreviewTable ? (
-											<ChevronUp className="w-3.5 h-3.5" />
-										) : (
-											<ChevronDown className="w-3.5 h-3.5" />
-										)}
-									</button>
-								</div>
-
-								{/* Collapsible Mini Preview Table with Search */}
-								{showPreviewTable && (
-									<div className="bg-white rounded-2xl border border-emerald-200/80 p-3 shadow-2xs space-y-3 mt-1">
-										<div className="flex items-center justify-between gap-3">
-											<div className="relative flex-1 max-w-xs">
-												<Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-												<input
-													type="text"
-													value={previewSearchQuery}
-													onChange={(e) =>
-														setPreviewSearchQuery(e.target.value)
-													}
-													placeholder="Search ticker or name..."
-													className="w-full pl-8.5 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white focus:border-indigo-400"
-												/>
-											</div>
-											<span className="text-[11px] text-slate-400 font-medium">
-												Showing {filteredPreviewRecords.length} of{" "}
-												{previewData.totalCount}
-											</span>
-										</div>
-
-										<div className="overflow-x-auto">
-											<table className="w-full text-left text-[11px]">
-												<thead>
-													<tr className="border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
-														<th className="p-2">Ticker</th>
-														<th className="p-2">Company Name</th>
-														<th className="p-2 text-right">Close</th>
-														<th className="p-2 text-right">Change</th>
-														<th className="p-2 text-right">Volume</th>
-														<th className="p-2 text-right">Foreign Buy</th>
-														<th className="p-2 text-right">Foreign Sell</th>
-													</tr>
-												</thead>
-												<tbody className="divide-y divide-slate-50 font-medium text-slate-800">
-													{filteredPreviewRecords.map((stock) => (
-														<tr
-															key={stock.StockCode}
-															className="hover:bg-slate-50/80 transition-colors"
-														>
-															<td className="p-2 font-mono font-bold text-indigo-700">
-																{stock.StockCode}
-															</td>
-															<td className="p-2 truncate max-w-[180px]">
-																{stock.StockName}
-															</td>
-															<td className="p-2 text-right font-mono font-bold">
-																{stock.Close.toLocaleString()}
-															</td>
-															<td
-																className={`p-2 text-right font-mono font-bold ${
-																	stock.Change > 0
-																		? "text-emerald-600"
-																		: stock.Change < 0
-																			? "text-rose-600"
-																			: "text-slate-500"
-																}`}
-															>
-																{stock.Change > 0
-																	? `+${stock.Change}`
-																	: stock.Change}
-															</td>
-															<td className="p-2 text-right font-mono text-slate-600">
-																{formatCompactNumber(stock.Volume)}
-															</td>
-															<td className="p-2 text-right font-mono text-emerald-700">
-																{formatCompactNumber(stock.ForeignBuy)}
-															</td>
-															<td className="p-2 text-right font-mono text-rose-700">
-																{formatCompactNumber(stock.ForeignSell)}
-															</td>
-														</tr>
-													))}
-												</tbody>
-											</table>
-										</div>
-									</div>
-								)}
-							</div>
-						)}
-
-						{/* Textarea */}
-						<div className="flex-1 relative p-4 sm:p-6 flex flex-col">
-							{input.length === 0 && (
-								<div className="absolute inset-x-6 top-8 pointer-events-none flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-center space-y-3">
-									<div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-center text-slate-400">
-										<FileCode className="w-6 h-6" />
-									</div>
-									<div>
-										<p className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-											Paste JSON or Drop File Here
-										</p>
-										<p className="text-xs text-slate-400 font-medium mt-0.5">
-											Accepts IDX Trading Summary format e.g. &#123;
-											&quot;data&quot;: [ &#123; &quot;StockCode&quot;:
-											&quot;BBCA&quot; &#125; ] &#125;
-										</p>
-									</div>
-								</div>
-							)}
-							<textarea
-								value={input}
-								onChange={(e) => setInput(e.target.value)}
-								onKeyDown={handleKeyDown}
-								className={`w-full flex-1 min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-slate-900 font-mono text-xs leading-relaxed outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-[border-color,background-color,box-shadow] resize-y ${
-									input.length === 0
-										? "opacity-0 focus:opacity-100"
-										: "opacity-100"
-								}`}
-								spellCheck={false}
-							/>
-						</div>
-
-						{/* Status Bar & Submit Row */}
-						<div className="p-4 sm:p-5 bg-slate-50/70 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-							<div className="flex-1 w-full sm:w-auto">
-								<AnimatePresence mode="wait">
-									{status.type !== "idle" && (
-										<motion.div
-											key={status.type}
-											initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-											animate={{ opacity: 1, x: 0 }}
-											exit={{ opacity: 0, x: 10 }}
-											className="flex items-center gap-2.5"
-										>
-											{status.type === "loading" ? (
-												<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
-											) : status.type === "success" ? (
-												<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-											) : (
-												<AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-											)}
-											<span
-												className={`text-xs font-bold uppercase tracking-wider ${
-													status.type === "loading"
-														? "text-indigo-600"
-														: status.type === "success"
-															? "text-emerald-700"
-															: "text-rose-700"
-												}`}
-											>
-												{status.message}
-											</span>
-										</motion.div>
-									)}
-								</AnimatePresence>
-							</div>
-
-							<div className="flex items-center gap-2.5 w-full sm:w-auto">
-								<button
-									type="button"
-									onClick={handleResetInput}
-									disabled={!input.trim()}
-									className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-xs"
-								>
-									<RotateCcw className="w-3.5 h-3.5" />
-									<span>Clear</span>
-								</button>
-
-								<button
-									type="button"
-									onClick={handleImport}
-									disabled={!input.trim() || status.type === "loading"}
-									className="flex-[2] sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-xs transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-								>
-									{status.type === "loading" ? (
-										<Loader2 className="w-4 h-4 animate-spin" />
-									) : (
-										<Upload className="w-4 h-4" />
-									)}
-									<span>
-										{status.type === "loading"
-											? "Importing..."
-											: "Import to Redis"}
-									</span>
-								</button>
-							</div>
+								<ArrowLeft className="w-4 h-4 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
+								<span>Back to Explorer</span>
+							</Link>
 						</div>
 					</div>
 				</div>
 
-				{/* High-Fidelity CustomModal for Cache Purging */}
-				<CustomModal
-					isOpen={isPurgeModalOpen}
-					onClose={() => setIsPurgeModalOpen(false)}
-					onConfirm={handleClearCacheConfirm}
-					title="Purge Stock Cache?"
-					description="Are you sure you want to purge the IDX stock data from Redis cache? This will delete all instruments and reset the auto-fetch cooldown."
-					confirmText="Yes, Purge Cache"
-					cancelText="Cancel"
-					variant="danger"
-					isLoading={isPurging}
-				/>
-			</main>
-		</PinGuard>
+				{/* Cache Status Indicator Card */}
+				<section className="bg-white border border-slate-200/80 rounded-3xl shadow-xs p-5 sm:p-7 space-y-5 sm:space-y-6">
+					{/* Card Header & Operational Controls */}
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+						<div className="flex items-center gap-3.5">
+							<div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100/80 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+								<Server className="w-5 h-5" />
+							</div>
+							<div className="space-y-0.5">
+								<div className="flex items-center gap-2.5 flex-wrap">
+									<h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+										Redis In-Memory Registry
+									</h2>
+									{cacheStatus.loading ? (
+										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+											<Loader2 className="w-3 h-3 animate-spin text-slate-500" />
+											<span>Verifying</span>
+										</span>
+									) : cacheStatus.available ? (
+										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+											<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+											<span>Active Cache</span>
+										</span>
+									) : (
+										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/80">
+											<AlertCircle className="w-3 h-3 text-rose-500" />
+											<span>No Cache / Expired</span>
+										</span>
+									)}
+								</div>
+								<p className="text-xs text-slate-500 font-medium">
+									Real-time IDX equity dataset status and in-memory cache
+									operations
+								</p>
+							</div>
+						</div>
+
+						{/* Cache Actions */}
+						<div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+							<button
+								type="button"
+								onClick={fetchCacheStatus}
+								disabled={cacheStatus.loading}
+								className="flex items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
+								title="Refresh Status"
+								aria-label="Refresh Cache Status"
+							>
+								<RefreshCw
+									className={`w-4 h-4 ${cacheStatus.loading ? "animate-spin text-indigo-600" : ""}`}
+								/>
+							</button>
+
+							<button
+								type="button"
+								onClick={handleLiveSync}
+								disabled={isLiveFetching || cacheStatus.loading}
+								className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
+								title="Trigger Live IDX API Fetch"
+							>
+								{isLiveFetching ? (
+									<Loader2 className="w-3.5 h-3.5 animate-spin" />
+								) : (
+									<Radio className="w-3.5 h-3.5" />
+								)}
+								<span>Sync Live</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={() => setIsPurgeModalOpen(true)}
+								disabled={!cacheStatus.available || cacheStatus.loading}
+								className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
+							>
+								<Trash2 className="w-3.5 h-3.5" />
+								<span>Purge Cache</span>
+							</button>
+						</div>
+					</div>
+
+					{/* Telemetry Metrics Grid or Empty/Loading Fallback */}
+					{cacheStatus.loading ? (
+						<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+							{[1, 2, 3].map((i) => (
+								<div
+									key={i}
+									className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between min-h-[118px] animate-pulse"
+								>
+									<div className="flex items-center justify-between mb-2">
+										<div className="h-3 w-24 bg-slate-200 rounded-md" />
+										<div className="w-7 h-7 rounded-lg bg-slate-200" />
+									</div>
+									<div className="h-7 w-28 bg-slate-200 rounded-lg my-1" />
+									<div className="h-3 w-36 bg-slate-200 rounded-md mt-1" />
+								</div>
+							))}
+						</div>
+					) : cacheStatus.available ? (
+						<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+							<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors min-w-0">
+								<div className="flex items-center justify-between mb-2">
+									<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+										Total Instruments
+									</span>
+									<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+										<Layers className="w-3.5 h-3.5" />
+									</div>
+								</div>
+								<div className="flex items-baseline gap-1.5">
+									<p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+										{cacheStatus.count.toLocaleString()}
+									</p>
+									<span className="text-xs font-bold text-slate-400">
+										equities
+									</span>
+								</div>
+								<p className="text-[11px] font-medium text-slate-500 mt-1 truncate">
+									Active symbols indexed in Redis
+								</p>
+							</div>
+
+							<div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/70 flex flex-col justify-between group hover:bg-slate-50 transition-colors min-w-0">
+								<div className="flex items-center justify-between mb-2">
+									<span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+										Trading Session
+									</span>
+									<div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-emerald-600 shadow-2xs shrink-0">
+										<Calendar className="w-3.5 h-3.5" />
+									</div>
+								</div>
+								<p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
+									{formatTradingDate(cacheStatus.lastDate)}
+								</p>
+								<p className="text-[11px] font-medium text-slate-500 mt-1 truncate">
+									Latest IDX market close session
+								</p>
+							</div>
+
+							<div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/90 flex flex-col justify-between group hover:bg-indigo-50/80 transition-colors min-w-0">
+								<div className="flex items-center justify-between mb-2">
+									<span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider truncate">
+										Cache Lifespan
+									</span>
+									<div className="w-7 h-7 rounded-lg bg-white border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+										<Clock className="w-3.5 h-3.5" />
+									</div>
+								</div>
+								<div className="flex items-baseline gap-1.5">
+									<p className="text-2xl sm:text-3xl font-black text-indigo-950 tracking-tight">
+										12
+									</p>
+									<span className="text-xs font-bold text-indigo-800">
+										Hours
+									</span>
+								</div>
+								<p className="text-[11px] font-medium text-indigo-700/90 mt-1 truncate">
+									Auto-purges via rolling Redis TTL
+								</p>
+							</div>
+						</div>
+					) : (
+						<div className="rounded-2xl bg-amber-50/60 border border-amber-200/80 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+							<div className="flex items-start gap-3.5">
+								<div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0 shadow-2xs">
+									<AlertCircle className="w-5 h-5" />
+								</div>
+								<div className="space-y-1">
+									<h4 className="text-sm font-bold text-amber-950">
+										Redis Cache is Empty or Expired
+									</h4>
+									<p className="text-xs text-amber-800/90 leading-relaxed font-medium max-w-2xl">
+										No equity records are currently stored in Redis. The system
+										will automatically fetch live data on the next query, or you
+										can prime the dataset immediately.
+									</p>
+								</div>
+							</div>
+							<button
+								type="button"
+								onClick={handleLiveSync}
+								disabled={isLiveFetching}
+								className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold tracking-wider uppercase transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shrink-0 shadow-xs"
+							>
+								{isLiveFetching ? (
+									<Loader2 className="w-3.5 h-3.5 animate-spin" />
+								) : (
+									<CloudDownload className="w-3.5 h-3.5" />
+								)}
+								<span>Prime Cache Now</span>
+							</button>
+						</div>
+					)}
+				</section>
+
+				{/* Dismissible Protocol Info Pill */}
+				{showProtocolBanner && (
+					<div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+						<div className="flex items-center gap-3">
+							<div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+								<ShieldCheck className="w-4 h-4" />
+							</div>
+							<div className="text-xs text-indigo-900/90 leading-relaxed font-medium">
+								<strong className="font-bold text-indigo-950">
+									Manual Override Protocol:
+								</strong>{" "}
+								If cloud datacenter IP is blocked by IDX, drag and drop or paste
+								raw JSON below to manually prime Redis.
+							</div>
+						</div>
+						<button
+							type="button"
+							onClick={() => setShowProtocolBanner(false)}
+							className="text-indigo-400 hover:text-indigo-700 text-xs font-bold px-2 py-1 rounded-lg hover:bg-indigo-100/50 transition-colors"
+							aria-label="Dismiss banner"
+						>
+							✕
+						</button>
+					</div>
+				)}
+
+				{/* Input Area with Drag & Drop */}
+				<div
+					onDragOver={handleDragOver}
+					onDragLeave={handleDragLeave}
+					onDrop={handleDrop}
+					className={`bg-white border rounded-3xl sm:rounded-[2rem] shadow-xs overflow-hidden flex flex-col min-h-[480px] transition-[border-color,box-shadow,background-color] relative ${
+						isDragging
+							? "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/10"
+							: "border-slate-200/80"
+					}`}
+				>
+					{/* Drag & Drop Visual Overlay */}
+					{isDragging && (
+						<div className="absolute inset-0 z-20 bg-indigo-50/90 backdrop-blur-xs border-2 border-dashed border-indigo-500 rounded-3xl sm:rounded-[2rem] flex flex-col items-center justify-center gap-3 pointer-events-none">
+							<div className="w-14 h-14 rounded-2xl bg-white border border-indigo-200 shadow-xs flex items-center justify-center text-indigo-600">
+								<FileUp className="w-7 h-7" />
+							</div>
+							<div className="text-center">
+								<p className="text-sm font-extrabold text-indigo-950 uppercase tracking-wider">
+									Drop JSON File to Load Instruments
+								</p>
+								<p className="text-xs text-indigo-700 font-medium">
+									IDX Trading Summary structure detected automatically
+								</p>
+							</div>
+						</div>
+					)}
+
+					{/* Quick Action Toolbar */}
+					<div className="p-3.5 sm:p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
+						<div className="flex flex-wrap items-center gap-2">
+							<input
+								type="file"
+								ref={fileInputRef}
+								onChange={handleFileUpload}
+								accept=".json,application/json"
+								className="hidden"
+							/>
+							<button
+								type="button"
+								onClick={() => fileInputRef.current?.click()}
+								className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+							>
+								<FileUp className="w-3.5 h-3.5 text-indigo-600" />
+								<span>Upload JSON</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={handleFormatJson}
+								disabled={!input.trim()}
+								className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:pointer-events-none text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+							>
+								<Code2 className="w-3.5 h-3.5 text-indigo-600" />
+								<span>Format JSON</span>
+							</button>
+
+							<div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
+
+							{/* Multi-preset sample triggers */}
+							<button
+								type="button"
+								onClick={() => handleLoadPreset("banks")}
+								className="px-3 py-1.5 rounded-xl border border-indigo-100 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+							>
+								<LayoutTemplate className="w-3.5 h-3.5 text-indigo-600" />
+								<span>Sample Banks</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={() => handleLoadPreset("tech")}
+								className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+							>
+								<LayoutTemplate className="w-3.5 h-3.5 text-amber-600" />
+								<span>Sample Tech</span>
+							</button>
+						</div>
+
+						<div className="flex items-center gap-3 text-[11px] font-bold text-slate-500 font-mono">
+							{input.length > 0 && (
+								<span className="px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700">
+									{input.length.toLocaleString()} chars
+								</span>
+							)}
+							<span className="hidden sm:inline-flex items-center gap-1 text-slate-500">
+								<kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200/80 text-[10px] text-slate-600 shadow-2xs font-mono">
+									⌘/Ctrl + ↵
+								</kbd>
+								<span className="text-slate-400 font-sans font-semibold">
+									to import
+								</span>
+							</span>
+						</div>
+					</div>
+
+					{/* Pre-Import Inspector Strip */}
+					{previewData && (
+						<div className="p-3.5 sm:p-4 bg-emerald-50/50 border-b border-emerald-100 flex flex-col gap-3">
+							<div className="flex flex-wrap items-center justify-between gap-2.5">
+								<div className="flex flex-wrap items-center gap-2 text-xs">
+									<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-extrabold text-[11px] border border-emerald-200/60 shadow-2xs">
+										<CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+										{previewData.totalCount.toLocaleString()} Instruments
+										Detected
+									</span>
+									<span className="px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-emerald-800 font-bold text-[11px] shadow-2xs">
+										Date: {formatTradingDate(previewData.sampleDate)}
+									</span>
+									<span className="hidden md:inline-flex px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-slate-600 font-medium text-[11px] shadow-2xs">
+										Vol: {formatCompactNumber(previewData.totalVolume)}
+									</span>
+									<span className="hidden md:inline-flex px-2.5 py-1 rounded-xl bg-white border border-emerald-200 text-slate-600 font-medium text-[11px] shadow-2xs">
+										Val: Rp {formatCompactNumber(previewData.totalValue)}
+									</span>
+								</div>
+
+								<button
+									type="button"
+									onClick={() => setShowPreviewTable((prev) => !prev)}
+									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100/60 hover:bg-emerald-100 transition-[background-color,color] active:scale-95 cursor-pointer shadow-2xs"
+								>
+									<Eye className="w-3.5 h-3.5" />
+									<span>
+										{showPreviewTable
+											? "Hide Sample Table"
+											: "Inspect Sample Table"}
+									</span>
+									{showPreviewTable ? (
+										<ChevronUp className="w-3.5 h-3.5" />
+									) : (
+										<ChevronDown className="w-3.5 h-3.5" />
+									)}
+								</button>
+							</div>
+
+							{/* Collapsible Mini Preview Table with Search */}
+							{showPreviewTable && (
+								<div className="bg-white rounded-2xl border border-emerald-200/80 p-3 shadow-2xs space-y-3 mt-1">
+									<div className="flex items-center justify-between gap-3">
+										<div className="relative flex-1 max-w-xs">
+											<Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+											<input
+												type="text"
+												value={previewSearchQuery}
+												onChange={(e) => setPreviewSearchQuery(e.target.value)}
+												placeholder="Search ticker or name..."
+												className="w-full pl-8.5 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white focus:border-indigo-400"
+											/>
+										</div>
+										<span className="text-[11px] text-slate-400 font-medium">
+											Showing {filteredPreviewRecords.length} of{" "}
+											{previewData.totalCount}
+										</span>
+									</div>
+
+									<div className="overflow-x-auto">
+										<table className="w-full text-left text-[11px]">
+											<thead>
+												<tr className="border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
+													<th className="p-2">Ticker</th>
+													<th className="p-2">Company Name</th>
+													<th className="p-2 text-right">Close</th>
+													<th className="p-2 text-right">Change</th>
+													<th className="p-2 text-right">Volume</th>
+													<th className="p-2 text-right">Foreign Buy</th>
+													<th className="p-2 text-right">Foreign Sell</th>
+												</tr>
+											</thead>
+											<tbody className="divide-y divide-slate-50 font-medium text-slate-800">
+												{filteredPreviewRecords.map((stock) => (
+													<tr
+														key={stock.StockCode}
+														className="hover:bg-slate-50/80 transition-colors"
+													>
+														<td className="p-2 font-mono font-bold text-indigo-700">
+															{stock.StockCode}
+														</td>
+														<td className="p-2 truncate max-w-[180px]">
+															{stock.StockName}
+														</td>
+														<td className="p-2 text-right font-mono font-bold">
+															{stock.Close.toLocaleString()}
+														</td>
+														<td
+															className={`p-2 text-right font-mono font-bold ${
+																stock.Change > 0
+																	? "text-emerald-600"
+																	: stock.Change < 0
+																		? "text-rose-600"
+																		: "text-slate-500"
+															}`}
+														>
+															{stock.Change > 0
+																? `+${stock.Change}`
+																: stock.Change}
+														</td>
+														<td className="p-2 text-right font-mono text-slate-600">
+															{formatCompactNumber(stock.Volume)}
+														</td>
+														<td className="p-2 text-right font-mono text-emerald-700">
+															{formatCompactNumber(stock.ForeignBuy)}
+														</td>
+														<td className="p-2 text-right font-mono text-rose-700">
+															{formatCompactNumber(stock.ForeignSell)}
+														</td>
+													</tr>
+												))}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							)}
+						</div>
+					)}
+
+					{/* Textarea */}
+					<div className="flex-1 relative p-4 sm:p-6 flex flex-col">
+						{input.length === 0 && (
+							<div className="absolute inset-x-6 top-8 pointer-events-none flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-center space-y-3">
+								<div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-center text-slate-400">
+									<FileCode className="w-6 h-6" />
+								</div>
+								<div>
+									<p className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+										Paste JSON or Drop File Here
+									</p>
+									<p className="text-xs text-slate-400 font-medium mt-0.5">
+										Accepts IDX Trading Summary format e.g. &#123;
+										&quot;data&quot;: [ &#123; &quot;StockCode&quot;:
+										&quot;BBCA&quot; &#125; ] &#125;
+									</p>
+								</div>
+							</div>
+						)}
+						<textarea
+							value={input}
+							onChange={(e) => setInput(e.target.value)}
+							onKeyDown={handleKeyDown}
+							className={`w-full flex-1 min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-slate-900 font-mono text-xs leading-relaxed outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-[border-color,background-color,box-shadow] resize-y ${
+								input.length === 0
+									? "opacity-0 focus:opacity-100"
+									: "opacity-100"
+							}`}
+							spellCheck={false}
+						/>
+					</div>
+
+					{/* Status Bar & Submit Row */}
+					<div className="p-4 sm:p-5 bg-slate-50/70 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+						<div className="flex-1 w-full sm:w-auto">
+							<AnimatePresence mode="wait">
+								{status.type !== "idle" && (
+									<motion.div
+										key={status.type}
+										initial={reduceMotion ? false : { opacity: 0, x: -10 }}
+										animate={{ opacity: 1, x: 0 }}
+										exit={{ opacity: 0, x: 10 }}
+										className="flex items-center gap-2.5"
+									>
+										{status.type === "loading" ? (
+											<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+										) : status.type === "success" ? (
+											<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+										) : (
+											<AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+										)}
+										<span
+											className={`text-xs font-bold uppercase tracking-wider ${
+												status.type === "loading"
+													? "text-indigo-600"
+													: status.type === "success"
+														? "text-emerald-700"
+														: "text-rose-700"
+											}`}
+										>
+											{status.message}
+										</span>
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</div>
+
+						<div className="flex items-center gap-2.5 w-full sm:w-auto">
+							<button
+								type="button"
+								onClick={handleResetInput}
+								disabled={!input.trim()}
+								className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-xs"
+							>
+								<RotateCcw className="w-3.5 h-3.5" />
+								<span>Clear</span>
+							</button>
+
+							<button
+								type="button"
+								onClick={handleImport}
+								disabled={!input.trim() || status.type === "loading"}
+								className="flex-[2] sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-xs transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+							>
+								{status.type === "loading" ? (
+									<Loader2 className="w-4 h-4 animate-spin" />
+								) : (
+									<Upload className="w-4 h-4" />
+								)}
+								<span>
+									{status.type === "loading"
+										? "Importing..."
+										: "Import to Redis"}
+								</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* High-Fidelity CustomModal for Cache Purging */}
+			<CustomModal
+				isOpen={isPurgeModalOpen}
+				onClose={() => setIsPurgeModalOpen(false)}
+				onConfirm={handleClearCacheConfirm}
+				title="Purge Stock Cache?"
+				description="Are you sure you want to purge the IDX stock data from Redis cache? This will delete all instruments and reset the auto-fetch cooldown."
+				confirmText="Yes, Purge Cache"
+				cancelText="Cancel"
+				variant="danger"
+				isLoading={isPurging}
+			/>
+		</main>
 	);
 }

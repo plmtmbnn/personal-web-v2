@@ -191,3 +191,6 @@ function logEnvironmentInfo() {
 }
 
 logEnvironmentInfo();
+
+// ── Auth Mode Resolution Helper ──────────────────────────────────────────────
+export { getAuthMode, type AuthMode } from "@/features/auth/types";

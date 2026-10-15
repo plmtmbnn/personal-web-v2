@@ -1,5 +1,7 @@
 import { Redis } from "@upstash/redis";
 import { ENV_GLOBAL } from "@/lib/core/env";
+import type { AuthMode, AuthSession } from "@/features/auth/types";
+export type { AuthSession } from "@/features/auth/types";
 
 /**
  * Centralized Redis client using Upstash.
@@ -91,18 +93,24 @@ export async function invalidateStatsCache() {
 /**
  * Session metadata interface
  */
-interface SessionMetadata {
-	userId: string;
-	createdAt: number;
-	lastRefreshedAt: number;
-	expiresAt: number;
-}
+export type SessionMetadata = AuthSession;
 
 /**
  * Create a new user session in Redis (30 weeks TTL to match cookie).
- * Also stores metadata for tracking session lifecycle.
+ * Also stores metadata for tracking session lifecycle and auth factor progress.
  */
-export async function createSession(userId: string): Promise<string> {
+export async function createSession(
+	userId: string,
+	options?: {
+		email?: string;
+		name?: string;
+		avatarUrl?: string;
+		isAdmin?: boolean;
+		googleAuthenticated?: boolean;
+		pinAuthenticated?: boolean;
+		mode?: AuthMode;
+	},
+): Promise<string> {
 	const sessionId = crypto.randomUUID();
 	const key = CACHE_KEYS.SESSION(sessionId);
 	const metaKey = CACHE_KEYS.SESSION_META(sessionId);
@@ -110,8 +118,22 @@ export async function createSession(userId: string): Promise<string> {
 	const now = Date.now();
 	const ttlSeconds = 604800 * 30; // 30 weeks to match cookie
 
-	const metadata: SessionMetadata = {
+	const metadata: AuthSession = {
+		sessionId,
 		userId,
+		email: options?.email,
+		name: options?.name,
+		avatarUrl: options?.avatarUrl,
+		isAdmin: options?.isAdmin ?? true,
+		googleAuthenticated: options?.googleAuthenticated ?? false,
+		pinAuthenticated: options?.pinAuthenticated ?? false,
+		mode:
+			options?.mode ??
+			(options?.googleAuthenticated && options?.pinAuthenticated
+				? "serial"
+				: options?.pinAuthenticated
+					? "pin_only"
+					: "login_only"),
 		createdAt: now,
 		lastRefreshedAt: now,
 		expiresAt: now + ttlSeconds * 1000,
@@ -124,6 +146,92 @@ export async function createSession(userId: string): Promise<string> {
 	]);
 
 	return sessionId;
+}
+
+/**
+ * Retrieve verified AuthSession from Redis metadata.
+ */
+export async function getAuthSession(
+	sessionId: string,
+): Promise<AuthSession | null> {
+	try {
+		const key = CACHE_KEYS.SESSION(sessionId);
+		const metaKey = CACHE_KEYS.SESSION_META(sessionId);
+
+		const [rawMeta, userId] = await Promise.all([
+			redis.get<string | AuthSession>(metaKey),
+			redis.get<string>(key),
+		]);
+
+		if (!rawMeta && !userId) {
+			return null;
+		}
+
+		if (rawMeta) {
+			const parsed: AuthSession =
+				typeof rawMeta === "string" ? JSON.parse(rawMeta) : rawMeta;
+			return parsed;
+		}
+
+		// Fallback for legacy sessions without structured metadata
+		if (userId) {
+			const now = Date.now();
+			return {
+				sessionId,
+				userId,
+				isAdmin: true,
+				googleAuthenticated: true,
+				pinAuthenticated: false,
+				mode: "login_only",
+				createdAt: now,
+				lastRefreshedAt: now,
+				expiresAt: now + 604800 * 30 * 1000,
+			};
+		}
+
+		return null;
+	} catch (err) {
+		console.error("[Redis] getAuthSession Error:", err);
+		return null;
+	}
+}
+
+/**
+ * Mark PIN authentication as verified for an existing session.
+ */
+export async function updateSessionPinAuth(
+	sessionId: string,
+): Promise<boolean> {
+	try {
+		const session = await getAuthSession(sessionId);
+		if (!session) {
+			console.warn(
+				"[Redis] Cannot update PIN auth for non-existent session:",
+				sessionId,
+			);
+			return false;
+		}
+
+		const now = Date.now();
+		const ttlSeconds = 604800 * 30; // 30 weeks
+
+		session.pinAuthenticated = true;
+		session.lastRefreshedAt = now;
+		session.expiresAt = now + ttlSeconds * 1000;
+
+		const key = CACHE_KEYS.SESSION(sessionId);
+		const metaKey = CACHE_KEYS.SESSION_META(sessionId);
+
+		await Promise.all([
+			redis.expire(key, ttlSeconds),
+			redis.set(metaKey, JSON.stringify(session), { ex: ttlSeconds }),
+		]);
+
+		return true;
+	} catch (err) {
+		console.error("[Redis] updateSessionPinAuth Error:", err);
+		return false;
+	}
 }
 
 /**
@@ -147,7 +255,7 @@ export async function refreshSession(sessionId: string): Promise<boolean> {
 
 		// Get existing metadata
 		const existingMeta = await redis.get<string>(metaKey);
-		let metadata: SessionMetadata;
+		let metadata: AuthSession;
 
 		if (existingMeta) {
 			const parsed =
@@ -162,7 +270,12 @@ export async function refreshSession(sessionId: string): Promise<boolean> {
 		} else {
 			// Recreate metadata if missing
 			metadata = {
+				sessionId,
 				userId,
+				isAdmin: true,
+				googleAuthenticated: true,
+				pinAuthenticated: false,
+				mode: "login_only",
 				createdAt: now,
 				lastRefreshedAt: now,
 				expiresAt: now + ttlSeconds * 1000,
@@ -184,11 +297,14 @@ export async function refreshSession(sessionId: string): Promise<boolean> {
 }
 
 /**
- * Delete a session from Redis.
+ * Delete a session from Redis (removes both primary key and metadata).
  */
 export async function deleteSession(sessionId: string) {
 	try {
-		await redis.del(CACHE_KEYS.SESSION(sessionId));
+		await Promise.all([
+			redis.del(CACHE_KEYS.SESSION(sessionId)),
+			redis.del(CACHE_KEYS.SESSION_META(sessionId)),
+		]);
 	} catch (err) {
 		console.error("Redis Delete Session Error:", err);
 	}

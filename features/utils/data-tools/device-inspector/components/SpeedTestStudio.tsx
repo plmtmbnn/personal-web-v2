@@ -296,44 +296,65 @@ export default function SpeedTestStudio({
 						{suitability.metrics.map((item) => (
 							<div
 								key={item.title}
-								className="p-4 bg-white border border-slate-200/80 rounded-xl space-y-2 shadow-2xs flex flex-col justify-between"
+								className="p-4 bg-white border border-slate-200/80 rounded-2xl space-y-3 shadow-2xs flex flex-col justify-between transition-all"
 							>
-								<div className="space-y-1.5">
-									<div className="flex items-center justify-between">
-										<span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase">
-											{item.iconName === "tv" && (
-												<Tv className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-											)}
+								<div className="space-y-2">
+									{/* Tier 1: Domain Icon Squircle & Status Badge */}
+									<div className="flex items-center justify-between gap-2">
+										<div
+											className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${
+												item.iconName === "tv"
+													? "bg-indigo-50 border-indigo-100 text-indigo-600"
+													: item.iconName === "gamepad"
+														? "bg-purple-50 border-purple-100 text-purple-600"
+														: item.iconName === "video"
+															? "bg-emerald-50 border-emerald-100 text-emerald-600"
+															: "bg-cyan-50 border-cyan-100 text-cyan-600"
+											}`}
+										>
+											{item.iconName === "tv" && <Tv className="w-3.5 h-3.5" />}
 											{item.iconName === "gamepad" && (
-												<Gamepad2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+												<Gamepad2 className="w-3.5 h-3.5" />
 											)}
 											{item.iconName === "video" && (
-												<Video className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+												<Video className="w-3.5 h-3.5" />
 											)}
 											{item.iconName === "cloud-upload" && (
-												<CloudUpload className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
+												<CloudUpload className="w-3.5 h-3.5" />
 											)}
-											<span className="truncate">{item.title}</span>
-										</span>
+										</div>
+
 										<span
-											className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md shrink-0 ${
+											className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md shrink-0 border ${
 												item.status === "optimal"
-													? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+													? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
 													: item.status === "good"
-														? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+														? "bg-indigo-50 text-indigo-700 border-indigo-200/80"
 														: item.status === "moderate"
-															? "bg-amber-50 text-amber-700 border border-amber-200"
-															: "bg-rose-50 text-rose-700 border border-rose-200"
+															? "bg-amber-50 text-amber-700 border-amber-200/80"
+															: "bg-rose-50 text-rose-700 border-rose-200/80"
 											}`}
 										>
 											{item.status}
 										</span>
 									</div>
-									<p className="text-xs font-bold text-slate-900 leading-tight">
-										{item.verdict}
-									</p>
+
+									{/* Tier 2 & Tier 3: Workload Category & Verdict */}
+									<div className="space-y-0.5">
+										<span
+											className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate"
+											title={item.title}
+										>
+											{item.title}
+										</span>
+										<p className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
+											{item.verdict}
+										</p>
+									</div>
 								</div>
-								<p className="text-[10px] text-slate-500 leading-normal pt-1 border-t border-slate-100">
+
+								{/* Tier 4: Operational Details */}
+								<p className="text-[10px] text-slate-500 leading-relaxed pt-2 border-t border-slate-100">
 									{item.details}
 								</p>
 							</div>

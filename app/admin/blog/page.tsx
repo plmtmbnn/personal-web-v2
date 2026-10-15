@@ -10,8 +10,7 @@ import {
 	Layers,
 } from "lucide-react";
 import DynamicAdminBlogList from "@/features/blog/components/DynamicAdminBlogList";
-import { redirect } from "next/navigation";
-import { checkAdmin } from "@/features/auth/actions";
+import { requireAuth } from "@/features/auth/server";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
@@ -40,14 +39,8 @@ interface AdminBlogPageProps {
 export default async function AdminBlogPage({
 	searchParams,
 }: AdminBlogPageProps) {
-	const [isAdmin, blogStats] = await Promise.all([
-		checkAdmin(),
-		getBlogStats(),
-	]);
-
-	if (!isAdmin) {
-		redirect("/unauthorized");
-	}
+	await requireAuth({ requireAdmin: true, redirectTo: "/admin/blog" });
+	const blogStats = await getBlogStats();
 
 	const params = await searchParams;
 	const currentStatus = params.status || "all";

@@ -1,9 +1,9 @@
 import BlogForm from "@/features/blog/components/BlogForm";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, ChevronRight, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/core/supabase-server";
-import { checkAdmin } from "@/features/auth/actions";
+import { requireAuth } from "@/features/auth/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,11 +18,7 @@ interface EditorPageProps {
 }
 
 export default async function BlogEditorPage({ params }: EditorPageProps) {
-	const isAdmin = await checkAdmin();
-
-	if (!isAdmin) {
-		redirect("/unauthorized");
-	}
+	await requireAuth({ requireAdmin: true, redirectTo: "/admin/blog" });
 
 	const resolvedParams = await params;
 	const rawId = resolvedParams.id?.[0];

@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { checkAdmin } from "@/features/auth/actions";
+import { requireAuth } from "@/features/auth/server";
 import { getMovementStateAction } from "@/features/movement/actions";
 import MovementView from "@/features/movement/components/MovementView";
 import type { Metadata } from "next";
@@ -13,10 +12,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminMovementPage() {
-	const isAdmin = await checkAdmin();
-	if (!isAdmin) {
-		redirect("/unauthorized");
-	}
+	await requireAuth({ requireAdmin: true, redirectTo: "/admin/movement" });
 
 	const initialState = await getMovementStateAction();
 

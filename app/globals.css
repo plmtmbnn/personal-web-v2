@@ -149,6 +149,47 @@
 		transform: translateX(240%);
 	}
 }
+@keyframes cloudDriftSlow {
+	0% {
+		transform: translate3d(0, 0, 0);
+	}
+	100% {
+		transform: translate3d(-50%, 0, 0);
+	}
+}
+@keyframes cloudDriftMedium {
+	0% {
+		transform: translate3d(0, 0, 0);
+	}
+	100% {
+		transform: translate3d(-50%, 0, 0);
+	}
+}
+@keyframes seaSwellSlow {
+	0% {
+		transform: translate3d(0, 0, 0);
+	}
+	100% {
+		transform: translate3d(-50%, 0, 0);
+	}
+}
+@keyframes seaSwellMedium {
+	0% {
+		transform: translate3d(-50%, 0, 0);
+	}
+	100% {
+		transform: translate3d(0, 0, 0);
+	}
+}
+@keyframes seaBreathe {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-8px);
+	}
+}
 
 @theme {
 	--color-background: var(--background);
@@ -186,21 +227,33 @@
 	--animate-shake: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 	--animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
 	--animate-scan-glide: scanGlide 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+	--animate-cloud-slow: cloudDriftSlow 48s linear infinite;
+	--animate-cloud-medium: cloudDriftMedium 34s linear infinite;
+	--animate-sea-deep: seaSwellSlow 26s linear infinite;
+	--animate-sea-mid: seaSwellMedium 20s linear infinite;
+	--animate-sea-breathe: seaBreathe 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-cloud-slow,
+	.animate-cloud-medium,
+	.animate-sea-deep,
+	.animate-sea-mid,
+	.animate-sea-breathe {
+		animation: none;
+	}
 }
 
 /* ============================================================================
    CUSTOM UTILITIES
    ============================================================================ */
 
-/* Dot Pattern Utility for Floating Card Canvas */
+/* Canvas Utility for Floating Card Canvas (Dots removed) */
 .bg-dot-pattern {
 	background-color: var(--canvas-bg, #eceef2);
-	background-image: radial-gradient(#c4c9d4 1.25px, transparent 1.25px);
-	background-size: 20px 20px;
 }
 [data-theme="dark"] .bg-dot-pattern {
 	background-color: #0f172a;
-	background-image: radial-gradient(#334155 1.25px, transparent 1.25px);
 }
 
 /* Glassmorphism Utilities */

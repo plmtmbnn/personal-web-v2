@@ -33,6 +33,9 @@ vi.mock("@/lib/core/supabase", () => ({
 // Mock Server Actions
 vi.mock("@/features/auth/actions", () => ({
 	checkAdmin: vi.fn().mockResolvedValue(false),
+	getAuthStatusAction: vi
+		.fn()
+		.mockResolvedValue({ isAdmin: false, isLoggedIn: false }),
 	logout: vi.fn().mockResolvedValue(undefined),
 }));
 

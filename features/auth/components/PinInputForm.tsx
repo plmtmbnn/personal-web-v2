@@ -53,6 +53,11 @@ export default function PinInputForm({
 								authenticated: true,
 							}),
 						);
+						window.dispatchEvent(
+							new CustomEvent("auth:state:updated", {
+								detail: { authenticated: true },
+							}),
+						);
 					}
 					onSuccess();
 				} else {

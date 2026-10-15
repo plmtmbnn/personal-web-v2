@@ -27,6 +27,7 @@ import {
 	Cpu,
 	Clock,
 } from "lucide-react";
+import HomeAnimatedBackground from "./HomeAnimatedBackground";
 
 // ─── Animation Variants ────────────────────────────────────────────────────────
 
@@ -187,7 +188,8 @@ export default function Home({
 	}, []);
 
 	return (
-		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
+		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
+			<HomeAnimatedBackground />
 			<div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center relative z-10 my-auto">
 				{/* ── Left Content (Span 6) ─────────────────────────────────── */}
 				<motion.div

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Varela_Round, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import CompactBottomBar from "@/features/shared/components/CompactBottomBar";
+import FloatingNavDock from "@/features/shared/components/FloatingNavDock";
 import NavigationLoader from "@/features/shared/components/NavigationLoader";
 import CommandPaletteWrapper from "@/features/shared/components/CommandPaletteWrapper";
 import AuthProvider from "@/features/auth/components/AuthProvider";
@@ -67,7 +67,7 @@ export default function RootLayout({
 					</Suspense>
 					{children}
 					<CommandPaletteWrapper />
-					<CompactBottomBar />
+					<FloatingNavDock />
 					<SpeedInsights />
 				</AuthProvider>
 			</body>

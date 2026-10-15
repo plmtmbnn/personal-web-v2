@@ -66,12 +66,24 @@ export async function checkAuth(
 			} = await supabase.auth.getUser();
 
 			if (!userError && user) {
-				const adminClient = await createAdminClient();
-				const { data: profile } = await adminClient
-					.from("profiles")
-					.select("is_admin, is_verified")
-					.eq("id", user.id)
-					.single();
+				// Fast-path: If Redis session already contains verified admin status for this user, use it
+				const cachedAdmin =
+					authSession?.userId === user.id &&
+					typeof authSession.isAdmin === "boolean"
+						? authSession.isAdmin
+						: null;
+
+				let isAdmin = cachedAdmin ?? false;
+
+				if (cachedAdmin === null) {
+					const adminClient = await createAdminClient();
+					const { data: profile } = await adminClient
+						.from("profiles")
+						.select("is_admin, is_verified")
+						.eq("id", user.id)
+						.single();
+					isAdmin = !!profile?.is_admin;
+				}
 
 				googleUser = {
 					id: user.id,
@@ -82,7 +94,7 @@ export async function checkAuth(
 						user.email?.split("@")[0],
 					avatarUrl:
 						user.user_metadata?.avatar_url || user.user_metadata?.picture,
-					isAdmin: !!profile?.is_admin,
+					isAdmin,
 				};
 			}
 		} catch (err) {

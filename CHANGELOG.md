@@ -1,3 +1,10 @@
+# [0.107.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.106.0...v0.107.0) (2026-10-15)
+
+
+### Features
+
+* **auth:** centralize per-page auth engine and improve responsiveness ([676e704](https://github.com/plmtmbnn/personal-web-v2/commit/676e70447436a6dc39c660091dfb2380697d40d2))
+
 # [0.106.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.105.0...v0.106.0) (2026-10-13)
 
 

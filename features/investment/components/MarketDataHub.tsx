@@ -21,6 +21,7 @@ import {
 import FearAndGreedGauge from "@/features/investment/components/FearAndGreedGauge";
 import MacroLens from "@/features/investment/components/MacroLens";
 import GlobalMarkets from "@/features/investment/components/GlobalMarkets";
+import { DEFAULT_THRESHOLDS } from "../config/thresholds";
 
 type TabId = "indonesia" | "crypto" | "macro" | "quotes" | "sentiment";
 
@@ -130,7 +131,11 @@ export default function MarketDataHub({
 					</div>
 				</div>
 
-				<div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-2 px-2 sm:mx-0 sm:px-0 relative">
+				<div
+					role="tablist"
+					aria-label="Market Data Terminal Views"
+					className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-2 px-2 sm:mx-0 sm:px-0 relative"
+				>
 					{/* Continuous hairline track line */}
 					<div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-100 rounded-full" />
 
@@ -141,6 +146,10 @@ export default function MarketDataHub({
 							<button
 								type="button"
 								key={tab.id}
+								id={`tab-${tab.id}`}
+								role="tab"
+								aria-selected={isActive}
+								aria-controls={`tabpanel-${tab.id}`}
 								onClick={() => setActiveTab(tab.id)}
 								className={`group relative pb-2.5 px-3 sm:px-4 flex items-center gap-1.5 sm:gap-2 text-xs font-bold transition-all whitespace-nowrap active:scale-95 touch-manipulation cursor-pointer z-10 ${
 									isActive
@@ -175,6 +184,9 @@ export default function MarketDataHub({
 				<AnimatePresence mode="wait">
 					<motion.div
 						key={activeTab}
+						id={`tabpanel-${activeTab}`}
+						role="tabpanel"
+						aria-labelledby={`tab-${activeTab}`}
 						initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -10 }}
@@ -367,7 +379,7 @@ export default function MarketDataHub({
 											<span className="text-xl sm:text-2xl font-black text-slate-900">
 												{latestIdYield != null
 													? `${latestIdYield.toFixed(2)}%`
-													: "6.85%"}
+													: "---"}
 											</span>
 										</div>
 										<p className="text-[11px] text-slate-500">
@@ -587,7 +599,11 @@ export default function MarketDataHub({
 											</span>
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Altcoin gate threshold: &lt;= 54.0%
+											Altcoin gate threshold: &lt;={" "}
+											{DEFAULT_THRESHOLDS.crypto.altcoinBtcDominanceMax.toFixed(
+												1,
+											)}
+											%
 										</p>
 									</div>
 

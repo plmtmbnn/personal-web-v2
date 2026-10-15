@@ -28,6 +28,22 @@ describe("EventCalendar Component", () => {
 		expect(container.textContent).toContain("Upcoming Catalysts & Risk Events");
 	});
 
+	it("strictly adheres to the Anti-Middot Mandate and accessibility standards", () => {
+		const { container } = render(<EventCalendar />);
+
+		// Strictly forbid '•' or '·' anywhere in the rendered calendar
+		expect(container.textContent).not.toContain("•");
+		expect(container.textContent).not.toContain("·");
+
+		// Filter group accessibility
+		const filterGroup = container.querySelector(
+			'fieldset[aria-label="Filter catalysts by market"]',
+		);
+		expect(filterGroup).not.toBeNull();
+		const allButton = filterGroup?.querySelector('button[aria-pressed="true"]');
+		expect(allButton?.textContent).toContain("All Catalysts");
+	});
+
 	it("calculates weekday distance correctly skipping weekends", () => {
 		// Monday to Thursday = 3 weekdays
 		expect(getWeekdayDistance("2026-10-15", "2026-10-12")).toBe(3);

@@ -27,7 +27,8 @@ export default function ScenarioSandbox({
 		data.markets.macro?.FEDFUNDS?.data?.slice(-1)[0]?.value ?? 4.5;
 	const defaultUsdIdr = data.markets.quotes.USDIDR?.last ?? 15850;
 	const defaultBtcPrice = data.markets.quotes.BTC?.last ?? 88000;
-	const defaultIhsgPrice = data.markets.quotes.JKSE?.last ?? 7200;
+	const defaultIhsgPrice =
+		data.markets.quotes.JKSE?.last ?? data.markets.quotes.IHSG?.last ?? 7200;
 
 	// Simulation states
 	const [fedFunds, setFedFunds] = useState<number>(defaultFedFunds);
@@ -158,6 +159,14 @@ export default function ScenarioSandbox({
 						? {
 								JKSE: {
 									...data.markets.quotes.JKSE,
+									last: ihsgPrice,
+								},
+							}
+						: {}),
+					...(data.markets.quotes.IHSG
+						? {
+								IHSG: {
+									...data.markets.quotes.IHSG,
 									last: ihsgPrice,
 								},
 							}
@@ -300,6 +309,7 @@ export default function ScenarioSandbox({
 							</div>
 							<input
 								type="range"
+								aria-label="Simulated Fed Funds Rate"
 								min="2.00"
 								max="6.50"
 								step="0.25"
@@ -326,6 +336,7 @@ export default function ScenarioSandbox({
 							</div>
 							<input
 								type="range"
+								aria-label="Simulated USD/IDR FX Rate"
 								min="14500"
 								max="18000"
 								step="50"
@@ -354,6 +365,7 @@ export default function ScenarioSandbox({
 							</div>
 							<input
 								type="range"
+								aria-label="Simulated Bitcoin Price"
 								min="30000"
 								max="150000"
 								step="1000"
@@ -382,6 +394,7 @@ export default function ScenarioSandbox({
 							</div>
 							<input
 								type="range"
+								aria-label="Simulated IHSG Index Level"
 								min="5500"
 								max="8500"
 								step="25"

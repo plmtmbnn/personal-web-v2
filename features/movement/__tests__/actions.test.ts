@@ -3,6 +3,7 @@ import {
 	getMovementStateAction,
 	saveMovementStateAction,
 	syncLocalMovementStateAction,
+	getUndoneMovementSnacksCount,
 } from "../actions";
 import { redis } from "@/lib/core/redis";
 import { checkAdmin } from "@/features/auth/actions";
@@ -152,6 +153,83 @@ describe("Movement Server Actions", () => {
 				JSON.stringify(merged),
 			);
 			expect(revalidatePath).toHaveBeenCalledWith("/admin/movement");
+		});
+	});
+
+	describe("getUndoneMovementSnacksCount()", () => {
+		it("returns 0 if not admin", async () => {
+			vi.mocked(checkAdmin).mockResolvedValue(false);
+			const count = await getUndoneMovementSnacksCount();
+			expect(count).toBe(0);
+		});
+
+		it("returns full daily target when no sessions are completed today", async () => {
+			vi.mocked(checkAdmin).mockResolvedValue(true);
+			vi.mocked(redis.get).mockResolvedValue(null);
+
+			const count = await getUndoneMovementSnacksCount();
+			expect(count).toBe(6); // default daily target is 6
+		});
+
+		it("returns correct undone count when some sessions are completed today", async () => {
+			vi.mocked(checkAdmin).mockResolvedValue(true);
+			const todayStr = new Date().toISOString().split("T")[0];
+			const mockState = {
+				...getDefaultMovementState(),
+				config: {
+					...getDefaultMovementState().config,
+					dailyTarget: 6,
+				},
+				logs: {
+					[todayStr]: [
+						{
+							id: "s-1",
+							movementId: "desk-pushup",
+							status: "completed" as const,
+						},
+						{
+							id: "s-2",
+							movementId: "slow-squat",
+							status: "completed" as const,
+						},
+					],
+				},
+			};
+			vi.mocked(redis.get).mockResolvedValue(JSON.stringify(mockState));
+
+			const count = await getUndoneMovementSnacksCount();
+			expect(count).toBe(4); // 6 target - 2 completed = 4 remaining
+		});
+
+		it("returns 0 when target is reached or exceeded", async () => {
+			vi.mocked(checkAdmin).mockResolvedValue(true);
+			const todayStr = new Date().toISOString().split("T")[0];
+			const mockState = {
+				...getDefaultMovementState(),
+				config: {
+					...getDefaultMovementState().config,
+					dailyTarget: 2,
+				},
+				logs: {
+					[todayStr]: [
+						{
+							id: "s-1",
+							movementId: "desk-pushup",
+							status: "completed" as const,
+						},
+						{
+							id: "s-2",
+							movementId: "slow-squat",
+							status: "completed" as const,
+						},
+						{ id: "s-3", movementId: "wall-sit", status: "completed" as const },
+					],
+				},
+			};
+			vi.mocked(redis.get).mockResolvedValue(JSON.stringify(mockState));
+
+			const count = await getUndoneMovementSnacksCount();
+			expect(count).toBe(0);
 		});
 	});
 });

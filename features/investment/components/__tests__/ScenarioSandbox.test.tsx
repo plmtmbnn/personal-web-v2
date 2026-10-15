@@ -272,10 +272,49 @@ describe("ScenarioSandbox Component", () => {
 		const sliders = container.querySelectorAll('input[type="range"]');
 		expect(sliders.length).toBe(4);
 
+		// Verify accessibility aria-labels
+		expect(sliders[0].getAttribute("aria-label")).toBe(
+			"Simulated Fed Funds Rate",
+		);
+		expect(sliders[1].getAttribute("aria-label")).toBe(
+			"Simulated USD/IDR FX Rate",
+		);
+		expect(sliders[2].getAttribute("aria-label")).toBe(
+			"Simulated Bitcoin Price",
+		);
+		expect(sliders[3].getAttribute("aria-label")).toBe(
+			"Simulated IHSG Index Level",
+		);
+
 		// Change Fed Funds slider to 2.50%
 		fireEvent.change(sliders[0], { target: { value: "2.5" } });
 
 		expect(container.textContent).toContain("2.50%");
 		expect(container.textContent).toContain("Simulation Active");
+	});
+
+	it("correctly resolves defaultIhsgPrice when quote key is IHSG instead of JKSE", () => {
+		const ihsgOnlyData: InvestmentCompassData = {
+			...mockData,
+			markets: {
+				...mockData.markets,
+				quotes: {
+					...mockData.markets.quotes,
+					IHSG: {
+						...mockData.markets.quotes.JKSE,
+						symbol: "^JKSE",
+						name: "IHSG",
+						last: 7654,
+					},
+					JKSE: undefined as unknown as typeof mockData.markets.quotes.JKSE,
+				},
+			},
+		};
+
+		const { container } = render(
+			<ScenarioSandbox data={ihsgOnlyData} liveOutput={mockLiveOutput} />,
+		);
+
+		expect(container.textContent).toContain("7.654");
 	});
 });

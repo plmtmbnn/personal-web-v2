@@ -29,7 +29,10 @@ export default function MarketDeltaAlerts({
 	if (alerts.length === 0) return null;
 
 	return (
-		<div className="bg-amber-50 rounded-[2rem] border-2 border-amber-400/50 shadow-lg shadow-amber-900/5 p-4 sm:p-7 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+		<section
+			aria-label="Critical Market Delta Alerts"
+			className="bg-white rounded-3xl border border-amber-200/90 shadow-xs p-4 sm:p-7 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700"
+		>
 			<div className="flex items-center gap-3">
 				<div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
 					<BellRing className="w-5 h-5 animate-pulse" />
@@ -77,6 +80,6 @@ export default function MarketDeltaAlerts({
 					);
 				})}
 			</div>
-		</div>
+		</section>
 	);
 }

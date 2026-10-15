@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-	type Activity,
+	type LucideIcon,
 	TrendingUp,
 	TrendingDown,
 	Info,
@@ -47,7 +47,7 @@ export default function OverviewRegimes({
 
 	const renderRegimeCard = (
 		regime: MarketRegimeScore,
-		Icon: typeof Activity,
+		Icon: LucideIcon,
 		accentBorder: string,
 	) => {
 		return (
@@ -228,6 +228,8 @@ export default function OverviewRegimes({
 										key={factor.key}
 										type="button"
 										onClick={() => setActiveFactor(isSelected ? null : factor)}
+										aria-expanded={isSelected}
+										aria-controls={`factor-detail-${regime.id}`}
 										className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer active:scale-95 touch-manipulation ${
 											isSelected
 												? "ring-2 ring-slate-900 border-transparent shadow-xs"
@@ -268,7 +270,11 @@ export default function OverviewRegimes({
 						{/* Inline Factor Detail Card */}
 						{activeFactor &&
 							regime.factors.some((f) => f.key === activeFactor.key) && (
-								<div className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+								<section
+									id={`factor-detail-${regime.id}`}
+									aria-label="Factor breakdown detail"
+									className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200"
+								>
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex items-center gap-2 min-w-0">
 											<span className="text-xs font-black text-indigo-700 uppercase tracking-wider truncate">
@@ -290,7 +296,7 @@ export default function OverviewRegimes({
 									<p className="text-xs text-slate-600 font-medium leading-relaxed">
 										{activeFactor.note}
 									</p>
-								</div>
+								</section>
 							)}
 					</div>
 				</div>
@@ -379,6 +385,8 @@ export default function OverviewRegimes({
 										key={f.key}
 										type="button"
 										onClick={() => setActiveFactor(isSelected ? null : f)}
+										aria-expanded={isSelected}
+										aria-controls={`factor-detail-${globalRegime.id}`}
 										className={`px-2.5 py-1 rounded-lg text-left transition-all cursor-pointer active:scale-95 touch-manipulation ${
 											isSelected
 												? "bg-slate-900 text-white shadow-2xs"
@@ -401,7 +409,11 @@ export default function OverviewRegimes({
 						{/* Inline Factor Detail for Global Macro */}
 						{activeFactor &&
 							globalRegime.factors.some((f) => f.key === activeFactor.key) && (
-								<div className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+								<section
+									id={`factor-detail-${globalRegime.id}`}
+									aria-label="Factor breakdown detail"
+									className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200"
+								>
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex items-center gap-2 min-w-0">
 											<span className="text-xs font-black text-indigo-700 uppercase tracking-wider truncate">
@@ -423,7 +435,7 @@ export default function OverviewRegimes({
 									<p className="text-xs text-slate-600 font-medium leading-relaxed">
 										{activeFactor.note}
 									</p>
-								</div>
+								</section>
 							)}
 					</div>
 				</div>

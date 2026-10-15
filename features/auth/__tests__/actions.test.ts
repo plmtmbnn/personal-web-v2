@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { checkAdmin, logout } from "../actions";
-import { createClient } from "@/lib/core/supabase-server";
+import { createClient, createAdminClient } from "@/lib/core/supabase-server";
 import { deleteSession } from "@/lib/core/redis";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -17,6 +17,7 @@ vi.mock("@/lib/core/env", () => ({
 
 vi.mock("@/lib/core/supabase-server", () => ({
 	createClient: vi.fn(),
+	createAdminClient: vi.fn(),
 }));
 
 vi.mock("@/lib/core/redis", () => ({
@@ -34,6 +35,7 @@ vi.mock("next/navigation", () => ({
 describe("Auth Actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.mocked(createAdminClient).mockImplementation(createClient as any);
 		mockEnv.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH = true;
 	});
 

@@ -8,6 +8,7 @@ import {
 	getDefaultMovementState,
 	mergeMovementStates,
 	pruneExpiredLogs,
+	getLocalDateKey,
 } from "./lib/storage";
 
 const MOVEMENT_REDIS_KEY = CACHE_KEYS.MOVEMENT_STATE || "admin:movement:state";
@@ -107,5 +108,30 @@ export async function syncLocalMovementStateAction(
 	} catch (error) {
 		console.error("Redis Sync Movement State Error:", error);
 		return localState;
+	}
+}
+
+/**
+ * Retrieves the count of undone movement snacks for today.
+ * Evaluates targetToday minus completedToday.
+ */
+export async function getUndoneMovementSnacksCount(): Promise<number> {
+	const isAdmin = await checkAdmin();
+	if (!isAdmin) {
+		return 0;
+	}
+
+	try {
+		const state = await getMovementStateAction();
+		const todayKey = getLocalDateKey();
+		const todaySessions = (state.logs?.[todayKey] || []).filter(
+			(s) => s.status === "completed",
+		);
+		const targetToday = state.config?.dailyTarget ?? 6;
+		const completedCount = todaySessions.length;
+		return Math.max(0, targetToday - completedCount);
+	} catch (error) {
+		console.error("Error in getUndoneMovementSnacksCount:", error);
+		return 0;
 	}
 }

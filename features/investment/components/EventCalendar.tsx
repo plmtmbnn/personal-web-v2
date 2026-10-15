@@ -82,7 +82,7 @@ export default function EventCalendar() {
 										{pa.badgeText}
 									</span>
 									<span className="text-[10px] font-extrabold text-slate-500">
-										{pa.event.date} • {pa.event.market}
+										{pa.event.date} / {pa.event.market}
 									</span>
 								</div>
 
@@ -168,12 +168,16 @@ export default function EventCalendar() {
 					</div>
 
 					{/* Filter Pills */}
-					<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-1 px-1 sm:mx-0 sm:px-0">
+					<fieldset
+						aria-label="Filter catalysts by market"
+						className="border-0 p-0 m-0 flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-1 px-1 sm:mx-0 sm:px-0"
+					>
 						{filters.map((f) => (
 							<button
 								type="button"
 								key={f.id}
 								onClick={() => setSelectedMarket(f.id)}
+								aria-pressed={selectedMarket === f.id}
 								className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap active:scale-95 touch-manipulation ${
 									selectedMarket === f.id
 										? "bg-slate-900 text-white shadow-2xs"
@@ -183,7 +187,7 @@ export default function EventCalendar() {
 								{f.label}
 							</button>
 						))}
-					</div>
+					</fieldset>
 				</div>
 
 				{/* Events List */}

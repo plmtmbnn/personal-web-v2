@@ -146,7 +146,13 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 			},
 			{
 				label: "IHSG",
-				value: ihsg ? ihsg.last?.toLocaleString("id-ID") : "---",
+				value:
+					ihsg?.last != null
+						? ihsg.last.toLocaleString("en-US", {
+								minimumFractionDigits: 2,
+								maximumFractionDigits: 2,
+							})
+						: "---",
 				change: ihsg?.changePct,
 				desc: "Jakarta Composite Index.",
 				isInverse: false,

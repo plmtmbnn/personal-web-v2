@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useTransition } from "react";
 import { SupabaseConn } from "@/lib/core/supabase";
-import { logout } from "@/features/auth/actions";
+import { logout, checkAdmin } from "@/features/auth/actions";
 import { getReminderCount } from "@/features/reminders/actions";
+import { getPendingTasksCount } from "@/features/tasks/actions/tasks";
+import { getUndoneMovementSnacksCount } from "@/features/movement/actions";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import {
 	Home,
@@ -14,7 +16,6 @@ import {
 	CheckSquare,
 	LogOut,
 	LogIn,
-	ChevronUp,
 	TrendingUp,
 	Mail,
 	Briefcase,
@@ -29,6 +30,7 @@ import {
 	Bell,
 	ArrowUpRight,
 	Activity,
+	Loader2,
 } from "lucide-react";
 import {
 	motion,
@@ -40,7 +42,10 @@ import {
 /**
  * Path active matcher: matches exact path or nested sub-path (excluding root '/')
  */
-function isPathActive(currentPath: string, targetPath?: string): boolean {
+export function isPathActive(
+	currentPath: string,
+	targetPath?: string,
+): boolean {
 	if (!targetPath) return false;
 	if (targetPath === "/") return currentPath === "/";
 	return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
@@ -51,7 +56,7 @@ function isPathActive(currentPath: string, targetPath?: string): boolean {
  * Prevents root routes like '/adventures' from simultaneously highlighting
  * when a child sub-route like '/adventures/running' is active.
  */
-function getActiveSubHref(
+export function getActiveSubHref(
 	currentPath: string,
 	subItems?: SubNavItem[],
 ): string | undefined {
@@ -68,7 +73,7 @@ function getActiveSubHref(
  * Resolves the single most specific active top-level nav item label.
  * Prevents multiple top-level buttons from highlighting simultaneously.
  */
-function getActiveNavLabel(
+export function getActiveNavLabel(
 	currentPath: string,
 	visibleItems: NavItem[],
 ): string | null {
@@ -96,7 +101,7 @@ function getActiveNavLabel(
 	return bestLabel;
 }
 
-function getSubmenuSubtitle(label: string, count: number): string {
+export function getSubmenuSubtitle(label: string, count: number): string {
 	switch (label) {
 		case "Adventures":
 			return `${count} destinations`;
@@ -112,15 +117,16 @@ function getSubmenuSubtitle(label: string, count: number): string {
 /**
  * Navigation Item Types
  */
-type SubNavItem = {
+export type SubNavItem = {
 	href?: string;
 	label: string;
 	icon: React.ElementType;
 	onClick?: () => void;
 	description?: string;
+	isLogout?: boolean;
 };
 
-type NavItem = {
+export type NavItem = {
 	href: string;
 	label: string;
 	icon: React.ElementType;
@@ -133,7 +139,7 @@ type NavItem = {
 /**
  * NAV_ITEMS Configuration
  */
-const NAV_ITEMS: NavItem[] = [
+export const NAV_ITEMS: NavItem[] = [
 	{
 		label: "Home",
 		href: "/",
@@ -275,13 +281,16 @@ const NAV_ITEMS: NavItem[] = [
 				icon: Activity,
 				description: "Desk movement breaks",
 			},
-			{ label: "Logout", icon: LogOut, onClick: () => logout() },
+			{
+				label: "Logout",
+				icon: LogOut,
+				isLogout: true,
+			},
 		],
 	},
 ];
 
 // Motion Variants
-
 const submenuVariants: Variants = {
 	hidden: {
 		opacity: 0,
@@ -332,30 +341,55 @@ export default function CompactBottomBar() {
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [pendingTasksCount, setPendingTasksCount] = useState(0);
 	const [pendingRemindersCount, setPendingRemindersCount] = useState(0);
+	const [pendingMovementCount, setPendingMovementCount] = useState(0);
 	const [hasHover, setHasHover] = useState(false);
+	const [isLoggingOut, startTransition] = useTransition();
+
 	const navRef = useRef<HTMLElement>(null);
+	const triggerRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
+	const submenuRefs = useRef<{
+		[key: string]: (HTMLAnchorElement | HTMLButtonElement | null)[];
+	}>({});
+	const isTouchDeviceRef = useRef(false);
 	const reduceMotion = useReducedMotion();
 
 	const closeSubMenu = useCallback(() => {
 		setExpandedItem(null);
 	}, []);
 
+	// Hover media query listener
 	useEffect(() => {
+		if (typeof window === "undefined" || !window.matchMedia) return;
 		const mediaQuery = window.matchMedia("(hover: hover)");
 		setHasHover(mediaQuery.matches);
 		const listener = (e: MediaQueryListEvent) => {
 			setHasHover(e.matches);
 		};
 		mediaQuery.addEventListener("change", listener);
+
+		// Touch detection listener to support hybrid touchscreen laptops
+		const onTouch = () => {
+			isTouchDeviceRef.current = true;
+		};
+		const onMouse = () => {
+			isTouchDeviceRef.current = false;
+		};
+		window.addEventListener("touchstart", onTouch, { passive: true });
+		window.addEventListener("mousemove", onMouse, { passive: true });
+
 		return () => {
 			mediaQuery.removeEventListener("change", listener);
+			window.removeEventListener("touchstart", onTouch);
+			window.removeEventListener("mousemove", onMouse);
 		};
 	}, []);
 
+	// Close submenu on route transitions
 	useEffect(() => {
 		closeSubMenu();
 	}, [pathname, closeSubMenu]);
 
+	// Handle outside clicks and global Escape key
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent | TouchEvent) => {
 			if (navRef.current && !navRef.current.contains(event.target as Node)) {
@@ -368,7 +402,9 @@ export default function CompactBottomBar() {
 			}
 		};
 		document.addEventListener("mousedown", handleClickOutside);
-		document.addEventListener("touchstart", handleClickOutside);
+		document.addEventListener("touchstart", handleClickOutside, {
+			passive: true,
+		});
 		window.addEventListener("keydown", handleKeyDown);
 		return () => {
 			document.removeEventListener("mousedown", handleClickOutside);
@@ -377,34 +413,35 @@ export default function CompactBottomBar() {
 		};
 	}, [closeSubMenu]);
 
-	useEffect(() => {
+	// Centralized Auth Synchronization
+	const syncAuthState = useCallback(async () => {
 		if (!isGoogleAuthEnabled) {
 			setIsAdmin(true);
+			setIsLoggedIn(true);
 			return;
 		}
-		const checkUser = async () => {
-			const {
-				data: { user },
-			} = await SupabaseConn.auth.getUser();
-			if (user) {
-				setIsLoggedIn(true);
-				const { data: profile } = await SupabaseConn.from("profiles")
-					.select("is_admin")
-					.eq("id", user.id)
-					.single();
-				if (profile?.is_admin) setIsAdmin(true);
-			} else {
-				setIsLoggedIn(false);
-				setIsAdmin(false);
-			}
-		};
-		checkUser();
+
+		try {
+			const [adminStatus, { data: authData }] = await Promise.all([
+				checkAdmin(),
+				SupabaseConn.auth.getUser(),
+			]);
+			setIsAdmin(adminStatus);
+			setIsLoggedIn(Boolean(authData?.user));
+		} catch {
+			setIsAdmin(false);
+			setIsLoggedIn(false);
+		}
+	}, [isGoogleAuthEnabled]);
+
+	useEffect(() => {
+		syncAuthState();
 		const {
 			data: { subscription },
 		} = SupabaseConn.auth.onAuthStateChange((_event, session) => {
 			if (session?.user) {
 				setIsLoggedIn(true);
-				checkUser();
+				syncAuthState();
 			} else {
 				setIsLoggedIn(false);
 				setIsAdmin(false);
@@ -413,31 +450,70 @@ export default function CompactBottomBar() {
 			}
 		});
 		return () => subscription.unsubscribe();
-	}, [isGoogleAuthEnabled]);
+	}, [syncAuthState]);
 
-	useEffect(() => {
+	// Pending Admin Telemetry Badges (Tasks, Reminders, and Movement Snacks)
+	const fetchPendingCounts = useCallback(async () => {
 		if (!isGoogleAuthEnabled || (isLoggedIn && isAdmin)) {
-			const fetchPendingCount = async () => {
-				try {
-					const todayStr = new Date().toISOString().split("T")[0];
-					const { count } = await SupabaseConn.from("tasks")
-						.select("*", { count: "exact", head: true })
-						.neq("status", "done")
-						.neq("status", "cancelled")
-						.eq("due_date", todayStr);
-					setPendingTasksCount(count || 0);
-					const rCount = await getReminderCount();
-					setPendingRemindersCount(rCount);
-				} catch (err) {
-					console.error("Error fetching admin counts:", err);
-				}
-			};
-			fetchPendingCount();
+			try {
+				const [taskCount, reminderCount, movementCount] = await Promise.all([
+					getPendingTasksCount(),
+					getReminderCount(),
+					getUndoneMovementSnacksCount(),
+				]);
+				setPendingTasksCount(taskCount);
+				setPendingRemindersCount(reminderCount);
+				setPendingMovementCount(movementCount);
+			} catch (err) {
+				console.error("Error fetching admin telemetry counts:", err);
+			}
 		} else {
 			setPendingTasksCount(0);
 			setPendingRemindersCount(0);
+			setPendingMovementCount(0);
 		}
 	}, [isLoggedIn, isAdmin, isGoogleAuthEnabled]);
+
+	// Re-fetch badges on route change or when tab regains focus
+	useEffect(() => {
+		fetchPendingCounts();
+
+		const onFocus = () => {
+			fetchPendingCounts();
+		};
+		const onVisibility = () => {
+			if (document.visibilityState === "visible") {
+				fetchPendingCounts();
+			}
+		};
+		const onMovement = () => {
+			fetchPendingCounts();
+		};
+
+		window.addEventListener("focus", onFocus);
+		document.addEventListener("visibilitychange", onVisibility);
+		window.addEventListener("movement:state:updated", onMovement);
+		return () => {
+			window.removeEventListener("focus", onFocus);
+			document.removeEventListener("visibilitychange", onVisibility);
+			window.removeEventListener("movement:state:updated", onMovement);
+		};
+	}, [fetchPendingCounts, pathname]);
+
+	const handleLogout = useCallback(() => {
+		startTransition(async () => {
+			closeSubMenu();
+			await logout();
+		});
+	}, [closeSubMenu]);
+
+	const visibleItems = NAV_ITEMS.filter((item) => {
+		if (item.toggle && !ENV_GLOBAL[item.toggle]) return false;
+		if (item.adminOnly && !isAdmin && isGoogleAuthEnabled) return false;
+		if (item.hideIfLoggedIn && (isLoggedIn || !isGoogleAuthEnabled))
+			return false;
+		return true;
+	});
 
 	const handleItemClick = (
 		e: React.MouseEvent,
@@ -445,7 +521,8 @@ export default function CompactBottomBar() {
 		hasSubItems: boolean,
 	) => {
 		if (hasSubItems) {
-			if (!hasHover) {
+			const isTouch = isTouchDeviceRef.current || !hasHover;
+			if (isTouch) {
 				e.preventDefault();
 				setExpandedItem((prev) =>
 					prev === navItem.label ? null : navItem.label,
@@ -458,13 +535,68 @@ export default function CompactBottomBar() {
 		}
 	};
 
-	const visibleItems = NAV_ITEMS.filter((item) => {
-		if (item.toggle && !ENV_GLOBAL[item.toggle]) return false;
-		if (item.adminOnly && !isAdmin && isGoogleAuthEnabled) return false;
-		if (item.hideIfLoggedIn && (isLoggedIn || !isGoogleAuthEnabled))
-			return false;
-		return true;
-	});
+	// Keyboard navigation for top-level dock triggers
+	const handleTriggerKeyDown = (
+		e: React.KeyboardEvent,
+		navItem: NavItem,
+		hasSubItems: boolean,
+		index: number,
+	) => {
+		if (
+			hasSubItems &&
+			(e.key === "ArrowUp" || e.key === "Enter" || e.key === " ")
+		) {
+			e.preventDefault();
+			setExpandedItem(navItem.label);
+			setTimeout(() => {
+				const firstSubItem = submenuRefs.current[navItem.label]?.[0];
+				firstSubItem?.focus();
+			}, 40);
+			return;
+		}
+
+		if (e.key === "ArrowRight") {
+			e.preventDefault();
+			const nextIdx = (index + 1) % visibleItems.length;
+			const nextItem = visibleItems[nextIdx];
+			triggerRefs.current[nextItem.label]?.focus();
+		} else if (e.key === "ArrowLeft") {
+			e.preventDefault();
+			const prevIdx = (index - 1 + visibleItems.length) % visibleItems.length;
+			const prevItem = visibleItems[prevIdx];
+			triggerRefs.current[prevItem.label]?.focus();
+		}
+	};
+
+	// Keyboard navigation within submenu rows
+	const handleSubmenuKeyDown = (
+		e: React.KeyboardEvent,
+		parentLabel: string,
+		subIndex: number,
+		subItemsCount: number,
+	) => {
+		const items = submenuRefs.current[parentLabel] || [];
+
+		if (e.key === "ArrowDown") {
+			e.preventDefault();
+			const nextIndex = (subIndex + 1) % subItemsCount;
+			items[nextIndex]?.focus();
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			const prevIndex = (subIndex - 1 + subItemsCount) % subItemsCount;
+			items[prevIndex]?.focus();
+		} else if (e.key === "Home") {
+			e.preventDefault();
+			items[0]?.focus();
+		} else if (e.key === "End") {
+			e.preventDefault();
+			items[subItemsCount - 1]?.focus();
+		} else if (e.key === "Escape") {
+			e.preventDefault();
+			closeSubMenu();
+			triggerRefs.current[parentLabel]?.focus();
+		}
+	};
 
 	const getSubItemBadge = (subLabel: string) => {
 		if (subLabel === "Manage Tasks" && pendingTasksCount > 0) {
@@ -473,14 +605,18 @@ export default function CompactBottomBar() {
 		if (subLabel === "Quick Reminders" && pendingRemindersCount > 0) {
 			return pendingRemindersCount;
 		}
+		if (subLabel === "Movement Snacks" && pendingMovementCount > 0) {
+			return pendingMovementCount;
+		}
 		return null;
 	};
 
-	const totalAdminBadge = pendingTasksCount + pendingRemindersCount;
+	const totalAdminBadge =
+		pendingTasksCount + pendingRemindersCount + pendingMovementCount;
 
 	return (
 		<>
-			{/* Mobile Dismissal Backdrop */}
+			{/* Universal Touch Dismissal Backdrop (Active whenever submenu is open) */}
 			<AnimatePresence>
 				{expandedItem && (
 					<motion.div
@@ -488,7 +624,7 @@ export default function CompactBottomBar() {
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0 }}
 						transition={{ duration: 0.15 }}
-						className="fixed inset-0 z-40 bg-slate-900/10 sm:hidden pointer-events-auto"
+						className="fixed inset-0 z-40 bg-slate-900/5 sm:bg-transparent pointer-events-auto"
 						onClick={closeSubMenu}
 						aria-hidden="true"
 					/>
@@ -497,12 +633,12 @@ export default function CompactBottomBar() {
 
 			<motion.nav
 				ref={navRef}
-				className="fixed bottom-3 sm:bottom-4 left-0 right-0 z-50 px-3 sm:px-4 flex justify-center pointer-events-none"
+				className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:bottom-4 left-0 right-0 z-50 px-3 sm:px-4 flex justify-center pointer-events-none"
 				aria-label="Main Navigation"
 			>
 				{/* Bar shell */}
 				<div
-					className="bg-white/95 backdrop-blur-md flex items-center p-1 rounded-2xl border border-slate-200/70 relative pointer-events-auto select-none gap-px"
+					className="bg-white/95 backdrop-blur-md flex items-center p-1 rounded-2xl border border-slate-200/70 relative pointer-events-auto select-none gap-0.5 sm:gap-1"
 					style={{
 						boxShadow:
 							"0 4px 24px -4px rgba(15,23,42,0.10), 0 1px 6px -1px rgba(15,23,42,0.06), 0 0 0 0.5px rgba(15,23,42,0.04)",
@@ -514,7 +650,7 @@ export default function CompactBottomBar() {
 						return visibleItems.map((navItem, index) => {
 							const Icon = navItem.icon;
 							const subItems = navItem.subItems?.filter(
-								(sub) => isGoogleAuthEnabled || sub.label !== "Logout",
+								(sub) => isGoogleAuthEnabled || !sub.isLogout,
 							);
 							const isActive = navItem.label === activeNavLabel;
 							const isExpanded = expandedItem === navItem.label;
@@ -528,35 +664,40 @@ export default function CompactBottomBar() {
 							const alignClass = isLeft
 								? "left-0 sm:left-1/2 sm:-translate-x-1/2 origin-bottom-left sm:origin-bottom"
 								: isRight
-									? "right-0 sm:left-1/2 sm:-translate-x-1/2 origin-bottom-right sm:origin-bottom"
+									? "right-0 sm:right-0 sm:left-auto sm:translate-x-0 origin-bottom-right sm:origin-bottom-right"
 									: "left-1/2 -translate-x-1/2 origin-bottom";
+
+							const submenuId = `submenu-${navItem.label.toLowerCase()}`;
 
 							return (
 								<div key={navItem.label} className="flex items-center">
 									{showDivider && (
-										<div className="w-px h-5 bg-slate-200/80 mx-0.5 shrink-0" />
+										<div className="w-px h-5 bg-slate-200/80 mx-0.5 sm:mx-1 shrink-0" />
 									)}
 
 									<div
 										className="relative flex-shrink-0"
 										onMouseEnter={
-											hasHover && hasSubItems
+											hasHover && !isTouchDeviceRef.current && hasSubItems
 												? () => setExpandedItem(navItem.label)
 												: undefined
 										}
 										onMouseLeave={
-											hasHover && hasSubItems ? () => closeSubMenu() : undefined
+											hasHover && !isTouchDeviceRef.current && hasSubItems
+												? () => closeSubMenu()
+												: undefined
 										}
 									>
 										{/* Submenu Pop-over */}
 										<AnimatePresence>
 											{hasSubItems && isExpanded && subItems && (
 												<motion.div
+													id={submenuId}
 													variants={submenuVariants}
 													initial={reduceMotion ? false : "hidden"}
 													animate="visible"
 													exit="exit"
-													className={`absolute bottom-[calc(100%+10px)] ${alignClass} w-48 bg-white rounded-xl overflow-hidden border border-slate-200/70 z-50`}
+													className={`absolute bottom-[calc(100%+10px)] ${alignClass} w-48 bg-white rounded-xl border border-slate-200/70 z-50 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain`}
 													style={{
 														boxShadow:
 															"0 12px 40px -6px rgba(15,23,42,0.14), 0 3px 12px -3px rgba(15,23,42,0.07)",
@@ -571,7 +712,7 @@ export default function CompactBottomBar() {
 																<Icon className="w-3 h-3" />
 															</div>
 															<div className="min-w-0">
-																<p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-800 leading-none">
+																<p className="text-[9px] font-bold uppercase tracking-[0.08em] text-slate-800 leading-none">
 																	{navItem.label}
 																</p>
 																<p className="text-[9px] text-slate-400 font-medium mt-0.5 leading-none">
@@ -593,7 +734,7 @@ export default function CompactBottomBar() {
 																subItems,
 															);
 
-															return subItems.map((sub) => {
+															return subItems.map((sub, subIdx) => {
 																const SubIcon = sub.icon;
 																const isSubActive = sub.href
 																	? sub.href === activeSubHref
@@ -609,7 +750,11 @@ export default function CompactBottomBar() {
 																					: "bg-slate-100 text-slate-500 group-hover/sub:bg-slate-200/80 group-hover/sub:text-slate-700"
 																			}`}
 																		>
-																			<SubIcon className="w-3 h-3" />
+																			{sub.isLogout && isLoggingOut ? (
+																				<Loader2 className="w-3 h-3 animate-spin text-slate-500" />
+																			) : (
+																				<SubIcon className="w-3 h-3" />
+																			)}
 																		</div>
 																		<div className="min-w-0 flex-1">
 																			<span
@@ -635,7 +780,7 @@ export default function CompactBottomBar() {
 																		</div>
 																		{badgeCount !== null && (
 																			<span
-																				className={`shrink-0 flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[9px] font-black ${
+																				className={`shrink-0 flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[9px] font-bold ${
 																					isSubActive
 																						? "bg-white/20 text-white"
 																						: "bg-slate-900 text-white"
@@ -652,9 +797,9 @@ export default function CompactBottomBar() {
 																	</>
 																);
 
-																const rowClass = `group/sub flex w-full text-left items-center gap-2 px-1.5 py-1.5 rounded-lg transition-[background-color,color] duration-150 !no-underline select-none touch-manipulation active:scale-[0.98] ${
+																const rowClass = `group/sub flex w-full text-left items-center gap-2 px-1.5 py-1.5 rounded-lg transition-[background-color,color] duration-150 !no-underline select-none touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-900/30 focus-visible:bg-slate-100/90 ${
 																	isSubActive
-																		? "bg-slate-900 text-white shadow-sm"
+																		? "bg-slate-900 text-white shadow-xs"
 																		: "text-slate-700 hover:bg-slate-100/70"
 																}`;
 
@@ -665,11 +810,30 @@ export default function CompactBottomBar() {
 																	>
 																		{sub.href ? (
 																			<Link
+																				ref={(el) => {
+																					if (
+																						!submenuRefs.current[navItem.label]
+																					) {
+																						submenuRefs.current[navItem.label] =
+																							[];
+																					}
+																					submenuRefs.current[navItem.label][
+																						subIdx
+																					] = el;
+																				}}
 																				href={sub.href}
 																				onClick={() => {
 																					sub.onClick?.();
 																					closeSubMenu();
 																				}}
+																				onKeyDown={(e) =>
+																					handleSubmenuKeyDown(
+																						e,
+																						navItem.label,
+																						subIdx,
+																						subItems.length,
+																					)
+																				}
 																				className={rowClass}
 																				role="menuitem"
 																			>
@@ -677,11 +841,35 @@ export default function CompactBottomBar() {
 																			</Link>
 																		) : (
 																			<button
+																				ref={(el) => {
+																					if (
+																						!submenuRefs.current[navItem.label]
+																					) {
+																						submenuRefs.current[navItem.label] =
+																							[];
+																					}
+																					submenuRefs.current[navItem.label][
+																						subIdx
+																					] = el;
+																				}}
 																				type="button"
 																				onClick={() => {
-																					sub.onClick?.();
-																					closeSubMenu();
+																					if (sub.isLogout) {
+																						handleLogout();
+																					} else {
+																						sub.onClick?.();
+																						closeSubMenu();
+																					}
 																				}}
+																				onKeyDown={(e) =>
+																					handleSubmenuKeyDown(
+																						e,
+																						navItem.label,
+																						subIdx,
+																						subItems.length,
+																					)
+																				}
+																				disabled={sub.isLogout && isLoggingOut}
 																				className={rowClass}
 																				role="menuitem"
 																			>
@@ -697,87 +885,81 @@ export default function CompactBottomBar() {
 											)}
 										</AnimatePresence>
 
-										{/* Nav button */}
+										{/* Icon-Only Nav Button */}
 										<Link
+											ref={(el) => {
+												triggerRefs.current[navItem.label] = el;
+											}}
 											href={navItem.href}
 											aria-current={isActive ? "page" : undefined}
 											aria-label={navItem.label}
-											aria-haspopup={hasSubItems ? "true" : undefined}
+											aria-haspopup={hasSubItems ? "menu" : undefined}
 											aria-expanded={hasSubItems ? isExpanded : undefined}
+											aria-controls={hasSubItems ? submenuId : undefined}
 											onClick={(e) => handleItemClick(e, navItem, hasSubItems)}
-											className="group relative flex flex-col items-center justify-center py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-[0.8rem] transition-colors duration-150 !no-underline select-none min-w-[44px] sm:min-w-[52px] touch-manipulation active:scale-95"
+											onKeyDown={(e) =>
+												handleTriggerKeyDown(e, navItem, hasSubItems, index)
+											}
+											title={navItem.label}
+											className="group relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all duration-150 !no-underline select-none touch-manipulation active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 focus-visible:ring-offset-1"
 										>
-											{/* Hover background for inactive items */}
-											{!isActive && (
-												<span className="absolute inset-0 rounded-[0.8rem] bg-slate-100/0 group-hover:bg-slate-100/60 transition-colors duration-150 pointer-events-none" />
+											{/* Active sliding background */}
+											{isActive && (
+												<motion.div
+													layoutId="nav-active-icon"
+													transition={{
+														type: "spring",
+														stiffness: 440,
+														damping: 34,
+													}}
+													className="absolute inset-0 bg-slate-900 rounded-xl z-0 shadow-xs"
+												/>
 											)}
 
-											{/* Icon container */}
-											<div className="relative flex items-center justify-center w-7 h-7 rounded-[0.625rem]">
-												{isActive && (
-													<motion.div
-														layoutId="nav-active-icon"
+											{/* Inactive Hover Background */}
+											{!isActive && (
+												<span className="absolute inset-0 rounded-xl bg-slate-100/0 group-hover:bg-slate-100/70 transition-colors duration-150 pointer-events-none" />
+											)}
+
+											{/* Icon */}
+											<Icon
+												className={`relative z-10 w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-colors duration-150 ${
+													isActive
+														? "!text-white"
+														: "!text-slate-400 group-hover:!text-slate-700"
+												}`}
+											/>
+
+											{/* Submenu Indicator Dot */}
+											{hasSubItems && (
+												<span
+													className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full transition-colors duration-150 pointer-events-none z-10 ${
+														isActive
+															? "bg-white/70"
+															: "bg-slate-300 group-hover:bg-slate-500"
+													}`}
+													aria-hidden="true"
+												/>
+											)}
+
+											{/* Admin Pending Badge Pip */}
+											{navItem.label === "Admin" &&
+												!isExpanded &&
+												totalAdminBadge > 0 && (
+													<motion.span
+														key={totalAdminBadge}
+														initial={{ scale: 0.6, opacity: 0 }}
+														animate={{ scale: 1, opacity: 1 }}
 														transition={{
 															type: "spring",
-															stiffness: 440,
-															damping: 34,
+															stiffness: 500,
+															damping: 28,
 														}}
-														className="absolute inset-0 bg-slate-900 rounded-[0.625rem] z-0"
-													/>
-												)}
-												<Icon
-													className={`relative z-10 w-[15px] h-[15px] sm:w-[16px] sm:h-[16px] shrink-0 transition-colors duration-150 ${
-														isActive
-															? "!text-white"
-															: "!text-slate-400 group-hover:!text-slate-700"
-													}`}
-												/>
-
-												{/* Admin pending badge pip */}
-												{navItem.label === "Admin" &&
-													!isExpanded &&
-													totalAdminBadge > 0 && (
-														<motion.span
-															key={totalAdminBadge}
-															initial={{ scale: 0.6, opacity: 0 }}
-															animate={{ scale: 1, opacity: 1 }}
-															transition={{
-																type: "spring",
-																stiffness: 500,
-																damping: 28,
-															}}
-															className="absolute -top-1 -right-1 z-20 flex h-[12px] min-w-[12px] px-0.5 items-center justify-center rounded-full bg-rose-500 text-[7px] font-black !text-white ring-[1.5px] ring-white"
-														>
-															{totalAdminBadge}
-														</motion.span>
-													)}
-											</div>
-
-											{/* Label + chevron indicator */}
-											<div className="mt-0.5 flex items-center justify-center gap-0.5 max-w-full">
-												<span
-													className={`text-[9px] tracking-tight leading-none transition-colors duration-150 truncate ${
-														isActive
-															? "font-bold text-slate-900"
-															: "font-medium text-slate-400 group-hover:text-slate-600"
-													}`}
-												>
-													{navItem.label}
-												</span>
-												{hasSubItems && (
-													<motion.span
-														animate={{ rotate: isExpanded ? 180 : 0 }}
-														transition={{ duration: 0.18, ease: "easeInOut" }}
-														className={`shrink-0 transition-colors duration-150 ${
-															isActive
-																? "text-slate-600"
-																: "text-slate-300 group-hover:text-slate-500"
-														}`}
+														className="absolute -top-1 -right-1 z-20 flex h-[14px] min-w-[14px] px-1 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold !text-white ring-[1.5px] ring-white"
 													>
-														<ChevronUp className="w-2 h-2" strokeWidth={2.5} />
+														{totalAdminBadge}
 													</motion.span>
 												)}
-											</div>
 										</Link>
 									</div>
 								</div>

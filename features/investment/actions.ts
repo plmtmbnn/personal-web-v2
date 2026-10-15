@@ -414,6 +414,9 @@ async function getHistoryData(forceRefresh: boolean): Promise<{
 			if (r.value.symbol === "^JKSE") {
 				history.JKSE = r.value.series;
 			}
+			if (r.value.symbol === "IDR=X") {
+				history.USDIDR = r.value.series;
+			}
 		}
 	}
 	return { history, sourceOk: coreOk && Object.keys(history).length > 0 };

@@ -126,6 +126,7 @@ export function saveMovementState(state: MovementAppState): void {
 	try {
 		const { state: pruned } = pruneExpiredLogs(state);
 		localStorage.setItem(MOVEMENT_STORAGE_KEY, JSON.stringify(pruned));
+		window.dispatchEvent(new CustomEvent("movement:state:updated"));
 	} catch {
 		// Ignore local storage quota errors
 	}

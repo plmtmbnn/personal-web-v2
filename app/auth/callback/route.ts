@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/core/supabase-server";
+import { createClient, createAdminClient } from "@/lib/core/supabase-server";
 import { createSession } from "@/lib/core/redis";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -59,9 +59,10 @@ export async function GET(request: Request) {
 
 	// 2. Fetch Verification Status from Profiles
 	console.log("[Auth Callback] Fetching profile for user:", userId);
-	const { data: profile, error: profileError } = await supabase
+	const adminClient = await createAdminClient();
+	const { data: profile, error: profileError } = await adminClient
 		.from("profiles")
-		.select("is_verified, is_admin, full_name, avatar_url")
+		.select("is_verified, is_admin")
 		.eq("id", userId)
 		.single();
 
@@ -98,8 +99,12 @@ export async function GET(request: Request) {
 	try {
 		sessionId = await createSession(userId, {
 			email: data.user.email,
-			name: profile?.full_name || data.user.user_metadata?.full_name,
-			avatarUrl: profile?.avatar_url || data.user.user_metadata?.avatar_url,
+			name:
+				data.user.user_metadata?.full_name ||
+				data.user.user_metadata?.name ||
+				data.user.email?.split("@")[0],
+			avatarUrl:
+				data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture,
 			isAdmin: Boolean(profile?.is_admin),
 			googleAuthenticated: true,
 			pinAuthenticated: mode === "login_only",

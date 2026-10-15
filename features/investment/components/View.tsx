@@ -62,6 +62,18 @@ export default function InvestmentCompassView({
 		if (!initialData) fetchData();
 	}, [fetchData, initialData]);
 
+	// Handle Escape key to dismiss sources popover
+	useEffect(() => {
+		if (!showSourcesPopover) return;
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				setShowSourcesPopover(false);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [showSourcesPopover]);
+
 	// Compute or retrieve engineOutput once
 	const engineOutput = useMemo(() => {
 		if (!data) return null;
@@ -159,6 +171,8 @@ export default function InvestmentCompassView({
 								<button
 									type="button"
 									onClick={() => setShowSourcesPopover(!showSourcesPopover)}
+									aria-expanded={showSourcesPopover}
+									aria-haspopup="dialog"
 									className="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-center shadow-2xs flex items-center gap-2 cursor-pointer transition-colors active:scale-95"
 								>
 									<div
@@ -190,7 +204,11 @@ export default function InvestmentCompassView({
 											className="fixed inset-0 z-40 bg-slate-900/10 sm:bg-transparent cursor-default"
 											onClick={() => setShowSourcesPopover(false)}
 										/>
-										<div className="fixed inset-x-4 top-28 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-72 max-w-sm mx-auto sm:mx-0 bg-white rounded-2xl border border-slate-200/90 shadow-2xl sm:shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+										<div
+											role="dialog"
+											aria-label="Data Stream Sources"
+											className="fixed inset-x-4 top-28 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-72 max-w-sm mx-auto sm:mx-0 bg-white rounded-2xl border border-slate-200/90 shadow-2xl sm:shadow-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200"
+										>
 											<div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
 												<span className="text-xs font-black text-slate-900">
 													Data Stream Sources

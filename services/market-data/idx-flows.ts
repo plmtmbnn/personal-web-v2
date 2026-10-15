@@ -15,7 +15,7 @@ const FLOW_HISTORY_KEY = "idx:flow:history";
 /**
  * Calculates net foreign flow (IDR) from a raw IDXStock payload.
  */
-function calculateNetFlow(stocks: IDXStock[]): number {
+export function calculateNetFlow(stocks: IDXStock[]): number {
 	let totalNet = 0;
 	for (const stock of stocks) {
 		const vwap =
@@ -43,7 +43,7 @@ function calculateNetFlow(stocks: IDXStock[]): number {
 /**
  * Calculates streak days. Positive = inflow streak, Negative = outflow streak.
  */
-function calculateStreak(history: number[]): number {
+export function calculateStreak(history: number[]): number {
 	if (history.length === 0) return 0;
 	let streak = 0;
 	const isPositive = history[0] > 0;
@@ -126,26 +126,42 @@ export async function fetchIhsgForeignFlow(
 		}
 
 		// Fallback to Jakarta timezone wall-clock if payload date is absent
+		const now = new Date();
+		const wibFormatter = new Intl.DateTimeFormat("en-US", {
+			timeZone: "Asia/Jakarta",
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
+			hour: "numeric",
+			hour12: false,
+		});
+		const parts = wibFormatter.formatToParts(now);
+		const currentYear = parts.find((p) => p.type === "year")?.value;
+		const currentMonth = parts.find((p) => p.type === "month")?.value;
+		const currentDay = parts.find((p) => p.type === "day")?.value;
+		const currentWibDateStr = `${currentYear}-${currentMonth}-${currentDay}`;
+		const wibHour = parseInt(
+			parts.find((p) => p.type === "hour")?.value ?? "0",
+			10,
+		);
+
 		if (!sessionDateStr) {
-			const now = new Date();
-			const formatter = new Intl.DateTimeFormat("en-US", {
-				timeZone: "Asia/Jakarta",
-				year: "numeric",
-				month: "2-digit",
-				day: "2-digit",
-			});
-			const parts = formatter.formatToParts(now);
-			const year = parts.find((p) => p.type === "year")?.value;
-			const month = parts.find((p) => p.type === "month")?.value;
-			const day = parts.find((p) => p.type === "day")?.value;
-			sessionDateStr = `${year}-${month}-${day}`;
+			sessionDateStr = currentWibDateStr;
 		}
 
-		// Validate that session date is not a weekend
+		// Enforce active trading session guard: if session date matches today's Jakarta date,
+		// only record into history once market opens at 09:00 WIB
+		const isToday = sessionDateStr === currentWibDateStr;
+		const isSessionActiveOrClosed = !isToday || wibHour >= 9;
+
+		// Validate that session date is not a weekend and market has opened if today
 		const sessionDayOfWeek = new Date(
 			`${sessionDateStr}T12:00:00Z`,
 		).getUTCDay();
-		const isTradingDay = sessionDayOfWeek !== 0 && sessionDayOfWeek !== 6;
+		const isTradingDay =
+			sessionDayOfWeek !== 0 &&
+			sessionDayOfWeek !== 6 &&
+			isSessionActiveOrClosed;
 
 		// 2. Fetch history from Redis
 		let historyMap: Record<string, number> = {};

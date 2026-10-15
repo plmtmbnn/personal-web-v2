@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/core/supabase-server";
+import { createClient, createAdminClient } from "@/lib/core/supabase-server";
 import { getAuthSession } from "@/lib/core/redis";
 import {
 	getAuthMode,
@@ -66,9 +66,10 @@ export async function checkAuth(
 			} = await supabase.auth.getUser();
 
 			if (!userError && user) {
-				const { data: profile } = await supabase
+				const adminClient = await createAdminClient();
+				const { data: profile } = await adminClient
 					.from("profiles")
-					.select("is_admin, is_verified, full_name, avatar_url")
+					.select("is_admin, is_verified")
 					.eq("id", user.id)
 					.single();
 
@@ -76,15 +77,25 @@ export async function checkAuth(
 					id: user.id,
 					email: user.email,
 					name:
-						profile?.full_name ||
 						user.user_metadata?.full_name ||
+						user.user_metadata?.name ||
 						user.email?.split("@")[0],
-					avatarUrl: profile?.avatar_url || user.user_metadata?.avatar_url,
+					avatarUrl:
+						user.user_metadata?.avatar_url || user.user_metadata?.picture,
 					isAdmin: !!profile?.is_admin,
 				};
 			}
 		} catch (err) {
 			console.error("[checkAuth] Supabase auth check error:", err);
+			if (authSession?.googleAuthenticated && authSession.userId) {
+				googleUser = {
+					id: authSession.userId,
+					email: authSession.email,
+					name: authSession.name,
+					avatarUrl: authSession.avatarUrl,
+					isAdmin: authSession.isAdmin,
+				};
+			}
 		}
 	}
 

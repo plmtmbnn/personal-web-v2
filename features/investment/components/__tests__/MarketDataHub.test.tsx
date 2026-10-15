@@ -252,12 +252,39 @@ describe("MarketDataHub Component", () => {
 		expect(container.textContent).toContain("Global Quotes");
 		expect(container.textContent).toContain("Sentiment Dials");
 
+		// WAI-ARIA tab semantics
+		const tablist = container.querySelector('[role="tablist"]');
+		expect(tablist).not.toBeNull();
+		const activeTab = tablist?.querySelector(
+			'[role="tab"][aria-selected="true"]',
+		);
+		expect(activeTab?.textContent).toContain("Indonesia (IDX)");
+		expect(activeTab?.getAttribute("aria-controls")).toBe("tabpanel-indonesia");
+
 		// Default active tab is Indonesia
 		expect(container.textContent).toContain("Indonesia Domestic Market Data");
 		expect(container.textContent).toContain("IHSG Index Level");
 	});
 
-	it("switches to Crypto Majors tab when clicked", () => {
+	it("displays --- instead of dummy yield when 10Y yield data is null", () => {
+		const base = createMockData();
+		const noYieldData: InvestmentCompassData = {
+			...base,
+			markets: {
+				...base.markets,
+				macro: {
+					...base.markets.macro,
+					IRLTLT01IDM156N:
+						undefined as unknown as (typeof base.markets.macro)["IRLTLT01IDM156N"],
+				},
+			},
+		};
+		const { container } = render(<MarketDataHub data={noYieldData} />);
+		expect(container.textContent).toContain("---");
+		expect(container.textContent).not.toContain("6.85%");
+	});
+
+	it("switches to Crypto Majors tab and displays calibrated 59.0% dominance threshold", () => {
 		const data = createMockData();
 		const { getByText, container } = render(<MarketDataHub data={data} />);
 
@@ -269,6 +296,9 @@ describe("MarketDataHub Component", () => {
 		);
 		expect(container.textContent).toContain("Bitcoin (BTC) Spot");
 		expect(container.textContent).toContain("Stablecoin 30D Net Issuance");
+		// Calibrated post-ETF Bitcoin dominance threshold (59.0%)
+		expect(container.textContent).toContain("59.0%");
+		expect(container.textContent).not.toContain("54.0%");
 	});
 
 	it("switches to Global Macro tab when clicked", () => {

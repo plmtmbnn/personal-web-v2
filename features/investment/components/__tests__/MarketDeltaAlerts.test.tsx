@@ -258,4 +258,18 @@ describe("MarketDeltaAlerts Component", () => {
 		expect(container.textContent).toContain("Global Quotes");
 		expect(container.textContent).toContain("Operating on cached backup data");
 	});
+
+	it("strictly adheres to the Pure White Container Standard for alert container", () => {
+		const data = createMockData();
+		data.markets.quotes.SPX.changePct = -2.5;
+
+		const { container } = render(<MarketDeltaAlerts data={data} />);
+		const alertContainer = container.querySelector(
+			'section[aria-label="Critical Market Delta Alerts"]',
+		);
+		expect(alertContainer).not.toBeNull();
+		expect(alertContainer?.className).toContain("bg-white");
+		expect(alertContainer?.className).toContain("rounded-3xl");
+		expect(alertContainer?.className).not.toContain("bg-amber-50");
+	});
 });

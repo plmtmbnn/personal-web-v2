@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { SupabaseConn } from "@/lib/core/supabase";
 import { invalidateStatsCache } from "@/lib/core/redis";
+import { checkAdmin } from "@/features/auth/actions";
 import type { Task, TaskPriority, TaskRecurrence, TaskStatus } from "../types";
 import { addDays, addMonths, parseISO, format, isBefore } from "date-fns";
 import { getJakartaDateString } from "../utils";
@@ -846,4 +847,31 @@ export async function getPotentialBlockers(taskId: string): Promise<Task[]> {
 	}
 
 	return (data as Task[]).filter((t) => !visited.has(t.id));
+}
+
+/**
+ * Retrieves the count of pending actionable tasks (due today or overdue)
+ * for the current authenticated admin user in Jakarta timezone.
+ */
+export async function getPendingTasksCount(): Promise<number> {
+	const isAdmin = await checkAdmin();
+	if (!isAdmin) return 0;
+
+	try {
+		const todayStr = getJakartaDateString();
+		const { count, error } = await SupabaseConn.from("tasks")
+			.select("*", { count: "exact", head: true })
+			.neq("status", "done")
+			.neq("status", "cancelled")
+			.lte("due_date", todayStr);
+
+		if (error) {
+			console.error("Error fetching pending task count:", error);
+			return 0;
+		}
+		return count || 0;
+	} catch (err) {
+		console.error("Error in getPendingTasksCount:", err);
+		return 0;
+	}
 }

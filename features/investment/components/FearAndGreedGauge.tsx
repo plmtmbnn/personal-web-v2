@@ -22,7 +22,12 @@ function TrendVelocitySparkline({
 	const gradientId = useId();
 	const points = useMemo(() => {
 		if (!data || data.length === 0) return [];
-		const values = data.map((d) => d?.y ?? 0);
+		const validData = data.filter(
+			(d): d is { x: number; y: number; rating: string } =>
+				d != null && typeof d.y === "number" && Number.isFinite(d.y),
+		);
+		if (validData.length === 0) return [];
+		const values = validData.map((d) => d.y);
 		const minVal = Math.min(...values);
 		const maxVal = Math.max(...values);
 		const range = maxVal - minVal || 10;
@@ -30,8 +35,8 @@ function TrendVelocitySparkline({
 		const h = 56 - padY * 2;
 		const w = 240;
 
-		return data.map((d, i) => {
-			const x = (i / Math.max(data.length - 1, 1)) * w;
+		return validData.map((d, i) => {
+			const x = (i / Math.max(validData.length - 1, 1)) * w;
 			const y = padY + h - ((d.y - minVal) / range) * h;
 			return { x, y, val: d.y };
 		});

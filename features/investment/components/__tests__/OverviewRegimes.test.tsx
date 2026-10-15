@@ -120,10 +120,18 @@ describe("OverviewRegimes Component", () => {
 		);
 
 		// Click on factor button
-		const factorBtn = getByText("Price vs 200D MA");
+		const factorBtn = getByText("Price vs 200D MA").closest("button")!;
+		expect(factorBtn.getAttribute("aria-expanded")).toBe("false");
+		expect(factorBtn.getAttribute("aria-controls")).toBe("factor-detail-ihsg");
+
 		fireEvent.click(factorBtn);
 
-		// Popover appears
+		// Button now expanded
+		expect(factorBtn.getAttribute("aria-expanded")).toBe("true");
+
+		// Detail container appears as semantic section
+		const detailRegion = container.querySelector("section#factor-detail-ihsg");
+		expect(detailRegion).not.toBeNull();
 		expect(container.textContent).toContain(
 			"Trading below structural long-term average",
 		);
@@ -132,10 +140,11 @@ describe("OverviewRegimes Component", () => {
 		const closeBtn = getByText("Close");
 		fireEvent.click(closeBtn);
 
-		// Popover is dismissed
+		// Detail container is dismissed
 		expect(
 			queryByText("Trading below structural long-term average"),
 		).toBeNull();
+		expect(factorBtn.getAttribute("aria-expanded")).toBe("false");
 	});
 
 	it("renders Asymmetry Zone banner when asymmetryZone is active", () => {

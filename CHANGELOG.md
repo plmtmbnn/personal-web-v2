@@ -1,3 +1,10 @@
+# [0.108.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.107.0...v0.108.0) (2026-10-15)
+
+
+### Features
+
+* **navigation:** adopt icon-only dock standard and enhance multi-source badging ([9f07385](https://github.com/plmtmbnn/personal-web-v2/commit/9f07385d32fa808711297a402d2483d3b3841930))
+
 # [0.107.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.106.0...v0.107.0) (2026-10-15)
 
 

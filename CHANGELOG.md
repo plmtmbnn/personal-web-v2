@@ -1,3 +1,10 @@
+# [0.109.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.108.0...v0.109.0) (2026-10-15)
+
+
+### Features
+
+* **home:** add sea waves and sky clouds background and remove dots sitewide ([22bc77c](https://github.com/plmtmbnn/personal-web-v2/commit/22bc77c157e333e3eef3adfa9ffbc2725af71fda))
+
 # [0.108.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.107.0...v0.108.0) (2026-10-15)
 
 

@@ -1,3 +1,10 @@
+# [0.110.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.109.0...v0.110.0) (2026-10-16)
+
+
+### Features
+
+* **investment:** streamline compass telemetry, add contagion monitor, and motion ([d371801](https://github.com/plmtmbnn/personal-web-v2/commit/d37180193366149f59de8982e980411bd12c0c0b))
+
 # [0.109.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.108.0...v0.109.0) (2026-10-15)
 
 

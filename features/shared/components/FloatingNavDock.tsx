@@ -8,6 +8,10 @@ import { logout, getAuthStatusAction } from "@/features/auth/actions";
 import { getReminderCount } from "@/features/reminders/actions";
 import { getPendingTasksCount } from "@/features/tasks/actions/tasks";
 import { getUndoneMovementSnacksCount } from "@/features/movement/actions";
+import {
+	loadMovementState,
+	calculateUndoneCount,
+} from "@/features/movement/lib/storage";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import {
 	Home,
@@ -503,6 +507,18 @@ export default function FloatingNavDock() {
 	// Pending Admin Telemetry Badges (Tasks, Reminders, and Movement Snacks)
 	const fetchPendingCounts = useCallback(async () => {
 		if (!isGoogleAuthEnabled || (isLoggedIn && isAdmin)) {
+			// Optimistic hint: if movement state exists in localStorage, display it immediately
+			if (typeof window !== "undefined") {
+				try {
+					const local = loadMovementState();
+					if (local?.logs) {
+						setPendingMovementCount(calculateUndoneCount(local));
+					}
+				} catch {
+					// Fall through to server fetch
+				}
+			}
+
 			try {
 				const [taskCount, reminderCount, movementCount] = await Promise.all([
 					getPendingTasksCount(),
@@ -534,7 +550,12 @@ export default function FloatingNavDock() {
 				fetchPendingCounts();
 			}
 		};
-		const onMovement = () => {
+		const onMovement = (event: Event) => {
+			const customEvent = event as CustomEvent<{ undoneCount?: number }>;
+			if (typeof customEvent.detail?.undoneCount === "number") {
+				setPendingMovementCount(customEvent.detail.undoneCount);
+				return;
+			}
 			fetchPendingCounts();
 		};
 		const onAuth = () => {

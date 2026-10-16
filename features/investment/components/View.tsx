@@ -433,17 +433,12 @@ export default function InvestmentCompassView({
 					/>
 				)}
 
-				{/* ── Macro Scenario Sandbox ("What-If" Stress-Tester) ──────── */}
-				{!isLoading && data && engineOutput && (
-					<ScenarioSandbox data={data} liveOutput={engineOutput} />
-				)}
-
 				{/* ── 2. Cheatsheet: Unified Permissions Matrix ──────────────── */}
 				{!isLoading && engineOutput && (
 					<PermissionsMatrix permissions={engineOutput.permissions} />
 				)}
 
-				{/* ── 3. Execution Playbook (IHSG, Crypto, Safe Bucket) ──────── */}
+				{/* ── 3. Execution Playbook (IHSG & Crypto Tactical Scripts) ──── */}
 				{!isLoading && engineOutput && (
 					<MarketPlaybook
 						playbooks={engineOutput.playbooks}
@@ -455,13 +450,18 @@ export default function InvestmentCompassView({
 					/>
 				)}
 
-				{/* ── 4. Market Data Terminal (Consolidated Hub) ─────────────── */}
+				{/* ── 4. Macro Scenario Sandbox ("What-If" Stress-Tester) ──────── */}
+				{!isLoading && data && engineOutput && (
+					<ScenarioSandbox data={data} liveOutput={engineOutput} />
+				)}
+
+				{/* ── 5. Market Data Terminal (Consolidated 3-Tab Hub) ─────────── */}
 				{!isLoading && data && <MarketDataHub data={data} />}
 
-				{/* ── 5. Disciplined Rebuild Rulebook ────────────────────────── */}
+				{/* ── 6. Disciplined Rebuild Rulebook ────────────────────────── */}
 				<Rulebook />
 
-				{/* ── 6. Upcoming Catalysts & Active Seasonality ─────────────── */}
+				{/* ── 7. Upcoming Catalysts & Active Seasonality ─────────────── */}
 				<EventCalendar />
 
 				{/* Disclaimer Footer */}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { AreaChart } from "lucide-react";
 import type { InvestmentCompassData } from "@/features/investment/types";
 import { sahmRule } from "../lib/indicators";
 
@@ -30,69 +29,45 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 		const dgs10 = getLatest("DGS10");
 		const yieldCurve = getLatest("T10Y2Y");
 		const hySpread = getLatest("BAMLH0A0HYM2");
-		const id10y = getLatest("IRLTLT01IDM156N");
-		const biRate = getLatest("IRSTCB01IDM156N");
 
 		const sahm = sahmRule(data.markets.macro?.UNRATE?.data ?? []);
 
-		// DXY & Indonesia from quotes
+		// DXY from quotes
 		const dxy = data.markets.quotes.DXY;
-		const usdIdr = data.markets.quotes.USDIDR;
-		const ihsg = data.markets.quotes.JKSE ?? data.markets.quotes.IHSG;
+		const realYield = getLatest("DFII10");
 
 		const usTiles = [
 			{
 				label: "Fed Funds Rate",
 				value: fedFunds ? `${fedFunds.value.toFixed(2)}%` : "---",
 				change: fedFunds?.change,
-				desc: "Central bank base interest rate.",
+				desc: "Central bank base policy interest rate.",
 				isInverse: true,
 				historicalMsg:
 					fedFunds && fedFunds.value > 5.0
-						? "Historically, rates > 5% trigger economic slowdowns within 12-18 months. Projection: Equities re-price to lower multiples."
+						? "Historically, rates > 5% trigger economic slowdowns within 12-18 months. Equities re-price to lower multiples."
 						: undefined,
 			},
 			{
-				label: "US CPI (YoY %)",
-				value: cpi ? `${cpi.value.toFixed(1)}%` : "---",
-				change: cpi?.change,
-				desc: "Headline inflation year-over-year rate.",
+				label: "US 10Y Real Yield",
+				value: realYield ? `${realYield.value.toFixed(2)}%` : "---",
+				change: realYield?.change,
+				desc: "TIPS yield, true real cost of capital.",
 				isInverse: true,
 				historicalMsg:
-					cpi && cpi.value > 3.0
-						? "Sticky inflation (> 3.0%) delays Fed rate cuts, keeping discount rates elevated."
+					realYield && realYield.value > 2.0
+						? "Real yields > 2.0% exert heavy valuation discount compression on equities and crypto."
 						: undefined,
-			},
-			{
-				label: "US M2 Money Supply",
-				value: m2 ? `${m2.value > 0 ? "+" : ""}${m2.value.toFixed(1)}%` : "---",
-				change: m2?.change,
-				desc: "Broad liquidity expansion YoY rate.",
-				isInverse: false,
-				historicalMsg:
-					m2 && m2.value < 0
-						? "Historically, money supply contractions drain systemic liquidity and cap multiple expansions."
-						: undefined,
-			},
-			{
-				label: "Unemployment Rate",
-				value: unrate ? `${unrate.value.toFixed(1)}%` : "---",
-				change: unrate?.change,
-				desc: "Labor market strength.",
-				isInverse: true,
-				historicalMsg: sahm.triggered
-					? `Sahm Rule Triggered (+${sahm.value}% above 12M low): Historically signals an active recession.`
-					: undefined,
 			},
 			{
 				label: "10Y Treasury Yield",
 				value: dgs10 ? `${dgs10.value.toFixed(2)}%` : "---",
 				change: dgs10?.change,
-				desc: "Benchmark discount rate.",
+				desc: "Benchmark discount rate for assets.",
 				isInverse: true,
 				historicalMsg:
 					dgs10 && dgs10.value > 4.5
-						? "Historically, high risk-free returns trigger equity sell-offs as capital rotates to safety."
+						? "Historically, elevated nominal yields trigger rotation out of high-beta assets into cash/paper."
 						: undefined,
 			},
 			{
@@ -103,9 +78,9 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 				isInverse: false,
 				historicalMsg:
 					yieldCurve && yieldCurve.value < 0
-						? "Historically, curve inversion precedes a recession by 6-24 months. Projection: Economic contraction risk."
+						? "Historically, curve inversion precedes a recession by 6-24 months. Economic contraction risk."
 						: yieldCurve && yieldCurve.value > 0 && yieldCurve.value < 0.5
-							? "Historically, rapid un-inversion after a long inversion is when recessions actually begin."
+							? "Rapid un-inversion after a prolonged inversion is typically when macro slowdown shocks materialize."
 							: undefined,
 			},
 			{
@@ -116,68 +91,55 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 				isInverse: true,
 				historicalMsg:
 					hySpread && hySpread.value > 5.0
-						? "Historically signals severe credit stress. Projection: High likelihood of broad equity market drawdowns."
+						? "Historically signals severe credit stress and elevated default probabilities."
 						: undefined,
 			},
 			{
 				label: "US Dollar Index",
 				value: dxy ? dxy.last?.toFixed(2) : "---",
 				change: dxy?.changePct,
-				desc: "Global liquidity proxy.",
+				desc: "Global liquidity transmission proxy.",
 				isInverse: true,
 				historicalMsg:
 					dxy?.last && dxy.last > 105
-						? "Historically, a strong USD triggers liquidity crises in Emerging Markets. Projection: Headwind for IHSG & Crypto."
+						? "A strong USD drains offshore liquidity and pressures Emerging Markets and Crypto."
 						: undefined,
 			},
-		];
-
-		const idTiles = [
 			{
-				label: "USD/IDR",
-				value: usdIdr ? usdIdr.last?.toLocaleString("id-ID") : "---",
-				change: usdIdr?.changePct,
-				desc: "Rupiah exchange rate.",
-				isInverse: true, // rising = weaker IDR
+				label: "US CPI (YoY %)",
+				value: cpi ? `${cpi.value.toFixed(1)}%` : "---",
+				change: cpi?.change,
+				desc: "Headline inflation rate.",
+				isInverse: true,
 				historicalMsg:
-					usdIdr?.last && usdIdr.last > 16000
-						? "Historically, a weak Rupiah prompts BI to hike rates, pressuring domestic equities."
+					cpi && cpi.value > 3.0
+						? "Sticky inflation delays central bank rate easing cycles."
 						: undefined,
 			},
 			{
-				label: "IHSG",
-				value:
-					ihsg?.last != null
-						? ihsg.last.toLocaleString("en-US", {
-								minimumFractionDigits: 2,
-								maximumFractionDigits: 2,
-							})
-						: "---",
-				change: ihsg?.changePct,
-				desc: "Jakarta Composite Index.",
+				label: "US M2 Money Supply",
+				value: m2 ? `${m2.value > 0 ? "+" : ""}${m2.value.toFixed(1)}%` : "---",
+				change: m2?.change,
+				desc: "Broad liquidity expansion YoY rate.",
 				isInverse: false,
-			},
-			{
-				label: "Bank Indonesia Rate",
-				value: biRate ? `${biRate.value.toFixed(2)}%` : "---",
-				change: biRate?.change,
-				desc: "Central bank benchmark policy rate.",
-				isInverse: true,
 				historicalMsg:
-					biRate && biRate.value >= 6.0
-						? "Historically, high BI rates increase borrowing costs and pressure real estate/bank lending."
+					m2 && m2.value < 0
+						? "Money supply contraction drains systemic cash and caps multiple expansions."
 						: undefined,
 			},
 			{
-				label: "Indonesia 10Y Gov Yield",
-				value: id10y ? `${id10y.value.toFixed(2)}%` : "---",
-				change: id10y?.change,
-				desc: "Sovereign borrowing benchmark rate.",
+				label: "Unemployment Rate",
+				value: unrate ? `${unrate.value.toFixed(1)}%` : "---",
+				change: unrate?.change,
+				desc: "Labor market health & Sahm rule.",
 				isInverse: true,
+				historicalMsg: sahm.triggered
+					? `Sahm Rule Triggered (+${sahm.value}% above 12M low): Historically signals an active recession.`
+					: undefined,
 			},
 		];
 
-		return { usTiles, idTiles };
+		return { usTiles };
 	}, [data.markets.macro, data.markets.quotes]);
 
 	const renderTile = (tile: any, i: number) => {
@@ -244,39 +206,9 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 	};
 
 	return (
-		<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-5 sm:space-y-6">
-			<div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-				<div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-					<AreaChart className="w-5 h-5" />
-				</div>
-				<div>
-					<h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-						Macro Lens
-					</h2>
-					<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-						Global Cycle &amp; Economic Indicators
-					</p>
-				</div>
-			</div>
-
-			<div className="space-y-6">
-				<div>
-					<h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">
-						US Macro &amp; Liquidity
-					</h3>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{macroTiles.usTiles.map((tile, i) => renderTile(tile, i))}
-					</div>
-				</div>
-
-				<div>
-					<h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">
-						Indonesia Macro
-					</h3>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{macroTiles.idTiles.map((tile, i) => renderTile(tile, i))}
-					</div>
-				</div>
+		<div className="space-y-4">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{macroTiles.usTiles.map((tile, i) => renderTile(tile, i))}
 			</div>
 		</div>
 	);

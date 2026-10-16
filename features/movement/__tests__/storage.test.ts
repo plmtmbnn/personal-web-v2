@@ -8,6 +8,8 @@ import {
 	toggleSlotSkip,
 	calculateStreak,
 	calculateSummaryStats,
+	calculateUndoneCount,
+	saveMovementState,
 	getCalendarHeatmapData,
 	importMovementDataFromJson,
 	exportMovementDataAsJson,
@@ -323,5 +325,75 @@ describe("Movement Storage & Logic", () => {
 		const sunday = currentMonth.days[6];
 		expect(sunday.dayName).toBe("Sun");
 		expect(sunday.totalSessions).toBe(0);
+	});
+
+	it("correctly calculates undone movement snacks count", () => {
+		const state = getDefaultMovementState();
+		state.config.dailyTarget = 6;
+		const todayKey = getLocalDateKey();
+
+		// Initially all 6 undone
+		expect(calculateUndoneCount(state, todayKey)).toBe(6);
+
+		// Record 2 completions
+		state.logs[todayKey] = [
+			{
+				id: "s-1",
+				movementId: "slow-squat",
+				completedAt: new Date().toISOString(),
+				status: "completed",
+			},
+			{
+				id: "s-2",
+				movementId: "calf-raise",
+				completedAt: new Date().toISOString(),
+				status: "completed",
+			},
+		];
+		expect(calculateUndoneCount(state, todayKey)).toBe(4);
+
+		// Skipped slots should not count as completed
+		state.logs[todayKey].push({
+			id: "s-3",
+			movementId: "desk-pushup",
+			completedAt: new Date().toISOString(),
+			status: "skipped",
+		});
+		expect(calculateUndoneCount(state, todayKey)).toBe(4);
+	});
+
+	it("dispatches movement:state:updated with undoneCount and state in event detail", () => {
+		const state = getDefaultMovementState();
+		state.config.dailyTarget = 6;
+		const todayKey = getLocalDateKey();
+		state.logs[todayKey] = [
+			{
+				id: "s-1",
+				movementId: "slow-squat",
+				completedAt: new Date().toISOString(),
+				status: "completed",
+			},
+		];
+
+		let receivedDetail: { undoneCount?: number; state?: unknown } | null = null;
+		const listener = (event: Event) => {
+			receivedDetail = (
+				event as CustomEvent<{ undoneCount?: number; state?: unknown }>
+			).detail;
+		};
+
+		window.addEventListener("movement:state:updated", listener);
+		try {
+			saveMovementState(state);
+			const detail = receivedDetail as {
+				undoneCount?: number;
+				state?: unknown;
+			} | null;
+			expect(detail).not.toBeNull();
+			expect(detail?.undoneCount).toBe(5);
+			expect(detail?.state).toBeDefined();
+		} finally {
+			window.removeEventListener("movement:state:updated", listener);
+		}
 	});
 });

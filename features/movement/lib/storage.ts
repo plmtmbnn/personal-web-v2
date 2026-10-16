@@ -15,13 +15,10 @@ import type {
 export const MOVEMENT_STORAGE_KEY = "movement:snacks:v1";
 
 /**
- * Returns the current or provided Date formatted as YYYY-MM-DD using the user's local timezone.
+ * Returns the current or provided Date formatted as YYYY-MM-DD in the Asia/Jakarta timezone.
  */
 export function getLocalDateKey(date: Date = new Date()): string {
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, "0");
-	const day = String(date.getDate()).padStart(2, "0");
-	return `${year}-${month}-${day}`;
+	return date.toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
 }
 
 /**
@@ -118,6 +115,20 @@ export function loadMovementState(): MovementAppState {
 }
 
 /**
+ * Calculates the number of undone movement snacks for a given date key.
+ */
+export function calculateUndoneCount(
+	state: MovementAppState,
+	dateKey: string = getLocalDateKey(),
+): number {
+	const todaySessions = (state.logs?.[dateKey] || []).filter(
+		(s) => s.status === "completed",
+	);
+	const targetToday = state.config?.dailyTarget ?? 6;
+	return Math.max(0, targetToday - todaySessions.length);
+}
+
+/**
  * Persists the current movement state to localStorage.
  */
 export function saveMovementState(state: MovementAppState): void {
@@ -126,7 +137,12 @@ export function saveMovementState(state: MovementAppState): void {
 	try {
 		const { state: pruned } = pruneExpiredLogs(state);
 		localStorage.setItem(MOVEMENT_STORAGE_KEY, JSON.stringify(pruned));
-		window.dispatchEvent(new CustomEvent("movement:state:updated"));
+		const undoneCount = calculateUndoneCount(pruned);
+		window.dispatchEvent(
+			new CustomEvent("movement:state:updated", {
+				detail: { state: pruned, undoneCount },
+			}),
+		);
 	} catch {
 		// Ignore local storage quota errors
 	}

@@ -248,9 +248,7 @@ describe("MarketDataHub Component", () => {
 		expect(container.textContent).toContain("Market Data Terminal");
 		expect(container.textContent).toContain("Indonesia (IDX)");
 		expect(container.textContent).toContain("Crypto Majors");
-		expect(container.textContent).toContain("Global Macro");
-		expect(container.textContent).toContain("Global Quotes");
-		expect(container.textContent).toContain("Sentiment Dials");
+		expect(container.textContent).toContain("Global Macro & Contagion");
 
 		// WAI-ARIA tab semantics
 		const tablist = container.querySelector('[role="tablist"]');
@@ -263,7 +261,8 @@ describe("MarketDataHub Component", () => {
 
 		// Default active tab is Indonesia
 		expect(container.textContent).toContain("Indonesia Domestic Market Data");
-		expect(container.textContent).toContain("IHSG Index Level");
+		expect(container.textContent).toContain("200-Day Moving Average");
+		expect(container.textContent).toContain("Sector Rotation Bellwethers");
 	});
 
 	it("displays --- instead of dummy yield when 10Y yield data is null", () => {
@@ -294,42 +293,27 @@ describe("MarketDataHub Component", () => {
 		expect(container.textContent).toContain(
 			"Digital Asset Metrics & Liquidity",
 		);
-		expect(container.textContent).toContain("Bitcoin (BTC) Spot");
+		expect(container.textContent).toContain("Bitcoin MVRV Valuation");
 		expect(container.textContent).toContain("Stablecoin 30D Net Issuance");
 		// Calibrated post-ETF Bitcoin dominance threshold (59.0%)
 		expect(container.textContent).toContain("59.0%");
 		expect(container.textContent).not.toContain("54.0%");
 	});
 
-	it("switches to Global Macro tab when clicked", () => {
+	it("switches to Global Macro & Contagion tab and displays Regional Transmission Pulse", () => {
 		const data = createMockData();
 		const { getByText, container } = render(<MarketDataHub data={data} />);
 
-		const macroButton = getByText("Global Macro");
+		const macroButton = getByText("Global Macro & Contagion");
 		fireEvent.click(macroButton);
 
-		expect(container.textContent).toContain("Macro Lens");
-	});
-
-	it("switches to Global Quotes tab when clicked", () => {
-		const data = createMockData();
-		const { getByText, container } = render(<MarketDataHub data={data} />);
-
-		const quotesButton = getByText("Global Quotes");
-		fireEvent.click(quotesButton);
-
-		expect(container.textContent).toContain("Live Cross-Asset Summary");
-	});
-
-	it("switches to Sentiment Dials tab when clicked", () => {
-		const data = createMockData();
-		const { getByText, container } = render(<MarketDataHub data={data} />);
-
-		const sentimentButton = getByText("Sentiment Dials");
-		fireEvent.click(sentimentButton);
-
 		expect(container.textContent).toContain(
-			"Traditional Market Sentiment Gauge",
+			"Regional Market Transmission Pulse",
 		);
+		expect(container.textContent).toContain("Contagion Monitor");
+		expect(container.textContent).toContain("S&P 500");
+		expect(container.textContent).toContain("Nasdaq Composite");
+		expect(container.textContent).toContain("Hang Seng");
+		expect(container.textContent).toContain("CBOE VIX");
 	});
 });

@@ -2,9 +2,10 @@
 
 import { redis, CACHE_KEYS } from "@/lib/core/redis";
 import type {
-	FearAndGreedData,
 	CryptoFearAndGreedResponse,
 	InvestmentCompassData,
+	CryptoOnChainSnapshot,
+	IhsgForeignFlowSnapshot,
 } from "./types";
 import { INSTRUMENTS } from "./data/instruments";
 import {
@@ -25,50 +26,6 @@ import type {
 } from "@/services/market-data/types";
 import { fetchBitcoinMvrv } from "@/services/market-data/onchain";
 import { fetchIhsgForeignFlow } from "@/services/market-data/idx-flows";
-import type { CryptoOnChainSnapshot, IhsgForeignFlowSnapshot } from "./types";
-
-/**
- * Fetch Fear and Greed Index data from CNN
- * Implements robust error handling with fallback mechanisms
- */
-async function getFearAndGreedData(): Promise<FearAndGreedData | null> {
-	// Request historical time series starting 30 days ago so Trend Velocity and factor cards have full trend data
-	const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-		.toISOString()
-		.split("T")[0];
-	const url = `https://production.dataviz.cnn.io/index/fearandgreed/graphdata/${startDate}`;
-
-	try {
-		const response = await fetch(url, {
-			next: { revalidate: 3600 }, // Cache for 1 hour - SSG-like behavior
-			headers: {
-				"User-Agent":
-					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-				Accept: "application/json",
-			},
-		});
-
-		if (!response.ok) {
-			console.error(
-				`Fear and Greed API error: ${response.status} - ${response.statusText}`,
-			);
-			return null;
-		}
-
-		const data = await response.json();
-
-		// Validate expected structure
-		if (!data?.fear_and_greed || !data.fear_and_greed_historical?.data) {
-			console.error("Fear and Greed API: Invalid response structure");
-			return null;
-		}
-
-		return data as FearAndGreedData;
-	} catch (error) {
-		console.error("Fear and Greed fetch failed:", error);
-		return null;
-	}
-}
 
 /**
  * Fetch Crypto Fear and Greed Index from Alternative.me (Free API, 30 days history)
@@ -575,7 +532,6 @@ export async function getInvestmentCompass(
 	forceRefresh = false,
 ): Promise<InvestmentCompassData> {
 	const [
-		cnnResult,
 		cryptoFngResult,
 		quotesResult,
 		cryptoGlobalResult,
@@ -585,7 +541,6 @@ export async function getInvestmentCompass(
 		cryptoOnChainResult,
 		ihsgFlowsResult,
 	] = await Promise.allSettled([
-		getFearAndGreedData(),
 		getCryptoFearAndGreedData(),
 		getMarketQuotes(forceRefresh),
 		getCryptoGlobalData(forceRefresh),
@@ -596,7 +551,6 @@ export async function getInvestmentCompass(
 		getIhsgFlowsData(forceRefresh),
 	]);
 
-	const traditional = cnnResult.status === "fulfilled" ? cnnResult.value : null;
 	const crypto =
 		cryptoFngResult.status === "fulfilled" ? cryptoFngResult.value : null;
 	const quotesData =
@@ -628,8 +582,14 @@ export async function getInvestmentCompass(
 			? ihsgFlowsResult.value
 			: { data: null, sourceOk: false };
 
+	const vixQuote = quotesData.quotes.VIX ?? null;
+
 	const compassData: InvestmentCompassData = {
-		sentiment: { traditional, crypto },
+		sentiment: {
+			crypto,
+			vix: vixQuote,
+			traditional: null,
+		},
 		markets: {
 			quotes: quotesData.quotes,
 			cryptoGlobal: cgData.data,
@@ -640,10 +600,10 @@ export async function getInvestmentCompass(
 			ihsgFlows: ihsgFlowData.data,
 		},
 		sources: {
-			cnn: {
-				ok: !!traditional,
-				label: "CNN Fear & Greed",
-				stale: !traditional,
+			vix: {
+				ok: Boolean(vixQuote),
+				label: "CBOE VIX Volatility",
+				stale: !vixQuote,
 			},
 			cryptoFng: {
 				ok: !!crypto,

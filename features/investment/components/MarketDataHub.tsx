@@ -3,11 +3,14 @@
 import { useState } from "react";
 import {
 	Activity,
-	Globe,
 	LineChart,
 	Building2,
 	Coins,
 	TrendingUp,
+	TrendingDown,
+	ShieldAlert,
+	Flame,
+	Globe,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { InvestmentCompassData } from "@/features/investment/types";
@@ -18,12 +21,10 @@ import {
 	getHalvingCyclePhase,
 } from "../lib/indicators";
 
-import FearAndGreedGauge from "@/features/investment/components/FearAndGreedGauge";
 import MacroLens from "@/features/investment/components/MacroLens";
-import GlobalMarkets from "@/features/investment/components/GlobalMarkets";
 import { DEFAULT_THRESHOLDS } from "../config/thresholds";
 
-type TabId = "indonesia" | "crypto" | "macro" | "quotes" | "sentiment";
+type TabId = "indonesia" | "crypto" | "macro";
 
 export default function MarketDataHub({
 	data,
@@ -36,9 +37,7 @@ export default function MarketDataHub({
 	const TABS = [
 		{ id: "indonesia", label: "Indonesia (IDX)", icon: Building2 },
 		{ id: "crypto", label: "Crypto Majors", icon: Coins },
-		{ id: "macro", label: "Global Macro", icon: LineChart },
-		{ id: "quotes", label: "Global Quotes", icon: Globe },
-		{ id: "sentiment", label: "Sentiment Dials", icon: Activity },
+		{ id: "macro", label: "Global Macro & Contagion", icon: LineChart },
 	] as const;
 
 	// Calculate live Indonesia metrics
@@ -61,6 +60,14 @@ export default function MarketDataHub({
 		idYieldSeries && idYieldSeries.length > 0
 			? idYieldSeries[idYieldSeries.length - 1].value
 			: null;
+
+	const biRateSeries = data.markets.macro?.IRSTCB01IDM156N?.data;
+	const latestBiRate =
+		biRateSeries && biRateSeries.length > 0
+			? biRateSeries[biRateSeries.length - 1].value
+			: null;
+
+	const ihsgFlows = data.markets.ihsgFlows;
 
 	const sectorBellwethers = [
 		{
@@ -111,7 +118,64 @@ export default function MarketDataHub({
 	const btcHistory = data.markets.history?.["BTC-USD"]?.points ?? [];
 	const btcMa200 = sma(btcHistory, 200);
 	const flows = data.markets.cryptoFlows;
+	const mvrvRatio =
+		data.markets.cryptoOnChain?.mvrvRatio ??
+		data.markets.cryptoOnChain?.mvrvZScore ??
+		null;
 	const halving = getHalvingCyclePhase();
+
+	// Regional Transmission Anchors for Tab 3
+	const regionalAnchors = [
+		{
+			id: "SPX",
+			name: "S&P 500",
+			region: "US Equities",
+			quote: data.markets.quotes.SPX,
+			inverse: false,
+		},
+		{
+			id: "IXIC",
+			name: "Nasdaq Composite",
+			region: "US Tech & Beta",
+			quote: data.markets.quotes.IXIC,
+			inverse: false,
+		},
+		{
+			id: "HSI",
+			name: "Hang Seng",
+			region: "Hong Kong / China",
+			quote: data.markets.quotes.HSI,
+			inverse: false,
+		},
+		{
+			id: "N225",
+			name: "Nikkei 225",
+			region: "Japan / Asia-Pacific",
+			quote: data.markets.quotes.N225,
+			inverse: false,
+		},
+		{
+			id: "DXY",
+			name: "US Dollar Index",
+			region: "Global Liquidity",
+			quote: data.markets.quotes.DXY,
+			inverse: true,
+		},
+		{
+			id: "US10Y",
+			name: "US 10Y Yield",
+			region: "Discount Rate",
+			quote: data.markets.quotes.US10Y,
+			inverse: true,
+		},
+		{
+			id: "VIX",
+			name: "CBOE VIX",
+			region: "Equity Fear Index",
+			quote: data.markets.quotes.VIX,
+			inverse: true,
+		},
+	];
 
 	return (
 		<div className="space-y-5 sm:space-y-6">
@@ -180,7 +244,7 @@ export default function MarketDataHub({
 			</div>
 
 			{/* Tab Content Area */}
-			<div className="min-h-[500px] relative">
+			<div className="min-h-[480px] relative">
 				<AnimatePresence mode="wait">
 					<motion.div
 						key={activeTab}
@@ -210,53 +274,81 @@ export default function MarketDataHub({
 									</span>
 								</div>
 
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-									{/* IHSG Spot */}
-									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											IHSG Index Level
-										</span>
-										<div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{ihsgPrice
-													? ihsgPrice.toLocaleString("en-US", {
-															minimumFractionDigits: 2,
-															maximumFractionDigits: 2,
-														})
-													: "---"}
-											</span>
-											{ihsgQuote?.changePct != null && (
-												<span
-													className={`text-xs font-bold ${
-														ihsgQuote.changePct >= 0
-															? "text-emerald-600"
-															: "text-rose-600"
-													}`}
-												>
-													{ihsgQuote.change != null && (
-														<span className="mr-1">
-															{ihsgQuote.change >= 0 ? "+" : ""}
-															{ihsgQuote.change.toFixed(1)}
-														</span>
-													)}
-													({ihsgQuote.changePct >= 0 ? "+" : ""}
-													{ihsgQuote.changePct.toFixed(2)}%)
+								{/* Foreign Institutional Flow Snapshot (if available) */}
+								{ihsgFlows?.streakDays != null && (
+									<div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+										<div className="flex items-center gap-3">
+											<div
+												className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border shadow-2xs ${
+													ihsgFlows.streakDays >= 0
+														? "bg-emerald-50 text-emerald-700 border-emerald-200"
+														: "bg-rose-50 text-rose-700 border-rose-200"
+												}`}
+											>
+												{ihsgFlows.streakDays >= 0 ? (
+													<Flame className="w-5 h-5 text-emerald-600" />
+												) : (
+													<ShieldAlert className="w-5 h-5 text-rose-600" />
+												)}
+											</div>
+											<div>
+												<span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+													Net Foreign Institutional Flow
 												</span>
+												<span className="text-sm font-black text-slate-900">
+													{ihsgFlows.streakDays >= 0
+														? `+${ihsgFlows.streakDays}-Day Net Inflow Streak`
+														: `${ihsgFlows.streakDays}-Day Net Outflow Streak`}
+												</span>
+											</div>
+										</div>
+
+										<div className="flex items-center gap-3 flex-wrap self-start sm:self-auto text-xs">
+											{ihsgFlows.netBuySell1dIdr != null && (
+												<div className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
+													<span className="text-[9px] font-black uppercase text-slate-400 block">
+														1-Day Net
+													</span>
+													<span
+														className={`font-black ${
+															ihsgFlows.netBuySell1dIdr >= 0
+																? "text-emerald-600"
+																: "text-rose-600"
+														}`}
+													>
+														{ihsgFlows.netBuySell1dIdr >= 0 ? "+" : ""}Rp{" "}
+														{(
+															Math.abs(ihsgFlows.netBuySell1dIdr) / 1e9
+														).toFixed(1)}
+														B
+													</span>
+												</div>
+											)}
+											{ihsgFlows.netBuySell5dIdr != null && (
+												<div className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
+													<span className="text-[9px] font-black uppercase text-slate-400 block">
+														5-Day Cumulative
+													</span>
+													<span
+														className={`font-black ${
+															ihsgFlows.netBuySell5dIdr >= 0
+																? "text-emerald-600"
+																: "text-rose-600"
+														}`}
+													>
+														{ihsgFlows.netBuySell5dIdr >= 0 ? "+" : ""}Rp{" "}
+														{(
+															Math.abs(ihsgFlows.netBuySell5dIdr) / 1e9
+														).toFixed(1)}
+														B
+													</span>
+												</div>
 											)}
 										</div>
-										<p className="text-[11px] text-slate-500">
-											52W High:{" "}
-											<strong>
-												{ihsgQuote?.high52w
-													? ihsgQuote.high52w.toLocaleString("en-US", {
-															minimumFractionDigits: 2,
-															maximumFractionDigits: 2,
-														})
-													: "---"}
-											</strong>
-										</p>
 									</div>
+								)}
 
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 									{/* 200-Day MA */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
@@ -317,7 +409,22 @@ export default function MarketDataHub({
 											)}
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Intermediate momentum &amp; swing trade baseline
+											Intermediate momentum &amp; swing baseline
+										</p>
+									</div>
+
+									{/* 52W Drawdown */}
+									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
+										<span className="text-[10px] font-black uppercase text-slate-400 block">
+											Drawdown from 52-Week High
+										</span>
+										<div className="flex items-baseline gap-2">
+											<span className="text-xl sm:text-2xl font-black text-slate-900">
+												{ihsgDd != null ? `${ihsgDd.toFixed(2)}%` : "---"}
+											</span>
+										</div>
+										<p className="text-[11px] text-slate-500">
+											Bear market threshold: -20%
 										</p>
 									</div>
 
@@ -355,18 +462,20 @@ export default function MarketDataHub({
 										</p>
 									</div>
 
-									{/* 52W Drawdown */}
+									{/* Bank Indonesia Rate */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											Drawdown from 52-Week High
+											Bank Indonesia Benchmark Rate
 										</span>
 										<div className="flex items-baseline gap-2">
 											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{ihsgDd != null ? `${ihsgDd.toFixed(2)}%` : "---"}
+												{latestBiRate != null
+													? `${latestBiRate.toFixed(2)}%`
+													: "---"}
 											</span>
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Bear market threshold: -20%
+											Domestic banking cost of funds
 										</p>
 									</div>
 
@@ -383,7 +492,7 @@ export default function MarketDataHub({
 											</span>
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Sovereign cost of capital &amp; benchmark discount rate
+											Sovereign borrowing benchmark rate
 										</p>
 									</div>
 								</div>
@@ -473,76 +582,51 @@ export default function MarketDataHub({
 											Digital Asset Metrics &amp; Liquidity
 										</h4>
 										<p className="text-xs text-slate-500 font-medium">
-											Major Cryptocurrencies, Stablecoin Flows, and Halving
-											Cycle
+											Bitcoin Valuation, Stablecoin Flows, and Halving Cycle
 										</p>
 									</div>
 									<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
-										BTC / ETH / SOL
+										BTC / ETH Spot &amp; Derivatives
 									</span>
 								</div>
 
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-									{/* Bitcoin */}
+									{/* On-Chain MVRV Z-Score / Ratio */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											Bitcoin (BTC) Spot
+											Bitcoin MVRV Valuation
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{btcQuote?.last
-													? `$${Math.round(btcQuote.last).toLocaleString("en-US")}`
-													: "---"}
+											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+												{mvrvRatio != null ? mvrvRatio.toFixed(2) : "---"}
 											</span>
-											{btcQuote?.changePct != null && (
+											{mvrvRatio != null && (
 												<span
-													className={`text-xs font-bold ${
-														btcQuote.changePct >= 0
-															? "text-emerald-600"
-															: "text-rose-600"
+													className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
+														mvrvRatio <=
+														DEFAULT_THRESHOLDS.crypto.mvrv.accumulation
+															? "bg-emerald-100 text-emerald-800"
+															: mvrvRatio >=
+																	DEFAULT_THRESHOLDS.crypto.mvrv.overheat
+																? "bg-rose-100 text-rose-800"
+																: "bg-slate-200 text-slate-700"
 													}`}
 												>
-													{btcQuote.changePct >= 0 ? "+" : ""}
-													{btcQuote.changePct.toFixed(2)}%
+													{mvrvRatio <=
+													DEFAULT_THRESHOLDS.crypto.mvrv.accumulation
+														? "Deep Value"
+														: mvrvRatio >=
+																DEFAULT_THRESHOLDS.crypto.mvrv.overheat
+															? "Cycle Overheat"
+															: "Neutral Zone"}
 												</span>
 											)}
 										</div>
 										<p className="text-[11px] text-slate-500">
-											200D MA:{" "}
-											<strong>
-												{btcMa200
-													? `$${Math.round(btcMa200).toLocaleString("en-US")}`
-													: "---"}
-											</strong>
-										</p>
-									</div>
-
-									{/* Ethereum */}
-									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											Ethereum (ETH) Spot
-										</span>
-										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{ethQuote?.last
-													? `$${Math.round(ethQuote.last).toLocaleString("en-US")}`
-													: "---"}
-											</span>
-											{ethQuote?.changePct != null && (
-												<span
-													className={`text-xs font-bold ${
-														ethQuote.changePct >= 0
-															? "text-emerald-600"
-															: "text-rose-600"
-													}`}
-												>
-													{ethQuote.changePct >= 0 ? "+" : ""}
-													{ethQuote.changePct.toFixed(2)}%
-												</span>
-											)}
-										</div>
-										<p className="text-[11px] text-slate-500">
-											Smart-contract platform leader
+											Accumulation: &lt;{" "}
+											{DEFAULT_THRESHOLDS.crypto.mvrv.accumulation.toFixed(2)} |
+											Overheat: &gt;{" "}
+											{DEFAULT_THRESHOLDS.crypto.mvrv.overheat.toFixed(2)}
 										</p>
 									</div>
 
@@ -552,7 +636,7 @@ export default function MarketDataHub({
 											Stablecoin 30D Net Issuance
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
+											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
 												{flows?.stablecoin30dChangePct != null
 													? `${flows.stablecoin30dChangePct >= 0 ? "+" : ""}${flows.stablecoin30dChangePct.toFixed(2)}%`
 													: "---"}
@@ -575,7 +659,7 @@ export default function MarketDataHub({
 											BTC Perp Funding Rate (8h)
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
+											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
 												{flows?.btcFundingRate8hPct != null
 													? `${flows.btcFundingRate8hPct >= 0 ? "+" : ""}${flows.btcFundingRate8hPct.toFixed(3)}%`
 													: "---"}
@@ -592,7 +676,7 @@ export default function MarketDataHub({
 											Bitcoin Dominance
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
+											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
 												{data.markets.cryptoGlobal?.btcDominance
 													? `${data.markets.cryptoGlobal.btcDominance.toFixed(1)}%`
 													: "---"}
@@ -621,46 +705,178 @@ export default function MarketDataHub({
 											{halving.phase}
 										</p>
 									</div>
+
+									{/* Ethereum */}
+									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
+										<span className="text-[10px] font-black uppercase text-slate-400 block">
+											Ethereum (ETH) Spot
+										</span>
+										<div className="flex items-baseline gap-2">
+											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+												{ethQuote?.last
+													? `$${Math.round(ethQuote.last).toLocaleString("en-US")}`
+													: "---"}
+											</span>
+											{ethQuote?.changePct != null && (
+												<span
+													className={`text-xs font-bold ${
+														ethQuote.changePct >= 0
+															? "text-emerald-600"
+															: "text-rose-600"
+													}`}
+												>
+													{ethQuote.changePct >= 0 ? "+" : ""}
+													{ethQuote.changePct.toFixed(2)}%
+												</span>
+											)}
+										</div>
+										<p className="text-[11px] text-slate-500">
+											Smart-contract platform leader
+										</p>
+									</div>
+
+									{/* Bitcoin 200D MA */}
+									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
+										<span className="text-[10px] font-black uppercase text-slate-400 block">
+											Bitcoin 200D MA Baseline
+										</span>
+										<div className="flex items-baseline gap-2">
+											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+												{btcMa200
+													? `$${Math.round(btcMa200).toLocaleString("en-US")}`
+													: "---"}
+											</span>
+											{btcQuote?.last && btcMa200 && (
+												<span
+													className={`text-xs font-bold ${
+														btcQuote.last >= btcMa200
+															? "text-emerald-600"
+															: "text-rose-600"
+													}`}
+												>
+													{distancePct(btcQuote.last, btcMa200)! >= 0
+														? "+"
+														: ""}
+													{distancePct(btcQuote.last, btcMa200)?.toFixed(1)}%
+												</span>
+											)}
+										</div>
+										<p className="text-[11px] text-slate-500">
+											Macro cycle structural trend threshold
+										</p>
+									</div>
 								</div>
 							</div>
 						)}
 
-						{/* ── 3. Global Macro Tab ─────────────────────────────── */}
-						{activeTab === "macro" && <MacroLens data={data} />}
+						{/* ── 3. Global Macro & Regional Contagion Tab ────────── */}
+						{activeTab === "macro" && (
+							<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
+								{/* Regional Contagion & Shockwave Monitor */}
+								<div className="space-y-4">
+									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+										<div className="flex items-center gap-2.5">
+											<Globe className="w-5 h-5 text-indigo-600" />
+											<div>
+												<h4 className="text-base sm:text-lg font-black text-slate-900">
+													Regional Market Transmission Pulse
+												</h4>
+												<p className="text-xs text-slate-500 font-medium">
+													Overnight US and Asian session anchors affecting IHSG
+													&amp; Crypto liquidity
+												</p>
+											</div>
+										</div>
+										<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 self-start sm:self-auto">
+											Contagion Monitor
+										</span>
+									</div>
 
-						{/* ── 4. Global Quotes Tab ────────────────────────────── */}
-						{activeTab === "quotes" && <GlobalMarkets data={data} />}
+									<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+										{regionalAnchors.map((item) => {
+											const changePct = item.quote?.changePct ?? null;
+											const isDownSevere =
+												!item.inverse && changePct != null && changePct <= -1.5;
+											const isVixSpike =
+												item.id === "VIX" &&
+												((item.quote?.last ?? 0) >= 20 ||
+													(changePct != null && changePct >= 10));
 
-						{/* ── 5. Sentiment Dials Tab ──────────────────────────── */}
-						{activeTab === "sentiment" && data.sentiment.traditional && (
-							<div className="bg-white p-5 sm:p-8 rounded-[2rem] border border-slate-200/80 shadow-xs max-w-2xl mx-auto space-y-6">
-								<div className="flex items-center justify-between border-b border-slate-100 pb-4">
-									<div>
-										<h4 className="text-base sm:text-lg font-black text-slate-900">
-											Traditional Market Sentiment Gauge
-										</h4>
-										<p className="text-xs text-slate-500 font-medium">
-											CNN Fear &amp; Greed Composite Index
-										</p>
+											const isWarning = isDownSevere || isVixSpike;
+											const isPositive =
+												item.inverse && changePct != null
+													? changePct <= 0
+													: changePct != null && changePct >= 0;
+
+											return (
+												<div
+													key={item.id}
+													className={`p-3 sm:p-3.5 rounded-2xl border transition-all ${
+														isWarning
+															? "bg-rose-50/50 border-rose-200/90 shadow-2xs"
+															: "bg-slate-50/60 border-slate-200/70"
+													}`}
+												>
+													<div className="flex items-center justify-between gap-1 mb-1">
+														<span className="text-xs font-black text-slate-900 truncate">
+															{item.name}
+														</span>
+														{isWarning && (
+															<span className="text-[9px] font-black uppercase text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded">
+																Alert
+															</span>
+														)}
+													</div>
+													<div className="flex items-baseline justify-between gap-1">
+														<span className="text-sm font-black font-mono text-slate-900">
+															{item.quote?.last != null
+																? item.id === "US10Y" || item.id === "VIX"
+																	? item.quote.last.toFixed(2)
+																	: item.quote.last.toLocaleString("en-US", {
+																			minimumFractionDigits: 1,
+																			maximumFractionDigits: 2,
+																		})
+																: "---"}
+														</span>
+														{changePct != null && (
+															<span
+																className={`text-[11px] font-bold flex items-center gap-0.5 ${
+																	isPositive
+																		? "text-emerald-600"
+																		: "text-rose-600"
+																}`}
+															>
+																{changePct >= 0 ? (
+																	<TrendingUp className="w-3 h-3" />
+																) : (
+																	<TrendingDown className="w-3 h-3" />
+																)}
+																{changePct >= 0 ? "+" : ""}
+																{changePct.toFixed(2)}%
+															</span>
+														)}
+													</div>
+													<span className="text-[10px] font-semibold text-slate-400 block mt-1 truncate">
+														{item.region}
+													</span>
+												</div>
+											);
+										})}
 									</div>
 								</div>
 
-								{(() => {
-									const fng = data.sentiment.traditional.fear_and_greed;
-									const historical =
-										data.sentiment.traditional.fear_and_greed_historical;
-									return (
-										<FearAndGreedGauge
-											score={fng?.score ?? 50}
-											rating={fng?.rating ?? "neutral"}
-											previousClose={fng?.previous_close ?? 50}
-											previous1Week={fng?.previous_1_week ?? 50}
-											previous1Month={fng?.previous_1_month ?? 50}
-											previous1Year={fng?.previous_1_year ?? 50}
-											historicalData={historical?.data ?? []}
-										/>
-									);
-								})()}
+								{/* Macro Liquidity Indicators */}
+								<div className="pt-4 border-t border-slate-100 space-y-3">
+									<div className="flex items-center justify-between">
+										<h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
+											Systemic Discount Rate &amp; Liquidity Signals
+										</h4>
+										<span className="text-[10px] font-bold text-slate-400">
+											FRED Macro Series
+										</span>
+									</div>
+									<MacroLens data={data} />
+								</div>
 							</div>
 						)}
 					</motion.div>

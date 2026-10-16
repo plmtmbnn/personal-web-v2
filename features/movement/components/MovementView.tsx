@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type {
 	Movement,
 	MovementAppState,
@@ -11,6 +11,7 @@ import { INITIAL_MOVEMENT_LIBRARY } from "../data/default-library";
 import {
 	loadMovementState,
 	saveMovementState,
+	mergeMovementStates,
 	recordMovementSession,
 	undoMovementSession,
 	toggleSlotSkip,
@@ -63,8 +64,12 @@ export default function MovementView({ initialState }: MovementViewProps) {
 	>(undefined);
 	const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
+	const hasInitializedRef = useRef<boolean>(false);
+
 	// Load and synchronize state on mount
 	useEffect(() => {
+		if (hasInitializedRef.current) return;
+		hasInitializedRef.current = true;
 		let isCancelled = false;
 
 		async function init() {
@@ -96,11 +101,30 @@ export default function MovementView({ initialState }: MovementViewProps) {
 					localStorage.setItem("movement:snacks:migrated_to_redis", "true");
 				}
 			} else {
-				// Already migrated or clean slate: prefer server initialState, fall back to localStorage
-				const activeState = initialState || localState;
+				// Non-destructive merge: preserve local completions and merge with server state
+				const mergedState = initialState
+					? mergeMovementStates(initialState, localState)
+					: localState;
+
 				if (!isCancelled) {
-					setState(activeState);
-					saveMovementState(activeState);
+					setState(mergedState);
+					saveMovementState(mergedState);
+
+					// If merged state contains local sessions missing from server initialState, sync to Redis in background
+					if (initialState) {
+						const serverCount = Object.values(initialState.logs || {}).flat()
+							.length;
+						const mergedCount = Object.values(mergedState.logs || {}).flat()
+							.length;
+						if (mergedCount > serverCount) {
+							saveMovementStateAction(mergedState).catch((err) => {
+								console.error(
+									"Failed to sync merged local state to Redis:",
+									err,
+								);
+							});
+						}
+					}
 				}
 				localStorage.setItem("movement:snacks:migrated_to_redis", "true");
 			}
@@ -189,8 +213,10 @@ export default function MovementView({ initialState }: MovementViewProps) {
 			) {
 				try {
 					const remote = await getMovementStateAction();
-					setState(remote);
-					saveMovementState(remote);
+					const local = loadMovementState();
+					const merged = mergeMovementStates(remote, local);
+					setState(merged);
+					saveMovementState(merged);
 				} catch (err) {
 					console.error("Tab focus sync error:", err);
 				}

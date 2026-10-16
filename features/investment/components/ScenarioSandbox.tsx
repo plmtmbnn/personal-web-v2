@@ -16,11 +16,13 @@ import { computeCompass } from "../lib/engine/index";
 interface ScenarioSandboxProps {
 	data: InvestmentCompassData;
 	liveOutput: CompassOutput;
+	initialOpen?: boolean;
 }
 
 export default function ScenarioSandbox({
 	data,
 	liveOutput,
+	initialOpen = false,
 }: ScenarioSandboxProps) {
 	// Extract initial default values from live data
 	const defaultFedFunds =
@@ -35,7 +37,7 @@ export default function ScenarioSandbox({
 	const [usdIdr, setUsdIdr] = useState<number>(defaultUsdIdr);
 	const [btcPrice, setBtcPrice] = useState<number>(defaultBtcPrice);
 	const [ihsgPrice, setIhsgPrice] = useState<number>(defaultIhsgPrice);
-	const [isOpen, setIsOpen] = useState<boolean>(true);
+	const [isOpen, setIsOpen] = useState<boolean>(initialOpen);
 
 	// Check if simulated parameters have deviated from live data
 	const isModified =
@@ -231,9 +233,13 @@ export default function ScenarioSandbox({
 							<h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
 								Macro Scenario Sandbox
 							</h3>
-							{isModified && (
-								<span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200/60 animate-pulse">
+							{isModified ? (
+								<span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
 									Simulation Active
+								</span>
+							) : (
+								<span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+									Live Baseline
 								</span>
 							)}
 						</div>
@@ -258,9 +264,13 @@ export default function ScenarioSandbox({
 					<button
 						type="button"
 						onClick={() => setIsOpen(!isOpen)}
-						className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/70 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+						className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+							isOpen
+								? "bg-slate-100 hover:bg-slate-200/80 text-slate-800"
+								: "bg-slate-900 hover:bg-slate-800 text-white"
+						}`}
 					>
-						{isOpen ? "Collapse" : "Expand"}
+						{isOpen ? "Collapse Workstation" : "Open Stress-Test Workstation"}
 					</button>
 				</div>
 			</div>

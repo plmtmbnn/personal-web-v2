@@ -141,8 +141,9 @@ export interface CryptoOnChainSnapshot {
 
 export interface InvestmentCompassData {
 	sentiment: {
-		traditional: FearAndGreedData | null;
+		traditional?: FearAndGreedData | null;
 		crypto: CryptoFearAndGreedResponse | null;
+		vix?: MarketQuote | null;
 	};
 	markets: {
 		/** Quotes keyed by instrument id (see `data/instruments.ts`). */

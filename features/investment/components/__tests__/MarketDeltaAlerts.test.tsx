@@ -193,31 +193,21 @@ describe("MarketDeltaAlerts Component", () => {
 		expect(container.textContent).toContain("VIX compressed -11.2%");
 	});
 
-	it("renders Sentiment Plunge alert when CNN Fear & Greed drops >= 15 points overnight", () => {
+	it("renders Systemic Contagion Alert when multiple regional peers drop >= 1.5%", () => {
 		const data = createMockData();
-		if (data.sentiment.traditional?.fear_and_greed) {
-			data.sentiment.traditional.fear_and_greed.score = 30;
-			data.sentiment.traditional.fear_and_greed.previous_close = 50; // delta: -20
-		}
+		data.markets.quotes.SPX.changePct = -1.85;
+		data.markets.quotes.HSI = {
+			...data.markets.quotes.SPX,
+			symbol: "^HSI",
+			name: "Hang Seng",
+			last: 19500,
+			changePct: -2.15,
+		};
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
-		expect(container.textContent).toContain("Traditional Sentiment Plunge");
+		expect(container.textContent).toContain("Systemic Contagion Alert");
 		expect(container.textContent).toContain(
-			"CNN Fear & Greed dropped 20 points overnight to 30/100",
-		);
-	});
-
-	it("renders Sentiment Surge alert when CNN Fear & Greed jumps >= 15 points overnight", () => {
-		const data = createMockData();
-		if (data.sentiment.traditional?.fear_and_greed) {
-			data.sentiment.traditional.fear_and_greed.score = 68;
-			data.sentiment.traditional.fear_and_greed.previous_close = 45; // delta: +23
-		}
-
-		const { container } = render(<MarketDeltaAlerts data={data} />);
-		expect(container.textContent).toContain("Traditional Sentiment Surge");
-		expect(container.textContent).toContain(
-			"CNN Fear & Greed jumped +23 points overnight to 68/100",
+			"Broad regional & global sell-off detected",
 		);
 	});
 

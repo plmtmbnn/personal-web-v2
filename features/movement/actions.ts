@@ -8,7 +8,7 @@ import {
 	getDefaultMovementState,
 	mergeMovementStates,
 	pruneExpiredLogs,
-	getLocalDateKey,
+	calculateUndoneCount,
 } from "./lib/storage";
 
 const MOVEMENT_REDIS_KEY = CACHE_KEYS.MOVEMENT_STATE || "admin:movement:state";
@@ -123,13 +123,7 @@ export async function getUndoneMovementSnacksCount(): Promise<number> {
 
 	try {
 		const state = await getMovementStateAction();
-		const todayKey = getLocalDateKey();
-		const todaySessions = (state.logs?.[todayKey] || []).filter(
-			(s) => s.status === "completed",
-		);
-		const targetToday = state.config?.dailyTarget ?? 6;
-		const completedCount = todaySessions.length;
-		return Math.max(0, targetToday - completedCount);
+		return calculateUndoneCount(state);
 	} catch (error) {
 		console.error("Error in getUndoneMovementSnacksCount:", error);
 		return 0;

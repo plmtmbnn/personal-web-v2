@@ -107,25 +107,31 @@ export function deriveAlerts(
 		});
 	}
 
-	// 6. CNN Fear & Greed Rapid Shifts
-	const fng = data.sentiment.traditional?.fear_and_greed;
-	if (fng) {
-		const delta = fng.score - fng.previous_close;
-		if (delta <= -15) {
-			alerts.push({
-				id: "sentiment-plunge",
-				title: "Traditional Sentiment Plunge",
-				message: `CNN Fear & Greed dropped ${Math.abs(delta)} points overnight to ${fng.score}/100.`,
-				type: "danger",
-			});
-		} else if (delta >= 15) {
-			alerts.push({
-				id: "sentiment-surge",
-				title: "Traditional Sentiment Surge",
-				message: `CNN Fear & Greed jumped +${delta} points overnight to ${fng.score}/100.`,
-				type: "positive",
-			});
-		}
+	// 6. Systemic Regional & Global Contagion Alert
+	const contagionAnchors = [
+		{ name: "S&P 500", quote: data.markets.quotes.SPX },
+		{ name: "Nasdaq", quote: data.markets.quotes.IXIC },
+		{ name: "Hang Seng", quote: data.markets.quotes.HSI },
+		{ name: "Nikkei 225", quote: data.markets.quotes.N225 },
+	];
+
+	const severeDrops = contagionAnchors.filter(
+		(a) => a.quote?.changePct != null && a.quote.changePct <= -1.5,
+	);
+
+	if (
+		severeDrops.length >= 2 ||
+		severeDrops.some((a) => (a.quote?.changePct ?? 0) <= -2.5)
+	) {
+		const details = severeDrops
+			.map((a) => `${a.name} (${a.quote?.changePct?.toFixed(1)}%)`)
+			.join(", ");
+		alerts.push({
+			id: "systemic-contagion",
+			title: "Systemic Contagion Alert",
+			message: `Broad regional & global sell-off detected across ${details}. Elevated spillover pressure on IHSG and Crypto liquidity. Tighten stop-losses and avoid aggressive opening bids.`,
+			type: "danger",
+		});
 	}
 
 	// 7. US Large Cap Equities Shock

@@ -210,9 +210,13 @@ const mockLiveOutput: CompassOutput = {
 };
 
 describe("ScenarioSandbox Component", () => {
-	it("renders title, sliders, preset buttons, and comparative impact cards", () => {
+	it("renders title, sliders, preset buttons, and comparative impact cards when open", () => {
 		const { container } = render(
-			<ScenarioSandbox data={mockData} liveOutput={mockLiveOutput} />,
+			<ScenarioSandbox
+				data={mockData}
+				liveOutput={mockLiveOutput}
+				initialOpen={true}
+			/>,
 		);
 
 		expect(container.textContent).toContain("Macro Scenario Sandbox");
@@ -227,7 +231,11 @@ describe("ScenarioSandbox Component", () => {
 
 	it("applies preset and reveals reset button and simulation badge", () => {
 		const { getByText, container } = render(
-			<ScenarioSandbox data={mockData} liveOutput={mockLiveOutput} />,
+			<ScenarioSandbox
+				data={mockData}
+				liveOutput={mockLiveOutput}
+				initialOpen={true}
+			/>,
 		);
 
 		// Click Fed Easing preset
@@ -251,22 +259,27 @@ describe("ScenarioSandbox Component", () => {
 			<ScenarioSandbox data={mockData} liveOutput={mockLiveOutput} />,
 		);
 
-		// Click Collapse
-		const collapseBtn = getByText("Collapse");
-		fireEvent.click(collapseBtn);
-
-		// Body collapsed
+		// Initially collapsed
 		expect(container.textContent).not.toContain("Quick Scenarios:");
-		expect(getByText("Expand")).toBeDefined();
+		const openBtn = getByText("Open Stress-Test Workstation");
 
-		// Click Expand
-		fireEvent.click(getByText("Expand"));
+		// Click Open
+		fireEvent.click(openBtn);
 		expect(container.textContent).toContain("Quick Scenarios:");
+		expect(getByText("Collapse Workstation")).toBeDefined();
+
+		// Click Collapse
+		fireEvent.click(getByText("Collapse Workstation"));
+		expect(container.textContent).not.toContain("Quick Scenarios:");
 	});
 
 	it("updates simulated scores when slider changes", () => {
 		const { container } = render(
-			<ScenarioSandbox data={mockData} liveOutput={mockLiveOutput} />,
+			<ScenarioSandbox
+				data={mockData}
+				liveOutput={mockLiveOutput}
+				initialOpen={true}
+			/>,
 		);
 
 		const sliders = container.querySelectorAll('input[type="range"]');
@@ -312,7 +325,11 @@ describe("ScenarioSandbox Component", () => {
 		};
 
 		const { container } = render(
-			<ScenarioSandbox data={ihsgOnlyData} liveOutput={mockLiveOutput} />,
+			<ScenarioSandbox
+				data={ihsgOnlyData}
+				liveOutput={mockLiveOutput}
+				initialOpen={true}
+			/>,
 		);
 
 		expect(container.textContent).toContain("7.654");

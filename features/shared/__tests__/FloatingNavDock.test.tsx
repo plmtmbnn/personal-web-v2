@@ -266,4 +266,27 @@ describe("FloatingNavDock Component", () => {
 
 		expect(getAuthStatusAction).toHaveBeenCalledTimes(2);
 	});
+
+	it("updates movement snacks badge immediately upon receiving movement:state:updated with detail", async () => {
+		vi.mocked(getAuthStatusAction).mockResolvedValue({
+			isAdmin: true,
+			isLoggedIn: true,
+		});
+
+		render(<FloatingNavDock />);
+
+		// Allow initial auth sync to resolve so Admin item is visible
+		await act(async () => {});
+
+		await act(async () => {
+			window.dispatchEvent(
+				new CustomEvent("movement:state:updated", {
+					detail: { undoneCount: 4 },
+				}),
+			);
+		});
+
+		// Verify the badge renders 4
+		expect(screen.getByText("4")).toBeDefined();
+	});
 });

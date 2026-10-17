@@ -1,3 +1,10 @@
+# [0.111.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.110.0...v0.111.0) (2026-10-17)
+
+
+### Features
+
+* **investment:** add rebuild rulebook tool and sector breadth tracking ([570a394](https://github.com/plmtmbnn/personal-web-v2/commit/570a394f683615d14ab763a212ea1916278ec807))
+
 # [0.110.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.109.0...v0.110.0) (2026-10-16)
 
 

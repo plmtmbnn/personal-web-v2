@@ -265,7 +265,10 @@ async function getMacroData(
 			{ id: "DGS10" },
 			{ id: "T10Y2Y" },
 			{ id: "BAMLH0A0HYM2" },
-			{ id: "IRSTCB01IDM156N" },
+			{ id: "IRSTCB01IDM156N" }, // Bank Indonesia Policy Rate
+			{ id: "IRLTLT01IDM156N" }, // Indonesia 10Y Gov Bond Yield
+			{ id: "DFII10" }, // 10Y TIPS Real Yield
+			{ id: "IDNCPIALLMINMEI", units: "pc1" }, // Indonesia CPI YoY
 		];
 		const macroData: Record<string, MacroSeries> = {};
 
@@ -346,6 +349,8 @@ async function getHistoryData(forceRefresh: boolean): Promise<{
 		{ symbol: "ADRO.JK", range: "6mo", interval: "1d" }, // Energy bellwether
 		{ symbol: "ICBP.JK", range: "6mo", interval: "1d" }, // Consumer bellwether
 		{ symbol: "ANTM.JK", range: "6mo", interval: "1d" }, // Basic Materials bellwether
+		{ symbol: "TLKM.JK", range: "6mo", interval: "1d" }, // Telco/Infra bellwether
+		{ symbol: "ASII.JK", range: "6mo", interval: "1d" }, // Industrial/Auto bellwether
 	];
 	const allItems = [...coreSymbols, ...sectorSymbols];
 	const history: Record<string, PriceHistorySeries | null> = {};

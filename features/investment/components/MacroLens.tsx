@@ -34,7 +34,17 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 
 		// DXY from quotes
 		const dxy = data.markets.quotes.DXY;
-		const realYield = getLatest("DFII10");
+		const pce = getLatest("PCEPILFE");
+		const dfii10 = getLatest("DFII10");
+		const computedRealYieldVal =
+			dgs10 && pce
+				? dgs10.value - pce.value
+				: dgs10 && cpi
+					? dgs10.value - cpi.value
+					: null;
+		const realYieldVal = dfii10?.value ?? computedRealYieldVal;
+		const realYieldChange =
+			dfii10?.change ?? (dgs10?.change != null ? dgs10.change : null);
 
 		const usTiles = [
 			{
@@ -50,12 +60,14 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 			},
 			{
 				label: "US 10Y Real Yield",
-				value: realYield ? `${realYield.value.toFixed(2)}%` : "---",
-				change: realYield?.change,
-				desc: "TIPS yield, true real cost of capital.",
+				value: realYieldVal != null ? `${realYieldVal.toFixed(2)}%` : "---",
+				change: realYieldChange,
+				desc: dfii10
+					? "TIPS yield, true real cost of capital."
+					: "Computed real cost of capital (10Y Yield - Core PCE).",
 				isInverse: true,
 				historicalMsg:
-					realYield && realYield.value > 2.0
+					realYieldVal != null && realYieldVal > 2.0
 						? "Real yields > 2.0% exert heavy valuation discount compression on equities and crypto."
 						: undefined,
 			},

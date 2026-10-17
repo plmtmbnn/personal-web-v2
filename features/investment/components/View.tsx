@@ -24,9 +24,9 @@ import ScenarioSandbox from "./ScenarioSandbox";
 import PermissionsMatrix from "./PermissionsMatrix";
 import MarketPlaybook from "./MarketPlaybook";
 import MarketDataHub from "./MarketDataHub";
-import Rulebook from "./Rulebook";
 import EventCalendar from "./EventCalendar";
 import MarketDeltaAlerts from "./MarketDeltaAlerts";
+import { BookOpen, ArrowUpRight } from "lucide-react";
 
 export default function InvestmentCompassView({
 	initialData,
@@ -458,8 +458,39 @@ export default function InvestmentCompassView({
 				{/* ── 5. Market Data Terminal (Consolidated 3-Tab Hub) ─────────── */}
 				{!isLoading && data && <MarketDataHub data={data} />}
 
-				{/* ── 6. Disciplined Rebuild Rulebook ────────────────────────── */}
-				<Rulebook />
+				{/* ── 6. Disciplined Rebuild Rulebook Launch Card ──────────────── */}
+				<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 relative overflow-hidden">
+					<div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
+						<div className="flex items-start gap-4">
+							<div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
+								<BookOpen className="w-6 h-6" />
+							</div>
+							<div className="space-y-1">
+								<div className="flex items-center gap-2">
+									<h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+										Disciplined Rebuild Rulebook &amp; Execution Gates
+									</h3>
+									<span className="text-[10px] font-black uppercase text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md">
+										Interactive Utility
+									</span>
+								</div>
+								<p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+									Capital Buckets Architecture (40% Safe / 45% Core / 15%
+									Swing), 5-Gate Pre-Trade Verification, and mechanical drawdown
+									recovery formulas.
+								</p>
+							</div>
+						</div>
+
+						<Link
+							href="/utils/rebuild-rulebook"
+							className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 !text-white text-xs font-bold transition-all shadow-xs shrink-0 self-start md:self-auto group !no-underline"
+						>
+							<span className="!text-white font-bold">Open Rulebook</span>
+							<ArrowUpRight className="w-4 h-4 !text-slate-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+						</Link>
+					</div>
+				</div>
 
 				{/* ── 7. Upcoming Catalysts & Active Seasonality ─────────────── */}
 				<EventCalendar />

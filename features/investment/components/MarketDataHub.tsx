@@ -67,6 +67,19 @@ export default function MarketDataHub({
 			? biRateSeries[biRateSeries.length - 1].value
 			: null;
 
+	const us10yVal =
+		data.markets.quotes.US10Y?.last ??
+		data.markets.macro?.DGS10?.data?.slice(-1)[0]?.value ??
+		null;
+	const yieldSpread =
+		latestIdYield != null && us10yVal != null ? latestIdYield - us10yVal : null;
+
+	const idCpiSeries = data.markets.macro?.IDNCPIALLMINMEI?.data;
+	const latestIdCpi =
+		idCpiSeries && idCpiSeries.length > 0
+			? idCpiSeries[idCpiSeries.length - 1].value
+			: null;
+
 	const ihsgFlows = data.markets.ihsgFlows;
 
 	const sectorBellwethers = [
@@ -94,6 +107,18 @@ export default function MarketDataHub({
 			sector: "Basic Materials",
 			label: "Aneka Tambang",
 		},
+		{
+			symbol: "TLKM.JK",
+			ticker: "TLKM",
+			sector: "Telco/Infra",
+			label: "Telkom Indonesia",
+		},
+		{
+			symbol: "ASII.JK",
+			ticker: "ASII",
+			sector: "Industrial/Auto",
+			label: "Astra International",
+		},
 	].map((item) => {
 		const points = data.markets.history?.[item.symbol]?.points ?? [];
 		if (points.length === 0)
@@ -111,6 +136,11 @@ export default function MarketDataHub({
 		const dist50 = ma50 ? distancePct(price, ma50) : null;
 		return { ...item, price, ma50, dist50, changePct };
 	});
+
+	const expandingSectorsCount = sectorBellwethers.filter(
+		(s) => s.dist50 != null && s.dist50 >= 0,
+	).length;
+	const totalSectorsCount = sectorBellwethers.length;
 
 	// Calculate live Crypto metrics
 	const btcQuote = data.markets.quotes.BTC;
@@ -155,6 +185,13 @@ export default function MarketDataHub({
 			inverse: false,
 		},
 		{
+			id: "USDJPY",
+			name: "USD / JPY",
+			region: "Yen Carry Monitor",
+			quote: data.markets.quotes.USDJPY,
+			inverse: false,
+		},
+		{
 			id: "DXY",
 			name: "US Dollar Index",
 			region: "Global Liquidity",
@@ -174,6 +211,28 @@ export default function MarketDataHub({
 			region: "Equity Fear Index",
 			quote: data.markets.quotes.VIX,
 			inverse: true,
+		},
+	];
+
+	// Global Commodities Barometer
+	const commodityAnchors = [
+		{
+			id: "OIL_BRENT",
+			name: "Brent Crude",
+			detail: "Energy & Fuel Subsidy",
+			quote: data.markets.quotes.OIL_BRENT,
+		},
+		{
+			id: "GOLD",
+			name: "Gold Spot",
+			detail: "Reserve Debasement Hedge",
+			quote: data.markets.quotes.GOLD,
+		},
+		{
+			id: "COPPER",
+			name: "Copper Futures",
+			detail: "Industrial Demand Barometer",
+			quote: data.markets.quotes.COPPER,
 		},
 	];
 
@@ -495,23 +554,101 @@ export default function MarketDataHub({
 											Sovereign borrowing benchmark rate
 										</p>
 									</div>
+
+									{/* Indo-US 10Y Yield Spread */}
+									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
+										<span className="text-[10px] font-black uppercase text-slate-400 block">
+											Indo-US 10Y Yield Spread
+										</span>
+										<div className="flex items-baseline gap-2">
+											<span className="text-xl sm:text-2xl font-black text-slate-900">
+												{yieldSpread != null
+													? `${yieldSpread >= 0 ? "+" : ""}${yieldSpread.toFixed(2)}%`
+													: "---"}
+											</span>
+											{yieldSpread != null && (
+												<span
+													className={`text-xs font-bold ${
+														yieldSpread >= 2.0
+															? "text-emerald-600"
+															: yieldSpread >= 1.5
+																? "text-amber-600"
+																: "text-rose-600"
+													}`}
+												>
+													{yieldSpread >= 2.0
+														? "Healthy Carry"
+														: yieldSpread >= 1.5
+															? "Moderate Buffer"
+															: "Compression Risk"}
+												</span>
+											)}
+										</div>
+										<p className="text-[11px] text-slate-500">
+											Sovereign risk &amp; Rupiah carry premium buffer
+										</p>
+									</div>
+
+									{/* Indonesia CPI YoY */}
+									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
+										<span className="text-[10px] font-black uppercase text-slate-400 block">
+											Indonesia CPI Inflation (YoY)
+										</span>
+										<div className="flex items-baseline gap-2">
+											<span className="text-xl sm:text-2xl font-black text-slate-900">
+												{latestIdCpi != null
+													? `${latestIdCpi.toFixed(2)}%`
+													: "---"}
+											</span>
+											{latestIdCpi != null && (
+												<span
+													className={`text-xs font-bold ${
+														latestIdCpi >= 1.5 && latestIdCpi <= 3.5
+															? "text-emerald-600"
+															: "text-amber-600"
+													}`}
+												>
+													{latestIdCpi >= 1.5 && latestIdCpi <= 3.5
+														? "In BI Target Corridor"
+														: "Outside Corridor"}
+												</span>
+											)}
+										</div>
+										<p className="text-[11px] text-slate-500">
+											Bank Indonesia Target Corridor: 1.5% - 3.5%
+										</p>
+									</div>
 								</div>
 
 								{/* Sector Leadership Strip */}
 								<div className="space-y-3 pt-3 border-t border-slate-100">
-									<div className="flex items-center justify-between">
+									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 										<div className="flex items-center gap-2">
 											<TrendingUp className="w-4 h-4 text-slate-600" />
 											<span className="text-xs font-black text-slate-900 tracking-tight">
 												Sector Rotation Bellwethers (IDX)
 											</span>
 										</div>
-										<span className="text-[10px] font-bold text-slate-400">
-											50D Moving Average Momentum
-										</span>
+										<div className="flex items-center gap-2">
+											<span
+												className={`text-[10px] font-black px-2.5 py-0.5 rounded-lg border ${
+													expandingSectorsCount >= 4
+														? "bg-emerald-50 text-emerald-700 border-emerald-200"
+														: expandingSectorsCount <= 2
+															? "bg-rose-50 text-rose-700 border-rose-200"
+															: "bg-slate-50 text-slate-700 border-slate-200"
+												}`}
+											>
+												{expandingSectorsCount}/{totalSectorsCount} Sectors &gt;
+												50D MA
+											</span>
+											<span className="text-[10px] font-bold text-slate-400 hidden sm:inline">
+												50D MA Momentum
+											</span>
+										</div>
 									</div>
 
-									<div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+									<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
 										{sectorBellwethers.map((s) => {
 											const isAbove = s.dist50 != null && s.dist50 >= 0;
 											return (
@@ -859,6 +996,68 @@ export default function MarketDataHub({
 													<span className="text-[10px] font-semibold text-slate-400 block mt-1 truncate">
 														{item.region}
 													</span>
+												</div>
+											);
+										})}
+									</div>
+								</div>
+
+								{/* Global Commodities Barometer */}
+								<div className="pt-4 border-t border-slate-100 space-y-3">
+									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+										<div className="flex items-center gap-2">
+											<TrendingUp className="w-4 h-4 text-slate-600" />
+											<h4 className="text-xs font-black uppercase tracking-wider text-slate-700">
+												Global Commodities &amp; Energy Transmission
+											</h4>
+										</div>
+										<span className="text-[10px] font-bold text-slate-400">
+											Indonesian Trade Balance &amp; Inflation Drivers
+										</span>
+									</div>
+
+									<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+										{commodityAnchors.map((c) => {
+											const changePct = c.quote?.changePct ?? null;
+											const isPositive = changePct != null && changePct >= 0;
+											return (
+												<div
+													key={c.id}
+													className="p-3.5 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-1.5"
+												>
+													<div className="flex items-center justify-between">
+														<span className="text-xs font-black text-slate-900">
+															{c.name}
+														</span>
+														<span className="text-[10px] font-bold text-slate-400">
+															USD
+														</span>
+													</div>
+													<div className="flex items-baseline justify-between">
+														<span className="text-base sm:text-lg font-black font-mono text-slate-900">
+															{c.quote?.last != null
+																? `$${c.quote.last.toLocaleString("en-US", {
+																		minimumFractionDigits: 2,
+																		maximumFractionDigits: 2,
+																	})}`
+																: "---"}
+														</span>
+														{changePct != null && (
+															<span
+																className={`text-xs font-bold flex items-center gap-0.5 ${
+																	isPositive
+																		? "text-emerald-600"
+																		: "text-rose-600"
+																}`}
+															>
+																{isPositive ? "+" : ""}
+																{changePct.toFixed(2)}%
+															</span>
+														)}
+													</div>
+													<p className="text-[10px] font-semibold text-slate-500">
+														{c.detail}
+													</p>
 												</div>
 											);
 										})}

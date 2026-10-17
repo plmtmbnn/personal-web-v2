@@ -58,7 +58,11 @@ export function deriveAlerts(
 
 	// 3. VIX Volatility Shock
 	const vixQuote = data.markets.quotes.VIX;
-	if (vixQuote?.changePct != null && vixQuote.changePct >= 10.0) {
+	if (
+		vixQuote?.changePct != null &&
+		vixQuote.changePct >= 10.0 &&
+		isFreshQuote(vixQuote.lastTime, data.fetchedAt)
+	) {
 		alerts.push({
 			id: "vix-shock",
 			title: "Volatility Shock",
@@ -66,7 +70,11 @@ export function deriveAlerts(
 			type: "danger",
 			asOf: vixQuote.lastTime ?? undefined,
 		});
-	} else if (vixQuote?.changePct != null && vixQuote.changePct <= -10.0) {
+	} else if (
+		vixQuote?.changePct != null &&
+		vixQuote.changePct <= -10.0 &&
+		isFreshQuote(vixQuote.lastTime, data.fetchedAt)
+	) {
 		alerts.push({
 			id: "vix-crush",
 			title: "Volatility Crush",
@@ -80,7 +88,8 @@ export function deriveAlerts(
 	const dxyQuote = data.markets.quotes.DXY;
 	if (
 		dxyQuote?.changePct != null &&
-		dxyQuote.changePct >= (thresholds.dxy.overnightRallyPct ?? 0.7)
+		dxyQuote.changePct >= (thresholds.dxy.overnightRallyPct ?? 0.7) &&
+		isFreshQuote(dxyQuote.lastTime, data.fetchedAt)
 	) {
 		alerts.push({
 			id: "dxy-rally",
@@ -95,7 +104,8 @@ export function deriveAlerts(
 	const btcQuote = data.markets.quotes.BTC;
 	if (
 		btcQuote?.changePct != null &&
-		Math.abs(btcQuote.changePct) >= thresholds.crypto.overnightShockPct
+		Math.abs(btcQuote.changePct) >= thresholds.crypto.overnightShockPct &&
+		isFreshQuote(btcQuote.lastTime, data.fetchedAt)
 	) {
 		const isPump = btcQuote.changePct > 0;
 		alerts.push({
@@ -116,7 +126,10 @@ export function deriveAlerts(
 	];
 
 	const severeDrops = contagionAnchors.filter(
-		(a) => a.quote?.changePct != null && a.quote.changePct <= -1.5,
+		(a) =>
+			a.quote?.changePct != null &&
+			a.quote.changePct <= -1.5 &&
+			isFreshQuote(a.quote.lastTime, data.fetchedAt),
 	);
 
 	if (
@@ -136,7 +149,11 @@ export function deriveAlerts(
 
 	// 7. US Large Cap Equities Shock
 	const spxQuote = data.markets.quotes.SPX;
-	if (spxQuote?.changePct != null && spxQuote.changePct <= -2.0) {
+	if (
+		spxQuote?.changePct != null &&
+		spxQuote.changePct <= -2.0 &&
+		isFreshQuote(spxQuote.lastTime, data.fetchedAt)
+	) {
 		alerts.push({
 			id: "spx-selloff",
 			title: "US Equities Sell-Off",
@@ -146,7 +163,23 @@ export function deriveAlerts(
 		});
 	}
 
-	// 8. Data Telemetry Stale / Offline Check
+	// 8. Crude Oil Shock Alert (Energy Inflation & Trade Balance Pressure)
+	const oilQuote = data.markets.quotes.OIL_BRENT;
+	if (
+		oilQuote?.changePct != null &&
+		oilQuote.changePct >= 3.5 &&
+		isFreshQuote(oilQuote.lastTime, data.fetchedAt)
+	) {
+		alerts.push({
+			id: "oil-surge",
+			title: "Crude Oil Price Surge",
+			message: `Brent Crude spiked +${oilQuote.changePct.toFixed(1)}% to $${oilQuote.last?.toFixed(2)}. Rising imported inflation & energy subsidy risks for Indonesia.`,
+			type: "warning",
+			asOf: oilQuote.lastTime ?? undefined,
+		});
+	}
+
+	// 9. Data Telemetry Stale / Offline Check
 	if (data.sources) {
 		const degraded = Object.entries(data.sources)
 			.filter(([_, s]) => s.stale || !s.ok)

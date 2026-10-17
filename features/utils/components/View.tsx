@@ -30,6 +30,7 @@ import {
 	FileText,
 	ChevronRight,
 	Trophy,
+	BookOpen,
 } from "lucide-react";
 
 export interface UtilityCategory {
@@ -241,6 +242,14 @@ const utilities: UtilityItem[] = [
 	},
 
 	// Financial Intelligence
+	{
+		title: "Rebuild Rulebook",
+		slug: "rebuild-rulebook",
+		categoryId: "finance",
+		description:
+			"Interactive capital allocation sizer (40/45/15), 5-gate pre-trade checklist, and mechanical drawdown recovery calculator.",
+		icon: BookOpen,
+	},
 	{
 		title: "Stock Explorer",
 		slug: "stock-explorer",

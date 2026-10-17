@@ -73,7 +73,7 @@ export default function OverviewRegimes({
 						</div>
 
 						<span
-							className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider border shrink-0 ${getStateBadge(regime.state)}`}
+							className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider border shrink-0 ${getStateBadge(regime.state)}`}
 						>
 							{regime.state.replace("_", " ")}
 						</span>

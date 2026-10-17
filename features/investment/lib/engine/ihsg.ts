@@ -412,6 +412,8 @@ export function scoreIhsg(
 		{ id: "ADRO.JK", label: "Energy (ADRO)" },
 		{ id: "ICBP.JK", label: "Consumer (ICBP)" },
 		{ id: "ANTM.JK", label: "Basic Materials (ANTM)" },
+		{ id: "TLKM.JK", label: "Telco/Infra (TLKM)" },
+		{ id: "ASII.JK", label: "Industrial/Auto (ASII)" },
 	];
 
 	const sectorPerformance = sectors
@@ -436,6 +438,22 @@ export function scoreIhsg(
 			);
 		} else if (leader && leader.dist > 3) {
 			contextFlags.push(`Sector Leadership: ${leader.label} Outperforming`);
+		}
+
+		// Sector Breadth: % of bellwethers trading above their 50-day moving average
+		const expandingSectors = sectorPerformance.filter((s) => s.dist >= 0);
+		if (sectorPerformance.length >= 4) {
+			const expandingCount = expandingSectors.length;
+			const totalCount = sectorPerformance.length;
+			if (expandingCount >= totalCount - 1) {
+				contextFlags.push(
+					`Broad Sector Expansion (${expandingCount}/${totalCount} > 50D MA)`,
+				);
+			} else if (expandingCount <= 1) {
+				contextFlags.push(
+					`Broad Sector Contraction (${totalCount - expandingCount}/${totalCount} < 50D MA)`,
+				);
+			}
 		}
 	}
 

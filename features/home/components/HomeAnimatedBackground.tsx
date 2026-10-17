@@ -5,30 +5,36 @@ interface HomeAnimatedBackgroundProps {
 }
 
 /**
- * HomeAnimatedBackground
+ * HomeAnimatedBackground (v3)
  *
- * Calm, light atmospheric background: soft clouds drifting across the sky,
- * layered sea swells rolling beneath a pale horizon haze.
+ * A quiet, light sky: a few soft clouds drifting slowly over three layers of
+ * gentle sea swells, with a faint warm glow in the corner.
  *
- * What's different from v1
- * - Waves are generated from integer-harmonic sine sums, so every tile starts
- *   and ends at the same height: the loop is seamless (v1 jumped at the seam).
- * - Clouds are real soft cumulus shapes drifting at different speeds/depths
- *   instead of flat bands, spread out on load via negative animation delays.
- * - Each sea layer fades into the canvas colour, so foreground text stays readable.
- * - Parallax: layers scroll at different speeds and gently bob on a separate
- *   element (scroll + bob never fight over the same transform).
- * - Keyframes are self-contained (no tailwind.config dependency) and use only
- *   transform/opacity, so everything runs on the compositor.
- * - prefers-reduced-motion: all motion stops and clouds sit at fixed positions.
+ * Next.js notes
+ * - Pure Server Component: no hooks, no "use client", zero client JS.
+ *   Wave paths are computed once at module load (deterministic).
+ * - Parent must be `relative` (this component is `absolute inset-0 -z-10`).
+ * - Keyframes are inlined, so there is no tailwind.config dependency.
+ *
+ * Calmer than v2
+ * - 3 sea layers instead of 4, 4 clouds instead of 5, no sheen sweep.
+ * - Slower motion everywhere (clouds ~3-5 min per crossing, sea 80-150s per tile).
+ * - Clouds are built from radial-gradient puffs, so there is no SVG blur filter.
+ * - Waves are cubic Béziers from exact sine derivatives: smooth, compact, and
+ *   still perfectly seamless (integer harmonics per tile).
+ * - The front swell fades into the canvas colour (#f8fafc), so text stays readable.
+ * - Only transform/opacity are animated (compositor-friendly).
+ * - On small screens one cloud and the back swell are hidden.
+ * - prefers-reduced-motion: all motion stops, clouds sit at fixed positions.
  */
 
 /* ───────────────────────── Wave generation ───────────────────────── */
 
 const TILE = 1440; // one seamless tile, in viewBox units
 const VB_W = TILE * 2; // two tiles side by side; the layer scrolls exactly one tile
-const VB_H = 450;
-const STEP = 20;
+const VB_H = 400;
+const STEP = 48; // segment width (TILE / STEP must be an integer)
+const TAU = Math.PI * 2;
 
 interface WaveSpec {
 	base: number; // baseline y in viewBox units
@@ -44,82 +50,92 @@ interface WaveSpec {
 	reverse: boolean;
 	bob: number; // bob seconds
 	bobDelay: number;
+	bobPx: number; // bob distance in px (negative = up)
+	hideOnSmall?: boolean;
 }
 
 const WAVES: WaveSpec[] = [
 	{
-		base: 110,
-		amp: 14,
+		base: 95,
+		amp: 12,
 		h1: 2,
 		h2: 3,
 		p1: 0.4,
 		p2: 1.9,
-		stops: ["#dbeafe", "#f1f5f9"],
-		opacity: 0.55,
+		stops: ["#dbeafe", "#eef4fb"],
+		opacity: 0.5,
 		crest: 0,
-		duration: 110,
+		duration: 150,
 		reverse: false,
-		bob: 11,
+		bob: 12,
 		bobDelay: 0,
+		bobPx: -4,
+		hideOnSmall: true,
 	},
 	{
-		base: 175,
-		amp: 18,
+		base: 170,
+		amp: 15,
 		h1: 3,
 		h2: 5,
 		p1: 2.1,
 		p2: 0.6,
-		stops: ["#e0f2fe", "#f8fafc"],
-		opacity: 0.62,
-		crest: 0.45,
-		duration: 85,
+		stops: ["#e0f2fe", "#f3f8fc"],
+		opacity: 0.6,
+		crest: 0.5,
+		duration: 110,
 		reverse: true,
-		bob: 9,
+		bob: 10,
 		bobDelay: -3,
+		bobPx: -5,
 	},
 	{
-		base: 245,
-		amp: 22,
+		base: 250,
+		amp: 14,
 		h1: 2,
 		h2: 4,
 		p1: 4.0,
 		p2: 2.7,
-		stops: ["#e2e8f0", "#f8fafc"],
-		opacity: 0.7,
-		crest: 0,
-		duration: 64,
+		stops: ["#eef2f7", "#f8fafc"], // ends exactly on the canvas colour
+		opacity: 0.95,
+		crest: 0.75,
+		duration: 80,
 		reverse: false,
-		bob: 8,
+		bob: 9,
 		bobDelay: -5,
-	},
-	{
-		base: 318,
-		amp: 16,
-		h1: 3,
-		h2: 6,
-		p1: 1.2,
-		p2: 3.3,
-		stops: ["#f8fafc", "#ffffff"],
-		opacity: 0.9,
-		crest: 0.6,
-		duration: 48,
-		reverse: true,
-		bob: 7,
-		bobDelay: -2,
+		bobPx: -6,
 	},
 ];
 
+function waveY(w: WaveSpec, x: number) {
+	const t = (TAU * x) / TILE;
+	return (
+		w.base +
+		w.amp *
+			(0.65 * Math.sin(w.h1 * t + w.p1) + 0.35 * Math.sin(w.h2 * t + w.p2))
+	);
+}
+
+// Analytic derivative, used for smooth Bézier handles.
+function waveDY(w: WaveSpec, x: number) {
+	const t = (TAU * x) / TILE;
+	return (
+		w.amp *
+		(TAU / TILE) *
+		(0.65 * w.h1 * Math.cos(w.h1 * t + w.p1) +
+			0.35 * w.h2 * Math.cos(w.h2 * t + w.p2))
+	);
+}
+
 function buildWave(w: WaveSpec) {
-	const pts: string[] = [];
-	for (let x = 0; x <= VB_W; x += STEP) {
-		const t = (2 * Math.PI * x) / TILE;
-		const y =
-			w.base +
-			w.amp *
-				(0.65 * Math.sin(w.h1 * t + w.p1) + 0.35 * Math.sin(w.h2 * t + w.p2));
-		pts.push(`${x},${y.toFixed(1)}`);
+	const f = (n: number) => n.toFixed(1);
+	const k = STEP / 3;
+	let crest = `M0,${f(waveY(w, 0))}`;
+	for (let x = 0; x < VB_W; x += STEP) {
+		const x1 = x + STEP;
+		crest += ` C${f(x + k)},${f(waveY(w, x) + waveDY(w, x) * k)} ${f(
+			x1 - k,
+		)},${f(waveY(w, x1) - waveDY(w, x1) * k)} ${x1},${f(waveY(w, x1))}`;
 	}
-	const crest = `M${pts.join(" L")}`;
 	return { crest, fill: `${crest} L${VB_W},${VB_H} L0,${VB_H} Z` };
 }
 
@@ -129,48 +145,63 @@ const WAVE_PATHS = WAVES.map(buildWave);
 
 interface CloudSpec {
 	top: string;
-	width: number; // px
+	width: number; // max px (scales down with the viewport)
 	duration: number; // seconds to cross the screen
 	progress: number; // 0..1, where it sits on load (and when motion is reduced)
 	opacity: number;
+	hideOnSmall?: boolean;
 }
 
 const CLOUDS: CloudSpec[] = [
-	{ top: "9%", width: 360, duration: 170, progress: 0.18, opacity: 0.95 },
-	{ top: "20%", width: 250, duration: 125, progress: 0.58, opacity: 0.8 },
-	{ top: "3%", width: 200, duration: 210, progress: 0.82, opacity: 0.6 },
-	{ top: "29%", width: 300, duration: 150, progress: 0.38, opacity: 0.65 },
-	{ top: "15%", width: 170, duration: 105, progress: 0.96, opacity: 0.55 },
+	{ top: "8%", width: 340, duration: 260, progress: 0.22, opacity: 0.9 },
+	{ top: "19%", width: 240, duration: 200, progress: 0.62, opacity: 0.7 },
+	{ top: "3%", width: 190, duration: 320, progress: 0.85, opacity: 0.55 },
+	{
+		top: "27%",
+		width: 280,
+		duration: 240,
+		progress: 0.42,
+		opacity: 0.6,
+		hideOnSmall: true,
+	},
 ];
 
-const CLOUD_SHAPES = (
-	<>
-		<ellipse cx="62" cy="68" rx="52" ry="22" />
-		<ellipse cx="112" cy="52" rx="46" ry="32" />
-		<ellipse cx="158" cy="58" rx="44" ry="28" />
-		<ellipse cx="196" cy="72" rx="38" ry="18" />
-		<rect x="40" y="68" width="170" height="22" rx="11" />
-	</>
-);
+// [cx, cy, rx, ry] inside a 300 x 130 viewBox
+const PUFFS: [number, number, number, number][] = [
+	[66, 82, 48, 30],
+	[122, 62, 58, 46],
+	[184, 66, 54, 44],
+	[238, 84, 42, 28],
+	[150, 96, 104, 24],
+];
 
-/* ───────────────────────── Keyframes ───────────────────────── */
+const CLOUD_SHAPES = PUFFS.map(([cx, cy, rx, ry], i) => (
+	<ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} />
+));
+
+/* ───────────────────────── Styles ───────────────────────── */
 
 const CSS = `
+.hab-root { contain: paint; }
+
 @keyframes hab-scroll-left  { from { transform: translate3d(0,0,0); }    to { transform: translate3d(-50%,0,0); } }
 @keyframes hab-scroll-right { from { transform: translate3d(-50%,0,0); } to { transform: translate3d(0,0,0); } }
-@keyframes hab-bob   { 0%,100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0,-8px,0); } }
+@keyframes hab-bob   { 0%,100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0,var(--hab-bob,-5px),0); } }
 @keyframes hab-drift { from { transform: translate3d(-120%,0,0); }       to { transform: translate3d(calc(100vw + 20%),0,0); } }
-@keyframes hab-haze  { 0%,100% { opacity: .55; } 50% { opacity: .95; } }
-@keyframes hab-sheen { from { transform: translate3d(-70%,0,0); }        to { transform: translate3d(170%,0,0); } }
+@keyframes hab-haze  { 0%,100% { opacity: .6; } 50% { opacity: .95; } }
 
 .hab-scroll { animation-timing-function: linear; animation-iteration-count: infinite; }
-.hab-bob    { animation: hab-bob ease-in-out infinite; }
-.hab-cloud  { animation: hab-drift linear infinite; }
-.hab-haze   { animation: hab-haze 14s ease-in-out infinite; }
-.hab-sheen  { animation: hab-sheen 42s linear infinite; }
+.hab-track  { width: max(200%, 2400px); } /* keeps swells gentle on narrow screens; -50% is still exactly one tile */
+.hab-bob    { animation-name: hab-bob; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+.hab-cloud  { animation-name: hab-drift; animation-timing-function: linear; animation-iteration-count: infinite; }
+.hab-haze   { animation: hab-haze 16s ease-in-out infinite; }
+
+@media (max-width: 640px) {
+	.hab-sm-hide { display: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-	.hab-scroll, .hab-bob, .hab-haze, .hab-sheen { animation: none !important; }
+	.hab-scroll, .hab-bob, .hab-haze { animation: none !important; }
 	.hab-cloud { animation: none !important; transform: translate3d(var(--hab-x, 20vw),0,0); }
 }
 `;
@@ -183,32 +214,70 @@ export default function HomeAnimatedBackground({
 	return (
 		<div
 			aria-hidden="true"
-			className={`absolute inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-slate-50 ${className}`}
+			className={`hab-root absolute inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-slate-50 ${className}`}
 		>
-			<style>{CSS}</style>
+			<style dangerouslySetInnerHTML={{ __html: CSS }} />
 
-			{/* Shared soft-edge filter for clouds */}
-			<svg width="0" height="0" className="absolute">
+			{/* Shared gradients (defined once, referenced by id) */}
+			<svg width="0" height="0" className="absolute" focusable="false">
 				<defs>
-					<filter id="hab-soft" x="-10%" y="-10%" width="120%" height="120%">
-						<feGaussianBlur stdDeviation="2.5" />
-					</filter>
+					<radialGradient id="hab-puff">
+						<stop offset="0" stopColor="#ffffff" stopOpacity="0.95" />
+						<stop offset="0.55" stopColor="#ffffff" stopOpacity="0.5" />
+						<stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+					</radialGradient>
+					<radialGradient id="hab-puff-shade">
+						<stop offset="0" stopColor="#cbd5e1" stopOpacity="0.5" />
+						<stop offset="1" stopColor="#cbd5e1" stopOpacity="0" />
+					</radialGradient>
+					{WAVES.map((w, i) => (
+						<linearGradient
+							key={i}
+							id={`hab-sea-${i}`}
+							x1="0"
+							y1="0"
+							x2="0"
+							y2="1"
+						>
+							<stop offset="0" stopColor={w.stops[0]} />
+							<stop offset="1" stopColor={w.stops[1]} />
+						</linearGradient>
+					))}
 				</defs>
 			</svg>
 
-			{/* ── Sky tint: faint sea-sky blue at the top easing into the canvas ── */}
-			<div className="absolute inset-0 bg-gradient-to-b from-sky-50 via-slate-50 to-slate-50" />
+			{/* Sky: faint blue easing into the canvas */}
+			<div
+				className="absolute inset-0"
+				style={{
+					background:
+						"linear-gradient(to bottom, #eaf4fc 0%, #f4f8fc 38%, #f8fafc 62%)",
+				}}
+			/>
 
-			{/* ── Clouds ── */}
+			{/* A barely-there warm glow, top right */}
+			<div
+				className="absolute inset-0"
+				style={{
+					background:
+						"radial-gradient(ellipse 60% 45% at 82% 2%, rgba(255,246,228,0.85) 0%, rgba(255,246,228,0) 100%)",
+				}}
+			/>
+
+			{/* Clouds */}
 			<div className="absolute top-0 inset-x-0 h-[55%] overflow-hidden">
 				{CLOUDS.map((c, i) => (
 					<div
 						key={i}
-						className="hab-cloud absolute left-0 will-change-transform"
+						className={`hab-cloud absolute left-0 will-change-transform ${
+							c.hideOnSmall ? "hab-sm-hide" : ""
+						}`}
 						style={
 							{
 								top: c.top,
-								width: c.width,
+								width: `clamp(${Math.round(c.width * 0.55)}px, ${(
+									c.width / 14.4
+								).toFixed(1)}vw, ${c.width}px)`,
 								opacity: c.opacity,
 								animationDuration: `${c.duration}s`,
 								animationDelay: `-${(c.duration * c.progress).toFixed(1)}s`,
@@ -217,37 +286,40 @@ export default function HomeAnimatedBackground({
 						}
 					>
 						<svg
-							viewBox="0 0 240 100"
+							viewBox="0 0 300 130"
 							className="block w-full h-auto"
 							fill="none"
 						>
-							<g filter="url(#hab-soft)">
-								<g fill="#e2e8f0" opacity="0.55" transform="translate(0 7)">
-									{CLOUD_SHAPES}
-								</g>
-								<g fill="#ffffff">{CLOUD_SHAPES}</g>
+							<g fill="url(#hab-puff-shade)" transform="translate(0 10)">
+								{CLOUD_SHAPES}
 							</g>
+							<g fill="url(#hab-puff)">{CLOUD_SHAPES}</g>
 						</svg>
 					</div>
 				))}
 			</div>
 
-			{/* ── Horizon haze: a pale band where sea meets sky ── */}
-			<div className="hab-haze absolute inset-x-0 top-[40%] h-[22%] bg-gradient-to-b from-transparent via-white/70 to-transparent" />
+			{/* Horizon haze: a pale band where sea meets sky */}
+			<div className="hab-haze absolute inset-x-0 top-[42%] h-[20%] bg-gradient-to-b from-transparent via-white/60 to-transparent" />
 
-			{/* ── Sea ── */}
-			<div className="absolute bottom-0 inset-x-0 h-[48%] overflow-hidden">
+			{/* Sea */}
+			<div className="absolute bottom-0 inset-x-0 h-[46%] overflow-hidden">
 				{WAVES.map((w, i) => (
 					<div
 						key={i}
-						className="hab-bob absolute inset-0"
-						style={{
-							animationDuration: `${w.bob}s`,
-							animationDelay: `${w.bobDelay}s`,
-						}}
+						className={`hab-bob absolute inset-0 ${
+							w.hideOnSmall ? "hab-sm-hide" : ""
+						}`}
+						style={
+							{
+								animationDuration: `${w.bob}s`,
+								animationDelay: `${w.bobDelay}s`,
+								"--hab-bob": `${w.bobPx}px`,
+							} as CSSProperties
+						}
 					>
 						<div
-							className="hab-scroll absolute inset-y-0 left-0 w-[200%] will-change-transform"
+							className="hab-scroll hab-track absolute inset-y-0 left-0 will-change-transform"
 							style={{
 								animationName: w.reverse
 									? "hab-scroll-right"
@@ -260,24 +332,17 @@ export default function HomeAnimatedBackground({
 								preserveAspectRatio="none"
 								className="block w-full h-full"
 								fill="none"
-								xmlns="http://www.w3.org/2000/svg"
 							>
-								<defs>
-									<linearGradient id={`hab-g${i}`} x1="0" y1="0" x2="0" y2="1">
-										<stop offset="0" stopColor={w.stops[0]} />
-										<stop offset="1" stopColor={w.stops[1]} />
-									</linearGradient>
-								</defs>
 								<path
 									d={WAVE_PATHS[i].fill}
-									fill={`url(#hab-g${i})`}
+									fill={`url(#hab-sea-${i})`}
 									opacity={w.opacity}
 								/>
 								{w.crest > 0 && (
 									<path
 										d={WAVE_PATHS[i].crest}
 										stroke="#ffffff"
-										strokeWidth="2"
+										strokeWidth="1.5"
 										strokeLinecap="round"
 										strokeLinejoin="round"
 										vectorEffect="non-scaling-stroke"
@@ -286,23 +351,12 @@ export default function HomeAnimatedBackground({
 								)}
 							</svg>
 						</div>
-
-						{/* Slow light sheen sweeping across the water, behind the nearer swells */}
-						{i === 1 && (
-							<div
-								className="hab-sheen absolute inset-y-0 left-0 w-1/2 will-change-transform opacity-60"
-								style={{
-									background:
-										"linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%)",
-								}}
-							/>
-						)}
 					</div>
 				))}
 			</div>
 
-			{/* ── Soft edge vignette (keeps content area calm and readable) ── */}
-			<div className="absolute inset-0 bg-gradient-to-b from-slate-50/40 via-transparent to-slate-50/60" />
+			{/* Soft vignette: keeps the content area calm and readable */}
+			<div className="absolute inset-0 bg-gradient-to-b from-slate-50/30 via-transparent to-slate-50/60" />
 		</div>
 	);
 }

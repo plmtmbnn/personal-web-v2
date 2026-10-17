@@ -252,7 +252,7 @@ export default function ContactView() {
 										Location
 									</p>
 									<p className="text-xs font-bold text-slate-800 truncate">
-										Toba, ID
+										Indonesia
 									</p>
 								</div>
 							</div>

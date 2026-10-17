@@ -10,7 +10,8 @@ export type InstrumentGroup =
 	| "fx"
 	| "rates"
 	| "crypto"
-	| "sector";
+	| "sector"
+	| "commodity";
 
 export type ValueFormat = "index" | "usd" | "fx" | "yield";
 
@@ -107,6 +108,17 @@ export const INSTRUMENTS: readonly Instrument[] = [
 		format: "fx",
 		inverse: true,
 	},
+	{
+		id: "USDJPY",
+		cnbc: "JPY=",
+		yahoo: "JPY=X",
+		label: "USD / JPY",
+		detail: "Yen carry-trade unwinding barometer & global risk proxy",
+		group: "fx",
+		format: "fx",
+		decimals: 2,
+		market: "JP",
+	},
 
 	// ── Treasury & Volatility Fear Gauges ──────────────────────────
 	{
@@ -190,6 +202,56 @@ export const INSTRUMENTS: readonly Instrument[] = [
 		group: "sector",
 		format: "fx",
 		market: "ID",
+	},
+	{
+		id: "TLKM.JK",
+		yahoo: "TLKM.JK",
+		label: "Telkom Indonesia",
+		detail: "Telecommunications & digital infrastructure bellwether",
+		group: "sector",
+		format: "fx",
+		market: "ID",
+	},
+	{
+		id: "ASII.JK",
+		yahoo: "ASII.JK",
+		label: "Astra International",
+		detail: "Industrial, automotive & consumer spending bellwether",
+		group: "sector",
+		format: "fx",
+		market: "ID",
+	},
+
+	// ── Global Commodities ────────────────────────────────────────
+	{
+		id: "OIL_BRENT",
+		cnbc: "@LCO.1",
+		yahoo: "BZ=F",
+		label: "Brent Crude",
+		detail: "Global energy cost & Indonesian trade balance driver",
+		group: "commodity",
+		format: "usd",
+		decimals: 2,
+	},
+	{
+		id: "GOLD",
+		cnbc: "@GC.1",
+		yahoo: "GC=F",
+		label: "Gold Spot",
+		detail: "Global safe haven & sovereign reserve debasement hedge",
+		group: "commodity",
+		format: "usd",
+		decimals: 2,
+	},
+	{
+		id: "COPPER",
+		cnbc: "@HG.1",
+		yahoo: "HG=F",
+		label: "Copper",
+		detail: "Dr. Copper - global industrial activity & demand barometer",
+		group: "commodity",
+		format: "usd",
+		decimals: 3,
 	},
 ];
 

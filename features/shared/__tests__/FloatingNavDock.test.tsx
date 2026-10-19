@@ -30,25 +30,19 @@ vi.mock("@/lib/core/supabase", () => ({
 	},
 }));
 
+import { getNavTelemetrySummary } from "@/features/shared/actions/telemetry";
+
 // Mock Server Actions
 vi.mock("@/features/auth/actions", () => ({
 	checkAdmin: vi.fn().mockResolvedValue(false),
-	getAuthStatusAction: vi
-		.fn()
-		.mockResolvedValue({ isAdmin: false, isLoggedIn: false }),
 	logout: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@/features/reminders/actions", () => ({
-	getReminderCount: vi.fn().mockResolvedValue(0),
-}));
-
-vi.mock("@/features/tasks/actions/tasks", () => ({
-	getPendingTasksCount: vi.fn().mockResolvedValue(0),
-}));
-
-vi.mock("@/features/movement/actions", () => ({
-	getUndoneMovementSnacksCount: vi.fn().mockResolvedValue(0),
+vi.mock("@/features/shared/actions/telemetry", () => ({
+	getNavTelemetrySummary: vi.fn().mockResolvedValue({
+		auth: { isAdmin: false, isLoggedIn: false },
+		counts: { tasks: 0, reminders: 0, movement: 0 },
+	}),
 }));
 
 // Mock next/navigation
@@ -95,7 +89,6 @@ import FloatingNavDock, {
 	getSubmenuSubtitle,
 	NAV_ITEMS,
 } from "../components/FloatingNavDock";
-import { getAuthStatusAction } from "@/features/auth/actions";
 
 describe("FloatingNavDock Helper Functions", () => {
 	describe("isPathActive()", () => {
@@ -242,18 +235,20 @@ describe("FloatingNavDock Component", () => {
 	});
 
 	it("re-syncs auth immediately upon receiving auth:state:updated custom event", async () => {
-		vi.mocked(getAuthStatusAction).mockResolvedValueOnce({
-			isAdmin: false,
-			isLoggedIn: false,
+		vi.mocked(getNavTelemetrySummary).mockResolvedValueOnce({
+			auth: { isAdmin: false, isLoggedIn: false },
+			counts: { tasks: 0, reminders: 0, movement: 0 },
 		});
 
-		render(<FloatingNavDock />);
-		expect(getAuthStatusAction).toHaveBeenCalledTimes(1);
+		await act(async () => {
+			render(<FloatingNavDock />);
+		});
+		expect(getNavTelemetrySummary).toHaveBeenCalledTimes(1);
 
 		// Now simulate successful login event dispatch
-		vi.mocked(getAuthStatusAction).mockResolvedValueOnce({
-			isAdmin: true,
-			isLoggedIn: true,
+		vi.mocked(getNavTelemetrySummary).mockResolvedValueOnce({
+			auth: { isAdmin: true, isLoggedIn: true },
+			counts: { tasks: 0, reminders: 0, movement: 0 },
 		});
 
 		await act(async () => {
@@ -264,13 +259,13 @@ describe("FloatingNavDock Component", () => {
 			);
 		});
 
-		expect(getAuthStatusAction).toHaveBeenCalledTimes(2);
+		expect(getNavTelemetrySummary).toHaveBeenCalledTimes(2);
 	});
 
 	it("updates movement snacks badge immediately upon receiving movement:state:updated with detail", async () => {
-		vi.mocked(getAuthStatusAction).mockResolvedValue({
-			isAdmin: true,
-			isLoggedIn: true,
+		vi.mocked(getNavTelemetrySummary).mockResolvedValue({
+			auth: { isAdmin: true, isLoggedIn: true },
+			counts: { tasks: 0, reminders: 0, movement: 0 },
 		});
 
 		render(<FloatingNavDock />);

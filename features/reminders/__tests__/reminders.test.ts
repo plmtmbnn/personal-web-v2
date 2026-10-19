@@ -15,6 +15,9 @@ vi.mock("@/lib/core/redis", () => ({
 		keys: vi.fn(),
 		mget: vi.fn(),
 		del: vi.fn(),
+		sadd: vi.fn(),
+		scard: vi.fn(),
+		srem: vi.fn(),
 	},
 }));
 
@@ -152,13 +155,28 @@ describe("Reminders Actions", () => {
 			expect(count).toBe(0);
 		});
 
-		it("returns number of keys if admin", async () => {
+		it("returns count from scard if admin and set has items", async () => {
 			vi.mocked(checkAdmin).mockResolvedValue(true);
-			vi.mocked(redis.keys).mockResolvedValue(["k1", "k2", "k3"]);
+			vi.mocked(redis.scard).mockResolvedValue(5 as any);
 
 			const count = await getReminderCount();
-			expect(count).toBe(3);
+			expect(count).toBe(5);
+			expect(redis.scard).toHaveBeenCalledWith("admin:reminder:ids");
+		});
+
+		it("falls back to self-seeding keys if scard is 0", async () => {
+			vi.mocked(checkAdmin).mockResolvedValue(true);
+			vi.mocked(redis.scard).mockResolvedValue(0 as any);
+			vi.mocked(redis.keys).mockResolvedValue([
+				"admin:reminder:k1",
+				"admin:reminder:k2",
+			]);
+			vi.mocked(redis.sadd).mockResolvedValue(2 as any);
+
+			const count = await getReminderCount();
+			expect(count).toBe(2);
 			expect(redis.keys).toHaveBeenCalledWith("admin:reminder:*");
+			expect(redis.sadd).toHaveBeenCalledWith("admin:reminder:ids", "k1", "k2");
 		});
 	});
 });

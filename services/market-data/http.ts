@@ -17,7 +17,11 @@ export function buildFetchInit(
 	if (policy.fresh) {
 		return { cache: "no-store", headers, signal };
 	}
-	return { next: { revalidate: policy.revalidate }, headers, signal };
+	return {
+		next: { revalidate: policy.revalidate ?? 60, tags: ["compass-data"] },
+		headers,
+		signal,
+	};
 }
 
 /**

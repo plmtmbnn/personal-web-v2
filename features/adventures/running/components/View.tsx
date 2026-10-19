@@ -390,7 +390,7 @@ export function RunningSkeleton() {
 
 export default function RunningView({
 	initialData,
-	isAdmin = false,
+	isAdmin: propIsAdmin = false,
 	isLoading = false,
 }: {
 	initialData?: StravaDataResult;
@@ -402,6 +402,7 @@ export default function RunningView({
 	}
 
 	const [mounted, setMounted] = useState(false);
+	const [isAdmin, setIsAdmin] = useState(propIsAdmin);
 	const [dataState, setDataState] = useState<StravaDataResult | undefined>(
 		initialData,
 	);
@@ -454,6 +455,39 @@ export default function RunningView({
 	useEffect(() => {
 		setMounted(true);
 	}, []);
+
+	useEffect(() => {
+		if (propIsAdmin) {
+			setIsAdmin(true);
+			return;
+		}
+
+		// Resolve admin capability client-side for edge-cached visits
+		if (typeof window !== "undefined") {
+			try {
+				const sessionStr = localStorage.getItem("auth_pin_session");
+				if (sessionStr) {
+					const { authenticated, timestamp } = JSON.parse(sessionStr);
+					if (authenticated && Date.now() - timestamp < 3600000 * 12) {
+						setIsAdmin(true);
+					}
+				}
+			} catch {
+				// Silently ignore
+			}
+		}
+
+		const onAuthUpdate = (e: Event) => {
+			const custom = e as CustomEvent<{ authenticated?: boolean }>;
+			if (custom.detail?.authenticated) {
+				setIsAdmin(true);
+			}
+		};
+		window.addEventListener("auth:state:updated", onAuthUpdate);
+		return () => {
+			window.removeEventListener("auth:state:updated", onAuthUpdate);
+		};
+	}, [propIsAdmin]);
 
 	useEffect(() => {
 		if (initialData) {

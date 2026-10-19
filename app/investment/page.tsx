@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createMetadata } from "@/lib/shared/metadata";
 import { SITE } from "@/lib/shared/constants";
 import InvestmentCompassView from "@/features/investment/components/View";
-import { getInvestmentCompass } from "@/features/investment/actions";
+import { getCachedInvestmentCompass } from "@/features/investment/actions";
 
 export const revalidate = 3600;
 
@@ -23,7 +23,7 @@ export const metadata: Metadata = createMetadata({
 });
 
 export default async function InvestmentPage() {
-	const initialData = await getInvestmentCompass();
+	const initialData = await getCachedInvestmentCompass();
 
 	const jsonLd = {
 		"@context": "https://schema.org",

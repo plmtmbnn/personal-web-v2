@@ -4,7 +4,7 @@ import { createMetadata } from "@/lib/shared/metadata";
 import { PERSON_SCHEMA, SITE, SEO } from "@/lib/shared/constants";
 import HomeView from "@/features/home/components/HomeView";
 import HomeSkeleton from "@/features/home/components/HomeSkeleton";
-import { getAthleteStats } from "@/services/strava/service";
+import { getCachedAthleteStats } from "@/services/strava/service";
 
 // Edge cache with ISR — revalidate athlete stats at most once every hour
 export const revalidate = 3600;
@@ -19,7 +19,7 @@ export const metadata: Metadata = createMetadata({
 async function HomeDataWrapper() {
 	let runningKm = 1000;
 	try {
-		const stats = await getAthleteStats();
+		const stats = await getCachedAthleteStats();
 		if (stats?.ytd_run_totals?.distance) {
 			runningKm = Math.round(stats.ytd_run_totals.distance / 1000);
 		}

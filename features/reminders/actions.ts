@@ -4,53 +4,11 @@ import { redis } from "@/lib/core/redis";
 import { checkAdmin } from "@/features/auth/actions";
 import { revalidatePath } from "next/cache";
 import type { Reminder, ReminderTTL } from "./types";
+import { resolveDueDate } from "./utils";
 
 const KEY_PREFIX = "admin:reminder:";
+const REMINDER_SET_KEY = "admin:reminder:ids";
 const NINETY_DAYS_SECONDS = 90 * 86400;
-
-/**
- * Calculates target ISO due date based on preset or explicit date string.
- */
-function resolveDueDate(dueDateOrPreset?: string): string {
-	const now = new Date();
-	if (
-		!dueDateOrPreset ||
-		dueDateOrPreset === "today" ||
-		dueDateOrPreset === "day"
-	) {
-		const endOfToday = new Date(now);
-		endOfToday.setHours(23, 59, 59, 999);
-		return endOfToday.toISOString();
-	}
-	if (dueDateOrPreset === "tomorrow") {
-		const tomorrow = new Date(now);
-		tomorrow.setDate(tomorrow.getDate() + 1);
-		tomorrow.setHours(23, 59, 59, 999);
-		return tomorrow.toISOString();
-	}
-	if (dueDateOrPreset === "week") {
-		const nextWeek = new Date(now);
-		nextWeek.setDate(nextWeek.getDate() + 7);
-		nextWeek.setHours(23, 59, 59, 999);
-		return nextWeek.toISOString();
-	}
-	if (dueDateOrPreset === "month") {
-		const nextMonth = new Date(now);
-		nextMonth.setDate(nextMonth.getDate() + 30);
-		nextMonth.setHours(23, 59, 59, 999);
-		return nextMonth.toISOString();
-	}
-
-	// If explicit date string (e.g. "2026-10-25" or ISO string)
-	const parsed = new Date(dueDateOrPreset);
-	if (!Number.isNaN(parsed.getTime())) {
-		return parsed.toISOString();
-	}
-
-	const fallback = new Date(now);
-	fallback.setHours(23, 59, 59, 999);
-	return fallback.toISOString();
-}
 
 export async function addReminder(
 	text: string,
@@ -78,7 +36,10 @@ export async function addReminder(
 	};
 
 	// 90-day retention so overdue tasks remain visible until checked off
-	await redis.set(key, JSON.stringify(reminder), { ex: NINETY_DAYS_SECONDS });
+	await Promise.all([
+		redis.set(key, JSON.stringify(reminder), { ex: NINETY_DAYS_SECONDS }),
+		redis.sadd(REMINDER_SET_KEY, id),
+	]);
 
 	revalidatePath("/admin/reminders");
 	return { success: true, reminder };
@@ -113,7 +74,10 @@ export async function deleteReminder(id: string) {
 	const isAdmin = await checkAdmin();
 	if (!isAdmin) throw new Error("Unauthorized");
 
-	await redis.del(`${KEY_PREFIX}${id}`);
+	await Promise.all([
+		redis.del(`${KEY_PREFIX}${id}`),
+		redis.srem(REMINDER_SET_KEY, id),
+	]);
 	revalidatePath("/admin/reminders");
 	return { success: true };
 }
@@ -122,8 +86,24 @@ export async function getReminderCount(): Promise<number> {
 	const isAdmin = await checkAdmin();
 	if (!isAdmin) return 0;
 
-	const keys = await redis.keys(`${KEY_PREFIX}*`);
-	return keys.length;
+	try {
+		let count = (await redis.scard(REMINDER_SET_KEY)) || 0;
+		if (count === 0) {
+			// Self-seed from existing keys if set is not initialized yet
+			const keys = await redis.keys(`${KEY_PREFIX}*`);
+			if (keys.length > 0) {
+				const ids = keys.map((k) => k.replace(KEY_PREFIX, ""));
+				if (ids.length > 0) {
+					await redis.sadd(REMINDER_SET_KEY, ids[0], ...ids.slice(1));
+					count = ids.length;
+				}
+			}
+		}
+		return count;
+	} catch (err) {
+		console.error("Error in getReminderCount:", err);
+		return 0;
+	}
 }
 
 export async function extendReminder(id: string, extendBy: ReminderTTL) {

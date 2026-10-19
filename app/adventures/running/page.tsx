@@ -4,10 +4,10 @@ import { createMetadata } from "@/lib/shared/metadata";
 import RunningView, {
 	RunningSkeleton,
 } from "@/features/adventures/running/components/View";
-import { getStravaData } from "@/services/strava/service";
-import { checkAdmin } from "@/features/auth/actions";
+import { getCachedStravaData } from "@/services/strava/service";
 
-export const dynamic = "force-dynamic";
+// Edge cache with ISR — revalidate running activity log at most once every 5 minutes
+export const revalidate = 300;
 
 export const metadata: Metadata = createMetadata({
 	title: "Endurance Journey | Running",
@@ -24,13 +24,10 @@ export const metadata: Metadata = createMetadata({
 });
 
 export default async function RunningPage() {
-	const [stravaData, isAdmin] = await Promise.all([
-		getStravaData(),
-		checkAdmin(),
-	]);
+	const stravaData = await getCachedStravaData();
 	return (
 		<Suspense fallback={<RunningSkeleton />}>
-			<RunningView initialData={stravaData} isAdmin={isAdmin} />
+			<RunningView initialData={stravaData} />
 		</Suspense>
 	);
 }

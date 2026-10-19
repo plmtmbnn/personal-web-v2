@@ -6,10 +6,11 @@ export default defineConfig({
 		environment: "jsdom",
 		globals: true,
 		setupFiles: [],
+		fileParallelism: true,
 	},
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "./"),
+			"@": path.resolve(import.meta.dirname, "./"),
 		},
 	},
 });

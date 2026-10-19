@@ -4,10 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef, useCallback, useTransition } from "react";
 import { SupabaseConn } from "@/lib/core/supabase";
-import { logout, getAuthStatusAction } from "@/features/auth/actions";
-import { getReminderCount } from "@/features/reminders/actions";
-import { getPendingTasksCount } from "@/features/tasks/actions/tasks";
-import { getUndoneMovementSnacksCount } from "@/features/movement/actions";
+import { logout } from "@/features/auth/actions";
+import { getNavTelemetrySummary } from "@/features/shared/actions/telemetry";
 import {
 	loadMovementState,
 	calculateUndoneCount,
@@ -357,7 +355,6 @@ export default function FloatingNavDock() {
 		[key: string]: (HTMLAnchorElement | HTMLButtonElement | null)[];
 	}>({});
 	const isTouchDeviceRef = useRef(false);
-	const isInitialAuthSyncRef = useRef(false);
 	const reduceMotion = useReducedMotion();
 
 	const closeSubMenu = useCallback(() => {
@@ -420,78 +417,108 @@ export default function FloatingNavDock() {
 		};
 	}, [closeSubMenu]);
 
-	// Centralized Auth Synchronization with Single-Action Optimization & LocalStorage Hint
-	const syncAuthState = useCallback(async () => {
-		if (!isGoogleAuthEnabled) {
-			setIsAdmin(true);
-			setIsLoggedIn(true);
-			return;
-		}
+	const lastTelemetryFetchRef = useRef<number>(0);
+	const isTelemetryFetchingRef = useRef<boolean>(false);
 
-		// Optimistic hint: if valid PIN session exists in localStorage, reveal early
-		if (typeof window !== "undefined") {
-			try {
-				const sessionStr = localStorage.getItem("auth_pin_session");
-				if (sessionStr) {
-					const { authenticated, timestamp } = JSON.parse(sessionStr);
-					if (authenticated && Date.now() - timestamp < 3600000 * 12) {
-						setIsAdmin(true);
-						setIsLoggedIn(true);
-					}
-				}
-			} catch {
-				// Silently fallback to server action check
+	// Consolidated Telemetry & Auth Synchronization with 60s SWR Cache
+	const syncTelemetry = useCallback(
+		async (force = false) => {
+			const now = Date.now();
+			if (!force && now - lastTelemetryFetchRef.current < 60000) {
+				return;
 			}
-		}
+			if (!force && isTelemetryFetchingRef.current) return;
+			isTelemetryFetchingRef.current = true;
 
-		try {
-			const status = await getAuthStatusAction();
-			setIsAdmin(status.isAdmin);
-			setIsLoggedIn(status.isLoggedIn);
-		} catch {
-			setIsAdmin(false);
-			setIsLoggedIn(false);
-		}
-
-		// Optimistic hint: try reading user metadata from Supabase session
-		if (typeof window !== "undefined") {
-			try {
-				const {
-					data: { user },
-				} = await SupabaseConn.auth.getUser();
-				if (user?.user_metadata) {
-					const avatar =
-						user.user_metadata.avatar_url || user.user_metadata.picture;
-					if (avatar) {
-						setUserAvatar(avatar);
-						setAvatarError(false);
-					}
-				}
-			} catch {
-				// Silently fallback to server action check
+			if (!isGoogleAuthEnabled) {
+				setIsAdmin(true);
+				setIsLoggedIn(true);
 			}
-		}
-	}, [isGoogleAuthEnabled]);
 
-	// Reactive Auth Listeners (Mount, Supabase changes, cross-component events, and tab focus)
+			// Optimistic hints from localStorage
+			if (typeof window !== "undefined") {
+				try {
+					const sessionStr = localStorage.getItem("auth_pin_session");
+					if (sessionStr) {
+						const { authenticated, timestamp } = JSON.parse(sessionStr);
+						if (authenticated && now - timestamp < 3600000 * 12) {
+							setIsAdmin(true);
+							setIsLoggedIn(true);
+						}
+					}
+					const local = loadMovementState();
+					if (local?.logs) {
+						setPendingMovementCount(calculateUndoneCount(local));
+					}
+				} catch {
+					// Fall through to server fetch
+				}
+			}
+
+			try {
+				const summary = await getNavTelemetrySummary();
+				lastTelemetryFetchRef.current = Date.now();
+				setIsAdmin(summary.auth.isAdmin);
+				setIsLoggedIn(summary.auth.isLoggedIn);
+				setPendingTasksCount(summary.counts.tasks);
+				setPendingRemindersCount(summary.counts.reminders);
+				setPendingMovementCount(summary.counts.movement);
+			} catch (err) {
+				console.error("Error syncing telemetry summary:", err);
+			} finally {
+				isTelemetryFetchingRef.current = false;
+			}
+
+			// Optimistic hint: try reading user metadata from Supabase session
+			if (typeof window !== "undefined") {
+				try {
+					const {
+						data: { user },
+					} = await SupabaseConn.auth.getUser();
+					if (user?.user_metadata) {
+						const avatar =
+							user.user_metadata.avatar_url || user.user_metadata.picture;
+						if (avatar) {
+							setUserAvatar(avatar);
+							setAvatarError(false);
+						}
+					}
+				} catch {
+					// Silently ignore
+				}
+			}
+		},
+		[isGoogleAuthEnabled],
+	);
+
+	// Reactive Auth & Telemetry Listeners
 	useEffect(() => {
-		syncAuthState();
+		syncTelemetry(true);
 
-		const onAuthUpdate = () => {
-			syncAuthState();
+		const onForceSync = () => {
+			syncTelemetry(true);
 		};
 		const onFocus = () => {
-			syncAuthState();
+			syncTelemetry(false);
 		};
 		const onVisibility = () => {
 			if (document.visibilityState === "visible") {
-				syncAuthState();
+				syncTelemetry(false);
 			}
 		};
+		const onMovement = (event: Event) => {
+			const customEvent = event as CustomEvent<{ undoneCount?: number }>;
+			if (typeof customEvent.detail?.undoneCount === "number") {
+				setPendingMovementCount(customEvent.detail.undoneCount);
+				return;
+			}
+			syncTelemetry(true);
+		};
 
-		window.addEventListener("auth:state:updated", onAuthUpdate);
+		window.addEventListener("auth:state:updated", onForceSync);
 		window.addEventListener("focus", onFocus);
 		document.addEventListener("visibilitychange", onVisibility);
+		window.addEventListener("movement:state:updated", onMovement);
 
 		const {
 			data: { subscription },
@@ -505,7 +532,7 @@ export default function FloatingNavDock() {
 					setUserAvatar(avatar);
 					setAvatarError(false);
 				}
-				syncAuthState();
+				syncTelemetry(true);
 			} else {
 				setIsLoggedIn(false);
 				setIsAdmin(false);
@@ -518,91 +545,18 @@ export default function FloatingNavDock() {
 		});
 
 		return () => {
-			window.removeEventListener("auth:state:updated", onAuthUpdate);
-			window.removeEventListener("focus", onFocus);
-			document.removeEventListener("visibilitychange", onVisibility);
-			subscription.unsubscribe();
-		};
-	}, [syncAuthState]);
-
-	// Re-sync auth immediately on route change (e.g. login -> admin navigation)
-	useEffect(() => {
-		if (isInitialAuthSyncRef.current) {
-			syncAuthState();
-		} else {
-			isInitialAuthSyncRef.current = true;
-		}
-	}, [syncAuthState, pathname]);
-
-	// Pending Admin Telemetry Badges (Tasks, Reminders, and Movement Snacks)
-	const fetchPendingCounts = useCallback(async () => {
-		if (!isGoogleAuthEnabled || (isLoggedIn && isAdmin)) {
-			// Optimistic hint: if movement state exists in localStorage, display it immediately
-			if (typeof window !== "undefined") {
-				try {
-					const local = loadMovementState();
-					if (local?.logs) {
-						setPendingMovementCount(calculateUndoneCount(local));
-					}
-				} catch {
-					// Fall through to server fetch
-				}
-			}
-
-			try {
-				const [taskCount, reminderCount, movementCount] = await Promise.all([
-					getPendingTasksCount(),
-					getReminderCount(),
-					getUndoneMovementSnacksCount(),
-				]);
-				setPendingTasksCount(taskCount);
-				setPendingRemindersCount(reminderCount);
-				setPendingMovementCount(movementCount);
-			} catch (err) {
-				console.error("Error fetching admin telemetry counts:", err);
-			}
-		} else {
-			setPendingTasksCount(0);
-			setPendingRemindersCount(0);
-			setPendingMovementCount(0);
-		}
-	}, [isLoggedIn, isAdmin, isGoogleAuthEnabled]);
-
-	// Re-fetch badges on route change or when tab regains focus or auth/movement updates
-	useEffect(() => {
-		fetchPendingCounts();
-
-		const onFocus = () => {
-			fetchPendingCounts();
-		};
-		const onVisibility = () => {
-			if (document.visibilityState === "visible") {
-				fetchPendingCounts();
-			}
-		};
-		const onMovement = (event: Event) => {
-			const customEvent = event as CustomEvent<{ undoneCount?: number }>;
-			if (typeof customEvent.detail?.undoneCount === "number") {
-				setPendingMovementCount(customEvent.detail.undoneCount);
-				return;
-			}
-			fetchPendingCounts();
-		};
-		const onAuth = () => {
-			fetchPendingCounts();
-		};
-
-		window.addEventListener("focus", onFocus);
-		document.addEventListener("visibilitychange", onVisibility);
-		window.addEventListener("movement:state:updated", onMovement);
-		window.addEventListener("auth:state:updated", onAuth);
-		return () => {
+			window.removeEventListener("auth:state:updated", onForceSync);
 			window.removeEventListener("focus", onFocus);
 			document.removeEventListener("visibilitychange", onVisibility);
 			window.removeEventListener("movement:state:updated", onMovement);
-			window.removeEventListener("auth:state:updated", onAuth);
+			subscription.unsubscribe();
 		};
-	}, [fetchPendingCounts, pathname]);
+	}, [syncTelemetry]);
+
+	// Re-sync on route change with SWR throttling
+	useEffect(() => {
+		syncTelemetry(false);
+	}, [syncTelemetry, pathname]);
 
 	const handleLogout = useCallback(() => {
 		startTransition(async () => {

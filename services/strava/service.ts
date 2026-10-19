@@ -1,5 +1,6 @@
 import { redis } from "@/lib/core/redis";
 import { ENV_GLOBAL } from "@/lib/core/env";
+import { unstable_cache } from "next/cache";
 
 export interface StravaTokenData {
 	access_token: string;
@@ -474,6 +475,12 @@ export async function getAthleteStats(
 	return stats;
 }
 
+export const getCachedAthleteStats = unstable_cache(
+	async () => getAthleteStats(),
+	["athlete-stats-summary"],
+	{ revalidate: 3600, tags: ["strava-stats"] },
+);
+
 export async function getActivitySplits(
 	activityId: number,
 	accessToken?: string | null,
@@ -542,3 +549,9 @@ export async function getStravaData(): Promise<StravaDataResult> {
 		};
 	}
 }
+
+export const getCachedStravaData = unstable_cache(
+	async () => getStravaData(),
+	["strava-activity-data"],
+	{ revalidate: 300, tags: ["strava-runs"] },
+);

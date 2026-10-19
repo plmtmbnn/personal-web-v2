@@ -1,6 +1,7 @@
 "use server";
 
 import { redis, CACHE_KEYS } from "@/lib/core/redis";
+import { revalidatePath, unstable_cache } from "next/cache";
 import type {
 	CryptoFearAndGreedResponse,
 	InvestmentCompassData,
@@ -536,6 +537,14 @@ async function getIhsgFlowsData(forceRefresh: boolean): Promise<{
 export async function getInvestmentCompass(
 	forceRefresh = false,
 ): Promise<InvestmentCompassData> {
+	if (forceRefresh) {
+		try {
+			revalidatePath("/investment");
+		} catch (e) {
+			console.warn("[Investment] revalidatePath failed:", e);
+		}
+	}
+
 	const [
 		cryptoFngResult,
 		quotesResult,
@@ -667,3 +676,9 @@ export async function getInvestmentCompass(
 
 	return compassData;
 }
+
+export const getCachedInvestmentCompass = unstable_cache(
+	async () => getInvestmentCompass(false),
+	["investment-compass-data"],
+	{ revalidate: 60, tags: ["compass-data"] },
+);

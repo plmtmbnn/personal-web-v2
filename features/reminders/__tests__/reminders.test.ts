@@ -47,7 +47,7 @@ describe("Reminders Actions", () => {
 			expect(redis.set).not.toHaveBeenCalled();
 		});
 
-		it("saves reminder to Redis with 1-day TTL default", async () => {
+		it("saves reminder to Redis with default today due date and 90-day retention", async () => {
 			vi.mocked(checkAdmin).mockResolvedValue(true);
 			vi.mocked(redis.set).mockResolvedValue("OK" as any);
 
@@ -55,32 +55,27 @@ describe("Reminders Actions", () => {
 
 			expect(result.success).toBe(true);
 			expect(result.reminder.text).toBe("Buy milk");
-			expect(result.reminder.ttl).toBe("day");
+			expect(result.reminder.dueDate).toBeDefined();
 			expect(redis.set).toHaveBeenCalledWith(
 				expect.stringMatching(/^admin:reminder:/),
 				expect.any(String),
-				{ ex: 86400 },
+				{ ex: 90 * 86400 },
 			);
 			expect(revalidatePath).toHaveBeenCalledWith("/admin/reminders");
 		});
 
-		it("saves reminder with week and month TTLs correctly", async () => {
+		it("saves reminder with tomorrow, week, and custom due date correctly", async () => {
 			vi.mocked(checkAdmin).mockResolvedValue(true);
 			vi.mocked(redis.set).mockResolvedValue("OK" as any);
 
-			await addReminder("Review sprint", "week");
-			expect(redis.set).toHaveBeenCalledWith(
-				expect.stringMatching(/^admin:reminder:/),
-				expect.any(String),
-				{ ex: 604800 },
-			);
+			const resTomorrow = await addReminder("Review sprint", "tomorrow");
+			expect(resTomorrow.reminder.dueDate).toBeDefined();
 
-			await addReminder("Renew domain", "month");
-			expect(redis.set).toHaveBeenCalledWith(
-				expect.stringMatching(/^admin:reminder:/),
-				expect.any(String),
-				{ ex: 2592000 },
-			);
+			const resWeek = await addReminder("Renew domain", "week");
+			expect(resWeek.reminder.dueDate).toBeDefined();
+
+			const resCustom = await addReminder("Quarterly taxes", "2026-11-15");
+			expect(resCustom.reminder.dueDate).toContain("2026-11-15");
 		});
 	});
 
@@ -100,7 +95,7 @@ describe("Reminders Actions", () => {
 			expect(redis.mget).not.toHaveBeenCalled();
 		});
 
-		it("returns sorted reminders by expiresAt ascending", async () => {
+		it("returns sorted reminders by dueDate ascending", async () => {
 			vi.mocked(checkAdmin).mockResolvedValue(true);
 			vi.mocked(redis.keys).mockResolvedValue([
 				"admin:reminder:1",
@@ -111,15 +106,13 @@ describe("Reminders Actions", () => {
 				id: "1",
 				text: "Later",
 				createdAt: "2026-08-24T10:00:00.000Z",
-				expiresAt: "2026-08-30T10:00:00.000Z",
-				ttl: "week",
+				dueDate: "2026-08-30T23:59:59.000Z",
 			};
 			const reminder2 = {
 				id: "2",
 				text: "Urgent",
 				createdAt: "2026-08-24T10:00:00.000Z",
-				expiresAt: "2026-08-25T10:00:00.000Z",
-				ttl: "day",
+				dueDate: "2026-08-25T23:59:59.000Z",
 			};
 
 			vi.mocked(redis.mget).mockResolvedValue([
@@ -129,7 +122,7 @@ describe("Reminders Actions", () => {
 
 			const reminders = await getReminders();
 			expect(reminders).toHaveLength(2);
-			expect(reminders[0]?.id).toBe("2"); // Expiring sooner
+			expect(reminders[0]?.id).toBe("2"); // Due sooner
 			expect(reminders[1]?.id).toBe("1");
 		});
 	});

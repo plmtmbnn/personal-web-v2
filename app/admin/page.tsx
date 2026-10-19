@@ -186,14 +186,14 @@ export default async function AdminDashboardPage() {
 		{
 			title: "Quick Reminders",
 			description:
-				"Jot down expiring operational notes, URL links, and daily reminders with automatic Redis TTL.",
+				"Straightforward reminders with target due dates, linear checklist, and 1-click completion.",
 			href: "/admin/reminders",
 			icon: Bell,
 			color: "text-amber-600",
 			bg: "bg-amber-50",
 			border: "border-amber-200/70",
 			hoverAccent: "group-hover:text-amber-600",
-			tags: ["Redis Auto-Expiry", "Linkified Pills", "Duration Extend"],
+			tags: ["Due Date Tracking", "1-Click Complete", "Undo Toast"],
 		},
 		{
 			title: "Daily Movement Snacks",

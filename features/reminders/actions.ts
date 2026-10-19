@@ -5,15 +5,57 @@ import { checkAdmin } from "@/features/auth/actions";
 import { revalidatePath } from "next/cache";
 import type { Reminder, ReminderTTL } from "./types";
 
-const TTL_SECONDS = {
-	day: 86400,
-	week: 604800,
-	month: 2592000,
-};
-
 const KEY_PREFIX = "admin:reminder:";
+const NINETY_DAYS_SECONDS = 90 * 86400;
 
-export async function addReminder(text: string, ttl: ReminderTTL = "day") {
+/**
+ * Calculates target ISO due date based on preset or explicit date string.
+ */
+function resolveDueDate(dueDateOrPreset?: string): string {
+	const now = new Date();
+	if (
+		!dueDateOrPreset ||
+		dueDateOrPreset === "today" ||
+		dueDateOrPreset === "day"
+	) {
+		const endOfToday = new Date(now);
+		endOfToday.setHours(23, 59, 59, 999);
+		return endOfToday.toISOString();
+	}
+	if (dueDateOrPreset === "tomorrow") {
+		const tomorrow = new Date(now);
+		tomorrow.setDate(tomorrow.getDate() + 1);
+		tomorrow.setHours(23, 59, 59, 999);
+		return tomorrow.toISOString();
+	}
+	if (dueDateOrPreset === "week") {
+		const nextWeek = new Date(now);
+		nextWeek.setDate(nextWeek.getDate() + 7);
+		nextWeek.setHours(23, 59, 59, 999);
+		return nextWeek.toISOString();
+	}
+	if (dueDateOrPreset === "month") {
+		const nextMonth = new Date(now);
+		nextMonth.setDate(nextMonth.getDate() + 30);
+		nextMonth.setHours(23, 59, 59, 999);
+		return nextMonth.toISOString();
+	}
+
+	// If explicit date string (e.g. "2026-10-25" or ISO string)
+	const parsed = new Date(dueDateOrPreset);
+	if (!Number.isNaN(parsed.getTime())) {
+		return parsed.toISOString();
+	}
+
+	const fallback = new Date(now);
+	fallback.setHours(23, 59, 59, 999);
+	return fallback.toISOString();
+}
+
+export async function addReminder(
+	text: string,
+	dueDateOrPreset: string = "today",
+) {
 	const isAdmin = await checkAdmin();
 	if (!isAdmin) throw new Error("Unauthorized");
 
@@ -24,17 +66,19 @@ export async function addReminder(text: string, ttl: ReminderTTL = "day") {
 	const id = crypto.randomUUID();
 	const key = `${KEY_PREFIX}${id}`;
 	const now = Date.now();
-	const expiresAt = now + TTL_SECONDS[ttl] * 1000;
+	const dueDate = resolveDueDate(dueDateOrPreset);
 
 	const reminder: Reminder = {
 		id,
-		text,
+		text: text.trim(),
 		createdAt: new Date(now).toISOString(),
-		expiresAt: new Date(expiresAt).toISOString(),
-		ttl,
+		dueDate,
+		expiresAt: dueDate,
+		ttl: dueDateOrPreset as ReminderTTL,
 	};
 
-	await redis.set(key, JSON.stringify(reminder), { ex: TTL_SECONDS[ttl] });
+	// 90-day retention so overdue tasks remain visible until checked off
+	await redis.set(key, JSON.stringify(reminder), { ex: NINETY_DAYS_SECONDS });
 
 	revalidatePath("/admin/reminders");
 	return { success: true, reminder };
@@ -51,10 +95,15 @@ export async function getReminders(): Promise<Reminder[]> {
 
 	const reminders: Reminder[] = rawReminders
 		.filter((r): r is string | object => !!r)
-		.map((r) => (typeof r === "string" ? JSON.parse(r) : r))
+		.map((r) => {
+			const item = typeof r === "string" ? JSON.parse(r) : r;
+			return {
+				...item,
+				dueDate: item.dueDate || item.expiresAt || new Date().toISOString(),
+			};
+		})
 		.sort(
-			(a, b) =>
-				new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime(),
+			(a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
 		);
 
 	return reminders;
@@ -88,21 +137,24 @@ export async function extendReminder(id: string, extendBy: ReminderTTL) {
 	const reminder: Reminder =
 		typeof rawReminder === "string" ? JSON.parse(rawReminder) : rawReminder;
 
-	const now = Date.now();
-	// Base the extension on the current expiresAt if it's in the future,
-	// otherwise base it on now.
-	const currentExpiresAt = new Date(reminder.expiresAt).getTime();
-	const baseTime = Math.max(now, currentExpiresAt);
-
-	const newExpiresAt = baseTime + TTL_SECONDS[extendBy] * 1000;
-	const secondsDiff = Math.max(1, Math.floor((newExpiresAt - now) / 1000));
+	const currentDue = new Date(
+		reminder.dueDate || reminder.expiresAt || Date.now(),
+	).getTime();
+	const baseTime = Math.max(Date.now(), currentDue);
+	const addedDays = extendBy === "day" ? 1 : extendBy === "week" ? 7 : 30;
+	const newDueDate = new Date(
+		baseTime + addedDays * 86400 * 1000,
+	).toISOString();
 
 	const updatedReminder: Reminder = {
 		...reminder,
-		expiresAt: new Date(newExpiresAt).toISOString(),
+		dueDate: newDueDate,
+		expiresAt: newDueDate,
 	};
 
-	await redis.set(key, JSON.stringify(updatedReminder), { ex: secondsDiff });
+	await redis.set(key, JSON.stringify(updatedReminder), {
+		ex: NINETY_DAYS_SECONDS,
+	});
 
 	revalidatePath("/admin/reminders");
 	return { success: true, reminder: updatedReminder };

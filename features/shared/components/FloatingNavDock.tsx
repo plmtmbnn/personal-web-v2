@@ -343,6 +343,8 @@ export default function FloatingNavDock() {
 	const [expandedItem, setExpandedItem] = useState<string | null>(null);
 	const [isAdmin, setIsAdmin] = useState(!isGoogleAuthEnabled);
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
+	const [userAvatar, setUserAvatar] = useState<string | null>(null);
+	const [avatarError, setAvatarError] = useState(false);
 	const [pendingTasksCount, setPendingTasksCount] = useState(0);
 	const [pendingRemindersCount, setPendingRemindersCount] = useState(0);
 	const [pendingMovementCount, setPendingMovementCount] = useState(0);
@@ -450,6 +452,25 @@ export default function FloatingNavDock() {
 			setIsAdmin(false);
 			setIsLoggedIn(false);
 		}
+
+		// Optimistic hint: try reading user metadata from Supabase session
+		if (typeof window !== "undefined") {
+			try {
+				const {
+					data: { user },
+				} = await SupabaseConn.auth.getUser();
+				if (user?.user_metadata) {
+					const avatar =
+						user.user_metadata.avatar_url || user.user_metadata.picture;
+					if (avatar) {
+						setUserAvatar(avatar);
+						setAvatarError(false);
+					}
+				}
+			} catch {
+				// Silently fallback to server action check
+			}
+		}
 	}, [isGoogleAuthEnabled]);
 
 	// Reactive Auth Listeners (Mount, Supabase changes, cross-component events, and tab focus)
@@ -477,10 +498,19 @@ export default function FloatingNavDock() {
 		} = SupabaseConn.auth.onAuthStateChange((_event, session) => {
 			if (session?.user) {
 				setIsLoggedIn(true);
+				const avatar =
+					session.user.user_metadata?.avatar_url ||
+					session.user.user_metadata?.picture;
+				if (avatar) {
+					setUserAvatar(avatar);
+					setAvatarError(false);
+				}
 				syncAuthState();
 			} else {
 				setIsLoggedIn(false);
 				setIsAdmin(false);
+				setUserAvatar(null);
+				setAvatarError(false);
 				setPendingTasksCount(0);
 				setPendingRemindersCount(0);
 				setPendingMovementCount(0);
@@ -587,6 +617,8 @@ export default function FloatingNavDock() {
 			}
 			setIsAdmin(false);
 			setIsLoggedIn(false);
+			setUserAvatar(null);
+			setAvatarError(false);
 			await logout();
 		});
 	}, [closeSubMenu]);
@@ -720,12 +752,12 @@ export default function FloatingNavDock() {
 				className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:bottom-4 left-0 right-0 z-50 px-3 sm:px-4 flex justify-center pointer-events-none"
 				aria-label="Main Navigation"
 			>
-				{/* Bar shell */}
+				{/* Liquid Glass Pill Dock Shell */}
 				<div
-					className="bg-white/95 backdrop-blur-md flex items-center p-1 rounded-2xl border border-slate-200/70 relative pointer-events-auto select-none gap-0.5 sm:gap-1"
+					className="bg-white/75 backdrop-blur-2xl backdrop-saturate-180 flex items-center p-1 sm:p-1.5 rounded-full border border-white/60 relative pointer-events-auto select-none gap-1 sm:gap-1.5 transition-all duration-300"
 					style={{
 						boxShadow:
-							"0 4px 24px -4px rgba(15,23,42,0.10), 0 1px 6px -1px rgba(15,23,42,0.06), 0 0 0 0.5px rgba(15,23,42,0.04)",
+							"0 20px 40px -6px rgba(15,23,42,0.14), 0 2px 8px -2px rgba(15,23,42,0.06), inset 0 1.5px 1.5px 0 rgba(255,255,255,0.9), inset 0 -1.5px 1.5px 0 rgba(15,23,42,0.04), 0 0 0 1px rgba(255,255,255,0.3)",
 					}}
 				>
 					{(() => {
@@ -756,7 +788,7 @@ export default function FloatingNavDock() {
 							return (
 								<div key={navItem.label} className="flex items-center">
 									{showDivider && (
-										<div className="w-px h-5 bg-slate-200/80 mx-0.5 sm:mx-1 shrink-0" />
+										<div className="w-px h-5 bg-slate-300/60 mx-0.5 sm:mx-1 shrink-0" />
 									)}
 
 									<div
@@ -781,18 +813,18 @@ export default function FloatingNavDock() {
 													initial={reduceMotion ? false : "hidden"}
 													animate="visible"
 													exit="exit"
-													className={`absolute bottom-[calc(100%+10px)] ${alignClass} w-48 bg-white rounded-xl border border-slate-200/70 z-50 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain`}
+													className={`absolute bottom-[calc(100%+12px)] ${alignClass} w-52 bg-white/90 backdrop-blur-2xl rounded-2xl border border-white/60 z-50 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain p-1.5`}
 													style={{
 														boxShadow:
-															"0 12px 40px -6px rgba(15,23,42,0.14), 0 3px 12px -3px rgba(15,23,42,0.07)",
+															"0 24px 48px -8px rgba(15,23,42,0.18), 0 4px 16px -2px rgba(15,23,42,0.08), inset 0 1.5px 1.5px 0 rgba(255,255,255,0.9), 0 0 0 1px rgba(255,255,255,0.4)",
 													}}
 													role="menu"
 													aria-label={`${navItem.label} Submenu`}
 												>
 													{/* Submenu header */}
-													<div className="px-2.5 pt-2.5 pb-2">
+													<div className="px-2 pt-2 pb-1.5">
 														<div className="flex items-center gap-2">
-															<div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200/70 flex items-center justify-center shrink-0 text-slate-600">
+															<div className="w-6 h-6 rounded-lg bg-slate-100/90 backdrop-blur-xs border border-white/60 flex items-center justify-center shrink-0 text-slate-700 shadow-2xs">
 																<Icon className="w-3 h-3" />
 															</div>
 															<div className="min-w-0">
@@ -809,9 +841,9 @@ export default function FloatingNavDock() {
 														</div>
 													</div>
 
-													<div className="mx-2 border-t border-slate-100 mb-1" />
+													<div className="mx-2 border-t border-slate-200/60 my-1" />
 
-													<div className="px-1 pb-1 space-y-px">
+													<div className="space-y-0.5">
 														{(() => {
 															const activeSubHref = getActiveSubHref(
 																pathname,
@@ -881,10 +913,10 @@ export default function FloatingNavDock() {
 																	</>
 																);
 
-																const rowClass = `group/sub flex w-full text-left items-center gap-2 px-1.5 py-1.5 rounded-lg transition-[background-color,color] duration-150 !no-underline select-none touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-900/30 focus-visible:bg-slate-100/90 ${
+																const rowClass = `group/sub flex w-full text-left items-center gap-2 px-2 py-1.5 rounded-xl transition-[background-color,color] duration-150 !no-underline select-none touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-900/30 focus-visible:bg-slate-100/90 ${
 																	isSubActive
 																		? "bg-slate-900 text-white shadow-xs"
-																		: "text-slate-700 hover:bg-slate-100/70"
+																		: "text-slate-700 hover:bg-slate-100/80"
 																}`;
 
 																return (
@@ -969,7 +1001,7 @@ export default function FloatingNavDock() {
 											)}
 										</AnimatePresence>
 
-										{/* Icon-Only Nav Button */}
+										{/* Icon-Only Nav Button with Tactile Physics */}
 										<Link
 											ref={(el) => {
 												triggerRefs.current[navItem.label] = el;
@@ -985,44 +1017,66 @@ export default function FloatingNavDock() {
 												handleTriggerKeyDown(e, navItem, hasSubItems, index)
 											}
 											title={navItem.label}
-											className="group relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all duration-150 !no-underline select-none touch-manipulation active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 focus-visible:ring-offset-1"
+											className={`group relative flex items-center justify-center ${
+												isActive
+													? "px-4 sm:px-5 w-auto min-w-[50px] sm:min-w-[56px] h-9 sm:h-10"
+													: "w-9 h-9 sm:w-10 sm:h-10"
+											} rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 active:scale-95 ease-out !no-underline select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 focus-visible:ring-offset-1`}
 										>
 											{/* Active sliding background */}
 											{isActive && (
 												<motion.div
-													layoutId="nav-active-icon"
+													layoutId="nav-active-pill"
 													transition={{
 														type: "spring",
-														stiffness: 440,
+														stiffness: 460,
 														damping: 34,
 													}}
-													className="absolute inset-0 bg-slate-900 rounded-xl z-0 shadow-xs"
+													className="absolute inset-0 bg-slate-900/95 rounded-full z-0 shadow-sm"
+													style={{
+														boxShadow:
+															"0 2px 10px -1px rgba(15,23,42,0.35), inset 0 1px 1px 0 rgba(255,255,255,0.22)",
+													}}
 												/>
 											)}
 
 											{/* Inactive Hover Background */}
 											{!isActive && (
-												<span className="absolute inset-0 rounded-xl bg-slate-100/0 group-hover:bg-slate-100/70 transition-colors duration-150 pointer-events-none" />
+												<span className="absolute inset-0 rounded-full bg-slate-900/0 group-hover:bg-slate-900/5 transition-colors duration-150 pointer-events-none" />
 											)}
 
-											{/* Icon */}
-											<Icon
-												className={`relative z-10 w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-colors duration-150 ${
-													isActive
-														? "!text-white"
-														: "!text-slate-400 group-hover:!text-slate-700"
-												}`}
-											/>
-
-											{/* Submenu Indicator Dot */}
-											{hasSubItems && (
-												<span
-													className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full transition-colors duration-150 pointer-events-none z-10 ${
+											{/* Icon or Avatar */}
+											{navItem.label === "Admin" && isLoggedIn ? (
+												<div
+													className="relative z-10 flex items-center justify-center p-[2px] rounded-full shrink-0 shadow-2xs"
+													style={{
+														background:
+															"conic-gradient(from 45deg, #EA4335, #FBBC05, #34A853, #4285F4, #EA4335)",
+													}}
+												>
+													<div className="w-[18px] h-[18px] sm:w-5 sm:h-5 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center">
+														{!avatarError ? (
+															<img
+																src={userAvatar || "/profile.jpg"}
+																alt=""
+																referrerPolicy="no-referrer"
+																onError={() => setAvatarError(true)}
+																className="w-full h-full object-cover"
+															/>
+														) : (
+															<Icon
+																className={`w-3 h-3 ${isActive ? "!text-white" : "!text-slate-700"}`}
+															/>
+														)}
+													</div>
+												</div>
+											) : (
+												<Icon
+													className={`relative z-10 w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] shrink-0 transition-colors duration-150 ${
 														isActive
-															? "bg-white/70"
-															: "bg-slate-300 group-hover:bg-slate-500"
+															? "!text-white"
+															: "!text-slate-400 group-hover:!text-slate-700"
 													}`}
-													aria-hidden="true"
 												/>
 											)}
 
@@ -1039,7 +1093,7 @@ export default function FloatingNavDock() {
 															stiffness: 500,
 															damping: 28,
 														}}
-														className="absolute -top-1 -right-1 z-20 flex h-[14px] min-w-[14px] px-1 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold !text-white ring-[1.5px] ring-white"
+														className="absolute -top-1 -right-1 z-20 flex h-[15px] min-w-[15px] px-1 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold !text-white ring-2 ring-white shadow-xs"
 													>
 														{totalAdminBadge}
 													</motion.span>

@@ -1,3 +1,10 @@
+# [0.113.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.112.0...v0.113.0) (2026-10-19)
+
+
+### Features
+
+* **perf:** implement edge ISR, unified navigation telemetry RPC, and turbopack hygiene ([544cc3c](https://github.com/plmtmbnn/personal-web-v2/commit/544cc3c2ad804e8c426a7ee4a673d2a266d5da69))
+
 # [0.112.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.111.0...v0.112.0) (2026-10-19)
 
 

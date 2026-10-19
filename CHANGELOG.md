@@ -1,3 +1,10 @@
+# [0.112.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.111.0...v0.112.0) (2026-10-19)
+
+
+### Features
+
+* **reminders:** revamp reminders UI and enhance floating nav dock ([0bc7748](https://github.com/plmtmbnn/personal-web-v2/commit/0bc7748f0b6899c9069281850ae216c11c76cf36))
+
 # [0.111.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.110.0...v0.111.0) (2026-10-17)
 
 

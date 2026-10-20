@@ -57,6 +57,34 @@ export default function StockpickCard({
 								<span>{pick.thesis}</span>
 							</span>
 						)}
+						{pick.bucket && (
+							<span
+								className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+									pick.bucket === "core"
+										? "bg-blue-50 text-blue-700 border-blue-200/80"
+										: "bg-amber-50 text-amber-700 border-amber-200/80"
+								}`}
+							>
+								{pick.bucket === "core" ? "Core Bucket" : "Swing Bucket"}
+							</span>
+						)}
+						{pick.alertStatus === "stop_breached" && (
+							<span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-600 text-white shadow-2xs">
+								<ShieldAlert className="w-3 h-3" />
+								<span>Stop Breached</span>
+							</span>
+						)}
+						{pick.alertStatus === "target_hit" && (
+							<span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs">
+								<Target className="w-3 h-3" />
+								<span>Target Hit</span>
+							</span>
+						)}
+						{pick.alertStatus === "trailing_protect" && (
+							<span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+								<span>Trailing Protect</span>
+							</span>
+						)}
 						{pick.status === "closed" && (
 							<span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">
 								Closed
@@ -151,11 +179,10 @@ export default function StockpickCard({
 					<div className="text-base sm:text-lg font-bold font-mono text-slate-900 mt-0.5">
 						{fmtIDRPrice(pick.buyPrice)}
 					</div>
-					<div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium mt-0.5">
+					<div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium mt-0.5">
 						<Calendar className="w-3 h-3 text-slate-400" />
 						<span>{pick.entryDate}</span>
-						<span>•</span>
-						<span>{pick.holdingDays}d held</span>
+						<span>({pick.holdingDays}d held)</span>
 					</div>
 				</div>
 

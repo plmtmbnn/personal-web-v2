@@ -49,7 +49,6 @@ export const TASK_STATUS_CONFIG = {
 		color: "text-slate-600 bg-slate-100 border-slate-200",
 		borderColor: "border-l-slate-300",
 		dotColor: "bg-slate-400",
-		emoji: "○",
 	},
 	in_progress: {
 		label: "In Progress",
@@ -57,7 +56,6 @@ export const TASK_STATUS_CONFIG = {
 		color: "text-blue-700 bg-blue-50 border-blue-200",
 		borderColor: "border-l-blue-500",
 		dotColor: "bg-blue-500",
-		emoji: "◔",
 	},
 	done: {
 		label: "Done",
@@ -65,7 +63,6 @@ export const TASK_STATUS_CONFIG = {
 		color: "text-emerald-700 bg-emerald-50 border-emerald-200",
 		borderColor: "border-l-emerald-500",
 		dotColor: "bg-emerald-500",
-		emoji: "●",
 	},
 	blocked: {
 		label: "Blocked",
@@ -73,7 +70,6 @@ export const TASK_STATUS_CONFIG = {
 		color: "text-amber-700 bg-amber-50 border-amber-200",
 		borderColor: "border-l-amber-500",
 		dotColor: "bg-amber-500",
-		emoji: "⊘",
 	},
 	cancelled: {
 		label: "Cancelled",
@@ -81,7 +77,6 @@ export const TASK_STATUS_CONFIG = {
 		color: "text-slate-400 bg-slate-50 border-slate-200",
 		borderColor: "border-l-slate-200",
 		dotColor: "bg-slate-300",
-		emoji: "✕",
 	},
 } as const;
 

@@ -2,12 +2,19 @@ import { redis } from "@/lib/core/redis";
 import type { FetchPolicy } from "./types";
 import { getStockData, saveStockData } from "@/lib/core/redis";
 import type { IDXStock } from "@/features/utils/stock-tools/stock-explorer/types";
+import { processIdxMarketData } from "@/features/utils/stock-tools/stock-explorer/hooks/useMarketData";
+import type { IhsgAlphaCandidate } from "@/features/investment/types";
 
 export interface IhsgForeignFlowSnapshot {
 	netBuySell1dIdr?: number | null;
 	netBuySell5dIdr?: number | null;
 	streakDays?: number | null;
 	asOf?: string;
+	advancers?: number;
+	decliners?: number;
+	unchanged?: number;
+	liquidAdvancersPct?: number;
+	topAlphaPicks?: IhsgAlphaCandidate[];
 }
 
 const FLOW_HISTORY_KEY = "idx:flow:history";
@@ -220,11 +227,89 @@ export async function fetchIhsgForeignFlow(
 		const effective1dNet =
 			sortedDates.length > 0 ? historyMap[sortedDates[0]] : todayNetIdr;
 
+		// 5. Extract live breadth & institutional alpha shortlist from stocksData
+		let advancers = 0;
+		let decliners = 0;
+		let unchanged = 0;
+		let liquidAdvancersPct = 50;
+		let topAlphaPicks: IhsgAlphaCandidate[] = [];
+
+		try {
+			const { processed, marketHealth } = processIdxMarketData(stocksData, {
+				price: 25,
+				volume: 25,
+				foreign: 25,
+				liquidity: 15,
+				volatility: 10,
+			});
+			advancers = marketHealth.advancers;
+			decliners = marketHealth.decliners;
+			unchanged = marketHealth.unchanged;
+
+			const liquidStocks = processed.filter(
+				(s) => (s.Value || 0) >= 1_000_000_000,
+			);
+			if (liquidStocks.length > 0) {
+				const liqUp = liquidStocks.filter((s) => s.Change > 0).length;
+				liquidAdvancersPct = Math.round((liqUp / liquidStocks.length) * 100);
+			}
+
+			// Select top institutional liquid setups (Turnover >= Rp 5B, safe from ARB)
+			const candidates = processed
+				.filter(
+					(s) =>
+						(s.Value || 0) >= 5_000_000_000 &&
+						s.ARARisk !== "ARB" &&
+						s.ARARisk !== "Near ARB" &&
+						s.CompositeScore >= 55,
+				)
+				.sort(
+					(a, b) =>
+						b.CompositeScore * 10 +
+						(b.ForeignParticipationPct || 0) -
+						(a.CompositeScore * 10 + (a.ForeignParticipationPct || 0)),
+				)
+				.slice(0, 8);
+
+			topAlphaPicks = candidates.map((s) => {
+				const plan = s.TradePlan;
+				const entryZone =
+					plan && plan.entryLow !== plan.entryHigh
+						? `Rp ${plan.entryLow.toLocaleString("id-ID")} - ${plan.entryHigh.toLocaleString("id-ID")}`
+						: `Rp ${(s.Close || 0).toLocaleString("id-ID")}`;
+
+				return {
+					code: s.StockCode,
+					name: s.StockName,
+					sector: s.Sector,
+					close: s.Close,
+					changePct: Number(s.ChangePct.toFixed(2)),
+					valueIdr: s.Value,
+					foreignNetIdr: s.ForeignNet,
+					foreignParticipationPct: s.ForeignParticipationPct || 0,
+					compositeScore: s.CompositeScore,
+					opportunity: s.Opportunity,
+					setupBucket: plan?.setupBucket || "swing",
+					entryZone,
+					stopLoss: plan?.stopLoss || Math.round(s.Close * 0.96),
+					target1: plan?.target1 || Math.round(s.Close * 1.06),
+					rrr: plan?.riskRewardRatio || 2.0,
+				};
+			});
+		} catch (e) {
+			console.warn("Failed to compute IDX alpha shortlist in idx-flows:", e);
+		}
+
 		return {
 			netBuySell1dIdr: effective1dNet,
 			netBuySell5dIdr,
 			streakDays,
 			asOf: effectiveDateStr,
+			advancers,
+			decliners,
+			unchanged,
+			liquidAdvancersPct,
+			topAlphaPicks,
 		};
 	} catch (error) {
 		console.warn("IHSG Foreign Flow fetch failed:", error);

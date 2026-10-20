@@ -208,6 +208,10 @@ interface ScreenerContextType {
 	searchQuery: string;
 	setSearchQuery: (query: string) => void;
 	resetFilters: () => void;
+
+	// Simulated Portfolio Account Equity (IDR) for Position Sizing & Bucket Caps
+	accountEquityIdr: number;
+	setAccountEquityIdr: (equity: number) => void;
 }
 
 const ScreenerContext = createContext<ScreenerContextType | null>(null);
@@ -246,13 +250,15 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 		null,
 	);
 
-	// Filters
+	// Filters (default minTurnover to Rp 1B out of the box to filter out illiquid saham tidur)
 	const [minScore, setMinScoreState] = useState<number>(0);
-	const [minTurnover, setMinTurnoverState] = useState<number>(0);
+	const [minTurnover, setMinTurnoverState] = useState<number>(1_000_000_000);
 	const [selectedSector, setSelectedSectorState] = useState<Sector | "ALL">(
 		"ALL",
 	);
 	const [searchQuery, setSearchQueryState] = useState<string>("");
+	const [accountEquityIdr, setAccountEquityIdrState] =
+		useState<number>(100_000_000);
 
 	// Load stored weights and watchlist on mount + retrieve stockpicks from Supabase Cloud
 	useEffect(() => {
@@ -274,6 +280,13 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			const storedWatchlist = localStorage.getItem("idx:watchlist");
 			if (storedWatchlist) {
 				setWatchlist(JSON.parse(storedWatchlist));
+			}
+		} catch (_e) {}
+
+		try {
+			const storedEquity = localStorage.getItem("idx:equity");
+			if (storedEquity && !Number.isNaN(Number(storedEquity))) {
+				setAccountEquityIdrState(Math.max(1_000_000, Number(storedEquity)));
 			}
 		} catch (_e) {}
 
@@ -892,6 +905,14 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 		[],
 	);
 
+	const setAccountEquityIdr = useCallback((equity: number) => {
+		const valid = Math.max(1_000_000, Math.round(equity));
+		setAccountEquityIdrState(valid);
+		try {
+			localStorage.setItem("idx:equity", String(valid));
+		} catch (_e) {}
+	}, []);
+
 	const applyPreset = useCallback((preset: ScoreWeights) => {
 		setWeights(preset);
 		try {
@@ -906,13 +927,16 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 					(p) => p.name === "Compass Risk-On Momentum",
 				);
 				if (preset) applyPreset(preset.weights);
+				setMinTurnoverState(1_000_000_000);
 			} else if (regimeState === "defensive" || regimeState === "stress") {
 				const preset = STRATEGY_PRESETS.find(
 					(p) => p.name === "Compass Defensive Blue-Chip",
 				);
 				if (preset) applyPreset(preset.weights);
+				setMinTurnoverState(5_000_000_000);
 			} else {
 				applyPreset(DEFAULT_WEIGHTS);
+				setMinTurnoverState(1_000_000_000);
 			}
 		},
 		[applyPreset],
@@ -921,8 +945,8 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 	const resetWeights = useCallback(() => {
 		setWeights(DEFAULT_WEIGHTS);
 		setMinScoreState(0);
-		setMinTurnoverState(0);
-		syncUrl(workstationTab, 0, 0, selectedSector, searchQuery);
+		setMinTurnoverState(1_000_000_000);
+		syncUrl(workstationTab, 0, 1_000_000_000, selectedSector, searchQuery);
 		try {
 			localStorage.setItem("idx:weights", JSON.stringify(DEFAULT_WEIGHTS));
 		} catch (_e) {}
@@ -996,6 +1020,8 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			searchQuery,
 			setSearchQuery,
 			resetFilters,
+			accountEquityIdr,
+			setAccountEquityIdr,
 		}),
 		[
 			workstationTab,
@@ -1050,6 +1076,8 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 			searchQuery,
 			setSearchQuery,
 			resetFilters,
+			accountEquityIdr,
+			setAccountEquityIdr,
 		],
 	);
 

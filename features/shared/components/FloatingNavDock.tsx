@@ -686,7 +686,7 @@ export default function FloatingNavDock() {
 
 	return (
 		<>
-			{/* Universal Touch Dismissal Backdrop (Active whenever submenu is open) */}
+			{/* Universal Dismissal Backdrop (Active whenever submenu is open) */}
 			<AnimatePresence>
 				{expandedItem && (
 					<motion.div
@@ -694,7 +694,7 @@ export default function FloatingNavDock() {
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0 }}
 						transition={{ duration: 0.15 }}
-						className="fixed inset-0 z-40 bg-slate-900/5 sm:bg-transparent pointer-events-auto"
+						className="fixed inset-0 z-40 bg-slate-950/20 backdrop-blur-[2px] pointer-events-auto"
 						onClick={closeSubMenu}
 						aria-hidden="true"
 					/>
@@ -767,10 +767,10 @@ export default function FloatingNavDock() {
 													initial={reduceMotion ? false : "hidden"}
 													animate="visible"
 													exit="exit"
-													className={`absolute bottom-[calc(100%+12px)] ${alignClass} w-52 bg-white/90 backdrop-blur-2xl rounded-2xl border border-white/60 z-50 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain p-1.5`}
+													className={`absolute bottom-[calc(100%+12px)] ${alignClass} w-52 bg-white rounded-2xl border border-slate-200/80 z-50 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain p-1.5 shadow-xl`}
 													style={{
 														boxShadow:
-															"0 24px 48px -8px rgba(15,23,42,0.18), 0 4px 16px -2px rgba(15,23,42,0.08), inset 0 1.5px 1.5px 0 rgba(255,255,255,0.9), 0 0 0 1px rgba(255,255,255,0.4)",
+															"0 20px 45px -10px rgba(15,23,42,0.18), 0 4px 16px -2px rgba(15,23,42,0.06)",
 													}}
 													role="menu"
 													aria-label={`${navItem.label} Submenu`}
@@ -778,7 +778,7 @@ export default function FloatingNavDock() {
 													{/* Submenu header */}
 													<div className="px-2 pt-2 pb-1.5">
 														<div className="flex items-center gap-2">
-															<div className="w-6 h-6 rounded-lg bg-slate-100/90 backdrop-blur-xs border border-white/60 flex items-center justify-center shrink-0 text-slate-700 shadow-2xs">
+															<div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200/70 flex items-center justify-center shrink-0 text-slate-700 shadow-2xs">
 																<Icon className="w-3 h-3" />
 															</div>
 															<div className="min-w-0">

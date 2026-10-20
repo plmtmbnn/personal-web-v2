@@ -1,6 +1,14 @@
 "use client";
 
-import { useOptimistic, useTransition, useMemo, useCallback } from "react";
+import {
+	useOptimistic,
+	useTransition,
+	useMemo,
+	useCallback,
+	useState,
+	useRef,
+	useEffect,
+} from "react";
 import {
 	DragDropContext,
 	Droppable,
@@ -13,12 +21,15 @@ import {
 	updateTask,
 	deleteTask,
 	reorderTasks,
+	archiveTask,
 } from "@/features/tasks/actions/tasks";
 import TaskItem from "./TaskItem";
-import { TASK_STATUS_CONFIG } from "@/features/tasks/constants";
+import {
+	TASK_STATUS_CONFIG,
+	UNDO_TOAST_DURATION_MS,
+} from "@/features/tasks/constants";
 import { useToast } from "@/features/tasks/components/shared/Toast";
 import CustomModal from "@/features/shared/components/CustomModal";
-import { useState } from "react";
 
 interface TaskBoardProps {
 	overdueTasks?: Task[];
@@ -39,7 +50,31 @@ export default function TaskBoard({
 	// Modal State for Deletion
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
-	// Combine all active and completed tasks into one flat array
+	// Multi-task undo timers keyed by "delete-{id}" or "archive-{id}"
+	const undoTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+	// Flush any pending deletions/archives immediately on unmount so they persist
+	useEffect(() => {
+		return () => {
+			undoTimeoutsRef.current.forEach((timer, key) => {
+				clearTimeout(timer);
+				if (key.startsWith("archive-")) {
+					const taskId = key.replace("archive-", "");
+					archiveTask(taskId).catch((err) =>
+						console.error("Failed to archive task on unmount:", err),
+					);
+				} else if (key.startsWith("delete-")) {
+					const taskId = key.replace("delete-", "");
+					deleteTask(taskId).catch((err) =>
+						console.error("Failed to delete task on unmount:", err),
+					);
+				}
+			});
+			undoTimeoutsRef.current.clear();
+		};
+	}, []);
+
+	// Combine all tasks into one deduplicated flat array
 	const allTasks = useMemo(() => {
 		const map = new Map<string, Task>();
 		for (const t of [
@@ -55,7 +90,7 @@ export default function TaskBoard({
 		return Array.from(map.values());
 	}, [overdueTasks, todayTasks, upcomingTasks, completedTasks]);
 
-	// Optimistic state handles toggle, delete, update, and drag-and-drop
+	// Optimistic state handles toggle, delete, archive, restore, update, and drag-and-drop
 	const [optimisticTasks, addOptimisticAction] = useOptimistic<
 		Task[],
 		{ action: string; payload: any }
@@ -86,7 +121,10 @@ export default function TaskBoard({
 						: t,
 				);
 			case "delete":
+			case "archive":
 				return state.filter((t) => t.id !== payload.taskId);
+			case "restore":
+				return [...state.filter((t) => t.id !== payload.task.id), payload.task];
 			case "update":
 				return state.map((t) =>
 					t.id === payload.taskId ? { ...t, ...payload.updates } : t,
@@ -177,21 +215,114 @@ export default function TaskBoard({
 
 	const handleConfirmDelete = async () => {
 		if (!deleteTaskId) return;
-		const taskId = deleteTaskId;
+		const targetId = deleteTaskId;
 		setDeleteTaskId(null);
 
+		const taskToDelete = optimisticTasks.find((t) => t.id === targetId);
+		if (!taskToDelete) return;
+
+		// 1. Optimistically remove
 		startTransition(() => {
-			addOptimisticAction({ action: "delete", payload: { taskId } });
+			addOptimisticAction({ action: "delete", payload: { taskId: targetId } });
 		});
 
-		try {
-			await deleteTask(taskId);
-			showSuccess("Task deleted forever.");
-		} catch (error) {
-			console.error("Failed to delete task:", error);
-			showError("Failed to delete task. Please try again.");
-		}
+		// 2. Multi-task undo timer
+		const timerKey = `delete-${targetId}`;
+		const timer = setTimeout(async () => {
+			undoTimeoutsRef.current.delete(timerKey);
+			try {
+				await deleteTask(targetId);
+			} catch (error) {
+				console.error("Failed to delete task:", error);
+				showError("Failed to delete task. Please try again.");
+				startTransition(() => {
+					addOptimisticAction({
+						action: "restore",
+						payload: { task: taskToDelete },
+					});
+				});
+			}
+		}, UNDO_TOAST_DURATION_MS);
+
+		undoTimeoutsRef.current.set(timerKey, timer);
+
+		// 3. Show undo toast
+		showSuccess(
+			`Task "${taskToDelete.title}" deleted`,
+			"Click undo to restore it",
+			{
+				label: "Undo",
+				onClick: () => {
+					const t = undoTimeoutsRef.current.get(timerKey);
+					if (t) {
+						clearTimeout(t);
+						undoTimeoutsRef.current.delete(timerKey);
+					}
+					startTransition(() => {
+						addOptimisticAction({
+							action: "restore",
+							payload: { task: taskToDelete },
+						});
+					});
+				},
+			},
+		);
 	};
+
+	const handleArchive = useCallback(
+		(taskId: string) => {
+			const taskToArchive = optimisticTasks.find((t) => t.id === taskId);
+			if (!taskToArchive) return;
+
+			// 1. Optimistically remove
+			startTransition(() => {
+				addOptimisticAction({ action: "archive", payload: { taskId } });
+			});
+
+			// 2. Multi-task undo timer
+			const timerKey = `archive-${taskId}`;
+			const timer = setTimeout(async () => {
+				undoTimeoutsRef.current.delete(timerKey);
+				try {
+					await archiveTask(taskId);
+				} catch (error) {
+					console.error("Failed to archive task:", error);
+					showError("Failed to archive task.");
+					startTransition(() => {
+						addOptimisticAction({
+							action: "restore",
+							payload: { task: taskToArchive },
+						});
+					});
+				}
+			}, UNDO_TOAST_DURATION_MS);
+
+			undoTimeoutsRef.current.set(timerKey, timer);
+
+			// 3. Show Toast with Undo
+			showSuccess(
+				`Task "${taskToArchive.title}" archived`,
+				"Click undo to restore it",
+				{
+					label: "Undo",
+					onClick: () => {
+						const t = undoTimeoutsRef.current.get(timerKey);
+						if (t) {
+							clearTimeout(t);
+							undoTimeoutsRef.current.delete(timerKey);
+						}
+						startTransition(() => {
+							addOptimisticAction({
+								action: "restore",
+								payload: { task: taskToArchive },
+							});
+						});
+					},
+				},
+			);
+		},
+		[optimisticTasks, addOptimisticAction, showSuccess, showError],
+	);
 
 	const handleUpdate = useCallback(
 		async (taskId: string, updates: Partial<Task>) => {
@@ -271,6 +402,7 @@ export default function TaskBoard({
 																layoutMode="board"
 																onDelete={handleDeleteRequest}
 																onUpdate={handleUpdate}
+																onArchive={handleArchive}
 															/>
 														)}
 													</Draggable>

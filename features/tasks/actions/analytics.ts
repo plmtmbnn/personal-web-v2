@@ -2,15 +2,10 @@
 
 import { SupabaseConn } from "@/lib/core/supabase";
 import { redis, CACHE_KEYS } from "@/lib/core/redis";
+import { checkAdmin } from "@/features/auth/actions";
+import { getJakartaDateString } from "../utils";
 import type { Task, TaskPriority } from "../types";
-import {
-	startOfToday,
-	subDays,
-	format,
-	parseISO,
-	isSameDay,
-	addDays,
-} from "date-fns";
+import { subDays, format, parseISO, isSameDay, addDays } from "date-fns";
 
 export interface AnalyticsStats {
 	totalTasks: number;
@@ -40,6 +35,10 @@ export interface AnalyticsStats {
 export async function getTaskStats(
 	period: "today" | "week" | "month",
 ): Promise<AnalyticsStats> {
+	if (!(await checkAdmin())) {
+		throw new Error("Unauthorized: Admin privileges required");
+	}
+
 	const cacheKey = CACHE_KEYS.STATS(period);
 
 	// 1. Try to fetch from Redis Cache
@@ -51,7 +50,8 @@ export async function getTaskStats(
 	}
 
 	// 2. Cache Miss: Fetch from Supabase
-	const today = startOfToday();
+	const todayStr = getJakartaDateString();
+	const today = parseISO(todayStr);
 	let days: number;
 	let startDate: Date;
 
@@ -72,11 +72,13 @@ export async function getTaskStats(
 	// Previous period for comparison
 	const prevStartDate = subDays(startDate, days);
 
-	// Fetch current period tasks
+	// Fetch current period tasks (root tasks only, non-archived)
 	const { data: currentTasks, error: currentError } = await SupabaseConn.from(
 		"tasks",
 	)
 		.select("*")
+		.is("parent_id", null)
+		.is("archived_at", null)
 		.gte("due_date", startDateStr)
 		.lte("due_date", endDateStr);
 
@@ -85,11 +87,13 @@ export async function getTaskStats(
 		throw new Error("Failed to fetch analytics data");
 	}
 
-	// Fetch all uncompleted tasks for global distribution and reschedules
+	// Fetch all uncompleted tasks for global distribution and reschedules (root tasks only, non-archived)
 	const { data: globalTasks, error: globalError } = await SupabaseConn.from(
 		"tasks",
 	)
 		.select("title, due_date, reschedule_count, status")
+		.is("parent_id", null)
+		.is("archived_at", null)
 		.neq("status", "done");
 
 	if (globalError) {
@@ -99,6 +103,8 @@ export async function getTaskStats(
 	// Fetch previous period completed tasks for comparison
 	const { count: prevCompletedCount } = await SupabaseConn.from("tasks")
 		.select("*", { count: "exact", head: true })
+		.is("parent_id", null)
+		.is("archived_at", null)
 		.eq("status", "done")
 		.gte("completed_at", prevStartDate.toISOString())
 		.lt("completed_at", startDate.toISOString());
@@ -106,6 +112,8 @@ export async function getTaskStats(
 	// Fetch current period completed tasks using completed_at for true velocity and comparison
 	const { count: currentCompletedCount } = await SupabaseConn.from("tasks")
 		.select("*", { count: "exact", head: true })
+		.is("parent_id", null)
+		.is("archived_at", null)
 		.eq("status", "done")
 		.gte("completed_at", startDate.toISOString())
 		.lte("completed_at", new Date().toISOString());
@@ -123,6 +131,8 @@ export async function getTaskStats(
 	// Reschedule Analytics
 	const { data: rescheduleData } = await SupabaseConn.from("tasks")
 		.select("title, reschedule_count")
+		.is("parent_id", null)
+		.is("archived_at", null)
 		.gt("reschedule_count", 0)
 		.order("reschedule_count", { ascending: false });
 
@@ -140,10 +150,10 @@ export async function getTaskStats(
 		};
 	}
 
-	const { count: totalTaskCount } = await SupabaseConn.from("tasks").select(
-		"*",
-		{ count: "exact", head: true },
-	);
+	const { count: totalTaskCount } = await SupabaseConn.from("tasks")
+		.select("*", { count: "exact", head: true })
+		.is("parent_id", null)
+		.is("archived_at", null);
 
 	const averageReschedule =
 		totalTaskCount && totalTaskCount > 0
@@ -151,17 +161,18 @@ export async function getTaskStats(
 			: 0;
 
 	// Distribution
-	const todayStr = format(today, "yyyy-MM-dd");
+	const todayDateStr = format(today, "yyyy-MM-dd");
 	const gTasks = (globalTasks || []) as Task[];
 	const distribution = {
 		today: gTasks.filter(
-			(t) => t.due_date === todayStr && (t.status || "todo") !== "cancelled",
+			(t) =>
+				t.due_date === todayDateStr && (t.status || "todo") !== "cancelled",
 		).length,
 		upcoming: gTasks.filter(
-			(t) => t.due_date > todayStr && (t.status || "todo") !== "cancelled",
+			(t) => t.due_date > todayDateStr && (t.status || "todo") !== "cancelled",
 		).length,
 		overdue: gTasks.filter(
-			(t) => t.due_date < todayStr && (t.status || "todo") !== "cancelled",
+			(t) => t.due_date < todayDateStr && (t.status || "todo") !== "cancelled",
 		).length,
 	};
 
@@ -217,6 +228,8 @@ export async function getTaskStats(
 	// Streak
 	const { data: allCompleted } = await SupabaseConn.from("tasks")
 		.select("completed_at")
+		.is("parent_id", null)
+		.is("archived_at", null)
 		.eq("status", "done")
 		.not("completed_at", "is", null)
 		.order("completed_at", { ascending: false })
@@ -278,7 +291,12 @@ interface BurndownDay {
 }
 
 export async function getVelocityAndBurndownData(period: "week" | "month") {
-	const today = startOfToday();
+	if (!(await checkAdmin())) {
+		return { velocity: [], burndown: [], totalScope: 0 };
+	}
+
+	const todayStr = getJakartaDateString();
+	const today = parseISO(todayStr);
 	const days = period === "week" ? 7 : 30;
 	const startDate = subDays(today, days - 1);
 
@@ -288,6 +306,8 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 	const { data: completedTasks, error: completedError } =
 		await SupabaseConn.from("tasks")
 			.select("id, completed_at, estimated_minutes, due_date, status")
+			.is("parent_id", null)
+			.is("archived_at", null)
 			.eq("status", "done")
 			.not("completed_at", "is", null)
 			.gte("completed_at", `${startDateStr}T00:00:00`)
@@ -304,6 +324,8 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 		"tasks",
 	)
 		.select("id, due_date, completed_at, estimated_minutes, status")
+		.is("parent_id", null)
+		.is("archived_at", null)
 		.not("due_date", "is", null)
 		.gte("due_date", startDateStr)
 		.lte("due_date", endDateStr);
@@ -385,7 +407,12 @@ export interface WeeklyReviewStats {
 }
 
 export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
-	const today = startOfToday();
+	if (!(await checkAdmin())) {
+		throw new Error("Unauthorized: Admin privileges required");
+	}
+
+	const todayStr = getJakartaDateString();
+	const today = parseISO(todayStr);
 	const dayOfWeek = today.getDay();
 	const distanceToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 	const weekStart = subDays(today, distanceToMonday);
@@ -397,10 +424,14 @@ export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
 	const [tasksByDue, tasksByCompleted] = await Promise.all([
 		SupabaseConn.from("tasks")
 			.select("*")
+			.is("parent_id", null)
+			.is("archived_at", null)
 			.gte("due_date", weekStartStr)
 			.lte("due_date", weekEndStr),
 		SupabaseConn.from("tasks")
 			.select("*")
+			.is("parent_id", null)
+			.is("archived_at", null)
 			.gte("completed_at", `${weekStartStr}T00:00:00`)
 			.lte("completed_at", `${weekEndStr}T23:59:59`),
 	]);

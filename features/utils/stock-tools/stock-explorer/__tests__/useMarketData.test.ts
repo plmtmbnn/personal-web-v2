@@ -115,6 +115,7 @@ describe("useMarketData Hook", () => {
 		expect(processed[0].ARALimitPrice).toBeGreaterThan(6100);
 		expect(processed[0].ARBLimitPrice).toBeLessThan(6100);
 		expect(processed[0].ARARisk).toBe("Normal");
+		expect(processed[0].Opportunity).toBe("Blue Chip");
 	});
 
 	it("correctly identifies ASMI (Previous 33 -> Close 44, +35%) as ARA with zero offers", () => {
@@ -162,5 +163,105 @@ describe("useMarketData Hook", () => {
 		expect(asmi.ARBLimitPrice).toBe(22);
 		expect(asmi.ARARisk).toBe("ARA");
 		expect(asmi.BidOfferPressure).toBe(100); // 100% Bids, 0% Offers
+		expect(asmi.Sector).toBe("Banking");
+		expect(asmi.TradePlan).toBeDefined();
+	});
+
+	it("enriches stocks with 10-day ring buffer RVOL, ForeignStreakDays, High10D, Low10D, and Return5D", () => {
+		const rawStocks: IDXStock[] = [
+			{
+				No: 1,
+				IDStockSummary: 1,
+				Date: "2026-10-16",
+				StockCode: "ADRO",
+				StockName: "Alamtri Resources Indonesia Tbk",
+				Remarks: "",
+				Previous: 3600,
+				OpenPrice: 3610,
+				FirstTrade: 3610,
+				High: 3720,
+				Low: 3600,
+				Close: 3700,
+				Change: 100,
+				Volume: 80000000,
+				Value: 292000000000,
+				Frequency: 14000,
+				IndexIndividual: 100,
+				Offer: 3710,
+				OfferVolume: 1000,
+				Bid: 3700,
+				BidVolume: 2000,
+				ListedShares: 31985962000,
+				TradebleShares: 31985962000,
+				WeightForIndex: 1,
+				ForeignBuy: 40000000,
+				ForeignSell: 20000000,
+				DelistingDate: "",
+				NonRegularVolume: 0,
+				NonRegularValue: 0,
+				NonRegularFrequency: 0,
+				persen: null,
+				percentage: null,
+			},
+		];
+
+		const ringBuffer = {
+			"2026-10-12": {
+				ADRO: {
+					c: 3400,
+					h: 3450,
+					l: 3380,
+					v: 40000000,
+					val: 136000000000,
+					f: 7000,
+					fn: 15000000000,
+				},
+			},
+			"2026-10-13": {
+				ADRO: {
+					c: 3480,
+					h: 3500,
+					l: 3410,
+					v: 42000000,
+					val: 146000000000,
+					f: 7500,
+					fn: 22000000000,
+				},
+			},
+			"2026-10-14": {
+				ADRO: {
+					c: 3550,
+					h: 3580,
+					l: 3470,
+					v: 45000000,
+					val: 159000000000,
+					f: 8000,
+					fn: 18000000000,
+				},
+			},
+			"2026-10-15": {
+				ADRO: {
+					c: 3600,
+					h: 3620,
+					l: 3530,
+					v: 44000000,
+					val: 158000000000,
+					f: 8200,
+					fn: 25000000000,
+				},
+			},
+		};
+
+		const { result } = renderHook(() =>
+			useMarketData(rawStocks, mockWeights, ringBuffer),
+		);
+		const adro = result.current.processed[0];
+
+		expect(adro.Sector).toBe("Energy");
+		expect(adro.ForeignStreakDays).toBe(5);
+		expect(adro.RVOL).toBeGreaterThan(1.5);
+		expect(adro.High10D).toBe(3720);
+		expect(adro.Low10D).toBe(3380);
+		expect(adro.Return5D).toBeGreaterThan(8.0);
 	});
 });

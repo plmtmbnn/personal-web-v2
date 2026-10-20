@@ -116,6 +116,31 @@ export function calculatePickMetrics(
 	const isCompassAligned =
 		(liveStock?.CompositeScore ?? 0) >= 60 || (liveStock?.ForeignNet ?? 0) > 0;
 
+	const isCoreThesis =
+		pick.thesis === "Compass Core Tranche" ||
+		pick.thesis === "Foreign Flow Surge" ||
+		pick.thesis === "Value Accumulation";
+	const bucket: "core" | "swing" = isCoreThesis ? "core" : "swing";
+
+	let alertStatus: StockPickWithMetrics["alertStatus"] = "healthy";
+	if (isClosed) {
+		alertStatus = undefined;
+	} else if (
+		pick.stopLossPrice &&
+		pick.stopLossPrice > 0 &&
+		currentPrice <= pick.stopLossPrice
+	) {
+		alertStatus = "stop_breached";
+	} else if (
+		pick.targetPrice &&
+		pick.targetPrice > 0 &&
+		currentPrice >= pick.targetPrice
+	) {
+		alertStatus = "target_hit";
+	} else if (peakGainPct >= 5 && pnlPct > 0 && peakGainPct - pnlPct >= 3) {
+		alertStatus = "trailing_protect";
+	}
+
 	return {
 		...pick,
 		currentPrice,
@@ -136,6 +161,8 @@ export function calculatePickMetrics(
 		compositeScore: liveStock?.CompositeScore,
 		opportunity: liveStock?.Opportunity,
 		isCompassAligned,
+		bucket,
+		alertStatus,
 	};
 }
 
@@ -214,6 +241,7 @@ export function traceAndUpdateWatermarks(
  */
 export function calculatePortfolioSummary(
 	picksWithMetrics: StockPickWithMetrics[],
+	referenceEquityIdr = 100_000_000,
 ): SimulatorPortfolioSummary {
 	const activePicksList = picksWithMetrics.filter((p) => p.status === "active");
 	const closedPicksList = picksWithMetrics.filter((p) => p.status === "closed");
@@ -221,6 +249,8 @@ export function calculatePortfolioSummary(
 	let totalSimulatedCapital = 0;
 	let totalCurrentValue = 0;
 	let totalUnrealizedPlNominal = 0;
+	let coreCapitalNominal = 0;
+	let swingCapitalNominal = 0;
 	let winningPicks = 0;
 	let losingPicks = 0;
 
@@ -231,6 +261,12 @@ export function calculatePortfolioSummary(
 		totalSimulatedCapital += pick.simulatedOutlay;
 		totalCurrentValue += pick.currentMarketValue;
 		totalUnrealizedPlNominal += pick.unrealizedPlNominal;
+
+		if (pick.bucket === "core") {
+			coreCapitalNominal += pick.simulatedOutlay;
+		} else {
+			swingCapitalNominal += pick.simulatedOutlay;
+		}
 
 		if (pick.unrealizedPlPct > 0) {
 			winningPicks++;
@@ -260,6 +296,18 @@ export function calculatePortfolioSummary(
 			? (totalUnrealizedPlNominal / totalSimulatedCapital) * 100
 			: 0;
 
+	const denominatorEquity = Math.max(
+		referenceEquityIdr,
+		totalSimulatedCapital,
+		1,
+	);
+	const coreAllocationPct = Number(
+		((coreCapitalNominal / denominatorEquity) * 100).toFixed(1),
+	);
+	const swingAllocationPct = Number(
+		((swingCapitalNominal / denominatorEquity) * 100).toFixed(1),
+	);
+
 	return {
 		totalPicks: picksWithMetrics.length,
 		activePicks: activeCount,
@@ -273,6 +321,10 @@ export function calculatePortfolioSummary(
 		totalUnrealizedPlPct,
 		bestPerformer,
 		worstPerformer,
+		coreCapitalNominal,
+		swingCapitalNominal,
+		coreAllocationPct,
+		swingAllocationPct,
 	};
 }
 

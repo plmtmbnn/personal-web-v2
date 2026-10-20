@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, fireEvent } from "@testing-library/react";
-import MarketDataHub from "../MarketDataHub";
+import MarketDataHub, { formatFlowAmount } from "../MarketDataHub";
 import type { InvestmentCompassData } from "../../types";
 
 vi.mock("framer-motion", () => ({
@@ -315,5 +315,61 @@ describe("MarketDataHub Component", () => {
 		expect(container.textContent).toContain("Nasdaq Composite");
 		expect(container.textContent).toContain("Hang Seng");
 		expect(container.textContent).toContain("CBOE VIX");
+	});
+
+	describe("Amount Formatting (formatFlowAmount & Foreign Flow)", () => {
+		it("formats trillion-level amounts in T with 2 decimals and billion-level in B with 1 decimal", () => {
+			expect(formatFlowAmount(7418700000000)).toBe("7.42T");
+			expect(formatFlowAmount(-7418700000000)).toBe("7.42T");
+			expect(formatFlowAmount(2153000000000)).toBe("2.15T");
+			expect(formatFlowAmount(-2153000000000)).toBe("2.15T");
+			expect(formatFlowAmount(450000000000)).toBe("450.0B");
+			expect(formatFlowAmount(150000000)).toBe("150.0M");
+		});
+
+		it("renders net foreign flow amounts formatted in T with proper +/- signs", () => {
+			const base = createMockData();
+			const testData: InvestmentCompassData = {
+				...base,
+				markets: {
+					...base.markets,
+					ihsgFlows: {
+						asOf: "2026-10-20",
+						streakDays: -5,
+						netBuySell1dIdr: -2153000000000,
+						netBuySell5dIdr: -7418700000000,
+					},
+				},
+			};
+
+			const { container } = render(<MarketDataHub data={testData} />);
+			expect(container.textContent).toContain("-Rp 2.15T");
+			expect(container.textContent).toContain("-Rp 7.42T");
+			expect(container.textContent).not.toContain("7418.7B");
+			expect(container.textContent).not.toContain("2153.0B");
+			expect(container.textContent).toContain("5-Day Net Outflow Streak");
+			expect(container.textContent).not.toContain("-5-Day Net Outflow Streak");
+		});
+
+		it("renders positive trillion flows with +Rp sign", () => {
+			const base = createMockData();
+			const testData: InvestmentCompassData = {
+				...base,
+				markets: {
+					...base.markets,
+					ihsgFlows: {
+						asOf: "2026-10-20",
+						streakDays: 4,
+						netBuySell1dIdr: 2153000000000,
+						netBuySell5dIdr: 7418700000000,
+					},
+				},
+			};
+
+			const { container } = render(<MarketDataHub data={testData} />);
+			expect(container.textContent).toContain("+Rp 2.15T");
+			expect(container.textContent).toContain("+Rp 7.42T");
+			expect(container.textContent).toContain("+4-Day Net Inflow Streak");
+		});
 	});
 });

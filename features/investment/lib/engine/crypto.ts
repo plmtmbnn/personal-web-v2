@@ -190,6 +190,11 @@ export function scoreCrypto(
 			score = 55;
 			dir = "neutral";
 		}
+		const supplyUsd = flows.totalStablecoinSupplyUsd ?? 0;
+		const supplyStr =
+			supplyUsd >= 1e12
+				? `$${(supplyUsd / 1e12).toFixed(2)}T`
+				: `$${(supplyUsd / 1e9).toFixed(1)}B`;
 
 		factors.push({
 			key: "stablecoin_supply",
@@ -200,7 +205,7 @@ export function scoreCrypto(
 			direction: dir,
 			note:
 				change > 0
-					? `Net new fiat liquidity ($${((flows.totalStablecoinSupplyUsd ?? 0) / 1e9).toFixed(1)}B) entering crypto.`
+					? `Net new fiat liquidity (${supplyStr}) entering crypto.`
 					: "Stablecoin redemptions indicate capital fleeing digital assets.",
 		});
 	}

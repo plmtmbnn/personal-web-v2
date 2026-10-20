@@ -9,6 +9,16 @@ import { addDays, addMonths, parseISO, format, isBefore } from "date-fns";
 import { getJakartaDateString } from "../utils";
 
 /**
+ * Enforces admin authorization for task mutations.
+ */
+async function requireTasksAdmin() {
+	const isAdmin = await checkAdmin();
+	if (!isAdmin) {
+		throw new Error("Unauthorized: Admin privileges required");
+	}
+}
+
+/**
  * Handle recurrence task instance creation.
  */
 async function handleRecurrenceSpawning(task: Task) {
@@ -141,6 +151,8 @@ export async function getTasks(options?: {
 	includeCompleted?: boolean;
 	includeOverdue?: boolean;
 }): Promise<Task[]> {
+	if (!(await checkAdmin())) return [];
+
 	const today = getJakartaDateString();
 	const startDate = options?.startDate || today;
 	const endDate = options?.endDate || today;
@@ -218,6 +230,8 @@ export async function getTasks(options?: {
  * Fetch all subtasks (children) for a given parent task.
  */
 export async function getSubtasks(parentId: string): Promise<Task[]> {
+	if (!(await checkAdmin())) return [];
+
 	const { data, error } = await SupabaseConn.from("tasks")
 		.select("*")
 		.eq("parent_id", parentId)
@@ -250,12 +264,27 @@ export async function addTask(payload: {
 	estimated_minutes?: number;
 	tags?: string[];
 	parent_id?: string;
+	start_date?: string | null;
+	start_time?: string | null;
+	due_time?: string | null;
 }) {
+	await requireTasksAdmin();
+
+	let dueDate = payload.due_date;
+	if (
+		payload.start_date &&
+		payload.due_date &&
+		payload.start_date > payload.due_date
+	) {
+		dueDate = payload.start_date;
+	}
+
 	const status: TaskStatus = payload.status || "todo";
 	const { data, error } = await SupabaseConn.from("tasks")
 		.insert([
 			{
 				...payload,
+				due_date: dueDate,
 				status,
 				tags: payload.tags || [],
 				position: 0,
@@ -268,7 +297,7 @@ export async function addTask(payload: {
 		console.error("Failed to create task:", {
 			taskTitle: payload.title,
 			category: payload.category,
-			dueDate: payload.due_date,
+			dueDate,
 			error: error.message,
 			code: error.code,
 		});
@@ -292,6 +321,8 @@ export async function addSubtask(payload: {
 	due_date?: string;
 	estimated_minutes?: number;
 }) {
+	await requireTasksAdmin();
+
 	// Inherit parent's due_date and priority if not specified
 	const { data: parent, error: parentError } = await SupabaseConn.from("tasks")
 		.select("due_date, priority, category")
@@ -352,6 +383,7 @@ export async function addBatchTasks(
 		tags?: string[];
 	}[],
 ) {
+	await requireTasksAdmin();
 	const status: TaskStatus = "todo";
 	const { data, error } = await SupabaseConn.from("tasks")
 		.insert(
@@ -387,6 +419,8 @@ export async function addBatchTasks(
  * Update task status.
  */
 export async function updateTaskStatus(taskId: string, status: TaskStatus) {
+	await requireTasksAdmin();
+
 	const completedAt = status === "done" ? new Date().toISOString() : null;
 
 	const { data: currentTask } = await SupabaseConn.from("tasks")
@@ -432,12 +466,29 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus) {
  * Update task details (title, priority, etc.)
  */
 export async function updateTask(taskId: string, updates: Partial<Task>) {
+	await requireTasksAdmin();
+
 	const payload: Partial<Task> = { ...updates };
 
 	const { data: currentTask } = await SupabaseConn.from("tasks")
-		.select("status")
+		.select("status, due_date, start_date")
 		.eq("id", taskId)
 		.single();
+
+	// Clamp dates so due_date is never before start_date
+	const effectiveStartDate =
+		payload.start_date !== undefined
+			? payload.start_date
+			: currentTask?.start_date;
+	const effectiveDueDate =
+		payload.due_date !== undefined ? payload.due_date : currentTask?.due_date;
+	if (
+		effectiveStartDate &&
+		effectiveDueDate &&
+		effectiveStartDate > effectiveDueDate
+	) {
+		payload.due_date = effectiveStartDate;
+	}
 
 	const wasDone = currentTask?.status === "done";
 	let becameDone = false;
@@ -492,6 +543,7 @@ export async function updateTask(taskId: string, updates: Partial<Task>) {
  * Bulk update task positions safely without upsert constraint violations
  */
 export async function reorderTasks(taskIds: string[]) {
+	await requireTasksAdmin();
 	if (!taskIds.length) return;
 
 	const updatePromises = taskIds.map((id, index) =>
@@ -518,6 +570,7 @@ export async function reorderTasks(taskIds: string[]) {
  * Delete a task (also cascades to subtasks via ON DELETE CASCADE)
  */
 export async function deleteTask(taskId: string) {
+	await requireTasksAdmin();
 	const { error } = await SupabaseConn.from("tasks").delete().eq("id", taskId);
 
 	if (error) {
@@ -535,36 +588,15 @@ export async function deleteTask(taskId: string) {
 	await invalidateStatsCache();
 }
 
-// ─── Stale / Overdue ──────────────────────────────────────────────────────────
-
-/**
- * Fetch tasks that are not completed and past their due date.
- */
-export async function getStaleTasks(): Promise<Task[]> {
-	const today = getJakartaDateString();
-
-	const { data, error } = await SupabaseConn.from("tasks")
-		.select("*")
-		.neq("status", "done")
-		.not("status", "in", '("cancelled")')
-		.lt("due_date", today)
-		.is("parent_id", null)
-		.is("archived_at", null)
-		.order("due_date", { ascending: true });
-
-	if (error) {
-		console.error("Error fetching stale tasks:", error);
-		return [];
-	}
-
-	return data as Task[];
-}
+// ─── Overdue Rescheduling ──────────────────────────────────────────────────────
 
 /**
  * Reschedule all overdue tasks by adding a specific number of days.
  * Increments the reschedule_count for each task.
  */
 export async function rescheduleOverdueTasks(daysToAdd: number) {
+	await requireTasksAdmin();
+
 	const today = getJakartaDateString();
 	const newDate = addDays(parseISO(today), daysToAdd);
 	const newDateStr = format(newDate, "yyyy-MM-dd");
@@ -694,6 +726,8 @@ async function handleDependenciesReblocking(reopenedTaskId: string) {
  * Archive a task.
  */
 export async function archiveTask(taskId: string) {
+	await requireTasksAdmin();
+
 	const { error } = await SupabaseConn.from("tasks")
 		.update({ archived_at: new Date().toISOString() })
 		.eq("id", taskId);
@@ -711,6 +745,8 @@ export async function archiveTask(taskId: string) {
  * Unarchive a task.
  */
 export async function unarchiveTask(taskId: string) {
+	await requireTasksAdmin();
+
 	const { error } = await SupabaseConn.from("tasks")
 		.update({ archived_at: null })
 		.eq("id", taskId);
@@ -728,6 +764,8 @@ export async function unarchiveTask(taskId: string) {
  * Fetch all archived tasks for review and restoration.
  */
 export async function getArchivedTasks(): Promise<Task[]> {
+	if (!(await checkAdmin())) return [];
+
 	const { data, error } = await SupabaseConn.from("tasks")
 		.select("*")
 		.not("archived_at", "is", null)
@@ -747,6 +785,8 @@ export async function getArchivedTasks(): Promise<Task[]> {
  * Automatically marks the dependent task as blocked if the blocker is incomplete.
  */
 export async function addTaskDependency(taskId: string, dependsOnId: string) {
+	await requireTasksAdmin();
+
 	const { error } = await SupabaseConn.from("task_dependencies").insert([
 		{ task_id: taskId, depends_on: dependsOnId },
 	]);
@@ -778,6 +818,8 @@ export async function removeTaskDependency(
 	taskId: string,
 	dependsOnId: string,
 ) {
+	await requireTasksAdmin();
+
 	const { error } = await SupabaseConn.from("task_dependencies")
 		.delete()
 		.eq("task_id", taskId)
@@ -796,6 +838,8 @@ export async function removeTaskDependency(
  * Get all tasks that this task depends on (blockers).
  */
 export async function getTaskDependencies(taskId: string): Promise<Task[]> {
+	if (!(await checkAdmin())) return [];
+
 	const { data: deps, error } = await SupabaseConn.from("task_dependencies")
 		.select("depends_on")
 		.eq("task_id", taskId);
@@ -816,6 +860,8 @@ export async function getTaskDependencies(taskId: string): Promise<Task[]> {
  * Traverses the transitive dependency tree to prevent multi-level cycles.
  */
 export async function getPotentialBlockers(taskId: string): Promise<Task[]> {
+	if (!(await checkAdmin())) return [];
+
 	const { data, error } = await SupabaseConn.from("tasks")
 		.select("*")
 		.neq("status", "done")
@@ -861,6 +907,8 @@ export async function getPendingTasksCount(): Promise<number> {
 		const todayStr = getJakartaDateString();
 		const { count, error } = await SupabaseConn.from("tasks")
 			.select("*", { count: "exact", head: true })
+			.is("parent_id", null)
+			.is("archived_at", null)
 			.neq("status", "done")
 			.neq("status", "cancelled")
 			.lte("due_date", todayStr);

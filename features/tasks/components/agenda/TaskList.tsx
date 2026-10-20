@@ -5,7 +5,6 @@ import {
 	useTransition,
 	useMemo,
 	useState,
-	useCallback,
 	useRef,
 	useEffect,
 } from "react";
@@ -17,6 +16,8 @@ import {
 	CheckCircle2,
 	RotateCcw,
 	AlertTriangle,
+	ChevronLeft,
+	ChevronRight,
 } from "lucide-react";
 import {
 	DragDropContext,
@@ -30,10 +31,10 @@ import {
 	reorderTasks,
 	updateTask,
 	rescheduleOverdueTasks,
+	archiveTask,
 } from "@/features/tasks/actions/tasks";
 import { useToast } from "@/features/tasks/components/shared/Toast";
 import TaskItem from "./TaskItem";
-import TaskFilters from "./TaskFilters";
 import { UNDO_TOAST_DURATION_MS } from "@/features/tasks/constants";
 import {
 	format,
@@ -41,6 +42,7 @@ import {
 	addMonths,
 	isBefore,
 	isAfter,
+	isSameDay,
 	startOfDay,
 	parseISO,
 	startOfWeek,
@@ -54,6 +56,46 @@ interface TaskListProps {
 	todayTasks: Task[];
 	upcomingTasks: Task[];
 	completedTasks: Task[];
+}
+
+interface TaskBuckets {
+	overdueTasks: Task[];
+	todayTasks: Task[];
+	upcomingTasks: Task[];
+	completedTasks: Task[];
+}
+
+function getBucket(
+	task: Task,
+	todayRef: Date,
+): "overdue" | "today" | "upcoming" | "completed" {
+	if (task.status === "done") return "completed";
+	const isFuture = Boolean(
+		task.start_date && isAfter(parseISO(task.start_date), todayRef),
+	);
+	if (isFuture) return "upcoming";
+	if (!task.due_date) return "today";
+	const due = parseISO(task.due_date);
+	if (isBefore(due, todayRef)) return "overdue";
+	if (isSameDay(due, todayRef)) return "today";
+	return "upcoming";
+}
+
+function reBucketTasks(tasks: Task[], todayRef: Date): TaskBuckets {
+	const buckets: TaskBuckets = {
+		overdueTasks: [],
+		todayTasks: [],
+		upcomingTasks: [],
+		completedTasks: [],
+	};
+	for (const t of tasks) {
+		const b = getBucket(t, todayRef);
+		if (b === "overdue") buckets.overdueTasks.push(t);
+		else if (b === "today") buckets.todayTasks.push(t);
+		else if (b === "upcoming") buckets.upcomingTasks.push(t);
+		else if (b === "completed") buckets.completedTasks.push(t);
+	}
+	return buckets;
 }
 
 export default function TaskList({
@@ -70,263 +112,213 @@ export default function TaskList({
 	// Modal State
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
-	// Multi-task undo timers keyed by task ID
+	// Multi-task undo timers keyed by "delete-{id}" or "archive-{id}"
 	const undoTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-	// Flush any pending deletions immediately on unmount so they persist
+	// Flush any pending deletions/archives immediately on unmount so they persist
 	useEffect(() => {
 		return () => {
-			undoTimeoutsRef.current.forEach((timer, taskId) => {
+			undoTimeoutsRef.current.forEach((timer, key) => {
 				clearTimeout(timer);
-				deleteTask(taskId).catch((err) =>
-					console.error("Failed to delete task on unmount:", err),
-				);
+				if (key.startsWith("archive-")) {
+					const taskId = key.replace("archive-", "");
+					archiveTask(taskId).catch((err) =>
+						console.error("Failed to archive task on unmount:", err),
+					);
+				} else if (key.startsWith("delete-")) {
+					const taskId = key.replace("delete-", "");
+					deleteTask(taskId).catch((err) =>
+						console.error("Failed to delete task on unmount:", err),
+					);
+				}
 			});
 			undoTimeoutsRef.current.clear();
 		};
 	}, []);
 
-	// Completed Tasks Section loaded by default to avoid artificial gating
-	const [isCompletedLoaded, setIsCompletedLoaded] = useState(true);
-
 	// Request deduplication to prevent race conditions
 	const pendingRequests = useRef(new Set<string>());
 
-	// Section-specific filter extraction
-	const getFilters = useCallback(
-		(prefix: string) => ({
-			priority: searchParams.get(`${prefix}_priority`) || "all",
-			category: searchParams.get(`${prefix}_category`) || "all",
-			range: searchParams.get(`${prefix}_range`) || "week",
-			search: searchParams.get(`${prefix}_search`) || "",
-			status: searchParams.get(`${prefix}_status`) || "all",
-		}),
-		[searchParams],
-	);
-
-	const todayFilters = getFilters("today");
-	const upcomingFilters = getFilters("upcoming");
-	const completedFilters = getFilters("completed");
-
-	// Optimistic state for all task lists including overdue
+	// Optimistic state with automatic cross-section re-bucketing
 	const [optimisticState, addOptimisticAction] = useOptimistic<
-		{
-			overdueTasks: Task[];
-			todayTasks: Task[];
-			upcomingTasks: Task[];
-			completedTasks: Task[];
-		},
+		TaskBuckets,
 		{ action: string; payload: any }
 	>(
 		{ overdueTasks, todayTasks, upcomingTasks, completedTasks },
 		(state, { action, payload }) => {
-			const updateInLists = (updater: (t: Task) => Task) => ({
-				overdueTasks: state.overdueTasks.map(updater),
-				todayTasks: state.todayTasks.map(updater),
-				upcomingTasks: state.upcomingTasks.map(updater),
-				completedTasks: state.completedTasks.map(updater),
-			});
+			const todayRef = startOfDay(new Date());
 
 			switch (action) {
-				case "toggle":
-					return updateInLists((t: Task) =>
-						t.id === payload.taskId
-							? { ...t, status: t.status === "done" ? "todo" : "done" }
-							: t,
-					);
-				case "update":
-					return updateInLists((t: Task) =>
-						t.id === payload.taskId ? { ...t, ...payload.updates } : t,
-					);
-				case "delete":
-					return {
-						overdueTasks: state.overdueTasks.filter(
-							(t: Task) => t.id !== payload.taskId,
-						),
-						todayTasks: state.todayTasks.filter(
-							(t: Task) => t.id !== payload.taskId,
-						),
-						upcomingTasks: state.upcomingTasks.filter(
-							(t: Task) => t.id !== payload.taskId,
-						),
-						completedTasks: state.completedTasks.filter(
-							(t: Task) => t.id !== payload.taskId,
-						),
+				case "toggle": {
+					const { taskId } = payload;
+					const all = [
+						...state.overdueTasks,
+						...state.todayTasks,
+						...state.upcomingTasks,
+						...state.completedTasks,
+					];
+					const target = all.find((t) => t.id === taskId);
+					if (!target) return state;
+
+					const newStatus = target.status === "done" ? "todo" : "done";
+					const updatedTask: Task = {
+						...target,
+						status: newStatus,
+						completed_at:
+							newStatus === "done" ? new Date().toISOString() : null,
 					};
-				case "restore": {
-					const { task, listType } = payload;
+
+					const nextAll = [updatedTask, ...all.filter((t) => t.id !== taskId)];
+					return reBucketTasks(nextAll, todayRef);
+				}
+
+				case "update": {
+					const { taskId, updates } = payload;
+					const all = [
+						...state.overdueTasks,
+						...state.todayTasks,
+						...state.upcomingTasks,
+						...state.completedTasks,
+					];
+					const target = all.find((t) => t.id === taskId);
+					if (!target) return state;
+
+					const updatedTask: Task = { ...target, ...updates };
+					const nextAll = [updatedTask, ...all.filter((t) => t.id !== taskId)];
+					return reBucketTasks(nextAll, todayRef);
+				}
+
+				case "delete":
+				case "archive": {
+					const { taskId } = payload;
 					return {
-						overdueTasks:
-							listType === "overdue"
-								? [...state.overdueTasks, task]
-								: state.overdueTasks.filter((t) => t.id !== task.id),
-						todayTasks:
-							listType === "today"
-								? [...state.todayTasks, task]
-								: state.todayTasks.filter((t) => t.id !== task.id),
-						upcomingTasks:
-							listType === "upcoming"
-								? [...state.upcomingTasks, task]
-								: state.upcomingTasks.filter((t) => t.id !== task.id),
-						completedTasks:
-							listType === "completed"
-								? [...state.completedTasks, task]
-								: state.completedTasks.filter((t) => t.id !== task.id),
+						overdueTasks: state.overdueTasks.filter((t) => t.id !== taskId),
+						todayTasks: state.todayTasks.filter((t) => t.id !== taskId),
+						upcomingTasks: state.upcomingTasks.filter((t) => t.id !== taskId),
+						completedTasks: state.completedTasks.filter((t) => t.id !== taskId),
 					};
 				}
+
+				case "restore": {
+					const { task } = payload;
+					const all = [
+						...state.overdueTasks,
+						...state.todayTasks,
+						...state.upcomingTasks,
+						...state.completedTasks,
+						task,
+					];
+					return reBucketTasks(all, todayRef);
+				}
+
 				case "reorder": {
 					const listKey =
 						payload.droppableId === "today-list"
 							? "todayTasks"
 							: "upcomingTasks";
 					return {
-						overdueTasks: state.overdueTasks,
-						todayTasks:
-							listKey === "todayTasks" ? payload.newTasks : state.todayTasks,
-						upcomingTasks:
-							listKey === "upcomingTasks"
-								? payload.newTasks
-								: state.upcomingTasks,
-						completedTasks: state.completedTasks,
+						...state,
+						[listKey]: payload.newTasks,
 					};
 				}
-				case "move":
+
+				case "move": {
 					return {
-						overdueTasks: state.overdueTasks,
+						...state,
 						todayTasks: payload.newTodayTasks,
 						upcomingTasks: payload.newUpcomingTasks,
-						completedTasks: state.completedTasks,
 					};
+				}
+
 				default:
 					return state;
 			}
 		},
 	);
 
-	/**
-	 * Helper to apply local filters to a list
-	 */
-	const applyFilters = useCallback(
-		(list: Task[], filters: any, isUpcoming = false, isCompleted = false) => {
-			let result = list;
-			const todayRef = startOfDay(new Date());
+	// Upcoming Range: "week" | "month" | "all"
+	const upcomingRange = searchParams.get("upcoming_range") || "week";
 
-			// Memoize filter values to avoid recomputation
-			const priorityFilter = filters.priority;
-			const categoryFilter = filters.category;
-			const searchFilter = filters.search?.toLowerCase();
-
-			// 1. Priority
-			if (priorityFilter !== "all") {
-				result = result.filter((t) => t.priority === priorityFilter);
-			}
-
-			// 2. Category
-			if (categoryFilter !== "all") {
-				result = result.filter((t) => t.category === categoryFilter);
-			}
-
-			// 3. Completion check
-			if (isCompleted) {
-				result = result.filter((t) => t.status === "done");
-			} else {
-				result = result.filter((t) => t.status !== "done");
-			}
-
-			// 3b. Status filter
-			if (filters.status && filters.status !== "all") {
-				result = result.filter((t) => (t.status || "todo") === filters.status);
-			}
-
-			// 4. Date Range (For Upcoming & Completed)
-			if (isUpcoming) {
-				if (filters.range === "month") {
-					// MONTH: today until next 1 month
-					const maxMonth = addMonths(todayRef, 1);
-					result = result.filter((t) => {
-						if (!t.due_date) return false;
-						const d = parseISO(t.due_date);
-						return !isBefore(d, todayRef) && !isAfter(d, maxMonth);
-					});
-				} else if (filters.range === "all") {
-					// ALL: all upcoming tasks from today onwards
-					result = result.filter((t) => {
-						if (!t.due_date) return true;
-						const d = parseISO(t.due_date);
-						return !isBefore(d, todayRef);
-					});
-				} else {
-					// Default: WEEK (today until next 7 days)
-					const maxWeek = addDays(todayRef, 7);
-					result = result.filter((t) => {
-						if (!t.due_date) return false;
-						const d = parseISO(t.due_date);
-						return !isBefore(d, todayRef) && !isAfter(d, maxWeek);
-					});
-				}
-			}
-
-			if (isCompleted) {
-				const weekOffset = Number(
-					searchParams.get("completed_week_offset") || "0",
-				);
-				const weekStart = addDays(
-					startOfWeek(todayRef, { weekStartsOn: 1 }),
-					weekOffset * 7,
-				);
-				const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-
-				result = result.filter((t) => {
-					if (!t.completed_at && !t.due_date && !t.created_at) return false;
-					const d = parseISO(t.completed_at || t.due_date || t.created_at);
-					return isWithinInterval(d, { start: weekStart, end: weekEnd });
-				});
-			}
-
-			// 5. Search text query
-			if (searchFilter) {
-				result = result.filter(
-					(t) =>
-						(t.title || "").toLowerCase().includes(searchFilter) ||
-						(t.description || "").toLowerCase().includes(searchFilter),
-				);
-			}
-
-			return result;
-		},
-		[searchParams],
+	// Completed Week Offset: 0, -1, -2...
+	const completedWeekOffset = Number(
+		searchParams.get("completed_week_offset") || "0",
 	);
 
-	// Derived display lists
-	const displayOverdueTasks = useMemo(
-		() => applyFilters(optimisticState.overdueTasks, todayFilters),
-		[optimisticState.overdueTasks, todayFilters, applyFilters],
+	const todayRef = useMemo(() => startOfDay(new Date()), []);
+
+	const selectedWeekStart = useMemo(
+		() =>
+			addDays(
+				startOfWeek(todayRef, { weekStartsOn: 1 }),
+				completedWeekOffset * 7,
+			),
+		[todayRef, completedWeekOffset],
 	);
 
-	const displayTodayTasks = useMemo(
-		() => applyFilters(optimisticState.todayTasks, todayFilters),
-		[optimisticState.todayTasks, todayFilters, applyFilters],
+	const selectedWeekEnd = useMemo(
+		() => endOfWeek(selectedWeekStart, { weekStartsOn: 1 }),
+		[selectedWeekStart],
 	);
 
-	const displayUpcomingTasks = useMemo(
-		() => applyFilters(optimisticState.upcomingTasks, upcomingFilters, true),
-		[optimisticState.upcomingTasks, upcomingFilters, applyFilters],
-	);
+	// Display Lists
+	const displayOverdueTasks = optimisticState.overdueTasks;
+	const displayTodayTasks = optimisticState.todayTasks;
+
+	const displayUpcomingTasks = useMemo(() => {
+		if (upcomingRange === "month") {
+			const maxMonth = addMonths(todayRef, 1);
+			return optimisticState.upcomingTasks.filter((t) => {
+				if (!t.due_date) return false;
+				const d = parseISO(t.due_date);
+				return !isBefore(d, todayRef) && !isAfter(d, maxMonth);
+			});
+		}
+		if (upcomingRange === "all") {
+			return optimisticState.upcomingTasks;
+		}
+		// Default: 7 days
+		const maxWeek = addDays(todayRef, 7);
+		return optimisticState.upcomingTasks.filter((t) => {
+			if (!t.due_date) return false;
+			const d = parseISO(t.due_date);
+			return !isBefore(d, todayRef) && !isAfter(d, maxWeek);
+		});
+	}, [optimisticState.upcomingTasks, upcomingRange, todayRef]);
 
 	const displayCompletedTasks = useMemo(() => {
-		if (!isCompletedLoaded) return [];
-		return applyFilters(
-			optimisticState.completedTasks,
-			completedFilters,
-			false,
-			true,
-		);
-	}, [
-		isCompletedLoaded,
-		optimisticState.completedTasks,
-		completedFilters,
-		applyFilters,
-	]);
+		return optimisticState.completedTasks.filter((t) => {
+			if (!t.completed_at && !t.due_date && !t.created_at) return false;
+			const d = parseISO(t.completed_at || t.due_date || t.created_at);
+			return isWithinInterval(d, {
+				start: selectedWeekStart,
+				end: selectedWeekEnd,
+			});
+		});
+	}, [optimisticState.completedTasks, selectedWeekStart, selectedWeekEnd]);
+
+	const setUpcomingRange = (range: "week" | "month" | "all") => {
+		startTransition(() => {
+			const params = new URLSearchParams(searchParams.toString());
+			if (range === "week") {
+				params.delete("upcoming_range");
+			} else {
+				params.set("upcoming_range", range);
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
+		});
+	};
+
+	const setCompletedWeekOffset = (offset: number) => {
+		startTransition(() => {
+			const params = new URLSearchParams(searchParams.toString());
+			if (offset === 0) {
+				params.delete("completed_week_offset");
+			} else {
+				params.set("completed_week_offset", offset.toString());
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
+		});
+	};
 
 	const handleBatchRollover = (daysToAdd: number) => {
 		startTransition(async () => {
@@ -348,27 +340,7 @@ export default function TaskList({
 		});
 	};
 
-	const resetSectionFilters = (prefix: string) => {
-		startTransition(() => {
-			const params = new URLSearchParams(searchParams.toString());
-			params.delete(`${prefix}_priority`);
-			params.delete(`${prefix}_category`);
-			params.delete(`${prefix}_status`);
-			params.delete(`${prefix}_search`);
-			params.delete(`${prefix}_completed`);
-			if (prefix === "upcoming") {
-				params.delete(`${prefix}_range`);
-			}
-			if (prefix === "completed") {
-				params.delete(`${prefix}_range`);
-				params.delete(`${prefix}_week_offset`);
-			}
-			router.replace(`?${params.toString()}`, { scroll: false });
-		});
-	};
-
 	const handleUpdate = async (taskId: string, updates: Partial<Task>) => {
-		// Prevent duplicate update requests for the same task
 		if (pendingRequests.current.has(`update-${taskId}`)) {
 			return;
 		}
@@ -395,50 +367,19 @@ export default function TaskList({
 	const confirmDelete = async () => {
 		if (!deleteTaskId) return;
 
-		// Prevent duplicate delete requests
-		if (pendingRequests.current.has(`delete-${deleteTaskId}`)) {
-			return;
-		}
-
-		// Find the task being deleted and its list type
-		let taskToDelete: Task | undefined;
-		let listType: "overdue" | "today" | "upcoming" | "completed" = "today";
-
-		taskToDelete = optimisticState.overdueTasks.find(
-			(t: Task) => t.id === deleteTaskId,
-		);
-		if (taskToDelete) listType = "overdue";
-
-		if (!taskToDelete) {
-			taskToDelete = optimisticState.todayTasks.find(
-				(t: Task) => t.id === deleteTaskId,
-			);
-			if (taskToDelete) listType = "today";
-		}
-
-		if (!taskToDelete) {
-			taskToDelete = optimisticState.upcomingTasks.find(
-				(t: Task) => t.id === deleteTaskId,
-			);
-			if (taskToDelete) listType = "upcoming";
-		}
-
-		if (!taskToDelete) {
-			taskToDelete = optimisticState.completedTasks.find(
-				(t: Task) => t.id === deleteTaskId,
-			);
-			if (taskToDelete) listType = "completed";
-		}
-
-		if (!taskToDelete) {
-			console.error("Task not found for deletion:", deleteTaskId);
-			setDeleteTaskId(null);
-			return;
-		}
-
 		const targetId = deleteTaskId;
+		setDeleteTaskId(null);
 
-		// Optimistically remove the task
+		const all = [
+			...optimisticState.overdueTasks,
+			...optimisticState.todayTasks,
+			...optimisticState.upcomingTasks,
+			...optimisticState.completedTasks,
+		];
+		const taskToDelete = all.find((t) => t.id === targetId);
+		if (!taskToDelete) return;
+
+		// 1. Optimistically remove
 		startTransition(() => {
 			addOptimisticAction({
 				action: "delete",
@@ -446,74 +387,122 @@ export default function TaskList({
 			});
 		});
 
-		// Show undo toast
-		showSuccess(
-			`Task "${taskToDelete.title}" deleted`,
-			"Click undo to restore it",
-			{
-				label: "Undo",
-				onClick: () => {
-					const existingTimer = undoTimeoutsRef.current.get(targetId);
-					if (existingTimer) {
-						clearTimeout(existingTimer);
-						undoTimeoutsRef.current.delete(targetId);
-					}
-					// Restore the task
-					startTransition(() => {
-						addOptimisticAction({
-							action: "restore",
-							payload: { task: taskToDelete, listType },
-						});
-					});
-				},
-			},
-		);
-
-		// Set timeout to actually delete the task
+		// 2. Set timeout for actual deletion
+		const timerKey = `delete-${targetId}`;
 		const deleteTimer = setTimeout(async () => {
-			undoTimeoutsRef.current.delete(targetId);
+			undoTimeoutsRef.current.delete(timerKey);
 			try {
-				pendingRequests.current.add(`delete-${targetId}`);
+				pendingRequests.current.add(timerKey);
 				await deleteTask(targetId);
 			} catch (error) {
 				console.error("Failed to delete task:", error);
 				showError(
 					`Failed to delete task. ${error instanceof Error ? error.message : "Please try again."}`,
 				);
-				// Revert optimistic update on error
 				startTransition(() => {
 					addOptimisticAction({
 						action: "restore",
-						payload: { task: taskToDelete, listType },
+						payload: { task: taskToDelete },
 					});
 				});
 			} finally {
-				pendingRequests.current.delete(`delete-${targetId}`);
+				pendingRequests.current.delete(timerKey);
 			}
 		}, UNDO_TOAST_DURATION_MS);
 
-		undoTimeoutsRef.current.set(targetId, deleteTimer);
-		setDeleteTaskId(null);
-	};
+		undoTimeoutsRef.current.set(timerKey, deleteTimer);
 
-	const hasActiveFilters = (filters: any) => {
-		return (
-			filters.priority !== "all" ||
-			filters.category !== "all" ||
-			filters.status !== "all" ||
-			(filters.range && filters.range !== "week") ||
-			!!filters.search
+		// 3. Show undo toast
+		showSuccess(
+			`Task "${taskToDelete.title}" deleted`,
+			"Click undo to restore it",
+			{
+				label: "Undo",
+				onClick: () => {
+					const existingTimer = undoTimeoutsRef.current.get(timerKey);
+					if (existingTimer) {
+						clearTimeout(existingTimer);
+						undoTimeoutsRef.current.delete(timerKey);
+					}
+					startTransition(() => {
+						addOptimisticAction({
+							action: "restore",
+							payload: { task: taskToDelete },
+						});
+					});
+				},
+			},
 		);
 	};
-	const isDragDisabled =
-		todayFilters.priority !== "all" ||
-		todayFilters.category !== "all" ||
-		todayFilters.status !== "all" ||
-		Boolean(todayFilters.search) ||
-		upcomingFilters.priority !== "all" ||
-		upcomingFilters.category !== "all" ||
-		upcomingFilters.status !== "all" ||
-		Boolean(upcomingFilters.search);
+
+	const handleArchive = (taskId: string) => {
+		const all = [
+			...optimisticState.overdueTasks,
+			...optimisticState.todayTasks,
+			...optimisticState.upcomingTasks,
+			...optimisticState.completedTasks,
+		];
+		const taskToArchive = all.find((t) => t.id === taskId);
+		if (!taskToArchive) return;
+
+		// 1. Optimistically remove
+		startTransition(() => {
+			addOptimisticAction({
+				action: "archive",
+				payload: { taskId },
+			});
+		});
+
+		// 2. Multi-task undo timer
+		const timerKey = `archive-${taskId}`;
+		const timer = setTimeout(async () => {
+			undoTimeoutsRef.current.delete(timerKey);
+			try {
+				await archiveTask(taskId);
+			} catch (error) {
+				console.error("Failed to archive task:", error);
+				showError("Failed to archive task.");
+				startTransition(() => {
+					addOptimisticAction({
+						action: "restore",
+						payload: { task: taskToArchive },
+					});
+				});
+			}
+		}, UNDO_TOAST_DURATION_MS);
+
+		undoTimeoutsRef.current.set(timerKey, timer);
+
+		// 3. Show Toast with Undo
+		showSuccess(
+			`Task "${taskToArchive.title}" archived`,
+			"Click undo to restore it",
+			{
+				label: "Undo",
+				onClick: () => {
+					const t = undoTimeoutsRef.current.get(timerKey);
+					if (t) {
+						clearTimeout(t);
+						undoTimeoutsRef.current.delete(timerKey);
+					}
+					startTransition(() => {
+						addOptimisticAction({
+							action: "restore",
+							payload: { task: taskToArchive },
+						});
+					});
+				},
+			},
+		);
+	};
+
+	const isDragDisabled = Boolean(
+		(searchParams.get("priority") && searchParams.get("priority") !== "all") ||
+			(searchParams.get("category") &&
+				searchParams.get("category") !== "all") ||
+			(searchParams.get("status") && searchParams.get("status") !== "all") ||
+			searchParams.get("search"),
+	);
 
 	const onDragEnd = (result: DropResult) => {
 		const { destination, source, draggableId } = result;
@@ -521,8 +510,9 @@ export default function TaskList({
 		if (
 			destination.droppableId === source.droppableId &&
 			destination.index === source.index
-		)
+		) {
 			return;
+		}
 
 		const sourceList: Task[] =
 			source.droppableId === "today-list"
@@ -671,6 +661,7 @@ export default function TaskList({
 									index={index}
 									onUpdate={handleUpdate}
 									onDelete={handleDeleteRequest}
+									onArchive={handleArchive}
 								/>
 							))}
 						</div>
@@ -679,7 +670,7 @@ export default function TaskList({
 
 				{/* Today Section */}
 				<section id="today-section">
-					<div className="flex flex-col gap-3.5 mb-6 border-b border-slate-100 pb-4">
+					<div className="flex items-center justify-between gap-3.5 mb-6 border-b border-slate-100 pb-4">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-200/50">
 								<Flame className="w-5 h-5 fill-orange-600" />
@@ -698,10 +689,6 @@ export default function TaskList({
 									High-priority execution
 								</p>
 							</div>
-						</div>
-						{/* Today Filters */}
-						<div className="w-full pt-1">
-							<TaskFilters tasks={todayTasks} paramPrefix="today" />
 						</div>
 					</div>
 
@@ -728,28 +715,11 @@ export default function TaskList({
 													snapshot={snapshot}
 													onUpdate={handleUpdate}
 													onDelete={handleDeleteRequest}
+													onArchive={handleArchive}
 												/>
 											)}
 										</Draggable>
 									))
-								) : hasActiveFilters(todayFilters) ? (
-									<div className="text-center py-12 bg-white border border-slate-200/80 rounded-[2rem] shadow-xs flex flex-col items-center justify-center p-6">
-										<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-2.5 opacity-40" />
-										<p className="text-xs text-slate-700 font-bold uppercase tracking-wider mb-1">
-											No tasks match your filters
-										</p>
-										<p className="text-[11px] text-slate-400 font-medium mb-3">
-											Try adjusting or resetting your filter criteria
-										</p>
-										<button
-											type="button"
-											onClick={() => resetSectionFilters("today")}
-											className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 active:scale-95 transition-all shadow-xs cursor-pointer"
-										>
-											<RotateCcw className="w-3.5 h-3.5" />
-											Reset Filters
-										</button>
-									</div>
 								) : (
 									<div className="text-center py-14 bg-emerald-50/40 border border-emerald-100 rounded-[2rem] border-dashed p-6">
 										<CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-2.5 opacity-60" />
@@ -769,7 +739,7 @@ export default function TaskList({
 
 				{/* Upcoming Section */}
 				<section id="upcoming-section">
-					<div className="flex flex-col gap-3.5 mb-6 border-b border-slate-100 pb-4">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 mb-6 border-b border-slate-100 pb-4">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200/50">
 								<Calendar className="w-5 h-5" />
@@ -789,13 +759,42 @@ export default function TaskList({
 								</p>
 							</div>
 						</div>
-						{/* Upcoming Filters with Range Toggle */}
-						<div className="w-full pt-1">
-							<TaskFilters
-								tasks={upcomingTasks}
-								paramPrefix="upcoming"
-								showRangeFilter={true}
-							/>
+
+						{/* Inline Date Horizon Selector */}
+						<div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/80">
+							<button
+								type="button"
+								onClick={() => setUpcomingRange("week")}
+								className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+									upcomingRange === "week"
+										? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+										: "text-slate-500 hover:text-slate-900"
+								}`}
+							>
+								7 Days
+							</button>
+							<button
+								type="button"
+								onClick={() => setUpcomingRange("month")}
+								className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+									upcomingRange === "month"
+										? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+										: "text-slate-500 hover:text-slate-900"
+								}`}
+							>
+								1 Month
+							</button>
+							<button
+								type="button"
+								onClick={() => setUpcomingRange("all")}
+								className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+									upcomingRange === "all"
+										? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+										: "text-slate-500 hover:text-slate-900"
+								}`}
+							>
+								All
+							</button>
 						</div>
 					</div>
 
@@ -822,28 +821,11 @@ export default function TaskList({
 													snapshot={snapshot}
 													onUpdate={handleUpdate}
 													onDelete={handleDeleteRequest}
+													onArchive={handleArchive}
 												/>
 											)}
 										</Draggable>
 									))
-								) : hasActiveFilters(upcomingFilters) ? (
-									<div className="text-center py-12 bg-white border border-slate-200/80 rounded-[2rem] shadow-xs flex flex-col items-center justify-center p-6">
-										<Inbox className="w-10 h-10 text-slate-300 mx-auto mb-2.5 opacity-40" />
-										<p className="text-xs text-slate-700 font-bold uppercase tracking-wider mb-1">
-											No upcoming tasks match your filters
-										</p>
-										<p className="text-[11px] text-slate-400 font-medium mb-3">
-											Try adjusting your range or search keywords
-										</p>
-										<button
-											type="button"
-											onClick={() => resetSectionFilters("upcoming")}
-											className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 active:scale-95 transition-all shadow-xs cursor-pointer"
-										>
-											<RotateCcw className="w-3.5 h-3.5" />
-											Reset Filters
-										</button>
-									</div>
 								) : (
 									<div className="text-center py-14 bg-slate-50/70 border border-slate-200 rounded-[2rem] border-dashed p-6">
 										<Inbox className="w-10 h-10 text-slate-300 mx-auto mb-2.5 opacity-40" />
@@ -867,7 +849,7 @@ export default function TaskList({
 					id="completed-section"
 					className="pt-4 border-t border-slate-100"
 				>
-					<div className="flex flex-col gap-3.5 mb-6 border-b border-slate-100 pb-4">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 mb-6 border-b border-slate-100 pb-4">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200/50">
 								<CheckCircle2 className="w-5 h-5 fill-emerald-600 text-white stroke-[3]" />
@@ -877,84 +859,64 @@ export default function TaskList({
 									<h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
 										Completed Tasks
 									</h3>
-									{isCompletedLoaded && (
-										<span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200/60">
-											{displayCompletedTasks.length}{" "}
-											{displayCompletedTasks.length === 1 ? "task" : "tasks"}
-										</span>
-									)}
+									<span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200/60">
+										{displayCompletedTasks.length}{" "}
+										{displayCompletedTasks.length === 1 ? "task" : "tasks"}
+									</span>
 								</div>
 								<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
 									Execution History
 								</p>
 							</div>
 						</div>
-						{/* Completed Filters with Range Toggle */}
-						{isCompletedLoaded && (
-							<div className="w-full pt-1">
-								<TaskFilters
-									tasks={completedTasks}
-									paramPrefix="completed"
-									showRangeFilter={true}
+
+						{/* Inline Completed Week Navigator */}
+						<div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200/80 select-none">
+							<button
+								type="button"
+								onClick={() => setCompletedWeekOffset(completedWeekOffset - 1)}
+								className="p-1 hover:bg-white rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer active:scale-90"
+								aria-label="Previous week"
+							>
+								<ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+							</button>
+							<span className="text-[10px] font-black uppercase tracking-wider text-slate-700 px-1 min-w-[90px] text-center">
+								{format(selectedWeekStart, "dd MMM")} -{" "}
+								{format(selectedWeekEnd, "dd MMM")}
+							</span>
+							<button
+								type="button"
+								onClick={() => setCompletedWeekOffset(completedWeekOffset + 1)}
+								disabled={completedWeekOffset >= 0}
+								className="p-1 hover:bg-white rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"
+								aria-label="Next week"
+							>
+								<ChevronRight className="w-4 h-4 stroke-[2.5]" />
+							</button>
+						</div>
+					</div>
+
+					<div className="space-y-3 min-h-[100px]">
+						{displayCompletedTasks.length > 0 ? (
+							displayCompletedTasks.map((task: Task, index: number) => (
+								<TaskItem
+									key={task.id}
+									task={task}
+									index={index}
+									onUpdate={handleUpdate}
+									onDelete={handleDeleteRequest}
+									onArchive={handleArchive}
 								/>
+							))
+						) : (
+							<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
+								<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
+								<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
+									No completed tasks found in this range.
+								</p>
 							</div>
 						)}
 					</div>
-
-					{!isCompletedLoaded ? (
-						<div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
-							<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-35 animate-pulse" />
-							<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em] mb-4">
-								Execution History is unloaded
-							</p>
-							<button
-								type="button"
-								onClick={() => setIsCompletedLoaded(true)}
-								className="px-6 py-2.5 bg-slate-900 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-							>
-								Load Completed Tasks
-							</button>
-						</div>
-					) : (
-						<div className="space-y-3 min-h-[100px]">
-							{displayCompletedTasks.length > 0 ? (
-								displayCompletedTasks.map((task: Task, index: number) => (
-									<TaskItem
-										key={task.id}
-										task={task}
-										index={index}
-										onUpdate={handleUpdate}
-										onDelete={handleDeleteRequest}
-									/>
-								))
-							) : hasActiveFilters(completedFilters) ? (
-								<div className="text-center py-12 bg-white border border-slate-200/80 rounded-[2rem] shadow-xs flex flex-col items-center justify-center p-6">
-									<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-2.5 opacity-40" />
-									<p className="text-xs text-slate-700 font-bold uppercase tracking-wider mb-1">
-										No completed tasks found in this period
-									</p>
-									<p className="text-[11px] text-slate-400 font-medium mb-3">
-										Navigate to different weeks or reset filters to see history
-									</p>
-									<button
-										type="button"
-										onClick={() => resetSectionFilters("completed")}
-										className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 active:scale-95 transition-all shadow-xs cursor-pointer"
-									>
-										<RotateCcw className="w-3.5 h-3.5" />
-										Reset Filters
-									</button>
-								</div>
-							) : (
-								<div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem] border-dashed">
-									<CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3 opacity-30" />
-									<p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">
-										No completed tasks found in this range.
-									</p>
-								</div>
-							)}
-						</div>
-					)}
 				</section>
 			</div>
 		</DragDropContext>

@@ -20,6 +20,7 @@ export const CACHE_KEYS = {
 	SESSION_META: (sessionId: string) => `session:meta:${sessionId}`,
 	STOCK_SUMMARY: "idx:stock-summary",
 	STOCK_SUMMARY_BACKUP: "idx:stock-summary:backup",
+	STOCK_TICKER_HISTORY_10D: "idx:ticker:history:10d",
 	LFC_FIXTURES: "liverpool:fixtures:upcoming",
 	MARKET_QUOTES: "compass:quotes:live",
 	MARKET_QUOTES_BACKUP: "compass:quotes:backup",
@@ -74,6 +75,161 @@ export async function getStockData(): Promise<any[] | null> {
 		return typeof data === "string" ? JSON.parse(data) : data;
 	} catch (error) {
 		console.error("Redis Get Stock Error:", error);
+		return null;
+	}
+}
+
+/**
+ * Retrieve the rolling 10-trading-day per-ticker ring buffer from Redis.
+ */
+export async function getTickerHistoryRingBuffer(): Promise<Record<
+	string,
+	Record<
+		string,
+		{
+			c: number;
+			h: number;
+			l: number;
+			v: number;
+			val: number;
+			f: number;
+			fn: number;
+		}
+	>
+> | null> {
+	try {
+		const raw = await redis.get(CACHE_KEYS.STOCK_TICKER_HISTORY_10D);
+		if (!raw) return null;
+		return typeof raw === "string" ? JSON.parse(raw) : (raw as any);
+	} catch (error) {
+		console.warn("Redis Get Ticker History 10D Error:", error);
+		return null;
+	}
+}
+
+/**
+ * Updates the rolling 10-trading-day per-ticker ring buffer in Redis
+ * when a valid weekday trading session payload is received.
+ */
+export async function updateTickerHistoryRingBuffer(stocks: any[]) {
+	try {
+		if (!stocks || !Array.isArray(stocks) || stocks.length === 0) return null;
+
+		let sessionDateStr = "";
+		const rawPayloadDate = stocks[0]?.Date;
+		if (rawPayloadDate && typeof rawPayloadDate === "string") {
+			const clean = rawPayloadDate.split("T")[0];
+			if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+				sessionDateStr = clean;
+			}
+		}
+
+		const now = new Date();
+		const wibFormatter = new Intl.DateTimeFormat("en-US", {
+			timeZone: "Asia/Jakarta",
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
+			hour: "numeric",
+			hour12: false,
+		});
+		const parts = wibFormatter.formatToParts(now);
+		const currentYear = parts.find((p) => p.type === "year")?.value;
+		const currentMonth = parts.find((p) => p.type === "month")?.value;
+		const currentDay = parts.find((p) => p.type === "day")?.value;
+		const currentWibDateStr = `${currentYear}-${currentMonth}-${currentDay}`;
+		const wibHour = parseInt(
+			parts.find((p) => p.type === "hour")?.value ?? "0",
+			10,
+		);
+
+		if (!sessionDateStr) {
+			sessionDateStr = currentWibDateStr;
+		}
+
+		const isToday = sessionDateStr === currentWibDateStr;
+		const isSessionActiveOrClosed = !isToday || wibHour >= 9;
+		const sessionDayOfWeek = new Date(
+			`${sessionDateStr}T12:00:00Z`,
+		).getUTCDay();
+		const isTradingDay =
+			sessionDayOfWeek !== 0 &&
+			sessionDayOfWeek !== 6 &&
+			isSessionActiveOrClosed;
+
+		let ringBuffer = (await getTickerHistoryRingBuffer()) || {};
+
+		// Prune any weekend dates
+		for (const d of Object.keys(ringBuffer)) {
+			const dow = new Date(`${d}T12:00:00Z`).getUTCDay();
+			if (dow === 0 || dow === 6) {
+				delete ringBuffer[d];
+			}
+		}
+
+		if (isTradingDay) {
+			const daySnapshot: Record<
+				string,
+				{
+					c: number;
+					h: number;
+					l: number;
+					v: number;
+					val: number;
+					f: number;
+					fn: number;
+				}
+			> = {};
+
+			for (const stock of stocks) {
+				if (!stock?.StockCode) continue;
+				const vwap =
+					stock.Volume > 0
+						? stock.Value / stock.Volume
+						: stock.Close || stock.Previous || 0;
+				const isForeignNominal = stock.ForeignBuy > stock.Volume * 5;
+				const foreignNetVol = isForeignNominal
+					? vwap > 0
+						? Math.round((stock.ForeignBuy - stock.ForeignSell) / vwap)
+						: 0
+					: (stock.ForeignBuy || 0) - (stock.ForeignSell || 0);
+				const foreignNet = isForeignNominal
+					? (stock.ForeignBuy || 0) - (stock.ForeignSell || 0)
+					: Math.round(foreignNetVol * vwap);
+
+				daySnapshot[stock.StockCode] = {
+					c: stock.Close || 0,
+					h: stock.High || stock.Close || 0,
+					l: stock.Low || stock.Close || 0,
+					v: stock.Volume || 0,
+					val: stock.Value || 0,
+					f: stock.Frequency || 0,
+					fn: foreignNet,
+				};
+			}
+
+			ringBuffer[sessionDateStr] = daySnapshot;
+
+			const sortedDates = Object.keys(ringBuffer).sort((a, b) =>
+				a > b ? -1 : 1,
+			);
+			if (sortedDates.length > 10) {
+				const pruned: typeof ringBuffer = {};
+				for (let i = 0; i < 10; i++) {
+					pruned[sortedDates[i]] = ringBuffer[sortedDates[i]];
+				}
+				ringBuffer = pruned;
+			}
+
+			await redis.set(
+				CACHE_KEYS.STOCK_TICKER_HISTORY_10D,
+				JSON.stringify(ringBuffer),
+			);
+		}
+
+		return ringBuffer;
+	} catch (error) {
+		console.warn("Redis Update Ticker History 10D Error:", error);
 		return null;
 	}
 }

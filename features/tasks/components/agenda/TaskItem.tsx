@@ -21,6 +21,7 @@ import {
 	Archive,
 	Flame,
 	Calendar,
+	Timer,
 } from "lucide-react";
 import type { Task, TaskStatus } from "@/features/tasks/types";
 import { StatusSelector } from "./StatusSelector";
@@ -47,7 +48,6 @@ import {
 } from "date-fns";
 import {
 	QUICK_RESCHEDULE_OPTIONS,
-	DELETE_CONFIRM_TIMEOUT_MS,
 	TASK_STATUS_CONFIG,
 	EFFORT_CHIPS,
 	formatEstimatedTime,
@@ -254,6 +254,7 @@ interface TaskItemProps {
 	snapshot?: DraggableStateSnapshot;
 	onDelete: (taskId: string) => void;
 	onUpdate: (taskId: string, updates: Partial<Task>) => void;
+	onArchive?: (taskId: string) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -264,6 +265,7 @@ function TaskItem({
 	snapshot,
 	onDelete,
 	onUpdate,
+	onArchive,
 	layoutMode = "list",
 }: TaskItemProps) {
 	const [isEditing, setIsEditing] = useState(false);
@@ -311,11 +313,8 @@ function TaskItem({
 		task.status || "todo",
 	);
 
-	// Delete confirmation state
-	const [deleteConfirm, setDeleteConfirm] = useState(false);
-	const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const deleteTimeoutMs = DELETE_CONFIRM_TIMEOUT_MS;
 	const reduceMotion = useReducedMotion();
+	const [showDependencies, setShowDependencies] = useState(false);
 
 	const titleRef = useRef<HTMLTextAreaElement>(null);
 	const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -383,29 +382,28 @@ function TaskItem({
 		}
 	}, [optimisticStatus, blockersLoaded, task.id]);
 
-	// Fetch blockers and potential blocker list when editing starts
-	useEffect(() => {
-		if (isEditing) {
-			const loadEditData = async () => {
-				try {
-					const [currBlockers, potentials] = await Promise.all([
-						getTaskDependencies(task.id),
-						getPotentialBlockers(task.id),
-					]);
-					setBlockers(currBlockers);
-					setBlockersLoaded(true);
-					setPotentialBlockers(potentials);
-					setPotentialBlockersLoaded(true);
-				} catch (err) {
-					console.error("Failed to load edit dependencies:", err);
-				}
-			};
-			loadEditData();
-		} else {
-			setPotentialBlockersLoaded(false);
-			setPotentialBlockers([]);
+	// Fetch blockers and potential blocker list on-demand
+	const loadDependenciesOnDemand = useCallback(async () => {
+		if (blockersLoaded && potentialBlockersLoaded) return;
+		try {
+			const [currBlockers, potentials] = await Promise.all([
+				getTaskDependencies(task.id),
+				getPotentialBlockers(task.id),
+			]);
+			setBlockers(currBlockers);
+			setBlockersLoaded(true);
+			setPotentialBlockers(potentials);
+			setPotentialBlockersLoaded(true);
+		} catch (err) {
+			console.error("Failed to load edit dependencies:", err);
 		}
-	}, [isEditing, task.id]);
+	}, [task.id, blockersLoaded, potentialBlockersLoaded]);
+
+	useEffect(() => {
+		if (isEditing && (task.status === "blocked" || showDependencies)) {
+			loadDependenciesOnDemand();
+		}
+	}, [isEditing, task.status, showDependencies, loadDependenciesOnDemand]);
 
 	useEffect(() => {
 		setOptimisticStatus(task.status || "todo");
@@ -432,15 +430,6 @@ function TaskItem({
 			}
 		}
 	}, [isEditing]);
-
-	useEffect(() => {
-		return () => {
-			if (deleteTimerRef.current) {
-				clearTimeout(deleteTimerRef.current);
-				deleteTimerRef.current = null;
-			}
-		};
-	}, [deleteConfirm]);
 
 	// Load subtasks when opening
 	useEffect(() => {
@@ -569,6 +558,9 @@ function TaskItem({
 		editStatus,
 		editEstimated,
 		editTags,
+		editStartDate,
+		editStartTime,
+		editDueTime,
 		task,
 		onUpdate,
 	]);
@@ -586,23 +578,10 @@ function TaskItem({
 		[handleSave, handleCancel],
 	);
 
-	// Two-step delete
+	// Direct delete modal request (with undo toast)
 	const handleDeleteClick = useCallback(() => {
-		if (deleteTimerRef.current) {
-			clearTimeout(deleteTimerRef.current);
-			deleteTimerRef.current = null;
-		}
-
-		if (!deleteConfirm) {
-			setDeleteConfirm(true);
-			deleteTimerRef.current = setTimeout(
-				() => setDeleteConfirm(false),
-				deleteTimeoutMs,
-			);
-		} else {
-			onDelete(task.id);
-		}
-	}, [deleteConfirm, task.id, onDelete, deleteTimeoutMs]);
+		onDelete(task.id);
+	}, [task.id, onDelete]);
 
 	const handleDragEnd = useCallback(
 		(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -1046,8 +1025,9 @@ function TaskItem({
 											</button>
 										))}
 										{editEstimated && (
-											<span className="px-2.5 py-1 text-[9px] font-black text-cyan-700 bg-cyan-50 border border-cyan-100 rounded-lg">
-												⏱ {formatEstimatedTime(editEstimated)}
+											<span className="px-2.5 py-1 text-[9px] font-black text-cyan-700 bg-cyan-50 border border-cyan-100 rounded-lg inline-flex items-center gap-1">
+												<Timer className="w-3 h-3 text-cyan-600" />
+												{formatEstimatedTime(editEstimated)}
 											</span>
 										)}
 									</div>
@@ -1195,9 +1175,23 @@ function TaskItem({
 
 							{/* Dependency Manager */}
 							<div className="space-y-2 border-t border-slate-100 pt-3">
-								<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">
-									Dependencies (Blockers)
-								</span>
+								<div className="flex items-center justify-between">
+									<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">
+										Dependencies (Blockers)
+									</span>
+									{!showDependencies && blockers.length === 0 && (
+										<button
+											type="button"
+											onClick={() => {
+												setShowDependencies(true);
+												loadDependenciesOnDemand();
+											}}
+											className="text-[9px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer"
+										>
+											+ Configure Blockers
+										</button>
+									)}
+								</div>
 
 								{/* Current blockers list */}
 								{blockersLoaded && blockers.length > 0 && (
@@ -1205,7 +1199,7 @@ function TaskItem({
 										{blockers.map((b) => (
 											<span
 												key={b.id}
-												className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-705 border border-amber-100"
+												className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100"
 											>
 												Blocked by: {b.title}
 												<button
@@ -1226,7 +1220,7 @@ function TaskItem({
 															console.error(err);
 														}
 													}}
-													className="text-amber-400 hover:text-amber-700 transition-colors ml-1"
+													className="text-amber-400 hover:text-amber-700 transition-colors ml-1 cursor-pointer"
 												>
 													<X className="w-3 h-3 stroke-[3]" />
 												</button>
@@ -1236,45 +1230,53 @@ function TaskItem({
 								)}
 
 								{/* Add dependency dropdown */}
-								{potentialBlockersLoaded && potentialBlockers.length > 0 && (
-									<div className="relative">
-										<select
-											value=""
-											onChange={async (e) => {
-												const selectId = e.target.value;
-												if (!selectId) return;
-												const chosen = potentialBlockers.find(
-													(item) => item.id === selectId,
-												);
-												if (!chosen) return;
-												try {
-													await addTaskDependency(task.id, selectId);
-													setBlockers((prev) => [...prev, chosen]);
-													setEditStatus("blocked");
-												} catch (err) {
-													console.error(err);
-												}
-											}}
-											className="w-full bg-slate-55 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
-										>
-											<option value="">+ Add blocker task...</option>
-											{potentialBlockers
-												.filter((pb) => !blockers.some((b) => b.id === pb.id))
-												.map((pb) => (
-													<option key={pb.id} value={pb.id}>
-														{pb.title} ({pb.category || "General"})
-													</option>
-												))}
-										</select>
-										<div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-											<ChevronDown className="w-3.5 h-3.5" />
-										</div>
-									</div>
-								)}
-								{potentialBlockersLoaded && potentialBlockers.length === 0 && (
-									<span className="text-[9px] text-slate-400 font-medium block">
-										No other pending tasks available to set as blocker.
-									</span>
+								{(showDependencies || blockers.length > 0) && (
+									<>
+										{potentialBlockersLoaded &&
+											potentialBlockers.length > 0 && (
+												<div className="relative">
+													<select
+														value=""
+														onChange={async (e) => {
+															const selectId = e.target.value;
+															if (!selectId) return;
+															const chosen = potentialBlockers.find(
+																(item) => item.id === selectId,
+															);
+															if (!chosen) return;
+															try {
+																await addTaskDependency(task.id, selectId);
+																setBlockers((prev) => [...prev, chosen]);
+																setEditStatus("blocked");
+															} catch (err) {
+																console.error(err);
+															}
+														}}
+														className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+													>
+														<option value="">+ Add blocker task...</option>
+														{potentialBlockers
+															.filter(
+																(pb) => !blockers.some((b) => b.id === pb.id),
+															)
+															.map((pb) => (
+																<option key={pb.id} value={pb.id}>
+																	{pb.title} ({pb.category || "General"})
+																</option>
+															))}
+													</select>
+													<div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+														<ChevronDown className="w-3.5 h-3.5" />
+													</div>
+												</div>
+											)}
+										{potentialBlockersLoaded &&
+											potentialBlockers.length === 0 && (
+												<span className="text-[9px] text-slate-400 font-medium block">
+													No other pending tasks available to set as blocker.
+												</span>
+											)}
+									</>
 								)}
 							</div>
 
@@ -1353,7 +1355,7 @@ function TaskItem({
 																e.stopPropagation();
 																setIsDescExpanded((v) => !v);
 															}}
-															className="mt-2 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-violet-500 hover:text-violet-750 transition-colors bg-violet-55/60 hover:bg-violet-100/80 px-2 py-0.5 rounded-lg w-fit"
+															className="mt-2 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-violet-500 hover:text-violet-700 transition-colors bg-violet-50/60 hover:bg-violet-100/80 px-2 py-0.5 rounded-lg w-fit"
 														>
 															{isDescExpanded ? (
 																<>
@@ -1389,7 +1391,7 @@ function TaskItem({
 																className={
 																	line.trim() === ""
 																		? "h-2"
-																		: "whitespace-pre-wrap break-words text-slate-550"
+																		: "whitespace-pre-wrap break-words text-slate-500"
 																}
 															>
 																{renderTextWithLinks(line)}
@@ -1453,7 +1455,7 @@ function TaskItem({
 								<button
 									type="button"
 									onClick={() => setIsSubtasksOpen((v) => !v)}
-									className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-655 transition-colors"
+									className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
 								>
 									<ChevronRight
 										className={`w-2.5 h-2.5 transition-transform ${isSubtasksOpen ? "rotate-90" : ""}`}
@@ -1739,43 +1741,28 @@ function TaskItem({
 
 									<button
 										type="button"
-										onClick={async () => {
-											try {
-												await archiveTask(task.id);
-											} catch (err) {
-												console.error(err);
+										onClick={() => {
+											if (onArchive) {
+												onArchive(task.id);
+											} else {
+												archiveTask(task.id).catch(console.error);
 											}
 										}}
-										className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+										className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer"
 										aria-label={`Archive task: ${task.title}`}
 										title="Archive Task"
 									>
 										<Archive className="w-3.5 h-3.5" />
 									</button>
 
-									{/* Two-step delete confirmation */}
 									<button
 										type="button"
 										onClick={handleDeleteClick}
-										aria-label={
-											deleteConfirm
-												? "Confirm delete"
-												: `Delete task: ${task.title}`
-										}
-										title={
-											deleteConfirm ? "Click again to confirm" : "Delete Task"
-										}
-										className={`p-1.5 rounded-xl transition-all ${
-											deleteConfirm
-												? "text-white bg-rose-500 hover:bg-rose-600 scale-105"
-												: "text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-										}`}
+										aria-label={`Delete task: ${task.title}`}
+										title="Delete Task"
+										className="p-1.5 rounded-xl transition-all text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
 									>
-										{deleteConfirm ? (
-											<AlertTriangle className="w-3.5 h-3.5" />
-										) : (
-											<Trash2 className="w-3.5 h-3.5" />
-										)}
+										<Trash2 className="w-3.5 h-3.5" />
 									</button>
 								</div>
 							</div>

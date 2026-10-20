@@ -20,6 +20,7 @@ import {
 	ListTodo,
 	Clock,
 	Hash,
+	Timer,
 } from "lucide-react";
 import { addTask, addBatchTasks } from "@/features/tasks/actions/tasks";
 import { useRouter } from "next/navigation";
@@ -319,10 +320,12 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 			setSubmitError(null);
 			setIsSubmitting(true);
 			try {
+				const effectiveDueDate =
+					startDate && dueDate && startDate > dueDate ? startDate : dueDate;
 				const metadata = {
 					priority,
 					category: category.trim() || "General",
-					due_date: dueDate,
+					due_date: effectiveDueDate,
 					recurrence,
 					description: description.trim() || undefined,
 					status,
@@ -973,8 +976,9 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 																/>
 															</div>
 															{estimatedMinutes && (
-																<span className="text-[9px] font-black text-cyan-700 bg-cyan-50 border border-cyan-200/70 px-2 py-1 rounded-lg whitespace-nowrap">
-																	⏱ {formatEstimatedTime(estimatedMinutes)}
+																<span className="text-[9px] font-black text-cyan-700 bg-cyan-50 border border-cyan-200/70 px-2 py-1 rounded-lg whitespace-nowrap inline-flex items-center gap-1">
+																	<Timer className="w-3 h-3 text-cyan-600" />
+																	{formatEstimatedTime(estimatedMinutes)}
 																</span>
 															)}
 														</div>

@@ -28,7 +28,6 @@ interface StockpickSimulatorProps {
 	stocks: ProcessedStock[];
 }
 
-type StatusFilter = "all" | "active" | "closed";
 type SortOption =
 	| "pl-desc"
 	| "pl-asc"
@@ -57,10 +56,12 @@ export default function StockpickSimulator({
 		setSelectedStock,
 		simulatorSubTab,
 		setSimulatorSubTab,
+		accountEquityIdr,
+		setAccountEquityIdr,
 	} = useScreener();
 
 	const [searchQuery, setSearchQuery] = useState("");
-	const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+	const [alertFilter, setAlertFilter] = useState<"all" | "alerts">("all");
 	const [sortOption, setSortOption] = useState<SortOption>("pl-desc");
 	const [importError, setImportError] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -84,15 +85,33 @@ export default function StockpickSimulator({
 
 	// Overall portfolio telemetry summary
 	const portfolioSummary = useMemo(() => {
-		return calculatePortfolioSummary(picksWithMetrics);
+		return calculatePortfolioSummary(picksWithMetrics, accountEquityIdr);
+	}, [picksWithMetrics, accountEquityIdr]);
+
+	const activeAlertCount = useMemo(() => {
+		return picksWithMetrics.filter(
+			(p) =>
+				p.status === "active" &&
+				(p.alertStatus === "stop_breached" ||
+					p.alertStatus === "target_hit" ||
+					p.alertStatus === "trailing_protect"),
+		).length;
 	}, [picksWithMetrics]);
 
-	// Filter and sort picks for the active positions tab
+	// Filter and sort picks for the active positions tab (strictly active open positions)
 	const filteredAndSortedPicks = useMemo(() => {
 		return picksWithMetrics
 			.filter((pick) => {
-				// Status filter (in active tab, only show active or all if specified)
-				if (statusFilter !== "all" && pick.status !== statusFilter) {
+				if (pick.status !== "active") {
+					return false;
+				}
+
+				if (
+					alertFilter === "alerts" &&
+					pick.alertStatus !== "stop_breached" &&
+					pick.alertStatus !== "target_hit" &&
+					pick.alertStatus !== "trailing_protect"
+				) {
 					return false;
 				}
 
@@ -127,7 +146,7 @@ export default function StockpickSimulator({
 						return 0;
 				}
 			});
-	}, [picksWithMetrics, searchQuery, statusFilter, sortOption]);
+	}, [picksWithMetrics, searchQuery, alertFilter, sortOption]);
 
 	// Drill down to Inspector Drawer from pick card
 	const handleInspectStock = (code: string) => {
@@ -225,14 +244,38 @@ export default function StockpickSimulator({
 				</div>
 
 				{simulatorSubTab === "active" && (
-					<button
-						type="button"
-						onClick={() => openAddPickModal()}
-						className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
-					>
-						<Plus className="w-4 h-4" />
-						<span>Simulate New Pick</span>
-					</button>
+					<div className="flex flex-wrap items-center gap-2">
+						<span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+							Portfolio Equity:
+						</span>
+						{[
+							{ label: "Rp 50M", value: 50_000_000 },
+							{ label: "Rp 100M", value: 100_000_000 },
+							{ label: "Rp 250M", value: 250_000_000 },
+							{ label: "Rp 500M", value: 500_000_000 },
+						].map((eq) => (
+							<button
+								key={eq.value}
+								type="button"
+								onClick={() => setAccountEquityIdr(eq.value)}
+								className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-colors cursor-pointer border ${
+									accountEquityIdr === eq.value
+										? "bg-indigo-600 text-white border-indigo-600"
+										: "bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50"
+								}`}
+							>
+								{eq.label}
+							</button>
+						))}
+						<button
+							type="button"
+							onClick={() => openAddPickModal()}
+							className="sm:hidden px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+						>
+							<Plus className="w-3.5 h-3.5" />
+							<span>New Pick</span>
+						</button>
+					</div>
 				)}
 			</div>
 
@@ -253,45 +296,40 @@ export default function StockpickSimulator({
 					{/* Stage 2: Controls & Actions Bar */}
 					<div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
 						<div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-							{/* Left: Search input & Status Tabs */}
+							{/* Left: Search input & Alert Filter Tabs */}
 							<div className="flex flex-wrap items-center gap-3">
 								{/* Live Search */}
 								<div className="relative w-full sm:w-64">
 									<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
 									<input
 										type="text"
-										placeholder="Search picks or thesis..."
+										placeholder="Search active picks or thesis..."
 										value={searchQuery}
 										onChange={(e) => setSearchQuery(e.target.value)}
 										className="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
 									/>
 								</div>
 
-								{/* Minimalist Frameless Milestone Standard: Status Tabs */}
+								{/* Minimalist Frameless Milestone Standard: Open vs Alert Filter */}
 								<div className="relative flex items-center border-b border-slate-200/60 pb-0.5">
 									{[
 										{
-											id: "active" as const,
-											label: "Active",
+											id: "all" as const,
+											label: "All Open",
 											count: portfolioSummary.activePicks,
 										},
 										{
-											id: "all" as const,
-											label: "All Picks",
-											count: portfolioSummary.totalPicks,
-										},
-										{
-											id: "closed" as const,
-											label: "Closed",
-											count: portfolioSummary.closedPicks,
+											id: "alerts" as const,
+											label: "Action Alerts (SL/TP)",
+											count: activeAlertCount,
 										},
 									].map((tab) => {
-										const isSelected = statusFilter === tab.id;
+										const isSelected = alertFilter === tab.id;
 										return (
 											<button
 												key={tab.id}
 												type="button"
-												onClick={() => setStatusFilter(tab.id)}
+												onClick={() => setAlertFilter(tab.id)}
 												className={`relative px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
 													isSelected
 														? "text-slate-900 font-bold"
@@ -299,7 +337,13 @@ export default function StockpickSimulator({
 												}`}
 											>
 												<span>{tab.label}</span>
-												<span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-mono font-bold">
+												<span
+													className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+														tab.id === "alerts" && tab.count > 0
+															? "bg-rose-100 text-rose-700"
+															: "bg-slate-100 text-slate-600"
+													}`}
+												>
 													{tab.count}
 												</span>
 												{isSelected && (

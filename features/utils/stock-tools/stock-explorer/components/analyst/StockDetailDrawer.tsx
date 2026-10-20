@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { X, ExternalLink, BookmarkPlus } from "lucide-react";
+import {
+	X,
+	ExternalLink,
+	BookmarkPlus,
+	Target,
+	ShieldAlert,
+	BarChart3,
+	Compass,
+} from "lucide-react";
 import type { ProcessedStock } from "../../types";
 import {
 	fmtLots,
@@ -10,6 +17,7 @@ import {
 	fmtIDRValue,
 	getIdxAutoRejectionLimits,
 } from "../../utils";
+import { calculateStockTradePlan } from "../../utils/opportunityPredicates";
 import { useScreener } from "../../context/ScreenerContext";
 import AIInsights from "./AIInsights";
 
@@ -26,274 +34,24 @@ export default function StockDetailDrawer({
 	const stock = stockProp !== undefined ? stockProp : screener.selectedStock;
 	const onClose = onCloseProp ?? (() => screener.setSelectedStock(null));
 
-	const [activeTab, setActiveTab] = useState<
-		"overview" | "fundamental" | "technical"
-	>("overview");
-
 	const reduceMotion = useReducedMotion();
 
 	if (!stock) return null;
 
-	const formatBillions = (val: number) => `${(val / 1e9).toFixed(1)}B`;
-
-	const renderFundamentalTab = () => (
-		<div className="space-y-6">
-			<div className="grid grid-cols-2 gap-4">
-				<div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-						P/E Ratio
-					</p>
-					<p className="text-xl font-black text-slate-900 mt-1">
-						{stock.Fundamentals.PE.toFixed(2)}x
-					</p>
-				</div>
-				<div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-						PBV
-					</p>
-					<p className="text-xl font-black text-slate-900 mt-1">
-						{stock.Fundamentals.PBV.toFixed(2)}x
-					</p>
-				</div>
-				<div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-						ROE
-					</p>
-					<p className="text-xl font-black text-slate-900 mt-1">
-						{stock.Fundamentals.ROE.toFixed(1)}%
-					</p>
-				</div>
-				<div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-						EPS
-					</p>
-					<p className="text-xl font-black text-slate-900 mt-1">
-						{stock.Fundamentals.EPS.toLocaleString()}
-					</p>
-				</div>
-			</div>
-			<div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-				<h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-4">
-					Financial Health
-				</h4>
-				<div className="space-y-3">
-					<div className="flex justify-between items-center py-2 border-b border-slate-50">
-						<span className="text-xs font-bold text-slate-500">Market Cap</span>
-						<span className="text-sm font-black text-slate-900">
-							{fmtIDRNet(stock.MarketCap).replace(/^\+/, "")} IDR
-						</span>
-					</div>
-					<div className="flex justify-between items-center py-2 border-b border-slate-50">
-						<span className="text-xs font-bold text-slate-500">
-							Revenue (Sim)
-						</span>
-						<span className="text-sm font-black text-slate-900">
-							{formatBillions(stock.Fundamentals.Revenue)} IDR
-						</span>
-					</div>
-					<div className="flex justify-between items-center py-2 border-b border-slate-50">
-						<span className="text-xs font-bold text-slate-500">
-							Net Income (Sim)
-						</span>
-						<span className="text-sm font-black text-slate-900">
-							{formatBillions(stock.Fundamentals.NetIncome)} IDR
-						</span>
-					</div>
-					<div className="flex justify-between items-center py-2">
-						<span className="text-xs font-bold text-slate-500">
-							Debt to Equity (DER)
-						</span>
-						<span className="text-sm font-black text-slate-900">
-							{stock.Fundamentals.DER.toFixed(2)}x
-						</span>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-
-	const renderTechnicalTab = () => {
-		const limits = getIdxAutoRejectionLimits(stock.Previous);
-		return (
-			<div className="space-y-6">
-				{/* Price Action */}
-				<div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-					<h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-4">
-						Price Action
-					</h4>
-					<div className="grid grid-cols-2 gap-4">
-						<div>
-							<p className="text-[10px] font-bold text-slate-400 uppercase">
-								High
-							</p>
-							<p className="text-sm font-black text-emerald-600">
-								{stock.High.toLocaleString()}
-							</p>
-						</div>
-						<div>
-							<p className="text-[10px] font-bold text-slate-400 uppercase">
-								Low
-							</p>
-							<p className="text-sm font-black text-rose-600">
-								{stock.Low.toLocaleString()}
-							</p>
-						</div>
-						<div>
-							<p className="text-[10px] font-bold text-slate-400 uppercase">
-								Open
-							</p>
-							<p className="text-sm font-black text-slate-700">
-								{stock.OpenPrice.toLocaleString()}
-							</p>
-						</div>
-						<div>
-							<p className="text-[10px] font-bold text-slate-400 uppercase">
-								Prev Close
-							</p>
-							<p className="text-sm font-black text-slate-700">
-								{stock.Previous.toLocaleString()}
-							</p>
-						</div>
-					</div>
-				</div>
-
-				{/* Auto-Rejection Price Bands */}
-				<div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-					<div className="flex items-center justify-between mb-4">
-						<h4 className="text-xs font-black uppercase tracking-widest text-slate-900">
-							Auto-Rejection Bounds (ARA / ARB)
-						</h4>
-						<span
-							className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-								stock.ARARisk === "ARA"
-									? "bg-emerald-500 text-white"
-									: stock.ARARisk === "Near ARA"
-										? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-										: stock.ARARisk === "ARB"
-											? "bg-rose-500 text-white"
-											: stock.ARARisk === "Near ARB"
-												? "bg-rose-50 text-rose-700 border border-rose-200"
-												: "bg-slate-100 text-slate-600"
-							}`}
-						>
-							{stock.ARARisk === "Normal" ? "Within Range" : stock.ARARisk}
-						</span>
-					</div>
-					<div className="grid grid-cols-2 gap-4">
-						<div className="bg-emerald-50/60 p-3 rounded-lg border border-emerald-100">
-							<p className="text-[10px] font-bold text-emerald-700 uppercase">
-								ARA Limit (+{limits.araPct.toFixed(1)}%)
-							</p>
-							<p className="text-base font-black text-emerald-800 mt-0.5">
-								{stock.ARALimitPrice.toLocaleString()} IDR
-							</p>
-						</div>
-						<div className="bg-rose-50/60 p-3 rounded-lg border border-rose-100">
-							<p className="text-[10px] font-bold text-rose-700 uppercase">
-								ARB Limit ({limits.arbPct.toFixed(1)}%)
-							</p>
-							<p className="text-base font-black text-rose-800 mt-0.5">
-								{stock.ARBLimitPrice.toLocaleString()} IDR
-							</p>
-						</div>
-					</div>
-				</div>
-
-				{/* Microstructure & Bandarmology Telemetry */}
-				<div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-					<h4 className="text-xs font-black uppercase tracking-widest text-slate-900">
-						Order Book &amp; Microstructure
-					</h4>
-
-					{/* Bid vs Offer Bar */}
-					<div className="space-y-1.5">
-						<div className="flex justify-between text-xs font-bold">
-							<span className="text-emerald-700">
-								Bid: {fmtLots(stock.BidVolume)} ({stock.BidOfferPressure}%)
-							</span>
-							<span className="text-rose-700">
-								Offer: {fmtLots(stock.OfferVolume)} (
-								{100 - stock.BidOfferPressure}%)
-							</span>
-						</div>
-						<div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
-							<div
-								style={{ width: `${stock.BidOfferPressure}%` }}
-								className="bg-emerald-500 h-full"
-							/>
-							<div
-								style={{ width: `${100 - stock.BidOfferPressure}%` }}
-								className="bg-rose-500 h-full"
-							/>
-						</div>
-					</div>
-
-					<div className="space-y-3 pt-2">
-						<div className="flex justify-between items-center py-2 border-b border-slate-50">
-							<span className="text-xs font-bold text-slate-500">
-								Avg Ticket Size (Whale Proxy)
-							</span>
-							<span className="text-sm font-black text-slate-900">
-								{fmtIDRValue(stock.AvgValuePerTx)} / trade
-							</span>
-						</div>
-						<div className="flex justify-between items-center py-2 border-b border-slate-50">
-							<span className="text-xs font-bold text-slate-500">
-								Non-Regular (Nego) Crossing
-							</span>
-							<span className="text-sm font-black text-slate-900">
-								{fmtIDRValue(stock.NonRegularValue || 0)} ({stock.NegoRatio}%)
-							</span>
-						</div>
-						<div className="flex justify-between items-center py-2">
-							<span className="text-xs font-bold text-slate-500">
-								Liquidity Tier
-							</span>
-							<span className="text-sm font-black text-indigo-600">
-								{stock.TurnoverTier} Liquidity
-							</span>
-						</div>
-					</div>
-				</div>
-
-				{/* Volume & Turnover */}
-				<div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-					<h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-4">
-						Volume &amp; Turnover
-					</h4>
-					<div className="space-y-3">
-						<div className="flex justify-between items-center py-2 border-b border-slate-50">
-							<span className="text-xs font-bold text-slate-500">
-								Volume (Lots)
-							</span>
-							<span className="text-sm font-black text-slate-900">
-								{fmtLots(stock.Volume)}{" "}
-								<span className="text-xs font-semibold text-slate-400">
-									({stock.Volume.toLocaleString()} shares)
-								</span>
-							</span>
-						</div>
-						<div className="flex justify-between items-center py-2 border-b border-slate-50">
-							<span className="text-xs font-bold text-slate-500">
-								Turnover (IDR)
-							</span>
-							<span className="text-sm font-black text-slate-900">
-								{fmtIDRValue(stock.Value)}
-							</span>
-						</div>
-						<div className="flex justify-between items-center py-2">
-							<span className="text-xs font-bold text-slate-500">
-								Trade Frequency
-							</span>
-							<span className="text-sm font-black text-slate-900">
-								{stock.Frequency.toLocaleString()} transactions
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		);
-	};
+	const limits = getIdxAutoRejectionLimits(stock.Previous);
+	const tradePlan = stock.TradePlan ?? calculateStockTradePlan(stock);
+	const vwapPrice =
+		stock.VWAP ||
+		(stock.Volume > 0 ? Math.round(stock.Value / stock.Volume) : stock.Close);
+	const historySessions = stock.History10D ?? [];
+	const maxHistoryTurnover =
+		historySessions.length > 0
+			? Math.max(...historySessions.map((h) => h.val), 1)
+			: 1;
+	const maxHistoryAbsForeign =
+		historySessions.length > 0
+			? Math.max(...historySessions.map((h) => Math.abs(h.fn)), 1)
+			: 1;
 
 	return (
 		<AnimatePresence>
@@ -313,25 +71,39 @@ export default function StockDetailDrawer({
 					onClick={(e) => e.stopPropagation()}
 				>
 					{/* Header */}
-					<div className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-6 flex items-start justify-between">
+					<div className="sticky top-0 z-10 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-6 py-5 flex items-start justify-between">
 						<div>
-							<div className="flex items-center gap-3 mb-1">
-								<h2 className="text-3xl font-black text-slate-900">
+							<div className="flex items-center gap-2.5 flex-wrap mb-1">
+								<h2 className="text-2xl sm:text-3xl font-black text-slate-900">
 									{stock.StockCode}
 								</h2>
 								<span
-									className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${stock.ChangePct > 0 ? "bg-emerald-100 text-emerald-700" : stock.ChangePct < 0 ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-700"}`}
+									className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
+										stock.ChangePct > 0
+											? "bg-emerald-100 text-emerald-700"
+											: stock.ChangePct < 0
+												? "bg-rose-100 text-rose-700"
+												: "bg-slate-100 text-slate-700"
+									}`}
 								>
 									{stock.ChangePct > 0 ? "+" : ""}
 									{stock.ChangePct.toFixed(2)}%
+								</span>
+								<span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+									Score {stock.CompositeScore}
 								</span>
 							</div>
 							<p className="text-sm font-bold text-slate-500">
 								{stock.StockName}
 							</p>
-							<p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-2">
-								{stock.Sector}
-							</p>
+							<div className="flex items-center gap-2 mt-2">
+								<span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+									{stock.Sector}
+								</span>
+								<span className="text-[10px] font-bold text-slate-400">
+									Cap: {fmtIDRNet(stock.MarketCap).replace(/^\+/, "")} IDR
+								</span>
+							</div>
 						</div>
 						<div className="flex items-center gap-2">
 							<button
@@ -365,83 +137,353 @@ export default function StockDetailDrawer({
 						</div>
 					</div>
 
-					<div className="p-6 flex-1">
-						{/* Minimalist Frameless Milestone Standard: Tabs */}
-						<div className="relative flex items-center border-b border-slate-200/60 pb-0.5 mb-6">
-							{[
-								{ id: "overview" as const, label: "Overview" },
-								{ id: "fundamental" as const, label: "Fundamental" },
-								{ id: "technical" as const, label: "Technical" },
-							].map((tab) => {
-								const isSelected = activeTab === tab.id;
-								return (
-									<button
-										key={tab.id}
-										type="button"
-										onClick={() => setActiveTab(tab.id)}
-										className={`relative flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-center ${
-											isSelected
-												? "text-slate-900 font-black"
-												: "text-slate-500 hover:text-slate-800"
-										}`}
-									>
-										<span>{tab.label}</span>
-										{isSelected && (
-											<motion.div
-												layoutId="drawerTabUnderline"
-												className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-slate-900 rounded-full z-20"
-												transition={{
-													type: "spring",
-													stiffness: 380,
-													damping: 30,
-												}}
-											/>
-										)}
-									</button>
-								);
-							})}
+					{/* Unified Single-Scroll Inspector Body */}
+					<div className="p-6 flex-1 space-y-6">
+						{/* 1. Quantitative Signal Synthesis & 6-Factor Strip */}
+						<AIInsights stock={stock} />
+
+						{/* 2. Mechanical Trade Setup & Tick-Valid Risk Plan */}
+						<div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+							<div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+								<div className="flex items-center gap-2">
+									<div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+										<Compass className="w-4 h-4" />
+									</div>
+									<div>
+										<h4 className="text-xs font-black uppercase tracking-widest text-slate-900">
+											Mechanical Trade Setup Plan
+										</h4>
+										<p className="text-[10px] font-semibold text-slate-500 uppercase">
+											{tradePlan.setupBucket} Bucket (BEI Fraksi Tick-Rounded)
+										</p>
+									</div>
+								</div>
+								<span className="text-[11px] font-mono font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-lg">
+									RRR {tradePlan.riskRewardRatio}:1
+								</span>
+							</div>
+
+							<div className="grid grid-cols-3 gap-3">
+								{/* Entry Zone */}
+								<div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+									<span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">
+										Buy Entry Zone
+									</span>
+									<span className="text-xs sm:text-sm font-black font-mono text-slate-900 mt-1 block">
+										{tradePlan.entryLow === tradePlan.entryHigh
+											? `${tradePlan.entryHigh.toLocaleString()}`
+											: `${tradePlan.entryLow.toLocaleString()}-${tradePlan.entryHigh.toLocaleString()}`}
+									</span>
+									<span className="text-[10px] font-semibold text-slate-500 mt-0.5 block">
+										VWAP {vwapPrice.toLocaleString()}
+									</span>
+								</div>
+
+								{/* Stop-Loss Invalidation */}
+								<div className="p-3 rounded-xl bg-rose-50/60 border border-rose-100">
+									<div className="flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-rose-700">
+										<ShieldAlert className="w-3 h-3" />
+										<span>Stop-Loss</span>
+									</div>
+									<span className="text-xs sm:text-sm font-black font-mono text-rose-800 mt-1 block">
+										{tradePlan.stopLoss.toLocaleString()}
+									</span>
+									<span className="text-[10px] font-bold text-rose-600 mt-0.5 block">
+										{tradePlan.stopLossPct.toFixed(2)}% risk
+									</span>
+								</div>
+
+								{/* Targets (2R / 3R) */}
+								<div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
+									<div className="flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700">
+										<Target className="w-3 h-3" />
+										<span>Target 1 (2R)</span>
+									</div>
+									<span className="text-xs sm:text-sm font-black font-mono text-emerald-800 mt-1 block">
+										{tradePlan.target1.toLocaleString()}{" "}
+										<span className="text-[10px] font-bold text-emerald-600">
+											(+{tradePlan.target1Pct.toFixed(1)}%)
+										</span>
+									</span>
+									<span className="text-[10px] font-bold text-emerald-700 mt-0.5 block">
+										T2 (3R): {tradePlan.target2.toLocaleString()}
+									</span>
+								</div>
+							</div>
+
+							<p className="text-[11px] font-medium text-slate-600 leading-relaxed">
+								{tradePlan.setupNote}
+							</p>
 						</div>
 
-						{/* Content */}
-						{activeTab === "overview" && (
-							<div className="space-y-6">
-								<AIInsights stock={stock} />
+						{/* 3. Multi-Session 10D Flow & Velocity Sparkbars (when available) */}
+						{historySessions.length > 0 && (
+							<div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+								<div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+									<div className="flex items-center gap-2">
+										<div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+											<BarChart3 className="w-4 h-4" />
+										</div>
+										<div>
+											<h4 className="text-xs font-black uppercase tracking-widest text-slate-900">
+												{historySessions.length}-Session Flow &amp; Velocity
+												History
+											</h4>
+											<p className="text-[10px] font-semibold text-slate-500">
+												Rolling settlement ring buffer
+											</p>
+										</div>
+									</div>
+									<div className="flex items-center gap-1.5">
+										{stock.RVOL !== undefined && (
+											<span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono">
+												RVOL {stock.RVOL.toFixed(1)}x
+											</span>
+										)}
+										{stock.ForeignStreakDays !== undefined &&
+											stock.ForeignStreakDays !== 0 && (
+												<span
+													className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md font-mono ${
+														stock.ForeignStreakDays > 0
+															? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+															: "bg-rose-50 text-rose-700 border border-rose-200"
+													}`}
+												>
+													{stock.ForeignStreakDays > 0
+														? `${stock.ForeignStreakDays}D Inflow`
+														: `${Math.abs(stock.ForeignStreakDays)}D Outflow`}
+												</span>
+											)}
+									</div>
+								</div>
+
+								{/* Mini Sparkbars for Foreign Flow & Turnover */}
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-										<h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-4">
-											Foreign Flow
-										</h4>
-										<div className="flex justify-between items-center">
-											<span className="text-xs font-bold text-slate-500">
-												Net Foreign
-											</span>
-											<span
-												className={`text-sm font-black ${stock.ForeignNet > 0 ? "text-emerald-600" : "text-rose-600"}`}
-											>
-												{fmtIDRNet(stock.ForeignNet)}
-											</span>
+									<div className="space-y-2">
+										<div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase">
+											<span>Foreign Net by Session</span>
+											{stock.ForeignNet5D !== undefined && (
+												<span
+													className={
+														stock.ForeignNet5D >= 0
+															? "text-emerald-600 font-black"
+															: "text-rose-600 font-black"
+													}
+												>
+													5D: {fmtIDRNet(stock.ForeignNet5D)}
+												</span>
+											)}
+										</div>
+										<div className="flex items-end gap-1 h-14 bg-slate-50 rounded-xl p-2 border border-slate-100">
+											{historySessions.map((sess) => {
+												const heightPct = Math.max(
+													14,
+													Math.round(
+														(Math.abs(sess.fn) / maxHistoryAbsForeign) * 100,
+													),
+												);
+												const isPos = sess.fn >= 0;
+												return (
+													<div
+														key={sess.d}
+														className="flex-1 h-full flex flex-col justify-end items-center"
+														title={`${sess.d}: ${fmtIDRNet(sess.fn)}`}
+													>
+														<div
+															style={{ height: `${heightPct}%` }}
+															className={`w-full rounded-xs ${
+																isPos ? "bg-emerald-500" : "bg-rose-500"
+															}`}
+														/>
+													</div>
+												);
+											})}
 										</div>
 									</div>
 
-									<div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-										<h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-4">
-											Order Book Pressure
-										</h4>
-										<div className="flex justify-between items-center">
-											<span className="text-xs font-bold text-slate-500">
-												Bid Dominance
-											</span>
-											<span className="text-sm font-black text-slate-900">
-												{stock.BidOfferPressure}% Bids
-											</span>
+									<div className="space-y-2">
+										<div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase">
+											<span>Daily Turnover Velocity</span>
+											{stock.High10D && stock.Low10D && (
+												<span className="text-slate-700 font-mono">
+													10D: {stock.Low10D.toLocaleString()}-
+													{stock.High10D.toLocaleString()}
+												</span>
+											)}
+										</div>
+										<div className="flex items-end gap-1 h-14 bg-slate-50 rounded-xl p-2 border border-slate-100">
+											{historySessions.map((sess) => {
+												const heightPct = Math.max(
+													14,
+													Math.round((sess.val / maxHistoryTurnover) * 100),
+												);
+												return (
+													<div
+														key={sess.d}
+														className="flex-1 h-full flex flex-col justify-end items-center"
+														title={`${sess.d}: Rp ${fmtIDRValue(sess.val)} | Close ${sess.c.toLocaleString()}`}
+													>
+														<div
+															style={{ height: `${heightPct}%` }}
+															className="w-full rounded-xs bg-indigo-500"
+														/>
+													</div>
+												);
+											})}
 										</div>
 									</div>
 								</div>
 							</div>
 						)}
 
-						{activeTab === "fundamental" && renderFundamentalTab()}
-						{activeTab === "technical" && renderTechnicalTab()}
+						{/* 4. Price Action & Auto-Rejection Bounds (ARA / ARB) */}
+						<div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-5">
+							<div>
+								<div className="flex items-center justify-between mb-3">
+									<h4 className="text-xs font-black uppercase tracking-widest text-slate-900">
+										Session Price Action &amp; Bounds
+									</h4>
+									<span
+										className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
+											stock.ARARisk === "ARA"
+												? "bg-emerald-500 text-white"
+												: stock.ARARisk === "Near ARA"
+													? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+													: stock.ARARisk === "ARB"
+														? "bg-rose-500 text-white"
+														: stock.ARARisk === "Near ARB"
+															? "bg-rose-50 text-rose-700 border border-rose-200"
+															: "bg-slate-100 text-slate-600"
+										}`}
+									>
+										{stock.ARARisk === "Normal"
+											? "Within Range"
+											: stock.ARARisk}
+									</span>
+								</div>
+								<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+									<div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+										<p className="text-[10px] font-bold text-slate-400 uppercase">
+											Open
+										</p>
+										<p className="text-sm font-black text-slate-800 mt-0.5 font-mono">
+											{stock.OpenPrice.toLocaleString()}
+										</p>
+									</div>
+									<div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+										<p className="text-[10px] font-bold text-slate-400 uppercase">
+											High
+										</p>
+										<p className="text-sm font-black text-emerald-600 mt-0.5 font-mono">
+											{stock.High.toLocaleString()}
+										</p>
+									</div>
+									<div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+										<p className="text-[10px] font-bold text-slate-400 uppercase">
+											Low
+										</p>
+										<p className="text-sm font-black text-rose-600 mt-0.5 font-mono">
+											{stock.Low.toLocaleString()}
+										</p>
+									</div>
+									<div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+										<p className="text-[10px] font-bold text-slate-400 uppercase">
+											Prev Close
+										</p>
+										<p className="text-sm font-black text-slate-700 mt-0.5 font-mono">
+											{stock.Previous.toLocaleString()}
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+								<div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100">
+									<p className="text-[10px] font-bold text-emerald-700 uppercase">
+										ARA Ceiling (+{limits.araPct.toFixed(0)}%)
+									</p>
+									<p className="text-sm font-black text-emerald-800 mt-0.5 font-mono">
+										{stock.ARALimitPrice.toLocaleString()} IDR
+									</p>
+								</div>
+								<div className="bg-rose-50/60 p-3 rounded-xl border border-rose-100">
+									<p className="text-[10px] font-bold text-rose-700 uppercase">
+										ARB Floor ({limits.arbPct.toFixed(0)}%)
+									</p>
+									<p className="text-sm font-black text-rose-800 mt-0.5 font-mono">
+										{stock.ARBLimitPrice.toLocaleString()} IDR
+									</p>
+								</div>
+							</div>
+						</div>
+
+						{/* 5. Order Book Depth & Turnover Telemetry */}
+						<div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+							<h4 className="text-xs font-black uppercase tracking-widest text-slate-900">
+								Order Book Depth &amp; Turnover Telemetry
+							</h4>
+
+							{/* Bid vs Offer Bar */}
+							<div className="space-y-1.5">
+								<div className="flex justify-between text-xs font-bold">
+									<span className="text-emerald-700">
+										Bid: {fmtLots(stock.BidVolume)} ({stock.BidOfferPressure}%)
+									</span>
+									<span className="text-rose-700">
+										Offer: {fmtLots(stock.OfferVolume)} (
+										{100 - stock.BidOfferPressure}%)
+									</span>
+								</div>
+								<div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
+									<div
+										style={{ width: `${stock.BidOfferPressure}%` }}
+										className="bg-emerald-500 h-full"
+									/>
+									<div
+										style={{ width: `${100 - stock.BidOfferPressure}%` }}
+										className="bg-rose-500 h-full"
+									/>
+								</div>
+							</div>
+
+							<div className="space-y-2.5 pt-2">
+								<div className="flex justify-between items-center py-1.5 border-b border-slate-50">
+									<span className="text-xs font-bold text-slate-500">
+										Session Turnover (IDR)
+									</span>
+									<span className="text-xs font-black text-slate-900 font-mono">
+										Rp {fmtIDRValue(stock.Value)} ({stock.TurnoverTier} Tier)
+									</span>
+								</div>
+								<div className="flex justify-between items-center py-1.5 border-b border-slate-50">
+									<span className="text-xs font-bold text-slate-500">
+										Volume &amp; Frequency
+									</span>
+									<span className="text-xs font-black text-slate-900 font-mono">
+										{fmtLots(stock.Volume)} ({stock.Frequency.toLocaleString()}{" "}
+										tx)
+									</span>
+								</div>
+								<div className="flex justify-between items-center py-1.5 border-b border-slate-50">
+									<span className="text-xs font-bold text-slate-500">
+										Foreign Participation
+									</span>
+									<span className="text-xs font-black text-slate-900 font-mono">
+										{fmtIDRNet(stock.ForeignNet)} (
+										{(stock.ForeignParticipationPct ?? 0).toFixed(1)}% of value)
+									</span>
+								</div>
+								<div className="flex justify-between items-center py-1.5">
+									<span className="text-xs font-bold text-slate-500">
+										Non-Regular (Nego) Crossing
+									</span>
+									<span className="text-xs font-black text-slate-900 font-mono">
+										Rp {fmtIDRValue(stock.NonRegularValue || 0)} (
+										{stock.NegoRatio}%)
+									</span>
+								</div>
+							</div>
+						</div>
 					</div>
 				</motion.div>
 			</motion.div>

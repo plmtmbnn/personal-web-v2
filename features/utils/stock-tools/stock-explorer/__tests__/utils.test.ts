@@ -33,6 +33,12 @@ describe("Stock Explorer Utils", () => {
 			expect(fmtCompact(7800000000)).toBe("7.8B");
 			expect(fmtCompact(7900000000)).toBe("7.9B");
 		});
+
+		it("formats trillions as T", () => {
+			expect(fmtCompact(1000000000000)).toBe("1.00T");
+			expect(fmtCompact(7418700000000)).toBe("7.42T");
+			expect(fmtCompact(-2153000000000)).toBe("-2.15T");
+		});
 	});
 
 	describe("fmtPct()", () => {

@@ -166,9 +166,11 @@ export default function RebuildRulebookView() {
 									}`}
 								>
 									Rp{" "}
-									{preset >= 1000000000
-										? `${preset / 1e9}B`
-										: `${preset / 1e6}M`}
+									{preset >= 1e12
+										? `${(preset / 1e12).toFixed(preset % 1e12 === 0 ? 0 : 2)}T`
+										: preset >= 1e9
+											? `${preset / 1e9}B`
+											: `${preset / 1e6}M`}
 								</button>
 							))}
 						</div>

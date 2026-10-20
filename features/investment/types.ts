@@ -124,11 +124,34 @@ export interface SourceStatus {
 	asOf?: string;
 }
 
+export interface IhsgAlphaCandidate {
+	code: string;
+	name: string;
+	sector: string;
+	close: number;
+	changePct: number;
+	valueIdr: number;
+	foreignNetIdr: number;
+	foreignParticipationPct: number;
+	compositeScore: number;
+	opportunity: string;
+	setupBucket: "core" | "swing" | "scalp";
+	entryZone: string;
+	stopLoss: number;
+	target1: number;
+	rrr: number;
+}
+
 export interface IhsgForeignFlowSnapshot {
 	netBuySell1dIdr?: number | null; // e.g. -500_000_000_000 (net sell 500B IDR)
 	netBuySell5dIdr?: number | null;
 	streakDays?: number | null; // e.g. -3 for 3 consecutive days of net foreign selling
 	asOf?: string;
+	advancers?: number;
+	decliners?: number;
+	unchanged?: number;
+	liquidAdvancersPct?: number;
+	topAlphaPicks?: IhsgAlphaCandidate[];
 }
 
 export interface CryptoOnChainSnapshot {

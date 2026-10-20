@@ -47,24 +47,6 @@ export default function MarketPlaybook({
 		const isIhsg = script.market === "IHSG";
 		let tacticalAlert = null;
 
-		if (isIhsg && compassData?.markets.ihsgFlows?.streakDays != null) {
-			const streak = compassData.markets.ihsgFlows.streakDays;
-			if (streak <= -3) {
-				tacticalAlert = {
-					color: "rose",
-					message: `Caution: Sustained Institutional Distribution (${streak}D Outflow Streak)`,
-					action:
-						"Prioritize defensive sizing and tighten stop losses immediately.",
-				};
-			} else if (streak >= 3) {
-				tacticalAlert = {
-					color: "emerald",
-					message: `Institutional Accumulation Confirmed (+${streak}D Inflow Streak)`,
-					action: "Favor trend-following setups and ride momentum leaders.",
-				};
-			}
-		}
-
 		if (!isIhsg && compassData?.markets.cryptoOnChain?.mvrvZScore != null) {
 			const mvrv = compassData.markets.cryptoOnChain.mvrvZScore;
 			if (mvrv <= DEFAULT_THRESHOLDS.crypto.mvrv.accumulation) {

@@ -44,6 +44,7 @@ export type Sector =
 	| "Transportation"
 	| "Basic Materials"
 	| "Industrials"
+	| "Unclassified"
 	| "Unknown";
 
 export interface FundamentalData {
@@ -57,7 +58,70 @@ export interface FundamentalData {
 	PBV: number;
 }
 
+export interface TickerHistorySession {
+	d: string; // YYYY-MM-DD
+	c: number; // Close
+	h: number; // High
+	l: number; // Low
+	v: number; // Volume (shares)
+	val: number; // Value (IDR turnover)
+	f: number; // Frequency
+	fn: number; // ForeignNet (IDR)
+}
+
+/** Map of date ("YYYY-MM-DD") -> Map of Ticker ("BBCA") -> compact session point */
+export type TickerHistoryRingBuffer = Record<
+	string,
+	Record<
+		string,
+		{
+			c: number;
+			h: number;
+			l: number;
+			v: number;
+			val: number;
+			f: number;
+			fn: number;
+		}
+	>
+>;
+
+export interface StockTradePlan {
+	entryLow: number;
+	entryHigh: number;
+	stopLoss: number;
+	stopLossPct: number;
+	target1: number;
+	target1Pct: number;
+	target2: number;
+	target2Pct: number;
+	riskRewardRatio: number;
+	setupBucket: "core" | "swing" | "scalp";
+	setupNote: string;
+}
+
+export interface CompassBridgeSummary {
+	rawState: "risk_on" | "selective" | "defensive" | "stress" | "insufficient";
+	effectiveState:
+		| "risk_on"
+		| "selective"
+		| "defensive"
+		| "stress"
+		| "insufficient";
+	score: number;
+	headline: string;
+	trendState: string;
+	valuationState: string;
+	maxExposurePct: number;
+	riskPerTradePct: number;
+	isTradingLocked: boolean;
+	streakDays?: number | null;
+	net5dIdr?: number | null;
+}
+
 export type OpportunityCategory =
+	| "High Volatile"
+	| "Near ARA"
 	| "Strong Buy"
 	| "Momentum"
 	| "Breakout"
@@ -86,7 +150,7 @@ export interface ProcessedStock extends IDXStock {
 	Sector: Sector;
 	CompositeScore: number;
 	Opportunity: OpportunityCategory;
-	Fundamentals: FundamentalData;
+	Fundamentals?: FundamentalData;
 	// Technical signals
 	Trend: "Up" | "Down" | "Sideways";
 	// Indonesian Microstructure & Bandarmology Telemetry
@@ -97,6 +161,19 @@ export interface ProcessedStock extends IDXStock {
 	ARALimitPrice: number;
 	ARBLimitPrice: number;
 	ARARisk: AutoRejectionStatus;
+	// Enhanced Microstructure & Multi-Day Ring Buffer Signals
+	VWAP?: number;
+	CloseToVwapPct?: number;
+	CloseRangePosition?: number; // 0-100%
+	ForeignParticipationPct?: number; // Net Foreign / Value (%)
+	ForeignStreakDays?: number; // Consecutive net inflow/outflow sessions
+	ForeignNet5D?: number; // 5D cumulative net foreign flow in IDR
+	RVOL?: number; // Relative turnover velocity vs 10D average (e.g. 2.1x)
+	High10D?: number;
+	Low10D?: number;
+	Return5D?: number;
+	History10D?: TickerHistorySession[];
+	TradePlan?: StockTradePlan;
 }
 
 export interface MarketHealth {
@@ -142,6 +219,8 @@ export type StockPickThesis =
 	| "Value Accumulation"
 	| "Breakout Momentum"
 	| "ARB Reversal"
+	| "High Volatile Scalp"
+	| "Near ARA Hunter"
 	| "Swing Speculation"
 	| "Custom";
 
@@ -256,6 +335,13 @@ export interface StockPickWithMetrics extends StockPick {
 	compositeScore?: number;
 	opportunity?: OpportunityCategory;
 	isCompassAligned?: boolean;
+	bucket?: "core" | "swing";
+	alertStatus?:
+		| "stop_breached"
+		| "target_hit"
+		| "trailing_protect"
+		| "healthy"
+		| "none";
 }
 
 export interface SimulatorPortfolioSummary {
@@ -269,6 +355,10 @@ export interface SimulatorPortfolioSummary {
 	totalCurrentValue: number;
 	totalUnrealizedPlNominal: number;
 	totalUnrealizedPlPct: number;
+	coreCapitalNominal?: number;
+	swingCapitalNominal?: number;
+	coreAllocationPct?: number;
+	swingAllocationPct?: number;
 	bestPerformer?: { stockCode: string; plPct: number };
 	worstPerformer?: { stockCode: string; plPct: number };
 }

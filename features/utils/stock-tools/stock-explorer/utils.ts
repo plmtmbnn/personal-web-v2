@@ -1,15 +1,16 @@
-"use client";
-
 /**
  * Formats a number into a compact string (e.g., 1000 → "1K", 1000000 → "1M").
  * @param n - The number to format.
  * @returns The formatted string.
  */
 export function fmtCompact(n: number): string {
-	if (n < 1e3) return n.toLocaleString();
-	if (n < 1e6) return `${(n / 1e3).toFixed(1)}K`;
-	if (n < 1e9) return `${(n / 1e6).toFixed(1)}M`;
-	return `${(n / 1e9).toFixed(1)}B`;
+	const abs = Math.abs(n);
+	const sign = n < 0 ? "-" : "";
+	if (abs < 1e3) return `${sign}${abs.toLocaleString()}`;
+	if (abs < 1e6) return `${sign}${(abs / 1e3).toFixed(1)}K`;
+	if (abs < 1e9) return `${sign}${(abs / 1e6).toFixed(1)}M`;
+	if (abs < 1e12) return `${sign}${(abs / 1e9).toFixed(1)}B`;
+	return `${sign}${(abs / 1e12).toFixed(2)}T`;
 }
 
 /**
@@ -34,16 +35,17 @@ export function fmtLots(shares: number): string {
 /**
  * Formats monetary amounts in IDR billions/trillions with leading sign (+/-).
  * @param val - Value in IDR.
+ * @param decimals - Decimal precision (default 1).
  * @returns Formatted string (e.g. "+24.5B" or "-1.2T").
  */
-export function fmtIDRNet(val: number): string {
+export function fmtIDRNet(val: number, decimals = 1): string {
 	if (val === 0) return "0";
 	const isNeg = val < 0;
 	const absVal = Math.abs(val);
 	if (absVal >= 1e12) {
-		return `${isNeg ? "-" : "+"}${(absVal / 1e12).toFixed(1)}T`;
+		return `${isNeg ? "-" : "+"}${(absVal / 1e12).toFixed(decimals)}T`;
 	}
-	return `${isNeg ? "-" : "+"}${(absVal / 1e9).toFixed(1)}B`;
+	return `${isNeg ? "-" : "+"}${(absVal / 1e9).toFixed(decimals)}B`;
 }
 
 /**

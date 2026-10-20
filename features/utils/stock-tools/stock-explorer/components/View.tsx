@@ -17,9 +17,15 @@ import {
 	Coins,
 	BookmarkPlus,
 	Plus,
+	Compass,
+	ArrowUpRight,
 } from "lucide-react";
 import UtilHeader from "@/features/utils/components/UtilHeader";
-import type { IDXStock } from "../types";
+import type {
+	IDXStock,
+	TickerHistoryRingBuffer,
+	CompassBridgeSummary,
+} from "../types";
 import { fmtIDRValue } from "../utils";
 import { useMarketData } from "../hooks/useMarketData";
 import {
@@ -30,14 +36,11 @@ import {
 
 // Dashboard Components
 import HeroOverview from "./dashboard/HeroOverview";
-import MarketBreadth from "./dashboard/MarketBreadth";
 import SectorRotation from "./dashboard/SectorRotation";
 import ForeignFlow from "./dashboard/ForeignFlow";
-import TopMovers from "./dashboard/TopMovers";
 import OpportunityScanner from "./dashboard/OpportunityScanner";
 
 // Charts & Table
-import Heatmap from "./charts/Heatmap";
 import SmartTable from "./table/SmartTable";
 
 // Analyst Experience & Stockpick Simulator
@@ -48,6 +51,10 @@ import { CloseStockpickModal } from "./simulator/CloseStockpickModal";
 
 function StockExplorerDashboard() {
 	const [rawStocks, setRawStocks] = useState<IDXStock[]>([]);
+	const [tickerHistory10d, setTickerHistory10d] =
+		useState<TickerHistoryRingBuffer>({});
+	const [compassBridge, setCompassBridge] =
+		useState<CompassBridgeSummary | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [lastSync, setLastSync] = useState<string | null>(null);
@@ -72,6 +79,7 @@ function StockExplorerDashboard() {
 		weights,
 		handleWeightChange,
 		applyPreset,
+		applyCompassRegime,
 		resetWeights,
 		activePresetName,
 		minScore,
@@ -98,6 +106,12 @@ function StockExplorerDashboard() {
 			}
 
 			setRawStocks(json.data);
+			if (json.tickerHistory10d && typeof json.tickerHistory10d === "object") {
+				setTickerHistory10d(json.tickerHistory10d);
+			}
+			if (json.compassBridge && typeof json.compassBridge === "object") {
+				setCompassBridge(json.compassBridge);
+			}
 			if (json.source) {
 				setDataSource(json.source);
 			}
@@ -120,7 +134,11 @@ function StockExplorerDashboard() {
 		fetchData();
 	}, [fetchData]);
 
-	const { processed, marketHealth } = useMarketData(rawStocks, weights);
+	const { processed, marketHealth } = useMarketData(
+		rawStocks,
+		weights,
+		tickerHistory10d,
+	);
 
 	useEffect(() => {
 		if (processed && processed.length > 0) {
@@ -142,7 +160,7 @@ function StockExplorerDashboard() {
 			: 0;
 
 	return (
-		<div className="min-h-screen bg-slate-50/80 bg-dot-pattern relative text-slate-900 pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+		<div className="min-h-screen bg-slate-50/80 relative text-slate-900 pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
 				<UtilHeader
 					title="Market Intelligence Explorer"
@@ -327,40 +345,97 @@ function StockExplorerDashboard() {
 								)}
 							</div>
 
+							{/* Live IHSG Investment Compass Regime & Permission Bridge */}
+							{compassBridge && (
+								<div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+									<div className="flex items-start sm:items-center gap-3">
+										<div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+											<Compass className="w-4 h-4" />
+										</div>
+										<div>
+											<div className="flex flex-wrap items-center gap-2">
+												<span className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+													IHSG Compass Regime Bridge
+												</span>
+												<span
+													className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+														compassBridge.effectiveState === "risk_on"
+															? "bg-emerald-50 text-emerald-700 border-emerald-200"
+															: compassBridge.effectiveState === "selective"
+																? "bg-blue-50 text-blue-700 border-blue-200"
+																: compassBridge.effectiveState === "defensive"
+																	? "bg-amber-50 text-amber-800 border-amber-200"
+																	: "bg-rose-50 text-rose-700 border-rose-200"
+													}`}
+												>
+													{compassBridge.effectiveState.replace("_", " ")} (
+													{compassBridge.score}/100)
+												</span>
+												<span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md font-mono">
+													Swing:{" "}
+													{compassBridge.isTradingLocked ? "LOCKED" : "OPEN"} |{" "}
+													{compassBridge.riskPerTradePct}% Risk/Trade |{" "}
+													{compassBridge.maxExposurePct}% Exposure Cap
+												</span>
+											</div>
+											<p className="text-[11px] font-medium text-slate-500 mt-1">
+												{compassBridge.headline}
+											</p>
+										</div>
+									</div>
+
+									<div className="flex flex-wrap items-center gap-2 shrink-0">
+										<button
+											type="button"
+											onClick={() =>
+												applyCompassRegime(
+													compassBridge.effectiveState === "insufficient"
+														? "selective"
+														: compassBridge.effectiveState,
+												)
+											}
+											className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+										>
+											Sync Regime Preset
+										</button>
+										<Link
+											href="/investment"
+											className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors !no-underline"
+										>
+											<span>Open Compass</span>
+											<ArrowUpRight className="w-3.5 h-3.5" />
+										</Link>
+									</div>
+								</div>
+							)}
+
 							{workstationTab === "simulator" ? (
 								<StockpickSimulator stocks={processed} />
 							) : (
 								<>
-									{/* Top KPI Cards */}
+									{/* Top KPI Cards (Integrated Market Return + Breadth, Composite Score, Foreign Flow, Turnover) */}
 									<HeroOverview marketHealth={marketHealth} />
-
-									{/* Top Movers Strip (Full Width) */}
-									<div>
-										<TopMovers stocks={processed} />
-									</div>
 
 									{/* Deep Market Intelligence Matrix: Balanced 2-Column Grid */}
 									<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-										{/* Left Column: Breadth + Sector Rotation + Foreign Flow */}
-										<div className="lg:col-span-6 space-y-6">
-											<MarketBreadth
-												advancers={marketHealth.advancers}
-												decliners={marketHealth.decliners}
-												unchanged={marketHealth.unchanged}
+										{/* Left Column: Opportunity Scanner */}
+										<div className="lg:col-span-6 h-full">
+											<OpportunityScanner
+												stocks={processed}
+												compassBridge={compassBridge}
 											/>
+										</div>
+
+										{/* Right Column: Sector Rotation + Foreign Flow */}
+										<div className="lg:col-span-6 space-y-6">
 											<SectorRotation stocks={processed} />
 											<ForeignFlow stocks={processed} />
 										</div>
-
-										{/* Right Column: Opportunity Scanner */}
-										<div className="lg:col-span-6 h-full">
-											<OpportunityScanner stocks={processed} />
-										</div>
 									</div>
 
-									{/* Market Heatmap (Full Width) */}
+									{/* Smart Screener Table (Promoted above Custom Factor Scoring for rapid access) */}
 									<div>
-										<Heatmap stocks={processed} />
+										<SmartTable stocks={processed} />
 									</div>
 
 									{/* Custom Scoring Engine & Hard Filter Control Panel */}
@@ -644,11 +719,6 @@ function StockExplorerDashboard() {
 											</div>
 										)}
 									</div>
-
-									{/* Smart Screener Table (Full Width) */}
-									<div>
-										<SmartTable stocks={processed} />
-									</div>
 								</>
 							)}
 						</>
@@ -666,6 +736,7 @@ function StockExplorerDashboard() {
 				pickToEdit={pickToEdit}
 				stockToSimulate={stockToSimulate}
 				availableStocks={processed}
+				compassBridge={compassBridge}
 				onSave={(data) => {
 					if (data.id) {
 						updateStockPick(data.id, data);

@@ -1,7 +1,15 @@
 import { z } from "zod";
 import { type NextRequest, NextResponse } from "next/server";
-import { getStockData, saveStockData, redis } from "@/lib/core/redis";
+import {
+	getStockData,
+	saveStockData,
+	getTickerHistoryRingBuffer,
+	updateTickerHistoryRingBuffer,
+	redis,
+} from "@/lib/core/redis";
 import { FALLBACK_IDX_STOCKS } from "@/features/utils/stock-tools/stock-explorer/data/fallbackData";
+import { getCachedInvestmentCompass } from "@/features/investment/actions";
+import type { CompassBridgeSummary } from "@/features/utils/stock-tools/stock-explorer/types";
 
 export const dynamic = "force-dynamic";
 
@@ -135,6 +143,50 @@ export async function GET(request: NextRequest) {
 			source = "fallback_static";
 		}
 
+		// Sync and retrieve 10-trading-day per-ticker ring buffer + live IHSG Compass regime bridge
+		let tickerHistory10d = null;
+		let compassBridge: CompassBridgeSummary | null = null;
+
+		try {
+			const [ringBufferRes, compassRes] = await Promise.allSettled([
+				source === "idx_live"
+					? updateTickerHistoryRingBuffer(data)
+					: getTickerHistoryRingBuffer().then(
+							(existing) => existing || updateTickerHistoryRingBuffer(data),
+						),
+				getCachedInvestmentCompass(),
+			]);
+
+			if (ringBufferRes.status === "fulfilled") {
+				tickerHistory10d = ringBufferRes.value;
+			}
+
+			if (compassRes.status === "fulfilled" && compassRes.value?.engineOutput) {
+				const eo = compassRes.value.engineOutput;
+				const ihsgRegime = eo.regimes.ihsg;
+				const ihsgPlaybook = eo.playbooks.ihsg;
+				const ihsgPerms = eo.permissions.ihsg;
+				const mandate = ihsgPerms.mandate;
+				const flows = compassRes.value.markets.ihsgFlows;
+
+				compassBridge = {
+					rawState: ihsgRegime.state,
+					effectiveState: ihsgPlaybook.state,
+					score: ihsgRegime.score,
+					headline: ihsgRegime.headline,
+					trendState: ihsgRegime.dualAxis?.trendState || ihsgRegime.state,
+					valuationState: ihsgRegime.dualAxis?.valuationState || "neutral",
+					maxExposurePct: mandate?.maxPortfolioExposurePct ?? 15,
+					riskPerTradePct: mandate?.maxRiskPerTradePct ?? 0.5,
+					isTradingLocked: Boolean(mandate?.isTradingLocked),
+					streakDays: flows?.streakDays ?? null,
+					net5dIdr: flows?.netBuySell5dIdr ?? null,
+				};
+			}
+		} catch (e) {
+			console.warn("Non-critical enrichment failed in stock-data route:", e);
+		}
+
 		// Apply pagination if requested explicitly
 		const { limit, offset } = parsedQuery.data;
 		const offsetNum = offset || 0;
@@ -148,6 +200,8 @@ export async function GET(request: NextRequest) {
 			limit: limit || data.length,
 			offset: offsetNum,
 			source,
+			tickerHistory10d,
+			compassBridge,
 			metadata: {
 				lastFetchAt: new Date().toISOString(),
 				cached: source.startsWith("redis") || source.startsWith("fallback"),

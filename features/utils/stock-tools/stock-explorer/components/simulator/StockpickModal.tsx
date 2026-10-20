@@ -9,15 +9,19 @@ import {
 	Layers,
 	FileText,
 	ArrowRight,
+	AlertTriangle,
 } from "lucide-react";
 import type {
 	ProcessedStock,
 	StockPick,
 	StockPickThesis,
 	Sector,
+	CompassBridgeSummary,
 } from "../../types";
 import { fmtIDRPrice } from "../../stockpicks";
 import { getIdxPriceTick } from "../../utils";
+import { calculateStockTradePlan } from "../../utils/opportunityPredicates";
+import { useScreener } from "../../context/ScreenerContext";
 
 interface StockpickModalProps {
 	isOpen: boolean;
@@ -25,6 +29,7 @@ interface StockpickModalProps {
 	pickToEdit?: StockPick | null;
 	stockToSimulate?: ProcessedStock | null;
 	availableStocks: ProcessedStock[];
+	compassBridge?: CompassBridgeSummary | null;
 	onSave: (data: {
 		id?: string;
 		stockCode: string;
@@ -47,6 +52,8 @@ const THESIS_OPTIONS: StockPickThesis[] = [
 	"Value Accumulation",
 	"Breakout Momentum",
 	"ARB Reversal",
+	"High Volatile Scalp",
+	"Near ARA Hunter",
 	"Swing Speculation",
 	"Custom",
 ];
@@ -57,8 +64,10 @@ export default function StockpickModal({
 	pickToEdit,
 	stockToSimulate,
 	availableStocks,
+	compassBridge,
 	onSave,
 }: StockpickModalProps) {
+	const { accountEquityIdr } = useScreener();
 	const [tickerQuery, setTickerQuery] = useState("");
 	const [selectedStock, setSelectedStock] = useState<ProcessedStock | null>(
 		null,
@@ -71,6 +80,11 @@ export default function StockpickModal({
 	const [thesis, setThesis] = useState<StockPickThesis>("Compass Core Tranche");
 	const [notes, setNotes] = useState<string>("");
 	const [error, setError] = useState<string | null>(null);
+
+	const activeRiskPct =
+		compassBridge && compassBridge.riskPerTradePct > 0
+			? compassBridge.riskPerTradePct
+			: 0.5;
 
 	// Synchronize initial state when modal opens
 	useEffect(() => {
@@ -101,23 +115,44 @@ export default function StockpickModal({
 		} else if (stockToSimulate) {
 			setTickerQuery(stockToSimulate.StockCode);
 			setSelectedStock(stockToSimulate);
-			setBuyPrice(stockToSimulate.Close || stockToSimulate.Previous || 1000);
-			setQuantityLots(10);
+			const plan =
+				stockToSimulate.TradePlan ?? calculateStockTradePlan(stockToSimulate);
+			const entry =
+				plan.entryHigh ||
+				stockToSimulate.Close ||
+				stockToSimulate.Previous ||
+				1000;
+			setBuyPrice(entry);
 			setEntryDate(today);
-			setTargetPrice("");
-			setStopLossPrice("");
-			setThesis(
-				stockToSimulate.Opportunity === "Foreign Accumulation"
-					? "Foreign Flow Surge"
-					: stockToSimulate.Opportunity === "Bandar Accumulation"
-						? "Bandar Accumulation"
-						: stockToSimulate.Opportunity === "Breakout"
-							? "Breakout Momentum"
-							: stockToSimulate.Opportunity === "Value"
-								? "Value Accumulation"
-								: "Compass Core Tranche",
-			);
-			setNotes("");
+
+			// Smart defaults for thesis and tick-valid risk brackets from TradePlan
+			let resolvedThesis: StockPickThesis = "Compass Core Tranche";
+			if (stockToSimulate.Opportunity === "High Volatile") {
+				resolvedThesis = "High Volatile Scalp";
+			} else if (stockToSimulate.Opportunity === "Near ARA") {
+				resolvedThesis = "Near ARA Hunter";
+			} else if (stockToSimulate.Opportunity === "Foreign Accumulation") {
+				resolvedThesis = "Foreign Flow Surge";
+			} else if (stockToSimulate.Opportunity === "Bandar Accumulation") {
+				resolvedThesis = "Bandar Accumulation";
+			} else if (stockToSimulate.Opportunity === "Breakout") {
+				resolvedThesis = "Breakout Momentum";
+			} else if (stockToSimulate.Opportunity === "ARB Reversal") {
+				resolvedThesis = "ARB Reversal";
+			} else if (stockToSimulate.Opportunity === "Value") {
+				resolvedThesis = "Value Accumulation";
+			}
+
+			setTargetPrice(String(plan.target1));
+			setStopLossPrice(String(plan.stopLoss));
+			setThesis(resolvedThesis);
+			setNotes(plan.setupNote);
+
+			// Auto-size initial lots from Compass Risk Per Trade %
+			const riskBudgetIdr = accountEquityIdr * (activeRiskPct / 100);
+			const riskPerLotIdr = Math.max(100, (entry - plan.stopLoss) * 100);
+			const sizedLots = Math.max(1, Math.floor(riskBudgetIdr / riskPerLotIdr));
+			setQuantityLots(sizedLots);
 		} else {
 			setTickerQuery("");
 			setSelectedStock(null);
@@ -129,7 +164,14 @@ export default function StockpickModal({
 			setThesis("Compass Core Tranche");
 			setNotes("");
 		}
-	}, [isOpen, pickToEdit, stockToSimulate, availableStocks]);
+	}, [
+		isOpen,
+		pickToEdit,
+		stockToSimulate,
+		availableStocks,
+		accountEquityIdr,
+		activeRiskPct,
+	]);
 
 	// Filter available stocks matching query
 	const searchResults = useMemo(() => {
@@ -176,6 +218,15 @@ export default function StockpickModal({
 			previewRrr = Number((reward / risk).toFixed(2));
 		}
 	}
+
+	const recommendedLots = useMemo(() => {
+		if (!buyPrice || buyPrice <= 0 || !numStop || numStop >= buyPrice) {
+			return null;
+		}
+		const riskBudgetIdr = accountEquityIdr * (activeRiskPct / 100);
+		const riskPerLotIdr = Math.max(100, (buyPrice - numStop) * 100);
+		return Math.max(1, Math.floor(riskBudgetIdr / riskPerLotIdr));
+	}, [buyPrice, numStop, accountEquityIdr, activeRiskPct]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -229,7 +280,7 @@ export default function StockpickModal({
 					<div>
 						<h3 className="text-lg font-bold text-slate-900">
 							{pickToEdit
-								? `Edit Pick • ${pickToEdit.stockCode}`
+								? `Edit Pick (${pickToEdit.stockCode})`
 								: "Simulate New Stockpick"}
 						</h3>
 						<p className="text-xs font-medium text-slate-500 mt-0.5">
@@ -363,13 +414,25 @@ export default function StockpickModal({
 
 						{/* Quantity Lots */}
 						<div className="space-y-1.5">
-							<label
-								htmlFor="modal-lots-input"
-								className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5"
-							>
-								<Layers className="w-3.5 h-3.5 text-slate-400" />
-								<span>Quantity (Lots)</span>
-							</label>
+							<div className="flex items-center justify-between">
+								<label
+									htmlFor="modal-lots-input"
+									className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5"
+								>
+									<Layers className="w-3.5 h-3.5 text-slate-400" />
+									<span>Quantity (Lots)</span>
+								</label>
+								{recommendedLots !== null && (
+									<button
+										type="button"
+										onClick={() => setQuantityLots(recommendedLots)}
+										className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md cursor-pointer transition-colors"
+										title={`Size for ${activeRiskPct}% Compass risk on ${fmtIDRPrice(accountEquityIdr)} equity`}
+									>
+										Risk-Size: {recommendedLots} lots ({activeRiskPct}% risk)
+									</button>
+								)}
+							</div>
 							<input
 								id="modal-lots-input"
 								type="number"
@@ -382,7 +445,7 @@ export default function StockpickModal({
 								required
 							/>
 							<p className="text-[10px] text-slate-400">
-								{(quantityLots * 100).toLocaleString("id-ID")} shares • Outlay:{" "}
+								{(quantityLots * 100).toLocaleString("id-ID")} shares | Outlay:{" "}
 								{fmtIDRPrice(simulatedOutlay)}
 							</p>
 						</div>
@@ -437,10 +500,16 @@ export default function StockpickModal({
 					<div className="p-4 bg-slate-50/70 border border-slate-100 rounded-2xl space-y-3">
 						<div className="flex items-center justify-between text-xs">
 							<span className="font-bold text-slate-700">
-								Target &amp; Capital Protection (Optional)
+								Target &amp; Capital Protection (BEI Tick Validated)
 							</span>
-							{previewRrr && (
-								<span className="font-mono font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md text-[11px]">
+							{previewRrr !== null && (
+								<span
+									className={`font-mono font-bold px-2 py-0.5 rounded-md text-[11px] border ${
+										previewRrr >= 1.5
+											? "text-emerald-700 bg-emerald-50 border-emerald-200"
+											: "text-amber-700 bg-amber-50 border-amber-200"
+									}`}
+								>
 									RRR {previewRrr}:1
 								</span>
 							)}
@@ -482,6 +551,16 @@ export default function StockpickModal({
 								/>
 							</div>
 						</div>
+
+						{previewRrr !== null && previewRrr < 1.5 && (
+							<div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-2.5 py-1.5 rounded-lg">
+								<AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+								<span>
+									Sub-optimal RRR ({previewRrr}:1 &lt; 1.5:1 Rulebook minimum).
+									Tighten entry near VWAP or widen target.
+								</span>
+							</div>
+						)}
 					</div>
 
 					{/* 5. Notes */}

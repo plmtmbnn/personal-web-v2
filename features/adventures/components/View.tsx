@@ -38,7 +38,7 @@ export function AdventuresSkeleton() {
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 						<div className="space-y-2">
 							<div className="h-8 sm:h-9 w-60 sm:w-72 bg-slate-200 rounded-xl animate-pulse" />
-							<div className="h-4 w-full max-w-xl bg-slate-200 rounded animate-pulse" />
+							<div className="h-4 w-72 sm:w-80 bg-slate-200 rounded animate-pulse" />
 						</div>
 
 						{/* Telemetry Quick Strip */}
@@ -198,10 +198,8 @@ export default function AdventuresLanding({
 							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
 								Adventures & Journeys
 							</h1>
-							<p className="text-sm text-slate-500 font-medium mt-1 max-w-xl">
-								Exploring the intersection of physical endurance, discipline,
-								and visual storytelling across running telemetry and curated
-								travel journeys.
+							<p className="text-sm text-slate-500 font-medium mt-1">
+								Endurance running logs and curated travel journeys.
 							</p>
 						</div>
 

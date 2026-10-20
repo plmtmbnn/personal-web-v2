@@ -225,8 +225,20 @@ export function scoreIhsg(
 		});
 	}
 
-	// 4. Bank Indonesia Policy Rate & Stance
+	// 4. Bank Indonesia Policy Rate & Sovereign Yield Spread Carry
 	const biRateSeries = data.markets.macro?.IRSTCB01IDM156N?.data;
+	const idYieldSeries = data.markets.macro?.IRLTLT01IDM156N?.data;
+	const latestIdYield =
+		idYieldSeries && idYieldSeries.length > 0
+			? idYieldSeries[idYieldSeries.length - 1].value
+			: null;
+	const us10yVal =
+		data.markets.quotes.US10Y?.last ??
+		data.markets.macro?.DGS10?.data?.slice(-1)[0]?.value ??
+		null;
+	const indoUsSpread =
+		latestIdYield != null && us10yVal != null ? latestIdYield - us10yVal : null;
+
 	if (biRateSeries && biRateSeries.length > 0) {
 		const latestBi = biRateSeries[biRateSeries.length - 1];
 		const prevBi =
@@ -261,10 +273,30 @@ export function scoreIhsg(
 			note = `Bank Indonesia benchmark rate steady within neutral policy corridor (${rate.toFixed(2)}%).`;
 		}
 
+		// Incorporate Indo-US 10Y Sovereign Yield Spread when available
+		if (indoUsSpread != null) {
+			if (indoUsSpread < 1.5) {
+				score = Math.max(15, score - 15);
+				if (score <= 40) dir = "bearish";
+				note += ` Indo-US 10Y spread compressed (${indoUsSpread >= 0 ? "+" : ""}${indoUsSpread.toFixed(2)}%), signaling bond outflow risk.`;
+				contextFlags.push(
+					`Tight Indo-US Yield Spread (${indoUsSpread.toFixed(2)}%)`,
+				);
+			} else if (indoUsSpread >= 2.2) {
+				score = Math.min(95, score + 8);
+				note += ` Healthy Indo-US 10Y spread (+${indoUsSpread.toFixed(2)}%) cushions foreign carry.`;
+			}
+		}
+
+		const spreadSuffix =
+			indoUsSpread != null
+				? ` (Spread: ${indoUsSpread >= 0 ? "+" : ""}${indoUsSpread.toFixed(2)}%)`
+				: "";
+
 		factors.push({
 			key: "bi_rate",
-			label: "Bank Indonesia Policy Rate",
-			valueStr: `${rate.toFixed(2)}%`,
+			label: "Bank Indonesia Policy Rate & Carry",
+			valueStr: `${rate.toFixed(2)}%${spreadSuffix}`,
 			score,
 			weight: wBiRate,
 			direction: dir,
@@ -333,9 +365,13 @@ export function scoreIhsg(
 			dir = "neutral";
 		}
 
-		const net5dB =
+		const net5dFormatted =
 			net5d != null
-				? ` (${net5d >= 0 ? "+" : ""}${(net5d / 1e9).toFixed(0)}B 5D)`
+				? ` (${net5d >= 0 ? "+" : "-"}${
+						Math.abs(net5d) >= 1e12
+							? `${(Math.abs(net5d) / 1e12).toFixed(2)}T`
+							: `${(Math.abs(net5d) / 1e9).toFixed(0)}B`
+					} 5D)`
 				: "";
 
 		factors.push({
@@ -343,9 +379,9 @@ export function scoreIhsg(
 			label: "Foreign Institutional Flow",
 			valueStr:
 				streak > 0
-					? `+${streak}D Inflow${net5dB}`
+					? `+${streak}D Inflow${net5dFormatted}`
 					: streak < 0
-						? `${Math.abs(streak)}D Outflow${net5dB}`
+						? `${Math.abs(streak)}D Outflow${net5dFormatted}`
 						: "Neutral",
 			score,
 			weight: wForeignFlow,
@@ -454,6 +490,38 @@ export function scoreIhsg(
 					`Broad Sector Contraction (${totalCount - expandingCount}/${totalCount} < 50D MA)`,
 				);
 			}
+
+			// Score Sector & Market Breadth as an active factor while keeping total weights = 100
+			const sectorRatio = expandingCount / totalCount;
+			const liqBreadth = data.markets.ihsgFlows?.liquidAdvancersPct;
+			const breadthScore =
+				liqBreadth != null
+					? Math.round(sectorRatio * 65 + (liqBreadth / 100) * 35)
+					: Math.round(sectorRatio * 90 + 5);
+
+			const fxFactor = factors.find((f) => f.key === "usdidr_trend");
+			if (fxFactor && fxFactor.weight >= 15) {
+				fxFactor.weight -= 5;
+				factors.push({
+					key: "ihsg_breadth",
+					label: "Sector & Market Breadth",
+					valueStr: `${expandingCount}/${totalCount} Sectors > 50D MA${liqBreadth != null ? ` (${liqBreadth}% Adv)` : ""}`,
+					score: breadthScore,
+					weight: 5,
+					direction:
+						breadthScore >= 60
+							? "bullish"
+							: breadthScore <= 40
+								? "bearish"
+								: "neutral",
+					note:
+						expandingCount >= totalCount - 1
+							? "Broad multi-sector participation confirms healthy index expansion."
+							: expandingCount <= 1
+								? "Narrow breadth divergence; index propped up by isolated weights while broad sectors lag."
+								: "Selective sector rotation across primary IDX industry groups.",
+				});
+			}
 		}
 	}
 
@@ -511,6 +579,7 @@ export function scoreIhsg(
 	const trendFactorKeys = [
 		"ihsg_200ma",
 		"ihsg_50ma",
+		"ihsg_breadth",
 		"usdidr_trend",
 		"global_liquidity_carry",
 	];

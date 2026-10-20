@@ -23,6 +23,7 @@ export default function SectorRotation({ stocks }: SectorRotationProps) {
 		const map = new Map<Sector, SectorData>();
 
 		for (const s of stocks) {
+			if (s.Sector === "Unclassified" || s.Sector === "Unknown") continue;
 			if (!map.has(s.Sector)) {
 				map.set(s.Sector, {
 					name: s.Sector,

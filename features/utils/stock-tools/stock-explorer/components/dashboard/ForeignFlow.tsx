@@ -29,7 +29,11 @@ export default function ForeignFlow({
 
 	const formatBillions = (val: number) => {
 		const isNeg = val < 0;
-		return `${isNeg ? "-" : "+"}${(Math.abs(val) / 1e9).toFixed(2)}B`;
+		const abs = Math.abs(val);
+		if (abs >= 1e12) {
+			return `${isNeg ? "-" : "+"}${(abs / 1e12).toFixed(2)}T`;
+		}
+		return `${isNeg ? "-" : "+"}${(abs / 1e9).toFixed(2)}B`;
 	};
 
 	const renderList = (

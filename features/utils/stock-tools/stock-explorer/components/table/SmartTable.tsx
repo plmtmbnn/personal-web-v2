@@ -580,8 +580,11 @@ export default function SmartTable({
 										<p className="text-xs font-black text-slate-900 tabular-nums">
 											{s.Close.toLocaleString()}
 										</p>
-										<p className="text-[9px] font-medium text-slate-400 tabular-nums">
-											{s.Low.toLocaleString()}-{s.High.toLocaleString()}
+										<p
+											className="text-[9px] font-medium text-slate-400 tabular-nums"
+											title={`Range: ${s.Low.toLocaleString()}-${s.High.toLocaleString()} | VWAP: ${(s.VWAP || s.Close).toLocaleString()}`}
+										>
+											VWAP {(s.VWAP || s.Close).toLocaleString()}
 										</p>
 									</td>
 
@@ -606,6 +609,11 @@ export default function SmartTable({
 										</p>
 										<p className="text-[9px] font-medium text-slate-400 tabular-nums">
 											{fmtCompact(s.Frequency)} tx
+											{s.RVOL !== undefined && s.RVOL >= 1.3 ? (
+												<span className="ml-1 font-extrabold text-indigo-600">
+													({s.RVOL.toFixed(1)}x)
+												</span>
+											) : null}
 										</p>
 									</td>
 
@@ -644,17 +652,33 @@ export default function SmartTable({
 									</td>
 
 									<td className="py-3 px-4 text-right">
-										<span
-											className={`inline-block text-[11px] font-black tabular-nums px-2 py-0.5 rounded-md ${
-												s.ForeignNet > 0
-													? "text-emerald-700 bg-emerald-50"
-													: s.ForeignNet < 0
-														? "text-rose-700 bg-rose-50"
-														: "text-slate-500 bg-slate-100"
-											}`}
-										>
-											{fmtIDRNet(s.ForeignNet)}
-										</span>
+										<div className="inline-flex flex-col items-end gap-0.5">
+											<span
+												className={`inline-block text-[11px] font-black tabular-nums px-2 py-0.5 rounded-md ${
+													s.ForeignNet > 0
+														? "text-emerald-700 bg-emerald-50"
+														: s.ForeignNet < 0
+															? "text-rose-700 bg-rose-50"
+															: "text-slate-500 bg-slate-100"
+												}`}
+											>
+												{fmtIDRNet(s.ForeignNet)}
+											</span>
+											{s.ForeignStreakDays !== undefined &&
+												Math.abs(s.ForeignStreakDays) >= 2 && (
+													<span
+														className={`text-[9px] font-extrabold font-mono ${
+															s.ForeignStreakDays > 0
+																? "text-emerald-600"
+																: "text-rose-600"
+														}`}
+													>
+														{s.ForeignStreakDays > 0
+															? `${s.ForeignStreakDays}D Inflow`
+															: `${Math.abs(s.ForeignStreakDays)}D Outflow`}
+													</span>
+												)}
+										</div>
 									</td>
 
 									<td className="py-3 px-3 text-center">

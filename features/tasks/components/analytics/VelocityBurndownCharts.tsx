@@ -4,9 +4,16 @@ import { useState, useEffect, useTransition } from "react";
 import { BarChart3, TrendingDown, Loader2 } from "lucide-react";
 import { getVelocityAndBurndownData } from "../../actions/analytics";
 
-export default function VelocityBurndownCharts() {
+interface VelocityBurndownChartsProps {
+	period?: "week" | "month";
+}
+
+export default function VelocityBurndownCharts({
+	period: propPeriod,
+}: VelocityBurndownChartsProps) {
 	const [Recharts, setRecharts] = useState<any>(null);
-	const [period, setPeriod] = useState<"week" | "month">("week");
+	const [localPeriod, setLocalPeriod] = useState<"week" | "month">("week");
+	const period = propPeriod || localPeriod;
 	const [data, setData] = useState<any>(null);
 	const [isPending, startTransition] = useTransition();
 
@@ -76,22 +83,24 @@ export default function VelocityBurndownCharts() {
 					</p>
 				</div>
 
-				<div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 self-start sm:self-auto">
-					{(["week", "month"] as const).map((p) => (
-						<button
-							key={p}
-							type="button"
-							onClick={() => setPeriod(p)}
-							className={`px-3 py-1.5 rounded-xl text-[9.5px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-								period === p
-									? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
-									: "text-slate-600 hover:text-slate-950 hover:bg-slate-50"
-							}`}
-						>
-							{p === "week" ? "Last 7 Days" : "Last 30 Days"}
-						</button>
-					))}
-				</div>
+				{!propPeriod && (
+					<div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 self-start sm:self-auto">
+						{(["week", "month"] as const).map((p) => (
+							<button
+								key={p}
+								type="button"
+								onClick={() => setLocalPeriod(p)}
+								className={`px-3 py-1.5 rounded-xl text-[9.5px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+									period === p
+										? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+										: "text-slate-600 hover:text-slate-950 hover:bg-slate-50"
+								}`}
+							>
+								{p === "week" ? "Last 7 Days" : "Last 30 Days"}
+							</button>
+						))}
+					</div>
+				)}
 			</div>
 
 			{isPending || !data ? (

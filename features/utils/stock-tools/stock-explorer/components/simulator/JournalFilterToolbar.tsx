@@ -25,6 +25,8 @@ const THESIS_OPTIONS: Array<{ value: StockPickThesis | "all"; label: string }> =
 		{ value: "Value Accumulation", label: "Value Accumulation" },
 		{ value: "Breakout Momentum", label: "Breakout Momentum" },
 		{ value: "ARB Reversal", label: "ARB Reversal" },
+		{ value: "High Volatile Scalp", label: "High Volatile Scalp" },
+		{ value: "Near ARA Hunter", label: "Near ARA Hunter" },
 		{ value: "Swing Speculation", label: "Swing Speculation" },
 		{ value: "Custom", label: "Custom" },
 	];

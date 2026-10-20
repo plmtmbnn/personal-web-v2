@@ -41,13 +41,15 @@ export default function TaskFilters({
 	const [isDebouncing, setIsDebouncing] = useState(false);
 
 	// Keys with prefix
-	const KEY_PRIORITY = `${paramPrefix}_priority`;
-	const KEY_CATEGORY = `${paramPrefix}_category`;
-	const KEY_COMPLETED = `${paramPrefix}_completed`;
-	const KEY_RANGE = `${paramPrefix}_range`;
-	const KEY_SEARCH = `${paramPrefix}_search`;
-	const KEY_WEEK_OFFSET = `${paramPrefix}_week_offset`;
-	const KEY_STATUS = `${paramPrefix}_status`;
+	const KEY_PRIORITY = paramPrefix ? `${paramPrefix}_priority` : "priority";
+	const KEY_CATEGORY = paramPrefix ? `${paramPrefix}_category` : "category";
+	const KEY_COMPLETED = paramPrefix ? `${paramPrefix}_completed` : "completed";
+	const KEY_RANGE = paramPrefix ? `${paramPrefix}_range` : "range";
+	const KEY_SEARCH = paramPrefix ? `${paramPrefix}_search` : "search";
+	const KEY_WEEK_OFFSET = paramPrefix
+		? `${paramPrefix}_week_offset`
+		: "week_offset";
+	const KEY_STATUS = paramPrefix ? `${paramPrefix}_status` : "status";
 
 	const currentPriority = searchParams.get(KEY_PRIORITY) || "all";
 	const currentCategory = searchParams.get(KEY_CATEGORY) || "all";

@@ -18,6 +18,7 @@ import {
 } from "@/features/tasks/actions/tasks";
 import { useToast } from "@/features/tasks/components/shared/Toast";
 import { format, parseISO } from "date-fns";
+import CustomModal from "@/features/shared/components/CustomModal";
 
 interface ArchiveModalProps {
 	isOpen: boolean;
@@ -28,6 +29,10 @@ export default function ArchiveModal({ isOpen, onClose }: ArchiveModalProps) {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
+	const [deleteTarget, setDeleteTarget] = useState<{
+		id: string;
+		title: string;
+	} | null>(null);
 	const [isPending, startTransition] = useTransition();
 	const { showSuccess, showError } = useToast();
 
@@ -70,8 +75,13 @@ export default function ArchiveModal({ isOpen, onClose }: ArchiveModalProps) {
 	};
 
 	const handleDeleteForever = (taskId: string, title: string) => {
-		if (!confirm(`Permanently delete "${title}"? This cannot be undone.`))
-			return;
+		setDeleteTarget({ id: taskId, title });
+	};
+
+	const confirmDeleteForever = () => {
+		if (!deleteTarget) return;
+		const { id: taskId } = deleteTarget;
+		setDeleteTarget(null);
 
 		startTransition(async () => {
 			try {
@@ -204,6 +214,21 @@ export default function ArchiveModal({ isOpen, onClose }: ArchiveModalProps) {
 					)}
 				</div>
 			</div>
+
+			<CustomModal
+				isOpen={!!deleteTarget}
+				onClose={() => setDeleteTarget(null)}
+				title="Delete Task Permanently"
+				description={
+					deleteTarget
+						? `Are you sure you want to permanently delete "${deleteTarget.title}"? This action cannot be undone.`
+						: "Are you sure you want to permanently delete this task?"
+				}
+				onConfirm={confirmDeleteForever}
+				confirmText="Delete Forever"
+				cancelText="Cancel"
+				variant="danger"
+			/>
 		</div>
 	);
 }

@@ -36,7 +36,8 @@ export default function SimulatorTelemetryStrip({
 				</div>
 				{/* Tier 4: Context Sublabel */}
 				<span className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-1">
-					Valued at {fmtIDRPrice(summary.totalCurrentValue)}
+					Core {summary.coreAllocationPct ?? 0}% (max 45%) | Swing{" "}
+					{summary.swingAllocationPct ?? 0}% (max 15%)
 				</span>
 			</div>
 

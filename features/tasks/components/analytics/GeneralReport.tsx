@@ -277,7 +277,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 			{/* Row 1: Execution & Reliability Command */}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 				{/* Efficiency Card */}
-				<div className="bg-slate-900 p-8 sm:p-10 rounded-[2.5rem] flex flex-col sm:flex-row items-center gap-10 group shadow-2xl shadow-black/20 transition-transform hover:-translate-y-1 min-w-0">
+				<div className="bg-white p-8 sm:p-10 rounded-[2.5rem] flex flex-col sm:flex-row items-center gap-10 group shadow-xs border-2 border-emerald-500/20 text-emerald-600 transition-transform hover:-translate-y-1 min-w-0">
 					<div className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0">
 						<svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
 							<circle
@@ -285,7 +285,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								cy="50"
 								r="40"
 								fill="transparent"
-								stroke="rgba(255,255,255,0.1)"
+								stroke="rgba(0,0,0,0.05)"
 								strokeWidth="10"
 							/>
 							<motion.circle
@@ -295,7 +295,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								fill="transparent"
 								stroke="currentColor"
 								strokeWidth="10"
-								className="text-emerald-400"
+								className="text-emerald-500"
 								strokeDasharray="251.2"
 								initial={reduceMotion ? false : { strokeDashoffset: 251.2 }}
 								animate={{
@@ -306,25 +306,24 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 								strokeLinecap="round"
 							/>
 						</svg>
-						<div className="absolute inset-0 flex items-center justify-center text-xl sm:text-2xl font-black text-white">
+						<div className="absolute inset-0 flex items-center justify-center text-xl sm:text-2xl font-black text-slate-900">
 							{stats.completionRate}%
 						</div>
 					</div>
 					<div className="text-center sm:text-left min-w-0">
 						<div className="flex items-center justify-center sm:justify-start gap-1.5 mb-2">
-							<p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">
+							<p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">
 								Completion Rate
 							</p>
 							<InfoTooltip
 								text="Percentage of scheduled objectives successfully marked done within the selected timeframe."
-								iconColor="text-white/40 hover:text-white group-hover/tip:text-white"
 								size="xs"
 							/>
 						</div>
-						<h4 className="text-3xl font-black text-white tracking-tight leading-none mb-3">
+						<h4 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-3">
 							Efficiency
 						</h4>
-						<p className="text-xs text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1.5 rounded-lg inline-block !text-white">
+						<p className="text-xs text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg inline-block">
 							{stats.completedTasks} Objectives Neutralized
 						</p>
 					</div>
@@ -427,7 +426,9 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 
 			{/* Velocity & Burndown Charts Section - NEW */}
 			<section className="bg-slate-50/50 p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-inner">
-				<DynamicVelocityBurndownCharts />
+				<DynamicVelocityBurndownCharts
+					period={period === "month" ? "month" : "week"}
+				/>
 			</section>
 
 			{/* Row 2: Supporting Stats */}
@@ -732,7 +733,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 			</div>
 
 			{/* Bottom Row: High-Level Insights */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
+			<div className="pt-4">
 				<div className="bg-emerald-50 border border-emerald-100 p-8 rounded-[2.5rem] flex items-center gap-6 shadow-sm transition-all hover:bg-emerald-100/50 min-w-0">
 					<div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20 flex-shrink-0">
 						<Trophy className="w-7 h-7" />
@@ -743,19 +744,6 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 						</p>
 						<h4 className="text-xl font-black text-slate-900 break-words whitespace-normal leading-tight">
 							{stats.mostProductiveDay}
-						</h4>
-					</div>
-				</div>
-				<div className="bg-slate-50 border border-slate-200 p-8 rounded-[2.5rem] flex items-center gap-6 shadow-sm transition-all hover:bg-slate-100/50 min-w-0">
-					<div className="p-4 bg-slate-900 text-white rounded-2xl shadow-lg shadow-black/20 flex-shrink-0">
-						<Activity className="w-7 h-7" />
-					</div>
-					<div className="min-w-0">
-						<p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">
-							System Health
-						</p>
-						<h4 className="text-xl font-black text-slate-900 break-words whitespace-normal leading-tight">
-							Operations Nominal
 						</h4>
 					</div>
 				</div>

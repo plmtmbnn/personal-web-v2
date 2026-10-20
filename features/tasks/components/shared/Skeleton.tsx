@@ -188,41 +188,47 @@ export function AnalyticsDashboardSkeleton() {
 }
 
 /**
- * Task Progress Skeleton - Loading placeholder for task progress
+ * Tasks Page Skeleton - Full localized page loading placeholder for /tasks
  */
-export function TaskProgressSkeleton() {
+export function TasksPageSkeleton() {
 	return (
-		<div className="p-6 bg-white border border-slate-200/80 rounded-[2.5rem] shadow-xl shadow-slate-200/50 animate-pulse min-h-[142px]">
-			<div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
-				{/* Progress ring + status skeleton */}
-				<div className="flex items-center gap-6 shrink-0 w-full lg:w-auto">
-					<div className="w-20 h-20 bg-slate-100 rounded-full shrink-0" />
-					<div className="space-y-2 flex-1 lg:w-48">
-						<Skeleton width="6rem" height="1rem" />
-						<Skeleton width="12rem" height="1.25rem" />
-						<div className="flex gap-2 pt-1">
-							<Skeleton width="5rem" height="1.5rem" variant="rounded" />
-							<Skeleton width="5rem" height="1.5rem" variant="rounded" />
+		<main className="min-h-screen bg-slate-50/80 relative overflow-x-hidden pb-32">
+			{/* Top Floating Header Card Skeleton */}
+			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 mb-6 sm:mb-8 relative z-10">
+				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
+						<div className="space-y-2">
+							<Skeleton width="10rem" height="0.875rem" />
+							<Skeleton width="14rem" height="1.75rem" />
+							<Skeleton width="20rem" height="1rem" />
 						</div>
 					</div>
-				</div>
 
-				{/* Divider skeleton */}
-				<div className="hidden lg:block w-px h-16 bg-slate-100 self-center" />
-
-				{/* Metric cards skeleton */}
-				<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 w-full">
-					{[1, 2, 3, 4].map((i) => (
-						<div
-							key={i}
-							className="rounded-2xl px-4 py-3 bg-slate-50 border border-slate-100 h-[68px] flex flex-col justify-between"
-						>
-							<Skeleton width="100%" height="0.75rem" className="mb-1" />
-							<Skeleton width="60%" height="1.25rem" />
-						</div>
-					))}
+					{/* 4-Tile Telemetry Strip Skeleton */}
+					<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-slate-100">
+						{[1, 2, 3, 4].map((i) => (
+							<div
+								key={i}
+								className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-2"
+							>
+								<Skeleton width="50%" height="0.75rem" />
+								<Skeleton width="70%" height="1.5rem" />
+							</div>
+						))}
+					</div>
 				</div>
 			</div>
-		</div>
+
+			{/* Agenda Section Skeleton */}
+			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 relative z-10">
+				<div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/80 shadow-xl shadow-slate-200/50 p-6 sm:p-8 space-y-6">
+					<div className="flex items-center justify-between border-b border-slate-100 pb-4">
+						<Skeleton width="10rem" height="1.5rem" />
+						<Skeleton width="12rem" height="2rem" variant="rounded" />
+					</div>
+					<TaskListSkeleton />
+				</div>
+			</div>
+		</main>
 	);
 }

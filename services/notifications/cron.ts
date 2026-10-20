@@ -40,11 +40,13 @@ export async function runTaskReminders() {
 
 	// 3. Fetch Tasks from Supabase (Service Role to bypass RLS)
 	const supabase = await createAdminClient();
-	const todayStr = new Date().toISOString().split("T")[0];
+	const todayStr = getJakartaDateString();
 
 	const { data: tasks, error } = await supabase
 		.from("tasks")
 		.select("id, title, due_date, reschedule_count, priority")
+		.is("parent_id", null)
+		.is("archived_at", null)
 		.neq("status", "done")
 		.neq("status", "cancelled")
 		.eq("due_date", todayStr);

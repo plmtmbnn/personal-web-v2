@@ -47,15 +47,16 @@ function TravelContent() {
 	const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 	const [searchQuery, setSearchQuery] = useState("");
 
-	// Automatically open postcard modal when ?postcard=<id> or ?destination=<id> is present
+	// Automatically open postcard modal when ?postcard=<id> or ?destination=<id> is present (visited only)
 	useEffect(() => {
-		const postcardId =
+		const targetId =
 			searchParams.get("postcard") || searchParams.get("destination");
-		if (postcardId) {
+		if (targetId) {
 			const matched = destinations.find(
 				(d) =>
-					d.id.toLowerCase() === postcardId.toLowerCase() ||
-					d.name.toLowerCase() === postcardId.toLowerCase(),
+					(d.id.toLowerCase() === targetId.toLowerCase() ||
+						d.name.toLowerCase() === targetId.toLowerCase()) &&
+					d.isVisited,
 			);
 			if (matched) {
 				setSelectedDestination(matched);
@@ -64,6 +65,7 @@ function TravelContent() {
 	}, [searchParams]);
 
 	const handleSelectDestination = (dest: Destination) => {
+		if (!dest.isVisited) return;
 		setSelectedDestination(dest);
 		if (typeof window !== "undefined") {
 			const url = new URL(window.location.href);
@@ -76,18 +78,13 @@ function TravelContent() {
 		setSelectedDestination(null);
 		if (typeof window !== "undefined") {
 			const url = new URL(window.location.href);
-			if (
-				url.searchParams.has("postcard") ||
-				url.searchParams.has("destination")
-			) {
-				url.searchParams.delete("postcard");
-				url.searchParams.delete("destination");
-				window.history.replaceState(
-					{},
-					"",
-					url.pathname + (url.search ? url.search : ""),
-				);
-			}
+			url.searchParams.delete("postcard");
+			url.searchParams.delete("destination");
+			window.history.replaceState(
+				{},
+				"",
+				url.pathname + (url.search ? url.search : ""),
+			);
 		}
 	};
 
@@ -459,7 +456,8 @@ function TravelContent() {
 											</span>
 										</div>
 										<span className="text-xs text-slate-400 font-medium hidden sm:inline">
-											Future destinations &amp; bucket list expeditions
+											Classified future expeditions, coordinates locked until
+											departure
 										</span>
 									</div>
 
@@ -480,7 +478,7 @@ function TravelContent() {
 				</AnimatePresence>
 			</div>
 
-			{/* ── Postcard & Sticker Modal ──────────────────────────────── */}
+			{/* ── Postcard & Sticker Modal (Visited Destinations Only) ──── */}
 			<PostcardModal
 				destination={selectedDestination}
 				onClose={handleCloseModal}

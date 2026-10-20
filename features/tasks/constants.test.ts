@@ -54,7 +54,6 @@ describe("Task Constants & Utilities", () => {
 				expect(config.color).toContain("bg-");
 				expect(config.borderColor).toContain("border-");
 				expect(config.dotColor).toContain("bg-");
-				expect(config.emoji).toBeTruthy();
 			});
 		});
 	});

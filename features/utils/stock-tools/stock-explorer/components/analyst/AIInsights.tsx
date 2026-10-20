@@ -105,7 +105,7 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 			);
 		}
 
-		// 4. Valuation & Capitalization Tier
+		// 4. VWAP Positioning, Multi-Day Streak & Capitalization Tier
 		const capTier =
 			stock.MarketCap >= 100000000000000
 				? "Tier-1 Mega Cap"
@@ -115,8 +115,25 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 						? "Mid-Cap Growth"
 						: "Small-Cap";
 
+		const vwapDelta =
+			stock.CloseToVwapPct ??
+			(vwap > 0 ? ((stock.Close - vwap) / vwap) * 100 : 0);
+		const vwapPhrase =
+			vwapDelta >= 0.5
+				? `holding +${vwapDelta.toFixed(2)}% above session VWAP (${Math.round(vwap).toLocaleString()} IDR)`
+				: vwapDelta <= -0.5
+					? `trading ${vwapDelta.toFixed(2)}% below session VWAP (${Math.round(vwap).toLocaleString()} IDR)`
+					: `consolidating near session VWAP (${Math.round(vwap).toLocaleString()} IDR)`;
+
+		const streakPhrase =
+			(stock.ForeignStreakDays || 0) >= 2
+				? ` with a ${stock.ForeignStreakDays}-day consecutive foreign inflow streak`
+				: (stock.ForeignStreakDays || 0) <= -2
+					? ` amidst a ${Math.abs(stock.ForeignStreakDays || 0)}-day foreign outflow streak`
+					: "";
+
 		parts.push(
-			`Classified as a ${capTier} trading at ${stock.Fundamentals.PE.toFixed(1)}x P/E and ${stock.Fundamentals.PBV.toFixed(1)}x PBV with a ${stock.Fundamentals.ROE.toFixed(1)}% ROE profile.`,
+			`Classified as a ${capTier} (${stock.TurnoverTier} liquidity tier) ${vwapPhrase}${streakPhrase}.`,
 		);
 
 		return parts.join(" ");
@@ -162,12 +179,18 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 					? "> 5T"
 					: "< 5T";
 
-	const valStance =
-		stock.Fundamentals.PE < 10
-			? "Undervalued"
-			: stock.Fundamentals.PE > 25
-				? "Growth Premium"
-				: "Fair Value";
+	const vwapPrice =
+		stock.VWAP ||
+		(stock.Volume > 0 ? Math.round(stock.Value / stock.Volume) : stock.Close);
+	const vwapDiffPct =
+		stock.CloseToVwapPct ??
+		(vwapPrice > 0 ? ((stock.Close - vwapPrice) / vwapPrice) * 100 : 0);
+	const vwapStance =
+		vwapDiffPct >= 0.25
+			? "Above VWAP"
+			: vwapDiffPct <= -0.25
+				? "Below VWAP"
+				: "At VWAP";
 
 	return (
 		<div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 sm:p-6 space-y-4">
@@ -287,18 +310,26 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 					</div>
 				</div>
 
-				{/* Valuation */}
+				{/* Session VWAP */}
 				<div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between min-h-[72px]">
 					<div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
 						<Coins className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-						<span className="truncate">Valuation</span>
+						<span className="truncate">Session VWAP</span>
 					</div>
 					<div className="flex items-baseline justify-between gap-1 mt-1.5">
 						<span className="text-xs sm:text-sm font-black text-slate-900 tabular-nums">
-							{stock.Fundamentals.PE.toFixed(1)}x
+							{vwapPrice.toLocaleString()}
 						</span>
-						<span className="text-[10px] font-bold text-slate-500 truncate">
-							{valStance}
+						<span
+							className={`text-[10px] font-bold truncate ${
+								vwapDiffPct > 0
+									? "text-emerald-600"
+									: vwapDiffPct < 0
+										? "text-rose-600"
+										: "text-slate-500"
+							}`}
+						>
+							{vwapStance}
 						</span>
 					</div>
 				</div>

@@ -258,6 +258,30 @@ describe("Stockpick Simulator Calculations & Watermark Engine", () => {
 
 			expect(summary.bestPerformer?.stockCode).toBe("BBCA");
 			expect(summary.worstPerformer?.stockCode).toBe("TLKM");
+			expect(summary.coreCapitalNominal).toBe(16000000);
+			expect(summary.swingCapitalNominal).toBe(0);
+		});
+
+		it("flags stop_breached, target_hit, and trailing_protect alerts and classifies Core vs Swing buckets", () => {
+			const stopBreached = calculatePickMetrics(samplePick, {
+				StockCode: "BBCA",
+				Close: 9400, // <= stopLossPrice (9500)
+			} as ProcessedStock);
+			expect(stopBreached.alertStatus).toBe("stop_breached");
+			expect(stopBreached.bucket).toBe("core");
+
+			const targetHit = calculatePickMetrics(
+				{
+					...samplePick,
+					thesis: "Breakout Momentum",
+				},
+				{
+					StockCode: "BBCA",
+					Close: 11200, // >= targetPrice (11000)
+				} as ProcessedStock,
+			);
+			expect(targetHit.alertStatus).toBe("target_hit");
+			expect(targetHit.bucket).toBe("swing");
 		});
 	});
 

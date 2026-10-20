@@ -83,8 +83,8 @@ function formatDueDate(dateStr: string): {
 		return {
 			label:
 				daysOverdue === 1
-					? "Overdue · Yesterday"
-					: `Overdue · ${daysOverdue}d ago`,
+					? "Overdue (Yesterday)"
+					: `Overdue (${daysOverdue}d ago)`,
 			status: "overdue",
 			fullDate,
 		};
@@ -269,11 +269,16 @@ export default function RemindersView({
 		}
 	};
 
-	// Filtered list based on search
+	// Filtered list based on search, sorted by urgency (overdue & today first)
 	const filteredReminders = useMemo(() => {
-		if (!searchQuery.trim()) return reminders;
-		const q = searchQuery.toLowerCase();
-		return reminders.filter((r) => r.text.toLowerCase().includes(q));
+		const base = !searchQuery.trim()
+			? reminders
+			: reminders.filter((r) =>
+					r.text.toLowerCase().includes(searchQuery.toLowerCase()),
+				);
+		return [...base].sort(
+			(a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
+		);
 	}, [reminders, searchQuery]);
 
 	// Counts
@@ -549,31 +554,33 @@ export default function RemindersView({
 									animate={{ opacity: 1, y: 0 }}
 									exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
 									transition={{ duration: 0.18 }}
-									className="group flex items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 hover:bg-slate-50/70 transition-colors"
+									className="group p-3.5 sm:p-4 hover:bg-slate-50/70 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4"
 								>
-									{/* Left side: Checkbox + Item Description */}
+									{/* Top tier (Mobile) / Left side (Desktop): Checkbox + Item Description */}
 									<div className="flex items-start gap-3 min-w-0 flex-1">
-										{/* 1-Click Complete Circle Trigger */}
+										{/* 1-Click Complete Circle Trigger with expanded touch bounding area */}
 										<button
 											type="button"
 											onClick={() => handleComplete(reminder)}
-											className="mt-0.5 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 transition-all cursor-pointer active:scale-90 group/check"
+											className="relative -m-1.5 p-1.5 rounded-full flex items-center justify-center shrink-0 cursor-pointer active:scale-90 touch-manipulation group/check"
 											title="Mark as completed"
 											aria-label={`Complete reminder: ${reminder.text}`}
 										>
-											<Check className="w-3 h-3 opacity-0 group-hover/check:opacity-100 transition-opacity" />
+											<div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover/check:border-emerald-500 group-hover/check:bg-emerald-50 flex items-center justify-center text-emerald-600 transition-all shadow-2xs">
+												<Check className="w-3 h-3 opacity-0 group-hover/check:opacity-100 transition-opacity" />
+											</div>
 										</button>
 
 										{/* Message Text with Linkification */}
-										<div className="min-w-0 flex-1">
+										<div className="min-w-0 flex-1 pt-0.5">
 											<div className="text-sm font-semibold text-slate-800 leading-snug break-words">
 												<LinkifiedItemText text={reminder.text} />
 											</div>
 										</div>
 									</div>
 
-									{/* Right side: Due Date Pill + Quick Actions */}
-									<div className="flex items-center gap-2 sm:gap-3 shrink-0">
+									{/* Bottom tier (Mobile sub-row) / Right side (Desktop): Due Date Pill + Quick Actions */}
+									<div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 pl-8 sm:pl-0 shrink-0">
 										{/* Due Date Pill */}
 										<span
 											className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border shadow-2xs ${
@@ -584,37 +591,42 @@ export default function RemindersView({
 														: "bg-slate-50 border-slate-200/80 text-slate-600"
 											}`}
 										>
-											{dueStatus === "overdue" && (
+											{dueStatus === "overdue" ? (
 												<AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
+											) : (
+												<CalendarIcon className="w-3 h-3 text-slate-400 shrink-0" />
 											)}
 											<span>{dueLabel}</span>
 										</span>
 
-										{/* Copy Note Button */}
-										<button
-											type="button"
-											onClick={(e) => handleCopyText(reminder, e)}
-											className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all opacity-0 group-hover:opacity-100 sm:opacity-0 focus:opacity-100 cursor-pointer active:scale-90"
-											title="Copy note text"
-											aria-label="Copy note text"
-										>
-											{isCopied ? (
-												<Check className="w-3.5 h-3.5 text-emerald-600" />
-											) : (
-												<Copy className="w-3.5 h-3.5" />
-											)}
-										</button>
+										{/* Quick Actions (Always visible on mobile, hover-revealed on desktop) */}
+										<div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+											{/* Copy Note Button */}
+											<button
+												type="button"
+												onClick={(e) => handleCopyText(reminder, e)}
+												className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all active:scale-90 cursor-pointer touch-manipulation"
+												title="Copy note text"
+												aria-label="Copy note text"
+											>
+												{isCopied ? (
+													<Check className="w-3.5 h-3.5 text-emerald-600" />
+												) : (
+													<Copy className="w-3.5 h-3.5" />
+												)}
+											</button>
 
-										{/* Direct Delete Trigger */}
-										<button
-											type="button"
-											onClick={(e) => handleDirectDelete(reminder.id, e)}
-											className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 sm:opacity-0 focus:opacity-100 cursor-pointer active:scale-90"
-											title="Delete reminder"
-											aria-label="Delete reminder"
-										>
-											<Trash2 className="w-3.5 h-3.5" />
-										</button>
+											{/* Direct Delete Trigger */}
+											<button
+												type="button"
+												onClick={(e) => handleDirectDelete(reminder.id, e)}
+												className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all active:scale-90 cursor-pointer touch-manipulation"
+												title="Delete reminder"
+												aria-label="Delete reminder"
+											>
+												<Trash2 className="w-3.5 h-3.5" />
+											</button>
+										</div>
 									</div>
 								</motion.div>
 							);

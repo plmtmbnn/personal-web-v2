@@ -6,6 +6,7 @@ export type TaskStatus =
 	| "done"
 	| "blocked"
 	| "cancelled";
+export type TaskViewTab = "agenda" | "analytics" | "review";
 
 export interface Task {
 	id: string;

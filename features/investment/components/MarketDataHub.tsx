@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
 	Activity,
 	LineChart,
@@ -11,6 +12,7 @@ import {
 	ShieldAlert,
 	Flame,
 	Globe,
+	ArrowUpRight,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { InvestmentCompassData } from "@/features/investment/types";
@@ -25,6 +27,26 @@ import MacroLens from "@/features/investment/components/MacroLens";
 import { DEFAULT_THRESHOLDS } from "../config/thresholds";
 
 type TabId = "indonesia" | "crypto" | "macro";
+
+/**
+ * Formats monetary amounts in compact units (T, B, M).
+ * Numbers >= 1 Trillion (1e12) are formatted in Trillions with 2 decimals (e.g. 7418.7B -> 7.42T).
+ * Numbers >= 1 Billion (1e9) are formatted in Billions with 1 decimal (e.g. 450.5B).
+ * Numbers >= 1 Million (1e6) are formatted in Millions with 1 decimal (e.g. 150.0M).
+ */
+export function formatFlowAmount(val: number): string {
+	const abs = Math.abs(val);
+	if (abs >= 1e12) {
+		return `${(abs / 1e12).toFixed(2)}T`;
+	}
+	if (abs >= 1e9) {
+		return `${(abs / 1e9).toFixed(1)}B`;
+	}
+	if (abs >= 1e6) {
+		return `${(abs / 1e6).toFixed(1)}M`;
+	}
+	return Math.round(abs).toLocaleString("en-US");
+}
 
 export default function MarketDataHub({
 	data,
@@ -51,7 +73,6 @@ export default function MarketDataHub({
 	const ihsgMa200 = sma(ihsgHistory, 200);
 	const ihsgDd = drawdownFromHigh(ihsgPrice, ihsgQuote?.high52w ?? null);
 
-	const usdIdrQuote = data.markets.quotes.USDIDR;
 	const usdIdrHistory = data.markets.history?.["IDR=X"]?.points ?? [];
 	const idrMa50 = sma(usdIdrHistory, 50);
 
@@ -357,7 +378,7 @@ export default function MarketDataHub({
 												<span className="text-sm font-black text-slate-900">
 													{ihsgFlows.streakDays >= 0
 														? `+${ihsgFlows.streakDays}-Day Net Inflow Streak`
-														: `${ihsgFlows.streakDays}-Day Net Outflow Streak`}
+														: `${Math.abs(ihsgFlows.streakDays)}-Day Net Outflow Streak`}
 												</span>
 											</div>
 										</div>
@@ -370,16 +391,19 @@ export default function MarketDataHub({
 													</span>
 													<span
 														className={`font-black ${
-															ihsgFlows.netBuySell1dIdr >= 0
+															ihsgFlows.netBuySell1dIdr > 0
 																? "text-emerald-600"
-																: "text-rose-600"
+																: ihsgFlows.netBuySell1dIdr < 0
+																	? "text-rose-600"
+																	: "text-slate-600"
 														}`}
 													>
-														{ihsgFlows.netBuySell1dIdr >= 0 ? "+" : ""}Rp{" "}
-														{(
-															Math.abs(ihsgFlows.netBuySell1dIdr) / 1e9
-														).toFixed(1)}
-														B
+														{ihsgFlows.netBuySell1dIdr > 0
+															? "+"
+															: ihsgFlows.netBuySell1dIdr < 0
+																? "-"
+																: ""}
+														Rp {formatFlowAmount(ihsgFlows.netBuySell1dIdr)}
 													</span>
 												</div>
 											)}
@@ -390,16 +414,19 @@ export default function MarketDataHub({
 													</span>
 													<span
 														className={`font-black ${
-															ihsgFlows.netBuySell5dIdr >= 0
+															ihsgFlows.netBuySell5dIdr > 0
 																? "text-emerald-600"
-																: "text-rose-600"
+																: ihsgFlows.netBuySell5dIdr < 0
+																	? "text-rose-600"
+																	: "text-slate-600"
 														}`}
 													>
-														{ihsgFlows.netBuySell5dIdr >= 0 ? "+" : ""}Rp{" "}
-														{(
-															Math.abs(ihsgFlows.netBuySell5dIdr) / 1e9
-														).toFixed(1)}
-														B
+														{ihsgFlows.netBuySell5dIdr > 0
+															? "+"
+															: ihsgFlows.netBuySell5dIdr < 0
+																? "-"
+																: ""}
+														Rp {formatFlowAmount(ihsgFlows.netBuySell5dIdr)}
 													</span>
 												</div>
 											)}
@@ -407,8 +434,8 @@ export default function MarketDataHub({
 									</div>
 								)}
 
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-									{/* 200-Day MA */}
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+									{/* 200-Day MA Structural Baseline */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
 											200-Day Moving Average
@@ -436,105 +463,19 @@ export default function MarketDataHub({
 											)}
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Primary long-term structural trend indicator
-										</p>
-									</div>
-
-									{/* 50-Day MA */}
-									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											50-Day Moving Average
-										</span>
-										<div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
+											50D MA:{" "}
+											<strong>
 												{ihsgMa50
 													? ihsgMa50.toLocaleString("en-US", {
 															minimumFractionDigits: 2,
 															maximumFractionDigits: 2,
 														})
 													: "---"}
-											</span>
-											{ihsgPrice && ihsgMa50 && (
-												<span
-													className={`text-xs font-bold ${
-														ihsgPrice >= ihsgMa50
-															? "text-emerald-600"
-															: "text-rose-600"
-													}`}
-												>
-													{distancePct(ihsgPrice, ihsgMa50)! >= 0 ? "+" : ""}
-													{distancePct(ihsgPrice, ihsgMa50)?.toFixed(1)}%
-												</span>
-											)}
-										</div>
-										<p className="text-[11px] text-slate-500">
-											Intermediate momentum &amp; swing baseline
-										</p>
-									</div>
-
-									{/* 52W Drawdown */}
-									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											Drawdown from 52-Week High
-										</span>
-										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{ihsgDd != null ? `${ihsgDd.toFixed(2)}%` : "---"}
-											</span>
-										</div>
-										<p className="text-[11px] text-slate-500">
-											Bear market threshold: -20%
-										</p>
-									</div>
-
-									{/* USD/IDR */}
-									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											USD/IDR Exchange Rate
-										</span>
-										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{usdIdrQuote?.last
-													? `Rp ${Math.round(usdIdrQuote.last).toLocaleString("id-ID")}`
-													: "---"}
-											</span>
-											{usdIdrQuote?.changePct != null && (
-												<span
-													className={`text-xs font-bold ${
-														usdIdrQuote.changePct > 0
-															? "text-rose-600"
-															: "text-emerald-600"
-													}`}
-												>
-													{usdIdrQuote.changePct > 0 ? "+" : ""}
-													{usdIdrQuote.changePct.toFixed(2)}%
-												</span>
-											)}
-										</div>
-										<p className="text-[11px] text-slate-500">
-											50D MA:{" "}
+											</strong>{" "}
+											| 52W DD:{" "}
 											<strong>
-												{idrMa50
-													? `Rp ${Math.round(idrMa50).toLocaleString("id-ID")}`
-													: "---"}
+												{ihsgDd != null ? `${ihsgDd.toFixed(1)}%` : "---"}
 											</strong>
-										</p>
-									</div>
-
-									{/* Bank Indonesia Rate */}
-									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											Bank Indonesia Benchmark Rate
-										</span>
-										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{latestBiRate != null
-													? `${latestBiRate.toFixed(2)}%`
-													: "---"}
-											</span>
-										</div>
-										<p className="text-[11px] text-slate-500">
-											Domestic banking cost of funds
 										</p>
 									</div>
 
@@ -551,7 +492,18 @@ export default function MarketDataHub({
 											</span>
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Sovereign borrowing benchmark rate
+											BI Benchmark:{" "}
+											<strong>
+												{latestBiRate != null
+													? `${latestBiRate.toFixed(2)}%`
+													: "---"}
+											</strong>{" "}
+											| IDR 50D:{" "}
+											<strong>
+												{idrMa50
+													? `Rp ${Math.round(idrMa50).toLocaleString("id-ID")}`
+													: "---"}
+											</strong>
 										</p>
 									</div>
 
@@ -707,6 +659,88 @@ export default function MarketDataHub({
 										})}
 									</div>
 								</div>
+
+								{/* Live Regime-Aligned IDX Alpha Shortlist */}
+								{ihsgFlows?.topAlphaPicks &&
+									ihsgFlows.topAlphaPicks.length > 0 && (
+										<div className="space-y-3 pt-4 border-t border-slate-100">
+											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+												<div>
+													<span className="text-xs font-black text-slate-900 tracking-tight block">
+														Regime-Aligned IDX Alpha Shortlist
+													</span>
+													<span className="text-[11px] text-slate-500 font-medium">
+														Liquid institutional setups filtered by VWAP
+														absorption, foreign participation, and tick-valid
+														R:R
+													</span>
+												</div>
+												<Link
+													href="/utils/stock-explorer"
+													className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 !text-white text-[11px] font-bold transition-all self-start sm:self-auto !no-underline"
+												>
+													<span>Open IDX Scanner</span>
+													<ArrowUpRight className="w-3.5 h-3.5 !text-slate-300" />
+												</Link>
+											</div>
+
+											<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+												{ihsgFlows.topAlphaPicks.slice(0, 4).map((pick) => (
+													<Link
+														key={pick.code}
+														href={`/utils/stock-explorer?q=${pick.code}`}
+														className="p-4 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-indigo-200 hover:shadow-xs transition-all flex flex-col justify-between gap-2.5 !no-underline group"
+													>
+														<div>
+															<div className="flex items-center justify-between gap-2">
+																<span className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors font-mono">
+																	{pick.code}
+																</span>
+																<span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 truncate">
+																	{pick.opportunity}
+																</span>
+															</div>
+															<p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
+																{pick.name}
+															</p>
+														</div>
+
+														<div className="flex items-baseline justify-between pt-1">
+															<span className="text-sm font-black text-slate-900">
+																Rp {pick.close.toLocaleString("id-ID")}
+															</span>
+															<span
+																className={`text-xs font-bold ${
+																	pick.changePct >= 0
+																		? "text-emerald-600"
+																		: "text-rose-600"
+																}`}
+															>
+																{pick.changePct >= 0 ? "+" : ""}
+																{pick.changePct.toFixed(2)}%
+															</span>
+														</div>
+
+														<div className="pt-2 border-t border-slate-200/60 space-y-1 text-[10px]">
+															<div className="flex justify-between text-slate-500">
+																<span>Entry / Stop:</span>
+																<span className="font-mono font-bold text-slate-700">
+																	Rp {pick.close.toLocaleString("id-ID")} /{" "}
+																	{pick.stopLoss.toLocaleString("id-ID")}
+																</span>
+															</div>
+															<div className="flex justify-between text-slate-500">
+																<span>Target 1 ({pick.rrr}R):</span>
+																<span className="font-mono font-bold text-emerald-700">
+																	Rp {pick.target1.toLocaleString("id-ID")}
+																</span>
+															</div>
+														</div>
+													</Link>
+												))}
+											</div>
+										</div>
+									)}
 							</div>
 						)}
 
@@ -783,7 +817,9 @@ export default function MarketDataHub({
 											Total:{" "}
 											<strong>
 												{flows?.totalStablecoinSupplyUsd
-													? `$${(flows.totalStablecoinSupplyUsd / 1e9).toFixed(1)}B`
+													? flows.totalStablecoinSupplyUsd >= 1e12
+														? `$${(flows.totalStablecoinSupplyUsd / 1e12).toFixed(2)}T`
+														: `$${(flows.totalStablecoinSupplyUsd / 1e9).toFixed(1)}B`
 													: "---"}
 											</strong>{" "}
 											(DefiLlama)

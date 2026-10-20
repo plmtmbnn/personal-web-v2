@@ -1,3 +1,10 @@
+# [0.114.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.113.0...v0.114.0) (2026-10-20)
+
+
+### Features
+
+* **stock-tools:** expand opportunity scanner formulas and remove liquidity heatmap ([0e1df8c](https://github.com/plmtmbnn/personal-web-v2/commit/0e1df8c46c559b48fc7743e2ec058185c6bf3367))
+
 # [0.113.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.112.0...v0.113.0) (2026-10-19)
 
 

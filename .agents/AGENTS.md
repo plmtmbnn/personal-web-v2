@@ -22,6 +22,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 ## 🛠 Tech Stack
 - **Framework:** Next.js 16.4.0 (App Router) & React 19.3.0
 - **Language:** TypeScript 5.9.3
+- **Runtime:** Node.js v24.22.1 (LTS)
 - **Package Manager:** pnpm 12.4.2
 - **Database:** Supabase (Auth, PostgreSQL)
 - **Real-time Config:** Firebase Remote Config

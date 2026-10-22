@@ -21,6 +21,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Prerequisites
+- **Node.js**: `v24.22.1` LTS (enforced via `.nvmrc` and `engines`)
+- **Package Manager**: `pnpm` `v12.4.2`
+
 First, run the development server:
 
 ```bash

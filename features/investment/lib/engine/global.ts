@@ -230,16 +230,22 @@ export function scoreGlobalLiquidity(
 		}
 	}
 
-	// 7. US Real Yields (10Y Nominal - Core PCE) - Weight 10
-	if (yield10y != null && pceObj != null) {
-		const realYield = yield10y - pceObj.value;
+	// 7. US Real Yields (DFII10 TIPS Yield with 10Y Nominal - Core PCE fallback) - Weight 10
+	const dfii10Obj = getFredLatest(data, "DFII10");
+	const realYieldVal =
+		dfii10Obj?.value ??
+		(yield10y != null && pceObj != null ? yield10y - pceObj.value : null);
+	const realYieldDate =
+		dfii10Obj?.date ?? pceObj?.date ?? dgs10Obj?.date ?? undefined;
+
+	if (realYieldVal != null) {
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
 
-		if (realYield <= 0.5) {
+		if (realYieldVal <= 0.5) {
 			score = 90;
 			dir = "bullish";
-		} else if (realYield >= 2.0) {
+		} else if (realYieldVal >= 2.0) {
 			score = 20;
 			dir = "bearish";
 		} else {
@@ -250,17 +256,17 @@ export function scoreGlobalLiquidity(
 		factors.push({
 			key: "us_real_yield",
 			label: "US 10Y Real Yield",
-			valueStr: `${realYield.toFixed(2)}%`,
+			valueStr: `${realYieldVal.toFixed(2)}%`,
 			score,
 			weight: 10,
 			direction: dir,
 			note:
-				realYield >= 2.0
-					? `Highly restrictive Real Yield (${realYield.toFixed(2)}%) drains capital from risk assets.`
-					: realYield <= 0.5
-						? `Accommodative Real Yield (${realYield.toFixed(2)}%) acts as a major tailwind for fiat debasement trades.`
-						: `Neutral cost of capital (${realYield.toFixed(2)}%).`,
-			asOf: pceObj.date,
+				realYieldVal >= 2.0
+					? `Highly restrictive Real Yield (${realYieldVal.toFixed(2)}%) drains capital from risk assets and emerging markets.`
+					: realYieldVal <= 0.5
+						? `Accommodative Real Yield (${realYieldVal.toFixed(2)}%) acts as a major tailwind for hard assets and EM equities.`
+						: `Neutral real cost of capital (${realYieldVal.toFixed(2)}%; < 0.5% bullish, >= 2.0% restrictive).`,
+			asOf: realYieldDate,
 		});
 	}
 
@@ -364,22 +370,41 @@ export function scoreGlobalLiquidity(
 
 	const { state, tone } = determineState(compositeScore, coverage, thresholds);
 
+	const bullDrivers = factors
+		.filter((f) => f.direction === "bullish")
+		.sort((a, b) => b.score * b.weight - a.score * a.weight)
+		.slice(0, 2)
+		.map((f) => `${f.label} (${f.valueStr})`);
+	const bearDrivers = factors
+		.filter((f) => f.direction === "bearish")
+		.sort((a, b) => (100 - b.score) * b.weight - (100 - a.score) * a.weight)
+		.slice(0, 2)
+		.map((f) => `${f.label} (${f.valueStr})`);
+
 	let headline = "Global Liquidity Conditions Mixed";
 	let diagnosis =
-		"Neutral cross-currents between monetary yields and risk appetite.";
+		bullDrivers.length > 0 && bearDrivers.length > 0
+			? `Cross-currents between supportive ${bullDrivers.join(" and ")} against headwinds from ${bearDrivers.join(" and ")}.`
+			: "Neutral cross-currents between monetary yields and risk appetite.";
 
 	if (state === "risk_on") {
 		headline = "Accommodative Global Liquidity Environment";
 		diagnosis =
-			"Falling yields, benign credit spreads, and soft dollar provide strong risk-on tailwinds.";
+			bullDrivers.length > 0
+				? `Supportive macro liquidity led by ${bullDrivers.join(", ")}${bearDrivers.length > 0 ? `, offsetting ${bearDrivers[0]}` : ""}. Favorable cross-border flows for IDX and Crypto.`
+				: "Falling yields, benign credit spreads, and soft dollar provide strong risk-on tailwinds.";
 	} else if (state === "defensive") {
 		headline = "Liquidity Headwinds & Dollar Pressure";
 		diagnosis =
-			"Elevated yields or firm dollar tightening capital flow to emerging markets and high-beta assets.";
+			bearDrivers.length > 0
+				? `Tightening conditions driven by ${bearDrivers.join(" and ")}. Foreign capital inflows to emerging markets and high-beta assets remain constrained.`
+				: "Elevated yields or firm dollar tightening capital flow to emerging markets and high-beta assets.";
 	} else if (state === "stress") {
 		headline = "Global Macro Liquidity Squeeze";
 		diagnosis =
-			"Credit spreads blowing out or systemic volatility spikes force capital preservation.";
+			bearDrivers.length > 0
+				? `Systemic macro stress triggered by ${bearDrivers.join(" and ")}. Prioritize cash preservation and zero-leverage defense.`
+				: "Credit spreads blowing out or systemic volatility spikes force capital preservation.";
 	}
 
 	return {

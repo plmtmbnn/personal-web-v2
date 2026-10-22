@@ -45,9 +45,7 @@ interface BlogContentProps {
 	content: string;
 }
 
-// ─────────────────────────────────────────────
 // Extract text recursively from React children
-// ─────────────────────────────────────────────
 function getTextFromChildren(children: React.ReactNode): string {
 	if (!children) return "";
 	if (typeof children === "string" || typeof children === "number") {
@@ -63,9 +61,7 @@ function getTextFromChildren(children: React.ReactNode): string {
 	return "";
 }
 
-// ─────────────────────────────────────────────
-// Copy Button — per code block
-// ─────────────────────────────────────────────
+// Copy button per code block
 function CopyButton({ code }: { code: string }) {
 	const [copied, setCopied] = useState(false);
 	const reduceMotion = useReducedMotion();
@@ -116,10 +112,6 @@ function CopyButton({ code }: { code: string }) {
 	);
 }
 
-// ─────────────────────────────────────────────
-// BlogContent
-// ─────────────────────────────────────────────
-
 export default function BlogContent({ content }: BlogContentProps) {
 	const normalizedContent = normalizeMarkdown(content);
 
@@ -141,7 +133,6 @@ export default function BlogContent({ content }: BlogContentProps) {
 				remarkPlugins={REMARK_PLUGINS}
 				rehypePlugins={REHYPE_PLUGINS}
 				components={{
-					// ── Code blocks & inline code ──────────────────────
 					code({ className, children, ...props }: any) {
 						const match = /language-(\w+)/.exec(className || "");
 						const codeString = String(children).replace(/\n$/, "");
@@ -204,7 +195,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 						);
 					},
 
-					// ── Headings — add scroll-margin + id anchor ───────
+					// Headings: add scroll margin and id anchor
 					h2({ id, children, ...props }: any) {
 						const text = getTextFromChildren(children);
 						const headingId = id || slugifyHeading(text);
@@ -250,7 +241,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 						);
 					},
 
-					// ── Blockquotes & GitHub Alert Callouts ────────────
+					// Blockquotes and GitHub alert callouts
 					blockquote({ children, ...props }: any) {
 						const text = getTextFromChildren(children).trim();
 
@@ -342,7 +333,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 						);
 					},
 
-					// ── Tables — responsive wrapper with zebra styles ─
+					// Tables: responsive wrapper with zebra styles
 					table({ node, children, ...props }: any) {
 						return (
 							<div className="not-prose overflow-x-auto my-8 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs bg-white">
@@ -403,7 +394,6 @@ export default function BlogContent({ content }: BlogContentProps) {
 						);
 					},
 
-					// ── Horizontal Rule ───────────────────────────────
 					hr({ node, ...props }: any) {
 						return (
 							<div
@@ -417,7 +407,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 						);
 					},
 
-					// ── Links — secure external links ──────────────────
+					// Links: secure external links
 					a({ node, href, children, ...props }: any) {
 						const isExternal =
 							href?.startsWith("http://") ||
@@ -441,7 +431,7 @@ export default function BlogContent({ content }: BlogContentProps) {
 						);
 					},
 
-					// ── Images — native lazy loading + async decode ────
+					// Images: native lazy loading and async decode
 					img({ src, alt, ...props }: any) {
 						return (
 							<img

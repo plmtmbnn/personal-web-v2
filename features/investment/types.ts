@@ -6,9 +6,7 @@ import type {
 	CryptoFlowsSnapshot,
 } from "@/services/market-data/types";
 
-/* ─────────────────────────────────────────────────────────────
-   CNN Fear & Greed payload
-   ───────────────────────────────────────────────────────────── */
+// CNN Fear & Greed payload
 
 export interface CnnSeriesPoint {
 	x: number;
@@ -45,9 +43,7 @@ export type FearAndGreedData = {
 	safe_haven_demand: CnnSubIndex;
 };
 
-/* ─────────────────────────────────────────────────────────────
-   Alternative.me Crypto Fear & Greed payload
-   ───────────────────────────────────────────────────────────── */
+// Alternative.me Crypto Fear & Greed payload
 
 export interface CryptoSentimentItem {
 	value: string;
@@ -61,9 +57,7 @@ export interface CryptoFearAndGreedResponse {
 	data: CryptoSentimentItem[];
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Derived domain models
-   ───────────────────────────────────────────────────────────── */
+// Derived domain models
 
 export type Tone = "positive" | "neutral" | "caution" | "negative";
 
@@ -183,9 +177,7 @@ export interface InvestmentCompassData {
 	engineOutput?: CompassOutput;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   V2 Decision Engine & Regime Models
-   ───────────────────────────────────────────────────────────── */
+// Decision engine and regime models
 
 export type RegimeState =
 	| "risk_on"

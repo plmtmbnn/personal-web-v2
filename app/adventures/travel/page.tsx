@@ -187,7 +187,7 @@ function TravelContent() {
 								Travel Bucket List
 							</h1>
 							<p className="text-sm text-slate-500 font-medium mt-1.5 max-w-lg leading-relaxed">
-								Curating a life of exploration — journeys completed, wishlist
+								Curating a life of exploration: journeys completed, wishlist
 								destinations, and vintage 3D airmail postcards.
 							</p>
 						</div>

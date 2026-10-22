@@ -6,7 +6,7 @@ import HomeView from "@/features/home/components/HomeView";
 import HomeSkeleton from "@/features/home/components/HomeSkeleton";
 import { getCachedAthleteStats } from "@/services/strava/service";
 
-// Edge cache with ISR — revalidate athlete stats at most once every hour
+// Edge cache with ISR: revalidate athlete stats at most once every hour
 export const revalidate = 3600;
 
 export const metadata: Metadata = createMetadata({
@@ -33,7 +33,7 @@ async function HomeDataWrapper() {
 export default function HomePage() {
 	return (
 		<>
-			{/* Person JSON-LD — signals Google Knowledge Panel & rich results */}
+			{/* Person JSON-LD: signals Google Knowledge Panel & rich results */}
 			<script
 				type="application/ld+json"
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_SCHEMA) }}

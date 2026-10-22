@@ -112,7 +112,7 @@ The following patterns are **strictly forbidden** in this codebase:
       2. Prominent, bold title `h1`.
       3. Straight-to-the-point concise description (`p`).
       4. Action buttons or telemetry stats strip (if present) aligned to the right (desktop) or stacked cleanly (mobile).
-    - NEVER use `'•'` or `'·'` (middots) as bullet points, separators, or slogan dividers in headers, cards, or pills. They look like auto-generated marketing fluff and create awkward line breaks or overflow bugs. Use clean commas, slashes (`/`), em-dashes (`—`), or standard native list styling (`list-disc pl-4`) instead.
+    - NEVER use `'•'` or `'·'` (middots) as bullet points, separators, or slogan dividers in headers, cards, or pills. They look like auto-generated marketing fluff and create awkward line breaks or overflow bugs. Use clean commas, slashes (`/`), hyphens (`-`), or standard native list styling (`list-disc pl-4`) instead. Furthermore, adhere strictly to `antislop-copywriting` Rule R-02 banning em dashes (`—`) in copy, subtitles, and comments.
     - NEVER construct compound marketing slogan badges (e.g. `CATEGORY • marketing sublabel & buzzwords`) or stack redundant subtitle paragraphs (`Technical essays · fintech systems · production learnings`) under badges.
     - NEVER apply `whitespace-nowrap` to badges or headers that break mobile viewports and overflow outside card boundaries.
   
@@ -183,6 +183,26 @@ The following icons are **banned from use in UI surfaces** unless there is an ex
 * **NEVER place light text on a light background** without checking WCAG AA contrast ratios. The minimum acceptable contrast is 4.5:1 for body text and 3:1 for large headings.
 * **NEVER use `text-gray-*` classes.** This project uses the `slate` neutral scale exclusively. `gray` and `zinc` neutrals are forbidden to maintain color system consistency.
 * **NEVER use more than 3 distinct accent colors within a single card component.** Visual overload is a direct result of AI models applying every available color to signal "rich" UI.
+
+### 2.6 Full Integration with Antislop & Ponytail Skill Suites
+
+Every AI coding assistant working in this repository MUST strictly align with the **Antislop** and **Ponytail** skill suites on every interaction:
+
+* **Antislop Skill Suite Integration (`antislop`)**:
+  - **`antislop` (Core Filter)**: Prohibits generic AI templates, decorative fluff, formulaic layout structures, and artificial complexities across every generated file.
+  - **`antislop-ui`**: Prohibits generic SaaS hero cards, full-bleed dark-mode dashboards, colored glow drops, ambient blur orbs (`blur-3xl`), and multi-color gradient text. Mandates solid surfaces, high-contrast typography, and purposeful domain-specific iconography.
+  - **`antislop-copywriting`**: Enforces authentic, technical, grounded copy. Strictly bans em dashes (`—`) in UI copy, titles, and comments (Rule R-02). Eliminates generic marketing jargon, superlatives, and repetitive slogan pills.
+  - **`antislop-human`**: Enforces strict accessibility standards (WCAG AA/AAA contrast ratios $\ge 4.5:1$ for body and $\ge 3:1$ for large text), visible keyboard focus rings (`focus-visible:ring-2`), minimum touch targets ($\ge 44\times 44$px), and full WAI-ARIA semantic states.
+  - **`antislop-layoutmobile`**: Enforces mobile-first responsive design, defensive horizontal overflow protection (`min-w-0`, `max-w-full`, `break-words`), and top-and-bottom flow in constrained spaces (< 600px width).
+  - **`antislop-code`**: Enforces clean code comment hygiene. Eliminates decorative box-drawing banners (`// ───`, `/* ───`, `{/* ───`), empty section labels (`// Render`, `// Types`, `// State`), workflow step narration (`// Step 1:`, `// 1. Fetch`), and obvious JSX restatements. Preserves genuine why/architectural/workaround rationale while never altering executable code.
+
+* **Ponytail Skill Integration (`ponytail`)**:
+  - **The Smallest Complete Change**: Solve the entire problem with the least new code. The best code is the code never written.
+  - **Check Scope & Blast Radius Before Writing**: Inspect every touchpoint (callers, tests, fixtures, config, exports) before proposing or implementing changes.
+  - **Reuse Existing Codebase Assets**: Reach first for existing components, utilities, and patterns already in the codebase (`features/shared/components/`, `lib/`). House components beat custom widgets.
+  - **No Speculative Abstractions**: Zero wrapper layers, premature abstractions, or "for later" configuration that nobody asked for.
+  - **Verified Quality & Checks**: Lazy code without checks is unfinished. Non-trivial changes must be verified against affected Vitest test suites or assert-based checks.
+  - **Reply Summary Requirement**: Conclude agent replies with 1–2 lines identifying what was skipped or not checked, and any risks the user must know.
 
 ---
 

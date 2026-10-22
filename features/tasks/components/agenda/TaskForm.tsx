@@ -42,9 +42,6 @@ import {
 	formatEstimatedTime,
 } from "@/features/tasks/constants";
 import { useTags } from "@/lib/hooks/useTags";
-
-// ─── Draft shape ─────────────────────────────────────────────────────────────
-
 interface TaskFormDraft {
 	title: string;
 	category: string;
@@ -60,16 +57,10 @@ interface TaskFormDraft {
 	dueTime: string | null;
 	timestamp?: number;
 }
-
-// ─── Props ───────────────────────────────────────────────────────────────────
-
 interface TaskFormProps {
 	isOpen?: boolean;
 	onClose?: () => void;
 }
-
-// ─── Component ───────────────────────────────────────────────────────────────
-
 export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const [title, setTitle] = useState("");
 	const [category, setCategory] = useState("");
@@ -101,8 +92,6 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const router = useRouter();
 	const reduceMotion = useReducedMotion();
 
-	// ── Derived values ────────────────────────────────────────────────────────
-
 	const taskTitles = title.split("\n").filter((t) => t.trim() !== "");
 	const hasMultipleLines = taskTitles.length > 1;
 	const finalBatchActive = hasMultipleLines && isBatchEnabled;
@@ -120,7 +109,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		startDate || startTime || dueTime ? 1 : 0,
 	].reduce((a, b) => a + b, 0);
 
-	// ── Draft: Restore on mount ────────────────────────────────────────────────
+	// Restore draft on mount
 	useEffect(() => {
 		try {
 			const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
@@ -187,7 +176,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		}
 	}, [setTags]);
 
-	// ── Draft: Persist on change (debounced) ───────────────────────────────────
+	// Persist draft on change
 	useEffect(() => {
 		if (isSubmitting || submitSuccess) return;
 		const timer = setTimeout(() => {
@@ -230,7 +219,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		dueTime,
 	]);
 
-	// ── Auto-expand textarea ───────────────────────────────────────────────────
+	// Auto-expand textarea
 	useEffect(() => {
 		if (textareaRef.current) {
 			textareaRef.current.style.height = "auto";
@@ -280,7 +269,6 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		setDueDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
 	}, []);
 
-	// ── Ctrl+Enter / Cmd+Enter submit ──────────────────────────────────────────
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 			if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -291,7 +279,6 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		[],
 	);
 
-	// ── Reset ─────────────────────────────────────────────────────────────────
 	const resetForm = useCallback(() => {
 		setTitle("");
 		setCategory("");
@@ -311,7 +298,6 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		localStorage.removeItem(DRAFT_STORAGE_KEY);
 	}, [setTags, setTagInput]);
 
-	// ── Submit ────────────────────────────────────────────────────────────────
 	const handleSubmit = useCallback(
 		async (e: React.FormEvent) => {
 			e.preventDefault();
@@ -388,8 +374,6 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 			resetForm,
 		],
 	);
-
-	// ─────────────────────────────────────────────────────────────────────────
 
 	return (
 		<AnimatePresence>

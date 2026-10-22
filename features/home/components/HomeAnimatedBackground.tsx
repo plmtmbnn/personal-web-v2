@@ -15,7 +15,7 @@ interface HomeAnimatedBackgroundProps {
  * - Pure Server Component: no hooks, no "use client", zero client-side JS.
  *   All SVG wave geometries are synthesized deterministically at module load.
  * - Parent must be `relative` (this component is `absolute inset-0 -z-10`).
- * - Keyframes are scoped and inlined — no tailwind.config changes required.
+ * - Keyframes are scoped and inlined (no tailwind.config changes required).
  *
  * What's reimagined from v3
  * - Container-relative cloud traversal: clouds drift across the exact width of
@@ -34,7 +34,7 @@ interface HomeAnimatedBackgroundProps {
  *   screens or flatten out on ultrawide monitors.
  */
 
-/* ───────────────────────── 3-Harmonic Wave Synthesis ───────────────────────── */
+// 3-harmonic wave synthesis
 
 const TILE = 1440; // width of one seamless period in viewBox units
 const VB_W = TILE * 2; // two periods side-by-side (-50% translate = 1 exact period)
@@ -65,7 +65,7 @@ interface WaveSpec {
 
 const WAVES: WaveSpec[] = [
 	{
-		// Distant horizon groundswell — slow, misty periwinkle-sky tone
+		// Distant horizon groundswell: slow, misty periwinkle-sky tone
 		base: 92,
 		amp: 10,
 		h1: 1,
@@ -86,7 +86,7 @@ const WAVES: WaveSpec[] = [
 		hideOnSmall: true,
 	},
 	{
-		// Mid-far swell — counter-drifting for calm interference patterns
+		// Mid-far swell: counter-drifting for calm interference patterns
 		base: 146,
 		amp: 14,
 		h1: 1,
@@ -106,7 +106,7 @@ const WAVES: WaveSpec[] = [
 		swellScale: 1.025,
 	},
 	{
-		// Mid-near swell — soft pearlescent sky-water
+		// Mid-near swell: soft pearlescent sky-water
 		base: 206,
 		amp: 15,
 		h1: 2,
@@ -126,7 +126,7 @@ const WAVES: WaveSpec[] = [
 		swellScale: 1.03,
 	},
 	{
-		// Foreground swell — melts seamlessly into the #f8fafc (slate-50) canvas
+		// Foreground swell: melts seamlessly into the #f8fafc (slate-50) canvas
 		base: 272,
 		amp: 13,
 		h1: 1,
@@ -187,7 +187,7 @@ function buildWave(w: WaveSpec) {
 
 const WAVE_PATHS = WAVES.map(buildWave);
 
-/* ───────────────────────── Sculpted Cloud Archetypes ───────────────────────── */
+// Sculpted cloud archetypes
 
 interface CloudSpec {
 	variant: 0 | 1 | 2;
@@ -281,7 +281,7 @@ const CLOUD_VARIANTS: ReactNode[] = [
 	</g>,
 ];
 
-/* ───────────────────────── Scoped Styles & Keyframes ───────────────────────── */
+// Scoped styles and keyframes
 
 const CSS = `
 .hab-root {
@@ -359,8 +359,6 @@ const CSS = `
 	}
 }
 `;
-
-/* ───────────────────────── Component ───────────────────────── */
 
 export default function HomeAnimatedBackground({
 	className = "",

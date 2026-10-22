@@ -5,8 +5,6 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Trophy, Play, Trash2, X } from "lucide-react";
 import type { WheelItem } from "../types";
 
-// ─── Lightweight Confetti Animation ──────────────────────────────────────────
-
 function Confetti() {
 	const pieces = useMemo(
 		() =>
@@ -49,8 +47,6 @@ function Confetti() {
 		</div>
 	);
 }
-
-// ─── Modal Dialog ────────────────────────────────────────────────────────────
 
 interface WinnerModalProps {
 	winner: WheelItem | null;

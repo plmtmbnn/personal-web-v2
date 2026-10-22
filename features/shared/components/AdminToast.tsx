@@ -6,9 +6,6 @@ import { createContext, useCallback, useContext, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { CheckCircle2, XCircle, Info, AlertTriangle, X } from "lucide-react";
 
-// ─────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────
 export type ToastVariant = "success" | "error" | "info" | "warning";
 
 interface Toast {
@@ -21,9 +18,6 @@ interface ToastContextValue {
 	toast: (message: string, variant?: ToastVariant) => void;
 }
 
-// ─────────────────────────────────────────────
-// Context
-// ─────────────────────────────────────────────
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function useAdminToast() {
@@ -33,9 +27,6 @@ export function useAdminToast() {
 	return ctx;
 }
 
-// ─────────────────────────────────────────────
-// Variant Config
-// ─────────────────────────────────────────────
 const VARIANT_CONFIG: Record<
 	ToastVariant,
 	{
@@ -76,9 +67,6 @@ const VARIANT_CONFIG: Record<
 	},
 };
 
-// ─────────────────────────────────────────────
-// Single Toast Item
-// ─────────────────────────────────────────────
 function ToastItem({
 	toast,
 	onDismiss,
@@ -99,7 +87,6 @@ function ToastItem({
 			transition={{ type: "spring", stiffness: 380, damping: 28 }}
 			className={`relative flex items-start gap-3 w-80 ${cfg.bg} border ${cfg.border} rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden`}
 		>
-			{/* Left accent bar */}
 			<div
 				className={`absolute left-0 top-0 bottom-0 w-1.5 ${cfg.bar} rounded-l-2xl`}
 			/>
@@ -120,9 +107,6 @@ function ToastItem({
 	);
 }
 
-// ─────────────────────────────────────────────
-// Provider + Toaster
-// ─────────────────────────────────────────────
 export function AdminToastProvider({
 	children,
 }: {

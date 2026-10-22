@@ -55,9 +55,6 @@ import {
 import { getCategoryStyles } from "@/features/blog/utils";
 import { Skeleton } from "@/features/shared/components/Skeleton";
 
-// ─────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────
 const PAGE_SIZE_OPTIONS = [5, 10, 25] as const;
 const CATEGORIES = [
 	"Tech",
@@ -67,9 +64,6 @@ const CATEGORIES = [
 	"General",
 ] as const;
 
-// ─────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────
 interface BlogStats {
 	total: number;
 	published: number;
@@ -90,9 +84,7 @@ interface AdminBlogListProps {
 	blogStats: BlogStats;
 }
 
-// ─────────────────────────────────────────────
-// Helper: useMediaQuery hook for responsive layouts
-// ─────────────────────────────────────────────
+// Responsive layout media query hook
 function useMediaQuery(query: string): boolean {
 	const [matches, setMatches] = useState(false);
 
@@ -109,9 +101,7 @@ function useMediaQuery(query: string): boolean {
 	return matches;
 }
 
-// ─────────────────────────────────────────────
-// Category Dropdown Component (Modern Floating Card UI/UX)
-// ─────────────────────────────────────────────
+// Category dropdown selector
 interface CategoryDropdownProps {
 	value: string;
 	onChange: (newCategory: string) => void;
@@ -242,9 +232,6 @@ function CategoryDropdown({
 	);
 }
 
-// ─────────────────────────────────────────────
-// Inner Component (uses toast context)
-// ─────────────────────────────────────────────
 function AdminBlogListInner({
 	initialBlogs,
 	totalCount,
@@ -264,10 +251,8 @@ function AdminBlogListInner({
 	const [isPending, startTransition] = useTransition();
 	const reduceMotion = useReducedMotion();
 
-	// ── Responsive layout ─────────────────────
 	const isMobile = useMediaQuery("(max-width: 768px)");
 
-	// ── Per-row action states ──────────────────
 	const [isDeleting, setIsDeleting] = useState<string | null>(null);
 	const [togglingId, setTogglingId] = useState<string | null>(null);
 	const [updatingMetadataId, setUpdatingMetadataId] = useState<string | null>(
@@ -275,17 +260,15 @@ function AdminBlogListInner({
 	);
 	const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-	// ── Modals ────────────────────────────────
 	const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
 	const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
 
-	// ── Local search & copy state ──────────────
 	const [searchQuery, setSearchQuery] = useState(currentSearch);
 	const [copiedId, setCopiedId] = useState<string | null>(null);
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	// ── Global Keyboard Shortcuts (/ to search, Esc to clear) ──
+	// Global keyboard shortcuts (/ to search, Esc to clear)
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			const targetTag = (e.target as HTMLElement)?.tagName;
@@ -322,12 +305,10 @@ function AdminBlogListInner({
 		[toast],
 	);
 
-	// ── Bulk select ───────────────────────────
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [isBulkLoading, setIsBulkLoading] = useState(false);
 	const [bulkCategoryValue, setBulkCategoryValue] = useState("Tech");
 
-	// ── Derived ───────────────────────────────
 	const hasActiveFilters =
 		currentSearch !== "" ||
 		currentStatus !== "all" ||
@@ -340,7 +321,6 @@ function AdminBlogListInner({
 		initialBlogs.length > 0 && initialBlogs.every((b) => selectedIds.has(b.id));
 	const someSelected = selectedIds.size > 0;
 
-	// ── URL param helper ──────────────────────
 	const updateParams = useCallback(
 		(updates: Record<string, string | null>) => {
 			const params = new URLSearchParams(searchParams.toString());
@@ -363,7 +343,7 @@ function AdminBlogListInner({
 		[searchParams, router, pathname],
 	);
 
-	// ── Stable debounced search ───────────────
+	// Debounced search sync
 	useEffect(() => {
 		if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 		searchDebounceRef.current = setTimeout(() => {
@@ -374,16 +354,13 @@ function AdminBlogListInner({
 		return () => {
 			if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 		};
-	}, [searchQuery]); // intentionally limited — updateParams & currentSearch are stable for this effect
+	}, [searchQuery]); // Intentionally limited: updateParams and currentSearch are stable
 
-	// ── Clear selection on page change ────────
+	// Clear selection on page or filter change
 	useEffect(() => {
 		setSelectedIds(new Set());
 	}, [currentPage, currentSearch, currentStatus, currentCategory]);
 
-	// ─────────────────────────────────────────
-	// Per-row Actions
-	// ─────────────────────────────────────────
 	const handleToggleStatus = async (id: string, currentPublished: boolean) => {
 		setTogglingId(id);
 		startTransition(async () => {
@@ -426,9 +403,6 @@ function AdminBlogListInner({
 		setIsDeleting(null);
 	};
 
-	// ─────────────────────────────────────────
-	// Bulk Actions
-	// ─────────────────────────────────────────
 	const handleBulkPublish = async (publish: boolean) => {
 		setIsBulkLoading(true);
 		const result = await bulkToggleStatus([...selectedIds], publish);
@@ -472,9 +446,6 @@ function AdminBlogListInner({
 		setIsBulkLoading(false);
 	};
 
-	// ─────────────────────────────────────────
-	// Select helpers
-	// ─────────────────────────────────────────
 	const toggleSelectAll = () => {
 		if (allSelected) {
 			setSelectedIds(new Set());
@@ -492,9 +463,6 @@ function AdminBlogListInner({
 		});
 	};
 
-	// ─────────────────────────────────────────
-	// CSV Export
-	// ─────────────────────────────────────────
 	const handleExportCSV = () => {
 		const headers = [
 			"id",
@@ -527,9 +495,6 @@ function AdminBlogListInner({
 		toast("CSV exported successfully.", "success");
 	};
 
-	// ─────────────────────────────────────────
-	// Pagination helper
-	// ─────────────────────────────────────────
 	const pageNumbers = useMemo(() => {
 		const pages: (number | "...")[] = [];
 		const maxVisible = 5;
@@ -562,19 +527,12 @@ function AdminBlogListInner({
 		return pages;
 	}, [currentPage, totalPages]);
 
-	// ─────────────────────────────────────────
-	// Showing X–Y of N guard
-	// ─────────────────────────────────────────
 	const showFrom =
 		totalCount === 0 ? 0 : (currentPage - 1) * currentPageSize + 1;
 	const showTo = Math.min(currentPage * currentPageSize, totalCount);
 
-	// ─────────────────────────────────────────
-	// Render
-	// ─────────────────────────────────────────
 	return (
 		<div className="flex flex-col bg-white border border-slate-200/80 rounded-3xl shadow-xs overflow-hidden text-slate-900">
-			{/* ── Delete Single Modal ── */}
 			<CustomModal
 				isOpen={!!deleteModalId}
 				onClose={() => setDeleteModalId(null)}
@@ -586,7 +544,6 @@ function AdminBlogListInner({
 				isLoading={!!isDeleting}
 			/>
 
-			{/* ── Bulk Delete Modal ── */}
 			<CustomModal
 				isOpen={bulkDeleteModal}
 				onClose={() => setBulkDeleteModal(false)}
@@ -882,7 +839,6 @@ function AdminBlogListInner({
 					)}
 				</AnimatePresence>
 
-				{/* ── Skeleton Loaders (shown during initial pending state) ── */}
 				{isPending && initialBlogs.length === 0 && (
 					<div className="p-6 space-y-4">
 						{/* Stats skeleton */}
@@ -1203,7 +1159,6 @@ function AdminBlogListInner({
 												</td>
 											</tr>
 
-											{/* ── Expandable Preview Row ── */}
 											<AnimatePresence>
 												{isExpanded && (
 													<motion.tr
@@ -1499,7 +1454,6 @@ function AdminBlogListInner({
 					</div>
 				)}
 
-				{/* ── Empty State ── */}
 				{initialBlogs.length === 0 && !isPending && (
 					<div className="px-6 py-24 text-center">
 						<div className="flex flex-col items-center gap-4">
@@ -1685,9 +1639,7 @@ function AdminBlogListInner({
 	);
 }
 
-// ─────────────────────────────────────────────
-// Exported wrapper (provides toast context)
-// ─────────────────────────────────────────────
+// Exported wrapper providing toast context
 export default function AdminBlogList(props: AdminBlogListProps) {
 	return (
 		<AdminToastProvider>

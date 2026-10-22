@@ -63,9 +63,6 @@ import {
 	getPotentialBlockers,
 	archiveTask,
 } from "@/features/tasks/actions/tasks";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const PRIORITY_COLORS = {
 	HIGH: "bg-rose-50 text-rose-700 border-rose-100",
 	MEDIUM: "bg-amber-50 text-amber-700 border-amber-100",
@@ -78,9 +75,6 @@ const RECURRENCE_LABELS = {
 	weekly: "Weekly",
 	monthly: "Monthly",
 } as const;
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
 interface SubtaskItemProps {
 	subtask: Task;
 	onUpdate: (id: string, updates: Partial<Task>) => void;
@@ -243,9 +237,6 @@ function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
 		</div>
 	);
 }
-
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface TaskItemProps {
 	task: Task;
 	index: number;
@@ -256,9 +247,6 @@ interface TaskItemProps {
 	onUpdate: (taskId: string, updates: Partial<Task>) => void;
 	onArchive?: (taskId: string) => void;
 }
-
-// ─── Component ────────────────────────────────────────────────────────────────
-
 function TaskItem({
 	task,
 	provided,
@@ -446,8 +434,6 @@ function TaskItem({
 			load();
 		}
 	}, [isSubtasksOpen, subtasksLoaded, task.id]);
-
-	// ── Handlers ──────────────────────────────────────────────────────────────
 
 	const startEditing = useCallback(() => {
 		setEditValue(task.title);
@@ -650,8 +636,6 @@ function TaskItem({
 		[editTagInput, editTags],
 	);
 
-	// ── Derived values ────────────────────────────────────────────────────────
-
 	const dueDateInfo = useMemo(() => {
 		if (!task.due_date) return null;
 		const today = startOfDay(new Date());
@@ -712,8 +696,6 @@ function TaskItem({
 	const subtaskTotal = subtasks.length;
 	const subtaskProgress =
 		subtaskTotal > 0 ? Math.round((subtaskDone / subtaskTotal) * 100) : 0;
-
-	// ─────────────────────────────────────────────────────────────────────────
 
 	return (
 		<div
@@ -803,7 +785,6 @@ function TaskItem({
 
 				{/* Main Content */}
 				<div className="flex-1 min-w-0 w-full">
-					{/* Title — edit or display */}
 					{isEditing ? (
 						<div className="space-y-4 py-1" onKeyDown={handleKeyDown}>
 							{/* Form Title & Description */}
@@ -1312,7 +1293,6 @@ function TaskItem({
 						</div>
 					) : (
 						<>
-							{/* ── Title ─────────────────────────────────────────── */}
 							<div
 								onDoubleClick={startEditing}
 								className={`text-sm sm:text-base font-bold text-slate-900 leading-relaxed mb-3 break-words whitespace-pre-wrap cursor-text select-text ${
@@ -1326,7 +1306,6 @@ function TaskItem({
 								{renderTextWithLinks(task.title)}
 							</div>
 
-							{/* ── Description (always visible, selectable) ────── */}
 							{task.description && (
 								<div className="mt-3">
 									{(() => {
@@ -1450,7 +1429,6 @@ function TaskItem({
 								</div>
 							)}
 
-							{/* ── Subtasks ────────────────────────────────────── */}
 							<div className="mt-3">
 								<button
 									type="button"
@@ -1589,7 +1567,6 @@ function TaskItem({
 								</AnimatePresence>
 							</div>
 
-							{/* ── Footer Metadata & Actions Row ────────────────── */}
 							<div
 								className={`flex border-t border-slate-100 ${
 									layoutMode === "board"

@@ -20,12 +20,7 @@ import UtilHeader from "@/features/utils/components/UtilHeader";
 import Papa from "papaparse";
 
 import { transformToNested } from "../utils/transform";
-
-// ─── Tree View Components ───────────────────────────────────────────────────
-
 import { JsonValue } from "@/features/shared/components/JsonValue";
-
-// ─── Main View ──────────────────────────────────────────────────────────────
 
 export default function CsvToJsonView() {
 	const reduceMotion = useReducedMotion();
@@ -40,8 +35,6 @@ export default function CsvToJsonView() {
 	const [isInputCollapsed, setIsInputCollapsed] = useState(false);
 	const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
-
-	// ─── Handlers ─────────────────────────────────────────────────────────────
 
 	const processCsv = useCallback(
 		(csvString: string) => {
@@ -119,8 +112,6 @@ export default function CsvToJsonView() {
 		a.click();
 		URL.revokeObjectURL(url);
 	};
-
-	// ─── Render ───────────────────────────────────────────────────────────────
 
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">

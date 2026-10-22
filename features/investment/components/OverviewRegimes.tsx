@@ -258,8 +258,8 @@ export default function OverviewRegimes({
 											<span className="text-[11px] font-black text-slate-900 truncate">
 												{factor.valueStr}
 											</span>
-											<span className="text-[9px] font-bold text-slate-400">
-												Score {factor.score}
+											<span className="text-[9px] font-bold text-slate-400 shrink-0">
+												Score {factor.score} ({factor.weight}%)
 											</span>
 										</div>
 									</button>
@@ -282,7 +282,7 @@ export default function OverviewRegimes({
 											</span>
 											<span className="text-[10px] font-bold text-slate-500 truncate">
 												{activeFactor.valueStr} (Score: {activeFactor.score}
-												/100)
+												/100 | Weight: {activeFactor.weight}%)
 											</span>
 										</div>
 										<button
@@ -360,7 +360,7 @@ export default function OverviewRegimes({
 
 							<div className="flex items-center gap-2">
 								<span
-									className={`px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${getStateBadge(globalRegime.state)}`}
+									className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border ${getStateBadge(globalRegime.state)}`}
 								>
 									{globalRegime.state.replace("_", " ")}
 								</span>
@@ -374,7 +374,7 @@ export default function OverviewRegimes({
 						</div>
 
 						<p className="text-xs font-medium text-slate-600 leading-relaxed pt-3">
-							{globalRegime.headline} — {globalRegime.diagnosis}
+							{globalRegime.headline}: {globalRegime.diagnosis}
 						</p>
 
 						<div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 text-[10px] font-semibold text-slate-500">
@@ -421,7 +421,7 @@ export default function OverviewRegimes({
 											</span>
 											<span className="text-[10px] font-bold text-slate-500 truncate">
 												{activeFactor.valueStr} (Score: {activeFactor.score}
-												/100)
+												/100 | Weight: {activeFactor.weight}%)
 											</span>
 										</div>
 										<button

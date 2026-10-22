@@ -37,9 +37,9 @@ const losModules: PortfolioItem[] = [
 		title: "Borrower Onboarding",
 		desc: "Multi-channel applicant registration & pre-screening engine",
 		category: "Fintech Core",
-		tagline: "Seamless borrower acquisition with dynamic validation forms",
+		tagline: "Borrower onboarding flow with validation forms",
 		fullDescription:
-			"Streamlines borrower acquisition through omni-channel web and mobile portals. Features dynamic multi-step application forms, preliminary eligibility calculation, duplicate account detection, and instant document pre-validation.",
+			"Supports borrower registration across web and mobile web portals. Features multi-step application forms, eligibility calculation, duplicate account detection, and document pre-validation.",
 		capabilities: [
 			"Dynamic multi-tier borrower classification (Individual, SME, Corporate)",
 			"Real-time phone (OTP / WhatsApp) and email verification",
@@ -52,7 +52,7 @@ const losModules: PortfolioItem[] = [
 			"Twilio & WhatsApp API",
 			"PostgreSQL / Prisma",
 		],
-		metrics: "Reduced drop-off by 35% with auto-save & instant pre-fill",
+		metrics: "Auto-save form state with client-side pre-fill",
 		themeColor: "indigo",
 	},
 	{
@@ -77,7 +77,7 @@ const losModules: PortfolioItem[] = [
 			"Dukcapil Gateway",
 			"AES-256 Data Encryption",
 		],
-		metrics: "Sub-3-second identity verification with 99.4% OCR accuracy",
+		metrics: "Automated OCR pipeline with liveness validation",
 		themeColor: "indigo",
 	},
 	{
@@ -86,9 +86,9 @@ const losModules: PortfolioItem[] = [
 		title: "Underwriting",
 		desc: "Rule-based & AI credit scoring, risk assessment workflow",
 		category: "Fintech Core",
-		tagline: "Intelligent credit assessment engine for multi-tier decisioning",
+		tagline: "Credit assessment engine for multi-tier decisioning",
 		fullDescription:
-			"Orchestrates multi-dimensional credit evaluation by fusing alternative financial data, bank statement parsing, and historical repayment signals. Supports multi-tier committee approvals, rule matrix configuration, and automated risk scoring.",
+			"Evaluates credit risk by combining financial history, bank statement parsing, and repayment signals. Supports multi-tier committee approvals, rule matrix configuration, and automated risk scoring.",
 		capabilities: [
 			"Configurable credit scoring engine with custom risk rule weights",
 			"Pefindo / SLIK OJK credit bureau data parsing and synthesis",
@@ -323,7 +323,6 @@ export function PortfolioSkeleton() {
 			aria-label="Loading portfolio"
 		>
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10">
-				{/* ── Floating Card Header Skeleton ── */}
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs mb-8 sm:mb-10">
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 						<div className="space-y-2">
@@ -331,7 +330,6 @@ export function PortfolioSkeleton() {
 							<div className="h-4 w-full max-w-md bg-slate-200 rounded animate-pulse" />
 						</div>
 
-						{/* Quick stat row */}
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="flex flex-col items-center gap-1.5">
 								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
@@ -351,9 +349,7 @@ export function PortfolioSkeleton() {
 					</div>
 				</div>
 
-				{/* ── Content Grid Skeleton ── */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-					{/* Left Column: Analytics Visualizer (4 cols) */}
 					<div className="lg:col-span-4 lg:sticky lg:top-24">
 						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs space-y-5">
 							<div className="h-3 w-32 bg-slate-200 rounded animate-pulse" />
@@ -456,7 +452,6 @@ export default function PortfolioView({
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10">
-				{/* ── Floating Card Header ── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -474,7 +469,6 @@ export default function PortfolioView({
 							</p>
 						</div>
 
-						{/* Quick stat row */}
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="text-center">
 								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
@@ -506,9 +500,7 @@ export default function PortfolioView({
 					</div>
 				</motion.div>
 
-				{/* ── Content Grid ── */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-					{/* Analytics Visualizer — sticky LHS */}
 					<motion.div
 						initial={reduceMotion ? false : { opacity: 0, x: -16 }}
 						animate={{ opacity: 1, x: 0 }}
@@ -521,8 +513,6 @@ export default function PortfolioView({
 									Expertise Distribution
 								</span>
 							</div>
-
-							{/* SVG Donut Chart */}
 							<div className="flex flex-col items-center">
 								<div className="relative w-48 h-48 sm:w-52 sm:h-52 mb-6">
 									<svg
@@ -724,9 +714,7 @@ export default function PortfolioView({
 						</div>
 					</motion.div>
 
-					{/* Detailed Lists — RHS */}
 					<motion.div layout className="lg:col-span-8 space-y-4">
-						{/* ── Fintech Core Section ── */}
 						<motion.div
 							initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 							animate={{ opacity: 1, y: 0 }}
@@ -829,7 +817,6 @@ export default function PortfolioView({
 							</AnimatePresence>
 						</motion.div>
 
-						{/* ── Notable Platforms Section ── */}
 						<motion.div
 							initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 							animate={{ opacity: 1, y: 0 }}

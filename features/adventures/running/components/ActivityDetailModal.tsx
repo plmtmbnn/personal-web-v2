@@ -35,9 +35,7 @@ interface ActivityDetailModalProps {
 	onClose: () => void;
 }
 
-// ──────────────────────────────────────────────
-// Shared Canvas Typography Constants
-// ──────────────────────────────────────────────
+// Shared canvas typography constants
 const FONT = {
 	hero: "900 72px 'Montserrat', sans-serif",
 	heroUnit: "700 20px 'Montserrat', sans-serif",
@@ -56,9 +54,7 @@ const FONT = {
 
 type CanvasTheme = "light" | "dark";
 
-// ──────────────────────────────────────────────
-// 2-Color Theme System: primary (text) + muted (secondary)
-// ──────────────────────────────────────────────
+// 2-color theme system: primary (text) + muted (secondary)
 const THEME_COLORS = {
 	light: {
 		primary: "#000000",
@@ -78,9 +74,7 @@ function getColors(theme: CanvasTheme) {
 	return THEME_COLORS[theme];
 }
 
-// ──────────────────────────────────────────────
-// Helper: Draw Rounded Rect on Canvas 2D
-// ──────────────────────────────────────────────
+// Draw rounded rectangle on canvas 2D
 function drawCanvasRoundedRect(
 	ctx: CanvasRenderingContext2D,
 	x: number,
@@ -102,9 +96,7 @@ function drawCanvasRoundedRect(
 	ctx.closePath();
 }
 
-// ──────────────────────────────────────────────
-// Canvas Exporter: Overview — High-Contrast Flat Sticker
-// ──────────────────────────────────────────────
+// Canvas exporter: overview high-contrast flat sticker
 function renderOverviewImageToCanvas(
 	activity: StravaRunActivity,
 	derived: {
@@ -158,13 +150,13 @@ function renderOverviewImageToCanvas(
 
 	let y = pad;
 
-	// ── 1. Hero Distance
+	// Hero distance
 	ctx.fillStyle = C.primary;
 	ctx.font = FONT.hero;
 	ctx.fillText(derived.distanceKm, pad - 4, y + 62);
 	y += 68 + 6;
 
-	// ── 2. Unit label
+	// Unit label
 	ctx.fillStyle = C.primary;
 	ctx.font = FONT.heroUnit;
 	ctx.letterSpacing = "6px";
@@ -172,7 +164,7 @@ function renderOverviewImageToCanvas(
 	ctx.letterSpacing = "0px";
 	y += 16 + 24;
 
-	// ── 3. Horizontal divider
+	// Horizontal divider
 	ctx.strokeStyle = C.divider;
 	ctx.lineWidth = 1.5;
 	ctx.beginPath();
@@ -181,7 +173,7 @@ function renderOverviewImageToCanvas(
 	ctx.stroke();
 	y += 1 + 20;
 
-	// ── 4. Stats Row 1: Pace + Time (always 2 columns)
+	// Stats row 1: pace and time (always 2 columns)
 	const row1ColW = innerW / 2;
 	const row1Stats = [
 		{ value: derived.formattedPace, label: "PACE" },
@@ -200,7 +192,7 @@ function renderOverviewImageToCanvas(
 	});
 	y += 38;
 
-	// ── 5. Stats Row 2: Elevation + HR (if available)
+	// Stats row 2: elevation and HR (if available)
 	if (hasRow2) {
 		y += 12;
 		const row2Stats: Array<{ value: string; label: string }> = [];
@@ -237,9 +229,7 @@ function renderOverviewImageToCanvas(
 	return canvas;
 }
 
-// ──────────────────────────────────────────────
-// Canvas Exporter: Splits — High-Contrast Multi-Column Pace Bars
-// ──────────────────────────────────────────────
+// Canvas exporter: splits high-contrast multi-column pace bars
 function renderSplitsImageToCanvas(
 	_activity: StravaRunActivity,
 	_derived: {
@@ -292,7 +282,7 @@ function renderSplitsImageToCanvas(
 
 	let y = pad;
 
-	// ── 1. Column Headers (KM, Pace, HR/Time)
+	// Column headers (KM, pace, HR/time)
 	const hasHr = splitsToRender.some((s) => Boolean(s.heartrate));
 	ctx.fillStyle = C.primary;
 	ctx.font = FONT.statLabel;
@@ -318,7 +308,7 @@ function renderSplitsImageToCanvas(
 	}
 	y += 14 + 8;
 
-	// ── 2. Horizontal Divider
+	// Horizontal divider
 	ctx.strokeStyle = C.divider;
 	ctx.lineWidth = 1.5;
 	ctx.beginPath();
@@ -333,7 +323,7 @@ function renderSplitsImageToCanvas(
 	const maxPace = splitPaces.length > 0 ? Math.max(...splitPaces) : 0;
 	const paceSpread = Math.max(maxPace - minPace, 1);
 
-	// ── 3. Splits — multi-column layout with bars
+	// Splits: multi-column layout with bars
 	const splitStartY = y;
 
 	for (let col = 0; col < colCount; col++) {
@@ -689,7 +679,6 @@ export default function ActivityDetailModal({
 					className="relative w-full max-w-md sm:max-w-lg bg-slate-50/95 backdrop-blur-xl rounded-[2rem] border border-slate-200/80 shadow-2xl overflow-hidden z-10 text-slate-900 flex flex-col"
 					onClick={(e) => e.stopPropagation()}
 				>
-					{/* ── TOP HEADER ── */}
 					<div className="p-5 pb-3.5 border-b border-slate-200/80 bg-white relative z-20">
 						<div className="flex items-start justify-between gap-3">
 							<div className="flex items-center gap-3 min-w-0">
@@ -839,10 +828,8 @@ export default function ActivityDetailModal({
 						</div>
 					</div>
 
-					{/* ── BODY CONTENT ── */}
 					<div className="p-5 space-y-3.5 max-h-[calc(85vh-150px)] overflow-y-auto">
 						{activeTab === "overview" ? (
-							/* ── TAB 1: OVERVIEW METRICS (SIMPLE & STRAIGHT TO THE POINT) ── */
 							<div className="space-y-4">
 								{/* 1. High-Priority Floating Hero Widget */}
 								<div className="relative rounded-[2rem] bg-slate-900 p-6 border border-slate-800 shadow-xl overflow-hidden group hover:shadow-2xl hover:border-slate-700/80 transition-all duration-500">
@@ -937,7 +924,6 @@ export default function ActivityDetailModal({
 								</div>
 							</div>
 						) : (
-							/* ── TAB 2: SPLITS BREAKDOWN (REAL STRAVA SPLITS) ── */
 							<div className="space-y-3">
 								{/* Summary Header Card */}
 								<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-between gap-2 text-xs">
@@ -1060,7 +1046,6 @@ export default function ActivityDetailModal({
 						)}
 					</div>
 
-					{/* ── FOOTER ACTIONS ── */}
 					<div className="p-4 border-t border-slate-100 bg-white/80 backdrop-blur-md flex items-center justify-between gap-3">
 						<button
 							type="button"

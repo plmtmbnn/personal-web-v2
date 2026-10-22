@@ -3,8 +3,6 @@
  * Central configuration for the tasks feature to improve maintainability
  */
 
-// ─── Timing Constants ─────────────────────────────────────────────────────────
-
 /**
  * Debounce delay for search input in milliseconds
  */
@@ -25,8 +23,6 @@ export const DELETE_CONFIRM_TIMEOUT_MS = 3000;
  */
 export const UNDO_TOAST_DURATION_MS = 5000;
 
-// ─── Task Categories ──────────────────────────────────────────────────────────
-
 /**
  * Default task categories available in the system
  */
@@ -39,8 +35,6 @@ export const TASK_CATEGORIES = [
 	"Study",
 	"Finance",
 ] as const;
-
-// ─── Task Status ──────────────────────────────────────────────────────────────
 
 export const TASK_STATUS_CONFIG = {
 	todo: {
@@ -82,15 +76,13 @@ export const TASK_STATUS_CONFIG = {
 
 /**
  * Status cycle order when clicking the status badge
- * (does not include cancelled — that requires an explicit action)
+ * (does not include cancelled: that requires an explicit action)
  */
 export const STATUS_CYCLE: (keyof typeof TASK_STATUS_CONFIG)[] = [
 	"todo",
 	"in_progress",
 	"done",
 ];
-
-// ─── Effort / Estimation Chips ────────────────────────────────────────────────
 
 export const EFFORT_CHIPS = [
 	{ label: "15m", minutes: 15 },
@@ -111,8 +103,6 @@ export function formatEstimatedTime(minutes: number): string {
 	return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-// ─── Recurrence Options ───────────────────────────────────────────────────────
-
 /**
  * Recurrence options for task form selector
  */
@@ -123,14 +113,10 @@ export const RECURRENCE_OPTIONS = [
 	{ label: "Monthly", value: "monthly" },
 ] as const;
 
-// ─── Local Storage Keys ───────────────────────────────────────────────────────
-
 /**
  * LocalStorage key for task form draft
  */
 export const DRAFT_STORAGE_KEY = "taskform_draft";
-
-// ─── Quick Date Options ───────────────────────────────────────────────────────
 
 /**
  * Quick date chips for task form (shortened version)

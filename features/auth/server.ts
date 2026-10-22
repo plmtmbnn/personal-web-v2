@@ -169,7 +169,7 @@ export async function checkAuth(
 	}
 
 	if (mode === "serial") {
-		// Step 1: Must be authenticated via Google
+		// Google authentication check
 		if (!googleUser) {
 			return {
 				authorized: false,
@@ -191,7 +191,7 @@ export async function checkAuth(
 			};
 		}
 
-		// Step 2: Must be authenticated via PIN
+		// PIN verification check
 		if (!authSession?.pinAuthenticated) {
 			return {
 				authorized: false,

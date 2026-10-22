@@ -47,8 +47,11 @@ export default function MarketPlaybook({
 		const isIhsg = script.market === "IHSG";
 		let tacticalAlert = null;
 
-		if (!isIhsg && compassData?.markets.cryptoOnChain?.mvrvZScore != null) {
-			const mvrv = compassData.markets.cryptoOnChain.mvrvZScore;
+		const mvrvVal =
+			compassData?.markets.cryptoOnChain?.mvrvRatio ??
+			compassData?.markets.cryptoOnChain?.mvrvZScore;
+		if (!isIhsg && mvrvVal != null) {
+			const mvrv = mvrvVal;
 			if (mvrv <= DEFAULT_THRESHOLDS.crypto.mvrv.accumulation) {
 				tacticalAlert = {
 					color: "emerald",
@@ -145,6 +148,42 @@ export default function MarketPlaybook({
 					<p className="text-xs sm:text-sm font-semibold text-slate-700 leading-relaxed">
 						{script.headline}
 					</p>
+
+					{script.liveSummary && (
+						<div className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+							<p className="text-[11px] font-bold text-slate-700 leading-relaxed">
+								{script.liveSummary}
+							</p>
+						</div>
+					)}
+
+					{script.keyLevels && script.keyLevels.length > 0 && (
+						<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+							{script.keyLevels.map((lvl) => {
+								const toneClasses =
+									lvl.tone === "positive"
+										? "bg-emerald-50/60 border-emerald-200/80 text-emerald-900"
+										: lvl.tone === "caution"
+											? "bg-amber-50/60 border-amber-200/80 text-amber-900"
+											: lvl.tone === "negative"
+												? "bg-rose-50/60 border-rose-200/80 text-rose-900"
+												: "bg-slate-50 border-slate-200/80 text-slate-900";
+								return (
+									<div
+										key={lvl.label}
+										className={`p-2.5 rounded-xl border ${toneClasses}`}
+									>
+										<span className="text-[9px] font-extrabold uppercase tracking-wider opacity-75 block truncate">
+											{lvl.label}
+										</span>
+										<span className="text-xs font-black font-mono tabular-nums mt-0.5 block truncate">
+											{lvl.value}
+										</span>
+									</div>
+								);
+							})}
+						</div>
+					)}
 
 					{/* Tactical Override Alert */}
 					{tacticalAlert && (

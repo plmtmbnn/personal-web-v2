@@ -225,12 +225,17 @@ export function scoreIhsg(
 		});
 	}
 
-	// 4. Bank Indonesia Policy Rate & Sovereign Yield Spread Carry
+	// 4. Bank Indonesia Policy Rate, Domestic CPI & Sovereign Yield Spread Carry
 	const biRateSeries = data.markets.macro?.IRSTCB01IDM156N?.data;
 	const idYieldSeries = data.markets.macro?.IRLTLT01IDM156N?.data;
+	const idCpiSeries = data.markets.macro?.IDNCPIALLMINMEI?.data;
 	const latestIdYield =
 		idYieldSeries && idYieldSeries.length > 0
 			? idYieldSeries[idYieldSeries.length - 1].value
+			: null;
+	const latestIdCpi =
+		idCpiSeries && idCpiSeries.length > 0
+			? idCpiSeries[idCpiSeries.length - 1].value
 			: null;
 	const us10yVal =
 		data.markets.quotes.US10Y?.last ??
@@ -244,6 +249,7 @@ export function scoreIhsg(
 		const prevBi =
 			biRateSeries.length > 1 ? biRateSeries[biRateSeries.length - 2] : null;
 		const rate = latestBi.value;
+		const realBiRate = latestIdCpi != null ? rate - latestIdCpi : null;
 		const isCutting = prevBi ? rate < prevBi.value : false;
 		const isHiking = prevBi ? rate > prevBi.value : false;
 
@@ -273,6 +279,24 @@ export function scoreIhsg(
 			note = `Bank Indonesia benchmark rate steady within neutral policy corridor (${rate.toFixed(2)}%).`;
 		}
 
+		// Incorporate Domestic CPI YoY and Real Policy Rate Cushion
+		if (latestIdCpi != null && realBiRate != null) {
+			if (latestIdCpi > 3.5) {
+				score = Math.max(15, score - 10);
+				if (score <= 40) dir = "bearish";
+				note += ` Domestic CPI (${latestIdCpi.toFixed(2)}% YoY) exceeds BI's 1.5%-3.5% target corridor (Real Rate: ${realBiRate >= 0 ? "+" : ""}${realBiRate.toFixed(2)}%).`;
+				contextFlags.push(
+					`Elevated Domestic CPI (${latestIdCpi.toFixed(2)}% > 3.5% Target)`,
+				);
+			} else if (latestIdCpi >= 1.5 && realBiRate >= 2.0) {
+				score = Math.min(95, score + 5);
+				if (score >= 60 && !isHiking) dir = "bullish";
+				note += ` CPI anchored at ${latestIdCpi.toFixed(2)}% YoY within BI's 1.5%-3.5% corridor, providing a +${realBiRate.toFixed(2)}% real rate cushion.`;
+			} else {
+				note += ` Domestic CPI at ${latestIdCpi.toFixed(2)}% YoY (Real Rate: ${realBiRate >= 0 ? "+" : ""}${realBiRate.toFixed(2)}%).`;
+			}
+		}
+
 		// Incorporate Indo-US 10Y Sovereign Yield Spread when available
 		if (indoUsSpread != null) {
 			if (indoUsSpread < 1.5) {
@@ -291,7 +315,9 @@ export function scoreIhsg(
 		const spreadSuffix =
 			indoUsSpread != null
 				? ` (Spread: ${indoUsSpread >= 0 ? "+" : ""}${indoUsSpread.toFixed(2)}%)`
-				: "";
+				: realBiRate != null
+					? ` (Real: ${realBiRate >= 0 ? "+" : ""}${realBiRate.toFixed(2)}%)`
+					: "";
 
 		factors.push({
 			key: "bi_rate",
@@ -540,22 +566,29 @@ export function scoreIhsg(
 
 	const { state, tone } = determineState(compositeScore, coverage, thresholds);
 
+	const ma200Factor = factors.find((f) => f.key === "ihsg_200ma");
+	const fxFactorDiag = factors.find((f) => f.key === "usdidr_trend");
+	const flowFactorDiag = factors.find((f) => f.key === "ihsg_foreign_flow");
+	const liveDrivers = [
+		ma200Factor ? `IHSG ${ma200Factor.valueStr}` : null,
+		fxFactorDiag ? `USD/IDR ${fxFactorDiag.valueStr}` : null,
+		flowFactorDiag ? `Foreign Flow ${flowFactorDiag.valueStr}` : null,
+	].filter(Boolean);
+	const driverSuffix =
+		liveDrivers.length > 0 ? ` Live telemetry: ${liveDrivers.join(", ")}.` : "";
+
 	let headline = "IHSG Consolidating in Mixed Regime";
-	let diagnosis =
-		"Index range-bound. Focus on high-dividend blue-chips and disciplined stop-losses.";
+	let diagnosis = `Index range-bound. Focus on high-dividend blue-chips and disciplined stop-losses.${driverSuffix}`;
 
 	if (state === "risk_on") {
 		headline = "IHSG Favorable Bullish Trend";
-		diagnosis =
-			"Index trending above key moving averages with supportive foreign and domestic liquidity.";
+		diagnosis = `Index trending above key moving averages with supportive foreign and domestic liquidity.${driverSuffix}`;
 	} else if (state === "defensive") {
-		headline = "IHSG Defensive Regime — Capital Preservation";
-		diagnosis =
-			"Index below intermediate averages or USD/IDR pressure. Close swing longs; hold cash/SBN.";
+		headline = "IHSG Defensive Regime: Capital Preservation";
+		diagnosis = `Index below intermediate averages or USD/IDR pressure. Close swing longs; hold cash/SBN.${driverSuffix}`;
 	} else if (state === "stress") {
 		headline = "IHSG Under Heavy Selling Pressure";
-		diagnosis =
-			"Broad structural breakdown below 200-day baseline. Avoid dip-buying until stabilization.";
+		diagnosis = `Broad structural breakdown below 200-day baseline. Avoid dip-buying until stabilization.${driverSuffix}`;
 	}
 
 	// Evaluate Institutional Capital Inflow/Outflow Extremes
@@ -608,8 +641,12 @@ export function scoreIhsg(
 	const valuationScore =
 		valWeight > 0
 			? Math.round(
-					valuationFactors.reduce((sum, f) => sum + f.score * f.weight, 0) /
-						valWeight,
+					valuationFactors.reduce((sum, f) => {
+						// Invert drawdown factor for valuation axis: deeper 52W discounts represent higher value attractiveness
+						const effectiveScore =
+							f.key === "ihsg_drawdown" ? 100 - f.score : f.score;
+						return sum + effectiveScore * f.weight;
+					}, 0) / valWeight,
 				)
 			: 50;
 

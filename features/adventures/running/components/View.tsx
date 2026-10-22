@@ -53,10 +53,6 @@ const DISTANCE_FILTERS: { id: DistanceFilter; label: string; range: string }[] =
 		{ id: "ultra", label: "Half & Beyond", range: "> 21K" },
 	];
 
-// ──────────────────────────────
-// SVG Components for Visualizations
-// ──────────────────────────────
-
 function PaceRing({
 	pace,
 	maxPace = 8,
@@ -125,7 +121,6 @@ export function RunningSkeleton() {
 			aria-label="Loading running activities"
 		>
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 space-y-6 sm:space-y-8 relative z-10">
-				{/* ── Modern Floating Card Header Skeleton ── */}
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
 					{/* Breadcrumb Navigation */}
 					<div className="flex items-center gap-1.5 mb-4">
@@ -159,7 +154,6 @@ export function RunningSkeleton() {
 					</div>
 				</div>
 
-				{/* ── Benchmarks & Live Telemetry Arena Skeleton ── */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
 					{/* LEFT COLUMN: Live Volume Telemetry & Intel */}
 					<div className="lg:col-span-5">
@@ -304,7 +298,6 @@ export function RunningSkeleton() {
 					</div>
 				</div>
 
-				{/* ── Recent Activities Feed & Controls Skeleton ── */}
 				<div className="space-y-5">
 					{/* Activities Toolbar */}
 					<div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
@@ -793,7 +786,6 @@ export default function RunningView({
 					</motion.div>
 				)}
 
-				{/* ── Modern Floating Card Header Standard ── */}
 				<motion.div
 					initial={safeReduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -874,9 +866,6 @@ export default function RunningView({
 					</div>
 				</motion.div>
 
-				{/* ═══════════════════════════════════════
-				    BENCHMARKS & LIVE TELEMETRY ARENA
-				═══════════════════════════════════════ */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
 					{/* LEFT COLUMN: Live Volume Telemetry & Intel */}
 					<div className="lg:col-span-5">
@@ -1039,7 +1028,6 @@ export default function RunningView({
 									</div>
 								)}
 
-								{/* Distance Distribution — proportional bar chart */}
 								<div className="pt-2">
 									<div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
 										<span>Distance Distribution</span>
@@ -1126,9 +1114,6 @@ export default function RunningView({
 					</div>
 				</div>
 
-				{/* ═══════════════════════════════════════
-				    OAUTH CONNECTION PROMPT (ADMIN / DEV)
-				═══════════════════════════════════════ */}
 				{showConnectPrompt && oauthUrl && (
 					<motion.div
 						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
@@ -1160,9 +1145,6 @@ export default function RunningView({
 					</motion.div>
 				)}
 
-				{/* ═══════════════════════════════════════
-				    RECENT ACTIVITIES FEED & CONTROLS
-				═══════════════════════════════════════ */}
 				{hasRunData ? (
 					<motion.div
 						initial={safeReduceMotion ? false : { opacity: 0, y: 30 }}
@@ -1170,7 +1152,6 @@ export default function RunningView({
 						transition={{ delay: 0.3 }}
 						className="space-y-5"
 					>
-						{/* Activities Section Header & Controls — floating card toolbar */}
 						<div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
 							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 								<div className="flex items-center gap-3">

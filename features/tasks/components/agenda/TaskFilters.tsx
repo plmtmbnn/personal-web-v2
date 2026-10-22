@@ -123,14 +123,12 @@ export default function TaskFilters({
 	}, [searchValue, currentSearch, KEY_SEARCH, searchParams, router]);
 
 	const setFilter = (key: string, value: string | null) => {
-		// 1. Optimistically update local state for immediate feedback
 		if (key === KEY_PRIORITY) setLocalPriority(value || "all");
 		if (key === KEY_CATEGORY) setLocalCategory(value || "all");
 		if (key === KEY_STATUS) setLocalStatus(value || "all");
 		if (key === KEY_RANGE) setLocalRange(value || "week");
 		if (key === KEY_WEEK_OFFSET) setLocalWeekOffset(Number(value || "0"));
 
-		// 2. Perform smooth concurrent router transition
 		startTransition(() => {
 			const params = new URLSearchParams(searchParams.toString());
 			if (
@@ -149,7 +147,6 @@ export default function TaskFilters({
 	};
 
 	const clearAllFilters = () => {
-		// 1. Optimistic reset
 		setLocalPriority("all");
 		setLocalCategory("all");
 		setLocalStatus("all");
@@ -157,7 +154,6 @@ export default function TaskFilters({
 		setLocalWeekOffset(0);
 		setSearchValue("");
 
-		// 2. Clear query parameters concurrently
 		startTransition(() => {
 			const params = new URLSearchParams(searchParams.toString());
 			params.delete(KEY_PRIORITY);
@@ -264,7 +260,6 @@ export default function TaskFilters({
 			className="flex flex-col gap-2.5 py-1 w-full max-w-full relative"
 			aria-busy={isLoading}
 		>
-			{/* ─── ULTRA-SMOOTH INDETERMINATE PROGRESS BEAM ─────────────────── */}
 			<div className="h-0.5 w-full overflow-hidden rounded-full bg-transparent relative -my-0.5">
 				<AnimatePresence>
 					{isLoading && (
@@ -289,7 +284,6 @@ export default function TaskFilters({
 				</AnimatePresence>
 			</div>
 
-			{/* ─── MOBILE BAR (< 640px) ────────────────────────────────────────── */}
 			<div className="flex sm:hidden flex-col gap-2.5 w-full">
 				<div className="flex items-center gap-2 w-full">
 					{/* Mobile Search Input */}
@@ -548,7 +542,6 @@ export default function TaskFilters({
 				</AnimatePresence>
 			</div>
 
-			{/* ─── DESKTOP / TABLET BAR (>= 640px) ────────────────────────────── */}
 			<div className="hidden sm:flex flex-col gap-2.5 w-full">
 				{/* Primary Row: Search, Range, Priority, Status Badge, Clear */}
 				<div className="flex flex-wrap items-center gap-2">

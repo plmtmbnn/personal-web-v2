@@ -8,7 +8,7 @@ import { scoreIhsg } from "./ihsg";
 import { scoreCrypto } from "./crypto";
 import { derivePermissions } from "./permissions";
 import { deriveAlerts } from "./alerts";
-import { PLAYBOOK_SCRIPTS } from "../../data/playbooks";
+import { buildDynamicPlaybooks } from "../../data/playbooks";
 import { getActiveSeasonality } from "../../data/seasonality";
 import { getUpcomingEvents, getCriticalPreAlerts } from "../../data/events";
 import { getHalvingCyclePhase, realizedVol, sma } from "../indicators";
@@ -52,21 +52,25 @@ export function computeCompass(
 			btcRealizedVol: btcVol,
 			btcDominance,
 			btcAbove200Ma: btcAbove200,
+			commodityQuotes: {
+				oilBrentChangePct: data.markets.quotes.OIL_BRENT?.changePct ?? null,
+				goldChangePct: data.markets.quotes.GOLD?.changePct ?? null,
+				copperChangePct: data.markets.quotes.COPPER?.changePct ?? null,
+			},
 		},
 	);
 
-	// 6. Actionable Playbook Scripts (Using effective states to eliminate contradictions)
-	const ihsgEffectiveState =
-		permissions.ihsg.mandate?.state ?? ihsgRegime.state;
-	const cryptoEffectiveState =
-		permissions.crypto.mandate?.state ?? cryptoRegime.state;
-
-	const ihsgScript =
-		PLAYBOOK_SCRIPTS.IHSG[ihsgEffectiveState] ??
-		PLAYBOOK_SCRIPTS.IHSG.defensive;
-	const cryptoScript =
-		PLAYBOOK_SCRIPTS.Crypto[cryptoEffectiveState] ??
-		PLAYBOOK_SCRIPTS.Crypto.defensive;
+	// 6. Actionable Playbook Scripts (Interpolating live telemetry and effective states)
+	const playbooks = buildDynamicPlaybooks(
+		data,
+		{
+			global: globalRegime,
+			ihsg: ihsgRegime,
+			crypto: cryptoRegime,
+		},
+		permissions,
+		thresholds,
+	);
 
 	// 7. Delta and Volatility Alerts
 	const alerts = deriveAlerts(data, thresholds);
@@ -84,10 +88,7 @@ export function computeCompass(
 			crypto: cryptoRegime,
 		},
 		permissions,
-		playbooks: {
-			ihsg: ihsgScript,
-			crypto: cryptoScript,
-		},
+		playbooks,
 		alerts,
 		activeSeasonality,
 		upcomingEvents,

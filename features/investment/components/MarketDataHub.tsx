@@ -173,7 +173,30 @@ export default function MarketDataHub({
 		data.markets.cryptoOnChain?.mvrvRatio ??
 		data.markets.cryptoOnChain?.mvrvZScore ??
 		null;
+	const impliedRealizedPrice =
+		btcQuote?.last != null && mvrvRatio != null && mvrvRatio > 0
+			? btcQuote.last / mvrvRatio
+			: null;
+	const ethBtcRatio =
+		btcQuote?.last != null && btcQuote.last > 0 && ethQuote?.last != null
+			? ethQuote.last / btcQuote.last
+			: null;
+	const ethRelChange =
+		ethQuote?.changePct != null && btcQuote?.changePct != null
+			? ethQuote.changePct - btcQuote.changePct
+			: null;
 	const halving = getHalvingCyclePhase();
+
+	const dfii10Val =
+		data.markets.macro?.DFII10?.data?.slice(-1)[0]?.value ?? null;
+	const pceVal =
+		data.markets.macro?.PCEPILFE?.data?.slice(-1)[0]?.value ?? null;
+	const usRealYield =
+		dfii10Val != null
+			? dfii10Val
+			: us10yVal != null && pceVal != null
+				? us10yVal - pceVal
+				: null;
 
 	// Regional Transmission Anchors for Tab 3
 	const regionalAnchors = [
@@ -337,7 +360,6 @@ export default function MarketDataHub({
 						transition={{ duration: 0.2 }}
 						className="w-full"
 					>
-						{/* ── 1. Indonesia (IDX) Tab ──────────────────────────── */}
 						{activeTab === "indonesia" && (
 							<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
 								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
@@ -352,6 +374,29 @@ export default function MarketDataHub({
 									<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 self-start sm:self-auto">
 										IDX Composite (^JKSE)
 									</span>
+								</div>
+
+								{/* Domestic Market Synthesis & Action Takeaway */}
+								<div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 space-y-1">
+									<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 block">
+										Domestic Telemetry Synthesis &amp; Suggestion
+									</span>
+									<p className="text-xs font-semibold text-slate-700 leading-relaxed">
+										{ihsgPrice != null && ihsgMa200 != null
+											? `IHSG trades ${ihsgPrice >= ihsgMa200 ? "above" : "below"} its 200D MA (${distancePct(ihsgPrice, ihsgMa200)! >= 0 ? "+" : ""}${distancePct(ihsgPrice, ihsgMa200)?.toFixed(1)}%) with ${expandingSectorsCount}/${totalSectorsCount} sector bellwethers above 50D MA.`
+											: `Sector breadth stands at ${expandingSectorsCount}/${totalSectorsCount} bellwethers above 50D MA.`}{" "}
+										{yieldSpread != null &&
+											`Indo-US 10Y spread is ${yieldSpread >= 0 ? "+" : ""}${yieldSpread.toFixed(2)}%${latestBiRate != null && latestIdCpi != null ? ` and Real BI Rate is +${(latestBiRate - latestIdCpi).toFixed(2)}%` : ""}. `}
+										{ihsgPrice != null &&
+										ihsgMa200 != null &&
+										ihsgPrice >= ihsgMa200 &&
+										expandingSectorsCount >= 3
+											? "Suggestion: Constructive domestic participation favors liquid Tier-1 banks and foreign inflow leaders above 50D MA."
+											: (data.markets.quotes.USDIDR?.last ?? 0) >=
+													DEFAULT_THRESHOLDS.usdIdr.stressLevel
+												? "Suggestion: Elevated USD/IDR currency pressure warrants avoiding heavy importers and preserving SBN/cash buffers."
+												: "Suggestion: Selective environment; focus on dividend blue-chips near 200D MA support and wait for foreign inflow confirmation."}
+									</p>
 								</div>
 
 								{/* Foreign Institutional Flow Snapshot (if available) */}
@@ -744,7 +789,6 @@ export default function MarketDataHub({
 							</div>
 						)}
 
-						{/* ── 2. Crypto Majors Tab ────────────────────────────── */}
 						{activeTab === "crypto" && (
 							<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
 								<div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -759,6 +803,30 @@ export default function MarketDataHub({
 									<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
 										BTC / ETH Spot &amp; Derivatives
 									</span>
+								</div>
+
+								{/* Crypto Market Synthesis & Action Takeaway */}
+								<div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 space-y-1">
+									<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 block">
+										On-Chain &amp; Liquidity Synthesis &amp; Suggestion
+									</span>
+									<p className="text-xs font-semibold text-slate-700 leading-relaxed">
+										{btcQuote?.last != null && btcMa200 != null
+											? `BTC ($${Math.round(btcQuote.last).toLocaleString("en-US")}) trades ${btcQuote.last >= btcMa200 ? "above" : "below"} its 200D MA ($${Math.round(btcMa200).toLocaleString("en-US")}).`
+											: "Monitoring Bitcoin structural 200D MA baseline."}{" "}
+										{impliedRealizedPrice != null &&
+											`Implied MVRV 1.0x Realized Floor sits near $${Math.round(impliedRealizedPrice * DEFAULT_THRESHOLDS.crypto.mvrv.accumulation).toLocaleString("en-US")} with ${DEFAULT_THRESHOLDS.crypto.mvrv.overheat.toFixed(1)}x Cycle Overheat at $${Math.round(impliedRealizedPrice * DEFAULT_THRESHOLDS.crypto.mvrv.overheat).toLocaleString("en-US")}. `}
+										{btcQuote?.last != null &&
+										btcMa200 != null &&
+										btcQuote.last >= btcMa200 &&
+										(flows?.stablecoin30dChangePct ?? 0) >= 0
+											? "Suggestion: Spot trend and stablecoin liquidity are constructive; favor BTC/ETH spot and respect altcoin dominance gates."
+											: mvrvRatio != null &&
+													mvrvRatio <=
+														DEFAULT_THRESHOLDS.crypto.mvrv.accumulation
+												? "Suggestion: On-chain valuation is in deep value floor; deploy spot BTC cold-storage tranches while avoiding leverage."
+												: "Suggestion: Defensive or range-bound conditions; keep dry powder in USDC/USDT and restrict entries to major support."}
+									</p>
 								</div>
 
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -794,10 +862,9 @@ export default function MarketDataHub({
 											)}
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Accumulation: &lt;{" "}
-											{DEFAULT_THRESHOLDS.crypto.mvrv.accumulation.toFixed(2)} |
-											Overheat: &gt;{" "}
-											{DEFAULT_THRESHOLDS.crypto.mvrv.overheat.toFixed(2)}
+											{impliedRealizedPrice != null
+												? `1.0x Floor: $${Math.round(impliedRealizedPrice * DEFAULT_THRESHOLDS.crypto.mvrv.accumulation).toLocaleString("en-US")} | ${DEFAULT_THRESHOLDS.crypto.mvrv.overheat.toFixed(1)}x Top: $${Math.round(impliedRealizedPrice * DEFAULT_THRESHOLDS.crypto.mvrv.overheat).toLocaleString("en-US")}`
+												: `Accumulation: < ${DEFAULT_THRESHOLDS.crypto.mvrv.accumulation.toFixed(2)} | Overheat: > ${DEFAULT_THRESHOLDS.crypto.mvrv.overheat.toFixed(2)}`}
 										</p>
 									</div>
 
@@ -826,7 +893,7 @@ export default function MarketDataHub({
 										</p>
 									</div>
 
-									{/* BTC Funding Rate */}
+									{/* BTC Funding Rate & Open Interest */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
 											BTC Perp Funding Rate (8h)
@@ -837,9 +904,15 @@ export default function MarketDataHub({
 													? `${flows.btcFundingRate8hPct >= 0 ? "+" : ""}${flows.btcFundingRate8hPct.toFixed(3)}%`
 													: "---"}
 											</span>
+											{flows?.btcOpenInterestUsd != null &&
+												flows.btcOpenInterestUsd > 0 && (
+													<span className="text-xs font-bold text-slate-600 font-mono">
+														OI: ${(flows.btcOpenInterestUsd / 1e9).toFixed(2)}B
+													</span>
+												)}
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Overheated threshold: &gt; +0.03%
+											Overheated threshold: &gt; +0.03% (OKX Perps)
 										</p>
 									</div>
 
@@ -879,7 +952,7 @@ export default function MarketDataHub({
 										</p>
 									</div>
 
-									{/* Ethereum */}
+									{/* Ethereum & ETH/BTC Ratio */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
 											Ethereum (ETH) Spot
@@ -904,7 +977,9 @@ export default function MarketDataHub({
 											)}
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Smart-contract platform leader
+											{ethBtcRatio != null
+												? `ETH/BTC: ${ethBtcRatio.toFixed(4)}${ethRelChange != null ? ` (${ethRelChange >= 0 ? "+" : ""}${ethRelChange.toFixed(2)}% vs BTC)` : ""}`
+												: "Smart-contract platform leader"}
 										</p>
 									</div>
 
@@ -942,7 +1017,6 @@ export default function MarketDataHub({
 							</div>
 						)}
 
-						{/* ── 3. Global Macro & Regional Contagion Tab ────────── */}
 						{activeTab === "macro" && (
 							<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
 								{/* Regional Contagion & Shockwave Monitor */}
@@ -963,6 +1037,24 @@ export default function MarketDataHub({
 										<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 self-start sm:self-auto">
 											Contagion Monitor
 										</span>
+									</div>
+
+									{/* Global Macro Synthesis & Action Takeaway */}
+									<div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 space-y-1">
+										<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 block">
+											Cross-Border Liquidity Synthesis &amp; Suggestion
+										</span>
+										<p className="text-xs font-semibold text-slate-700 leading-relaxed">
+											{usRealYield != null
+												? `US 10Y Real Yield stands at ${usRealYield >= 0 ? "+" : ""}${usRealYield.toFixed(2)}%${dfii10Val != null ? " (TIPS)" : " (Real)"}. `
+												: ""}
+											{data.markets.quotes.DXY?.last != null &&
+												`DXY is at ${data.markets.quotes.DXY.last.toFixed(2)}${data.markets.quotes.VIX?.last != null ? ` with CBOE VIX at ${data.markets.quotes.VIX.last.toFixed(2)}` : ""}. `}
+											{(data.markets.quotes.VIX?.last ?? 0) >= 25 ||
+											(usRealYield ?? 0) >= 2.2
+												? "Suggestion: Tight global discount rates or elevated VIX volatility restrict foreign inflows; cap swing sizing across IDX and Crypto."
+												: "Suggestion: Benign global volatility and manageable real yields support cross-border risk appetite into emerging markets and digital assets."}
+										</p>
 									</div>
 
 									<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

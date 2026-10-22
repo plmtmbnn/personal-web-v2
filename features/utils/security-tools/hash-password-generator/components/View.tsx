@@ -86,7 +86,7 @@ export default function HashPasswordGeneratorView() {
 	const [activeTab, setActiveTab] = useState<ActiveTab>("password");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// ─── TAB 1: Password Studio State ─────────────────────────────────────────
+	// Password studio state
 	const [passwordOptions, setPasswordOptions] = useState<PasswordOptions>({
 		mode: "custom",
 		length: 18,
@@ -141,7 +141,7 @@ export default function HashPasswordGeneratorView() {
 		setTimeout(() => setIsBatchCopied(false), 2000);
 	};
 
-	// ─── TAB 2: Hasher State ──────────────────────────────────────────────────
+	// Hasher state
 	const [hashInputMode, setHashInputMode] = useState<"text" | "file">("text");
 	const [hashTextInput, setHashTextInput] = useState("Hello, World!");
 	const [hashFileName, setHashFileName] = useState("");
@@ -239,7 +239,7 @@ export default function HashPasswordGeneratorView() {
 		setTimeout(() => setIsHashCopied(false), 2000);
 	};
 
-	// ─── TAB 3: Formatter State ───────────────────────────────────────────────
+	// Formatter state
 	const [formatterAction, setFormatterAction] =
 		useState<EncodingAction>("encode");
 	const [formatterFormat, setFormatterFormat] =

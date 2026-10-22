@@ -149,7 +149,7 @@ export default async function BlogDetailPage({
 				<div className="bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider text-center py-2.5 px-4 sticky top-0 z-50 flex items-center justify-center gap-2 shadow-md">
 					<AlertTriangle className="w-4 h-4 text-slate-950 flex-shrink-0" />
 					<span>
-						Draft Preview Mode — This entry is currently unpublished and only
+						Draft Preview Mode: This entry is currently unpublished and only
 						visible to authorized admins.
 					</span>
 				</div>

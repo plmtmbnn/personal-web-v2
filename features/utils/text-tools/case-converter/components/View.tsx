@@ -19,8 +19,6 @@ import UtilHeader from "@/features/utils/components/UtilHeader";
 import type { CaseType } from "../utils/case";
 import { toWords, fromWords, transformObject } from "../utils/case";
 
-// ─── View Component ─────────────────────────────────────────────────────────
-
 export default function CaseConverterView() {
 	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");

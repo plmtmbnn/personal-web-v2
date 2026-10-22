@@ -17,8 +17,6 @@ import {
 } from "lucide-react";
 import UtilHeader from "@/features/utils/components/UtilHeader";
 
-// ─── JSON Repair Logic ──────────────────────────────────────────────────────
-
 /**
  * Attempts to salvage "Dirty" JSON (unquoted keys, single quotes, etc.)
  */
@@ -53,11 +51,7 @@ const repairJson = (str: string) => {
 	}
 };
 
-// ─── Tree View Components ───────────────────────────────────────────────────
-
 import { JsonValue } from "@/features/shared/components/JsonValue";
-
-// ─── Main View ──────────────────────────────────────────────────────────────
 
 export default function JsonFormatterView() {
 	const reduceMotion = useReducedMotion();

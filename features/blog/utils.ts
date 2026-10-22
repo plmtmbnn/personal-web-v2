@@ -1,12 +1,9 @@
 /**
- * Shared blog utilities — canonical source of truth for styles,
+ * Shared blog utilities: canonical source of truth for styles,
  * image helpers, and content processing. Prevents duplication
  * between page.tsx and AdminBlogList.tsx.
  */
 
-// ─────────────────────────────────────────────
-// Categories & Category Styles
-// ─────────────────────────────────────────────
 export const CATEGORIES = [
 	"Tech",
 	"Running",
@@ -25,10 +22,6 @@ export const CATEGORY_STYLES: Record<string, string> = {
 
 export const getCategoryStyles = (category: string): string =>
 	CATEGORY_STYLES[category] ?? "bg-slate-50 text-slate-700 border-slate-100";
-
-// ─────────────────────────────────────────────
-// Reading Time — Markdown-aware
-// ─────────────────────────────────────────────
 
 /**
  * Calculates estimated reading time by stripping Markdown syntax
@@ -67,10 +60,6 @@ export const getWordCount = (content: string): number => {
 	return plainText.split(/\s+/).filter(Boolean).length;
 };
 
-// ─────────────────────────────────────────────
-// Image Placeholder — deterministic, clean URLs
-// ─────────────────────────────────────────────
-
 /**
  * Clean Unsplash placeholder URLs (no double query strings).
  */
@@ -88,10 +77,6 @@ export const getBlogImage = (imageUrl: string | null, seed: string): string => {
 		.reduce((acc, char) => acc + char.charCodeAt(0), 0);
 	return PLACEHOLDERS[charSum % PLACEHOLDERS.length];
 };
-
-// ─────────────────────────────────────────────
-// Blog Filtering & Sorting
-// ─────────────────────────────────────────────
 
 export function filterBlogs<
 	T extends { title: string; description: string; category: string },

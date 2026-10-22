@@ -136,8 +136,6 @@ async function handleRecurrenceSpawning(task: Task) {
 	}
 }
 
-// ─── Fetch ────────────────────────────────────────────────────────────────────
-
 /**
  * Fetch tasks with optional filters.
  * Default: Today, pending (status != done)
@@ -247,8 +245,6 @@ export async function getSubtasks(parentId: string): Promise<Task[]> {
 	}
 	return data as Task[];
 }
-
-// ─── Create ───────────────────────────────────────────────────────────────────
 
 /**
  * Add a new task to Supabase
@@ -413,8 +409,6 @@ export async function addBatchTasks(
 	return data as Task[];
 }
 
-// ─── Update ───────────────────────────────────────────────────────────────────
-
 /**
  * Update task status.
  */
@@ -537,8 +531,6 @@ export async function updateTask(taskId: string, updates: Partial<Task>) {
 	await invalidateStatsCache();
 }
 
-// ─── Reorder ──────────────────────────────────────────────────────────────────
-
 /**
  * Bulk update task positions safely without upsert constraint violations
  */
@@ -564,8 +556,6 @@ export async function reorderTasks(taskIds: string[]) {
 	await invalidateStatsCache();
 }
 
-// ─── Delete ───────────────────────────────────────────────────────────────────
-
 /**
  * Delete a task (also cascades to subtasks via ON DELETE CASCADE)
  */
@@ -587,8 +577,6 @@ export async function deleteTask(taskId: string) {
 	revalidatePath("/tasks");
 	await invalidateStatsCache();
 }
-
-// ─── Overdue Rescheduling ──────────────────────────────────────────────────────
 
 /**
  * Reschedule all overdue tasks by adding a specific number of days.
@@ -655,8 +643,6 @@ export async function rescheduleOverdueTasks(daysToAdd: number) {
 		message: `Successfully rescheduled ${overdueTasks.length} tasks`,
 	};
 }
-
-// ─── Dependencies & Lifecycle ─────────────────────────────────────────────────
 
 /**
  * Handle unblocking tasks that depend on the completed task.

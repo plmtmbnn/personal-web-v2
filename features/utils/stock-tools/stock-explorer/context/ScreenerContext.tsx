@@ -488,11 +488,7 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 		(code: string) => watchlist.includes(code),
 		[watchlist],
 	);
-
-	// -------------------------------------------------------------
-	// Stockpick Simulator Cloud Persistence & Mutation Handlers
-	// -------------------------------------------------------------
-
+	// Stockpick simulator cloud persistence and mutation handlers
 	const refreshPicksFromCloud = useCallback(async () => {
 		setIsPicksLoading(true);
 		setCloudSyncError(null);

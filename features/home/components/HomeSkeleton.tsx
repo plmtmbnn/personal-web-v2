@@ -1,4 +1,4 @@
-import { Layers, ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import HomeAnimatedBackground from "./HomeAnimatedBackground";
 
@@ -7,7 +7,6 @@ export default function HomeSkeleton() {
 		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
 			<HomeAnimatedBackground />
 			<div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center relative z-10 my-auto">
-				{/* ── Left Content (Span 6) ─────────────────────────────────── */}
 				<div className="lg:col-span-6 w-full">
 					{/* Avatar & Status chip */}
 					<div className="flex items-center gap-4 sm:gap-5 mb-7 sm:mb-8">
@@ -50,14 +49,12 @@ export default function HomeSkeleton() {
 					</div>
 				</div>
 
-				{/* ── Right Content (Span 6) ─────────────────────────────────── */}
 				<div className="lg:col-span-6 w-full space-y-4 lg:pl-6 mt-12 lg:mt-0">
 					{/* Metrics Panel */}
 					<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-5 sm:p-6">
 						<div className="flex items-center justify-between mb-5">
-							<span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
-								<Layers className="w-4 h-4" />
-								Professional Impact
+							<span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+								Professional Focus
 							</span>
 						</div>
 

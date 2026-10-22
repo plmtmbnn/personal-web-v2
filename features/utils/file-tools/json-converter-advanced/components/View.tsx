@@ -35,8 +35,6 @@ import {
 	generateJoi,
 } from "../utils/generators";
 
-// ─── Main View ──────────────────────────────────────────────────────────────
-
 type OutputFormat = "typescript" | "go" | "mongoose" | "zod" | "joi";
 
 export default function JsonToSchemaView() {

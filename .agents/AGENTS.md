@@ -19,6 +19,31 @@ This document provides foundational context for any AI coding assistant (e.g., C
 > - **Targeted Quality Assurance**: Identify affected tests using `codegraph affected <files...>` to verify changes rapidly without running irrelevant suites.
 > - **Index Synchronization**: Keep the AST graph updated via `codegraph sync -q` after edits.
 
+> [!IMPORTANT]
+> **Mandatory Antislop Skill Suite Integration Standard**:
+> AI coding assistants working in this repository **MUST ALWAYS** integrate with and apply the **`antislop`** filter suite across all generated UI, copy, accessibility, layout, and code comments. Antislop is an active filter preventing AI-generated tropes and generic slop without restricting domain aesthetics:
+> - **Core Filter (`antislop`)**: Always active sitewide. Prohibits boilerplate filler, generic SaaS clichés, ungrounded marketing flourishes, and artificial complexities.
+> - **UI / Visual (`antislop-ui`)**: Mandatory when authoring or revising visual components. Enforces clean solid surfaces, authentic domain-specific iconography (domain squircles), zero gradients, zero ambient blur orbs (`blur-3xl`), and strict adherence to the project's Modern Floating Card system.
+> - **Copywriting & Prose (`antislop-copywriting`)**: Mandatory when writing user-facing text, headers, and tooltips. Enforces direct, grounded, technical explanations. Strictly forbids em dashes (`—`) in prose/comments, bans fake superlatives, and eliminates repetitive marketing slogans.
+> - **Human & Accessibility (`antislop-human`)**: Mandatory for interactive states. Guarantees WCAG AA/AAA contrast ratios, visible keyboard focus rings, touch targets $\ge 44\times 44$px, and semantic WAI-ARIA states (`aria-expanded`, `aria-selected`, `aria-busy`).
+> - **Mobile & Responsive Layout (`antislop-layoutmobile`)**: Mandatory for responsive viewport engineering. Enforces mobile-first responsive grids, horizontal scroll mask containment, and defensive viewport overflow prevention (`max-w-full`, `break-words`).
+> - **Code Comments Hygiene (`antislop-code`)**: Mandatory sitewide. Prohibits decorative box-drawing banners (`// ───`, `/* ───`, `{/* ───`), empty section labels (`// Render`, `// Types`, `// State`), workflow step narration (`// Step 1:`, `// 1. Fetch`), and obvious element restatements. Preserves genuine architectural rationale, security boundaries, and non-obvious workarounds. Never modifies executable logic.
+
+> [!IMPORTANT]
+> **Mandatory Ponytail Lazy Senior Developer Standard**:
+> All AI coding assistants **MUST ALWAYS** follow **`ponytail`** (lazy senior dev mode) principles on every task:
+> - **Core Philosophy**: *"The best code is the code never written. Solve the whole problem with the least new code."* The shortest working diff that completely solves the task wins.
+> - **Pre-Flight Blast Radius Analysis**: Before writing code, inspect every touchpoint: callers, tests, fixtures, config, and exports. Check what the change could break. That is scope; extra unrequested features are not.
+> - **Hierarchy of Minimal Implementation**:
+>   1. *Does it need to exist?* Skip unrequested features, options, and speculative flexibility.
+>   2. *Already in this codebase?* Use established helpers, patterns, and shared components (house component beats custom widget).
+>   3. *Platform standard?* Use standard Web APIs / Node / TypeScript standard library unless a house component exists.
+>   4. *Installed dependency?* Use existing dependencies. Never introduce a new package for a few lines.
+>   5. *Minimum readable code*: Avoid premature abstractions, wrapper layers, type conversions, boilerplate, or "for later" configuration.
+> - **Non-Negotiables**: Never cut validation at trust boundaries, error handling that prevents data loss, security checks, accessibility, or anything the user requested.
+> - **Quality Assurance**: Lazy code without checks is unfinished. Every non-trivial change must verify against affected tests (using `codegraph affected` and Vitest) or include an assert-based check. Document known limits via `shortcut: <the limit>, <when to upgrade>`.
+> - **Mandatory Response Conclusion**: Conclude replies with 1–2 lines identifying what was skipped or not checked, and any risks the user must know.
+
 ## 🛠 Tech Stack
 - **Framework:** Next.js 16.4.0 (App Router) & React 19.3.0
 - **Language:** TypeScript 5.9.3
@@ -611,6 +636,8 @@ pnpm run analyze         # Alias for build:analyze
 - **Error Tracking & Monitoring**: Sentry is configured for client (`instrumentation-client.ts`), server (`sentry.server.config.ts`), and edge environment tracking (`sentry.edge.config.ts`), integrated via Next.js instrumentation (`instrumentation.ts`). Sentry builds use `silent: true` to suppress noisy missing source map warnings from Turbopack internal chunks.
 - **Git Workflow**: Follow **Conventional Commits**.
 - **Linter & Formatter**: **Biome** for strict full-repository formatting and linting (`452 files, 0 warnings, 0 errors`).
+- **Antislop Quality Filter Standard**: Sitewide mandate enforcing the `antislop` suite (`antislop`, `antislop-ui`, `antislop-copywriting`, `antislop-human`, `antislop-layoutmobile`, `antislop-code`). Zero generic AI-slop copy, zero em dashes in comments/prose, zero box-drawing banners, zero empty labels, and strict WAI-ARIA accessibility.
+- **Ponytail Lazy Senior Dev Standard**: Sitewide mandate solving every problem with the least new code. Reject speculative boilerplate and premature abstractions. Reuse existing codebase patterns. Verify blast radius and callers before writing. End all replies with skipped checks and risks.
 - **CodeGraph First-Touch & Impact Mandate**: NEVER guess function signatures, grep blindly, or refactor without impact analysis. Agents MUST inspect the AST knowledge graph via CodeGraph (`codegraph explore`, `codegraph node`, `codegraph callers`, `codegraph impact`) before proposing or implementing changes to maintain architectural consistency and prevent regression cascades.
 - **Performance Tools:** Bundle analyzer, profiling scripts, and optimized configurations.
 - **Commit/Push Policy**: **NEVER** stage, commit, or push changes unless explicitly requested by the user for each occurrence.

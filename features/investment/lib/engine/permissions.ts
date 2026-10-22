@@ -16,6 +16,11 @@ export function derivePermissions(
 		btcRealizedVol?: number | null;
 		btcDominance?: number | null;
 		btcAbove200Ma?: boolean;
+		commodityQuotes?: {
+			oilBrentChangePct?: number | null;
+			goldChangePct?: number | null;
+			copperChangePct?: number | null;
+		};
 	},
 ): PermissionsMatrixData {
 	const globalStressActive =
@@ -24,15 +29,15 @@ export function derivePermissions(
 	const summaryNotes: string[] = [];
 	if (globalRegime.state === "stress") {
 		summaryNotes.push(
-			"Global Macro Liquidity in stress state — cross-asset risk downgraded to capital defense.",
+			"Global Macro Liquidity in stress state: cross-asset risk downgraded to capital defense.",
 		);
 	} else if (globalRegime.state === "defensive") {
 		summaryNotes.push(
-			"Global Liquidity is defensive — tactical position sizing across all markets capped.",
+			"Global Liquidity is defensive: tactical position sizing across all markets capped.",
 		);
 	}
 
-	// ── 1. IHSG Permissions ─────────────────────────────────────
+	// 1. IHSG Permissions
 	let ihsgEffectiveState = ihsgRegime.state;
 	if (globalStressActive && ihsgEffectiveState === "risk_on") {
 		ihsgEffectiveState = "selective";
@@ -43,7 +48,7 @@ export function derivePermissions(
 	if (isIhsgVolExpanded && ihsgEffectiveState === "risk_on") {
 		ihsgEffectiveState = "selective";
 		summaryNotes.push(
-			"IHSG realized volatility expanded (> 26%) — swing exposure capped.",
+			"IHSG realized volatility expanded (> 26%): swing exposure capped.",
 		);
 	}
 
@@ -176,7 +181,36 @@ export function derivePermissions(
 			break;
 	}
 
-	// ── 2. Crypto (BTC / ETH Majors) Permissions ────────────────
+	const ihsgValState = ihsgRegime.dualAxis?.valuationState;
+	if (ihsgValState === "distribution") {
+		if (
+			ihsgEffectiveState === "risk_on" ||
+			ihsgEffectiveState === "selective"
+		) {
+			ihsgPerms.dca.label = "Value Caution (Trim Highs)";
+			ihsgPerms.dca.reason =
+				"Valuation stretched near 52W highs (Distribution Zone). Slow fresh market DCA and rotate partial swing profits into SBN/cash.";
+		}
+	} else if (ihsgValState === "accumulation") {
+		if (ihsgEffectiveState === "stress") {
+			ihsgPerms.dca.label = "Tranche Plan (Deep Value)";
+			ihsgPerms.dca.reason =
+				"Pause market orders during breakdown, but valuation is in deep discount (Accumulation Zone): deploy limit tranches at predetermined support.";
+		} else if (ihsgEffectiveState === "defensive") {
+			ihsgPerms.dca.label = "Value Tranches (Discount)";
+			ihsgPerms.dca.reason =
+				"Trend is defensive while valuation is in Accumulation Zone. Scale into Tier-1 dividend blue-chips via limit tranches.";
+		} else if (
+			ihsgEffectiveState === "risk_on" ||
+			ihsgEffectiveState === "selective"
+		) {
+			ihsgPerms.dca.label = "Active Value Pace";
+			ihsgPerms.dca.reason =
+				"Favorable valuation discount aligns with constructive trend. Accumulate core blue-chip tranches.";
+		}
+	}
+
+	// 2. Crypto (BTC / ETH Majors) Permissions
 	let cryptoEffectiveState = cryptoRegime.state;
 	if (globalStressActive && cryptoEffectiveState === "risk_on") {
 		cryptoEffectiveState = "selective";
@@ -187,7 +221,7 @@ export function derivePermissions(
 	if (isBtcVolExpanded && cryptoEffectiveState === "risk_on") {
 		cryptoEffectiveState = "selective";
 		summaryNotes.push(
-			"Bitcoin realized volatility elevated (> 60%) — swing sizing constrained.",
+			"Bitcoin realized volatility elevated (> 60%): swing sizing constrained.",
 		);
 	}
 
@@ -309,14 +343,36 @@ export function derivePermissions(
 					reason:
 						"Spot accumulation restricted to 200-week MA deep value zones.",
 				},
-				maxExposure: "Trading Frozen — Maximum Stablecoin Defense",
+				maxExposure: "Trading Frozen: Maximum Stablecoin Defense",
 				riskPerTrade: "0% (Trading Frozen)",
 				mandate: cryptoMandate,
 			};
 			break;
 	}
 
-	// ── 3. Altcoin Gating Protocol ──────────────────────────────
+	const cryptoValState = cryptoRegime.dualAxis?.valuationState;
+	if (cryptoValState === "distribution") {
+		if (
+			cryptoEffectiveState === "risk_on" ||
+			cryptoEffectiveState === "selective"
+		) {
+			cryptoPerms.dca.label = "Cycle Overheat (Trim)";
+			cryptoPerms.dca.reason =
+				"On-chain MVRV or sentiment is in Distribution Zone. Pause top-chasing DCA and scale partial profits into USDC/USDT.";
+		}
+	} else if (cryptoValState === "accumulation") {
+		if (cryptoEffectiveState === "stress") {
+			cryptoPerms.dca.label = "Tranche Plan (Deep Floor)";
+			cryptoPerms.dca.reason =
+				"Spot accumulation restricted to predetermined limit tranches near on-chain realized price floor (MVRV <= 1.0x).";
+		} else if (cryptoEffectiveState === "defensive") {
+			cryptoPerms.dca.label = "Asymmetric Value DCA";
+			cryptoPerms.dca.reason =
+				"Trend is risk-off, but on-chain MVRV/sentiment indicates deep value floor. Accumulate spot BTC tranches into cold storage.";
+		}
+	}
+
+	// 3. Altcoin Gating Protocol
 	// Hard Gate: Altcoins are locked unless BTC is above 200D MA and Dominance is below cap
 	const btcDom = options?.btcDominance ?? null;
 	const btcAbove200 = options?.btcAbove200Ma ?? false;
@@ -466,6 +522,58 @@ export function derivePermissions(
 	} else if (usdidrFactor && usdidrFactor.direction === "bullish") {
 		ihsgSectorGates.push(
 			"FAVORED: Banking & Consumer Staples (Favorable IDR Liquidity)",
+		);
+	}
+
+	if (
+		ihsgRegime.contextFlags.some((f) =>
+			f.includes("Tight Indo-US Yield Spread"),
+		)
+	) {
+		ihsgSectorGates.push(
+			"CAUTION: Rate-Sensitive Property & High-Debt Issuers (Compressed Indo-US Yield Spread)",
+		);
+	}
+
+	const rotationFlag = ihsgRegime.contextFlags.find(
+		(f) => f.startsWith("Rotation:") || f.startsWith("Sector Leadership:"),
+	);
+	if (rotationFlag) {
+		ihsgSectorGates.push(
+			`LIVE ROTATION: ${rotationFlag.replace(/^(Rotation|Sector Leadership):\s*/, "")}`,
+		);
+	}
+
+	const breadthFactor = ihsgRegime.factors.find(
+		(f) => f.key === "ihsg_breadth",
+	);
+	if (breadthFactor) {
+		const breadthTone =
+			breadthFactor.direction === "bullish"
+				? "Broad Participation"
+				: breadthFactor.direction === "bearish"
+					? "Narrow Index Leadership"
+					: "Selective Rotation";
+		ihsgSectorGates.push(
+			`BREADTH GATE: ${breadthFactor.valueStr} (${breadthTone})`,
+		);
+	}
+
+	const oilChg = options?.commodityQuotes?.oilBrentChangePct ?? null;
+	const goldChg = options?.commodityQuotes?.goldChangePct ?? null;
+	const copperChg = options?.commodityQuotes?.copperChangePct ?? null;
+	if (oilChg != null && oilChg >= 2.0) {
+		ihsgSectorGates.push(
+			`COMMODITY TAILWIND: Energy/Coal Exporters (ADRO) on Brent +${oilChg.toFixed(1)}% | Watch Logistics Cost`,
+		);
+	}
+	if (goldChg != null && goldChg >= 1.2) {
+		ihsgSectorGates.push(
+			`SAFE-HAVEN BID: Precious Metals Miners (ANTM) Supported by Gold +${goldChg.toFixed(1)}%`,
+		);
+	} else if (copperChg != null && copperChg <= -2.0) {
+		ihsgSectorGates.push(
+			`COMMODITY HEADWIND: Base Metals (ANTM) Pressured by Copper ${copperChg.toFixed(1)}%`,
 		);
 	}
 

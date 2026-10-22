@@ -17,8 +17,6 @@ import {
 
 import UtilHeader from "@/features/utils/components/UtilHeader";
 
-// ─── Transformation Logic ───────────────────────────────────────────────────
-
 /**
  * Transforms a single filename to kebab-case while preserving extensions.
  */
@@ -52,8 +50,6 @@ const transformToKebab = (filename: string): string => {
 
 	return kebab + extension;
 };
-
-// ─── Main View ──────────────────────────────────────────────────────────────
 
 export default function FileRenamerView() {
 	const reduceMotion = useReducedMotion();

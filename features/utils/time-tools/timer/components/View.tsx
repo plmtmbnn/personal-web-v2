@@ -26,8 +26,6 @@ import {
 import Link from "next/link";
 import UtilHeader from "@/features/utils/components/UtilHeader";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
 type PhaseType = "warmup" | "speed" | "rest" | "cooldown";
 
 interface Phase {
@@ -42,8 +40,6 @@ interface LapEntry {
 	duration: number;
 	completedAt: number; // totalElapsed when done
 }
-
-// ─── Theme Map ───────────────────────────────────────────────────────────────
 
 const PHASE_THEME: Record<
 	PhaseType,
@@ -85,8 +81,6 @@ const PHASE_ICONS: Record<PhaseType, React.FC<{ className?: string }>> = {
 	rest: ({ className }) => <TimerReset className={className} />,
 	cooldown: ({ className }) => <Activity className={className} />,
 };
-
-// ─── Circular Progress Ring ──────────────────────────────────────────────────
 
 function CountdownRing({
 	progress,
@@ -172,8 +166,6 @@ function CountdownRing({
 	);
 }
 
-// ─── Phase Queue Timeline ────────────────────────────────────────────────────
-
 function PhaseTimeline({
 	queue,
 	currentIndex,
@@ -239,8 +231,6 @@ function PhaseTimeline({
 	);
 }
 
-// ─── Next Phase Preview ──────────────────────────────────────────────────────
-
 function NextPhasePreview({ phase }: { phase: Phase }) {
 	const reduceMotion = useReducedMotion();
 	const theme = PHASE_THEME[phase.type];
@@ -263,8 +253,6 @@ function NextPhasePreview({ phase }: { phase: Phase }) {
 		</motion.div>
 	);
 }
-
-// ─── Lap History ─────────────────────────────────────────────────────────────
 
 function LapLog({ laps }: { laps: LapEntry[] }) {
 	const reduceMotion = useReducedMotion();
@@ -305,8 +293,6 @@ function LapLog({ laps }: { laps: LapEntry[] }) {
 	);
 }
 
-// ─── Pulse Ring for Speed Phase ──────────────────────────────────────────────
-
 function SpeedPulse() {
 	return (
 		<div className="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -330,8 +316,6 @@ function SpeedPulse() {
 		</div>
 	);
 }
-
-// ─── Confetti ────────────────────────────────────────────────────────────────
 
 function Confetti() {
 	const pieces = Array.from({ length: 40 }, (_, i) => ({
@@ -372,15 +356,11 @@ function Confetti() {
 	);
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function formatTime(seconds: number) {
 	const m = Math.floor(seconds / 60);
 	const s = seconds % 60;
 	return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
-
-// ─── Preset Configs ─────────────────────────────────────────────────────────
 
 interface WorkoutPreset {
 	id: string;
@@ -455,8 +435,6 @@ const WORKOUT_PRESETS: WorkoutPreset[] = [
 		cooldownSec: 0,
 	},
 ];
-
-// ─── Setup Input Card ────────────────────────────────────────────────────────
 
 function SetupCard({
 	label,
@@ -554,8 +532,6 @@ function SetupCard({
 	);
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
-
 export default function TimerView() {
 	// Input state
 	const [warmupMin, setWarmupMin] = useState(5);
@@ -588,8 +564,6 @@ export default function TimerView() {
 	const sessionStartTimeRef = useRef<number>(0);
 	const pausedTimeLeftRef = useRef<number>(0);
 	const pausedTotalElapsedRef = useRef<number>(0);
-
-	// ── Queue ────────────────────────────────────────────────────────────────
 
 	const queue = useMemo<Phase[]>(() => {
 		const q: Phase[] = [];
@@ -658,8 +632,6 @@ export default function TimerView() {
 		setCooldownSec(preset.cooldownSec);
 	}, []);
 
-	// ── Audio ────────────────────────────────────────────────────────────────
-
 	const playBeep = useCallback(
 		(freq = 440, dur = 0.1, type: OscillatorType = "sine") => {
 			if (!soundEnabled) return;
@@ -699,8 +671,6 @@ export default function TimerView() {
 		[playBeep],
 	);
 
-	// ── Wake Lock ────────────────────────────────────────────────────────────
-
 	const requestWakeLock = useCallback(async () => {
 		if ("wakeLock" in navigator) {
 			try {
@@ -719,8 +689,6 @@ export default function TimerView() {
 		wakeLockRef.current?.release();
 		wakeLockRef.current = null;
 	}, []);
-
-	// ── Controls ─────────────────────────────────────────────────────────────
 
 	const startTimer = () => {
 		if (queue.length === 0) return;
@@ -826,8 +794,6 @@ export default function TimerView() {
 		});
 	}, [releaseWakeLock, playBeep]);
 
-	// ── Sync Logic ───────────────────────────────────────────────────────────
-
 	const syncTimer = useCallback(() => {
 		if (!isActive || isPaused || isComplete) return;
 
@@ -879,8 +845,6 @@ export default function TimerView() {
 		playBeep,
 	]);
 
-	// ── Tick ─────────────────────────────────────────────────────────────────
-
 	useEffect(() => {
 		if (isActive && !isPaused) {
 			timerRef.current = setInterval(syncTimer, 1000);
@@ -892,8 +856,6 @@ export default function TimerView() {
 		};
 	}, [isActive, isPaused, syncTimer]);
 
-	// ── Visibility Change ────────────────────────────────────────────────────
-
 	useEffect(() => {
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === "visible") {
@@ -904,8 +866,6 @@ export default function TimerView() {
 		return () =>
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 	}, [syncTimer]);
-
-	// ── Derived ───────────────────────────────────────────────────────────────
 
 	const currentPhase = queue[currentPhaseIndex];
 	const PhaseIcon = currentPhase ? PHASE_ICONS[currentPhase.type] : null;
@@ -933,8 +893,6 @@ export default function TimerView() {
 		: PHASE_THEME.cooldown;
 
 	const reduceMotion = useReducedMotion();
-
-	// ── Render ────────────────────────────────────────────────────────────────
 
 	return (
 		<main
@@ -1047,9 +1005,7 @@ export default function TimerView() {
 					</div>
 				)}
 
-				{/* ── VIEWS ─────────────────────────────────────────────────────── */}
 				<AnimatePresence mode="wait">
-					{/* ── COMPLETE ── */}
 					{isComplete && (
 						<motion.div
 							key="complete"
@@ -1155,7 +1111,6 @@ export default function TimerView() {
 						</motion.div>
 					)}
 
-					{/* ── SETUP ── */}
 					{!isActive && !isComplete && (
 						<motion.div
 							key="setup"
@@ -1332,7 +1287,6 @@ export default function TimerView() {
 						</motion.div>
 					)}
 
-					{/* ── ACTIVE ── */}
 					{isActive && (
 						<motion.div
 							key={`active-${currentPhaseIndex}`}

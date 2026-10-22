@@ -277,7 +277,6 @@ export default function CronBuilderView() {
 						</div>
 					</div>
 
-					{/* ─── Minute Builder ─────────────────────────────────────────── */}
 					{activeFieldTab === "minute" && (
 						<div className="space-y-5 pt-2">
 							<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -354,7 +353,6 @@ export default function CronBuilderView() {
 						</div>
 					)}
 
-					{/* ─── Hour Builder ───────────────────────────────────────────── */}
 					{activeFieldTab === "hour" && (
 						<div className="space-y-5 pt-2">
 							<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -441,7 +439,6 @@ export default function CronBuilderView() {
 						</div>
 					)}
 
-					{/* ─── Day of Month Builder ───────────────────────────────────── */}
 					{activeFieldTab === "dayOfMonth" && (
 						<div className="space-y-5 pt-2">
 							<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -521,7 +518,6 @@ export default function CronBuilderView() {
 						</div>
 					)}
 
-					{/* ─── Month Builder ──────────────────────────────────────────── */}
 					{activeFieldTab === "month" && (
 						<div className="space-y-5 pt-2">
 							<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -593,7 +589,6 @@ export default function CronBuilderView() {
 						</div>
 					)}
 
-					{/* ─── Day of Week Builder ────────────────────────────────────── */}
 					{activeFieldTab === "dayOfWeek" && (
 						<div className="space-y-5 pt-2">
 							<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">

@@ -24,8 +24,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import InfoTooltip from "@/features/shared/components/InfoTooltip";
-
-// ─── Mini circular progress ───────────────────────────────────────────────────
 function RingProgress({
 	value,
 	size = 80,
@@ -70,8 +68,6 @@ function RingProgress({
 		</svg>
 	);
 }
-
-// ─── Animated counter ─────────────────────────────────────────────────────────
 function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 	const [count, setCount] = useState(0);
 	useEffect(() => {
@@ -95,8 +91,6 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 		</span>
 	);
 }
-
-// ─── Grade config ─────────────────────────────────────────────────────────────
 const GRADE_CONFIG = {
 	"A+": {
 		bg: "bg-emerald-500",
@@ -134,8 +128,6 @@ const GRADE_CONFIG = {
 		label: "Needs Recovery",
 	},
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatMinutes = (mins: number) => {
 	if (!mins || mins === 0) return "—";
 	if (mins < 60) return `${mins}m`;
@@ -167,8 +159,6 @@ const PRIORITY_CFG: Record<
 		border: "border-slate-200",
 	},
 };
-
-// ─── Component ────────────────────────────────────────────────────────────────
 export default function WeeklyReview() {
 	const [stats, setStats] = useState<WeeklyReviewStats | null>(null);
 	const [isPending, startTransition] = useTransition();
@@ -318,7 +308,6 @@ export default function WeeklyReview() {
 				animate={{ opacity: 1 }}
 				className="space-y-6 sm:space-y-8"
 			>
-				{/* ── Hero Banner ──────────────────────────────────────────────── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -457,7 +446,6 @@ export default function WeeklyReview() {
 					</div>
 				</motion.div>
 
-				{/* ── Metrics Row ───────────────────────────────────────────────── */}
 				<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 					{[
 						{
@@ -566,7 +554,6 @@ export default function WeeklyReview() {
 					))}
 				</div>
 
-				{/* ── Main Content ──────────────────────────────────────────────── */}
 				<div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
 					{/* Left: Top Wins (wider) */}
 					<motion.div
@@ -812,7 +799,6 @@ export default function WeeklyReview() {
 					</div>
 				</div>
 
-				{/* ── Feedback Banner ───────────────────────────────────────────── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 					animate={{ opacity: 1, y: 0 }}

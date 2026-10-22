@@ -99,9 +99,7 @@ export default function LiverpoolView({
 	return (
 		<main className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-slate-50/80 bg-dot-pattern flex flex-col px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-24 sm:pb-28">
 			<div className="max-w-4xl lg:max-w-5xl mx-auto w-full flex-1 flex flex-col min-h-0">
-				{/* ── Breadcrumb & Sync Row ──────────────────────────────────── */}
 				<div className="flex items-center justify-between gap-3 shrink-0 py-1 mb-2 sm:mb-3">
-					{/* Breadcrumbs */}
 					<div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-slate-500 min-w-0">
 						<Link
 							href="/"
@@ -123,7 +121,6 @@ export default function LiverpoolView({
 						</span>
 					</div>
 
-					{/* Sync status + refresh */}
 					<div className="flex items-center gap-2 shrink-0">
 						{syncTime && (
 							<span
@@ -152,7 +149,6 @@ export default function LiverpoolView({
 					</div>
 				</div>
 
-				{/* ── Main Content — vertically centered ────────────────────── */}
 				<div className="flex-1 flex flex-col justify-center min-h-0 py-1 sm:py-2">
 					{isLoading ? (
 						<FixtureSkeleton />

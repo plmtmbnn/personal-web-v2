@@ -208,9 +208,7 @@ export interface ScoreWeights {
 	volatility: number;
 }
 
-// -------------------------------------------------------------
-// Stockpick Simulator & Paper Portfolio Tracker Types
-// -------------------------------------------------------------
+// Stockpick simulator and paper portfolio tracker types
 
 export type StockPickThesis =
 	| "Compass Core Tranche"

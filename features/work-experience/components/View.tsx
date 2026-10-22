@@ -202,7 +202,6 @@ export function WorkExperienceSkeleton() {
 			aria-label="Loading work experience"
 		>
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-8 sm:space-y-10">
-				{/* ── Modern Floating Card Header Skeleton ── */}
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 						<div className="space-y-2">
@@ -210,7 +209,6 @@ export function WorkExperienceSkeleton() {
 							<div className="h-4 w-full max-w-xl bg-slate-200 rounded animate-pulse" />
 						</div>
 
-						{/* Telemetry Quick Strip */}
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="flex flex-col items-center gap-1.5">
 								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
@@ -235,11 +233,8 @@ export function WorkExperienceSkeleton() {
 					</div>
 				</div>
 
-				{/* ── 12-Column Two-Column Split Architecture ── */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-					{/* Left Column — Sticky Overview & Honors (4 cols) */}
 					<div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-						{/* Executive Summary Card */}
 						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs space-y-3">
 							<div className="h-3 w-28 bg-slate-200 rounded animate-pulse" />
 							<div className="h-5 w-44 bg-slate-200 rounded animate-pulse" />
@@ -248,7 +243,6 @@ export function WorkExperienceSkeleton() {
 								<div className="h-3.5 w-5/6 bg-slate-200 rounded animate-pulse" />
 							</div>
 
-							{/* Core Competencies */}
 							<div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
 								{[1, 2, 3, 4, 5, 6].map((i) => (
 									<div
@@ -259,7 +253,6 @@ export function WorkExperienceSkeleton() {
 							</div>
 						</div>
 
-						{/* Honors & Recognitions Card */}
 						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs space-y-3">
 							<div className="flex items-center gap-2 mb-1">
 								<div className="w-4 h-4 rounded bg-slate-200 animate-pulse" />
@@ -279,7 +272,6 @@ export function WorkExperienceSkeleton() {
 							</div>
 						</div>
 
-						{/* Connected Work Links */}
 						<div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-center justify-between">
 							<div className="h-3.5 w-24 bg-slate-200 rounded animate-pulse" />
 							<div className="w-px h-4 bg-slate-200" />
@@ -287,14 +279,12 @@ export function WorkExperienceSkeleton() {
 						</div>
 					</div>
 
-					{/* Right Column — Chronological Career Track (8 cols) */}
 					<div className="lg:col-span-8 space-y-5">
 						{[1, 2, 3].map((i) => (
 							<div
 								key={i}
 								className="w-full bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5 animate-pulse"
 							>
-								{/* Company Header Row */}
 								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
 									<div className="flex items-center gap-3.5">
 										<div className="w-11 h-11 rounded-2xl bg-slate-200 shrink-0" />
@@ -368,7 +358,6 @@ export default function WorkExperience({
 	return (
 		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-8 sm:space-y-10">
-				{/* ── Modern Floating Card Header Standard ── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -387,7 +376,6 @@ export default function WorkExperience({
 							</p>
 						</div>
 
-						{/* Telemetry Quick Strip */}
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="text-center">
 								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
@@ -428,16 +416,13 @@ export default function WorkExperience({
 					</div>
 				</motion.div>
 
-				{/* ── 12-Column Two-Column Split Architecture ── */}
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-					{/* Left Column — Sticky Overview & Honors (4 cols) */}
 					<motion.div
 						initial={reduceMotion ? false : { opacity: 0, x: -16 }}
 						animate={{ opacity: 1, x: 0 }}
 						transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
 						className="lg:col-span-4 lg:sticky lg:top-24 space-y-4"
 					>
-						{/* Executive Summary Card */}
 						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs">
 							<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-3">
 								Leadership Profile
@@ -451,7 +436,6 @@ export default function WorkExperience({
 								early venture to millions of active users.
 							</p>
 
-							{/* Core Competencies */}
 							<div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
 								{[
 									"Fintech Core",
@@ -471,7 +455,6 @@ export default function WorkExperience({
 							</div>
 						</div>
 
-						{/* Honors & Recognitions Card */}
 						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs">
 							<div className="flex items-center gap-2 mb-3.5">
 								<Award className="w-4 h-4 text-amber-600" />
@@ -508,7 +491,6 @@ export default function WorkExperience({
 							</div>
 						</div>
 
-						{/* Connected Work Links */}
 						<div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-center justify-between">
 							<Link
 								href="/portfolio"
@@ -528,7 +510,6 @@ export default function WorkExperience({
 						</div>
 					</motion.div>
 
-					{/* Right Column — Chronological Career Track (8 cols) */}
 					<motion.div
 						className="lg:col-span-8 space-y-5"
 						initial={reduceMotion ? false : "hidden"}

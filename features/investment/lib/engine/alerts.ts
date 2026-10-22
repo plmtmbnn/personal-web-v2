@@ -71,6 +71,18 @@ export function deriveAlerts(
 			asOf: vixQuote.lastTime ?? undefined,
 		});
 	} else if (
+		vixQuote?.last != null &&
+		vixQuote.last >= 25.0 &&
+		isFreshQuote(vixQuote.lastTime, data.fetchedAt)
+	) {
+		alerts.push({
+			id: "vix-elevated",
+			title: "Elevated VIX Volatility Regime",
+			message: `CBOE VIX remains in high-stress territory at ${vixQuote.last.toFixed(1)} (>= 25.0 threshold). Maintain defensive position sizing.`,
+			type: "danger",
+			asOf: vixQuote.lastTime ?? undefined,
+		});
+	} else if (
 		vixQuote?.changePct != null &&
 		vixQuote.changePct <= -10.0 &&
 		isFreshQuote(vixQuote.lastTime, data.fetchedAt)
@@ -167,7 +179,7 @@ export function deriveAlerts(
 	const oilQuote = data.markets.quotes.OIL_BRENT;
 	if (
 		oilQuote?.changePct != null &&
-		oilQuote.changePct >= 3.5 &&
+		oilQuote.changePct >= 3.0 &&
 		isFreshQuote(oilQuote.lastTime, data.fetchedAt)
 	) {
 		alerts.push({
@@ -176,6 +188,22 @@ export function deriveAlerts(
 			message: `Brent Crude spiked +${oilQuote.changePct.toFixed(1)}% to $${oilQuote.last?.toFixed(2)}. Rising imported inflation & energy subsidy risks for Indonesia.`,
 			type: "warning",
 			asOf: oilQuote.lastTime ?? undefined,
+		});
+	}
+
+	// 8b. Yen Carry-Trade Unwind Alert (USD/JPY sharp drop)
+	const usdJpyQuote = data.markets.quotes.USDJPY;
+	if (
+		usdJpyQuote?.changePct != null &&
+		usdJpyQuote.changePct <= -1.2 &&
+		isFreshQuote(usdJpyQuote.lastTime, data.fetchedAt)
+	) {
+		alerts.push({
+			id: "usdjpy-unwind",
+			title: "Yen Carry-Trade Unwind Warning",
+			message: `USD/JPY dropped ${usdJpyQuote.changePct.toFixed(2)}% to ${usdJpyQuote.last?.toFixed(2)}. Rapid Yen appreciation signals global carry-trade deleveraging across Asian equities and Crypto.`,
+			type: "warning",
+			asOf: usdJpyQuote.lastTime ?? undefined,
 		});
 	}
 

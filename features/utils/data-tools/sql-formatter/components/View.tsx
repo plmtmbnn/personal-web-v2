@@ -18,9 +18,6 @@ import UtilHeader from "@/features/utils/components/UtilHeader";
 import { formatSqlAction } from "../actions";
 import type { Dialect } from "../types";
 import { DIALECT_OPTIONS } from "../types";
-
-// ─── Component ─────────────────────────────────────────────────────────────
-
 export default function SqlFormatterView() {
 	const reduceMotion = useReducedMotion();
 	const [input, setInput] = useState("");
@@ -33,8 +30,6 @@ export default function SqlFormatterView() {
 		column?: number;
 	} | null>(null);
 	const [isCopied, setIsCopied] = useState(false);
-
-	// ─── Handlers ─────────────────────────────────────────────────────────────
 
 	const handleFormat = useCallback(async () => {
 		if (!input.trim() || isFormatting) return;
@@ -97,7 +92,6 @@ export default function SqlFormatterView() {
 				/>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-					{/* ─── Column 1: Configuration & Input ─── */}
 					<div className="lg:col-span-5 space-y-6">
 						<section className="p-6 sm:p-8 bg-white border border-slate-200/80 rounded-[2.5rem] shadow-xl shadow-slate-200/50 space-y-6">
 							<div className="space-y-4">
@@ -165,7 +159,6 @@ export default function SqlFormatterView() {
 						</section>
 					</div>
 
-					{/* ─── Column 2: Result & Validation ─── */}
 					<div className="lg:col-span-7 flex flex-col space-y-4">
 						<div className="flex items-center justify-between px-2">
 							<div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">

@@ -77,7 +77,6 @@ export function LiverpoolSkeleton() {
 			aria-label="Loading Liverpool FC matchday hub"
 		>
 			<div className="max-w-4xl lg:max-w-5xl mx-auto w-full flex-1 flex flex-col min-h-0">
-				{/* ── Breadcrumb & Sync Row ── */}
 				<div className="flex items-center justify-between gap-3 shrink-0 py-1 mb-2 sm:mb-3">
 					<div className="flex items-center gap-1.5 sm:gap-2">
 						<div className="h-3.5 w-10 bg-slate-200 rounded animate-pulse" />
@@ -92,7 +91,6 @@ export function LiverpoolSkeleton() {
 					</div>
 				</div>
 
-				{/* ── Main Content — vertically centered ── */}
 				<div className="flex-1 flex flex-col justify-center min-h-0 py-1 sm:py-2">
 					<FixtureSkeleton />
 				</div>

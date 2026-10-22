@@ -640,4 +640,154 @@ describe("Engine v2 computeCompass", () => {
 				output.playbooks.ihsg.state === "stress",
 		);
 	});
+
+	it("inverts ihsg_drawdown in dualAxis.valuationScore so deep drawdowns increase value attractiveness", () => {
+		const nearHighData = createMockData();
+		nearHighData.markets.quotes.JKSE.last = 7900;
+		nearHighData.markets.quotes.JKSE.high52w = 8000; // -1.25% drawdown
+
+		const deepDiscountData = createMockData();
+		deepDiscountData.markets.quotes.JKSE.last = 6200;
+		deepDiscountData.markets.quotes.JKSE.high52w = 8000; // -22.5% drawdown
+
+		const nearHighOut = computeCompass(nearHighData, DEFAULT_THRESHOLDS);
+		const deepDiscountOut = computeCompass(
+			deepDiscountData,
+			DEFAULT_THRESHOLDS,
+		);
+
+		const ddFactorDeep = deepDiscountOut.regimes.ihsg.factors.find(
+			(f) => f.key === "ihsg_drawdown",
+		);
+		expect(ddFactorDeep?.score).toBe(15); // Bearish for trend/composite
+		expect(
+			deepDiscountOut.regimes.ihsg.dualAxis?.valuationScore,
+		).toBeGreaterThan(nearHighOut.regimes.ihsg.dualAxis?.valuationScore ?? 0);
+		expect(deepDiscountOut.regimes.ihsg.dualAxis?.valuationState).toBe(
+			"accumulation",
+		);
+	});
+
+	it("incorporates Indonesia CPI YoY and Real BI Policy Rate into bi_rate factor and contextFlags", () => {
+		const mockData = createMockData();
+		mockData.markets.macro.IDNCPIALLMINMEI = {
+			id: "IDNCPIALLMINMEI",
+			name: "Indonesia CPI YoY",
+			frequency: "Monthly",
+			units: "Percent",
+			data: [{ date: "2026-09-01", value: 4.1 }], // Above BI 1.5%-3.5% corridor
+		};
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		const biFactor = output.regimes.ihsg.factors.find(
+			(f) => f.key === "bi_rate",
+		);
+		expect(biFactor?.note).toContain("exceeds BI's 1.5%-3.5% target corridor");
+		expect(output.regimes.ihsg.contextFlags).toContain(
+			"Elevated Domestic CPI (4.10% > 3.5% Target)",
+		);
+	});
+
+	it("prioritizes FRED DFII10 TIPS real yield in global liquidity scoring and triggers USD/JPY & Brent alerts", () => {
+		const mockData = createMockData();
+		mockData.markets.macro.DFII10 = {
+			id: "DFII10",
+			name: "10-Year TIPS Real Yield",
+			frequency: "Daily",
+			units: "Percent",
+			data: [{ date: "2026-10-02", value: 0.35 }],
+		};
+		mockData.markets.quotes.USDJPY = {
+			symbol: "USDJPY",
+			name: "USD/JPY",
+			last: 142.5,
+			change: -2.1,
+			changePct: -1.45,
+			open: null,
+			high: 144.8,
+			low: 142.0,
+			previousClose: 144.6,
+			high52w: 160.0,
+			low52w: 138.0,
+			currency: "JPY",
+			lastTime: "2026-10-04",
+			marketStatus: null,
+			source: "yahoo",
+		};
+		mockData.markets.quotes.OIL_BRENT = {
+			symbol: "OIL_BRENT",
+			name: "Brent Crude",
+			last: 84.0,
+			change: 2.6,
+			changePct: 3.2,
+			open: null,
+			high: 84.5,
+			low: 81.2,
+			previousClose: 81.4,
+			high52w: 92.0,
+			low52w: 68.0,
+			currency: "USD",
+			lastTime: "2026-10-04",
+			marketStatus: null,
+			source: "yahoo",
+		};
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		const realYieldFactor = output.regimes.global.factors.find(
+			(f) => f.key === "us_real_yield",
+		);
+		expect(realYieldFactor?.valueStr).toBe("0.35%");
+		expect(realYieldFactor?.direction).toBe("bullish");
+		expect(output.alerts.some((a) => a.id === "usdjpy-unwind")).toBe(true);
+		expect(output.alerts.some((a) => a.id === "oil-surge")).toBe(true);
+	});
+
+	it("enriches Crypto factors with OKX Open Interest, implied MVRV dollar bands, and dynamic playbook keyLevels", () => {
+		const mockData = createMockData();
+		mockData.markets.quotes.ETH = {
+			symbol: "ETH-USD",
+			name: "Ethereum",
+			last: 2650,
+			change: 60,
+			changePct: 2.3,
+			open: null,
+			high: 2680,
+			low: 2580,
+			previousClose: 2590,
+			high52w: 4000,
+			low52w: 2100,
+			currency: "USD",
+			lastTime: "2026-10-04",
+			marketStatus: null,
+			source: "yahoo",
+		};
+		mockData.markets.cryptoFlows = {
+			totalStablecoinSupplyUsd: 172_000_000_000,
+			stablecoin30dChangePct: 2.4,
+			btcFundingRate8hPct: 0.008,
+			btcOpenInterestUsd: 18_500_000_000,
+			updatedAt: 1700000000,
+		};
+		mockData.markets.cryptoOnChain = {
+			mvrvRatio: 1.6,
+			mvrvZScore: 1.6,
+			asOf: "2026-10-04",
+		};
+
+		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
+		const fundingFactor = output.regimes.crypto.factors.find(
+			(f) => f.key === "btc_funding",
+		);
+		const mvrvFactor = output.regimes.crypto.factors.find(
+			(f) => f.key === "crypto_mvrv",
+		);
+
+		expect(fundingFactor?.valueStr).toContain("$18.50B OI");
+		expect(mvrvFactor?.note).toContain("Implied bands: 1.0x Floor");
+		expect(
+			output.regimes.crypto.contextFlags.some((c) => c.startsWith("ETH/BTC:")),
+		).toBe(true);
+		expect(output.playbooks.ihsg.liveSummary).toContain("Dual-Axis Stance:");
+		expect(output.playbooks.crypto.keyLevels?.length).toBeGreaterThan(0);
+	});
 });

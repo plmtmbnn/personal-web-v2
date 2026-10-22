@@ -11,7 +11,6 @@ import WheelControls from "./WheelControls";
 import WinnerModal from "./WinnerModal";
 
 export default function SpinnerWheelView() {
-	// State
 	const [rawText, setRawText] = useState(
 		"Neapolitan Pizza\nTokyo Ramen\nBaja Fish Tacos\nHandcrafted Burgers\nMediterranean Bowl\nPad Thai\nJapanese Curry\nFresh Sushi",
 	);

@@ -210,9 +210,12 @@ export function scoreCrypto(
 		});
 	}
 
-	// 4. BTC Perpetual Funding Rate
+	// 4. BTC Perpetual Funding Rate & Open Interest Leverage
 	if (flows?.btcFundingRate8hPct != null) {
 		const funding = flows.btcFundingRate8hPct;
+		const oiUsd = flows.btcOpenInterestUsd ?? null;
+		const oiStr =
+			oiUsd != null && oiUsd > 0 ? `$${(oiUsd / 1e9).toFixed(2)}B OI` : null;
 		let score = 50;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
 
@@ -227,17 +230,27 @@ export function scoreCrypto(
 			dir = "bullish";
 		}
 
+		const fundingNote =
+			funding >= thresholds.crypto.fundingOverheated
+				? oiStr
+					? `Overleveraged longs (${oiStr}); high vulnerability to cascading liquidation squeeze.`
+					: "Overleveraged longs; high vulnerability to cascading squeeze."
+				: funding <= thresholds.crypto.fundingHeavilyNegative
+					? oiStr
+						? `Heavy short-side crowding (${oiStr}); elevated volatility and short-squeeze risk.`
+						: "Heavy panic shorting across perpetual swaps."
+					: oiStr
+						? `Neutral leverage environment (${oiStr}). Organic spot-led participation.`
+						: "Neutral leverage environment. Organic spot-led participation.";
+
 		factors.push({
 			key: "btc_funding",
 			label: "Perpetual Swap Funding Rate (8h)",
-			valueStr: `${funding >= 0 ? "+" : ""}${funding.toFixed(3)}%`,
+			valueStr: `${funding >= 0 ? "+" : ""}${funding.toFixed(3)}%${oiStr ? ` (${oiStr})` : ""}`,
 			score,
 			weight: wFunding,
 			direction: dir,
-			note:
-				funding >= thresholds.crypto.fundingOverheated
-					? "Overleveraged longs; high vulnerability to cascading squeeze."
-					: "Neutral leverage environment. Organic spot-led participation.",
+			note: fundingNote,
 		});
 	}
 
@@ -276,10 +289,14 @@ export function scoreCrypto(
 		}
 	}
 
-	// 6. On-Chain Valuation (Bitcoin MVRV Valuation Ratio)
+	// 6. On-Chain Valuation (Bitcoin MVRV Valuation Ratio & Implied Realized Price Bands)
 	const mvrvVal =
 		data.markets.cryptoOnChain?.mvrvRatio ??
 		data.markets.cryptoOnChain?.mvrvZScore;
+	const impliedRealizedPrice =
+		btcPrice != null && mvrvVal != null && mvrvVal > 0
+			? btcPrice / mvrvVal
+			: null;
 	if (mvrvVal != null) {
 		let score = 55;
 		let dir: "bullish" | "bearish" | "neutral" = "neutral";
@@ -305,6 +322,21 @@ export function scoreCrypto(
 			dir = "bullish";
 			note =
 				"Healthy cycle valuation. Spot positions supported by on-chain cost basis.";
+		}
+
+		if (impliedRealizedPrice != null) {
+			const floorPrice = Math.round(
+				impliedRealizedPrice * thresholds.crypto.mvrv.accumulation,
+			).toLocaleString("en-US");
+			const overheatPrice = Math.round(
+				impliedRealizedPrice * thresholds.crypto.mvrv.overheat,
+			).toLocaleString("en-US");
+			const fairMaxPrice = thresholds.crypto.mvrv.fairValueMax
+				? Math.round(
+						impliedRealizedPrice * thresholds.crypto.mvrv.fairValueMax,
+					).toLocaleString("en-US")
+				: null;
+			note += ` Implied bands: ${thresholds.crypto.mvrv.accumulation.toFixed(1)}x Floor $${floorPrice}${fairMaxPrice ? `, ${thresholds.crypto.mvrv.fairValueMax?.toFixed(1)}x Fair Max $${fairMaxPrice}` : ""}, ${thresholds.crypto.mvrv.overheat.toFixed(1)}x Overheat $${overheatPrice}.`;
 		}
 
 		factors.push({
@@ -375,13 +407,32 @@ export function scoreCrypto(
 	if (btcDom != null) {
 		if (btcDom >= thresholds.crypto.altcoinBtcDominanceMax) {
 			contextFlags.push(
-				`High BTC Dominance (${btcDom.toFixed(1)}%) — Altcoins Suppressed`,
+				`High BTC Dominance (${btcDom.toFixed(1)}%): Altcoins Suppressed`,
 			);
 		} else {
 			contextFlags.push(
-				`Softening BTC Dominance (${btcDom.toFixed(1)}%) — Alt-Rotation Watch`,
+				`Softening BTC Dominance (${btcDom.toFixed(1)}%): Alt-Rotation Watch`,
 			);
 		}
+	}
+
+	// Context Check: ETH/BTC Ratio & Relative Strength
+	const ethQuote = data.markets.quotes.ETH;
+	if (btcPrice != null && btcPrice > 0 && ethQuote?.last != null) {
+		const ethBtcRatio = ethQuote.last / btcPrice;
+		const ethRelChange =
+			ethQuote.changePct != null && btcQuote?.changePct != null
+				? ethQuote.changePct - btcQuote.changePct
+				: null;
+		const relLabel =
+			ethRelChange != null
+				? ethRelChange >= 0.5
+					? "ETH Outperforming"
+					: ethRelChange <= -0.5
+						? "ETH Lagging BTC"
+						: "Neutral vs BTC"
+				: "Spot Ratio";
+		contextFlags.push(`ETH/BTC: ${ethBtcRatio.toFixed(4)} (${relLabel})`);
 	}
 
 	// Compute Weighted Composite
@@ -399,27 +450,36 @@ export function scoreCrypto(
 
 	const { state, tone } = determineState(compositeScore, coverage, thresholds);
 
+	const btcMaFactor = factors.find((f) => f.key === "btc_200ma");
+	const stableFactor = factors.find((f) => f.key === "stablecoin_supply");
+	const mvrvFactor = factors.find((f) => f.key === "crypto_mvrv");
+	const liveCryptoDrivers = [
+		btcMaFactor ? `BTC ${btcMaFactor.valueStr}` : null,
+		stableFactor ? `Stablecoins 30D ${stableFactor.valueStr}` : null,
+		mvrvFactor ? `MVRV ${mvrvFactor.valueStr}x` : null,
+	].filter(Boolean);
+	const cryptoDriverSuffix =
+		liveCryptoDrivers.length > 0
+			? ` Live telemetry: ${liveCryptoDrivers.join(", ")}.`
+			: "";
+
 	let headline = "Crypto Markets Consolidating";
-	let diagnosis =
-		"BTC trading in neutral structure. Spot accumulation allowed only near major support.";
+	let diagnosis = `BTC trading in neutral structure. Spot accumulation allowed only near major support.${cryptoDriverSuffix}`;
 
 	if (state === "risk_on") {
 		headline = "Crypto Macro Expansion Regime";
-		diagnosis =
-			"BTC trending cleanly above 200D MA with stablecoin inflows and supportive macro liquidity.";
+		diagnosis = `BTC trending cleanly above 200D MA with stablecoin inflows and supportive macro liquidity.${cryptoDriverSuffix}`;
 	} else if (state === "defensive") {
-		headline = "Crypto Risk-Off Regime — Reduce Exposure";
-		diagnosis =
-			"BTC below key trend baselines or stablecoin outflows. Hold cash/stablecoins; pause altcoins.";
+		headline = "Crypto Risk-Off Regime: Reduce Exposure";
+		diagnosis = `BTC below key trend baselines or stablecoin outflows. Hold cash/stablecoins; pause altcoins.${cryptoDriverSuffix}`;
 	} else if (state === "stress") {
 		headline = "Severe Crypto Leverage Flushing";
-		diagnosis =
-			"Deleveraging cascade. All active trading halted; preserve capital in cold storage.";
+		diagnosis = `Deleveraging cascade. All active trading halted; preserve capital in cold storage.${cryptoDriverSuffix}`;
 	}
 
 	// Evaluate Asymmetric Cycle Extremes
 	let asymmetryZone: MarketRegimeScore["asymmetryZone"] = null;
-	const mvrv = data.markets.cryptoOnChain?.mvrvZScore;
+	const mvrv = mvrvVal;
 	const fngScore = data.sentiment.crypto?.data?.[0]?.value
 		? parseInt(data.sentiment.crypto.data[0].value, 10)
 		: null;
@@ -431,10 +491,14 @@ export function scoreCrypto(
 			mvrv != null &&
 			mvrv <= thresholds.crypto.mvrv.accumulation * 1.25)
 	) {
+		const floorNote =
+			impliedRealizedPrice != null
+				? ` (Implied Realized Floor ~$${Math.round(impliedRealizedPrice).toLocaleString("en-US")})`
+				: "";
 		asymmetryZone = {
 			type: "accumulation",
 			title: "Generational Asymmetry: Accumulation Zone Active",
-			description: `Bitcoin is at a historic valuation floor (MVRV <= ${thresholds.crypto.mvrv.accumulation.toFixed(1)}) alongside peak sentiment fear. Risk-reward mathematically skews heavily to multi-year spot accumulation.`,
+			description: `Bitcoin is at a historic valuation floor (MVRV <= ${thresholds.crypto.mvrv.accumulation.toFixed(1)})${floorNote} alongside peak sentiment fear. Risk-reward mathematically skews heavily to multi-year spot accumulation.`,
 		};
 	} else if (
 		(mvrv != null && mvrv >= thresholds.crypto.mvrv.overheat) ||
@@ -443,11 +507,14 @@ export function scoreCrypto(
 			mvrv != null &&
 			mvrv >= thresholds.crypto.mvrv.overheat * 0.85)
 	) {
+		const overheatNote =
+			impliedRealizedPrice != null
+				? ` (Overheat Band ~$${Math.round(impliedRealizedPrice * thresholds.crypto.mvrv.overheat).toLocaleString("en-US")})`
+				: "";
 		asymmetryZone = {
 			type: "distribution",
 			title: "Cycle Distribution Alert: Macro Overheat Warning",
-			description:
-				"On-chain valuation is stretched into historical cycle top bands with extreme market greed. Hard profit preservation protocols active.",
+			description: `On-chain valuation is stretched into historical cycle top bands${overheatNote} with extreme market greed. Hard profit preservation protocols active.`,
 		};
 	}
 

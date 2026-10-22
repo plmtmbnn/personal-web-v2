@@ -58,9 +58,6 @@ import remarkGfm from "remark-gfm";
 import { CATEGORIES, getCategoryStyles } from "@/features/blog/utils";
 import { normalizeMarkdown } from "./TableOfContents";
 
-// ─────────────────────────────────────────────
-// Form Category Select Component (Floating Card UI/UX)
-// ─────────────────────────────────────────────
 interface FormCategorySelectProps {
 	value: string;
 	onChange: (category: string) => void;

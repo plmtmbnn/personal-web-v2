@@ -1,3 +1,5 @@
+## [0.114.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.114.0...v0.114.1) (2026-10-22)
+
 # [0.114.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.113.0...v0.114.0) (2026-10-20)
 
 

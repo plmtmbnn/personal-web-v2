@@ -1,3 +1,10 @@
+# [0.115.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.114.1...v0.115.0) (2026-10-24)
+
+
+### Features
+
+* add admin running trade retriever and json to csv utility ([44c427d](https://github.com/plmtmbnn/personal-web-v2/commit/44c427dc08dd39ac2d6d6280a539aef18377236a))
+
 ## [0.114.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.114.0...v0.114.1) (2026-10-22)
 
 # [0.114.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.113.0...v0.114.0) (2026-10-20)

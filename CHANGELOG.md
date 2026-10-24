@@ -1,3 +1,10 @@
+# [0.116.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.115.0...v0.116.0) (2026-10-24)
+
+
+### Features
+
+* **running-trade:** add open market catch-up snapshot and update next.js ([5c63422](https://github.com/plmtmbnn/personal-web-v2/commit/5c6342267ae091f7b8cadfbeacd14b49bf79ca55))
+
 # [0.115.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.114.1...v0.115.0) (2026-10-24)
 
 

@@ -77,6 +77,44 @@ describe("collectRunningTrades", () => {
 		});
 		expect(cancelled.stopReason).toBe("cancelled");
 	});
+
+	it("stops with stopReason: 'caught_up' when market is open and empty page reached", async () => {
+		const pages = [
+			{ trades: [trade(1), trade(2)], isOpenMarket: true },
+			{ trades: [], isOpenMarket: true },
+		];
+		const fetchPage = vi.fn(
+			async () => pages.shift() ?? { trades: [], isOpenMarket: true },
+		);
+
+		const res = await collectRunningTrades({ fetchPage });
+		expect(res.stopReason).toBe("caught_up");
+		expect(res.isOpenMarket).toBe(true);
+		expect(res.trades.map((t) => t.trade_number)).toEqual(["1", "2"]);
+	});
+
+	it("stops with stopReason: 'empty' when market is open but 0 rows were collected", async () => {
+		const fetchPage = vi.fn(async () => ({ trades: [], isOpenMarket: true }));
+		const res = await collectRunningTrades({ fetchPage });
+
+		expect(res.stopReason).toBe("empty");
+		expect(res.isOpenMarket).toBe(true);
+		expect(res.trades).toHaveLength(0);
+	});
+
+	it("stops with stopReason: 'empty' when market is closed and empty page reached", async () => {
+		const pages = [
+			{ trades: [trade(1)], isOpenMarket: false },
+			{ trades: [], isOpenMarket: false },
+		];
+		const fetchPage = vi.fn(
+			async () => pages.shift() ?? { trades: [], isOpenMarket: false },
+		);
+
+		const res = await collectRunningTrades({ fetchPage });
+		expect(res.stopReason).toBe("empty");
+		expect(res.isOpenMarket).toBe(false);
+	});
 });
 
 describe("collectRunningTrades rate limiting", () => {

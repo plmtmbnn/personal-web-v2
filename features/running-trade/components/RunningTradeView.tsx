@@ -68,6 +68,8 @@ function downloadCsv(trades: RunningTrade[], symbol: string) {
 
 const STOP_MESSAGES: Record<CollectResult["stopReason"], string> = {
 	empty: "Finished. The API returned an empty page.",
+	caught_up:
+		"Caught up to live market. Retrieved all trades up to the present moment.",
 	cap: `Stopped at the ${MAX_PAGES}-page safety cap. Raise the limit or narrow the filters to get the rest.`,
 	cancelled: "Cancelled.",
 	error: "Stopped by an error.",
@@ -83,6 +85,7 @@ export default function RunningTradeView() {
 	const [stocks, setStocks] = useState<StockOption[]>([]);
 	const [tickerOpen, setTickerOpen] = useState(false);
 	const [running, setRunning] = useState(false);
+	const [isLiveMarket, setIsLiveMarket] = useState(false);
 	const [progress, setProgress] = useState({ pages: 0, rows: 0 });
 	const [waitNote, setWaitNote] = useState<string | null>(null);
 	const [result, setResult] = useState<CollectResult | null>(null);
@@ -130,6 +133,7 @@ export default function RunningTradeView() {
 		const ac = new AbortController();
 		abortRef.current = ac;
 		setRunning(true);
+		setIsLiveMarket(false);
 		setResult(null);
 		setProgress({ pages: 0, rows: 0 });
 
@@ -163,7 +167,12 @@ export default function RunningTradeView() {
 			}
 			if (!res.ok)
 				throw new Error(json?.error ?? `Request failed (${res.status})`);
-			return json?.data?.running_trade ?? [];
+			const marketOpen = Boolean(json?.data?.is_open_market);
+			if (marketOpen) setIsLiveMarket(true);
+			return {
+				trades: json?.data?.running_trade ?? [],
+				isOpenMarket: marketOpen,
+			};
 		};
 
 		const out = await collectRunningTrades({
@@ -184,7 +193,10 @@ export default function RunningTradeView() {
 		setRunning(false);
 		abortRef.current = null;
 		// A clean finish downloads automatically; partial runs wait for the user.
-		if (out.stopReason === "empty" && out.trades.length > 0) {
+		if (
+			(out.stopReason === "empty" || out.stopReason === "caught_up") &&
+			out.trades.length > 0
+		) {
 			downloadCsv(out.trades, settings.symbol);
 		}
 	}, [settings]);
@@ -449,24 +461,32 @@ export default function RunningTradeView() {
 
 			<div aria-live="polite" aria-busy={running}>
 				{running && (
-					<div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex items-center gap-4">
-						<Loader2
-							className="w-5 h-5 text-slate-900 animate-spin shrink-0"
-							aria-hidden
-						/>
-						<p className="text-sm text-slate-700">
-							<span className="font-mono font-bold">{progress.pages}</span>{" "}
-							pages,{" "}
-							<span className="font-mono font-bold">
-								{progress.rows.toLocaleString()}
-							</span>{" "}
-							rows collected
-							{waitNote && (
-								<span className="block text-xs text-amber-700 mt-0.5">
-									{waitNote}
-								</span>
-							)}
-						</p>
+					<div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex items-center justify-between gap-4">
+						<div className="flex items-center gap-4">
+							<Loader2
+								className="w-5 h-5 text-slate-900 animate-spin shrink-0"
+								aria-hidden
+							/>
+							<p className="text-sm text-slate-700">
+								<span className="font-mono font-bold">{progress.pages}</span>{" "}
+								pages,{" "}
+								<span className="font-mono font-bold">
+									{progress.rows.toLocaleString()}
+								</span>{" "}
+								rows collected
+								{waitNote && (
+									<span className="block text-xs text-amber-700 mt-0.5">
+										{waitNote}
+									</span>
+								)}
+							</p>
+						</div>
+						{isLiveMarket && (
+							<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0">
+								<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+								Market Open
+							</span>
+						)}
 					</div>
 				)}
 
@@ -491,9 +511,16 @@ export default function RunningTradeView() {
 								/>
 							)}
 							<div className="min-w-0 space-y-1">
-								<p className="text-sm font-bold text-slate-900">
-									{STOP_MESSAGES[result.stopReason]}
-								</p>
+								<div className="flex flex-wrap items-center gap-2">
+									<p className="text-sm font-bold text-slate-900">
+										{STOP_MESSAGES[result.stopReason]}
+									</p>
+									{result.isOpenMarket && (
+										<span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+											Market Open
+										</span>
+									)}
+								</div>
 								{result.error && (
 									<p className="text-sm text-rose-700 break-words">
 										{result.error}
@@ -503,7 +530,9 @@ export default function RunningTradeView() {
 									{result.trades.length.toLocaleString()} rows across{" "}
 									{result.pages} pages.
 									{result.stopReason === "empty" && !hasRows
-										? " Nothing matched these filters, so no file was created."
+										? result.isOpenMarket
+											? " Market is open, but no trades matched these filters today so far."
+											: " Nothing matched these filters, so no file was created."
 										: ""}
 								</p>
 							</div>
@@ -516,7 +545,8 @@ export default function RunningTradeView() {
 								className="inline-flex items-center gap-2 min-h-11 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider transition-colors active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 focus-visible:ring-offset-2"
 							>
 								<Download className="w-4 h-4" aria-hidden />
-								{result.stopReason === "empty"
+								{result.stopReason === "empty" ||
+								result.stopReason === "caught_up"
 									? "Download again"
 									: "Download partial CSV"}
 							</button>

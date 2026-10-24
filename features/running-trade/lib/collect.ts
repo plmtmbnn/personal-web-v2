@@ -24,13 +24,24 @@ export const PAUSE_MS = 5_000;
 export const MAX_RATE_LIMIT_RETRIES = 5;
 const DEFAULT_RETRY_MS = 10_000;
 
-export type StopReason = "empty" | "cap" | "cancelled" | "error" | "stalled";
+export type StopReason =
+	| "empty"
+	| "cap"
+	| "cancelled"
+	| "error"
+	| "stalled"
+	| "caught_up";
+
+export type FetchPageResult =
+	| RunningTrade[]
+	| { trades: RunningTrade[]; isOpenMarket?: boolean };
 
 export interface CollectResult {
 	trades: RunningTrade[];
 	pages: number;
 	stopReason: StopReason;
 	error?: string;
+	isOpenMarket?: boolean;
 }
 
 export class RateLimitError extends Error {
@@ -44,7 +55,7 @@ export class RateLimitError extends Error {
 }
 
 interface CollectOptions {
-	fetchPage: (tradeNumber?: string) => Promise<RunningTrade[]>;
+	fetchPage: (tradeNumber?: string) => Promise<FetchPageResult>;
 	onProgress?: (pages: number, rows: number) => void;
 	onWait?: (ms: number, reason: "pause" | "rate-limit") => void;
 	signal?: AbortSignal;
@@ -82,22 +93,41 @@ export async function collectRunningTrades({
 	const trades: RunningTrade[] = [];
 	let pages = 0;
 	let cursor: string | undefined;
+	let lastIsOpenMarket = false;
 
 	while (pages < maxPages) {
-		if (signal?.aborted) return { trades, pages, stopReason: "cancelled" };
+		if (signal?.aborted)
+			return {
+				trades,
+				pages,
+				stopReason: "cancelled",
+				isOpenMarket: lastIsOpenMarket,
+			};
 
 		if (pages > 0 && pages % pauseEvery === 0) {
 			onWait?.(pauseMs, "pause");
 			await sleep(pauseMs, signal);
-			if (signal?.aborted) return { trades, pages, stopReason: "cancelled" };
+			if (signal?.aborted)
+				return {
+					trades,
+					pages,
+					stopReason: "cancelled",
+					isOpenMarket: lastIsOpenMarket,
+				};
 		}
 
-		let batch: RunningTrade[] | undefined;
-		for (let attempt = 0; batch === undefined; attempt++) {
+		let res: FetchPageResult | undefined;
+		for (let attempt = 0; res === undefined; attempt++) {
 			try {
-				batch = await fetchPage(cursor);
+				res = await fetchPage(cursor);
 			} catch (e) {
-				if (signal?.aborted) return { trades, pages, stopReason: "cancelled" };
+				if (signal?.aborted)
+					return {
+						trades,
+						pages,
+						stopReason: "cancelled",
+						isOpenMarket: lastIsOpenMarket,
+					};
 				if (e instanceof RateLimitError && attempt < maxRetries) {
 					const wait = e.retryAfterMs ?? DEFAULT_RETRY_MS * (attempt + 1);
 					onWait?.(wait, "rate-limit");
@@ -109,11 +139,21 @@ export async function collectRunningTrades({
 					pages,
 					stopReason: "error",
 					error: e instanceof Error ? e.message : "Request failed",
+					isOpenMarket: lastIsOpenMarket,
 				};
 			}
 		}
 
-		if (batch.length === 0) return { trades, pages, stopReason: "empty" };
+		const batch = Array.isArray(res) ? res : res.trades;
+		if (!Array.isArray(res) && typeof res.isOpenMarket === "boolean") {
+			lastIsOpenMarket = res.isOpenMarket;
+		}
+
+		if (batch.length === 0) {
+			const stopReason: StopReason =
+				lastIsOpenMarket && trades.length > 0 ? "caught_up" : "empty";
+			return { trades, pages, stopReason, isOpenMarket: lastIsOpenMarket };
+		}
 
 		trades.push(...batch);
 		pages += 1;
@@ -121,11 +161,17 @@ export async function collectRunningTrades({
 
 		const next = batch[batch.length - 1].trade_number;
 		// A repeated cursor means the API ignores trade_number; looping again would never end.
-		if (next === cursor) return { trades, pages, stopReason: "stalled" };
+		if (next === cursor)
+			return {
+				trades,
+				pages,
+				stopReason: "stalled",
+				isOpenMarket: lastIsOpenMarket,
+			};
 		cursor = next;
 	}
 
-	return { trades, pages, stopReason: "cap" };
+	return { trades, pages, stopReason: "cap", isOpenMarket: lastIsOpenMarket };
 }
 
 export function buildCsv(trades: RunningTrade[]): string {

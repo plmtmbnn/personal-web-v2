@@ -45,7 +45,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 > - **Mandatory Response Conclusion**: Conclude replies with 1–2 lines identifying what was skipped or not checked, and any risks the user must know.
 
 ## 🛠 Tech Stack
-- **Framework:** Next.js 16.4.0 (App Router) & React 19.3.0
+- **Framework:** Next.js 16.4.2 (App Router) & React 19.3.1
 - **Language:** TypeScript 5.9.3
 - **Runtime:** Node.js v24.22.1 (LTS)
 - **Package Manager:** pnpm 12.4.2
@@ -85,7 +85,7 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **pnpm Upgrade:** v12.4.2 with improved dependency resolution and native binary performance
 - **Image Optimization:** Enhanced device sizes, formats (AVIF/WebP), and caching
 - **TypeScript:** Incremental compilation with performance optimizations
-- **Vitest Runner Acceleration:** Configured `import.meta.dirname` and `fileParallelism: true` in `vitest.config.ts`, executing all 55 test files (579 tests) cleanly.
+- **Vitest Runner Acceleration:** Configured `import.meta.dirname` and `fileParallelism: true` in `vitest.config.ts`, executing all 58 test files (613 tests) cleanly.
 
 ## 📂 Project Structure (Feature-Module Architecture)
 The project follows a modular, domain-driven structure to ensure scalability and isolation.
@@ -135,6 +135,7 @@ Contains all business logic, components, and types for specific features.
 - `features/movement/`: Desk-friendly Daily Movement Snacks habit tracker designed to break up prolonged sitting during deep work. Powered by Upstash Redis (`admin:movement:state`) with cross-device synchronization, server-side initial state loading (`getMovementStateAction`), instant optimistic client UI, tab-focus re-sync, automatic legacy `localStorage` migration (`syncLocalMovementStateAction`), non-destructive client/server log merging with double-mount guard (`hasInitializedRef`), deterministic `Asia/Jakarta` date keys (`getLocalDateKey`), centralized undone count calculation (`calculateUndoneCount`), and localized skeleton loading. Features `MovementView`, `DailyProgressCard` with circular progress ring and pressure-free motivation messaging, `TodayScheduleTimeline` with 6 configurable slots (09:00–17:00), 1-click completion, undo, skip/unskip toggles, and extra break tray, `SessionTimerModal` clean exercise guide with form instructions and Google video demo linkout (zero countdown timer or rep stepper clutter), `MovementLibraryView` with 8 initial desk movements and category filtering, `WeeklyHistoryView` with 4-week calendar consistency heatmap, `RoutineSettingsModal` with target, slot, and Web Audio chime toggles, JSON backup export/import, zero-PinGuard admin authentication, real-time `movement:state:updated` event dispatch on mutations carrying `{ state, undoneCount }`, and dynamic undone break telemetry via `getUndoneMovementSnacksCount()` surfacing directly on `CompactBottomBar.tsx` / `FloatingNavDock.tsx`.
 - `features/portfolio/` & `features/work-experience/`: Professional showcases, career timeline, interactive project cards, skills radar/metrics.
 - `features/reminders/`: Straightforward Quick Reminders actions, types, linear checklist layout, target due-date presets (`Today`, `Tomorrow`, `In 1 Week`, `Pick Date`), 1-click completion with 3.5s Undo toast, linkified URL pills, quick copy, and 90-day retention backed by Upstash Redis. Reminders count telemetry utilizes an indexed Redis set (`admin:reminder:ids`) executing $O(1)$ `redis.scard("admin:reminder:ids")` instead of expensive $O(N)$ key scans. Synchronous date resolver helpers are extracted to `features/reminders/utils.ts` (`resolveDueDate`) in strict compliance with the Turbopack Server Action Hygiene Standard.
+- `features/running-trade/`: Admin-only Running Trade Retriever. Pulls IDX running trade for a single ticker from an external API by following the `trade_number` cursor and exports a CSV. `types.ts` holds the response interfaces, `MARKET_BOARDS` (`BOARD_TYPE_REGULAR`, `BOARD_TYPE_NEGOTIATION`), and `DEFAULT_SETTINGS`. `lib/collect.ts` holds the pure `collectRunningTrades()` loop (periodic cooldown and 429 retry through `RateLimitError`) and `buildCsv()`. `components/RunningTradeView.tsx` is the client form. Unit tests live in `__tests__/collect.test.ts`.
 - `features/travel/`: Travel Chronicles & Global Footprint Tracker (`/adventures/travel`). Built on the Modern Floating Card architecture over clean textured canvas (`bg-slate-50/80 bg-dot-pattern`). Organized into two distinct presentation and privacy layers:
   - *Explored Journeys (Visited)*: High-contrast 4:3 photography cards, location and UTC-parsed visit dates (`new Date(`${destination.visitedDate}-01`)`), and interactive `PostcardModal` generating customizable 3D vintage travel postcards with scalloped stamps, flag CDN badges, rubber postmarks, flip mechanics, and HTML5 Canvas image exports.
   - *On the Radar (Wishlist - Classified Teaser Standard)*: Strictly adheres to the **Travel Wishlist Privacy & Classified Teaser Standard**. Private bucket lists, specific destination names, and unvisited itineraries are never leaked or detailed openly. Unvisited items render as atmospheric, high-tech tactical teaser cards (`DestinationCard.tsx`) with SVG concentric radar grids, pulsing `Radio` squircle emblems, `Lock` / `Classified` badges, target classification codes (`EXP-01`, `EXP-02`), generalized regional archetypes (*Domestic Archipelago*, *European Horizon*, *East Asian Corridor*, *Southeast Asian Trail*), and redacted coordinate pills (`Coordinates: [REDACTED]` with *"Itinerary kept offline. Revealed upon touchdown."*). Wishlist teaser cards are non-clickable with zero modal exposure.
@@ -158,7 +159,7 @@ Reserved for feature-agnostic, shared logic.
 
 ### 4. `app/` (Routing Layer)
 Strictly for routing and page definitions.
-- `app/admin/`: Centralized management dashboard, `/admin/reminders` Quick Reminders portal (with localized skeleton loader `app/admin/reminders/loading.tsx` and `RemindersSkeleton.tsx` mirroring the 3-tile header telemetry strip, creation card, and controls toolbar), and `/admin/movement` Daily Movement Snacks portal (with localized skeleton loader `app/admin/movement/loading.tsx` and `MovementSkeleton.tsx`, protected strictly by `checkAdmin()` with NO PinGuard).
+- `app/admin/`: Centralized management dashboard, `/admin/reminders` Quick Reminders portal (with localized skeleton loader `app/admin/reminders/loading.tsx` and `RemindersSkeleton.tsx` mirroring the 3-tile header telemetry strip, creation card, and controls toolbar), and `/admin/movement` Daily Movement Snacks portal (with localized skeleton loader `app/admin/movement/loading.tsx` and `MovementSkeleton.tsx`, protected strictly by `checkAdmin()` with NO PinGuard), plus `/admin/running-trade` Running Trade Retriever portal (guarded by `requireAuth({ requireAdmin: true })`).
 - `app/adventures/`: Aesthetic content pages for Running (`/adventures/running`) and Travel (`/adventures/travel`) logs.
 - `app/auth/`: Callback route for Supabase authentication.
 - `app/blog/`: SSG-optimized blog system with dynamic routes (`[slug]`).
@@ -172,10 +173,11 @@ Strictly for routing and page definitions.
 - `app/tasks/`: Personal task management, 6-month horizon, and analytics agenda.
 - `app/unauthorized/`: Fallback access-denied page decoupled into Server Component declaring SEO metadata and Suspense boundary wrapping client `UnauthorizedView.tsx` with breadcrumbs, monospace HTTP status pill, security telemetry diagnostics tray, and calibrated bottom clearance (`pb-28 sm:pb-36`).
 - `app/not-found.tsx`: Zero-redundancy Route Not Found page with path telemetry and single recovery trigger.
-- `app/utils/`: High-fidelity developer utilities index across 7 functional categories and 23 dedicated utility tools (including Faceless Social Canvas at `/utils/social-canvas` and Disciplined Rebuild Rulebook at `/utils/rebuild-rulebook`).
+- `app/utils/`: High-fidelity developer utilities index across 7 functional categories and 24 dedicated utility tools (including Faceless Social Canvas at `/utils/social-canvas`, Disciplined Rebuild Rulebook at `/utils/rebuild-rulebook`, and JSON to CSV Converter at `/utils/json-to-csv`).
 - `app/api/tasks/cron/`: Secure API endpoint for scheduled task reminders.
 - `app/api/mock/`: Dynamic path-based mocking engine endpoints (`app/api/mock/[...path]` catch-all and `app/api/mock/manage` management API with strict 15 active endpoint limitation).
 - `app/api/strava/`: Strava OAuth callback, sync, and split routes.
+- `app/api/admin/running-trade/`: Admin-only POST proxy (`checkAdmin()`, zod-validated body, https-only base URL, 20s timeout) that calls `{baseUrl}/order-trade/running-trade` server-side with the Bearer token. Uses `got-scraping` (dynamic import, same as `app/api/utils/stock-data`) instead of native `fetch`, because the external API's CDN/WAF returns `403 Forbidden` to Node's default fetch fingerprint even with a valid token. Upstream rejections surface as `502` with `Upstream <status>: <message>`, and network failures as `Could not reach upstream API (<code>)`. The server log carries the status and the first 200 characters of the body. The token and URL are never logged or returned. A ticker-level guard rejects the response with `Upstream returned X rows for Y` when any row's `code` differs from the requested ticker, and requests carry `Cache-Control: no-cache`. An upstream `429` is passed through as `429` with `retryAfterSeconds` (from `Retry-After`) so the client can wait and retry instead of failing. The fixed params `action_type`, `investor_type`, `sort=ASC`, and `order_by` are set here, not in the client.
 - `app/api/auth/refresh-session/`: Proactive Redis session & Supabase token synchronizer.
 - `app/sitemap.ts` & `app/robots.ts`: Centralized search indexing and crawler configuration. All public navigation routes (`/`, `/portfolio`, `/work-experience`, `/adventures/*`, `/blog`, `/liverpool`, `/insights`, `/investment`, `/utils`, `/contact`) are registered in `sitemap.ts`. Internal administrative and API endpoints (`/admin/`, `/api/`, `/tasks`, `/login`, `/private/`) are explicitly disallowed in `robots.ts` to focus crawl budgets on public content.
 - `app/page.tsx` (Home): Injects `PERSON_SCHEMA` JSON-LD (`<script type="application/ld+json">`) for Google Knowledge Panel and rich result eligibility. Metadata title: `"Polma Tambunan | Software Engineer & Distance Runner"`. Description pulls `SITE.description` (keyword-rich ~150-char SEO copy). Keywords injected from `SEO.baseKeywords`.
@@ -223,9 +225,9 @@ Strictly for routing and page definitions.
   - Avoid over-scaled, brutalist typography (such as `text-7xl` or `text-8xl` giants) inside standard cards. Primary telemetry figures must remain confident, well-proportioned, and readable (`text-5xl sm:text-6xl font-black font-mono` for hero times/records), leaving generous whitespace and optical balance.
 - **Modern Floating Card Header Standard (Clean Header Architecture)**:
   - Encapsulates hero headers within elevated floating cards (`bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs`) resting on the signature textured canvas (`bg-slate-50/80 bg-dot-pattern`).
-  - Standardized across all management, intelligence, operational views, and utility tools: Admin Hub (`/admin`), Blog Management (`/admin/blog`), Blog Editor (`/admin/blog/editor`), Quick Reminders (`/admin/reminders`), Stock Registry (`/utils/stock-explorer/admin`), Tasks Agenda (`/tasks`), Market Intelligence (`/investment`), and all 23 Developer Utilities (`/utils/*`).
+  - Standardized across all management, intelligence, operational views, and utility tools: Admin Hub (`/admin`), Blog Management (`/admin/blog`), Blog Editor (`/admin/blog/editor`), Quick Reminders (`/admin/reminders`), Stock Registry (`/utils/stock-explorer/admin`), Tasks Agenda (`/tasks`), Market Intelligence (`/investment`), and all 24 Developer Utilities (`/utils/*`).
   - **No Repetitive Category Section/Pills**: Prohibits generic decorative category pills/squircles (e.g. `Market Guideline`, `Engineering Journal`, `Performance Hub`) placed above titles. Standardizes headers to clean contextual breadcrumbs (`Admin Dashboard › ...` or `Home › Insights › Blog`), bold title typography `h1`, straight-to-the-point description (`p`), and right-aligned buttons or telemetry stats strip. Zero compound slogan badges with `•` or `·`, zero AI-slop subtitles, and zero `whitespace-nowrap` blowouts on mobile viewports.
-  - **Spacious 3-Tier Utility Header Standard (`UtilHeader.tsx`)**: Applied across all 23 utility tools to eliminate title squishing and horizontal action collisions:
+  - **Spacious 3-Tier Utility Header Standard (`UtilHeader.tsx`)**: Applied across all 24 utility tools to eliminate title squishing and horizontal action collisions:
     - *Tier 1 (Navigation Bar)*: Contextual breadcrumbs (`Home › Utilities › Tool Name`) left-aligned and clean, compact `← Back to Utilities` right-aligned, separated from content by a subtle bottom divider (`pb-4 border-b border-slate-100`).
     - *Tier 2 (Hero Title & Context Stage)*: Tool-specific squircle anchor (`w-11 h-11 sm:w-14 sm:h-14`), full-width `h1` headline (`text-xl sm:text-3xl lg:text-4xl break-words`), and straight-to-the-point description directly underneath.
     - *Tier 3 (Dedicated Actions/Presets Toolbar)*: When interactive presets, scenarios, or export controls are provided, they span a dedicated full-width strip (`pt-4 border-t border-slate-100/90`), keeping the title area spacious and completely unconstrained.
@@ -489,11 +491,11 @@ Strictly for routing and page definitions.
   - **Work Experience Timeline (`/work-experience`)**: Chronological career milestones featuring clean brand/legal entity hierarchy, inline technology chips, bottom impact statistics, and `ExperienceDetailModal` delivering comprehensive organizational impact and role breakdowns.
   - **Solid Aesthetic Policy**: Strictly avoids multi-color gradient text, ambient blur glow orbs, and fuzzy glow drop shadows in favor of crisp solid productivity surfaces, semantic badge tints, and high-contrast typography.
 
-### Developer Utilities Ecosystem (22 Tools across 7 Categories)
+### Developer Utilities Ecosystem (24 Tools across 7 Categories)
 - **Suite Categorization**:
   1. **Text Tools**: Text Compare (`/utils/text-compare` with custom comparator engine, character diffs, and synchronized scrolling), Diff Viewer (`/utils/diff-viewer`), Case Converter (`/utils/case-converter`), QR Code Generator (`/utils/qr-code-generator` with multi-format support and SVG/PNG export).
   2. **Data Tools**: Device Inspector (`/utils/device-inspector` with hardware diagnostics, audio/video studio, and network speed test), Dynamic Mock API Engine (`/utils/mock-api` & `/api/mock/*` with Redis persistence, sliding-window rate limiting, and strict 15 active endpoint limitation), SQL Formatter (`/utils/sql-formatter`).
-  3. **File Tools**: Code to Image (`/utils/code-to-image`), CSV to JSON (`/utils/csv-to-json`), File Renamer (`/utils/file-renamer`), Image Converter (`/utils/image-converter`), Schema Forge / Advanced JSON Converter (`/utils/json-converter-advanced`), JSON Formatter (`/utils/json-formatter`).
+  3. **File Tools**: Code to Image (`/utils/code-to-image`), CSV to JSON (`/utils/csv-to-json`), JSON to CSV Converter (`/utils/json-to-csv` with dot-notation flattening and smart array detection), File Renamer (`/utils/file-renamer`), Image Converter (`/utils/image-converter`), Schema Forge / Advanced JSON Converter (`/utils/json-converter-advanced`), JSON Formatter (`/utils/json-formatter`).
   4. **Fun Tools**: Spinner Wheel (`/utils/spinner-wheel` with Web Audio API clicks and confetti), Football Formation Studio (`/utils/football-formation` tactical board and squad sheet exporter), Faceless Social Canvas Studio (`/utils/social-canvas` with 21 templates across 4 categories, breaking news lower-thirds, classy offset typography, optical frosted glass, cinematic film subtitles, vinyl audio players, code terminal windows, light/dark text themes, and high-res canvas exports).
   5. **Security Tools**: JWT & API Token Inspector (`/utils/jwt-inspector` with 100% in-browser decoding, live countdown telemetry, RFC claims dictionary, and Web Crypto HMAC verification sandbox), Hash & Password Generator (`/utils/hash-password-generator`), URL Safety & Threat Inspector (`/utils/url-inspector`).
   6. **Stock Tools**: Stock Explorer (`/utils/stock-explorer` with composite scoring engine, whale/momentum/value presets, foreign flow tracking, sector heatmaps, and AI Analyst Drawer), Stock/Crypto Average Calculator (`/utils/stock-crypto-calculator`).
@@ -523,6 +525,11 @@ Strictly for routing and page definitions.
   - **Hardware & Interactive RAF Stability Benchmark**: CPU concurrency, unmasked WebGL GPU, buffer texture size, memory API, and interactive requestAnimationFrame timing loop measuring real-time live FPS, frame delta jitter (`±ms`), dropped frames count, and synchronized hardware fluidity rails.
   - **Acoustic & Peripherals Studio**: Web Audio API stereo separation acoustic player (440Hz Left, 880Hz Right, Center, 200–2000Hz Sweep), **Anti-Gradient Segmented LED VU Meter** (24 discrete LED blocks replacing CSS gradient fills), 16-band spectrum analyzer, and webcam sensor inspection.
   - **Searchable Compatibility Matrices & Bug Reporter**: Searchable/filterable media codec matrix (11 formats with MIME tooltips), modern Web Platform APIs audit (12 APIs), and 1-click `generateMarkdownReport()` export formatted for GitHub bug issues.
+- **JSON to CSV Converter (`/utils/json-to-csv`)**:
+  - **Architecture**: Domain-driven feature in `features/utils/file-tools/json-to-csv/` (`View.tsx`, `utils/transform.ts`, and unit test suite in `__tests__/transform.test.ts`).
+  - **Smart Array Detection**: Breadth-First Search (BFS) discovers candidate arrays, prioritizing arrays of objects over primitive arrays, outermost (shallowest) hierarchy first, combining sibling arrays via `_source_key`, with depth cap (`maxDepth = 6`) and combined-table-first sorting.
+  - **Dot Notation Flattening**: Recursively flattens nested object properties into dot-notation headers (e.g., `user.address.city`), serializing arrays and complex child structures into JSON strings to protect data integrity.
+  - **Export & Options**: Converts parsed JSON into downloadable CSV via `Papa.unparse` with custom delimiter, optional UTF-8 BOM, column exclusions, row exclusions, and optional parent-context merge.
 - **JSON Tree View**: Standardized `JsonValue` component for interactive exploration of parsed data, supporting nested expansion, item counts, and value-level copying.
 - **Structure**: Individual utilities implemented as Server (`page.tsx`) / Client (`View.tsx`) pairs to balance SEO and interactivity.
 - **Logic Decoupling**: Heavy business logic (e.g., schema generation, formatters, string transformations, comparator engine) is decoupled from the `View.tsx` component into dedicated `utils/` and `types.ts` files within each utility's feature directory.
@@ -542,7 +549,7 @@ Strictly for routing and page definitions.
   - **Trade Journal Alpha Attribution & Performance Ledger**: Closed positions calculate realized P/L (IDR and %), peak gain %, maximum drawdown %, holding days, and structured exit categorization (`Target Hit`, `Stop Loss`, `Thesis Invalidation`, `Rebalance`, `Time Stop`), paired with top-tier KPI telemetry cards (Win Rate, Profit Factor, Net Realized IDR, Average Hold Time) and filterable history logs.
 
 ### Administrative Ecosystem
-- **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, Stock Registry, and Quick Reminders (`/admin/reminders`).
+- **Centralized Management**: Admin dashboard (`/admin`) manages Blog, Tasks, Stock Registry, Quick Reminders (`/admin/reminders`), Daily Movement Snacks (`/admin/movement`), and Running Trade Retriever (`/admin/running-trade`).
 - **Stock Manager**: Re-engineered portal (`/utils/stock-explorer/admin`) featuring the **Modern Floating Card Header** and the **Operational Cache Telemetry & Control Card**:
   - *Header Controls*: Indigo `<Server />` squircle badge, title, pulsing active cache badge, and dedicated action triggers (`[↻ Refresh]`, `[🌐 Sync Live]`, `[🗑 Purge Cache]`).
   - *Full-Width Metric Grid*: Balanced 3-stat grid displaying Total Instruments (e.g. `963 equities`), Trading Settlement Date, and 12-Hour Redis TTL Lifespan.
@@ -553,6 +560,13 @@ Strictly for routing and page definitions.
   - *Linear Checklist Layout*: Clean single-column checklist (`rounded-3xl border border-slate-200/80 divide-y divide-slate-100`) focusing strictly on item description and due date.
   - *1-Click Complete & Undo Toast*: Circular checkbox completes/dismisses the item optimistically with a 3.5s floating Undo toast before deletion commits.
   - *Localized Skeleton Loader (`loading.tsx`)*: Route skeleton in `app/admin/reminders/loading.tsx` backed by `RemindersSkeleton.tsx` mirroring the header, inline composer, and linear rows to eliminate global fallback flashes.
+- **Running Trade Retriever (`/admin/running-trade`)**: Fetches running trade for one IDX ticker from an external API and downloads it as CSV:
+  - *Connection Persistence*: Base API URL, Bearer token, ticker, market board, minimum lot, value from, and limit are stored in `localStorage` under `running-trade:settings` and prefilled on the next visit. First-time defaults: `BOARD_TYPE_REGULAR`, minimum lot 1, value from 1, limit 100. Storage is read in `useEffect` to avoid hydration mismatch.
+  - *Ticker Autocomplete*: Searchable combobox backed by the Stock Explorer registry (`/api/utils/stock-data`), which also accepts a typed code.
+  - *Cursor Pagination*: First call omits `trade_number`. Each next call sends the last row's `trade_number`. Stops on an empty `running_trade`, on a repeated cursor (`stalled`), at the 500-page cap (`MAX_PAGES`), on error, or on Cancel (`AbortController`). Partial rows are kept and can be downloaded.
+  - *Rate Limit Handling*: The external API returned `429` after about 53 back-to-back pages, so the loop pauses `PAUSE_MS` (5s) once every `PAUSE_EVERY_PAGES` (25) pages, never on every loop. If a `429` still occurs, the same cursor is retried up to `MAX_RATE_LIMIT_RETRIES` (5) times, waiting the API's `Retry-After` (capped at 120s client-side) or a linear 10s, 20s, 30s backoff. Waits are abortable by Cancel and surface as an amber note in the progress card. Constants are overridable through `collectRunningTrades` options, and `sleep` is injectable for tests.
+  - *CSV Shape*: Columns are `time, action, price, change, lot, trade_number, buyer_type, seller_type, market_board, buy_order_number, sell_order_number, group_order_number, amount`. `amount` is `value.raw`. `id`, `code`, `is_broker_exists`, `buyer`, `seller`, and `value` are excluded. Built with `Papa.unparse`, downloaded as `running-trade_SYMBOL_YYYYMMDD-HHmm.csv`.
+  - *Accessibility*: Labelled inputs, `role="combobox"`/`listbox` ticker list, token visibility toggle with `aria-pressed`, and an `aria-live` progress region with `aria-busy`.
 - **Navigation**: "Manage Stocks", "Manage Tasks", "Quick Reminders", and "Movement Snacks" integrated into `CompactBottomBar.tsx` Admin sub-menu with real-time pending, reminder, and undone break telemetry badges.
 
 ## 🚀 Development & Build Optimization
@@ -573,7 +587,7 @@ pnpm run dev              # Start with Turbo + optimizations
 pnpm run dev:debug       # Start with Node.js debugger
 
 # Testing & Quality Assurance
-pnpm test                 # Run Vitest test suite across all domains (52 suites, 530 tests)
+pnpm test                 # Run Vitest test suite across all domains (58 suites, 613 tests)
 pnpm vitest run <path>    # Run target test file or domain (e.g. features/investment)
 pnpm run check            # Biome lint and format check across all files
 pnpm run format           # Biome format code across all files
@@ -615,7 +629,11 @@ pnpm run analyze         # Alias for build:analyze
   - `features/auth/__tests__/server.test.ts` (16 tests): Server route guarding (`requireAuth`), status evaluations (`disabled`, `login_only`, `pin_only`, `serial`), single-param syntax, and destination query param retention.
   - `features/auth/__tests__/actions.test.ts` (7 tests): Auth actions, admin checks, and session helpers.
   - *Full Auth Domain Health*: 2 test suites, 23 tests passing with zero failures.
-- **Total Repository Test Health**: 56 test suites, 608 tests passing across all domains with zero failures.
+- **JSON to CSV Converter Test Suite (`features/utils/file-tools/json-to-csv/`)):
+  - `features/utils/file-tools/json-to-csv/__tests__/transform.test.ts` (18 tests): Dot-notation flattening, array serialization, null/undefined/empty handling, BFS candidate ordering, parent-context merge, custom array paths, and `convertJsonToCsv` export options (delimiter, BOM, exclusions).
+- **Running Trade Retriever Test Suite (`features/running-trade/`)**:
+  - `features/running-trade/__tests__/collect.test.ts` (9 tests): `trade_number` cursor following until an empty page, partial rows kept on error, stalled-cursor stop, page cap and abort signal handling, once-per-N-pages cooldown, 429 retry on the same cursor with `Retry-After` and linear backoff, retry exhaustion, cancel during a rate-limit sleep, and `buildCsv` column set with `amount` from `value.raw`.
+- **Total Repository Test Health**: 58 test suites, 613 tests passing across all domains with zero failures.
 
 ### Configuration Files
 - `next.config.ts`: Optimized with bundle analyzer, Sentry (configured with `silent: true` to suppress Turbopack warning noise in CI), and caching

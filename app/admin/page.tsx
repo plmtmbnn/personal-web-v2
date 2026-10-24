@@ -9,6 +9,7 @@ import {
 	Plus,
 	Server,
 	Activity,
+	ArrowRightLeft,
 } from "lucide-react";
 import { logout } from "@/features/auth/actions";
 import { requireAuth } from "@/features/auth/server";
@@ -206,6 +207,18 @@ export default async function AdminDashboardPage() {
 			border: "border-emerald-200/70",
 			hoverAccent: "group-hover:text-emerald-600",
 			tags: ["Desk Mobility", "Habit Tracker", "Rest Day Grace"],
+		},
+		{
+			title: "Running Trade Retriever",
+			description:
+				"Pull IDX running trade for one ticker from an external API by trade_number cursor and export it as CSV.",
+			href: "/admin/running-trade",
+			icon: ArrowRightLeft,
+			color: "text-sky-600",
+			bg: "bg-sky-50",
+			border: "border-sky-200/70",
+			hoverAccent: "group-hover:text-sky-600",
+			tags: ["Cursor Pagination", "Bearer Auth", "CSV Export"],
 		},
 	];
 

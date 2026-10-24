@@ -183,6 +183,14 @@ const utilities: UtilityItem[] = [
 		icon: FileSpreadsheet,
 	},
 	{
+		title: "JSON to CSV",
+		slug: "json-to-csv",
+		categoryId: "data",
+		description:
+			"Convert nested JSON objects and arrays into structured, downloadable CSV tables with automatic dot notation flattening.",
+		icon: FileSpreadsheet,
+	},
+	{
 		title: "Image Converter",
 		slug: "image-converter",
 		categoryId: "data",

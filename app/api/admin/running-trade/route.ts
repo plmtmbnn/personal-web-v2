@@ -1,0 +1,127 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { checkAdmin } from "@/features/auth/actions";
+import { MARKET_BOARDS } from "@/features/running-trade/types";
+
+export const dynamic = "force-dynamic";
+
+const bodySchema = z.object({
+	baseUrl: z
+		.string()
+		.url()
+		.refine((u) => u.startsWith("https://"), "Base URL must use https"),
+	token: z.string().min(1),
+	symbol: z.string().regex(/^[A-Za-z0-9]{1,10}$/),
+	marketBoard: z.enum(MARKET_BOARDS),
+	minimumLot: z.number().int().min(0),
+	valueFrom: z.number().min(0),
+	limit: z.number().int().min(1).max(1000),
+	tradeNumber: z.string().regex(/^\d+$/).optional(),
+});
+
+export async function POST(req: Request) {
+	if (!(await checkAdmin())) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	const parsed = bodySchema.safeParse(await req.json().catch(() => null));
+	if (!parsed.success) {
+		return NextResponse.json(
+			{ error: parsed.error.issues.map((i) => i.message).join("; ") },
+			{ status: 400 },
+		);
+	}
+	const b = parsed.data;
+
+	const params = new URLSearchParams({
+		symbols: b.symbol.toUpperCase(),
+		action_type: "RUNNING_TRADE_ACTION_TYPE_ALL",
+		market_board: b.marketBoard,
+		investor_type: "RUNNING_TRADE_INVESTOR_TYPE_ALL",
+		minimum_lot: String(b.minimumLot),
+		value_from: String(b.valueFrom),
+		sort: "ASC",
+		limit: String(b.limit),
+		order_by: "RUNNING_TRADE_ORDER_BY_TIME",
+	});
+	if (b.tradeNumber) params.set("trade_number", b.tradeNumber);
+
+	const url = `${b.baseUrl.replace(/\/+$/, "")}/order-trade/running-trade?${params}`;
+
+	try {
+		const { gotScraping } = await import("got-scraping");
+		const upstream = await gotScraping({
+			url,
+			headers: {
+				authorization: `Bearer ${b.token}`,
+				accept: "application/json",
+				"cache-control": "no-cache",
+				pragma: "no-cache",
+			},
+			responseType: "text",
+			throwHttpErrors: false,
+			timeout: { request: 20_000 },
+		});
+
+		let payload: unknown = null;
+		try {
+			payload = JSON.parse(upstream.body);
+		} catch {}
+
+		if (upstream.statusCode < 200 || upstream.statusCode >= 300) {
+			const json = payload as { message?: string; error?: string } | null;
+			const detail =
+				json?.message ?? json?.error ?? upstream.statusMessage ?? "";
+			// Body snippet shows whether a CDN/WAF challenge page answered instead of the API.
+			console.warn(
+				"Running trade upstream rejected:",
+				upstream.statusCode,
+				detail,
+				upstream.body.slice(0, 200).replace(/\s+/g, " "),
+			);
+			if (upstream.statusCode === 429) {
+				const retryAfter = Number(upstream.headers["retry-after"]);
+				return NextResponse.json(
+					{
+						error: "Upstream 429: Too Many Requests",
+						retryAfterSeconds: Number.isFinite(retryAfter)
+							? retryAfter
+							: undefined,
+					},
+					{ status: 429 },
+				);
+			}
+			return NextResponse.json(
+				{
+					error: `Upstream ${upstream.statusCode}${detail ? `: ${detail}` : ""}`,
+				},
+				{ status: 502 },
+			);
+		}
+
+		// Guards against a cache or upstream bug answering with another ticker's rows.
+		const wanted = b.symbol.toUpperCase();
+		const rows =
+			(payload as { data?: { running_trade?: { code?: string }[] } } | null)
+				?.data?.running_trade ?? [];
+		const other = rows.find((r) => r.code && r.code.toUpperCase() !== wanted);
+		if (other) {
+			console.warn("Running trade ticker mismatch:", wanted, "got", other.code);
+			return NextResponse.json(
+				{ error: `Upstream returned ${other.code} rows for ${wanted}` },
+				{ status: 502 },
+			);
+		}
+		return NextResponse.json(payload);
+	} catch (e) {
+		// Only the error name and cause code are exposed; the token and URL stay out of logs and responses.
+		const code =
+			(e as { cause?: { code?: string } }).cause?.code ??
+			(e instanceof Error ? e.name : "unknown");
+		console.error("Running trade proxy failed:", code);
+		return NextResponse.json(
+			{ error: `Could not reach upstream API (${code})` },
+			{ status: 502 },
+		);
+	}
+}

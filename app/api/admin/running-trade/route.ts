@@ -4,6 +4,7 @@ import { checkAdmin } from "@/features/auth/actions";
 import { MARKET_BOARDS } from "@/features/running-trade/types";
 
 export const dynamic = "force-dynamic";
+export const preferredRegion = "sin1";
 
 const bodySchema = z.object({
 	baseUrl: z
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
 			},
 			responseType: "text",
 			throwHttpErrors: false,
+			http2: false,
 			timeout: { request: 20_000 },
 		});
 
@@ -71,7 +73,10 @@ export async function POST(req: Request) {
 		if (upstream.statusCode < 200 || upstream.statusCode >= 300) {
 			const json = payload as { message?: string; error?: string } | null;
 			const detail =
-				json?.message ?? json?.error ?? upstream.statusMessage ?? "";
+				json?.message ??
+				json?.error ??
+				upstream.statusMessage ??
+				(upstream.body ? upstream.body.slice(0, 100).replace(/\s+/g, " ") : "");
 			// Body snippet shows whether a CDN/WAF challenge page answered instead of the API.
 			console.warn(
 				"Running trade upstream rejected:",

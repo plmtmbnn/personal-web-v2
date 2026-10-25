@@ -23,6 +23,7 @@ import {
 	RateLimitError,
 } from "../lib/collect";
 import type { CollectResult } from "../lib/collect";
+import { setSessionTrades } from "../lib/session-cache";
 import {
 	DEFAULT_SETTINGS,
 	MARKET_BOARDS,
@@ -189,6 +190,9 @@ export default function RunningTradeView() {
 		});
 
 		setResult(out);
+		if (out.trades.length > 0) {
+			setSessionTrades(settings.symbol, out.trades);
+		}
 		setWaitNote(null);
 		setRunning(false);
 		abortRef.current = null;

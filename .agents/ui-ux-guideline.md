@@ -72,6 +72,16 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
     - **Anti-Overengineering & Clean Exercise Guide Pattern**: Prohibits redundant timer/rep-stepper hybrid overlays for standard bodyweight movements. Tapping an exercise guide provides clean, direct execution instructions, target repetitions/duration, primary muscle groups, tempo guidelines, and a Google Video Demo search link, with simple **Cancel** and **Mark Completed** triggers.
     - **4-Week Consistency Calendar Heatmap**: Neutral visual intensity dots/tiles representing daily movement volume, emphasizing sustainable multi-week consistency over fragile daily streaks (with weekend/rest day grace).
     - **Local Persistence & Zero-PIN Admin Security**: Client-side single source of truth in `localStorage` (`movement:snacks:v1`) grouped strictly by local calendar date (`YYYY-MM-DD`), JSON backup export/import, and protected solely by `checkAdmin()` without requiring `PinGuard`.
+  - **Order Trade Hub & Tape Reading Screener (`/admin/running-trade`)**:
+    - **3-Tab Workstation Navigation (`OrderTradeTabs.tsx`)**: High-density admin console supporting instant mode switching between Running Trade Retriever (`?tab=running-trade`), Trade Book Chart (`?tab=trade-book`), and Tape Reading Analyzer (`?tab=tape-analyzer`) under a unified React Suspense boundary.
+    - **Direct-to-FastAPI In-Memory Multipart Pipeline (`lib/tape-analyzer.ts`)**: In-memory CSV and JSON Blobs (`FormData`) bypass Vercel Next.js Serverless 4.5MB request payload ceilings and function execution timeouts on large multi-megabyte intraday tick files.
+    - **In-Memory Cross-Tab Session Cache (`lib/session-cache.ts`)**: In-memory singleton caching trades and trade-book charts across tabs, providing instant (<500ms) re-analysis without re-hitting upstream broker endpoints.
+    - **Zero Truncation Standard for Trading Setups & Execution Playbooks (`PlaybookSetupsCard.tsx`)**: Every trigger condition, entry level, stop-loss price, trailing rule, and setup explanation rendered in full with `break-words` and `leading-relaxed` (strictly prohibiting `truncate` or `...`).
+    - **Separated Milestone Target Architecture (TP1 vs TP2)**: Take-Profit 1 (conservative scalp/partial scale-out) and Take-Profit 2 (runner/structural target) rendered in distinct dedicated target cards with individual tick levels, percentage gains, and execution guidance.
+    - **Execution Governance & Net RRR Standard**: Calculates and displays true Net Risk:Reward Ratio after subtracting round-trip broker commission fees (0.40% round-trip), preventing traders from entering negative-expectancy scalps.
+    - **Defensive Microstructure Telemetry & Anti-Forced-Side-by-Side Standard (`MicrostructureGrid.tsx`)**: 4 pure white floating telemetry cards (Value Area Profile, 15m Flow Dynamics, Big Money Flow, Low Absorption) utilizing the canonical 4-tier vertical hierarchy without horizontal overcrowding or label clipping.
+    - **Executive Tactical Action Header (`ActionBanner.tsx`)**: Replaces raw JSON status strings and emojis with domain squircle badges (`Target`, `Clock`, `ShieldAlert`), providing immediate visual cues on market regime, trade bias, and liquidity condition alongside complete OHLC, turnover, volume, and tick size telemetry.
+    - **Mobile Touch Target & Tap Hygiene**: All segmented toggles, filter pills, collapsible accordions, and action buttons maintain touch targets $\ge 44\times 44$px for tactile control on mobile viewports.
 
 ---
 
@@ -259,6 +269,13 @@ All compact telemetry cards in 2-column mobile or constrained grid layouts MUST 
 * **Standardize on `font-semibold` (600) & `font-bold` (700)**: Primary metrics and headers should feel confident yet refined, leaving generous optical breathing room.
 * **Muted Secondary Hierarchy**: Use `font-normal` (400) or `font-medium` (500) for secondary labels and units (`text-slate-500`), creating distinct contrast without visual clutter.
 * **Frameless Summary Highlights over Bulky Colored Alert Boxes**: Banish thick-bordered fluorescent alert boxes (e.g. bright pink `bg-rose-50 border border-rose-200/80` or neon green boxes). Use pure white card containers or subtle tinted card surfaces (`bg-emerald-50/50 border border-emerald-100`) with restrained typography.
+
+### 4.4 Zero Truncation Standard for Trading Parameters & Execution Playbooks
+
+In financial and algorithmic trading interfaces (such as `/admin/running-trade` and `/utils/stock-explorer`), **truncating trade parameters or execution rules with ellipsis (`...` or `truncate`) is strictly forbidden**. Truncation destroys critical risk parameters:
+* **Never Truncate Entry & Invalidation Levels**: Trigger conditions, breakout thresholds, tick-level stop losses, trailing stop offsets, and scale-out rules must always be displayed in full using natural multiline text wrapping (`break-words`, `whitespace-normal`, and `leading-relaxed`).
+* **Dedicated Milestone Target Cards over Compressed Rows**: Dual-target playbooks (e.g., TP1 vs TP2) must never be crammed into a single truncated row. Render each target in its own dedicated milestone card with its exact price, target percentage, and execution notes clearly visible.
+* **Unabridged Checklist Diagnostics**: Conditions for trade setups (both Met and Pending) must render full diagnostic reasons (e.g. `RVOL 1.8x > 1.5x threshold` or `Price 3,080 within 1 tick of VWAP 3,078`) without clipping.
 
 ---
 

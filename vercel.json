@@ -1,3 +1,4 @@
 {
+	"regions": ["sin1"],
 	"ignoreCommand": "bash scripts/vercel-ignored-build.sh"
 }

@@ -62,30 +62,7 @@ export async function GET(request: NextRequest) {
 
 				let body: any = null;
 
-				// 1. Attempt using got-scraping (bypasses Cloudflare 403 on IDX)
 				try {
-					const { gotScraping } = await import("got-scraping");
-					const res = await gotScraping({
-						url: "https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
-						headers: {
-							referer: "https://www.idx.co.id/",
-							accept: "application/json, text/plain, */*",
-						},
-						responseType: "json",
-						timeout: { request: 15000 },
-					});
-					if (res.statusCode === 200 && res.body) {
-						body = res.body;
-					}
-				} catch (scrapeError: any) {
-					console.warn(
-						"got-scraping failed, attempting native fetch:",
-						scrapeError?.message || scrapeError,
-					);
-				}
-
-				// 2. Fallback to native fetch if got-scraping did not yield data
-				if (!body) {
 					const res = await fetch(
 						"https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
 						{
@@ -96,13 +73,18 @@ export async function GET(request: NextRequest) {
 								Accept: "application/json, text/plain, */*",
 								"Accept-Language": "en-US,en;q=0.9,id;q=0.8",
 							},
-							signal: AbortSignal.timeout(8000),
+							signal: AbortSignal.timeout(15000),
 						},
 					);
 
 					if (res.ok) {
 						body = (await res.json()) as any;
 					}
+				} catch (scrapeError: any) {
+					console.warn(
+						"Direct IDX fetch failed in stock-data:",
+						scrapeError?.message || scrapeError,
+					);
 				}
 
 				if (body && Array.isArray(body.data) && body.data.length > 0) {

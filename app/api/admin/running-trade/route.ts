@@ -50,42 +50,41 @@ export async function POST(req: Request) {
 	const url = `${b.baseUrl.replace(/\/+$/, "")}/order-trade/running-trade?${params}`;
 
 	try {
-		const { gotScraping } = await import("got-scraping");
-		const upstream = await gotScraping({
-			url,
+		const upstream = await fetch(url, {
+			method: "GET",
 			headers: {
 				authorization: `Bearer ${b.token}`,
 				accept: "application/json",
 				"cache-control": "no-cache",
 				pragma: "no-cache",
+				"user-agent":
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
 			},
-			responseType: "text",
-			throwHttpErrors: false,
-			http2: false,
-			timeout: { request: 20_000 },
+			signal: AbortSignal.timeout(20_000),
 		});
 
+		const bodyText = await upstream.text();
 		let payload: unknown = null;
 		try {
-			payload = JSON.parse(upstream.body);
+			payload = JSON.parse(bodyText);
 		} catch {}
 
-		if (upstream.statusCode < 200 || upstream.statusCode >= 300) {
+		if (!upstream.ok) {
 			const json = payload as { message?: string; error?: string } | null;
 			const detail =
 				json?.message ??
 				json?.error ??
-				upstream.statusMessage ??
-				(upstream.body ? upstream.body.slice(0, 100).replace(/\s+/g, " ") : "");
+				upstream.statusText ??
+				(bodyText ? bodyText.slice(0, 100).replace(/\s+/g, " ") : "");
 			// Body snippet shows whether a CDN/WAF challenge page answered instead of the API.
 			console.warn(
 				"Running trade upstream rejected:",
-				upstream.statusCode,
+				upstream.status,
 				detail,
-				upstream.body.slice(0, 200).replace(/\s+/g, " "),
+				bodyText.slice(0, 200).replace(/\s+/g, " "),
 			);
-			if (upstream.statusCode === 429) {
-				const retryAfter = Number(upstream.headers["retry-after"]);
+			if (upstream.status === 429) {
+				const retryAfter = Number(upstream.headers.get("retry-after"));
 				return NextResponse.json(
 					{
 						error: "Upstream 429: Too Many Requests",
@@ -98,7 +97,7 @@ export async function POST(req: Request) {
 			}
 			return NextResponse.json(
 				{
-					error: `Upstream ${upstream.statusCode}${detail ? `: ${detail}` : ""}`,
+					error: `Upstream ${upstream.status}${detail ? `: ${detail}` : ""}`,
 				},
 				{ status: 502 },
 			);

@@ -81,22 +81,6 @@ export async function fetchIhsgForeignFlow(
 		if (!stocksData || stocksData.length === 0) {
 			let body: any = null;
 			try {
-				const { gotScraping } = await import("got-scraping");
-				const res = await gotScraping({
-					url: "https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
-					headers: {
-						referer: "https://www.idx.co.id/",
-						accept: "application/json",
-					},
-					responseType: "json",
-					timeout: { request: 15000 },
-				});
-				if (res.statusCode === 200 && res.body) body = res.body;
-			} catch (scrapeError) {
-				console.warn("got-scraping failed in idx-flows:", scrapeError);
-			}
-
-			if (!body) {
 				const res = await fetch(
 					"https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
 					{
@@ -106,10 +90,12 @@ export async function fetchIhsgForeignFlow(
 								"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
 							Accept: "application/json",
 						},
-						signal: AbortSignal.timeout(8000),
+						signal: AbortSignal.timeout(15000),
 					},
 				);
 				if (res.ok) body = await res.json();
+			} catch (scrapeError) {
+				console.warn("Direct IDX fetch failed in idx-flows:", scrapeError);
 			}
 
 			if (body && Array.isArray(body.data) && body.data.length > 0) {

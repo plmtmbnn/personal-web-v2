@@ -40,35 +40,31 @@ export async function POST(req: Request) {
 	const url = `${baseUrl.replace(/\/+$/, "")}/order-trade/trade-book/chart?${params.toString()}`;
 
 	try {
-		const { gotScraping } = await import("got-scraping");
-		const upstream = await gotScraping({
-			url,
+		const upstream = await fetch(url, {
+			method: "GET",
 			headers: {
 				authorization: `Bearer ${token}`,
 				accept: "application/json",
 				"cache-control": "no-cache",
 				pragma: "no-cache",
+				"user-agent":
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
 			},
-			responseType: "text",
-			timeout: { request: 30_000 },
-			throwHttpErrors: false,
-			http2: false,
+			signal: AbortSignal.timeout(30_000),
 		});
 
+		const bodyText = await upstream.text();
 		let json: unknown = null;
 		try {
-			json = JSON.parse(upstream.body);
+			json = JSON.parse(bodyText);
 		} catch {
 			json = null;
 		}
 
-		if (upstream.statusCode === 429) {
-			const retryHeader = upstream.headers["retry-after"];
+		if (upstream.status === 429) {
+			const retryHeader = upstream.headers.get("retry-after");
 			const retryAfterSeconds = retryHeader
-				? Number.parseInt(
-						Array.isArray(retryHeader) ? retryHeader[0] : retryHeader,
-						10,
-					)
+				? Number.parseInt(retryHeader, 10)
 				: 10;
 			return NextResponse.json(
 				{
@@ -83,15 +79,12 @@ export async function POST(req: Request) {
 			);
 		}
 
-		if (upstream.statusCode >= 400) {
+		if (!upstream.ok) {
 			const errMsg =
 				(json as { message?: string; error?: string })?.message ??
 				(json as { message?: string; error?: string })?.error ??
-				`Upstream returned status ${upstream.statusCode}`;
-			return NextResponse.json(
-				{ error: errMsg },
-				{ status: upstream.statusCode },
-			);
+				`Upstream returned status ${upstream.status}`;
+			return NextResponse.json({ error: errMsg }, { status: upstream.status });
 		}
 
 		if (!json) {

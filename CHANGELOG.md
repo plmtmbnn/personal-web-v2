@@ -1,3 +1,10 @@
+## [0.117.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.117.0...v0.117.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **api:** replace got-scraping with native fetch to resolve vercel adm-zip error ([ddfd891](https://github.com/plmtmbnn/personal-web-v2/commit/ddfd891156aa90e9be7c07673d41c3e320fca4d7))
+
 # [0.117.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.116.0...v0.117.0) (2026-10-25)
 
 

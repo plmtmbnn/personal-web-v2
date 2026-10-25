@@ -1,3 +1,10 @@
+# [0.117.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.116.0...v0.117.0) (2026-10-25)
+
+
+### Features
+
+* **running-trade:** add trade book chart, tape reading analyzer, and sin1 routing ([1c49738](https://github.com/plmtmbnn/personal-web-v2/commit/1c49738144bdd5ed4869510678095163a9c13c67))
+
 # [0.116.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.115.0...v0.116.0) (2026-10-24)
 
 

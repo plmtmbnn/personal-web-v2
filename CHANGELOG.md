@@ -1,3 +1,10 @@
+# [0.118.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.117.1...v0.118.0) (2026-10-27)
+
+
+### Features
+
+* **admin:** revamp dashboard menu with 2-group hierarchy and live telemetry ([03e9811](https://github.com/plmtmbnn/personal-web-v2/commit/03e98111e6ada86edb6a5496f9a2d5903835964c))
+
 ## [0.117.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.117.0...v0.117.1) (2026-10-25)
 
 

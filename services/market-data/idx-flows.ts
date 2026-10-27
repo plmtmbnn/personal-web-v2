@@ -1,6 +1,10 @@
-import { redis } from "@/lib/core/redis";
+import {
+	redis,
+	getStockData,
+	saveStockData,
+	updateTickerHistoryRingBuffer,
+} from "@/lib/core/redis";
 import type { FetchPolicy } from "./types";
-import { getStockData, saveStockData } from "@/lib/core/redis";
 import type { IDXStock } from "@/features/utils/stock-tools/stock-explorer/types";
 import { processIdxMarketData } from "@/features/utils/stock-tools/stock-explorer/hooks/useMarketData";
 import type { IhsgAlphaCandidate } from "@/features/investment/types";
@@ -17,7 +21,60 @@ export interface IhsgForeignFlowSnapshot {
 	topAlphaPicks?: IhsgAlphaCandidate[];
 }
 
+export const PEOEL_STOCK_SUMMARY_URL =
+	process.env.PEOEL_SCREENER_SUMMARY_URL ||
+	"https://peoel-screener-py.vercel.app/api/v1/stock-summary";
+
 const FLOW_HISTORY_KEY = "idx:flow:history";
+
+/**
+ * Synchronizes IDX stock summary from peoel-screener-py, caching to Redis
+ * and updating the 10-trading-day ring buffer.
+ */
+export async function syncIdxStockSummary(force = false): Promise<{
+	success: boolean;
+	count: number;
+	error?: string;
+}> {
+	try {
+		if (!force) {
+			const existing = await getStockData();
+			if (existing && existing.length > 0) {
+				return { success: true, count: existing.length };
+			}
+		}
+
+		const res = await fetch(PEOEL_STOCK_SUMMARY_URL, {
+			headers: { Accept: "application/json" },
+			signal: AbortSignal.timeout(15000),
+		});
+
+		if (!res.ok) {
+			return {
+				success: false,
+				count: 0,
+				error: `peoel-screener-py HTTP ${res.status}`,
+			};
+		}
+
+		const body = (await res.json()) as any;
+		if (body && Array.isArray(body.data) && body.data.length > 0) {
+			await Promise.allSettled([
+				saveStockData(body.data, 43200),
+				updateTickerHistoryRingBuffer(body.data),
+			]);
+			return { success: true, count: body.data.length };
+		}
+
+		return { success: false, count: 0, error: "Empty or invalid stock data" };
+	} catch (e: any) {
+		console.warn(
+			"peoel-screener-py fetch failed in idx-flows:",
+			e?.message || e,
+		);
+		return { success: false, count: 0, error: e?.message || String(e) };
+	}
+}
 
 /**
  * Calculates net foreign flow (IDR) from a raw IDXStock payload.
@@ -74,33 +131,13 @@ export async function fetchIhsgForeignFlow(
 	_policy: FetchPolicy,
 ): Promise<IhsgForeignFlowSnapshot | null> {
 	try {
-		// 1. Get today's market summary (relies on stock-explorer background fetch or cache)
+		// 1. Get today's market summary, syncing from peoel-screener-py if empty or fresh requested
 		let stocksData = await getStockData();
 
-		// Standalone fallback: If Redis is empty, fetch directly from IDX
-		if (!stocksData || stocksData.length === 0) {
-			let body: any = null;
-			try {
-				const res = await fetch(
-					"https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
-					{
-						headers: {
-							Referer: "https://www.idx.co.id/",
-							"User-Agent":
-								"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-							Accept: "application/json",
-						},
-						signal: AbortSignal.timeout(15000),
-					},
-				);
-				if (res.ok) body = await res.json();
-			} catch (scrapeError) {
-				console.warn("Direct IDX fetch failed in idx-flows:", scrapeError);
-			}
-
-			if (body && Array.isArray(body.data) && body.data.length > 0) {
-				await saveStockData(body.data, 43200);
-				stocksData = body.data;
+		if (!stocksData || stocksData.length === 0 || _policy?.fresh) {
+			const syncResult = await syncIdxStockSummary(Boolean(_policy?.fresh));
+			if (syncResult.success) {
+				stocksData = await getStockData();
 			}
 		}
 

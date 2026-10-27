@@ -116,13 +116,14 @@ export function loadMovementState(): MovementAppState {
 
 /**
  * Calculates the number of undone movement snacks for a given date key.
+ * Both completed and skipped sessions count as resolved.
  */
 export function calculateUndoneCount(
 	state: MovementAppState,
 	dateKey: string = getLocalDateKey(),
 ): number {
 	const todaySessions = (state.logs?.[dateKey] || []).filter(
-		(s) => s.status === "completed",
+		(s) => s.status === "completed" || s.status === "skipped",
 	);
 	const targetToday = state.config?.dailyTarget ?? 6;
 	return Math.max(0, targetToday - todaySessions.length);

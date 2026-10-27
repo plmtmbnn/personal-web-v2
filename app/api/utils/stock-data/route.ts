@@ -10,6 +10,7 @@ import {
 import { FALLBACK_IDX_STOCKS } from "@/features/utils/stock-tools/stock-explorer/data/fallbackData";
 import { getCachedInvestmentCompass } from "@/features/investment/actions";
 import type { CompassBridgeSummary } from "@/features/utils/stock-tools/stock-explorer/types";
+import { PEOEL_STOCK_SUMMARY_URL } from "@/services/market-data/idx-flows";
 
 export const dynamic = "force-dynamic";
 
@@ -53,37 +54,30 @@ export async function GET(request: NextRequest) {
 		// 3. Determine if external API call to IDX is needed
 		const shouldFetch = forceRefresh || !data || data.length === 0;
 
-		// 4. Perform fetch from IDX only if Redis is empty or forceRefresh is true
+		// 4. Perform fetch from screener proxy only if Redis is empty or forceRefresh is true
 		if (shouldFetch) {
 			try {
 				console.log(
-					"Redis cache empty or force refresh requested. Attempting fetch from IDX...",
+					"Redis cache empty or force refresh requested. Attempting fetch from screener proxy...",
 				);
 
 				let body: any = null;
 
 				try {
-					const res = await fetch(
-						"https://www.idx.co.id/primary/TradingSummary/GetStockSummary",
-						{
-							headers: {
-								Referer: "https://www.idx.co.id/",
-								"User-Agent":
-									"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-								Accept: "application/json, text/plain, */*",
-								"Accept-Language": "en-US,en;q=0.9,id;q=0.8",
-							},
-							signal: AbortSignal.timeout(15000),
+					const res = await fetch(PEOEL_STOCK_SUMMARY_URL, {
+						headers: {
+							Accept: "application/json",
 						},
-					);
+						signal: AbortSignal.timeout(15000),
+					});
 
 					if (res.ok) {
 						body = (await res.json()) as any;
 					}
-				} catch (scrapeError: any) {
+				} catch (fetchErr: any) {
 					console.warn(
-						"Direct IDX fetch failed in stock-data:",
-						scrapeError?.message || scrapeError,
+						"peoel-screener-py fetch failed in stock-data:",
+						fetchErr?.message || fetchErr,
 					);
 				}
 
@@ -93,19 +87,19 @@ export async function GET(request: NextRequest) {
 					data = body.data;
 					source = "idx_live";
 					console.log(
-						`Successfully fetched and cached ${body.data.length} stocks from IDX to Redis.`,
+						`Successfully fetched and cached ${body.data.length} stocks from screener proxy to Redis.`,
 					);
 				} else {
-					throw new Error("No valid stock data returned from IDX");
+					throw new Error("No valid stock data returned from screener proxy");
 				}
 
-				// Set cooldown key to avoid spamming IDX
+				// Set cooldown key to avoid spamming upstream
 				await redis
 					.set(FETCH_ATTEMPT_KEY, "true", { ex: 3600 })
 					.catch(() => {});
 			} catch (fetchError: any) {
 				console.warn(
-					"Failed to fetch fresh stock data from IDX (likely cloud datacenter/IP block):",
+					"Failed to fetch fresh stock data from screener proxy:",
 					fetchError?.message || fetchError,
 				);
 				await redis

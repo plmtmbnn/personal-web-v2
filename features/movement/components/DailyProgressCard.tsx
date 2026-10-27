@@ -56,9 +56,9 @@ export default function DailyProgressCard({
 
 	// Find next scheduled upcoming slot today
 	const nextScheduledSlot = useMemo(() => {
-		const completedSlotIds = new Set(
+		const handledSlotIds = new Set(
 			todaySessions
-				.filter((s) => s.status === "completed")
+				.filter((s) => s.status === "completed" || s.status === "skipped")
 				.map((s) => s.slotId),
 		);
 
@@ -67,9 +67,9 @@ export default function DailyProgressCard({
 			now.getMinutes(),
 		).padStart(2, "0")}`;
 
-		// First try to find upcoming slot later today that is not completed
+		// First try to find upcoming slot later today that is not completed or skipped
 		const upcoming = config.slots
-			.filter((s) => s.enabled && !completedSlotIds.has(s.id))
+			.filter((s) => s.enabled && !handledSlotIds.has(s.id))
 			.find((s) => s.scheduledTime >= currentHourMinutes);
 
 		if (upcoming) {
@@ -77,9 +77,9 @@ export default function DailyProgressCard({
 			return { slot: upcoming, movement: m, isLater: true };
 		}
 
-		// Or the first uncompleted slot if all planned times passed
+		// Or the first unhandled slot if all planned times passed
 		const pendingAny = config.slots
-			.filter((s) => s.enabled && !completedSlotIds.has(s.id))
+			.filter((s) => s.enabled && !handledSlotIds.has(s.id))
 			.at(0);
 
 		if (pendingAny) {

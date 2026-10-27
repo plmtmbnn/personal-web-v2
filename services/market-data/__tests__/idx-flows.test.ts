@@ -7,9 +7,19 @@ vi.mock("@/lib/core/redis", () => ({
 	},
 	getStockData: vi.fn(),
 	saveStockData: vi.fn(),
+	updateTickerHistoryRingBuffer: vi.fn(),
 }));
 
-import { calculateStreak, calculateNetFlow } from "../idx-flows";
+import {
+	calculateStreak,
+	calculateNetFlow,
+	syncIdxStockSummary,
+} from "../idx-flows";
+import {
+	getStockData,
+	saveStockData,
+	updateTickerHistoryRingBuffer,
+} from "@/lib/core/redis";
 import type { IDXStock } from "@/features/utils/stock-tools/stock-explorer/types";
 
 describe("IDX Flows foreign telemetry logic", () => {
@@ -99,6 +109,49 @@ describe("IDX Flows foreign telemetry logic", () => {
 
 			// Historical session (not today): always valid regardless of current hour
 			expect(isSessionActiveOrClosed(false, 7)).toBe(true);
+		});
+	});
+
+	describe("syncIdxStockSummary", () => {
+		it("returns cached count without network fetch if not forced and data exists", async () => {
+			vi.mocked(getStockData).mockResolvedValueOnce([{ Code: "BBCA" }] as any);
+			const result = await syncIdxStockSummary(false);
+			expect(result).toEqual({ success: true, count: 1 });
+			expect(saveStockData).not.toHaveBeenCalled();
+		});
+
+		it("fetches upstream and updates Redis + ring buffer on force = true", async () => {
+			const mockStocks = [{ Code: "BBCA", Close: 10000 }];
+			const originalFetch = global.fetch;
+			global.fetch = vi.fn().mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({ data: mockStocks }),
+			} as any);
+
+			vi.mocked(saveStockData).mockResolvedValueOnce(true);
+			vi.mocked(updateTickerHistoryRingBuffer).mockResolvedValueOnce({} as any);
+
+			const result = await syncIdxStockSummary(true);
+
+			expect(result).toEqual({ success: true, count: 1 });
+			expect(saveStockData).toHaveBeenCalledWith(mockStocks, 43200);
+			expect(updateTickerHistoryRingBuffer).toHaveBeenCalledWith(mockStocks);
+
+			global.fetch = originalFetch;
+		});
+
+		it("handles fetch failure gracefully", async () => {
+			const originalFetch = global.fetch;
+			global.fetch = vi
+				.fn()
+				.mockRejectedValueOnce(new Error("Network timeout"));
+
+			const result = await syncIdxStockSummary(true);
+			expect(result.success).toBe(false);
+			expect(result.count).toBe(0);
+			expect(result.error).toContain("Network timeout");
+
+			global.fetch = originalFetch;
 		});
 	});
 });

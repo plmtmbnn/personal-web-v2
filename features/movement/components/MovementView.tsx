@@ -184,10 +184,12 @@ export default function MovementView({ initialState }: MovementViewProps) {
 				(s) => s.enabled && s.scheduledTime === currentTime,
 			);
 			if (matchingSlot) {
-				const isAlreadyDone = todaySessions.some(
-					(s) => s.slotId === matchingSlot.id && s.status === "completed",
+				const isAlreadyHandled = todaySessions.some(
+					(s) =>
+						s.slotId === matchingSlot.id &&
+						(s.status === "completed" || s.status === "skipped"),
 				);
-				if (!isAlreadyDone) {
+				if (!isAlreadyHandled) {
 					const m = allMovements.find((x) => x.id === matchingSlot.movementId);
 					sendMovementNotification(
 						`Time for a Movement Snack: ${m?.name || "Break"}`,

@@ -82,6 +82,12 @@ The application utilizes a unified, modern dashboard aesthetic characterized by 
     - **Defensive Microstructure Telemetry & Anti-Forced-Side-by-Side Standard (`MicrostructureGrid.tsx`)**: 4 pure white floating telemetry cards (Value Area Profile, 15m Flow Dynamics, Big Money Flow, Low Absorption) utilizing the canonical 4-tier vertical hierarchy without horizontal overcrowding or label clipping.
     - **Executive Tactical Action Header (`ActionBanner.tsx`)**: Replaces raw JSON status strings and emojis with domain squircle badges (`Target`, `Clock`, `ShieldAlert`), providing immediate visual cues on market regime, trade bias, and liquidity condition alongside complete OHLC, turnover, volume, and tick size telemetry.
     - **Mobile Touch Target & Tap Hygiene**: All segmented toggles, filter pills, collapsible accordions, and action buttons maintain touch targets $\ge 44\times 44$px for tactile control on mobile viewports.
+  - **Admin Operations & Control Center (`/admin`)**:
+    - **Clean Header Standard**: Contextual breadcrumbs (`Home > Admin Console`), bold title `h1`, straight-to-the-point description, right-aligned Sign Out trigger, and 4-metric quick telemetry strip (*Articles*, *Pending Tasks*, *Reminders*, *Infra Engines*).
+    - **Clean Dot-Free Canvas**: Clean textured canvas (`bg-slate-50/80`), dot pattern permanently removed.
+    - **2-Group Minimalist Taxonomy**: Continuous sections separating *Operations & Productivity* (4 Tools: Blog, Tasks, Reminders, Movement) and *Market Systems* (2 Tools: Stock Explorer, Running Trade) with discrete domain icons, titles, and item count pills.
+    - **Streamlined Modern Floating Cards**: Pure white containers (`bg-white rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md`) implementing Direct Icon-Beside-Title layout, top-right live status badges (`{publishedBlogs} Published`, `{pendingTasks} Active`, `{reminderCount} In Memory`, `6 Daily Slots`, `Redis Engine`, `BEI / IDX Feed`), zero redundant capability tags, single primary `Launch Console` trigger, and `+ New Article` for Blog.
+    - **Synchronized Structural Skeleton**: Localized `AdminSkeleton` loader (consumed by `app/admin/loading.tsx`) perfectly mirroring the 2-group hierarchy and card geometry.
 
 ---
 

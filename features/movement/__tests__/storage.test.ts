@@ -352,13 +352,17 @@ describe("Movement Storage & Logic", () => {
 		];
 		expect(calculateUndoneCount(state, todayKey)).toBe(4);
 
-		// Skipped slots should not count as completed
+		// Skipped slots count as resolved and reduce undone count
 		state.logs[todayKey].push({
 			id: "s-3",
 			movementId: "desk-pushup",
 			completedAt: new Date().toISOString(),
 			status: "skipped",
 		});
+		expect(calculateUndoneCount(state, todayKey)).toBe(3);
+
+		// Undoing/removing skip restores undone count
+		state.logs[todayKey] = state.logs[todayKey].filter((s) => s.id !== "s-3");
 		expect(calculateUndoneCount(state, todayKey)).toBe(4);
 	});
 

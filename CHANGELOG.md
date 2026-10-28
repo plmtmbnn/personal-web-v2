@@ -1,3 +1,10 @@
+# [0.119.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.118.0...v0.119.0) (2026-10-28)
+
+
+### Features
+
+* **swing-trade:** add swing trade hub with screener, market tools, and redis credentials ([6dec38d](https://github.com/plmtmbnn/personal-web-v2/commit/6dec38d98dee4bc57af856ed8e2fb3f38cc5bec7))
+
 # [0.118.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.117.1...v0.118.0) (2026-10-27)
 
 

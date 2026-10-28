@@ -1,23 +1,31 @@
 "use client";
 
 import {
+	Activity,
 	AlertCircle,
+	CheckCircle2,
 	ChevronDown,
 	ChevronUp,
+	Compass,
+	Download,
 	Eye,
 	EyeOff,
 	KeyRound,
+	LineChart,
 	Loader2,
 	ScanSearch,
 	Search,
 	Server,
 	Settings2,
 	UploadCloud,
+	XCircle,
 	Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { buildZipBlob, toUint8Array } from "@/lib/shared/zip";
 import { buildCsv, collectRunningTrades } from "../../lib/collect";
 import {
+	getSessionAnalysis,
 	getSessionTradeBook,
 	getSessionTrades,
 	hasSessionData,
@@ -31,10 +39,12 @@ import {
 	readTapeAnalyzerSettings,
 	saveTapeAnalyzerSettings,
 } from "../../lib/tape-analyzer";
-import type {
-	BlockMode,
-	TapeAnalyzerResponse,
-	TapeAnalyzerSettings,
+import type { RunningTrade } from "../../types";
+import {
+	type BlockMode,
+	DEFAULT_TAPE_ANALYZER_SETTINGS,
+	type TapeAnalyzerResponse,
+	type TapeAnalyzerSettings,
 } from "../../types/tape-analyzer";
 import ActionBanner from "./ActionBanner";
 import ArchetypesCard from "./ArchetypesCard";
@@ -53,9 +63,35 @@ interface StockOption {
 
 type IngestMode = "live" | "upload";
 
+function triggerDownload(
+	filename: string,
+	content: string | Blob | unknown,
+	mimeType: string,
+) {
+	const blob =
+		content instanceof Blob
+			? content
+			: new Blob(
+					[
+						typeof content === "string"
+							? content
+							: JSON.stringify(content, null, 2),
+					],
+					{ type: `${mimeType};charset=utf-8` },
+				);
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = filename;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
+}
+
 export default function TapeAnalyzerView() {
 	const [settings, setSettings] = useState<TapeAnalyzerSettings>(
-		readTapeAnalyzerSettings,
+		DEFAULT_TAPE_ANALYZER_SETTINGS,
 	);
 	const [hydrated, setHydrated] = useState(false);
 	const [showToken, setShowToken] = useState(false);
@@ -74,6 +110,26 @@ export default function TapeAnalyzerView() {
 	// Manual File Upload states
 	const [csvFile, setCsvFile] = useState<File | null>(null);
 	const [jsonFile, setJsonFile] = useState<File | null>(null);
+
+	// Feed Ingestion & Download States
+	const [collectedData, setCollectedData] = useState<{
+		trades: RunningTrade[] | null;
+		tradeBook: unknown | null;
+	}>({ trades: null, tradeBook: null });
+	const [tradesProgress, setTradesProgress] = useState<{
+		pages: number;
+		rows: number;
+	} | null>(null);
+	const [feedProgress, setFeedProgress] = useState<{
+		runningTrade: "idle" | "fetching" | "success" | "failed";
+		tradeBook: "idle" | "fetching" | "success" | "failed";
+		screener: "idle" | "fetching" | "success" | "failed";
+	}>({
+		runningTrade: "idle",
+		tradeBook: "idle",
+		screener: "idle",
+	});
+	const [isZipping, setIsZipping] = useState(false);
 
 	const abortRef = useRef<AbortController | null>(null);
 
@@ -140,6 +196,15 @@ export default function TapeAnalyzerView() {
 		setLoading(true);
 		setError(null);
 		setStatusText("Running screener engine on cached session data...");
+		setCollectedData({
+			trades: cachedTrades,
+			tradeBook: cachedBook,
+		});
+		setFeedProgress({
+			runningTrade: "success",
+			tradeBook: "success",
+			screener: "fetching",
+		});
 
 		try {
 			const csvString = buildCsv(cachedTrades);
@@ -155,10 +220,12 @@ export default function TapeAnalyzerView() {
 
 			setAnalysisResult(res);
 			setSessionAnalysis(sym, res);
+			setFeedProgress((p) => ({ ...p, screener: "success" }));
 		} catch (err) {
 			setError(
 				err instanceof Error ? err.message : "Cached analysis request failed",
 			);
+			setFeedProgress((p) => ({ ...p, screener: "failed" }));
 		} finally {
 			setLoading(false);
 			setStatusText(null);
@@ -174,6 +241,12 @@ export default function TapeAnalyzerView() {
 		setLoading(true);
 		setError(null);
 		setAnalysisResult(null);
+		setTradesProgress(null);
+		setFeedProgress({
+			runningTrade: "fetching",
+			tradeBook: "fetching",
+			screener: "idle",
+		});
 
 		const symbol = settings.symbol.trim().toUpperCase();
 
@@ -217,6 +290,7 @@ export default function TapeAnalyzerView() {
 				fetchPage,
 				signal: ac.signal,
 				onProgress: (pages, rows) => {
+					setTradesProgress({ pages, rows });
 					setStatusText(
 						`Collecting running trades... Page ${pages} (${rows.toLocaleString(
 							"id-ID",
@@ -247,6 +321,16 @@ export default function TapeAnalyzerView() {
 			// Store into session cache for instant future reuse
 			setSessionTrades(symbol, tradesCollectResult.trades);
 			setSessionTradeBook(symbol, bookData);
+			setCollectedData({
+				trades: tradesCollectResult.trades,
+				tradeBook: bookData,
+			});
+			setFeedProgress((p) => ({
+				...p,
+				runningTrade: "success",
+				tradeBook: "success",
+				screener: "fetching",
+			}));
 
 			setStatusText("Building in-memory dataset & analyzing microstructure...");
 			const csvString = buildCsv(tradesCollectResult.trades);
@@ -264,6 +348,7 @@ export default function TapeAnalyzerView() {
 
 			setAnalysisResult(analysis);
 			setSessionAnalysis(symbol, analysis);
+			setFeedProgress((p) => ({ ...p, screener: "success" }));
 		} catch (err) {
 			if (ac.signal.aborted) {
 				setError("Analysis operation cancelled.");
@@ -272,6 +357,12 @@ export default function TapeAnalyzerView() {
 					err instanceof Error ? err.message : "Tape reading analysis failed";
 				setError(msg);
 			}
+			setFeedProgress((p) => ({
+				...p,
+				runningTrade: p.runningTrade === "fetching" ? "failed" : p.runningTrade,
+				tradeBook: p.tradeBook === "fetching" ? "failed" : p.tradeBook,
+				screener: p.screener === "fetching" ? "failed" : p.screener,
+			}));
 		} finally {
 			setLoading(false);
 			setStatusText(null);
@@ -284,6 +375,11 @@ export default function TapeAnalyzerView() {
 
 		setLoading(true);
 		setError(null);
+		setFeedProgress({
+			runningTrade: csvFile ? "success" : "idle",
+			tradeBook: jsonFile ? "success" : "idle",
+			screener: "fetching",
+		});
 		setStatusText(
 			"Parsing uploaded files and dispatching to screener engine...",
 		);
@@ -300,17 +396,124 @@ export default function TapeAnalyzerView() {
 			});
 
 			setAnalysisResult(res);
+			setFeedProgress((p) => ({ ...p, screener: "success" }));
 		} catch (err) {
 			const msg =
 				err instanceof Error
 					? err.message
 					: "Analysis of uploaded files failed";
 			setError(msg);
+			setFeedProgress((p) => ({ ...p, screener: "failed" }));
 		} finally {
 			setLoading(false);
 			setStatusText(null);
 		}
 	}, [csvFile, jsonFile, loading, settings]);
+
+	const getFeedDownload = useCallback(
+		(key: "runningTrade" | "tradeBook" | "screener") => {
+			const sym = (settings.symbol.trim() || "STOCK").toUpperCase();
+			const d = new Date();
+			const p = (n: number) => String(n).padStart(2, "0");
+			const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+
+			switch (key) {
+				case "runningTrade": {
+					if (csvFile) {
+						return {
+							filename: `running-trade_${sym}_${stamp}.csv`,
+							data: csvFile,
+							mime: "text/csv",
+						};
+					}
+					const trades = collectedData.trades || getSessionTrades(sym);
+					if (trades && trades.length > 0) {
+						return {
+							filename: `running-trade_${sym}_${stamp}.csv`,
+							data: buildCsv(trades),
+							mime: "text/csv",
+						};
+					}
+					return null;
+				}
+				case "tradeBook": {
+					if (jsonFile) {
+						return {
+							filename: `trade-book_${sym}_${stamp}.json`,
+							data: jsonFile,
+							mime: "application/json",
+						};
+					}
+					const book = collectedData.tradeBook || getSessionTradeBook(sym);
+					if (book) {
+						return {
+							filename: `trade-book_${sym}_${stamp}.json`,
+							data: book,
+							mime: "application/json",
+						};
+					}
+					return null;
+				}
+				case "screener": {
+					const analysis = analysisResult || getSessionAnalysis(sym);
+					if (!analysis) return null;
+					return {
+						filename: `tape-analysis_${sym}_${stamp}.json`,
+						data: analysis,
+						mime: "application/json",
+					};
+				}
+			}
+		},
+		[settings.symbol, csvFile, jsonFile, collectedData, analysisResult],
+	);
+
+	const downloadFeedItem = (key: "runningTrade" | "tradeBook" | "screener") => {
+		const item = getFeedDownload(key);
+		if (!item) return;
+		triggerDownload(item.filename, item.data, item.mime);
+	};
+
+	const availableFeeds = useMemo(() => {
+		const keys: ("runningTrade" | "tradeBook" | "screener")[] = [
+			"runningTrade",
+			"tradeBook",
+			"screener",
+		];
+		return keys.filter((k) => getFeedDownload(k) !== null);
+	}, [getFeedDownload]);
+
+	const downloadAllFeeds = async () => {
+		const available = availableFeeds
+			.map((k) => getFeedDownload(k))
+			.filter((item): item is NonNullable<typeof item> => item !== null);
+
+		if (available.length === 0) return;
+
+		try {
+			setIsZipping(true);
+			const zipFiles = await Promise.all(
+				available.map(async (item) => ({
+					name: item.filename,
+					data: await toUint8Array(item.data),
+				})),
+			);
+
+			const sym = (settings.symbol.trim() || "STOCK").toUpperCase();
+			const d = new Date();
+			const p = (n: number) => String(n).padStart(2, "0");
+			const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+
+			const zipBlob = buildZipBlob(zipFiles);
+			triggerDownload(
+				`tape-feeds_${sym}_${stamp}.zip`,
+				zipBlob,
+				"application/zip",
+			);
+		} finally {
+			setIsZipping(false);
+		}
+	};
 
 	return (
 		<div className="space-y-6 sm:space-y-8">
@@ -681,6 +884,171 @@ export default function TapeAnalyzerView() {
 						<div className="space-y-0.5">
 							<span className="font-bold block">Analysis Error</span>
 							<p className="text-rose-700 font-medium">{error}</p>
+						</div>
+					</div>
+				)}
+
+				{/* Feed Ingestion & Download Status Card */}
+				{(loading ||
+					feedProgress.runningTrade !== "idle" ||
+					feedProgress.screener !== "idle" ||
+					availableFeeds.length > 0) && (
+					<div className="p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-3">
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+							<div className="flex items-center gap-2">
+								<span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+									Feed Ingestion &amp; Engine Status
+								</span>
+								{loading && (
+									<span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
+										<Loader2 className="w-3 h-3 animate-spin text-slate-600" />
+										Streaming live streams
+									</span>
+								)}
+							</div>
+							{availableFeeds.length > 0 && !loading && (
+								<button
+									type="button"
+									onClick={downloadAllFeeds}
+									disabled={isZipping}
+									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 border border-slate-200 text-slate-800 shadow-2xs transition-all active:scale-95 cursor-pointer self-start sm:self-auto min-h-8 disabled:opacity-50"
+									title="Download all available feeds in a single ZIP file"
+								>
+									{isZipping ? (
+										<Loader2
+											className="w-3.5 h-3.5 animate-spin text-slate-600"
+											aria-hidden
+										/>
+									) : (
+										<Download
+											className="w-3.5 h-3.5 text-slate-600"
+											aria-hidden
+										/>
+									)}
+									<span>
+										{isZipping ? "Zipping..." : "Download All (.ZIP)"}
+									</span>
+								</button>
+							)}
+						</div>
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+							{/* 1. Running Trade */}
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
+								<div className="flex items-center gap-2 min-w-0">
+									<Activity className="w-4 h-4 text-slate-600 shrink-0" />
+									<span className="font-semibold text-slate-800 truncate">
+										Running Trade (CSV)
+										{feedProgress.runningTrade === "fetching" &&
+											tradesProgress && (
+												<span className="ml-1 text-[11px] font-mono font-normal text-indigo-600">
+													(p.{tradesProgress.pages},{" "}
+													{tradesProgress.rows.toLocaleString("id-ID")} ticks)
+												</span>
+											)}
+									</span>
+								</div>
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("runningTrade") && !loading && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("runningTrade")}
+											title="Download Running Trade (CSV)"
+											aria-label="Download Running Trade (CSV)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{feedProgress.runningTrade === "fetching" && (
+										<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+									)}
+									{feedProgress.runningTrade === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{feedProgress.runningTrade === "failed" && (
+										<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+									)}
+									{feedProgress.runningTrade === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											IDLE
+										</span>
+									)}
+								</div>
+							</div>
+
+							{/* 2. Trade Book */}
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
+								<div className="flex items-center gap-2 min-w-0">
+									<LineChart className="w-4 h-4 text-slate-600 shrink-0" />
+									<span className="font-semibold text-slate-800 truncate">
+										Trade Book (JSON)
+									</span>
+								</div>
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("tradeBook") && !loading && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("tradeBook")}
+											title="Download Trade Book (JSON)"
+											aria-label="Download Trade Book (JSON)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{feedProgress.tradeBook === "fetching" && (
+										<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+									)}
+									{feedProgress.tradeBook === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{feedProgress.tradeBook === "failed" && (
+										<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+									)}
+									{feedProgress.tradeBook === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											IDLE
+										</span>
+									)}
+								</div>
+							</div>
+
+							{/* 3. FastAPI Engine */}
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
+								<div className="flex items-center gap-2 min-w-0">
+									<Compass className="w-4 h-4 text-slate-900 shrink-0" />
+									<span className="font-bold text-slate-900 truncate">
+										FastAPI Engine
+									</span>
+								</div>
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("screener") && !loading && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("screener")}
+											title="Download Tape Screener Result (JSON)"
+											aria-label="Download Tape Screener Result (JSON)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{feedProgress.screener === "fetching" && (
+										<Loader2 className="w-4 h-4 text-slate-900 animate-spin shrink-0" />
+									)}
+									{feedProgress.screener === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{feedProgress.screener === "failed" && (
+										<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+									)}
+									{feedProgress.screener === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											IDLE
+										</span>
+									)}
+								</div>
+							</div>
 						</div>
 					</div>
 				)}

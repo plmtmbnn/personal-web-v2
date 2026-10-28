@@ -53,9 +53,12 @@ This document provides foundational context for any AI coding assistant (e.g., C
 
 > [!IMPORTANT]
 > **Swing Trade Hub & Market Microstructure Engine Mandate (`/admin/swing-trade`)**:
-> - **6-Tab Segmented Container (`SwingTradeTabs.tsx`)**: Swing Screener (`?tab=swing-screener`), Historical Trade (`?tab=historical-trade`), Market Detector (`?tab=market-detector`), Trade Book 5M (`?tab=trade-book-5m`), Running Trade Chart (`?tab=running-trade-chart`), and Broker Distribution (`?tab=broker-distribution`).
+> - **6-Tab Segmented Container (`SwingTradeTabs.tsx`)**: Swing Screener (`?tab=swing-screener`), Historical Trade (`?tab=historical-trade`), Market Detector (`?tab=market-detector`), Trade Book 5M (`?tab=trade-book-5m`), Running Trade Chart (`?tab=running-trade-chart`), and Broker Distribution (`?tab=broker-distribution`) with default workstation set to Swing Screener.
 > - **5-Layer Composite Scoring Architecture (0–100)**: Price Action & Multi-Day VP (25%), Order Flow & PLIR (25%), Participant Profile & Bandar Cost Basis (20%), Broker Trajectory & Slopes (20%), Network Topology & Anti-Wash (10%) integrated with the FastAPI backend (`POST /api/v1/analyze-swing`).
 > - **Executive Action Plan & Broker Fee Deduction**: Dynamic trade plans (`STRONG_BUY`, `BUY_ON_WEAKNESS`, `WAIT_FOR_TRIGGER`, `AVOID`, `AVOID_DISTRIBUTION`) with entry, invalidation stop, TP1/TP2 targets, and Net RRR deducting 0.40% round-trip broker fees (0.15% buy + 0.25% sell/tax).
+> - **Feed Ingestion & Engine Status & Zero-Dependency ZIP Export**: Real-time progress checklist tracking all 5 market feeds and FastAPI engine. Features granular individual downloads and 1-click bulk export bundling all active feeds into a single `swing-feeds_{TICKER}_{YYYYMMDD}.zip` archive via pure TypeScript Store-mode builder (`lib/shared/zip.ts`), permanently preventing browser multi-download suppression.
+> - **Standardized Ticker Search Autocomplete**: Clean dropdown suggestions with code/name matching, keyboard accessibility, and full backdrop dismiss.
+> - **Deep Dive Workstation Standard (`DeepDiveWorkstation.tsx`)**: Modern 5-tab swipeable segmented navigation (`touch-pan-x min-h-11`), primary setup highlighting (`Primary Setup` badge), separated TP1 vs TP2 milestone target cards, responsive mobile cards (`< sm`) transitioning to high-density desktop tables (`>= sm`) for Top Accumulators & Flow Windows, prominent `Paint-the-Tape Bull Trap` alert, `Trapped Legacy` accumulators flag, Self-Match wash-trading verification table, 10D/20D/60D Value Area Migration, and VCP/Volume dry-up telemetry.
 
 ## 🛠 Tech Stack
 - **Framework:** Next.js 16.4.2 (App Router) & React 19.3.1
@@ -598,8 +601,12 @@ Strictly for routing and page definitions.
   - *Linear Checklist Layout*: Clean single-column checklist (`rounded-3xl border border-slate-200/80 divide-y divide-slate-100`) focusing strictly on item description and due date.
   - *1-Click Complete & Undo Toast*: Circular checkbox completes/dismisses the item optimistically with a 3.5s floating Undo toast before deletion commits.
   - *Localized Skeleton Loader (`loading.tsx`)*: Route skeleton in `app/admin/reminders/loading.tsx` backed by `RemindersSkeleton.tsx` mirroring the header, inline composer, and linear rows to eliminate global fallback flashes.
-- **Order Trade Hub (`/admin/running-trade`)**: Unified admin portal hosting Running Trade Retriever and Trade Book Chart & Inspector via `OrderTradeTabs`:
-  - *Segmented Mode Container*: Instant tab switching between Running Trade Retriever and Trade Book Chart with URL query sync (`?tab=running-trade` | `?tab=trade-book`) wrapped in Suspense.
+- **Order Trade Hub (`/admin/running-trade`)**: Unified admin portal hosting Tape Reading Analyzer, Running Trade Retriever, and Trade Book Chart & Inspector via `OrderTradeTabs`:
+  - *Segmented Mode Container*: Instant tab switching between Tape Reading Analyzer (`?tab=tape-analyzer`), Running Trade Retriever (`?tab=running-trade`), and Trade Book Chart (`?tab=trade-book`) with Tape Reading Analyzer as the default primary tab, wrapped in Suspense.
+  - *Tape Reading & Microstructure Screener (`TapeAnalyzerView.tsx`)*: Analyzes continuous intraday running trades and 5-minute trade book depth via FastAPI backend:
+    - *Hydration Safety Standard*: Initializes local settings to `DEFAULT_TAPE_ANALYZER_SETTINGS` on initial render and populates `localStorage` within `useEffect` to prevent React 19 SSR hydration mismatches.
+    - *Feed Ingestion & Engine Status*: Unified progress card tracking Running Trade (CSV), Trade Book (JSON), and FastAPI Engine with individual file download triggers.
+    - *Bulk Zero-Dependency ZIP Export*: 1-click `Download All (.ZIP)` button packages active session feeds into `tape-feeds_{TICKER}_{YYYYMMDD}.zip` via `@/lib/shared/zip`, circumventing browser multi-download blockers.
   - *Running Trade Retriever*: Fetches running trade for one IDX ticker from an external API and downloads it as CSV:
     - *Connection Persistence*: Base API URL, Bearer token, ticker, market board, minimum lot, value from, and limit are stored in `localStorage` under `running-trade:settings` and prefilled on the next visit. First-time defaults: `BOARD_TYPE_REGULAR`, minimum lot 1, value from 1, limit 100. Storage is read in `useEffect` to avoid hydration mismatch.
     - *Ticker Autocomplete*: Searchable combobox backed by the Stock Explorer registry (`/api/utils/stock-data`), which also accepts a typed code.

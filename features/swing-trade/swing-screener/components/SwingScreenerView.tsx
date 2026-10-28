@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
 	Activity,
 	AlertTriangle,
@@ -18,6 +18,7 @@ import {
 	Loader2,
 	Radar,
 	RefreshCw,
+	Search,
 	Settings,
 	UploadCloud,
 	XCircle,
@@ -36,6 +37,7 @@ import {
 	readSwingScreenerSettings,
 	saveSwingScreenerSettings,
 } from "../lib/storage";
+import { buildZipBlob, toUint8Array } from "../lib/zip";
 import {
 	executeSwingAnalysis,
 	fetchBrokerDistributionFeed,
@@ -49,6 +51,11 @@ import { useMarketCredentials } from "../../credentials/hooks/useMarketCredentia
 import ActionTradePlanBanner from "./ActionTradePlanBanner";
 import LayerScoresCard from "./LayerScoresCard";
 import DeepDiveWorkstation from "./DeepDiveWorkstation";
+
+interface StockOption {
+	StockCode: string;
+	StockName: string;
+}
 
 interface UploadedFiles {
 	historical: File | null;
@@ -66,6 +73,7 @@ export default function SwingScreenerView() {
 	const [showToken, setShowToken] = useState(false);
 	const [showAdvanced, setShowAdvanced] = useState(false);
 	const [isAnalyzing, setIsAnalyzing] = useState(false);
+	const [isZipping, setIsZipping] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [progress, setProgress] = useState<FeedCollectionProgress>(
 		DEFAULT_FEED_PROGRESS,
@@ -75,6 +83,8 @@ export default function SwingScreenerView() {
 		pages: number;
 		rows: number;
 	} | null>(null);
+	const [stocks, setStocks] = useState<StockOption[]>([]);
+	const [tickerOpen, setTickerOpen] = useState(false);
 
 	const [uploadedFiles, setUploadedFiles] = useState<UploadedFiles>({
 		historical: null,
@@ -83,13 +93,19 @@ export default function SwingScreenerView() {
 		runningTradeChart: null,
 		brokerDistribution: null,
 	});
+	const [collectedPayloads, setCollectedPayloads] =
+		useState<FeedPayloads | null>(null);
 
 	const abortControllerRef = useRef<AbortController | null>(null);
 
-	// Load persisted settings on mount
+	// Load persisted settings and stock list on mount
 	useEffect(() => {
 		const saved = readSwingScreenerSettings();
 		setSettings(saved);
+		fetch("/api/utils/stock-data")
+			.then((r) => r.json())
+			.then((j: { data?: StockOption[] }) => setStocks(j.data ?? []))
+			.catch(() => setStocks([]));
 	}, []);
 
 	// Pre-fill credentials from Redis once loaded
@@ -102,6 +118,18 @@ export default function SwingScreenerView() {
 			}));
 		}
 	}, [credentials]);
+
+	const suggestions = useMemo(() => {
+		const q = settings.symbol.trim().toUpperCase();
+		if (!q) return stocks.slice(0, 8);
+		return stocks
+			.filter(
+				(s) =>
+					s.StockCode?.toUpperCase().startsWith(q) ||
+					s.StockName?.toUpperCase().includes(q),
+			)
+			.slice(0, 8);
+	}, [stocks, settings.symbol]);
 
 	const handleSettingChange = <K extends keyof SwingScreenerSettings>(
 		key: K,
@@ -255,6 +283,8 @@ export default function SwingScreenerView() {
 				setProgress((p) => ({ ...p, brokerDistribution: "failed" }));
 			}
 
+			setCollectedPayloads({ ...payloads });
+
 			// Step 2: Hit FastAPI analyze-swing endpoint
 			setProgress((p) => ({ ...p, screener: "fetching" }));
 
@@ -324,6 +354,7 @@ export default function SwingScreenerView() {
 				runningTradeChartJson: uploadedFiles.runningTradeChart || undefined,
 				brokerDistributionJson: uploadedFiles.brokerDistribution || undefined,
 			};
+			setCollectedPayloads({ ...payloads });
 
 			const analysisRes = await executeSwingAnalysis({
 				ticker: symbolUpper,
@@ -349,15 +380,196 @@ export default function SwingScreenerView() {
 		}
 	};
 
+	const triggerDownload = (
+		filename: string,
+		content: string | Blob | unknown,
+		mimeType: string,
+	) => {
+		const blob =
+			content instanceof Blob
+				? content
+				: new Blob(
+						[
+							typeof content === "string"
+								? content
+								: JSON.stringify(content, null, 2),
+						],
+						{ type: `${mimeType};charset=utf-8` },
+					);
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = filename;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	};
+
+	const getFeedDownload = useCallback(
+		(
+			key:
+				| "historical"
+				| "tradeBook"
+				| "marketDetector"
+				| "runningTradeChart"
+				| "brokerDistribution"
+				| "screener",
+		) => {
+			const sym = (settings.symbol.trim() || "STOCK").toUpperCase();
+			const d = new Date();
+			const p = (n: number) => String(n).padStart(2, "0");
+			const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+
+			switch (key) {
+				case "historical": {
+					const data =
+						collectedPayloads?.historicalCsv || uploadedFiles.historical;
+					if (!data) return null;
+					return {
+						filename: `historical-trade_${sym}_1Y_${stamp}.csv`,
+						data,
+						mime: "text/csv",
+					};
+				}
+				case "tradeBook": {
+					const data =
+						collectedPayloads?.tradeBookJson || uploadedFiles.tradeBook;
+					if (!data) return null;
+					return {
+						filename: `trade-book-5m_${sym}_${stamp}.json`,
+						data,
+						mime: "application/json",
+					};
+				}
+				case "marketDetector": {
+					const data =
+						collectedPayloads?.marketDetectorJson ||
+						uploadedFiles.marketDetector;
+					if (!data) return null;
+					return {
+						filename: `market-detector_${sym}_${stamp}.json`,
+						data,
+						mime: "application/json",
+					};
+				}
+				case "runningTradeChart": {
+					const data =
+						collectedPayloads?.runningTradeChartJson ||
+						uploadedFiles.runningTradeChart;
+					if (!data) return null;
+					return {
+						filename: `running-trade-chart_${sym}_${stamp}.json`,
+						data,
+						mime: "application/json",
+					};
+				}
+				case "brokerDistribution": {
+					const data =
+						collectedPayloads?.brokerDistributionJson ||
+						uploadedFiles.brokerDistribution;
+					if (!data) return null;
+					return {
+						filename: `broker-distribution_${sym}_${stamp}.json`,
+						data,
+						mime: "application/json",
+					};
+				}
+				case "screener": {
+					if (!result) return null;
+					return {
+						filename: `swing-analysis_${result.ticker}_${result.date}.json`,
+						data: result,
+						mime: "application/json",
+					};
+				}
+			}
+		},
+		[collectedPayloads, uploadedFiles, result, settings.symbol],
+	);
+
+	const downloadFeedItem = (
+		key:
+			| "historical"
+			| "tradeBook"
+			| "marketDetector"
+			| "runningTradeChart"
+			| "brokerDistribution"
+			| "screener",
+	) => {
+		const item = getFeedDownload(key);
+		if (!item) return;
+		triggerDownload(item.filename, item.data, item.mime);
+	};
+
+	const downloadAllFeeds = async () => {
+		const keys: (
+			| "historical"
+			| "tradeBook"
+			| "marketDetector"
+			| "runningTradeChart"
+			| "brokerDistribution"
+			| "screener"
+		)[] = [
+			"historical",
+			"tradeBook",
+			"marketDetector",
+			"runningTradeChart",
+			"brokerDistribution",
+			"screener",
+		];
+		const available = keys
+			.map((k) => getFeedDownload(k))
+			.filter((item): item is NonNullable<typeof item> => item !== null);
+
+		if (available.length === 0) return;
+
+		try {
+			setIsZipping(true);
+			const zipFiles = await Promise.all(
+				available.map(async (item) => ({
+					name: item.filename,
+					data: await toUint8Array(item.data),
+				})),
+			);
+
+			const sym = (settings.symbol.trim() || "STOCK").toUpperCase();
+			const d = new Date();
+			const p = (n: number) => String(n).padStart(2, "0");
+			const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+
+			const zipBlob = buildZipBlob(zipFiles);
+			triggerDownload(
+				`swing-feeds_${sym}_${stamp}.zip`,
+				zipBlob,
+				"application/zip",
+			);
+		} finally {
+			setIsZipping(false);
+		}
+	};
+
+	const availableFeeds = useMemo(() => {
+		const keys: (
+			| "historical"
+			| "tradeBook"
+			| "marketDetector"
+			| "runningTradeChart"
+			| "brokerDistribution"
+			| "screener"
+		)[] = [
+			"historical",
+			"tradeBook",
+			"marketDetector",
+			"runningTradeChart",
+			"brokerDistribution",
+			"screener",
+		];
+		return keys.filter((k) => getFeedDownload(k) !== null);
+	}, [getFeedDownload]);
+
 	const handleDownloadJson = () => {
-		if (!result) return;
-		const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-			JSON.stringify(result, null, 2),
-		)}`;
-		const anchor = document.createElement("a");
-		anchor.href = jsonString;
-		anchor.download = `swing-analysis_${result.ticker}_${result.date}.json`;
-		anchor.click();
+		downloadFeedItem("screener");
 	};
 
 	const renderRiskFlagsBanner = (flags: RiskFlags) => {
@@ -463,24 +675,72 @@ export default function SwingScreenerView() {
 
 				{/* Primary Configuration Form */}
 				<div className="grid grid-cols-1 md:grid-cols-12 gap-4 pt-2">
-					<div className="md:col-span-3">
+					<div className="md:col-span-3 relative">
 						<label
 							htmlFor="symbol-input"
 							className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
 						>
 							Ticker Symbol
 						</label>
-						<input
-							id="symbol-input"
-							type="text"
-							value={settings.symbol}
-							onChange={(e) =>
-								handleSettingChange("symbol", e.target.value.toUpperCase())
-							}
-							placeholder="e.g. PWON"
-							disabled={isAnalyzing}
-							className="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm font-bold uppercase placeholder:text-slate-400 placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-500 transition-all"
-						/>
+						<div className="relative">
+							<input
+								id="symbol-input"
+								type="text"
+								role="combobox"
+								aria-expanded={tickerOpen}
+								aria-autocomplete="list"
+								aria-controls="screener-ticker-suggestions"
+								value={settings.symbol}
+								onChange={(e) => {
+									handleSettingChange("symbol", e.target.value.toUpperCase());
+									setTickerOpen(true);
+								}}
+								onFocus={() => setTickerOpen(true)}
+								placeholder="e.g. PWON, BBCA"
+								maxLength={10}
+								disabled={isAnalyzing}
+								className="w-full h-11 px-3.5 pr-10 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm font-bold uppercase tracking-wider placeholder:text-slate-400 placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-500 transition-all"
+							/>
+							<Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+						</div>
+
+						{tickerOpen && suggestions.length > 0 && !isAnalyzing && (
+							<>
+								<div
+									role="presentation"
+									aria-hidden="true"
+									className="fixed inset-0 z-30"
+									onClick={() => setTickerOpen(false)}
+								/>
+								<div
+									id="screener-ticker-suggestions"
+									role="listbox"
+									aria-label="Stock suggestions"
+									className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg z-40 max-h-56 overflow-y-auto py-1"
+								>
+									{suggestions.map((s) => (
+										<button
+											key={s.StockCode}
+											type="button"
+											role="option"
+											aria-selected={settings.symbol === s.StockCode}
+											onClick={() => {
+												handleSettingChange("symbol", s.StockCode);
+												setTickerOpen(false);
+											}}
+											className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 flex items-center justify-between text-xs transition-colors min-h-11 cursor-pointer"
+										>
+											<span className="font-bold text-slate-900">
+												{s.StockCode}
+											</span>
+											<span className="text-slate-500 truncate max-w-[180px]">
+												{s.StockName}
+											</span>
+										</button>
+									))}
+								</div>
+							</>
+						)}
 					</div>
 
 					{settings.ingestMode === "live" && (
@@ -900,20 +1160,49 @@ export default function SwingScreenerView() {
 				{/* Live Parallel Feed Progress Checklist */}
 				{(isAnalyzing ||
 					progress.historical !== "idle" ||
-					progress.screener !== "idle") && (
+					progress.screener !== "idle" ||
+					availableFeeds.length > 0) && (
 					<div className="p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-3">
-						<div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-							<span>Feed Ingestion & Engine Status</span>
-							{isAnalyzing && (
-								<span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-									<Loader2 className="w-3 h-3 animate-spin text-slate-600" />
-									Streaming parallel requests
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+							<div className="flex items-center gap-2">
+								<span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+									Feed Ingestion &amp; Engine Status
 								</span>
+								{isAnalyzing && (
+									<span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
+										<Loader2 className="w-3 h-3 animate-spin text-slate-600" />
+										Streaming parallel requests
+									</span>
+								)}
+							</div>
+							{availableFeeds.length > 0 && !isAnalyzing && (
+								<button
+									type="button"
+									onClick={downloadAllFeeds}
+									disabled={isZipping}
+									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 border border-slate-200 text-slate-800 shadow-2xs transition-all active:scale-95 cursor-pointer self-start sm:self-auto min-h-8 disabled:opacity-50"
+									title="Download all available feeds in a single ZIP file"
+								>
+									{isZipping ? (
+										<Loader2
+											className="w-3.5 h-3.5 animate-spin text-slate-600"
+											aria-hidden
+										/>
+									) : (
+										<Download
+											className="w-3.5 h-3.5 text-slate-600"
+											aria-hidden
+										/>
+									)}
+									<span>
+										{isZipping ? "Zipping..." : `Download All (.ZIP)`}
+									</span>
+								</button>
 							)}
 						</div>
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
 							{/* Historical */}
-							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
 								<div className="flex items-center gap-2 min-w-0">
 									<History className="w-4 h-4 text-slate-600 shrink-0" />
 									<span className="font-semibold text-slate-800 truncate">
@@ -925,146 +1214,224 @@ export default function SwingScreenerView() {
 										)}
 									</span>
 								</div>
-								{progress.historical === "fetching" && (
-									<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
-								)}
-								{progress.historical === "success" && (
-									<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-								)}
-								{progress.historical === "failed" && (
-									<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
-								)}
-								{progress.historical === "idle" && (
-									<span className="text-[10px] text-slate-500 font-bold">
-										IDLE
-									</span>
-								)}
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("historical") && !isAnalyzing && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("historical")}
+											title="Download Historical Trade (1Y CSV)"
+											aria-label="Download Historical Trade (1Y CSV)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{progress.historical === "fetching" && (
+										<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+									)}
+									{progress.historical === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{progress.historical === "failed" && (
+										<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+									)}
+									{progress.historical === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											IDLE
+										</span>
+									)}
+								</div>
 							</div>
 
 							{/* Trade Book 5M */}
-							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
 								<div className="flex items-center gap-2 min-w-0">
 									<LineChart className="w-4 h-4 text-slate-600 shrink-0" />
 									<span className="font-semibold text-slate-800 truncate">
 										Trade Book 5M (JSON)
 									</span>
 								</div>
-								{progress.tradeBook === "fetching" && (
-									<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
-								)}
-								{progress.tradeBook === "success" && (
-									<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-								)}
-								{progress.tradeBook === "failed" && (
-									<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
-								)}
-								{progress.tradeBook === "idle" && (
-									<span className="text-[10px] text-slate-500 font-bold">
-										IDLE
-									</span>
-								)}
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("tradeBook") && !isAnalyzing && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("tradeBook")}
+											title="Download Trade Book 5M (JSON)"
+											aria-label="Download Trade Book 5M (JSON)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{progress.tradeBook === "fetching" && (
+										<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+									)}
+									{progress.tradeBook === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{progress.tradeBook === "failed" && (
+										<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+									)}
+									{progress.tradeBook === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											IDLE
+										</span>
+									)}
+								</div>
 							</div>
 
 							{/* Market Detector */}
-							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
 								<div className="flex items-center gap-2 min-w-0">
 									<Radar className="w-4 h-4 text-slate-600 shrink-0" />
 									<span className="font-semibold text-slate-800 truncate">
 										Market Detector (JSON)
 									</span>
 								</div>
-								{progress.marketDetector === "fetching" && (
-									<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
-								)}
-								{progress.marketDetector === "success" && (
-									<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-								)}
-								{progress.marketDetector === "failed" && (
-									<span className="text-[10px] text-amber-700 font-bold">
-										SKIPPED
-									</span>
-								)}
-								{progress.marketDetector === "idle" && (
-									<span className="text-[10px] text-slate-500 font-bold">
-										IDLE
-									</span>
-								)}
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("marketDetector") && !isAnalyzing && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("marketDetector")}
+											title="Download Market Detector (JSON)"
+											aria-label="Download Market Detector (JSON)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{progress.marketDetector === "fetching" && (
+										<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+									)}
+									{progress.marketDetector === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{progress.marketDetector === "failed" && (
+										<span className="text-[10px] text-amber-700 font-bold">
+											SKIPPED
+										</span>
+									)}
+									{progress.marketDetector === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											IDLE
+										</span>
+									)}
+								</div>
 							</div>
 
 							{/* Running Trade Chart */}
-							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
 								<div className="flex items-center gap-2 min-w-0">
 									<Activity className="w-4 h-4 text-slate-600 shrink-0" />
 									<span className="font-semibold text-slate-800 truncate">
 										Running Trade Chart (JSON)
 									</span>
 								</div>
-								{progress.runningTradeChart === "fetching" && (
-									<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
-								)}
-								{progress.runningTradeChart === "success" && (
-									<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-								)}
-								{progress.runningTradeChart === "failed" && (
-									<span className="text-[10px] text-amber-700 font-bold">
-										SKIPPED
-									</span>
-								)}
-								{progress.runningTradeChart === "idle" && (
-									<span className="text-[10px] text-slate-500 font-bold">
-										IDLE
-									</span>
-								)}
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("runningTradeChart") && !isAnalyzing && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("runningTradeChart")}
+											title="Download Running Trade Chart (JSON)"
+											aria-label="Download Running Trade Chart (JSON)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{progress.runningTradeChart === "fetching" && (
+										<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+									)}
+									{progress.runningTradeChart === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{progress.runningTradeChart === "failed" && (
+										<span className="text-[10px] text-amber-700 font-bold">
+											SKIPPED
+										</span>
+									)}
+									{progress.runningTradeChart === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											IDLE
+										</span>
+									)}
+								</div>
 							</div>
 
 							{/* Broker Distribution */}
-							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
 								<div className="flex items-center gap-2 min-w-0">
 									<GitFork className="w-4 h-4 text-slate-600 shrink-0" />
 									<span className="font-semibold text-slate-800 truncate">
 										Broker Distribution (JSON)
 									</span>
 								</div>
-								{progress.brokerDistribution === "fetching" && (
-									<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
-								)}
-								{progress.brokerDistribution === "success" && (
-									<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-								)}
-								{progress.brokerDistribution === "failed" && (
-									<span className="text-[10px] text-amber-700 font-bold">
-										SKIPPED
-									</span>
-								)}
-								{progress.brokerDistribution === "idle" && (
-									<span className="text-[10px] text-slate-500 font-bold">
-										IDLE
-									</span>
-								)}
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("brokerDistribution") && !isAnalyzing && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("brokerDistribution")}
+											title="Download Broker Distribution (JSON)"
+											aria-label="Download Broker Distribution (JSON)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{progress.brokerDistribution === "fetching" && (
+										<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
+									)}
+									{progress.brokerDistribution === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{progress.brokerDistribution === "failed" && (
+										<span className="text-[10px] text-amber-700 font-bold">
+											SKIPPED
+										</span>
+									)}
+									{progress.brokerDistribution === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											IDLE
+										</span>
+									)}
+								</div>
 							</div>
 
 							{/* Screener Engine */}
-							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
+							<div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2">
 								<div className="flex items-center gap-2 min-w-0">
 									<Compass className="w-4 h-4 text-slate-900 shrink-0" />
 									<span className="font-bold text-slate-900 truncate">
 										FastAPI Engine
 									</span>
 								</div>
-								{progress.screener === "fetching" && (
-									<Loader2 className="w-4 h-4 text-slate-900 animate-spin shrink-0" />
-								)}
-								{progress.screener === "success" && (
-									<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-								)}
-								{progress.screener === "failed" && (
-									<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
-								)}
-								{progress.screener === "idle" && (
-									<span className="text-[10px] text-slate-500 font-bold">
-										WAITING
-									</span>
-								)}
+								<div className="flex items-center gap-1.5 shrink-0">
+									{getFeedDownload("screener") && !isAnalyzing && (
+										<button
+											type="button"
+											onClick={() => downloadFeedItem("screener")}
+											title="Download Screener Analysis Result (JSON)"
+											aria-label="Download Screener Analysis Result (JSON)"
+											className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+										>
+											<Download className="w-3.5 h-3.5" />
+										</button>
+									)}
+									{progress.screener === "fetching" && (
+										<Loader2 className="w-4 h-4 text-slate-900 animate-spin shrink-0" />
+									)}
+									{progress.screener === "success" && (
+										<CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+									)}
+									{progress.screener === "failed" && (
+										<XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+									)}
+									{progress.screener === "idle" && (
+										<span className="text-[10px] text-slate-500 font-bold">
+											WAITING
+										</span>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>

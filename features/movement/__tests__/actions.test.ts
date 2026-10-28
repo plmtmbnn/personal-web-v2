@@ -8,7 +8,7 @@ import {
 import { redis } from "@/lib/core/redis";
 import { checkAdmin } from "@/features/auth/actions";
 import { revalidatePath } from "next/cache";
-import { getDefaultMovementState } from "../lib/storage";
+import { getDefaultMovementState, getLocalDateKey } from "../lib/storage";
 
 vi.mock("@/lib/core/redis", () => ({
 	redis: {
@@ -173,7 +173,7 @@ describe("Movement Server Actions", () => {
 
 		it("returns correct undone count when some sessions are completed today", async () => {
 			vi.mocked(checkAdmin).mockResolvedValue(true);
-			const todayStr = new Date().toISOString().split("T")[0];
+			const todayStr = getLocalDateKey();
 			const mockState = {
 				...getDefaultMovementState(),
 				config: {
@@ -203,7 +203,7 @@ describe("Movement Server Actions", () => {
 
 		it("returns 0 when target is reached or exceeded", async () => {
 			vi.mocked(checkAdmin).mockResolvedValue(true);
-			const todayStr = new Date().toISOString().split("T")[0];
+			const todayStr = getLocalDateKey();
 			const mockState = {
 				...getDefaultMovementState(),
 				config: {

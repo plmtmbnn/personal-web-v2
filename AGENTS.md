@@ -42,6 +42,15 @@ All AI coding assistants (Antigravity, Claude Code, Cursor, Codex, Gemini) must 
      ```powershell
      pnpm test
      ```
+8. **Unified Market API Credentials Standard**:
+   - Centralize upstream market provider Base URL and Bearer token in Redis (`admin:market:credentials`).
+   - All admin market proxy endpoints (`/api/admin/*`) must resolve credentials via `resolveMarketCredentials` with Redis fallback when omitted in request bodies.
+   - Client views must synchronize via `useMarketCredentials()` hook and `MarketCredentialsModal`.
+9. **Swing Trade Hub & Market Microstructure Engine (`/admin/swing-trade`)**:
+   - 6-tab segmented mode container: Swing Screener, Historical Trade, Market Detector, Trade Book 5M, Running Trade Chart, Broker Distribution.
+   - 5-Layer Composite Scoring (0–100) integrated with the FastAPI backend (`POST /api/v1/analyze-swing`).
+   - Executive Action Plan Banner with entry/invalidation/targets, Net RRR deducting 0.40% round-trip broker fees, and Deep Dive Workstation.
+
 
 <!-- antislop:start -->
 ## antislop

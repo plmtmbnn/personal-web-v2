@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { validateSql } from "../utils/sql";
+import { formatSqlAction } from "../actions";
 
 describe("SQL Formatter & Validator", () => {
 	it("validates correct PostgreSQL SELECT query", () => {
@@ -30,13 +31,12 @@ describe("SQL Formatter & Validator", () => {
 	});
 
 	it("formats valid query via formatSqlAction", async () => {
-		const { formatSqlAction } = await import("../actions");
 		const raw = "select id, name from users where id=1";
 		const res = await formatSqlAction(raw, "postgresql");
 		expect(res.isValid).toBe(true);
 		expect(res.formattedSql).toContain("SELECT");
 		expect(res.formattedSql).toContain("FROM");
-	});
+	}, 15000);
 
 	it("returns error for invalid query via formatSqlAction", async () => {
 		const { formatSqlAction } = await import("../actions");

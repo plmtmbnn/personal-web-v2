@@ -13,6 +13,7 @@ import {
 	ChevronRight,
 	Layers,
 	TrendingUp,
+	History,
 } from "lucide-react";
 import { logout } from "@/features/auth/actions";
 import { requireAuth } from "@/features/auth/server";
@@ -106,7 +107,7 @@ export function AdminSkeleton() {
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-						{[1, 2].map((i) => (
+						{[1, 2, 3].map((i) => (
 							<div
 								key={i}
 								className="flex flex-col justify-between p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-xs h-[180px] animate-pulse"
@@ -255,6 +256,18 @@ export default async function AdminDashboardPage() {
 					border: "border-sky-200/70",
 					hoverAccent: "group-hover:text-sky-600",
 					statusBadge: "BEI / IDX Feed",
+				},
+				{
+					title: "Swing Trade Hub",
+					description:
+						"Quantitative market feeds: swing screener, historical trade, market detector, trade book 5M, running trade, and broker distribution.",
+					href: "/admin/swing-trade",
+					icon: History,
+					color: "text-emerald-600",
+					bg: "bg-emerald-50",
+					border: "border-emerald-200/70",
+					hoverAccent: "group-hover:text-emerald-600",
+					statusBadge: "6 Feeds",
 				},
 			],
 		},

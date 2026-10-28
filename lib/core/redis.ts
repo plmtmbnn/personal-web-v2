@@ -7,8 +7,8 @@ export type { AuthSession } from "@/features/auth/types";
  * Centralized Redis client using Upstash.
  */
 export const redis = new Redis({
-	url: ENV_GLOBAL.UPSTASH_REDIS_REST_URL!,
-	token: ENV_GLOBAL.UPSTASH_REDIS_REST_TOKEN!,
+	url: ENV_GLOBAL.UPSTASH_REDIS_REST_URL || "https://test.upstash.io",
+	token: ENV_GLOBAL.UPSTASH_REDIS_REST_TOKEN || "test-token",
 });
 
 /**
@@ -38,6 +38,7 @@ export const CACHE_KEYS = {
 	CRYPTO_ONCHAIN_BACKUP: "compass:crypto:onchain:backup",
 	COMPASS_SNAPSHOT: (date: string) => `compass:snapshot:${date}`,
 	MOVEMENT_STATE: "admin:movement:state",
+	MARKET_CREDENTIALS: "admin:market:credentials",
 };
 
 /**

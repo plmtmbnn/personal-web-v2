@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { checkAdmin } from "@/features/auth/actions";
+import { resolveMarketCredentials } from "@/features/swing-trade/credentials/server";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "sin1";
 
 const bodySchema = z.object({
-	baseUrl: z
-		.string()
-		.url()
-		.refine((u) => u.startsWith("https://"), "Base URL must use https"),
-	token: z.string().min(1, "Token is required"),
+	baseUrl: z.string().optional().default(""),
+	token: z.string().optional().default(""),
 	symbol: z
 		.string()
 		.regex(/^[A-Za-z0-9]{1,10}$/, "Valid ticker symbol required"),
@@ -31,19 +29,30 @@ export async function POST(req: Request) {
 
 	const { baseUrl, token, symbol } = parsed.data;
 
+	const creds = await resolveMarketCredentials(baseUrl, token);
+	if (!creds) {
+		return NextResponse.json(
+			{
+				error:
+					"Market API credentials (Base URL and Token) are required. Configure them in Redis.",
+			},
+			{ status: 400 },
+		);
+	}
+
 	const params = new URLSearchParams({
 		symbol: symbol.toUpperCase(),
 		time_interval: "1m",
 		period: "DATE_PICKER_PERIOD_LATEST",
 	});
 
-	const url = `${baseUrl.replace(/\/+$/, "")}/order-trade/trade-book/chart?${params.toString()}`;
+	const url = `${creds.baseUrl}/order-trade/trade-book/chart?${params.toString()}`;
 
 	try {
 		const upstream = await fetch(url, {
 			method: "GET",
 			headers: {
-				authorization: `Bearer ${token}`,
+				authorization: `Bearer ${creds.token}`,
 				accept: "application/json",
 				"cache-control": "no-cache",
 				pragma: "no-cache",

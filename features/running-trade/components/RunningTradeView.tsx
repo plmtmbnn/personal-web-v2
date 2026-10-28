@@ -31,6 +31,7 @@ import {
 	type RunningTradeResponse,
 	type RunningTradeSettings,
 } from "../types";
+import { useMarketCredentials } from "@/features/swing-trade/credentials/hooks/useMarketCredentials";
 
 const STORAGE_KEY = "running-trade:settings";
 
@@ -79,6 +80,7 @@ const STOP_MESSAGES: Record<CollectResult["stopReason"], string> = {
 };
 
 export default function RunningTradeView() {
+	const { credentials, saveCredentials } = useMarketCredentials();
 	const [settings, setSettings] =
 		useState<RunningTradeSettings>(DEFAULT_SETTINGS);
 	const [hydrated, setHydrated] = useState(false);
@@ -101,6 +103,17 @@ export default function RunningTradeView() {
 			.catch(() => setStocks([]));
 	}, []);
 
+	// Pre-fill credentials from Redis once available
+	useEffect(() => {
+		if (credentials?.baseUrl || credentials?.token) {
+			setSettings((prev) => ({
+				...prev,
+				baseUrl: prev.baseUrl || credentials.baseUrl || "",
+				token: prev.token || credentials.token || "",
+			}));
+		}
+	}, [credentials]);
+
 	useEffect(() => {
 		if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 	}, [settings, hydrated]);
@@ -122,9 +135,16 @@ export default function RunningTradeView() {
 			.slice(0, 8);
 	}, [stocks, settings.symbol]);
 
+	const effectiveBaseUrl = (
+		settings.baseUrl ||
+		credentials?.baseUrl ||
+		""
+	).trim();
+	const effectiveToken = (settings.token || credentials?.token || "").trim();
+
 	const ready =
-		settings.baseUrl.trim().startsWith("https://") &&
-		settings.token.trim() !== "" &&
+		effectiveBaseUrl.startsWith("https://") &&
+		effectiveToken !== "" &&
 		/^[A-Za-z0-9]{1,10}$/.test(settings.symbol.trim()) &&
 		settings.limit >= 1 &&
 		settings.minimumLot >= 0 &&
@@ -138,13 +158,20 @@ export default function RunningTradeView() {
 		setResult(null);
 		setProgress({ pages: 0, rows: 0 });
 
+		if (
+			(settings.baseUrl && settings.baseUrl !== credentials?.baseUrl) ||
+			(settings.token && settings.token !== credentials?.token)
+		) {
+			saveCredentials({ baseUrl: effectiveBaseUrl, token: effectiveToken });
+		}
+
 		const fetchPage = async (tradeNumber?: string) => {
 			const res = await fetch("/api/admin/running-trade", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					baseUrl: settings.baseUrl.trim(),
-					token: settings.token.trim(),
+					baseUrl: effectiveBaseUrl,
+					token: effectiveToken,
 					symbol: settings.symbol.trim(),
 					marketBoard: settings.marketBoard,
 					minimumLot: settings.minimumLot,
@@ -238,15 +265,24 @@ export default function RunningTradeView() {
 					<div className="min-w-0">
 						<h2 className="text-base font-bold text-slate-900">Connection</h2>
 						<p className="text-xs text-slate-500">
-							Saved in this browser's localStorage and prefilled next time.
+							Persisted in Redis and synchronized across all Market & Swing
+							Trade tools.
 						</p>
 					</div>
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div>
-						<label htmlFor="rt-base" className={labelClass}>
-							Base API URL
+						<label
+							htmlFor="rt-base"
+							className={`flex items-center justify-between ${labelClass}`}
+						>
+							<span>Base API URL</span>
+							{credentials?.baseUrl && (
+								<span className="text-[10px] font-semibold text-emerald-600 normal-case">
+									Redis Synced
+								</span>
+							)}
 						</label>
 						<input
 							id="rt-base"
@@ -254,15 +290,23 @@ export default function RunningTradeView() {
 							inputMode="url"
 							autoComplete="off"
 							spellCheck={false}
-							placeholder="https://api.example.com"
+							placeholder={credentials?.baseUrl || "https://api.example.com"}
 							value={settings.baseUrl}
 							onChange={(e) => update("baseUrl", e.target.value)}
 							className={inputClass}
 						/>
 					</div>
 					<div>
-						<label htmlFor="rt-token" className={labelClass}>
-							Bearer token
+						<label
+							htmlFor="rt-token"
+							className={`flex items-center justify-between ${labelClass}`}
+						>
+							<span>Bearer token</span>
+							{credentials?.token && (
+								<span className="text-[10px] font-semibold text-emerald-600 normal-case">
+									Redis Synced
+								</span>
+							)}
 						</label>
 						<div className="relative">
 							<KeyRound

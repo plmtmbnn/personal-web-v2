@@ -1,3 +1,10 @@
+# [0.120.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.119.0...v0.120.0) (2026-10-28)
+
+
+### Features
+
+* **trade:** revamp deep dive workstation, tab navigation, and feed bulk zip downloads ([dc223d9](https://github.com/plmtmbnn/personal-web-v2/commit/dc223d9cd656878e1da0fbaecea52584ad3de327))
+
 # [0.119.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.118.0...v0.119.0) (2026-10-28)
 
 

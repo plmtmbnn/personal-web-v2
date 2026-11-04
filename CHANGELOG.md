@@ -1,3 +1,10 @@
+# [0.121.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.120.0...v0.121.0) (2026-11-04)
+
+
+### Features
+
+* **travel:** record visited journeys for malaysia and singapore ([dc09277](https://github.com/plmtmbnn/personal-web-v2/commit/dc09277406dbf41d7b34caeb16622921ce488aff))
+
 # [0.120.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.119.0...v0.120.0) (2026-10-28)
 
 

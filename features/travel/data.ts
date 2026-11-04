@@ -169,23 +169,25 @@ export const destinations: Destination[] = [
 		location: "Kuala Lumpur & Sepang",
 		country: "Malaysia",
 		type: "international",
-		isVisited: false,
+		isVisited: true,
+		visitedDate: "2026-10",
 		imageUrl:
 			"https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=2070&auto=format&fit=crop",
 		description:
-			"Exploring Kuala Lumpur's iconic skyline and experiencing the high-speed action of MotoGP live in Sepang.",
+			"Witnessed the high-speed adrenaline of MotoGP live at Sepang and explored Kuala Lumpur's iconic urban skyline.",
 	},
 	{
 		id: "16",
 		name: "Singapore",
-		location: "Marina Bay & Sentosa",
+		location: "Marina Bay & Jewel Changi",
 		country: "Singapore",
 		type: "international",
-		isVisited: false,
+		isVisited: true,
+		visitedDate: "2026-11",
 		imageUrl:
 			"https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=2070&auto=format&fit=crop",
 		description:
-			"Experiencing the futuristic Gardens by the Bay, iconic Marina Bay Sands, and vibrant city culture.",
+			"A high-tempo 21-hour transit adventure through Jewel Changi and the vibrant Marina Bay skyline.",
 	},
 	{
 		id: "17",

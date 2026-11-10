@@ -1,3 +1,10 @@
+# [0.122.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.121.0...v0.122.0) (2026-11-10)
+
+
+### Features
+
+* **travel:** revamp travel journeys with completed dispatches and update devs ([9950634](https://github.com/plmtmbnn/personal-web-v2/commit/9950634ef7b561ea567362ed48a3ece83efc4552))
+
 # [0.121.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.120.0...v0.121.0) (2026-11-04)
 
 

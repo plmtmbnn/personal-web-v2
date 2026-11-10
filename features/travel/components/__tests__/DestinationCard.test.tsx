@@ -3,61 +3,59 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import DestinationCard from "../DestinationCard";
 import type { Destination } from "../../types";
 
-const mockVisitedDestination: Destination = {
+const mockDestination: Destination = {
 	id: "2",
 	name: "Bali",
-	location: "Bali Province",
+	location: "Canggu & Ubud",
 	country: "Indonesia",
 	type: "domestic",
-	isVisited: true,
 	visitedDate: "2019-12",
 	imageUrl: "https://example.com/bali.jpg",
-	description: "The Island of Gods.",
-};
-
-const mockWishlistDestination: Destination = {
-	id: "17",
-	name: "Chamonix-Mont-Blanc",
-	location: "Chamonix, Mont Blanc",
-	country: "France",
-	type: "international",
-	isVisited: false,
-	imageUrl: "https://example.com/chamonix.jpg",
-	description: "The ultimate trail running bucket list destination.",
+	description:
+		"Slow mornings along the Canggu coast followed by a few quiet days up in Ubud.",
 };
 
 describe("DestinationCard Component", () => {
-	it("renders visited destination card with postcard action", () => {
+	it("renders postal field-log card with country, formatted date, and postcard action", () => {
 		const handleSelect = vi.fn();
 		render(
 			<DestinationCard
-				destination={mockVisitedDestination}
+				destination={mockDestination}
 				index={0}
 				onSelect={handleSelect}
 			/>,
 		);
 
 		expect(screen.getByText("Bali")).toBeDefined();
-		expect(screen.getByText("Visited")).toBeDefined();
-		expect(screen.getByText("Postcard")).toBeDefined();
+		expect(screen.getByText("Indonesia")).toBeDefined();
+		expect(screen.getByText("Domestic")).toBeDefined();
+		expect(screen.getByText("Dec 2019")).toBeDefined();
+		expect(screen.getByText("Open Postcard")).toBeDefined();
 
 		const card = screen.getByRole("button", {
-			name: /View postcard for Bali/i,
+			name: /Open 3D postcard for Bali/i,
 		});
 		fireEvent.click(card);
-		expect(handleSelect).toHaveBeenCalledWith(mockVisitedDestination);
+		expect(handleSelect).toHaveBeenCalledWith(mockDestination);
 	});
 
-	it("renders classified teaser card for On the Radar destination without leaking details", () => {
-		render(<DestinationCard destination={mockWishlistDestination} index={0} />);
+	it("activates onSelect via keyboard Enter or Space", () => {
+		const handleSelect = vi.fn();
+		render(
+			<DestinationCard
+				destination={mockDestination}
+				index={0}
+				onSelect={handleSelect}
+			/>,
+		);
 
-		expect(screen.getByText("On the Radar")).toBeDefined();
-		expect(screen.getByText("Classified")).toBeDefined();
-		expect(screen.getByText(/Coordinates: \[REDACTED\]/i)).toBeDefined();
-		expect(screen.getByText("In Active Planning")).toBeDefined();
-		expect(screen.getByText("Locked")).toBeDefined();
-		expect(screen.getByText("EXP-01")).toBeDefined();
-		// Destination name should not be leaked in the card heading
-		expect(screen.queryByText("Chamonix-Mont-Blanc")).toBeNull();
+		const card = screen.getByRole("button", {
+			name: /Open 3D postcard for Bali/i,
+		});
+		fireEvent.keyDown(card, { key: "Enter" });
+		expect(handleSelect).toHaveBeenCalledTimes(1);
+
+		fireEvent.keyDown(card, { key: " " });
+		expect(handleSelect).toHaveBeenCalledTimes(2);
 	});
 });

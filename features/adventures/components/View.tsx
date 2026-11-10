@@ -27,13 +27,12 @@ const cardVariants: Variants = {
 export function AdventuresSkeleton() {
 	return (
 		<main
-			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden"
+			className="min-h-screen bg-slate-50/80 relative pb-32 sm:pb-36 overflow-x-hidden"
 			role="status"
 			aria-live="polite"
 			aria-label="Loading adventures"
 		>
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-8 sm:space-y-10">
-				{/* ── Modern Floating Card Header Skeleton ── */}
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
 						<div className="space-y-2">
@@ -41,7 +40,6 @@ export function AdventuresSkeleton() {
 							<div className="h-4 w-72 sm:w-80 bg-slate-200 rounded animate-pulse" />
 						</div>
 
-						{/* Telemetry Quick Strip */}
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="flex flex-col items-center gap-1.5">
 								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
@@ -66,7 +64,6 @@ export function AdventuresSkeleton() {
 					</div>
 				</div>
 
-				{/* ── Telemetry Summary Strip (4-Col Grid) ── */}
 				<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 					{[1, 2, 3, 4].map((i) => (
 						<div
@@ -83,7 +80,6 @@ export function AdventuresSkeleton() {
 					))}
 				</div>
 
-				{/* ── Two Main Domain Cards (Running & Travel) ── */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-7">
 					{[1, 2].map((i) => (
 						<div
@@ -91,19 +87,16 @@ export function AdventuresSkeleton() {
 							className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col justify-between min-h-[380px] animate-pulse"
 						>
 							<div>
-								{/* Header */}
 								<div className="flex items-center gap-3.5 mb-3">
 									<div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-200 shrink-0" />
 									<div className="h-6 sm:h-7 w-48 sm:w-60 bg-slate-200 rounded-lg" />
 								</div>
 
-								{/* Description */}
 								<div className="space-y-2 mb-4">
 									<div className="h-3.5 w-full bg-slate-200 rounded" />
 									<div className="h-3.5 w-4/5 bg-slate-200 rounded" />
 								</div>
 
-								{/* Snapshot Box (3 columns) */}
 								<div className="grid grid-cols-3 divide-x divide-slate-100 p-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl my-4">
 									{[1, 2, 3].map((col) => (
 										<div
@@ -117,7 +110,6 @@ export function AdventuresSkeleton() {
 									))}
 								</div>
 
-								{/* Feature Chips */}
 								<div className="flex flex-wrap gap-1.5">
 									{[1, 2, 3].map((chip) => (
 										<div
@@ -128,7 +120,6 @@ export function AdventuresSkeleton() {
 								</div>
 							</div>
 
-							{/* Bottom Action Affordance */}
 							<div className="pt-5 mt-6 border-t border-slate-100 flex items-center justify-between">
 								<div className="h-4 w-36 bg-slate-200 rounded" />
 								<div className="w-8 h-8 rounded-xl bg-slate-100" />
@@ -169,8 +160,8 @@ export default function AdventuresLanding({
 		},
 		{
 			label: "Destinations",
-			value: "10+ Cities",
-			sublabel: "Domestic & Global",
+			value: "8 Logged",
+			sublabel: "4 Countries Visited",
 			icon: MapPin,
 			badgeColor: "text-indigo-600 bg-indigo-50 border-indigo-100",
 		},
@@ -184,9 +175,8 @@ export default function AdventuresLanding({
 	];
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
+		<main className="min-h-screen bg-slate-50/80 relative pb-32 sm:pb-36 overflow-x-hidden">
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-8 sm:space-y-10">
-				{/* ── Modern Floating Card Header Standard ── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -199,17 +189,16 @@ export default function AdventuresLanding({
 								Adventures & Journeys
 							</h1>
 							<p className="text-sm text-slate-500 font-medium mt-1">
-								Endurance running logs and curated travel journeys.
+								Endurance running logs and completed travel dispatches.
 							</p>
 						</div>
 
-						{/* Telemetry Quick Strip */}
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="text-center">
 								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
 									65.9
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
 									km Max Run
 								</p>
 							</div>
@@ -218,16 +207,16 @@ export default function AdventuresLanding({
 								<p className="text-xl font-extrabold text-teal-600 tabular-nums">
 									2,982
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
 									m Vert Gain
 								</p>
 							</div>
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
 								<p className="text-xl font-extrabold text-indigo-600 tabular-nums">
-									10+
+									8
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
 									Cities
 								</p>
 							</div>
@@ -236,7 +225,7 @@ export default function AdventuresLanding({
 								<p className="text-xl font-extrabold text-amber-600 tabular-nums">
 									2
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
 									Canvases
 								</p>
 							</div>
@@ -244,7 +233,6 @@ export default function AdventuresLanding({
 					</div>
 				</motion.div>
 
-				{/* ── Telemetry Summary Strip (4-Col Grid) ── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 14 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -262,7 +250,7 @@ export default function AdventuresLanding({
 								<stat.icon className="w-5 h-5" />
 							</div>
 							<div className="min-w-0">
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">
+								<p className="text-[9px] font-black uppercase tracking-widest text-slate-500 truncate">
 									{stat.label}
 								</p>
 								<p className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
@@ -276,7 +264,6 @@ export default function AdventuresLanding({
 					))}
 				</motion.div>
 
-				{/* ── Two Main Domain Cards (Running & Travel) ── */}
 				<motion.div
 					className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-7"
 					initial={reduceMotion ? false : "hidden"}
@@ -285,7 +272,6 @@ export default function AdventuresLanding({
 						visible: { transition: { staggerChildren: 0.08 } },
 					}}
 				>
-					{/* Running Adventure Card */}
 					<motion.div
 						variants={cardVariants}
 						whileHover={reduceMotion ? undefined : { y: -3 }}
@@ -297,7 +283,6 @@ export default function AdventuresLanding({
 							className="group block h-full bg-white border border-slate-200/80 hover:border-emerald-200 hover:shadow-md transition-[border-color,box-shadow] duration-200 rounded-3xl p-6 sm:p-7 shadow-xs !no-underline flex flex-col justify-between"
 						>
 							<div>
-								{/* Header: Icon direct beside Title */}
 								<div className="flex items-center gap-3.5 mb-2.5">
 									<div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-105 transition-transform duration-200">
 										<Activity className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -307,17 +292,15 @@ export default function AdventuresLanding({
 									</h2>
 								</div>
 
-								{/* Description */}
 								<p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
 									Endurance training logs, race benchmarks, and mountain trail
 									milestones with live split pacing telemetry and Instagram
 									canvas exports.
 								</p>
 
-								{/* Benchmark Milestones Snapshot */}
 								<div className="grid grid-cols-3 divide-x divide-slate-200/60 p-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl text-center my-4">
 									<div className="px-2">
-										<p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">
+										<p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
 											5K Pace
 										</p>
 										<p className="text-sm font-extrabold text-slate-900 font-mono">
@@ -328,7 +311,7 @@ export default function AdventuresLanding({
 										</p>
 									</div>
 									<div className="px-2">
-										<p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">
+										<p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
 											Marathon
 										</p>
 										<p className="text-sm font-extrabold text-slate-900 font-mono">
@@ -339,7 +322,7 @@ export default function AdventuresLanding({
 										</p>
 									</div>
 									<div className="px-2">
-										<p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">
+										<p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
 											Ultra Trail
 										</p>
 										<p className="text-sm font-extrabold text-slate-900 font-mono">
@@ -351,7 +334,6 @@ export default function AdventuresLanding({
 									</div>
 								</div>
 
-								{/* Feature Highlights Chips */}
 								<div className="flex flex-wrap gap-1.5">
 									<span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
 										<Timer className="w-3.5 h-3.5 text-emerald-600" />
@@ -368,7 +350,6 @@ export default function AdventuresLanding({
 								</div>
 							</div>
 
-							{/* Bottom Action Affordance */}
 							<div className="pt-5 mt-6 border-t border-slate-100 flex items-center justify-between">
 								<span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors flex items-center gap-1">
 									Explore Running Logs
@@ -380,7 +361,6 @@ export default function AdventuresLanding({
 						</Link>
 					</motion.div>
 
-					{/* Travel Adventure Card */}
 					<motion.div
 						variants={cardVariants}
 						whileHover={reduceMotion ? undefined : { y: -3 }}
@@ -392,49 +372,46 @@ export default function AdventuresLanding({
 							className="group block h-full bg-white border border-slate-200/80 hover:border-indigo-200 hover:shadow-md transition-[border-color,box-shadow] duration-200 rounded-3xl p-6 sm:p-7 shadow-xs !no-underline flex flex-col justify-between"
 						>
 							<div>
-								{/* Header: Icon direct beside Title */}
 								<div className="flex items-center gap-3.5 mb-2.5">
 									<div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform duration-200">
 										<Camera className="w-5 h-5 sm:w-6 sm:h-6" />
 									</div>
 									<h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors leading-snug">
-										Travel Bucket List
+										Travel Journeys
 									</h2>
 								</div>
 
-								{/* Description */}
 								<p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-									Curated global destinations, cultural memories, and vintage
-									airmail postcard generators with 3D flip polaroid sticker
+									Field dispatches from completed journeys across Indonesia and
+									Southeast Asia, paired with interactive 3D airmail postcard
 									exports.
 								</p>
 
-								{/* Travel Exploration Snapshot */}
 								<div className="grid grid-cols-3 divide-x divide-slate-200/60 p-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl text-center my-4">
 									<div className="px-2">
-										<p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">
+										<p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
 											Completed
 										</p>
 										<p className="text-sm font-extrabold text-slate-900 font-mono">
-											10+ Cities
+											8 Cities
 										</p>
 										<p className="text-[10px] text-slate-500 font-medium">
 											Logged
 										</p>
 									</div>
 									<div className="px-2">
-										<p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">
+										<p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
 											Regions
 										</p>
 										<p className="text-sm font-extrabold text-slate-900 font-mono">
-											3 Countries
+											4 Countries
 										</p>
 										<p className="text-[10px] text-slate-500 font-medium">
-											ID, TH, SG
+											ID, TH, MY, SG
 										</p>
 									</div>
 									<div className="px-2">
-										<p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">
+										<p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
 											Postcards
 										</p>
 										<p className="text-sm font-extrabold text-slate-900 font-mono">
@@ -446,7 +423,6 @@ export default function AdventuresLanding({
 									</div>
 								</div>
 
-								{/* Feature Highlights Chips */}
 								<div className="flex flex-wrap gap-1.5">
 									<span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
 										<Layers className="w-3.5 h-3.5 text-indigo-600" />
@@ -454,7 +430,7 @@ export default function AdventuresLanding({
 									</span>
 									<span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
 										<MapPin className="w-3.5 h-3.5 text-indigo-600" />
-										<span>Wishlist Tracker</span>
+										<span>Field Dispatches</span>
 									</span>
 									<span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 text-[11px] font-medium flex items-center gap-1.5">
 										<ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
@@ -463,10 +439,9 @@ export default function AdventuresLanding({
 								</div>
 							</div>
 
-							{/* Bottom Action Affordance */}
 							<div className="pt-5 mt-6 border-t border-slate-100 flex items-center justify-between">
 								<span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors flex items-center gap-1">
-									Explore Travel Tracker
+									Explore Travel Journeys
 								</span>
 								<div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 flex items-center justify-center transition-[colors,transform]">
 									<ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

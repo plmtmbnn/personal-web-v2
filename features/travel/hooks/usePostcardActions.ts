@@ -5,11 +5,6 @@ import {
 	renderPostcardBackToCanvas,
 } from "../utils/postcardCanvas";
 
-/**
- * Hook encapsulating postcard sticker export actions:
- * - Copy to clipboard as high-res PNG
- * - Download as PNG file
- */
 export function usePostcardActions(destination: Destination | null) {
 	const [isCopying, setIsCopying] = useState(false);
 	const [isDownloading, setIsDownloading] = useState(false);
@@ -22,7 +17,6 @@ export function usePostcardActions(destination: Destination | null) {
 		[],
 	);
 
-	/** Copy direct share URL for this postcard to clipboard */
 	const handleCopyLink = useCallback(async () => {
 		if (!destination || isLinkCopied) return;
 		if (typeof window === "undefined") return;
@@ -50,7 +44,6 @@ export function usePostcardActions(destination: Destination | null) {
 		}
 	}, [destination, isLinkCopied]);
 
-	/** Copy rendered postcard to clipboard as PNG, fallback to download */
 	const handleCopy = useCallback(
 		async (side: "front" | "back") => {
 			if (!destination || isCopying) return;
@@ -82,7 +75,6 @@ export function usePostcardActions(destination: Destination | null) {
 								setTimeout(() => setIsCopied(false), 2400);
 								resolve();
 							} else {
-								// Fallback: download instead
 								const link = document.createElement("a");
 								link.download = buildFilename(destination, side);
 								link.href = canvas.toDataURL("image/png");
@@ -92,7 +84,7 @@ export function usePostcardActions(destination: Destination | null) {
 								resolve();
 							}
 						} catch (_err) {
-							// Fallback on clipboard write failure
+							// Browsers blocking ClipboardItem image writes fall back to direct file download.
 							const link = document.createElement("a");
 							link.download = buildFilename(destination, side);
 							link.href = canvas.toDataURL("image/png");
@@ -112,7 +104,6 @@ export function usePostcardActions(destination: Destination | null) {
 		[destination, isCopying, buildFilename],
 	);
 
-	/** Download rendered postcard as PNG file */
 	const handleDownload = useCallback(
 		async (side: "front" | "back") => {
 			if (!destination || isDownloading) return;

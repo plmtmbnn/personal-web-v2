@@ -4,59 +4,39 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import {
-	Compass,
-	Search,
-	SearchX,
-	X,
-	ChevronRight,
-	CheckCircle2,
-} from "lucide-react";
-import { destinations } from "@/features/travel/data";
+import { Compass, Search, SearchX, X, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
-import useDestinations from "@/features/travel/hooks/useDestinations";
+import { destinations } from "@/features/travel/data";
 import DestinationCard from "@/features/travel/components/DestinationCard";
+import type { Destination } from "@/features/travel/types";
 
 const PostcardModal = dynamic(
 	() => import("@/features/travel/components/PostcardModal"),
 	{ ssr: false },
 );
-import type { Destination } from "@/features/travel/types";
 
-type FilterTab =
-	| "all"
-	| "completed"
-	| "wishlist"
-	| "domestic"
-	| "international";
-
-const FILTER_ACCENTS: Record<FilterTab, string> = {
-	all: "bg-slate-900 text-white",
-	completed: "bg-emerald-600 text-white",
-	wishlist: "bg-amber-500 text-white",
-	domestic: "bg-indigo-600 text-white",
-	international: "bg-cyan-600 text-white",
-};
+type FilterTab = "all" | "domestic" | "international";
 
 function TravelContent() {
 	const reduceMotion = useReducedMotion();
 	const searchParams = useSearchParams();
-	const { visitedDestinations, wishlistDestinations } = useDestinations();
 	const [selectedDestination, setSelectedDestination] =
 		useState<Destination | null>(null);
 	const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 	const [searchQuery, setSearchQuery] = useState("");
 
-	// Automatically open postcard modal when ?postcard=<id> or ?destination=<id> is present (visited only)
 	useEffect(() => {
 		const targetId =
 			searchParams.get("postcard") || searchParams.get("destination");
 		if (targetId) {
+			const normalizedTarget = targetId.toLowerCase().replace(/[-_]/g, " ");
 			const matched = destinations.find(
 				(d) =>
-					(d.id.toLowerCase() === targetId.toLowerCase() ||
-						d.name.toLowerCase() === targetId.toLowerCase()) &&
-					d.isVisited,
+					d.id.toLowerCase() === targetId.toLowerCase() ||
+					d.name.toLowerCase() === normalizedTarget ||
+					d.name.toLowerCase() === targetId.toLowerCase() ||
+					d.country.toLowerCase() === normalizedTarget ||
+					d.country.toLowerCase() === targetId.toLowerCase(),
 			);
 			if (matched) {
 				setSelectedDestination(matched);
@@ -65,7 +45,6 @@ function TravelContent() {
 	}, [searchParams]);
 
 	const handleSelectDestination = (dest: Destination) => {
-		if (!dest.isVisited) return;
 		setSelectedDestination(dest);
 		if (typeof window !== "undefined") {
 			const url = new URL(window.location.href);
@@ -88,7 +67,6 @@ function TravelContent() {
 		}
 	};
 
-	// Counts
 	const totalDestinations = destinations.length;
 	const totalCountries = new Set(destinations.map((d) => d.country)).size;
 	const domesticCount = destinations.filter(
@@ -97,61 +75,30 @@ function TravelContent() {
 	const intlCount = destinations.filter(
 		(d) => d.type === "international",
 	).length;
-	const completionRate = Math.round(
-		(visitedDestinations.length / totalDestinations) * 100,
-	);
 
-	// Filter Tabs
 	const filterTabs: { id: FilterTab; label: string; count: number }[] = [
 		{ id: "all", label: "All", count: totalDestinations },
-		{ id: "completed", label: "Visited", count: visitedDestinations.length },
-		{ id: "wishlist", label: "Wishlist", count: wishlistDestinations.length },
 		{ id: "domestic", label: "Domestic", count: domesticCount },
 		{ id: "international", label: "International", count: intlCount },
 	];
 
-	const hasActiveFilter = activeFilter !== "all" || searchQuery !== "";
+	const hasActiveFilter = activeFilter !== "all" || searchQuery.trim() !== "";
 
-	// Filtered destinations
 	const filteredDestinations = useMemo(() => {
 		const q = searchQuery.toLowerCase().trim();
-		return destinations
-			.filter((dest) => {
-				const matchesSearch =
-					!q ||
-					dest.name.toLowerCase().includes(q) ||
-					dest.location.toLowerCase().includes(q) ||
-					dest.country.toLowerCase().includes(q);
+		return destinations.filter((dest) => {
+			const matchesSearch =
+				!q ||
+				dest.name.toLowerCase().includes(q) ||
+				dest.location.toLowerCase().includes(q) ||
+				dest.country.toLowerCase().includes(q) ||
+				dest.description.toLowerCase().includes(q);
 
-				let matchesTab = true;
-				if (activeFilter === "completed") matchesTab = dest.isVisited;
-				else if (activeFilter === "wishlist") matchesTab = !dest.isVisited;
-				else if (activeFilter === "domestic")
-					matchesTab = dest.type === "domestic";
-				else if (activeFilter === "international")
-					matchesTab = dest.type === "international";
+			const matchesTab = activeFilter === "all" || dest.type === activeFilter;
 
-				return matchesSearch && matchesTab;
-			})
-			.sort((a, b) => {
-				if (a.isVisited && !b.isVisited) return -1;
-				if (!a.isVisited && b.isVisited) return 1;
-				if (a.isVisited && b.isVisited) {
-					return (b.visitedDate || "").localeCompare(a.visitedDate || "");
-				}
-				return 0;
-			});
+			return matchesSearch && matchesTab;
+		});
 	}, [searchQuery, activeFilter]);
-
-	const filteredVisited = useMemo(
-		() => filteredDestinations.filter((d) => d.isVisited),
-		[filteredDestinations],
-	);
-
-	const filteredWishlist = useMemo(
-		() => filteredDestinations.filter((d) => !d.isVisited),
-		[filteredDestinations],
-	);
 
 	const handleResetFilters = () => {
 		setActiveFilter("all");
@@ -159,133 +106,131 @@ function TravelContent() {
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
+		<main className="min-h-screen bg-slate-50/80 relative pb-32 sm:pb-36 overflow-x-hidden">
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-4 sm:space-y-5">
-				{/* ── Floating Card Header ─────────────────────────────────── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.4, ease: "easeOut" }}
 					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
-					{/* Breadcrumb */}
-					<nav className="flex items-center gap-1.5 mb-5 text-xs font-semibold text-slate-400">
+					<nav
+						aria-label="Breadcrumb"
+						className="flex items-center gap-1.5 mb-5 text-xs font-semibold text-slate-500"
+					>
+						<Link
+							href="/"
+							className="hover:text-slate-900 transition-colors !no-underline"
+						>
+							Home
+						</Link>
+						<ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 						<Link
 							href="/adventures"
-							className="hover:text-slate-700 transition-colors !no-underline"
+							className="hover:text-slate-900 transition-colors !no-underline"
 						>
 							Adventures
 						</Link>
-						<ChevronRight className="w-3.5 h-3.5 shrink-0" />
-						<span className="text-slate-700">Travel</span>
+						<ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+						<span className="text-slate-900 font-bold">Travel</span>
 					</nav>
 
-					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-						{/* Title block */}
-						<div className="flex-1 min-w-0">
-							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-								Travel Bucket List
-							</h1>
-							<p className="text-sm text-slate-500 font-medium mt-1.5 max-w-lg leading-relaxed">
-								Curating a life of exploration: journeys completed, wishlist
-								destinations, and vintage 3D airmail postcards.
-							</p>
+					<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+						<div className="flex items-start gap-3.5 sm:gap-4 flex-1 min-w-0">
+							<div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-indigo-50 border border-indigo-200/70 text-indigo-600 shadow-2xs flex items-center justify-center shrink-0">
+								<Compass className="w-6 h-6 sm:w-7 sm:h-7" />
+							</div>
+							<div className="min-w-0 flex-1">
+								<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">
+									Travel Journeys
+								</h1>
+								<p className="text-sm text-slate-600 font-medium mt-1.5 max-w-xl leading-relaxed">
+									Field dispatches from completed journeys across Indonesia and
+									Southeast Asia. Select any destination to inspect and export
+									its 3D airmail postcard.
+								</p>
+							</div>
 						</div>
 
-						{/* Stat strip */}
-						<div className="flex items-center gap-5 shrink-0 sm:pl-5 sm:border-l sm:border-slate-100">
+						<div className="grid grid-cols-4 sm:flex sm:items-center gap-3 sm:gap-5 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l border-slate-100 lg:pl-6">
 							{[
 								{
-									value: totalCountries,
-									label: "Countries",
+									value: totalDestinations,
+									label: "Visited",
 									color: "text-slate-900",
 								},
 								{
-									value: visitedDestinations.length,
-									label: "Explored",
+									value: totalCountries,
+									label: "Countries",
+									color: "text-indigo-600",
+								},
+								{
+									value: domesticCount,
+									label: "Domestic",
 									color: "text-emerald-600",
 								},
 								{
-									value: wishlistDestinations.length,
-									label: "Wishlist",
-									color: "text-amber-500",
-								},
-								{
-									value: `${completionRate}%`,
-									label: "Progress",
-									color: "text-indigo-600",
+									value: intlCount,
+									label: "Intl",
+									color: "text-slate-900",
 								},
 							].map((stat, i, arr) => (
-								<div key={stat.label} className="flex items-center gap-5">
+								<div
+									key={stat.label}
+									className="flex items-center justify-center sm:justify-start gap-3 sm:gap-5"
+								>
 									<div className="text-center">
 										<p
-											className={`text-xl sm:text-2xl font-extrabold tabular-nums ${stat.color}`}
+											className={`text-xl sm:text-2xl font-bold font-mono tabular-nums ${stat.color}`}
 										>
 											{stat.value}
 										</p>
-										<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">
 											{stat.label}
 										</p>
 									</div>
 									{i < arr.length - 1 && (
-										<div className="w-px h-8 bg-slate-100" />
+										<div className="hidden sm:block w-px h-8 bg-slate-100" />
 									)}
 								</div>
 							))}
 						</div>
 					</div>
-
-					{/* Progress bar */}
-					<div className="mt-5 pt-4 border-t border-slate-100">
-						<div className="flex items-center justify-between mb-2">
-							<span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-								Bucket list progress
-							</span>
-							<span className="text-[10px] font-extrabold text-emerald-600">
-								{visitedDestinations.length} / {totalDestinations} destinations
-							</span>
-						</div>
-						<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-							<motion.div
-								className="h-full bg-emerald-500 rounded-full"
-								initial={{ width: 0 }}
-								animate={{ width: `${completionRate}%` }}
-								transition={{ duration: 0.9, ease: "easeOut", delay: 0.3 }}
-							/>
-						</div>
-					</div>
 				</motion.div>
 
-				{/* ── Filter & Search Toolbar ─────────────────────────────── */}
 				<motion.div
 					initial={reduceMotion ? false : { opacity: 0, y: 12 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.4, delay: 0.07, ease: "easeOut" }}
-					className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5"
+					transition={{ duration: 0.4, delay: 0.06, ease: "easeOut" }}
+					className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs space-y-3"
 				>
-					<div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-						{/* Filter pills */}
-						<div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+					<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+						<div
+							className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
+							role="tablist"
+							aria-label="Filter destinations by region"
+						>
 							{filterTabs.map((tab) => {
 								const isActive = activeFilter === tab.id;
-								const activeClass = FILTER_ACCENTS[tab.id];
 								return (
 									<button
 										key={tab.id}
 										type="button"
+										role="tab"
+										aria-selected={isActive}
 										onClick={() => setActiveFilter(tab.id)}
-										className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+										className={`min-h-11 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 ${
 											isActive
-												? `${activeClass} shadow-xs`
-												: "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
+												? "bg-slate-900 text-white shadow-xs"
+												: "bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
 										}`}
 									>
 										<span>{tab.label}</span>
 										<span
-											className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${
+											className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold ${
 												isActive
-													? "bg-black/15 text-white"
-													: "bg-slate-200/70 text-slate-600"
+													? "bg-white/20 text-white"
+													: "bg-slate-200/80 text-slate-700"
 											}`}
 										>
 											{tab.count}
@@ -295,32 +240,31 @@ function TravelContent() {
 							})}
 						</div>
 
-						{/* Search */}
 						<div className="relative w-full sm:w-64">
 							<Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
 							<input
 								type="text"
-								placeholder="Search destinations..."
+								aria-label="Search visited destinations"
+								placeholder="Search city or country..."
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
-								className="w-full pl-10 pr-9 py-2 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs sm:text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+								className="w-full min-h-11 pl-10 pr-10 py-2 bg-slate-50/80 border border-slate-200/80 rounded-xl text-base sm:text-sm font-medium text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors"
 							/>
 							{searchQuery && (
 								<button
 									type="button"
 									onClick={() => setSearchQuery("")}
-									className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-200/60 transition-colors cursor-pointer"
+									className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-9 min-h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer"
 									aria-label="Clear search"
 								>
-									<X className="w-3.5 h-3.5" />
+									<X className="w-4 h-4" />
 								</button>
 							)}
 						</div>
 					</div>
 
-					{/* Active filter summary */}
 					{hasActiveFilter && (
-						<div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+						<div className="flex items-center justify-between text-xs text-slate-600 pt-2.5 border-t border-slate-100">
 							<span>
 								Showing{" "}
 								<strong className="text-slate-900 font-bold">
@@ -331,21 +275,20 @@ function TravelContent() {
 									: "destinations"}
 								{activeFilter !== "all" &&
 									` in ${filterTabs.find((t) => t.id === activeFilter)?.label}`}
-								{searchQuery && ` matching "${searchQuery}"`}
+								{searchQuery.trim() && ` matching "${searchQuery.trim()}"`}
 							</span>
 							<button
 								type="button"
 								onClick={handleResetFilters}
-								className="inline-flex items-center gap-1 font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
+								className="inline-flex items-center gap-1 font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 rounded-md px-1.5 py-0.5"
 							>
 								<X className="w-3.5 h-3.5" />
-								<span>Clear</span>
+								<span>Reset</span>
 							</button>
 						</div>
 					)}
 				</motion.div>
 
-				{/* ── Destination Cards Content ─────────────────────────────── */}
 				<AnimatePresence mode="wait">
 					{filteredDestinations.length === 0 ? (
 						<motion.div
@@ -353,37 +296,38 @@ function TravelContent() {
 							initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
 							animate={{ opacity: 1, scale: 1 }}
 							exit={{ opacity: 0, scale: 0.96 }}
-							className="max-w-md mx-auto text-center py-16 px-6 bg-white rounded-3xl border border-slate-200/80 shadow-xs"
+							className="max-w-md mx-auto text-center py-14 px-6 bg-white rounded-3xl border border-slate-200/80 shadow-xs"
 						>
-							<div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+							<div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-4">
 								<SearchX className="w-6 h-6" />
 							</div>
-							<h3 className="text-base font-extrabold text-slate-900 mb-1">
-								No Destinations Found
-							</h3>
-							<p className="text-xs text-slate-500 mb-6 leading-relaxed">
-								No destinations match your current search or filter. Try
-								broadening your search.
+							<h2 className="text-base font-extrabold text-slate-900 mb-1">
+								No Matching Journeys
+							</h2>
+							<p className="text-xs text-slate-600 mb-6 leading-relaxed">
+								No logged destinations match your current search or regional
+								filter. Reset filters to view all {totalDestinations}{" "}
+								dispatches.
 							</p>
 							{hasActiveFilter && (
 								<button
 									type="button"
 									onClick={handleResetFilters}
-									className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+									className="min-h-11 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
 								>
 									Reset Filters
 								</button>
 							)}
 						</motion.div>
-					) : searchQuery ? (
-						/* Search results: unified grid */
-						<motion.div
-							key="search-results"
+					) : (
+						<motion.section
+							key={`${activeFilter}-${searchQuery.trim()}`}
 							initial={reduceMotion ? false : { opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.25 }}
-							className="space-y-4"
+							aria-label="Logged travel destinations"
+							className="space-y-6"
 						>
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
 								{filteredDestinations.map((dest, i) => (
@@ -395,90 +339,17 @@ function TravelContent() {
 									/>
 								))}
 							</div>
-						</motion.div>
-					) : (
-						/* Structured editorial flow with Explored Journeys & On the Radar */
-						<motion.div
-							key={activeFilter}
-							initial={reduceMotion ? false : { opacity: 0 }}
-							animate={{ opacity: 1 }}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.25 }}
-							className="space-y-8"
-						>
-							{/* Section 1: Explored Journeys (visited) */}
-							{filteredVisited.length > 0 && activeFilter !== "wishlist" && (
-								<section className="space-y-4">
-									<div className="flex items-center justify-between">
-										<div className="flex items-center gap-2">
-											<div className="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0">
-												<CheckCircle2 className="w-3.5 h-3.5" />
-											</div>
-											<h2 className="text-sm font-extrabold text-slate-900">
-												Explored Journeys
-											</h2>
-											<span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-wider">
-												{filteredVisited.length} completed
-											</span>
-										</div>
-										<span className="text-xs text-slate-400 font-medium hidden sm:inline">
-											Click card to generate 3D Postcard
-										</span>
-									</div>
 
-									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-										{filteredVisited.map((dest, i) => (
-											<DestinationCard
-												key={dest.id}
-												destination={dest}
-												index={i}
-												onSelect={handleSelectDestination}
-											/>
-										))}
-									</div>
-								</section>
-							)}
-
-							{/* Section 2: On the Radar (Wishlist) */}
-							{filteredWishlist.length > 0 && activeFilter !== "completed" && (
-								<section className="space-y-4 pt-2">
-									{/* Wishlist Header */}
-									<div className="flex items-center justify-between pb-1 border-t border-slate-200/60 pt-6">
-										<div className="flex items-center gap-2">
-											<div className="w-7 h-7 rounded-xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0">
-												<Compass className="w-3.5 h-3.5" />
-											</div>
-											<h2 className="text-sm font-extrabold text-slate-900">
-												On the Radar
-											</h2>
-											<span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full uppercase tracking-wider">
-												{filteredWishlist.length} planned
-											</span>
-										</div>
-										<span className="text-xs text-slate-400 font-medium hidden sm:inline">
-											Classified future expeditions, coordinates locked until
-											departure
-										</span>
-									</div>
-
-									{/* Wishlist Cards Grid */}
-									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-										{filteredWishlist.map((dest, i) => (
-											<DestinationCard
-												key={dest.id}
-												destination={dest}
-												index={i}
-											/>
-										))}
-									</div>
-								</section>
-							)}
-						</motion.div>
+							<p className="text-center text-xs text-slate-500 font-medium pt-2">
+								All {totalDestinations} completed dispatches logged across{" "}
+								{totalCountries} countries. Next coordinates stay offline until
+								touchdown.
+							</p>
+						</motion.section>
 					)}
 				</AnimatePresence>
 			</div>
 
-			{/* ── Postcard & Sticker Modal (Visited Destinations Only) ──── */}
 			<PostcardModal
 				destination={selectedDestination}
 				onClose={handleCloseModal}
@@ -490,162 +361,80 @@ function TravelContent() {
 export function TravelSkeleton() {
 	return (
 		<main
-			className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden"
+			className="min-h-screen bg-slate-50/80 relative pb-32 sm:pb-36 overflow-x-hidden"
 			role="status"
 			aria-live="polite"
 			aria-label="Loading travel destinations"
 		>
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-4 sm:space-y-5">
-				{/* ── Floating Card Header Skeleton ── */}
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
-					{/* Breadcrumb */}
 					<div className="flex items-center gap-1.5 mb-5">
+						<div className="h-3 w-12 bg-slate-200 rounded animate-pulse" />
+						<div className="w-3.5 h-3.5 bg-slate-200 rounded animate-pulse" />
 						<div className="h-3 w-16 bg-slate-200 rounded animate-pulse" />
 						<div className="w-3.5 h-3.5 bg-slate-200 rounded animate-pulse" />
 						<div className="h-3 w-12 bg-slate-200 rounded animate-pulse" />
 					</div>
 
-					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-						{/* Title block */}
-						<div className="flex-1 min-w-0 space-y-2">
-							<div className="h-8 sm:h-9 w-60 sm:w-72 bg-slate-200 rounded-xl animate-pulse" />
-							<div className="h-4 w-full max-w-lg bg-slate-200 rounded animate-pulse" />
+					<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+						<div className="flex items-start gap-3.5 sm:gap-4 flex-1 min-w-0">
+							<div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-200 animate-pulse shrink-0" />
+							<div className="flex-1 min-w-0 space-y-2">
+								<div className="h-8 sm:h-9 w-48 sm:w-60 bg-slate-200 rounded-xl animate-pulse" />
+								<div className="h-4 w-full max-w-lg bg-slate-200 rounded animate-pulse" />
+							</div>
 						</div>
 
-						{/* Stat strip */}
-						<div className="flex items-center gap-5 shrink-0 sm:pl-5 sm:border-l sm:border-slate-100">
-							<div className="flex flex-col items-center gap-1">
-								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
-								<div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse" />
-							</div>
-							<div className="w-px h-8 bg-slate-100" />
-							<div className="flex flex-col items-center gap-1">
-								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
-								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
-							</div>
-							<div className="w-px h-8 bg-slate-100" />
-							<div className="flex flex-col items-center gap-1">
-								<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
-								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
-							</div>
-							<div className="w-px h-8 bg-slate-100" />
-							<div className="flex flex-col items-center gap-1">
-								<div className="h-6 w-10 bg-slate-200 rounded animate-pulse" />
-								<div className="h-2.5 w-12 bg-slate-200 rounded animate-pulse" />
-							</div>
-						</div>
-					</div>
-
-					{/* Progress bar */}
-					<div className="mt-5 pt-4 border-t border-slate-100">
-						<div className="flex items-center justify-between mb-2">
-							<div className="h-2.5 w-28 bg-slate-200 rounded animate-pulse" />
-							<div className="h-2.5 w-32 bg-slate-200 rounded animate-pulse" />
-						</div>
-						<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-							<div className="w-1/3 h-full bg-slate-200 rounded-full animate-pulse" />
+						<div className="grid grid-cols-4 sm:flex sm:items-center gap-3 sm:gap-5 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l border-slate-100 lg:pl-6">
+							{[1, 2, 3, 4].map((stat) => (
+								<div key={stat} className="flex flex-col items-center gap-1">
+									<div className="h-6 w-8 bg-slate-200 rounded animate-pulse" />
+									<div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse" />
+								</div>
+							))}
 						</div>
 					</div>
 				</div>
 
-				{/* ── Filter & Search Toolbar Skeleton ── */}
-				<div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5">
-					<div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-						{/* Filter pills */}
-						<div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
-							{[1, 2, 3, 4, 5].map((tab) => (
+				<div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs">
+					<div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+						<div className="flex items-center gap-1.5 w-full sm:w-auto">
+							{[1, 2, 3].map((tab) => (
 								<div
 									key={tab}
-									className="h-8 w-20 rounded-xl bg-slate-100 border border-slate-200/60 animate-pulse shrink-0"
+									className="h-11 w-24 rounded-xl bg-slate-100 border border-slate-200/60 animate-pulse shrink-0"
 								/>
 							))}
 						</div>
-
-						{/* Search */}
-						<div className="h-9 w-full sm:w-64 bg-slate-100 rounded-xl animate-pulse" />
+						<div className="h-11 w-full sm:w-64 bg-slate-100 rounded-xl animate-pulse" />
 					</div>
 				</div>
 
-				{/* ── Destination Cards Content Skeleton ── */}
-				<div className="space-y-8">
-					{/* Section 1: Explored Journeys */}
-					<section className="space-y-4">
-						<div className="flex items-center gap-2">
-							<div className="w-7 h-7 rounded-xl bg-slate-200 animate-pulse shrink-0" />
-							<div className="h-4 w-32 bg-slate-200 rounded animate-pulse" />
-							<div className="h-4 w-20 bg-slate-200 rounded-full animate-pulse" />
-						</div>
-
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-							{[1, 2, 3].map((card) => (
-								<div
-									key={card}
-									className="bg-white border border-slate-200/80 rounded-[2rem] overflow-hidden shadow-xs flex flex-col justify-between h-[380px] animate-pulse"
-								>
-									{/* Photo Area */}
-									<div className="w-full aspect-16/10 bg-slate-200 shrink-0" />
-
-									{/* Card Content Area */}
-									<div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-										<div className="space-y-2">
-											<div className="flex items-center justify-between">
-												<div className="h-5 w-32 bg-slate-200 rounded" />
-												<div className="h-4 w-14 bg-slate-200 rounded-full" />
-											</div>
-											<div className="h-3.5 w-24 bg-slate-200 rounded" />
-											<div className="space-y-1 pt-1">
-												<div className="h-3 w-full bg-slate-200 rounded" />
-												<div className="h-3 w-4/5 bg-slate-200 rounded" />
-											</div>
-										</div>
-
-										<div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-											<div className="h-3 w-20 bg-slate-200 rounded" />
-											<div className="h-3 w-16 bg-slate-200 rounded" />
-										</div>
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+					{[1, 2, 3, 4, 5, 6].map((card) => (
+						<div
+							key={card}
+							className="bg-white border border-slate-200/80 rounded-[2rem] overflow-hidden shadow-xs flex flex-col justify-between h-[380px] animate-pulse"
+						>
+							<div className="p-2.5 pb-0">
+								<div className="w-full aspect-4/3 bg-slate-200 rounded-[1.4rem] shrink-0" />
+							</div>
+							<div className="p-5 sm:p-6 pt-4 flex-1 flex flex-col justify-between">
+								<div className="space-y-2">
+									<div className="h-5 w-32 bg-slate-200 rounded" />
+									<div className="h-3.5 w-24 bg-slate-200 rounded" />
+									<div className="space-y-1 pt-1">
+										<div className="h-3 w-full bg-slate-200 rounded" />
+										<div className="h-3 w-4/5 bg-slate-200 rounded" />
 									</div>
 								</div>
-							))}
-						</div>
-					</section>
-
-					{/* Section 2: On the Radar */}
-					<section className="space-y-4 pt-2">
-						<div className="flex items-center gap-2 pt-6 border-t border-slate-200/60">
-							<div className="w-7 h-7 rounded-xl bg-slate-200 animate-pulse shrink-0" />
-							<div className="h-4 w-28 bg-slate-200 rounded animate-pulse" />
-							<div className="h-4 w-18 bg-slate-200 rounded-full animate-pulse" />
-						</div>
-
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-							{[1, 2, 3].map((card) => (
-								<div
-									key={card}
-									className="bg-white border border-slate-200/80 rounded-[2rem] overflow-hidden shadow-xs flex flex-col justify-between h-[380px] animate-pulse"
-								>
-									<div className="w-full aspect-16/10 bg-slate-200 shrink-0" />
-									<div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-										<div className="space-y-2">
-											<div className="flex items-center justify-between">
-												<div className="h-5 w-32 bg-slate-200 rounded" />
-												<div className="h-4 w-14 bg-slate-200 rounded-full" />
-											</div>
-											<div className="h-3.5 w-24 bg-slate-200 rounded" />
-											<div className="space-y-1 pt-1">
-												<div className="h-3 w-full bg-slate-200 rounded" />
-												<div className="h-3 w-4/5 bg-slate-200 rounded" />
-											</div>
-										</div>
-
-										<div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-											<div className="h-3 w-20 bg-slate-200 rounded" />
-											<div className="h-3 w-16 bg-slate-200 rounded" />
-										</div>
-									</div>
+								<div className="pt-3.5 border-t border-slate-100 flex items-center justify-between">
+									<div className="h-3 w-20 bg-slate-200 rounded" />
+									<div className="h-3 w-24 bg-slate-200 rounded" />
 								</div>
-							))}
+							</div>
 						</div>
-					</section>
+					))}
 				</div>
 			</div>
 		</main>

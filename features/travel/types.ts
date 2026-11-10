@@ -4,8 +4,7 @@ export type Destination = {
 	location: string;
 	country: string;
 	type: "domestic" | "international";
-	isVisited: boolean;
-	visitedDate?: string; // Format: "YYYY-MM"
+	visitedDate: string; // Format: "YYYY-MM"
 	imageUrl: string;
 	description: string;
 };

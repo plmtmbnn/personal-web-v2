@@ -13,27 +13,23 @@ describe("Travel Data", () => {
 		expect(firstDestination).toHaveProperty("location");
 		expect(firstDestination).toHaveProperty("country");
 		expect(firstDestination).toHaveProperty("type");
-		expect(firstDestination).toHaveProperty("isVisited");
+		expect(firstDestination).toHaveProperty("visitedDate");
 		expect(firstDestination).toHaveProperty("imageUrl");
 		expect(firstDestination).toHaveProperty("description");
 	});
 
-	test("all destinations have required fields", () => {
+	test("all destinations have required fields and valid YYYY-MM visitedDate", () => {
 		for (const dest of destinations) {
 			expect(typeof dest.id).toBe("string");
 			expect(typeof dest.name).toBe("string");
 			expect(typeof dest.location).toBe("string");
 			expect(typeof dest.country).toBe("string");
 			expect(["domestic", "international"]).toContain(dest.type);
-			expect(typeof dest.isVisited).toBe("boolean");
+			expect(typeof dest.visitedDate).toBe("string");
+			expect(dest.visitedDate).toMatch(/^\d{4}-\d{2}$/);
 			expect(typeof dest.imageUrl).toBe("string");
 			expect(typeof dest.description).toBe("string");
-
-			if (dest.isVisited) {
-				expect(dest.visitedDate).toBeDefined();
-				expect(typeof dest.visitedDate).toBe("string");
-				expect(dest.visitedDate).toMatch(/^\d{4}-\d{2}$/);
-			}
+			expect(dest.description).not.toContain("—");
 		}
 	});
 });

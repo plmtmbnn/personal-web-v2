@@ -1,3 +1,11 @@
+## [0.122.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.122.0...v0.122.1) (2026-11-13)
+
+
+### Bug Fixes
+
+* **ci:** record pnpm version in frozen lockfile ([0d3246f](https://github.com/plmtmbnn/personal-web-v2/commit/0d3246fc126e14a4c524e663185f3d469d5ba48a))
+* harden admin APIs and improve site accessibility ([6127002](https://github.com/plmtmbnn/personal-web-v2/commit/61270026ad1316ffa954133b049c7dc4b49ad59e))
+
 # [0.122.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.121.0...v0.122.0) (2026-11-10)
 
 

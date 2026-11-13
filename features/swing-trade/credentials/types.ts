@@ -3,3 +3,9 @@ export interface MarketCredentials {
 	token: string;
 	updatedAt?: string;
 }
+
+export interface MarketCredentialsStatus {
+	baseUrl: string;
+	tokenConfigured: boolean;
+	updatedAt?: string;
+}

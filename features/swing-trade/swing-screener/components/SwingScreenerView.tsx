@@ -110,11 +110,10 @@ export default function SwingScreenerView() {
 
 	// Pre-fill credentials from Redis once loaded
 	useEffect(() => {
-		if (credentials?.baseUrl || credentials?.token) {
+		if (credentials?.baseUrl) {
 			setSettings((prev) => ({
 				...prev,
 				baseUrl: prev.baseUrl || credentials.baseUrl || "",
-				token: prev.token || credentials.token || "",
 			}));
 		}
 	}, [credentials]);
@@ -165,9 +164,12 @@ export default function SwingScreenerView() {
 			credentials?.baseUrl ||
 			""
 		).trim();
-		const effectiveToken = (settings.token || credentials?.token || "").trim();
+		const effectiveToken = settings.token.trim();
 
-		if (!effectiveBaseUrl || !effectiveToken) {
+		if (
+			!effectiveBaseUrl ||
+			(!effectiveToken && !credentials?.tokenConfigured)
+		) {
 			setError(
 				"Base URL and Bearer Token are required for live auto-collect. Please configure Market API Credentials in Redis.",
 			);
@@ -175,10 +177,7 @@ export default function SwingScreenerView() {
 		}
 
 		// Sync updated credentials to Redis if changed locally
-		if (
-			(settings.baseUrl && settings.baseUrl !== credentials?.baseUrl) ||
-			(settings.token && settings.token !== credentials?.token)
-		) {
+		if (effectiveToken) {
 			saveCredentials({ baseUrl: effectiveBaseUrl, token: effectiveToken });
 		}
 
@@ -776,7 +775,7 @@ export default function SwingScreenerView() {
 									className="flex items-center justify-between text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
 								>
 									<span>Bearer Token</span>
-									{credentials?.token && (
+									{credentials?.tokenConfigured && (
 										<span className="text-[10px] font-semibold text-emerald-600 normal-case">
 											Redis Synced
 										</span>
@@ -791,7 +790,7 @@ export default function SwingScreenerView() {
 											handleSettingChange("token", e.target.value)
 										}
 										placeholder={
-											credentials?.token
+											credentials?.tokenConfigured
 												? "Configured in Redis"
 												: "eyJhbGciOi..."
 										}

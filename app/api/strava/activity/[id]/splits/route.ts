@@ -28,10 +28,10 @@ export async function GET(_request: Request, context: RouteContext) {
 			activityId,
 			splits: splits || [],
 		});
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error("[Strava Activity Splits API Error]:", error);
 		return NextResponse.json(
-			{ error: error?.message || "Failed to fetch activity splits." },
+			{ error: "Failed to fetch activity splits." },
 			{ status: 500 },
 		);
 	}

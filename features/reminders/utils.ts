@@ -1,3 +1,18 @@
+import { z } from "zod";
+
+export const reminderTextSchema = z.string().trim().min(1).max(150);
+export const reminderIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/);
+export const reminderDueSchema = z
+	.string()
+	.trim()
+	.refine((value) => {
+		if (["today", "tomorrow", "day", "week", "month"].includes(value)) {
+			return true;
+		}
+		return !Number.isNaN(new Date(value).getTime());
+	}, "Invalid reminder due date");
+export const reminderTtlSchema = z.enum(["day", "week", "month"]);
+
 /**
  * Calculates target ISO due date based on preset or explicit date string.
  */
@@ -31,13 +46,10 @@ export function resolveDueDate(dueDateOrPreset?: string): string {
 		return nextMonth.toISOString();
 	}
 
-	// If explicit date string (e.g. "2026-10-25" or ISO string)
 	const parsed = new Date(dueDateOrPreset);
 	if (!Number.isNaN(parsed.getTime())) {
 		return parsed.toISOString();
 	}
 
-	const fallback = new Date(now);
-	fallback.setHours(23, 59, 59, 999);
-	return fallback.toISOString();
+	throw new Error("Invalid reminder due date");
 }

@@ -5,12 +5,11 @@ import {
 	getMarketCredentialsAction,
 	saveMarketCredentialsAction,
 } from "../actions";
-import type { MarketCredentials } from "../types";
+import type { MarketCredentialsStatus } from "../types";
 
 export function useMarketCredentials() {
-	const [credentials, setCredentials] = useState<MarketCredentials | null>(
-		null,
-	);
+	const [credentials, setCredentials] =
+		useState<MarketCredentialsStatus | null>(null);
 	const [loading, setLoading] = useState(true);
 
 	const loadCredentials = useCallback(async () => {
@@ -29,7 +28,7 @@ export function useMarketCredentials() {
 
 		const handleUpdated = (event: Event) => {
 			const customEvent = event as CustomEvent<{
-				credentials?: MarketCredentials;
+				credentials?: MarketCredentialsStatus;
 			}>;
 			if (customEvent.detail?.credentials) {
 				setCredentials(customEvent.detail.credentials);

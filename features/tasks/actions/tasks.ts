@@ -1,5 +1,3 @@
-"use server";
-
 import { revalidatePath } from "next/cache";
 import { SupabaseConn } from "@/lib/core/supabase";
 import { invalidateStatsCache } from "@/lib/core/redis";

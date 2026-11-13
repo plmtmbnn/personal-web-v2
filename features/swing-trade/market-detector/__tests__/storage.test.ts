@@ -27,7 +27,7 @@ describe("Market Detector Storage", () => {
 
 		const settings = readMarketDetectorSettings();
 		expect(settings.baseUrl).toBe("https://api.broker.id");
-		expect(settings.token).toBe("hist-token-123");
+		expect(settings.token).toBe("");
 		expect(settings.period).toBe("BROKER_SUMMARY_PERIOD_LAST_3_MONTHS");
 	});
 
@@ -42,7 +42,7 @@ describe("Market Detector Storage", () => {
 		saveMarketDetectorSettings(custom);
 		const read = readMarketDetectorSettings();
 		expect(read.symbol).toBe("DOOH");
-		expect(read.token).toBe("my-jwt-token");
+		expect(read.token).toBe("");
 		expect(read.period).toBe("BROKER_SUMMARY_PERIOD_LAST_1_MONTH");
 		expect(localStorage.getItem(MARKET_DETECTOR_STORAGE_KEY)).toBeDefined();
 	});

@@ -19,7 +19,11 @@ export function readSwingScreenerSettings(): SwingScreenerSettings {
 	try {
 		const raw = localStorage.getItem(SWING_SCREENER_STORAGE_KEY);
 		if (raw) {
-			return { ...DEFAULT_SWING_SCREENER_SETTINGS, ...JSON.parse(raw) };
+			return {
+				...DEFAULT_SWING_SCREENER_SETTINGS,
+				...JSON.parse(raw),
+				token: "",
+			};
 		}
 
 		// Fallback pre-fill from existing settings keys
@@ -34,11 +38,11 @@ export function readSwingScreenerSettings(): SwingScreenerSettings {
 			const existing = localStorage.getItem(key);
 			if (existing) {
 				const parsed = JSON.parse(existing);
-				if (parsed.baseUrl || parsed.token) {
+				if (parsed.baseUrl) {
 					return {
 						...DEFAULT_SWING_SCREENER_SETTINGS,
 						baseUrl: parsed.baseUrl || "",
-						token: parsed.token || "",
+						token: "",
 					};
 				}
 			}
@@ -55,6 +59,9 @@ export function saveSwingScreenerSettings(
 ): void {
 	if (typeof window === "undefined") return;
 	try {
-		localStorage.setItem(SWING_SCREENER_STORAGE_KEY, JSON.stringify(settings));
+		localStorage.setItem(
+			SWING_SCREENER_STORAGE_KEY,
+			JSON.stringify({ ...settings, token: "" }),
+		);
 	} catch {}
 }

@@ -210,6 +210,18 @@ export function derivePermissions(
 		}
 	}
 
+	if (
+		globalRegime.state === "stress" ||
+		(globalStressActive && ihsgEffectiveState === "defensive")
+	) {
+		ihsgPerms.dca = {
+			status: "paused",
+			label: "Tranche Plan Only",
+			reason: "Pause market orders and use only predetermined limit tranches.",
+		};
+		ihsgMandate.dcaPace = "tranche_only";
+	}
+
 	// 2. Crypto (BTC / ETH Majors) Permissions
 	let cryptoEffectiveState = cryptoRegime.state;
 	if (globalStressActive && cryptoEffectiveState === "risk_on") {

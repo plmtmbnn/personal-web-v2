@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { checkAdmin } from "@/features/auth/actions";
 import { redis } from "@/lib/core/redis";
 
 const TTL = 2592000; // 30 Days in seconds
@@ -6,6 +7,10 @@ const MAX_ENDPOINTS = 15;
 const ALLOWED_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 
 export async function GET() {
+	if (!(await checkAdmin())) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
 	try {
 		const keys = await redis.keys("mock:*");
 		if (keys.length === 0) {
@@ -47,6 +52,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+	if (!(await checkAdmin())) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
 	try {
 		const { method, path, status, body, enableRateLimit } = await req.json();
 
@@ -203,12 +212,19 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+	if (!(await checkAdmin())) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
 	try {
 		const { searchParams } = new URL(req.url);
 		const key = searchParams.get("key");
 
-		if (!key) {
-			return NextResponse.json({ error: "Key is required" }, { status: 400 });
+		if (
+			!key ||
+			!/^mock:(GET|POST|PUT|DELETE|PATCH):\/[a-zA-Z0-9_\-/]+$/.test(key)
+		) {
+			return NextResponse.json({ error: "Invalid mock key" }, { status: 400 });
 		}
 
 		await redis.del(key);

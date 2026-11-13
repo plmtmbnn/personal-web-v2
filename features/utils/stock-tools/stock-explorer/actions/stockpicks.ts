@@ -1,8 +1,65 @@
-"use server";
-
-import { SupabaseConn } from "@/lib/core/supabase";
+import { checkAdmin } from "@/features/auth/actions";
+import { createAdminClient } from "@/lib/core/supabase-server";
+import { z } from "zod";
 import type { StockPick, ClosePickPayload, Sector } from "../types";
 import { isValidUuid, ensureValidUuid } from "../utils/uuid";
+
+const pickDate = z
+	.string()
+	.max(40)
+	.refine((value) => Number.isFinite(Date.parse(value)));
+
+const stockPickSchema = z.object({
+	id: z.string().trim().min(1).max(64),
+	stockCode: z
+		.string()
+		.trim()
+		.regex(/^[A-Za-z0-9]{1,10}$/),
+	stockName: z.string().trim().min(1).max(160),
+	sector: z.string().trim().min(1).max(80),
+	status: z.enum(["active", "closed"]),
+	buyPrice: z.number().finite().positive(),
+	quantityLots: z.number().int().positive().max(1_000_000),
+	entryDate: pickDate,
+	targetPrice: z.number().finite().positive().optional(),
+	stopLossPrice: z.number().finite().positive().optional(),
+	notes: z.string().max(2_000).optional(),
+	highestPriceTraced: z.number().finite().nonnegative(),
+	lowestPriceTraced: z.number().finite().nonnegative(),
+	highestPriceDate: pickDate.optional(),
+	lowestPriceDate: pickDate.optional(),
+	closedDate: pickDate.optional(),
+	closedPrice: z.number().positive().optional(),
+	thesis: z.string().max(80).optional(),
+	exitReason: z.string().max(80).optional(),
+	realizedPlNominal: z.number().optional(),
+	realizedPlPct: z.number().optional(),
+});
+
+const closePickSchema = z
+	.object({
+		exitPrice: z.number().finite().positive(),
+		exitDate: pickDate.optional(),
+		exitReason: z.string().trim().min(1).max(80),
+		peakGainPct: z.number().finite(),
+		maxDrawdownPct: z.number().finite(),
+		holdingDays: z.number().int().nonnegative().max(36_500),
+		realizedPlNominal: z.number().finite(),
+		realizedPlPct: z.number().finite(),
+	})
+	.passthrough();
+
+const watermarkUpdatesSchema = z
+	.array(
+		z.object({
+			id: z.string().uuid(),
+			highestPriceTraced: z.number().finite().nonnegative(),
+			lowestPriceTraced: z.number().finite().nonnegative(),
+			highestPriceDate: pickDate.optional(),
+			lowestPriceDate: pickDate.optional(),
+		}),
+	)
+	.max(500);
 
 interface DbStockPick {
 	id: string;
@@ -121,7 +178,7 @@ function mapDbToStockPick(row: DbStockPick): StockPick {
 	};
 }
 
-function mapPickToDb(pick: StockPick) {
+function mapPickToDb(pick: z.infer<typeof stockPickSchema>) {
 	const lots = pick.quantityLots || 1;
 	const shares = lots * 100;
 	const buyPrice = pick.buyPrice;
@@ -172,22 +229,26 @@ export async function fetchCloudStockPicksAction(): Promise<{
 	data: StockPick[];
 	error?: string;
 }> {
+	if (!(await checkAdmin())) {
+		return { success: false, data: [], error: "Unauthorized" };
+	}
 	try {
-		const { data, error } = await SupabaseConn.from("stock_picks")
+		const supabase = await createAdminClient();
+		const { data, error } = await supabase
+			.from("stock_picks")
 			.select("*")
 			.order("created_at", { ascending: false });
 
 		if (error) {
 			console.error("[fetchCloudStockPicksAction] Supabase error:", error);
-			return { success: false, data: [], error: error.message };
+			return { success: false, data: [], error: "Failed to fetch stock picks" };
 		}
 
 		const picks = (data as unknown as DbStockPick[]).map(mapDbToStockPick);
 		return { success: true, data: picks };
 	} catch (err) {
-		const msg = err instanceof Error ? err.message : "Unknown database error";
 		console.error("[fetchCloudStockPicksAction] Exception:", err);
-		return { success: false, data: [], error: msg };
+		return { success: false, data: [], error: "Failed to fetch stock picks" };
 	}
 }
 
@@ -198,22 +259,28 @@ export async function saveCloudStockPickAction(pick: StockPick): Promise<{
 	success: boolean;
 	error?: string;
 }> {
+	if (!(await checkAdmin())) {
+		return { success: false, error: "Unauthorized" };
+	}
 	try {
-		const payload = mapPickToDb(pick);
-
-		const { error } = await SupabaseConn.from("stock_picks").upsert(payload, {
+		const parsed = stockPickSchema.safeParse(pick);
+		if (!parsed.success) {
+			return { success: false, error: "Invalid stock pick payload" };
+		}
+		const payload = mapPickToDb(parsed.data);
+		const supabase = await createAdminClient();
+		const { error } = await supabase.from("stock_picks").upsert(payload, {
 			onConflict: "id",
 		});
 
 		if (error) {
 			console.error("[saveCloudStockPickAction] Supabase error:", error);
-			return { success: false, error: error.message };
+			return { success: false, error: "Failed to save stock pick" };
 		}
 		return { success: true };
 	} catch (err) {
-		const msg = err instanceof Error ? err.message : "Failed to save to cloud";
 		console.error("[saveCloudStockPickAction] Exception:", err);
-		return { success: false, error: msg };
+		return { success: false, error: "Failed to save stock pick" };
 	}
 }
 
@@ -230,36 +297,44 @@ export async function closeCloudStockPickAction(
 		realizedPlPct: number;
 	},
 ): Promise<{ success: boolean; error?: string }> {
+	if (!(await checkAdmin())) {
+		return { success: false, error: "Unauthorized" };
+	}
 	if (!isValidUuid(id)) {
-		return { success: true };
+		return { success: false, error: "Invalid stock pick ID" };
+	}
+	const parsedPayload = closePickSchema.safeParse(payload);
+	if (!parsedPayload.success) {
+		return { success: false, error: "Invalid close payload" };
 	}
 	try {
-		const { error } = await SupabaseConn.from("stock_picks")
+		const supabase = await createAdminClient();
+		const { error } = await supabase
+			.from("stock_picks")
 			.update({
 				status: "closed",
-				exit_price: payload.exitPrice,
-				exit_date: payload.exitDate
-					? new Date(payload.exitDate).toISOString()
+				exit_price: parsedPayload.data.exitPrice,
+				exit_date: parsedPayload.data.exitDate
+					? new Date(parsedPayload.data.exitDate).toISOString()
 					: new Date().toISOString(),
-				exit_reason: payload.exitReason,
-				realized_pnl_idr: payload.realizedPlNominal,
-				realized_pnl_pct: payload.realizedPlPct,
-				peak_gain_pct: payload.peakGainPct,
-				max_drawdown_pct: payload.maxDrawdownPct,
-				holding_days: payload.holdingDays,
+				exit_reason: parsedPayload.data.exitReason,
+				realized_pnl_idr: parsedPayload.data.realizedPlNominal,
+				realized_pnl_pct: parsedPayload.data.realizedPlPct,
+				peak_gain_pct: parsedPayload.data.peakGainPct,
+				max_drawdown_pct: parsedPayload.data.maxDrawdownPct,
+				holding_days: parsedPayload.data.holdingDays,
 				updated_at: new Date().toISOString(),
 			})
 			.eq("id", id);
 
 		if (error) {
 			console.error("[closeCloudStockPickAction] Supabase error:", error);
-			return { success: false, error: error.message };
+			return { success: false, error: "Failed to close stock pick" };
 		}
 		return { success: true };
 	} catch (err) {
-		const msg = err instanceof Error ? err.message : "Failed to close in cloud";
 		console.error("[closeCloudStockPickAction] Exception:", err);
-		return { success: false, error: msg };
+		return { success: false, error: "Failed to close stock pick" };
 	}
 }
 
@@ -270,23 +345,23 @@ export async function deleteCloudStockPickAction(id: string): Promise<{
 	success: boolean;
 	error?: string;
 }> {
+	if (!(await checkAdmin())) {
+		return { success: false, error: "Unauthorized" };
+	}
 	if (!isValidUuid(id)) {
-		return { success: true };
+		return { success: false, error: "Invalid stock pick ID" };
 	}
 	try {
-		const { error } = await SupabaseConn.from("stock_picks")
-			.delete()
-			.eq("id", id);
+		const supabase = await createAdminClient();
+		const { error } = await supabase.from("stock_picks").delete().eq("id", id);
 		if (error) {
 			console.error("[deleteCloudStockPickAction] Supabase error:", error);
-			return { success: false, error: error.message };
+			return { success: false, error: "Failed to delete stock pick" };
 		}
 		return { success: true };
 	} catch (err) {
-		const msg =
-			err instanceof Error ? err.message : "Failed to delete from cloud";
 		console.error("[deleteCloudStockPickAction] Exception:", err);
-		return { success: false, error: msg };
+		return { success: false, error: "Failed to delete stock pick" };
 	}
 }
 
@@ -302,11 +377,19 @@ export async function syncCloudWatermarksAction(
 		lowestPriceDate?: string;
 	}>,
 ): Promise<{ success: boolean; error?: string }> {
-	const validUpdates = updates.filter((u) => isValidUuid(u.id));
-	if (!validUpdates.length) return { success: true };
+	if (!(await checkAdmin())) {
+		return { success: false, error: "Unauthorized" };
+	}
+	const parsedUpdates = watermarkUpdatesSchema.safeParse(updates);
+	if (!parsedUpdates.success) {
+		return { success: false, error: "Invalid watermark updates" };
+	}
+	if (!parsedUpdates.data.length) return { success: true };
 	try {
-		for (const u of validUpdates) {
-			const { error } = await SupabaseConn.from("stock_picks")
+		const supabase = await createAdminClient();
+		for (const u of parsedUpdates.data) {
+			const { error } = await supabase
+				.from("stock_picks")
 				.update({
 					high_watermark: u.highestPriceTraced,
 					high_watermark_date: u.highestPriceDate
@@ -326,8 +409,7 @@ export async function syncCloudWatermarksAction(
 		}
 		return { success: true };
 	} catch (err) {
-		const msg = err instanceof Error ? err.message : "Watermark sync error";
 		console.error("[syncCloudWatermarksAction] Exception:", err);
-		return { success: false, error: msg };
+		return { success: false, error: "Failed to sync stock pick watermarks" };
 	}
 }

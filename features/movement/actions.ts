@@ -4,6 +4,7 @@ import { redis, CACHE_KEYS } from "@/lib/core/redis";
 import { checkAdmin } from "@/features/auth/actions";
 import { revalidatePath } from "next/cache";
 import type { MovementAppState } from "./types";
+import { movementStateSchema } from "./lib/schema";
 import {
 	getDefaultMovementState,
 	mergeMovementStates,
@@ -74,9 +75,12 @@ export async function saveMovementStateAction(
 		throw new Error("Unauthorized");
 	}
 
+	const parsed = movementStateSchema.safeParse(state);
+	if (!parsed.success) throw new Error("Invalid movement state");
+
 	try {
 		// Enforce 3-month retention logic delete prior to saving in Redis
-		const { state: prunedState } = pruneExpiredLogs(state);
+		const { state: prunedState } = pruneExpiredLogs(parsed.data);
 		await redis.set(MOVEMENT_REDIS_KEY, JSON.stringify(prunedState));
 		revalidatePath("/admin/movement");
 		return { success: true };
@@ -98,9 +102,12 @@ export async function syncLocalMovementStateAction(
 		throw new Error("Unauthorized");
 	}
 
+	const parsed = movementStateSchema.safeParse(localState);
+	if (!parsed.success) throw new Error("Invalid movement state");
+
 	try {
 		const serverState = await getMovementStateAction();
-		const merged = mergeMovementStates(serverState, localState);
+		const merged = mergeMovementStates(serverState, parsed.data);
 		const { state: prunedMerged } = pruneExpiredLogs(merged);
 		await redis.set(MOVEMENT_REDIS_KEY, JSON.stringify(prunedMerged));
 		revalidatePath("/admin/movement");

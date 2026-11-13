@@ -4,6 +4,7 @@ import { createClient } from "@/lib/core/supabase-server";
 import { revalidatePath } from "next/cache";
 import type { Blog } from "@/features/blog/data";
 import { checkAdmin } from "@/features/auth/actions";
+import { z } from "zod";
 
 export type ActionResponse<T = any> = {
 	success: boolean;
@@ -13,6 +14,13 @@ export type ActionResponse<T = any> = {
 };
 
 import { slugify } from "./utils/slugify";
+
+const blogMetadataSchema = z.strictObject({
+	category: z.string().trim().min(1).max(120).optional(),
+	published: z.boolean().optional(),
+	is_headline: z.boolean().optional(),
+	is_private: z.boolean().optional(),
+});
 
 /**
  * Fetch blogs for admin with filtering, sorting, and pagination.
@@ -101,10 +109,17 @@ export async function updateBlogMetadata(
 		return { success: false, message: "Unauthorized" };
 	}
 
+	const parsed = blogMetadataSchema.safeParse(updates);
+	if (!parsed.success || Object.keys(parsed.data).length === 0) {
+		return { success: false, message: "Invalid blog metadata" };
+	}
 	const supabase = await createClient();
 
 	try {
-		const { error } = await supabase.from("blogs").update(updates).eq("id", id);
+		const { error } = await supabase
+			.from("blogs")
+			.update(parsed.data)
+			.eq("id", id);
 
 		if (error) {
 			console.error("Supabase error updating blog metadata:", error);

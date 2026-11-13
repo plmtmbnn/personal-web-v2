@@ -25,7 +25,7 @@ import {
 	closeCloudStockPickAction,
 	deleteCloudStockPickAction,
 	syncCloudWatermarksAction,
-} from "../actions/stockpicks";
+} from "../actions/server-actions";
 
 export const DEFAULT_WEIGHTS: ScoreWeights = {
 	price: 25,

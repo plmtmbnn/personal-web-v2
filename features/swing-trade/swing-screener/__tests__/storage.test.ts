@@ -26,7 +26,7 @@ describe("swing-screener storage", () => {
 
 		const settings = readSwingScreenerSettings();
 		expect(settings.baseUrl).toBe("https://fallback.com");
-		expect(settings.token).toBe("fallback-token");
+		expect(settings.token).toBe("");
 		expect(settings.feeBuy).toBe(0.15);
 		expect(settings.feeSell).toBe(0.25);
 	});
@@ -44,7 +44,7 @@ describe("swing-screener storage", () => {
 
 		const loaded = readSwingScreenerSettings();
 		expect(loaded.baseUrl).toBe("https://my-api.com");
-		expect(loaded.token).toBe("my-token-123");
+		expect(loaded.token).toBe("");
 		expect(loaded.symbol).toBe("PWON");
 		expect(loaded.feeBuy).toBe(0.12);
 		expect(loaded.feeSell).toBe(0.22);

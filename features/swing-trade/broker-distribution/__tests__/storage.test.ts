@@ -27,7 +27,7 @@ describe("Broker Distribution Storage", () => {
 
 		const settings = readBrokerDistributionSettings();
 		expect(settings.baseUrl).toBe("https://api.broker.id");
-		expect(settings.token).toBe("broker-test-token-123");
+		expect(settings.token).toBe("");
 		expect(settings.period).toBe("TB_PERIOD_LAST_3_MONTHS");
 	});
 
@@ -43,7 +43,7 @@ describe("Broker Distribution Storage", () => {
 		saveBrokerDistributionSettings(custom);
 		const read = readBrokerDistributionSettings();
 		expect(read.symbol).toBe("DOOH");
-		expect(read.token).toBe("custom-token-bd");
+		expect(read.token).toBe("");
 		expect(read.period).toBe("TB_PERIOD_LAST_6_MONTHS");
 		expect(read.dataType).toBe("BROKER_DISTRIBUTION_DATA_TYPE_VALUE");
 		expect(localStorage.getItem(BROKER_DISTRIBUTION_STORAGE_KEY)).toBeDefined();

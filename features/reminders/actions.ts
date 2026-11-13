@@ -4,7 +4,13 @@ import { redis } from "@/lib/core/redis";
 import { checkAdmin } from "@/features/auth/actions";
 import { revalidatePath } from "next/cache";
 import type { Reminder, ReminderTTL } from "./types";
-import { resolveDueDate } from "./utils";
+import {
+	reminderDueSchema,
+	reminderIdSchema,
+	reminderTextSchema,
+	reminderTtlSchema,
+	resolveDueDate,
+} from "./utils";
 
 const KEY_PREFIX = "admin:reminder:";
 const REMINDER_SET_KEY = "admin:reminder:ids";
@@ -17,22 +23,28 @@ export async function addReminder(
 	const isAdmin = await checkAdmin();
 	if (!isAdmin) throw new Error("Unauthorized");
 
-	if (text.length > 150) {
-		throw new Error("Reminder text exceeds 150 characters limit");
+	const parsedText = reminderTextSchema.safeParse(text);
+	if (!parsedText.success) {
+		throw new Error(
+			parsedText.error.issues[0]?.code === "too_big"
+				? "Reminder text exceeds 150 characters limit"
+				: "Reminder text is required",
+		);
 	}
+	const parsedDueDate = reminderDueSchema.parse(dueDateOrPreset);
 
 	const id = crypto.randomUUID();
 	const key = `${KEY_PREFIX}${id}`;
 	const now = Date.now();
-	const dueDate = resolveDueDate(dueDateOrPreset);
+	const dueDate = resolveDueDate(parsedDueDate);
 
 	const reminder: Reminder = {
 		id,
-		text: text.trim(),
+		text: parsedText.data,
 		createdAt: new Date(now).toISOString(),
 		dueDate,
 		expiresAt: dueDate,
-		ttl: dueDateOrPreset as ReminderTTL,
+		ttl: parsedDueDate,
 	};
 
 	// 90-day retention so overdue tasks remain visible until checked off
@@ -74,9 +86,10 @@ export async function deleteReminder(id: string) {
 	const isAdmin = await checkAdmin();
 	if (!isAdmin) throw new Error("Unauthorized");
 
+	const reminderId = reminderIdSchema.parse(id);
 	await Promise.all([
-		redis.del(`${KEY_PREFIX}${id}`),
-		redis.srem(REMINDER_SET_KEY, id),
+		redis.del(`${KEY_PREFIX}${reminderId}`),
+		redis.srem(REMINDER_SET_KEY, reminderId),
 	]);
 	revalidatePath("/admin/reminders");
 	return { success: true };
@@ -110,7 +123,8 @@ export async function extendReminder(id: string, extendBy: ReminderTTL) {
 	const isAdmin = await checkAdmin();
 	if (!isAdmin) throw new Error("Unauthorized");
 
-	const key = `${KEY_PREFIX}${id}`;
+	const key = `${KEY_PREFIX}${reminderIdSchema.parse(id)}`;
+	const parsedExtendBy = reminderTtlSchema.parse(extendBy);
 	const rawReminder = await redis.get(key);
 	if (!rawReminder) throw new Error("Reminder not found");
 
@@ -121,7 +135,8 @@ export async function extendReminder(id: string, extendBy: ReminderTTL) {
 		reminder.dueDate || reminder.expiresAt || Date.now(),
 	).getTime();
 	const baseTime = Math.max(Date.now(), currentDue);
-	const addedDays = extendBy === "day" ? 1 : extendBy === "week" ? 7 : 30;
+	const addedDays =
+		parsedExtendBy === "day" ? 1 : parsedExtendBy === "week" ? 7 : 30;
 	const newDueDate = new Date(
 		baseTime + addedDays * 86400 * 1000,
 	).toISOString();

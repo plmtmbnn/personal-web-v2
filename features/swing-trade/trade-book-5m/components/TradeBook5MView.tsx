@@ -92,11 +92,10 @@ export default function TradeBook5MView() {
 
 	// Pre-fill credentials from Redis once available
 	useEffect(() => {
-		if (credentials?.baseUrl || credentials?.token) {
+		if (credentials?.baseUrl) {
 			setSettings((prev) => ({
 				...prev,
 				baseUrl: prev.baseUrl || credentials.baseUrl || "",
-				token: prev.token || credentials.token || "",
 			}));
 		}
 	}, [credentials]);
@@ -129,11 +128,11 @@ export default function TradeBook5MView() {
 		credentials?.baseUrl ||
 		""
 	).trim();
-	const effectiveToken = (settings.token || credentials?.token || "").trim();
+	const effectiveToken = settings.token.trim();
 
 	const ready =
 		effectiveBaseUrl.startsWith("https://") &&
-		effectiveToken !== "" &&
+		(effectiveToken !== "" || credentials?.tokenConfigured === true) &&
 		/^[A-Za-z0-9]{1,10}$/.test(settings.symbol.trim());
 
 	const handleExecute = useCallback(async () => {
@@ -143,10 +142,7 @@ export default function TradeBook5MView() {
 		setError(null);
 		setDownloadedStats(null);
 
-		if (
-			(settings.baseUrl && settings.baseUrl !== credentials?.baseUrl) ||
-			(settings.token && settings.token !== credentials?.token)
-		) {
+		if (effectiveToken) {
 			saveCredentials({ baseUrl: effectiveBaseUrl, token: effectiveToken });
 		}
 
@@ -291,7 +287,7 @@ export default function TradeBook5MView() {
 							className={`flex items-center justify-between ${labelClass}`}
 						>
 							<span>Bearer Token</span>
-							{credentials?.token && (
+							{credentials?.tokenConfigured && (
 								<span className="text-[10px] font-semibold text-emerald-600 normal-case">
 									Redis Synced
 								</span>
@@ -306,7 +302,7 @@ export default function TradeBook5MView() {
 								id="tb5-token"
 								type={showToken ? "text" : "password"}
 								placeholder={
-									credentials?.token
+									credentials?.tokenConfigured
 										? "Configured in Redis"
 										: "Paste upstream auth token"
 								}

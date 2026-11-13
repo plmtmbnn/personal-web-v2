@@ -22,7 +22,7 @@ import {
 	deleteTask,
 	reorderTasks,
 	archiveTask,
-} from "@/features/tasks/actions/tasks";
+} from "@/features/tasks/actions/server-actions";
 import TaskItem from "./TaskItem";
 import {
 	TASK_STATUS_CONFIG,

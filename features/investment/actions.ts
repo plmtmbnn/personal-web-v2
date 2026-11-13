@@ -1,5 +1,3 @@
-"use server";
-
 import { redis, CACHE_KEYS } from "@/lib/core/redis";
 import { revalidatePath, unstable_cache } from "next/cache";
 import type {

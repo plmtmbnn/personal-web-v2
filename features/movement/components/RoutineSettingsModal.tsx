@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
 	X,
 	Settings,
@@ -54,6 +54,15 @@ export default function RoutineSettingsModal({
 	);
 	const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape") onClose();
+		};
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [isOpen, onClose]);
 
 	if (!isOpen) return null;
 
@@ -109,6 +118,7 @@ export default function RoutineSettingsModal({
 		<div
 			role="dialog"
 			aria-modal="true"
+			aria-labelledby="routine-settings-title"
 			className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
 		>
 			<div className="bg-white rounded-3xl max-w-xl w-full border border-slate-200/80 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -119,7 +129,10 @@ export default function RoutineSettingsModal({
 							<Settings className="w-5 h-5" />
 						</div>
 						<div>
-							<h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+							<h3
+								id="routine-settings-title"
+								className="text-base sm:text-lg font-bold text-slate-900 leading-tight"
+							>
 								Routine &amp; Habits Configuration
 							</h3>
 							<p className="text-xs text-slate-500 font-normal">
@@ -132,7 +145,7 @@ export default function RoutineSettingsModal({
 						type="button"
 						onClick={onClose}
 						aria-label="Close settings"
-						className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+						className="min-h-11 min-w-11 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
 					>
 						<X className="w-5 h-5" />
 					</button>
@@ -142,7 +155,7 @@ export default function RoutineSettingsModal({
 				<div className="p-5 sm:p-6 space-y-6 max-h-[72vh] overflow-y-auto">
 					{/* Daily Target Setting */}
 					<div className="space-y-2">
-						<span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+						<span className="text-xs font-semibold text-slate-700 block">
 							Daily Session Target
 						</span>
 						<div className="grid grid-cols-4 gap-2">
@@ -169,7 +182,7 @@ export default function RoutineSettingsModal({
 					{/* Scheduled Slots Configuration */}
 					<div className="space-y-3 pt-3 border-t border-slate-100">
 						<div className="flex items-center justify-between">
-							<span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+							<span className="text-xs font-semibold text-slate-700">
 								Scheduled Time Slots &amp; Exercises
 							</span>
 							<button
@@ -198,6 +211,7 @@ export default function RoutineSettingsModal({
 											<input
 												type="time"
 												value={slot.scheduledTime}
+												aria-label={`Time for slot ${slot.slotNumber}`}
 												onChange={(e) =>
 													handleSlotTimeChange(slot.id, e.target.value)
 												}
@@ -250,12 +264,15 @@ export default function RoutineSettingsModal({
 							<button
 								type="button"
 								onClick={() => setSoundEnabled(!soundEnabled)}
-								className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+								className={`min-w-11 min-h-11 rounded-full transition-colors relative cursor-pointer ${
 									soundEnabled ? "bg-emerald-600" : "bg-slate-300"
 								}`}
+								role="switch"
+								aria-checked={soundEnabled}
+								aria-label="Sound chimes"
 							>
 								<div
-									className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+									className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1/2 -translate-y-1/2 ${
 										soundEnabled ? "right-1" : "left-1"
 									}`}
 								/>
@@ -282,12 +299,15 @@ export default function RoutineSettingsModal({
 							<button
 								type="button"
 								onClick={handleToggleNotification}
-								className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+								className={`min-w-11 min-h-11 rounded-full transition-colors relative cursor-pointer ${
 									notificationsEnabled ? "bg-emerald-600" : "bg-slate-300"
 								}`}
+								role="switch"
+								aria-checked={notificationsEnabled}
+								aria-label="Browser notifications"
 							>
 								<div
-									className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+									className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1/2 -translate-y-1/2 ${
 										notificationsEnabled ? "right-1" : "left-1"
 									}`}
 								/>
@@ -297,7 +317,7 @@ export default function RoutineSettingsModal({
 
 					{/* Backup & History Management */}
 					<div className="space-y-3 pt-3 border-t border-slate-100">
-						<span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+						<span className="text-xs font-semibold text-slate-700 block">
 							Data Backup &amp; Storage
 						</span>
 

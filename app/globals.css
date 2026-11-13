@@ -1,3 +1,4 @@
+/* Hallmark · genre: editorial · built: the project · redesign: polish */
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
@@ -24,6 +25,10 @@
 	--error: #ef4444;
 	--warning: #eab308;
 	--info: #3b82f6;
+	--skeleton-highlight: #e2e8f0;
+	--print-paper: #fdfdfe;
+	--print-ink: #121722;
+	--print-url: #555e6c;
 	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 	--shadow-lg:
@@ -42,6 +47,8 @@
 /* ── Dark Theme ─────────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
 	--background: #0f172a;
+	--canvas-bg: var(--background);
+	--skeleton-highlight: var(--border);
 	--foreground: #f8fafc;
 	--background-secondary: #1e293b;
 	--background-muted: #1e293b;
@@ -132,10 +139,10 @@
 @keyframes glow-pulse {
 	0%,
 	100% {
-		box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+		box-shadow: 0 0 15px color-mix(in srgb, var(--info) 50%, transparent);
 	}
 	50% {
-		box-shadow: 0 0 25px rgba(59, 130, 246, 0.8);
+		box-shadow: 0 0 25px color-mix(in srgb, var(--info) 80%, transparent);
 	}
 }
 @keyframes scanGlide {
@@ -250,10 +257,7 @@
 
 /* Canvas Utility for Floating Card Canvas (Dots removed) */
 .bg-dot-pattern {
-	background-color: var(--canvas-bg, #eceef2);
-}
-[data-theme="dark"] .bg-dot-pattern {
-	background-color: #0f172a;
+	background-color: var(--canvas-bg);
 }
 
 /* Glassmorphism Utilities */
@@ -261,7 +265,7 @@
 	@apply bg-white/40 backdrop-blur-sm border border-white/10 shadow-lg;
 }
 .glass-card {
-	@apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl;
+	@apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl p-6 transition-shadow duration-300 hover:shadow-2xl;
 }
 .glass-strong {
 	@apply bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl;
@@ -278,13 +282,10 @@
 
 /* Text Utilities */
 .gradient-text {
-	background-image: linear-gradient(to right, #292524, #1c1917, #0c0a09);
-	background-clip: text;
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
+	color: var(--foreground);
 }
 [data-theme="dark"] .gradient-text {
-	background-image: linear-gradient(to right, #f8fafc, #cbd5e1, #94a3b8);
+	color: var(--foreground);
 }
 .glow-text {
 	@apply drop-shadow-[0_0_15px_rgba(0,0,0,0.1)];
@@ -322,7 +323,7 @@
 	border-radius: 3px;
 }
 [data-theme="dark"] .thin-scrollbar::-webkit-scrollbar-thumb {
-	background-color: #475569;
+	background-color: var(--border);
 }
 
 /* Button Variants */
@@ -333,7 +334,10 @@
 	border-radius: var(--radius-lg);
 	font-weight: 600;
 	box-shadow: var(--shadow-md);
-	transition: all var(--fast);
+	transition:
+		background-color var(--fast),
+		box-shadow var(--fast),
+		transform var(--fast);
 }
 .btn-primary:hover:not(:disabled) {
 	background-color: var(--accent-hover);
@@ -347,7 +351,9 @@
 	padding: 0.75rem 1.5rem;
 	border-radius: var(--radius-lg);
 	font-weight: 600;
-	transition: all var(--fast);
+	transition:
+		background-color var(--fast),
+		color var(--fast);
 }
 .btn-secondary:hover {
 	background-color: var(--accent);
@@ -362,7 +368,9 @@
 	justify-content: center;
 	background: transparent;
 	color: inherit;
-	transition: all var(--fast);
+	transition:
+		background-color var(--fast),
+		color var(--fast);
 }
 .btn-icon:hover {
 	background-color: var(--accent) / 0.1;
@@ -380,7 +388,9 @@
 }
 .img-shadow {
 	box-shadow: var(--shadow-sm);
-	transition: all var(--fast);
+	transition:
+		box-shadow var(--fast),
+		transform var(--fast);
 }
 .img-shadow:hover {
 	box-shadow: var(--shadow-lg);
@@ -388,7 +398,9 @@
 }
 .img-glow {
 	box-shadow: var(--shadow-md);
-	transition: all var(--fast);
+	transition:
+		box-shadow var(--fast),
+		transform var(--fast);
 }
 .img-glow:hover {
 	box-shadow: var(--shadow-xl);
@@ -407,7 +419,7 @@
 	outline-offset: 2px;
 }
 [data-theme="dark"] .focus-visible {
-	outline-color: #f8fafc;
+	outline-color: var(--foreground);
 }
 
 /* Container Utility */
@@ -441,7 +453,13 @@
 
 /* Transition utility */
 .transition-all-custom {
-	transition: all var(--normal);
+	transition:
+		background-color var(--normal),
+		border-color var(--normal),
+		color var(--normal),
+		opacity var(--normal),
+		box-shadow var(--normal),
+		transform var(--normal);
 }
 
 /* ============================================================================
@@ -451,6 +469,7 @@ html {
 	scroll-behavior: smooth;
 	font-size: 16px;
 	line-height: 1.5;
+	overflow-x: clip;
 }
 body {
 	background-color: var(--background);
@@ -464,6 +483,12 @@ body {
 		color var(--normal);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	overflow-x: clip;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+	outline: 2px solid var(--info);
+	outline-offset: 2px;
 }
 ::selection {
 	background: var(--selection-bg);
@@ -475,9 +500,15 @@ body {
    ============================================================================ */
 h1 {
 	font-size: clamp(1.75rem, 5vw, 2.25rem);
+	overflow-wrap: break-word;
+	min-width: 0;
+	text-wrap: balance;
 }
 h2 {
 	font-size: clamp(1.5rem, 4vw, 1.75rem);
+	overflow-wrap: break-word;
+	min-width: 0;
+	text-wrap: balance;
 }
 .prose h1,
 .prose h2,
@@ -637,7 +668,7 @@ img {
 .input-base:focus {
 	outline: none;
 	border-color: var(--info);
-	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 10%, transparent);
 }
 .btn {
 	cursor: pointer;
@@ -649,7 +680,10 @@ img {
 	padding: 0.75rem 1.5rem;
 	border-radius: var(--radius-lg);
 	font-weight: 600;
-	transition: all var(--fast);
+	transition:
+		filter var(--fast),
+		transform var(--fast),
+		opacity var(--fast);
 }
 .btn:hover:not(:disabled) {
 	filter: brightness(1.1);
@@ -661,14 +695,14 @@ img {
 	transform: none;
 }
 
+.btn:active:not(:disabled),
+.btn-primary:active:not(:disabled) {
+	transform: translateY(1px);
+}
+
 /* ============================================================================
    RESPONSIVE DESIGN
    ============================================================================ */
-@media (max-width: 768px) {
-	html {
-		font-size: 14px;
-	}
-}
 @media (prefers-reduced-motion: reduce) {
 	*,
 	*::before,
@@ -693,8 +727,8 @@ img {
 		display: none;
 	}
 	body {
-		background: white;
-		color: black;
+		background: var(--print-paper);
+		color: var(--print-ink);
 		font-size: 11pt;
 		line-height: 1.5;
 	}
@@ -709,7 +743,7 @@ img {
 	a[href]:after {
 		content: " (" attr(href) ")";
 		font-size: 9pt;
-		color: #666;
+		color: var(--print-url);
 	}
 	a[href^="#"]:after,
 	a[href^="javascript:"]:after {
@@ -775,7 +809,12 @@ img {
    LOADING STATES (Skeleton)
    ============================================================================ */
 .skeleton {
-	background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+	background: linear-gradient(
+		90deg,
+		var(--background-muted) 25%,
+		var(--skeleton-highlight) 50%,
+		var(--background-muted) 75%
+	);
 	background-size: 200% 100%;
 	animation: shimmer 1.5s infinite;
 	border-radius: var(--radius-md);
@@ -789,7 +828,12 @@ img {
 	}
 }
 [data-theme="dark"] .skeleton {
-	background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+	background: linear-gradient(
+		90deg,
+		var(--background-muted) 25%,
+		var(--skeleton-highlight) 50%,
+		var(--background-muted) 75%
+	);
 }
 .skeleton-loading {
 	display: none;

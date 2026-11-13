@@ -1,4 +1,5 @@
 import { CACHE_KEYS, redis } from "@/lib/core/redis";
+import { assertSafeExternalUrl } from "@/lib/server/url-security";
 import type { MarketCredentials } from "./types";
 
 /**
@@ -12,6 +13,13 @@ export async function resolveMarketCredentials(
 	const trimmedToken = bodyToken?.trim();
 
 	if (trimmedUrl && trimmedToken) {
+		try {
+			if ((await assertSafeExternalUrl(trimmedUrl)).protocol !== "https:") {
+				return null;
+			}
+		} catch {
+			return null;
+		}
 		return {
 			baseUrl: trimmedUrl.replace(/\/+$/, ""),
 			token: trimmedToken,
@@ -24,9 +32,13 @@ export async function resolveMarketCredentials(
 		const creds: MarketCredentials =
 			typeof raw === "string" ? JSON.parse(raw) : (raw as MarketCredentials);
 		if (creds.baseUrl && creds.token) {
+			const baseUrl = creds.baseUrl.replace(/\/+$/, "");
+			if ((await assertSafeExternalUrl(baseUrl)).protocol !== "https:") {
+				return null;
+			}
 			return {
-				baseUrl: (trimmedUrl || creds.baseUrl).replace(/\/+$/, ""),
-				token: trimmedToken || creds.token,
+				baseUrl,
+				token: creds.token,
 			};
 		}
 	} catch (error) {

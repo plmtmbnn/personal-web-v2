@@ -15,7 +15,7 @@ import {
 	getArchivedTasks,
 	unarchiveTask,
 	deleteTask,
-} from "@/features/tasks/actions/tasks";
+} from "@/features/tasks/actions/server-actions";
 import { useToast } from "@/features/tasks/components/shared/Toast";
 import { format, parseISO } from "date-fns";
 import CustomModal from "@/features/shared/components/CustomModal";

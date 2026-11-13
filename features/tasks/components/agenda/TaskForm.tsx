@@ -22,7 +22,10 @@ import {
 	Hash,
 	Timer,
 } from "lucide-react";
-import { addTask, addBatchTasks } from "@/features/tasks/actions/tasks";
+import {
+	addTask,
+	addBatchTasks,
+} from "@/features/tasks/actions/server-actions";
 import { useRouter } from "next/navigation";
 import type {
 	TaskPriority,

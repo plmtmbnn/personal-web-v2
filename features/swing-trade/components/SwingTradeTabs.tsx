@@ -58,7 +58,9 @@ function TabsContent() {
 	const [activeTab, setActiveTab] = useState<SwingTradeTab>(initialTab);
 	const [credentialsModalOpen, setCredentialsModalOpen] = useState(false);
 	const { credentials, loading } = useMarketCredentials();
-	const isConfigured = Boolean(credentials?.baseUrl && credentials?.token);
+	const isConfigured = Boolean(
+		credentials?.baseUrl && credentials.tokenConfigured,
+	);
 	const tabTrackRef = useRef<HTMLDivElement>(null);
 
 	const switchTab = useCallback((tab: SwingTradeTab) => {

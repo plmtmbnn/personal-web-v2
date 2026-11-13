@@ -1,4 +1,5 @@
 import { requireAuth } from "@/features/auth/server";
+import { connection } from "next/server";
 
 /**
  * Stock Admin Server Layout:
@@ -9,6 +10,7 @@ export default async function StockAdminLayout({
 }: {
 	children: React.ReactNode;
 }) {
+	await connection();
 	await requireAuth({
 		requireAdmin: true,
 		redirectTo: "/utils/stock-explorer/admin",

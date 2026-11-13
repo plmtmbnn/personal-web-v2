@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("../actions/stockpicks", () => ({
+vi.mock("../actions/server-actions", () => ({
 	fetchCloudStockPicksAction: vi
 		.fn()
 		.mockResolvedValue({ success: true, data: [] }),

@@ -14,7 +14,7 @@ import {
 	X,
 } from "lucide-react";
 import Link from "next/link";
-import { getInvestmentCompass } from "@/features/investment/actions";
+import { refreshInvestmentCompass } from "@/features/investment/server-actions";
 import type { InvestmentCompassData } from "@/features/investment/types";
 import { computeCompass } from "../lib/engine/index";
 import { sma } from "../lib/indicators";
@@ -47,7 +47,7 @@ export default function InvestmentCompassView({
 		setError(null);
 
 		try {
-			const freshData = await getInvestmentCompass(true);
+			const freshData = await refreshInvestmentCompass();
 			setData(freshData);
 		} catch (err) {
 			console.error("Compass fetch failed:", err);

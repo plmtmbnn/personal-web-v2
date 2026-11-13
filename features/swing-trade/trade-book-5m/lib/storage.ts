@@ -16,7 +16,11 @@ export function readTradeBook5MSettings(): TradeBook5MSettings {
 	try {
 		const raw = localStorage.getItem(TRADE_BOOK_5M_STORAGE_KEY);
 		if (raw) {
-			return { ...DEFAULT_TRADE_BOOK_5M_SETTINGS, ...JSON.parse(raw) };
+			return {
+				...DEFAULT_TRADE_BOOK_5M_SETTINGS,
+				...JSON.parse(raw),
+				token: "",
+			};
 		}
 
 		// Fallback pre-fill from existing settings keys
@@ -24,11 +28,11 @@ export function readTradeBook5MSettings(): TradeBook5MSettings {
 			const existing = localStorage.getItem(key);
 			if (existing) {
 				const parsed = JSON.parse(existing);
-				if (parsed.baseUrl || parsed.token) {
+				if (parsed.baseUrl) {
 					return {
 						...DEFAULT_TRADE_BOOK_5M_SETTINGS,
 						baseUrl: parsed.baseUrl || "",
-						token: parsed.token || "",
+						token: "",
 					};
 				}
 			}
@@ -43,6 +47,9 @@ export function readTradeBook5MSettings(): TradeBook5MSettings {
 export function saveTradeBook5MSettings(settings: TradeBook5MSettings): void {
 	if (typeof window === "undefined") return;
 	try {
-		localStorage.setItem(TRADE_BOOK_5M_STORAGE_KEY, JSON.stringify(settings));
+		localStorage.setItem(
+			TRADE_BOOK_5M_STORAGE_KEY,
+			JSON.stringify({ ...settings, token: "" }),
+		);
 	} catch {}
 }

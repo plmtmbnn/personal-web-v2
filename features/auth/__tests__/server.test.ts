@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { checkAuth, requireAuth } from "../server";
 import { createClient, createAdminClient } from "@/lib/core/supabase-server";
 import { getAuthSession } from "@/lib/core/redis";
@@ -35,6 +35,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("Centralized Server Auth Guards", () => {
+	afterEach(() => {
+		vi.unstubAllEnvs();
+	});
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.mocked(createAdminClient).mockImplementation(createClient as any);
@@ -57,6 +61,16 @@ describe("Centralized Server Auth Guards", () => {
 			expect(result.status).toBe("disabled");
 			expect(result.user?.id).toBe("dev-admin");
 			expect(createClient).not.toHaveBeenCalled();
+		});
+
+		it("fails closed in production", async () => {
+			mockEnv.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH = false;
+			mockEnv.NEXT_PUBLIC_ENABLE_PINGUARD = false;
+			vi.stubEnv("NODE_ENV", "production");
+
+			const result = await checkAuth({ requireAdmin: true });
+			expect(result.authorized).toBe(false);
+			expect(result.status).toBe("unauthenticated");
 		});
 	});
 

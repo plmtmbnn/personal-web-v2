@@ -37,7 +37,6 @@ export default function MarketCredentialsModal({
 	useEffect(() => {
 		if (credentials) {
 			setBaseUrl(credentials.baseUrl || "");
-			setToken(credentials.token || "");
 		}
 	}, [credentials]);
 
@@ -102,7 +101,9 @@ export default function MarketCredentialsModal({
 		}
 	};
 
-	const isConfigured = Boolean(credentials?.baseUrl && credentials?.token);
+	const isConfigured = Boolean(
+		credentials?.baseUrl && credentials.tokenConfigured,
+	);
 
 	return (
 		<div

@@ -62,7 +62,7 @@ import {
 	getTaskDependencies,
 	getPotentialBlockers,
 	archiveTask,
-} from "@/features/tasks/actions/tasks";
+} from "@/features/tasks/actions/server-actions";
 const PRIORITY_COLORS = {
 	HIGH: "bg-rose-50 text-rose-700 border-rose-100",
 	MEDIUM: "bg-amber-50 text-amber-700 border-amber-100",

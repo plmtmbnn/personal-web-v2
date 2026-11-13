@@ -32,7 +32,7 @@ import {
 	updateTask,
 	rescheduleOverdueTasks,
 	archiveTask,
-} from "@/features/tasks/actions/tasks";
+} from "@/features/tasks/actions/server-actions";
 import { useToast } from "@/features/tasks/components/shared/Toast";
 import TaskItem from "./TaskItem";
 import { UNDO_TOAST_DURATION_MS } from "@/features/tasks/constants";

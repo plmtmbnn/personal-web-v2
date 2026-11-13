@@ -17,7 +17,11 @@ export function readRunningTradeChartSettings(): RunningTradeChartSettings {
 	try {
 		const raw = localStorage.getItem(RUNNING_TRADE_CHART_STORAGE_KEY);
 		if (raw) {
-			return { ...DEFAULT_RUNNING_TRADE_CHART_SETTINGS, ...JSON.parse(raw) };
+			return {
+				...DEFAULT_RUNNING_TRADE_CHART_SETTINGS,
+				...JSON.parse(raw),
+				token: "",
+			};
 		}
 
 		// Fallback pre-fill from existing settings keys
@@ -30,11 +34,11 @@ export function readRunningTradeChartSettings(): RunningTradeChartSettings {
 			const existing = localStorage.getItem(key);
 			if (existing) {
 				const parsed = JSON.parse(existing);
-				if (parsed.baseUrl || parsed.token) {
+				if (parsed.baseUrl) {
 					return {
 						...DEFAULT_RUNNING_TRADE_CHART_SETTINGS,
 						baseUrl: parsed.baseUrl || "",
-						token: parsed.token || "",
+						token: "",
 					};
 				}
 			}
@@ -53,7 +57,7 @@ export function saveRunningTradeChartSettings(
 	try {
 		localStorage.setItem(
 			RUNNING_TRADE_CHART_STORAGE_KEY,
-			JSON.stringify(settings),
+			JSON.stringify({ ...settings, token: "" }),
 		);
 	} catch {}
 }

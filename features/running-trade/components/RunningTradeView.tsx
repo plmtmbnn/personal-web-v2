@@ -48,7 +48,9 @@ interface StockOption {
 function readSettings(): RunningTradeSettings {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
-		return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
+		return raw
+			? { ...DEFAULT_SETTINGS, ...JSON.parse(raw), token: "" }
+			: DEFAULT_SETTINGS;
 	} catch {
 		return DEFAULT_SETTINGS;
 	}
@@ -105,17 +107,21 @@ export default function RunningTradeView() {
 
 	// Pre-fill credentials from Redis once available
 	useEffect(() => {
-		if (credentials?.baseUrl || credentials?.token) {
+		if (credentials?.baseUrl) {
 			setSettings((prev) => ({
 				...prev,
 				baseUrl: prev.baseUrl || credentials.baseUrl || "",
-				token: prev.token || credentials.token || "",
 			}));
 		}
 	}, [credentials]);
 
 	useEffect(() => {
-		if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+		if (hydrated) {
+			localStorage.setItem(
+				STORAGE_KEY,
+				JSON.stringify({ ...settings, token: "" }),
+			);
+		}
 	}, [settings, hydrated]);
 
 	const update = <K extends keyof RunningTradeSettings>(
@@ -140,11 +146,11 @@ export default function RunningTradeView() {
 		credentials?.baseUrl ||
 		""
 	).trim();
-	const effectiveToken = (settings.token || credentials?.token || "").trim();
+	const effectiveToken = settings.token.trim();
 
 	const ready =
 		effectiveBaseUrl.startsWith("https://") &&
-		effectiveToken !== "" &&
+		(effectiveToken !== "" || credentials?.tokenConfigured === true) &&
 		/^[A-Za-z0-9]{1,10}$/.test(settings.symbol.trim()) &&
 		settings.limit >= 1 &&
 		settings.minimumLot >= 0 &&
@@ -158,10 +164,7 @@ export default function RunningTradeView() {
 		setResult(null);
 		setProgress({ pages: 0, rows: 0 });
 
-		if (
-			(settings.baseUrl && settings.baseUrl !== credentials?.baseUrl) ||
-			(settings.token && settings.token !== credentials?.token)
-		) {
+		if (effectiveToken) {
 			saveCredentials({ baseUrl: effectiveBaseUrl, token: effectiveToken });
 		}
 
@@ -302,7 +305,7 @@ export default function RunningTradeView() {
 							className={`flex items-center justify-between ${labelClass}`}
 						>
 							<span>Bearer token</span>
-							{credentials?.token && (
+							{credentials?.tokenConfigured && (
 								<span className="text-[10px] font-semibold text-emerald-600 normal-case">
 									Redis Synced
 								</span>

@@ -15,18 +15,22 @@ export function readMarketDetectorSettings(): MarketDetectorSettings {
 	try {
 		const raw = localStorage.getItem(MARKET_DETECTOR_STORAGE_KEY);
 		if (raw) {
-			return { ...DEFAULT_MARKET_DETECTOR_SETTINGS, ...JSON.parse(raw) };
+			return {
+				...DEFAULT_MARKET_DETECTOR_SETTINGS,
+				...JSON.parse(raw),
+				token: "",
+			};
 		}
 
 		// Fallback pre-fill from existing settings keys
 		const histRaw = localStorage.getItem(HISTORICAL_STORAGE_KEY);
 		if (histRaw) {
 			const histParsed = JSON.parse(histRaw);
-			if (histParsed.baseUrl || histParsed.token) {
+			if (histParsed.baseUrl) {
 				return {
 					...DEFAULT_MARKET_DETECTOR_SETTINGS,
 					baseUrl: histParsed.baseUrl || "",
-					token: histParsed.token || "",
+					token: "",
 				};
 			}
 		}
@@ -37,7 +41,7 @@ export function readMarketDetectorSettings(): MarketDetectorSettings {
 			return {
 				...DEFAULT_MARKET_DETECTOR_SETTINGS,
 				baseUrl: runParsed.baseUrl || "",
-				token: runParsed.token || "",
+				token: "",
 			};
 		}
 
@@ -52,6 +56,9 @@ export function saveMarketDetectorSettings(
 ): void {
 	if (typeof window === "undefined") return;
 	try {
-		localStorage.setItem(MARKET_DETECTOR_STORAGE_KEY, JSON.stringify(settings));
+		localStorage.setItem(
+			MARKET_DETECTOR_STORAGE_KEY,
+			JSON.stringify({ ...settings, token: "" }),
+		);
 	} catch {}
 }

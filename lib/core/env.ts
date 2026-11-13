@@ -169,6 +169,9 @@ const validateEnv = () => {
 		});
 
 		if (!serverResult.success) {
+			if (process.env.NODE_ENV === "production") {
+				throw new Error("Invalid server environment variables");
+			}
 			console.warn(
 				"⚠️ Warning: Some server-side environment variables are missing or invalid:",
 				serverResult.error.format(),

@@ -64,12 +64,12 @@ function MetricChannel({
 				</div>
 				<div className="min-w-0">
 					<p
-						className={`text-[10px] font-black uppercase tracking-widest truncate ${dark ? "text-slate-300" : "text-slate-600"}`}
+						className={`text-xs font-semibold ${dark ? "text-slate-300" : "text-slate-600"}`}
 					>
 						{label}
 					</p>
 					<p
-						className={`text-sm font-bold truncate ${dark ? "text-white" : "text-slate-900"}`}
+						className={`text-sm font-bold leading-tight break-words ${dark ? "text-white" : "text-slate-900"}`}
 					>
 						{value}
 					</p>
@@ -91,7 +91,7 @@ function MetricChannel({
 		</div>
 	);
 
-	const className = `group relative overflow-hidden rounded-2xl border p-4 flex items-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${dark ? "bg-slate-900 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/20" : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/50"}`;
+	const className = `group relative overflow-hidden rounded-2xl border p-4 flex items-center transition-[border-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${dark ? "bg-slate-900 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/20" : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/50"}`;
 
 	if (href) {
 		if (isExternal) {
@@ -116,12 +116,10 @@ function MetricChannel({
 }
 
 interface HomeProps {
-	initialRunningKm?: number;
+	initialRunningKm: number | null;
 }
 
-export default function Home({
-	initialRunningKm = AUTHOR_STATS.runningKmPerYear,
-}: HomeProps) {
+export default function Home({ initialRunningKm }: HomeProps) {
 	const reduceMotion = useReducedMotion();
 	const year = new Date().getFullYear();
 
@@ -169,12 +167,12 @@ export default function Home({
 								src="/profile.jpg"
 								alt={AUTHOR.name}
 								fill
-								className="object-cover grayscale-[15%] transition-all duration-500 hover:grayscale-0 hover:scale-105"
+								className="object-cover grayscale-[15%]"
 								sizes="(max-width: 640px) 64px, 80px"
 							/>
 						</div>
 						<div className="flex flex-col gap-1.5">
-							<h2 className="text-[14px] font-black uppercase text-slate-900">
+							<h2 className="text-sm font-bold text-slate-900">
 								{AUTHOR.name}
 							</h2>
 							<div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200/80 text-[11px] font-medium text-slate-700 w-fit">
@@ -216,7 +214,7 @@ export default function Home({
 								<MapPin className="w-3.5 h-3.5 text-indigo-500" />
 							</div>
 							<div className="min-w-0">
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-0.5 truncate">
+								<p className="text-xs font-semibold text-slate-600 mb-0.5 truncate">
 									Base
 								</p>
 								<p className="text-xs font-bold text-slate-800 truncate">
@@ -229,7 +227,7 @@ export default function Home({
 								<Clock className="w-3.5 h-3.5 text-emerald-500" />
 							</div>
 							<div className="min-w-0">
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-0.5 truncate">
+								<p className="text-xs font-semibold text-slate-600 mb-0.5 truncate">
 									Local Time
 								</p>
 								<p className="font-mono text-xs font-bold text-slate-800 tabular-nums truncate">
@@ -252,7 +250,7 @@ export default function Home({
 				>
 					<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-5 sm:p-6">
 						<div className="flex items-center justify-between mb-5">
-							<span className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
+							<span className="text-xs font-semibold text-slate-700">
 								Professional Focus
 							</span>
 						</div>
@@ -263,7 +261,7 @@ export default function Home({
 								<span className="text-xl sm:text-2xl font-bold text-slate-900 leading-none">
 									{EXPERIENCE_YEAR}+
 								</span>
-								<span className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+								<span className="text-xs font-medium text-slate-600">
 									Years Exp
 								</span>
 							</div>
@@ -273,9 +271,11 @@ export default function Home({
 									className="text-xl sm:text-2xl font-bold text-slate-900 leading-none"
 									suppressHydrationWarning
 								>
-									{initialRunningKm.toLocaleString("en-US")}+
+									{initialRunningKm == null
+										? "N/A"
+										: initialRunningKm.toLocaleString("en-US")}
 								</span>
-								<span className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+								<span className="text-xs font-medium text-slate-600">
 									Km / {year}
 								</span>
 							</div>
@@ -284,7 +284,7 @@ export default function Home({
 								<span className="text-xl sm:text-2xl font-bold text-slate-900 leading-none">
 									{AUTHOR_STATS.fintechSystems}+
 								</span>
-								<span className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+								<span className="text-xs font-medium text-slate-600">
 									Systems
 								</span>
 							</div>

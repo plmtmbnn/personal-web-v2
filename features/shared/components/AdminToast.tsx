@@ -97,8 +97,10 @@ function ToastItem({
 					{toast.message}
 				</p>
 				<button
+					type="button"
 					onClick={() => onDismiss(toast.id)}
-					className="shrink-0 p-1 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+					className="shrink-0 min-h-11 min-w-11 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer flex items-center justify-center"
+					aria-label="Dismiss notification"
 				>
 					<X className="w-3.5 h-3.5" />
 				</button>
@@ -122,7 +124,6 @@ export function AdminToastProvider({
 		(message: string, variant: ToastVariant = "info") => {
 			const id = `toast-${Date.now()}-${Math.random()}`;
 			setToasts((prev) => [...prev, { id, message, variant }]);
-			// Auto-dismiss after 4 s
 			setTimeout(() => dismiss(id), 4000);
 		},
 		[dismiss],
@@ -131,8 +132,11 @@ export function AdminToastProvider({
 	return (
 		<ToastContext.Provider value={{ toast }}>
 			{children}
-			{/* Portal: fixed bottom-right */}
-			<div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-2 items-end pointer-events-none">
+			<div
+				className="fixed bottom-28 right-3 sm:bottom-6 sm:right-6 z-[200] flex flex-col gap-2 items-end pointer-events-none"
+				role="status"
+				aria-live="polite"
+			>
 				<AnimatePresence mode="popLayout">
 					{toasts.map((t) => (
 						<div key={t.id} className="pointer-events-auto">

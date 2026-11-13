@@ -18,7 +18,11 @@ export function readBrokerDistributionSettings(): BrokerDistributionSettings {
 	try {
 		const raw = localStorage.getItem(BROKER_DISTRIBUTION_STORAGE_KEY);
 		if (raw) {
-			return { ...DEFAULT_BROKER_DISTRIBUTION_SETTINGS, ...JSON.parse(raw) };
+			return {
+				...DEFAULT_BROKER_DISTRIBUTION_SETTINGS,
+				...JSON.parse(raw),
+				token: "",
+			};
 		}
 
 		// Fallback pre-fill from existing settings keys
@@ -32,11 +36,11 @@ export function readBrokerDistributionSettings(): BrokerDistributionSettings {
 			const existing = localStorage.getItem(key);
 			if (existing) {
 				const parsed = JSON.parse(existing);
-				if (parsed.baseUrl || parsed.token) {
+				if (parsed.baseUrl) {
 					return {
 						...DEFAULT_BROKER_DISTRIBUTION_SETTINGS,
 						baseUrl: parsed.baseUrl || "",
-						token: parsed.token || "",
+						token: "",
 					};
 				}
 			}
@@ -55,7 +59,7 @@ export function saveBrokerDistributionSettings(
 	try {
 		localStorage.setItem(
 			BROKER_DISTRIBUTION_STORAGE_KEY,
-			JSON.stringify(settings),
+			JSON.stringify({ ...settings, token: "" }),
 		);
 	} catch {}
 }

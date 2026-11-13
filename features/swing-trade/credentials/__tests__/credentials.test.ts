@@ -24,6 +24,12 @@ vi.mock("@/features/auth/actions", () => ({
 	checkAdmin: vi.fn(),
 }));
 
+vi.mock("@/lib/server/url-security", () => ({
+	assertSafeExternalUrl: vi
+		.fn()
+		.mockResolvedValue(new URL("https://example.com")),
+}));
+
 describe("Market Credentials Suite", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -93,7 +99,8 @@ describe("Market Credentials Suite", () => {
 
 			const res = await getMarketCredentialsAction();
 			expect(res?.baseUrl).toBe("https://api.broker.co.id");
-			expect(res?.token).toBe("tok-123");
+			expect(res?.tokenConfigured).toBe(true);
+			expect(res).not.toHaveProperty("token");
 		});
 
 		it("saveMarketCredentialsAction rejects non-admin", async () => {
@@ -113,6 +120,7 @@ describe("Market Credentials Suite", () => {
 				token: "tok-123",
 			});
 			expect(res.success).toBe(true);
+			expect(res.credentials).not.toHaveProperty("token");
 			expect(redis.set).toHaveBeenCalledWith(
 				"admin:market:credentials",
 				expect.stringContaining("https://api.broker.co.id"),

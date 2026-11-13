@@ -27,7 +27,7 @@ describe("Running Trade Chart Storage", () => {
 
 		const settings = readRunningTradeChartSettings();
 		expect(settings.baseUrl).toBe("https://api.broker.id");
-		expect(settings.token).toBe("trade-book-token-888");
+		expect(settings.token).toBe("");
 		expect(settings.period).toBe("RT_PERIOD_LAST_3_MONTHS");
 	});
 
@@ -42,7 +42,7 @@ describe("Running Trade Chart Storage", () => {
 		saveRunningTradeChartSettings(custom);
 		const read = readRunningTradeChartSettings();
 		expect(read.symbol).toBe("DOOH");
-		expect(read.token).toBe("custom-token-running-chart");
+		expect(read.token).toBe("");
 		expect(read.period).toBe("RT_PERIOD_LAST_6_MONTHS");
 		expect(localStorage.getItem(RUNNING_TRADE_CHART_STORAGE_KEY)).toBeDefined();
 	});

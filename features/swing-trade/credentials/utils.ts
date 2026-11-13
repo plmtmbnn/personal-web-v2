@@ -1,4 +1,14 @@
-import type { MarketCredentials } from "./types";
+import type { MarketCredentials, MarketCredentialsStatus } from "./types";
+
+export function toMarketCredentialStatus(
+	credentials: MarketCredentials,
+): MarketCredentialsStatus {
+	return {
+		baseUrl: credentials.baseUrl,
+		tokenConfigured: Boolean(credentials.token),
+		updatedAt: credentials.updatedAt,
+	};
+}
 
 export function sanitizeMarketCredentials(input: {
 	baseUrl: string;

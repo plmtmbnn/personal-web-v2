@@ -4,7 +4,6 @@ import { checkAdmin } from "@/features/auth/actions";
 import { resolveMarketCredentials } from "@/features/swing-trade/credentials/server";
 
 export const dynamic = "force-dynamic";
-export const preferredRegion = "sin1";
 
 const bodySchema = z.object({
 	baseUrl: z.string().optional().default(""),
@@ -55,6 +54,7 @@ export async function POST(req: Request) {
 
 	try {
 		const upstream = await fetch(url, {
+			redirect: "error",
 			method: "GET",
 			headers: {
 				authorization: `Bearer ${creds.token}`,

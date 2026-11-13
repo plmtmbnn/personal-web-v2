@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { createMetadata } from "@/lib/shared/metadata";
 import MockApiView from "@/features/utils/data-tools/mock-api/components/View";
+import { requireAuth } from "@/features/auth/server";
 
 export const metadata: Metadata = createMetadata({
 	title: "Dynamic Mock API Engine",
@@ -16,6 +18,8 @@ export const metadata: Metadata = createMetadata({
 	],
 });
 
-export default function MockApiPage() {
+export default async function MockApiPage() {
+	await connection();
+	await requireAuth({ requireAdmin: true, redirectTo: "/utils/mock-api" });
 	return <MockApiView />;
 }

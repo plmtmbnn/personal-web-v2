@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/server/url-security", () => ({
+	assertSafeExternalUrl: async (value: string) => new URL(value),
+}));
 import { POST } from "@/app/api/admin/historical-trade/route";
 import * as authActions from "@/features/auth/actions";
 

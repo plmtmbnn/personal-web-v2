@@ -74,6 +74,17 @@ describe("Movement Server Actions", () => {
 	});
 
 	describe("saveMovementStateAction()", () => {
+		it("rejects malformed movement state before writing to Redis", async () => {
+			vi.mocked(checkAdmin).mockResolvedValue(true);
+			const state = getDefaultMovementState();
+			state.config.dailyTarget = -1;
+
+			await expect(saveMovementStateAction(state)).rejects.toThrow(
+				"Invalid movement state",
+			);
+			expect(redis.set).not.toHaveBeenCalled();
+		});
+
 		it("throws unauthorized if not admin", async () => {
 			vi.mocked(checkAdmin).mockResolvedValue(false);
 			const state = getDefaultMovementState();

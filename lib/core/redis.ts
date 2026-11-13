@@ -6,10 +6,13 @@ export type { AuthSession } from "@/features/auth/types";
 /**
  * Centralized Redis client using Upstash.
  */
-export const redis = new Redis({
-	url: ENV_GLOBAL.UPSTASH_REDIS_REST_URL || "https://test.upstash.io",
-	token: ENV_GLOBAL.UPSTASH_REDIS_REST_TOKEN || "test-token",
-});
+const redisUrl = ENV_GLOBAL.UPSTASH_REDIS_REST_URL;
+const redisToken = ENV_GLOBAL.UPSTASH_REDIS_REST_TOKEN;
+if (!redisUrl || !redisToken) {
+	throw new Error("Redis credentials are required");
+}
+
+export const redis = new Redis({ url: redisUrl, token: redisToken });
 
 /**
  * Cache keys constants.

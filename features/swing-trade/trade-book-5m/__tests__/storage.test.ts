@@ -27,7 +27,7 @@ describe("Trade Book 5M Storage", () => {
 
 		const settings = readTradeBook5MSettings();
 		expect(settings.baseUrl).toBe("https://api.broker.id");
-		expect(settings.token).toBe("market-detector-token-999");
+		expect(settings.token).toBe("");
 		expect(settings.timeInterval).toBe("5m");
 	});
 
@@ -42,7 +42,7 @@ describe("Trade Book 5M Storage", () => {
 		saveTradeBook5MSettings(custom);
 		const read = readTradeBook5MSettings();
 		expect(read.symbol).toBe("DOOH");
-		expect(read.token).toBe("custom-token-5m");
+		expect(read.token).toBe("");
 		expect(read.period).toBe("DATE_PICKER_PERIOD_LAST_1_WEEK");
 		expect(localStorage.getItem(TRADE_BOOK_5M_STORAGE_KEY)).toBeDefined();
 	});

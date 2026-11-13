@@ -47,16 +47,16 @@ function readSettings(): HistoricalTradeSettings {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
 		if (raw) {
-			return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+			return { ...DEFAULT_SETTINGS, ...JSON.parse(raw), token: "" };
 		}
-		// Pre-fill Base URL and Token from running-trade:settings on first load if available
+		// Reuse the provider URL without persisting its bearer token.
 		const runningTradeRaw = localStorage.getItem(RUNNING_TRADE_STORAGE_KEY);
 		if (runningTradeRaw) {
 			const parsed = JSON.parse(runningTradeRaw);
 			return {
 				...DEFAULT_SETTINGS,
 				baseUrl: parsed.baseUrl || "",
-				token: parsed.token || "",
+				token: "",
 			};
 		}
 		return DEFAULT_SETTINGS;
@@ -121,18 +121,20 @@ export default function HistoricalTradeView() {
 
 	// Pre-fill credentials from Redis once available
 	useEffect(() => {
-		if (credentials?.baseUrl || credentials?.token) {
+		if (credentials?.baseUrl) {
 			setSettings((prev) => ({
 				...prev,
 				baseUrl: prev.baseUrl || credentials.baseUrl || "",
-				token: prev.token || credentials.token || "",
 			}));
 		}
 	}, [credentials]);
 
 	useEffect(() => {
 		if (hydrated) {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+			localStorage.setItem(
+				STORAGE_KEY,
+				JSON.stringify({ ...settings, token: "" }),
+			);
 		}
 	}, [settings, hydrated]);
 
@@ -184,11 +186,11 @@ export default function HistoricalTradeView() {
 		credentials?.baseUrl ||
 		""
 	).trim();
-	const effectiveToken = (settings.token || credentials?.token || "").trim();
+	const effectiveToken = settings.token.trim();
 
 	const ready =
 		effectiveBaseUrl.startsWith("https://") &&
-		effectiveToken !== "" &&
+		(effectiveToken !== "" || credentials?.tokenConfigured === true) &&
 		/^[A-Za-z0-9]{1,10}$/.test(settings.symbol.trim()) &&
 		settings.startDate.trim() !== "" &&
 		settings.endDate.trim() !== "" &&
@@ -203,10 +205,7 @@ export default function HistoricalTradeView() {
 		setErrorMessage(null);
 		setProgress({ pages: 0, rows: 0 });
 
-		if (
-			(settings.baseUrl && settings.baseUrl !== credentials?.baseUrl) ||
-			(settings.token && settings.token !== credentials?.token)
-		) {
+		if (effectiveToken) {
 			saveCredentials({ baseUrl: effectiveBaseUrl, token: effectiveToken });
 		}
 
@@ -379,7 +378,7 @@ export default function HistoricalTradeView() {
 								className={`flex items-center justify-between ${labelClass}`}
 							>
 								<span>Bearer Token</span>
-								{credentials?.token && (
+								{credentials?.tokenConfigured && (
 									<span className="text-[10px] font-semibold text-emerald-600 normal-case">
 										Redis Synced
 									</span>
@@ -392,7 +391,7 @@ export default function HistoricalTradeView() {
 									value={settings.token}
 									onChange={(e) => update("token", e.target.value)}
 									placeholder={
-										credentials?.token
+										credentials?.tokenConfigured
 											? "Configured in Redis"
 											: "Paste API JWT Bearer token"
 									}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { createMetadata } from "@/lib/shared/metadata";
-import { PERSON_SCHEMA, SITE, SEO } from "@/lib/shared/constants";
+import { SITE, SEO } from "@/lib/shared/constants";
 import HomeView from "@/features/home/components/HomeView";
 import HomeSkeleton from "@/features/home/components/HomeSkeleton";
 import { getCachedAthleteStats } from "@/services/strava/service";
@@ -17,7 +17,7 @@ export const metadata: Metadata = createMetadata({
 });
 
 async function HomeDataWrapper() {
-	let runningKm = 1000;
+	let runningKm: number | null = null;
 	try {
 		const stats = await getCachedAthleteStats();
 		if (stats?.ytd_run_totals?.distance) {
@@ -32,15 +32,8 @@ async function HomeDataWrapper() {
 
 export default function HomePage() {
 	return (
-		<>
-			{/* Person JSON-LD: signals Google Knowledge Panel & rich results */}
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_SCHEMA) }}
-			/>
-			<Suspense fallback={<HomeSkeleton />}>
-				<HomeDataWrapper />
-			</Suspense>
-		</>
+		<Suspense fallback={<HomeSkeleton />}>
+			<HomeDataWrapper />
+		</Suspense>
 	);
 }

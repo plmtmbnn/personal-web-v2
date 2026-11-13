@@ -471,7 +471,7 @@ export default function UtilsLanding({
 	}, [filteredUtilities]);
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-hidden">
+		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative pb-32 sm:pb-36 overflow-x-clip">
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 relative z-10 space-y-6 sm:space-y-8">
 				{/* ── Modern Floating Card Header Standard ── */}
 				<motion.div
@@ -496,8 +496,8 @@ export default function UtilsLanding({
 								Developer &amp; Tech Utilities
 							</h1>
 							<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
-								High-fidelity developer utilities, data converters, and security
-								tools running 100% client-side in your browser.
+								Developer utilities, data converters, and security tools. Local
+								processing is used where the tool does not require a server.
 							</p>
 						</div>
 
@@ -507,27 +507,14 @@ export default function UtilsLanding({
 								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
 									{utilities.length}
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-									Engines
-								</p>
+								<p className="text-xs font-medium text-slate-600">Tools</p>
 							</div>
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
 								<p className="text-xl font-extrabold text-indigo-600 tabular-nums">
 									{CATEGORIES.length}
 								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-									Domains
-								</p>
-							</div>
-							<div className="w-px h-8 bg-slate-100" />
-							<div className="text-center">
-								<p className="text-xl font-extrabold text-emerald-600 tabular-nums">
-									100%
-								</p>
-								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-									Client-Side
-								</p>
+								<p className="text-xs font-medium text-slate-600">Categories</p>
 							</div>
 						</div>
 					</div>
@@ -548,7 +535,7 @@ export default function UtilsLanding({
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							placeholder="Search utilities by name, description, or keyword..."
-							className="w-full bg-slate-50/80 border border-slate-200/80 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+							className="w-full bg-slate-50/80 border border-slate-200/80 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm font-medium text-slate-900 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500"
 						/>
 						{searchQuery && (
 							<button
@@ -562,16 +549,17 @@ export default function UtilsLanding({
 						)}
 					</div>
 
-					{/* Category Filter Pills */}
-					<div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+					<fieldset className="m-0 flex min-w-0 items-center gap-2 overflow-x-auto border-0 p-0 pb-2 thin-scrollbar">
+						<legend className="sr-only">Filter utilities by category</legend>
 						<button
 							type="button"
 							onClick={() => setSelectedCategory("all")}
-							className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+							className={`inline-flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
 								selectedCategory === "all"
 									? "bg-slate-900 text-white shadow-xs"
 									: "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
 							}`}
+							aria-pressed={selectedCategory === "all"}
 						>
 							<Layers className="w-3.5 h-3.5" />
 							<span>All</span>
@@ -594,11 +582,12 @@ export default function UtilsLanding({
 									key={cat.id}
 									type="button"
 									onClick={() => setSelectedCategory(cat.id)}
-									className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+									className={`inline-flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
 										isActive
 											? "bg-slate-900 text-white shadow-xs"
 											: "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
 									}`}
+									aria-pressed={isActive}
 								>
 									<Icon className="w-3.5 h-3.5" />
 									<span>{cat.shortLabel}</span>
@@ -614,7 +603,7 @@ export default function UtilsLanding({
 								</button>
 							);
 						})}
-					</div>
+					</fieldset>
 				</motion.div>
 
 				{/* ── Grouped Category Sections ── */}
@@ -701,12 +690,14 @@ export default function UtilsLanding({
 													</div>
 
 													{/* Card Footer: Slug indicator */}
-													<div className="pt-3.5 mt-3.5 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-400">
-														<span className="truncate">/{util.slug}</span>
+													<div className="pt-3.5 mt-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+														<span className="truncate font-mono">
+															/{util.slug}
+														</span>
 														<span
-															className={`text-[10px] font-bold uppercase tracking-wider ${category.accentText} transition-colors opacity-0 group-hover:opacity-100`}
+															className={`font-semibold ${category.accentText} transition-colors`}
 														>
-															Launch →
+															Open
 														</span>
 													</div>
 												</Link>
@@ -740,7 +731,7 @@ export default function UtilsLanding({
 								setSearchQuery("");
 								setSelectedCategory("all");
 							}}
-							className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+							className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
 						>
 							Reset Filters
 						</button>

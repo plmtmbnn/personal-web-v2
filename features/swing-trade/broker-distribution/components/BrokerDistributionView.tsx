@@ -95,11 +95,10 @@ export default function BrokerDistributionView() {
 
 	// Pre-fill credentials from Redis once available
 	useEffect(() => {
-		if (credentials?.baseUrl || credentials?.token) {
+		if (credentials?.baseUrl) {
 			setSettings((prev) => ({
 				...prev,
 				baseUrl: prev.baseUrl || credentials.baseUrl || "",
-				token: prev.token || credentials.token || "",
 			}));
 		}
 	}, [credentials]);
@@ -132,11 +131,11 @@ export default function BrokerDistributionView() {
 		credentials?.baseUrl ||
 		""
 	).trim();
-	const effectiveToken = (settings.token || credentials?.token || "").trim();
+	const effectiveToken = settings.token.trim();
 
 	const ready =
 		effectiveBaseUrl.startsWith("https://") &&
-		effectiveToken !== "" &&
+		(effectiveToken !== "" || credentials?.tokenConfigured === true) &&
 		/^[A-Za-z0-9]{1,10}$/.test(settings.symbol.trim());
 
 	const handleExecute = useCallback(async () => {
@@ -144,10 +143,7 @@ export default function BrokerDistributionView() {
 		setLoading(true);
 		setError(null);
 
-		if (
-			(settings.baseUrl && settings.baseUrl !== credentials?.baseUrl) ||
-			(settings.token && settings.token !== credentials?.token)
-		) {
+		if (effectiveToken) {
 			saveCredentials({ baseUrl: effectiveBaseUrl, token: effectiveToken });
 		}
 
@@ -342,7 +338,7 @@ export default function BrokerDistributionView() {
 							className={`flex items-center justify-between ${labelClass}`}
 						>
 							<span>Bearer Token</span>
-							{credentials?.token && (
+							{credentials?.tokenConfigured && (
 								<span className="text-[10px] font-semibold text-emerald-600 normal-case">
 									Redis Synced
 								</span>
@@ -358,7 +354,7 @@ export default function BrokerDistributionView() {
 								value={settings.token}
 								onChange={(e) => update("token", e.target.value)}
 								placeholder={
-									credentials?.token
+									credentials?.tokenConfigured
 										? "Configured in Redis"
 										: "Paste upstream authorization token"
 								}

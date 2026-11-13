@@ -65,7 +65,7 @@ export default function RootLayout({
 					<Suspense fallback={null}>
 						<NavigationLoader />
 					</Suspense>
-					{children}
+					<div className="min-h-screen pb-28 sm:pb-32">{children}</div>
 					<CommandPaletteWrapper />
 					<FloatingNavDock />
 					<SpeedInsights />

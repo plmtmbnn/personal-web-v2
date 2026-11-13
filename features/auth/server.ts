@@ -30,6 +30,16 @@ export async function checkAuth(
 
 	// 1. Bypass mode for development/testing
 	if (mode === "disabled") {
+		if (process.env.NODE_ENV === "production") {
+			return {
+				authorized: false,
+				status: "unauthenticated",
+				session: null,
+				user: null,
+				redirectUrl: "/login",
+			};
+		}
+
 		const devUser: AuthUser = {
 			id: "dev-admin",
 			email: "admin@localhost",

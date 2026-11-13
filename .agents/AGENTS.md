@@ -46,10 +46,10 @@ This document provides foundational context for any AI coding assistant (e.g., C
 
 > [!IMPORTANT]
 > **Unified Market API Credentials Standard**:
-> Upstream market provider Base URL and Bearer tokens are persisted securely in Upstash Redis (`admin:market:credentials` / `CACHE_KEYS.MARKET_CREDENTIALS`), eliminating fragmented client-side `localStorage` stores:
-> - **Hybrid Proxy Resolution**: All admin market proxy routes (`/api/admin/*`) resolve connection credentials via `resolveMarketCredentials(bodyBaseUrl, bodyToken)`, accepting optional request body overrides while safely falling back to server-side Redis credentials.
-> - **Real-Time Cross-Tab Synchronization**: Client views synchronize via the `useMarketCredentials()` hook, dispatching and listening for `market:credentials:updated` custom window events.
-> - **Admin Control Interface**: The `MarketCredentialsModal` component provides a clean floating card interface for viewing, saving, and clearing credentials with masked password inputs.
+> Redis (`admin:market:credentials`) is the shared store for the provider base URL and bearer token.
+> - `resolveMarketCredentials` uses a complete explicit pair or the complete Redis pair. It never pairs a stored token with an override URL. Proxies require HTTPS, validate public addresses, and reject redirects. DNS validation and fetch resolve separately, so DNS rebinding mitigation is incomplete.
+> - Credential actions return `baseUrl`, `tokenConfigured`, and `updatedAt`. The `market:credentials:updated` window event refreshes views in the current window.
+> - The credentials modal accepts a new token and never reveals the saved one. Running Trade and Swing Trade views omit tokens from their own storage writes. Legacy Tape Analyzer and Trade Book still persist tokens and can write them to the shared Running Trade settings.
 
 > [!IMPORTANT]
 > **Swing Trade Hub & Market Microstructure Engine Mandate (`/admin/swing-trade`)**:
@@ -61,8 +61,8 @@ This document provides foundational context for any AI coding assistant (e.g., C
 > - **Deep Dive Workstation Standard (`DeepDiveWorkstation.tsx`)**: Modern 5-tab swipeable segmented navigation (`touch-pan-x min-h-11`), primary setup highlighting (`Primary Setup` badge), separated TP1 vs TP2 milestone target cards, responsive mobile cards (`< sm`) transitioning to high-density desktop tables (`>= sm`) for Top Accumulators & Flow Windows, prominent `Paint-the-Tape Bull Trap` alert, `Trapped Legacy` accumulators flag, Self-Match wash-trading verification table, 10D/20D/60D Value Area Migration, and VCP/Volume dry-up telemetry.
 
 ## 🛠 Tech Stack
-- **Framework:** Next.js 16.4.2 (App Router) & React 19.3.1
-- **Language:** TypeScript 5.9.3
+- **Framework:** Next.js 16.4.3 (App Router) & React 19.3.1
+- **Language:** TypeScript 7.0.2
 - **Runtime:** Node.js v24.22.1 (LTS)
 - **Package Manager:** pnpm 12.4.2
 - **Database:** Supabase (Auth, PostgreSQL)
@@ -88,9 +88,12 @@ This document provides foundational context for any AI coding assistant (e.g., C
 - **Unified Navigation Telemetry RPC & O(1) Counter:**
   - Consolidated 4 separate navigation server actions into a single `getNavTelemetrySummary()` RPC, backed by an indexed Redis set `admin:reminder:ids` ($O(1)$ `scard` instead of $O(N)$ `keys("*")` scan) and a 60-second client-side SWR cache in `FloatingNavDock` eliminating redundant network round-trips.
 - **Turbopack Server Action Hygiene Standard:**
-  - All non-action helper functions declared inside `"use server"` action files are strictly extracted into dedicated domain `utils.ts` modules (`features/reminders/utils.ts`, `features/blog/utils/slugify.ts`, `features/utils/stock-tools/stock-explorer/utils/uuid.ts`) to permanently prevent Next.js Turbopack compiler crashes (`Error: Server Actions must be async functions`).
+  - Keep implementation helpers outside `"use server"` modules and export explicit async functions. Turbopack rejects direct re-exports. Investment refresh, Tasks, and Stock Picks use dedicated `server-actions.ts` entry modules.
+- **Production auth and configuration:** Production denies access in disabled auth mode and throws on invalid server environment configuration. Redis requires configured credentials outside the test fallback.
+- **Outbound requests:** The public URL Inspector connects directly to the IP it validates for each followed redirect. Strava splits returns a generic client error and logs details on the server. The public Sentry example route was removed.
+- **Mutation validation:** Blog metadata restricts writable fields. Movement validates state on save and sync. Reminder actions validate text, due date, ID and extension preset.
 - **Unified Market API Credentials Standard:**
-  - Upstream broker Base URL and Bearer token are centralized in Upstash Redis (`CACHE_KEYS.MARKET_CREDENTIALS: "admin:market:credentials"`), eliminating duplicate credential entries and sync drift across `/admin/swing-trade`, `/admin/running-trade`, and `/admin/trade-book`.
+  - Use the shared Redis pair for new market flows. Legacy storage exceptions are documented above.
 - **Build Process:** `pnpm run build` compiled in ~31s (~75% faster, down from ~3 mins) via SWC import optimizations and Vercel serverless alignment
 - **Server External Packages:** Node libraries (`jsdom`, `@mozilla/readability`, `turndown`, `papaparse`, `sql-formatter`, `dompurify`, `node-sql-parser`) externalized in `next.config.ts` to shrink Vercel Lambda bundle sizes and prevent re-bundling
 - **Tree-Shaking Optimizations:** `experimental.optimizePackageImports` configured for `react-icons`, `framer-motion`, `@supabase/supabase-js`, `recharts`, `lucide-react`, and `date-fns`
@@ -217,8 +220,8 @@ Strictly for routing and page definitions.
 - `app/api/tasks/cron/`: Secure API endpoint for scheduled task reminders.
 - `app/api/mock/`: Dynamic path-based mocking engine endpoints (`app/api/mock/[...path]` catch-all and `app/api/mock/manage` management API with strict 15 active endpoint limitation).
 - `app/api/strava/`: Strava OAuth callback, sync, and split routes.
-- `app/api/admin/running-trade/`: Admin-only POST proxy (`checkAdmin()`, zod-validated body, https-only base URL, 20s timeout, `preferredRegion = "sin1"`) that calls `{baseUrl}/order-trade/running-trade` server-side with the Bearer token. Uses standard Node.js native `fetch` with browser headers (`User-Agent`, `Cache-Control: no-cache`), eliminating external module bundler packaging failures (`ADM-ZIP: Invalid filename`). Upstream rejections surface as `502` with `Upstream <status>: <message>`, and network failures as `Could not reach upstream API (<code>)`. The server log carries the status and the first 200 characters of the body. The token and URL are never logged or returned. A ticker-level guard rejects the response with `Upstream returned X rows for Y` when any row's `code` differs from the requested ticker. An upstream `429` is passed through as `429` with `retryAfterSeconds` (from `Retry-After`) so the client can wait and retry instead of failing. The fixed params `action_type`, `investor_type`, `sort=ASC`, and `order_by` are set here, not in the client.
-- `app/api/admin/trade-book/`: Admin-only POST proxy (`checkAdmin()`, Zod validation for `baseUrl`, `token`, and `symbol`, 30s timeout, `preferredRegion = "sin1"`) that calls `{baseUrl}/order-trade/trade-book/chart?symbol={symbol}&time_interval=1m&period=DATE_PICKER_PERIOD_LATEST` server-side with the Bearer token. Uses standard Node.js native `fetch` with browser headers. Propagates upstream 429 status with `retryAfterSeconds` and non-200 status messages safely without exposing tokens.
+- `app/api/admin/running-trade/`: Admin-only POST proxy (`checkAdmin()`, zod-validated body, https-only base URL, 20s timeout, upstream redirects disabled) that calls `{baseUrl}/order-trade/running-trade` server-side with the Bearer token. Uses standard Node.js native `fetch` with browser headers (`User-Agent`, `Cache-Control: no-cache`), eliminating external module bundler packaging failures (`ADM-ZIP: Invalid filename`). Upstream rejections surface as `502` with `Upstream <status>: <message>`, and network failures as `Could not reach upstream API (<code>)`. The server log carries the status and the first 200 characters of the body. The token and URL are never logged or returned. A ticker-level guard rejects the response with `Upstream returned X rows for Y` when any row's `code` differs from the requested ticker. An upstream `429` is passed through as `429` with `retryAfterSeconds` (from `Retry-After`) so the client can wait and retry instead of failing. The fixed params `action_type`, `investor_type`, `sort=ASC`, and `order_by` are set here, not in the client.
+- `app/api/admin/trade-book/`: Admin-only POST proxy (`checkAdmin()`, Zod validation for `baseUrl`, `token`, and `symbol`, 30s timeout, upstream redirects disabled) that calls `{baseUrl}/order-trade/trade-book/chart?symbol={symbol}&time_interval=1m&period=DATE_PICKER_PERIOD_LATEST` server-side with the Bearer token. Uses standard Node.js native `fetch` with browser headers. Propagates upstream 429 status with `retryAfterSeconds` and non-200 status messages safely without exposing tokens.
 - `app/api/auth/refresh-session/`: Proactive Redis session & Supabase token synchronizer.
 - `app/sitemap.ts` & `app/robots.ts`: Centralized search indexing and crawler configuration. All public navigation routes (`/`, `/portfolio`, `/work-experience`, `/adventures/*`, `/blog`, `/liverpool`, `/insights`, `/investment`, `/utils`, `/contact`) are registered in `sitemap.ts`. Internal administrative and API endpoints (`/admin/`, `/api/`, `/tasks`, `/login`, `/private/`) are explicitly disallowed in `robots.ts` to focus crawl budgets on public content.
 - `app/page.tsx` (Home): Injects `PERSON_SCHEMA` JSON-LD (`<script type="application/ld+json">`) for Google Knowledge Panel and rich result eligibility. Metadata title: `"Polma Tambunan | Software Engineer & Distance Runner"`. Description pulls `SITE.description` (keyword-rich ~150-char SEO copy). Keywords injected from `SEO.baseKeywords`.
@@ -333,7 +336,7 @@ Strictly for routing and page definitions.
   - **Bandarmology & Order Book Telemetry**: Replace ambiguous raw share lot counts with **Turnover Value in IDR** paired with **Transaction Frequency**. Expose real-time Bid/Offer volume pressure micro-bars (`Bid X%` vs `Y% Offer`), Whale Ticket proxy (`AvgValuePerTx = Turnover / Frequency`), and Non-Regular (Nego) crossing ratio.
 - **Stockpick Simulator, Paper Trading Ledger & Trade Journal Architecture Standard (`/utils/stock-explorer?tab=simulator`)**:
   - **Zero LocalStorage & Supabase Cloud Single Source of Truth Mandate**: Simulation positions and closed trade history MUST be retrieved directly and exclusively from the Supabase `stock_picks` table via `fetchCloudStockPicksAction()`. Local storage (`localStorage.getItem("idx:stockpicks:v1")`) is strictly forbidden as a primary store or cache fallback to prevent stale data conflicts and multi-device drift. Any legacy keys are explicitly purged from `localStorage` on component mount.
-  - **Client-Side Auth & Request Context Isolation (`SupabaseConn`)**: Server actions interacting with `stock_picks` MUST utilize `SupabaseConn` from `@/lib/core/supabase` directly rather than invoking `createClient()` with `cookies()` outside request scopes or falling back to missing service role keys.
+  - **Server authorization:** Stock-pick cloud actions check admin access before using `createAdminClient()`, validate mutations, and return generic database errors. The admin layout checks authorization at request time. The route page delegates to the feature view.
   - **RFC4122 v4 UUID Strict Formatting Mandate**: All stock pick IDs generated in client state or inserted into PostgreSQL MUST conform strictly to RFC4122 v4 UUID format (`ensureValidUuid()`). Custom string IDs like `"pick-1728..."` or `"demo-..."` cause catastrophic PostgreSQL `22P02` (`invalid input syntax for type uuid`) query failures.
   - **Physical Column Mapping Parity Standard**: Database queries and mutations MUST align 1:1 with the physical PostgreSQL schema of `public.stock_picks`:
     - `ticker` (not `stock_code`), `company_name` (not `stock_name`), `lots`, `shares` (NOT NULL, computed as `lots * 100`), `buy_price`, `high_watermark` (NOT NULL), `low_watermark` (NOT NULL), `high_watermark_date`, `low_watermark_date`, `target_price`, `stop_loss`, `entry_date`, `exit_price`, `exit_date`, `exit_reason`, `realized_pnl_idr`, `realized_pnl_pct`, `peak_gain_pct`, `max_drawdown_pct`, `holding_days`, `thesis`, `notes`.
@@ -552,6 +555,7 @@ Strictly for routing and page definitions.
   - **Developer Code Terminal Standard (`terminal-window`)**: macOS window chrome with authentic traffic light controls (`Red`, `Yellow`, `Green`), tab title bar, prompt line (`➜ ~/workspace`), line-numbered log output with contextual badge coloring (`[SUCCESS]`, `[ERROR]`, `[INFO]`), and an emerald terminal cursor block.
   - **Client-Side 2D Canvas Engine**: Pure in-browser rendering across 4 standard aspect ratios (`1:1`, `4:5`, `9:16`, `16:9`), intelligent `wrapText` handling word wrapping, explicit linebreaks, and massive unbroken word splitting, object-position offsets (`imageOffsetX`, `imageOffsetY`, `avatarOffsetX`, `avatarOffsetY`), and high-resolution PNG export with zero server roundtrips.
 - **Dynamic Mock API Engine (`/utils/mock-api` & `/api/mock/*`)**:
+  - **Access:** The management page and `/api/mock/manage` require admin access. DELETE accepts only a valid `mock:METHOD:PATH` key. Deployed mock endpoints remain publicly callable.
   - **Architecture**: Dynamic catch-all endpoint (`app/api/mock/[...path]/route.ts`) intercepting all HTTP methods (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`) backed by Upstash Redis with 30-day inactivity TTL (`2592000s`). Keys follow the canonical `mock:METHOD:PATH` schema (e.g., `mock:GET:/v1/users`).
   - **Rate Limiting**: Optional per-endpoint sliding-window rate limiting via `@upstash/ratelimit` (10 requests per 10s per client IP) returning HTTP 429 when exceeded.
   - **Strict Quota & 15 Active Endpoint Limitation (`MAX_ENDPOINTS = 15`)**: Double-enforced on both client (`View.tsx`) and server (`app/api/mock/manage/route.ts`). Caps total active mock endpoints to 15. Overwriting/updating an existing mock (matching method and path) is always permitted and preserves its slot without incrementing quota. When at capacity, new mock creation is rejected with HTTP 400 (`LIMIT_REACHED`) and disabled in the UI with a capacity warning callout.
@@ -608,7 +612,7 @@ Strictly for routing and page definitions.
     - *Feed Ingestion & Engine Status*: Unified progress card tracking Running Trade (CSV), Trade Book (JSON), and FastAPI Engine with individual file download triggers.
     - *Bulk Zero-Dependency ZIP Export*: 1-click `Download All (.ZIP)` button packages active session feeds into `tape-feeds_{TICKER}_{YYYYMMDD}.zip` via `@/lib/shared/zip`, circumventing browser multi-download blockers.
   - *Running Trade Retriever*: Fetches running trade for one IDX ticker from an external API and downloads it as CSV:
-    - *Connection Persistence*: Base API URL, Bearer token, ticker, market board, minimum lot, value from, and limit are stored in `localStorage` under `running-trade:settings` and prefilled on the next visit. First-time defaults: `BOARD_TYPE_REGULAR`, minimum lot 1, value from 1, limit 100. Storage is read in `useEffect` to avoid hydration mismatch.
+    - *Connection Persistence*: Running Trade reads and saves non-secret preferences under `running-trade:settings`. Legacy Tape Analyzer and Trade Book still write tokens to this shared key.
     - *Ticker Autocomplete*: Searchable combobox backed by the Stock Explorer registry (`/api/utils/stock-data`), which also accepts a typed code.
     - *Cursor Pagination*: First call omits `trade_number`. Each next call sends the last row's `trade_number`. Stops on an empty `running_trade`, on a repeated cursor (`stalled`), at the 500-page cap (`MAX_PAGES`), on error, or on Cancel (`AbortController`). Partial rows are kept and can be downloaded.
     - *Rate Limit Handling*: The external API returned `429` after about 53 back-to-back pages, so the loop pauses `PAUSE_MS` (5s) once every `PAUSE_EVERY_PAGES` (25) pages, never on every loop. If a `429` still occurs, the same cursor is retried up to `MAX_RATE_LIMIT_RETRIES` (5) times, waiting the API's `Retry-After` (capped at 120s client-side) or a linear 10s, 20s, 30s backoff. Waits are abortable by Cancel and surface as an amber note in the progress card. Constants are overridable through `collectRunningTrades` options, and `sleep` is injectable for tests.
@@ -634,13 +638,19 @@ Strictly for routing and page definitions.
 - **TypeScript:** Incremental compilation with performance settings
 
 ### Available Scripts
+
+Keep this file and `ui-ux-guideline.md` aligned with code changes that affect architecture, security, workflows, or shared UI behavior. Record remaining gaps explicitly and replace superseded guidance in the same change.
+
+The release workflow uses a frozen lockfile and runs Biome, TypeScript, and Vitest before semantic-release. Verify the production build separately with `pnpm build`.
+
 ```bash
 # Development
 pnpm run dev              # Start with Turbo + optimizations
 pnpm run dev:debug       # Start with Node.js debugger
 
 # Testing & Quality Assurance
-pnpm test                 # Run Vitest test suite across all domains (58 suites, 613 tests)
+pnpm test                 # Run the full Vitest suite
+pnpm typecheck            # Run TypeScript without incremental cache
 pnpm vitest run <path>    # Run target test file or domain (e.g. features/investment)
 pnpm run check            # Biome lint and format check across all files
 pnpm run format           # Biome format code across all files

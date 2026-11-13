@@ -1,3 +1,10 @@
+# [0.123.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.122.1...v0.123.0) (2026-11-13)
+
+
+### Features
+
+* **home:** redesign responsive landing page ([ea98f4d](https://github.com/plmtmbnn/personal-web-v2/commit/ea98f4dd075d632d560d9b8efb7219381deb789e))
+
 ## [0.122.1](https://github.com/plmtmbnn/personal-web-v2/compare/v0.122.0...v0.122.1) (2026-11-13)
 
 

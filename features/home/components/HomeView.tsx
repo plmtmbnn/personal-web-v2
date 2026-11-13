@@ -9,323 +9,129 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { motion, type Variants, useReducedMotion } from "framer-motion";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import {
-	ArrowRight,
-	ArrowUpRight,
-	Mail,
-	Briefcase,
-	Activity,
-	MapPin,
-	Cpu,
-	Clock,
-} from "lucide-react";
 import HomeAnimatedBackground from "./HomeAnimatedBackground";
-
-const containerVariants: Variants = {
-	hidden: {},
-	visible: { transition: { staggerChildren: 0.05 } },
-};
-
-const itemVariants: Variants = {
-	hidden: { opacity: 0, y: 14 },
-	visible: {
-		opacity: 1,
-		y: 0,
-		transition: { duration: 0.38, ease: "easeOut" },
-	},
-};
-
-interface ChannelProps {
-	icon: React.ElementType;
-	label: string;
-	value: string;
-	color: string;
-	href?: string;
-	isExternal?: boolean;
-	dark?: boolean;
-}
-
-function MetricChannel({
-	icon: Icon,
-	label,
-	value,
-	color,
-	href,
-	isExternal,
-	dark,
-}: ChannelProps) {
-	const inner = (
-		<div className="flex items-center justify-between w-full relative z-10">
-			<div className="flex items-center gap-3.5 min-w-0">
-				<div className={`p-2.5 rounded-xl border ${color} shrink-0`}>
-					<Icon className="w-4 h-4" />
-				</div>
-				<div className="min-w-0">
-					<p
-						className={`text-xs font-semibold ${dark ? "text-slate-300" : "text-slate-600"}`}
-					>
-						{label}
-					</p>
-					<p
-						className={`text-sm font-bold leading-tight break-words ${dark ? "text-white" : "text-slate-900"}`}
-					>
-						{value}
-					</p>
-				</div>
-			</div>
-			{href && (
-				<div className="shrink-0 pl-2">
-					<div
-						className={`p-1.5 rounded-lg transition-transform duration-300 group-hover:translate-x-0.5 ${dark ? "text-white/50 group-hover:text-white" : "text-slate-500 group-hover:text-slate-900"}`}
-					>
-						{isExternal ? (
-							<ArrowUpRight className="w-4 h-4" />
-						) : (
-							<ArrowRight className="w-4 h-4" />
-						)}
-					</div>
-				</div>
-			)}
-		</div>
-	);
-
-	const className = `group relative overflow-hidden rounded-2xl border p-4 flex items-center transition-[border-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${dark ? "bg-slate-900 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/20" : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/50"}`;
-
-	if (href) {
-		if (isExternal) {
-			return (
-				<a
-					href={href}
-					target="_blank"
-					rel="noopener noreferrer"
-					className={`block w-full !no-underline ${className}`}
-				>
-					{inner}
-				</a>
-			);
-		}
-		return (
-			<Link href={href} className={`block w-full !no-underline ${className}`}>
-				{inner}
-			</Link>
-		);
-	}
-	return <div className={`w-full ${className}`}>{inner}</div>;
-}
+import styles from "./HomeView.module.css";
 
 interface HomeProps {
 	initialRunningKm: number | null;
 }
 
 export default function Home({ initialRunningKm }: HomeProps) {
-	const reduceMotion = useReducedMotion();
 	const year = new Date().getFullYear();
-
 	const [localTime, setLocalTime] = useState("");
-	const [isActive, setIsActive] = useState(false);
 
 	useEffect(() => {
-		const updateStatusAndClock = () => {
-			const now = new Date();
-			const time = new Intl.DateTimeFormat("en-US", {
-				timeZone: "Asia/Jakarta",
-				hour: "2-digit",
-				minute: "2-digit",
-				second: "2-digit",
-				hour12: false,
-			}).format(now);
-			setLocalTime(time);
-
-			const utcHour = now.getUTCHours();
-			const jakartaHour = (utcHour + 7 + 24) % 24;
-			setIsActive(jakartaHour >= 8 && jakartaHour < 22);
+		const updateClock = () => {
+			setLocalTime(
+				new Intl.DateTimeFormat("en-US", {
+					timeZone: "Asia/Jakarta",
+					hour: "2-digit",
+					minute: "2-digit",
+					second: "2-digit",
+					hour12: false,
+				}).format(new Date()),
+			);
 		};
 
-		updateStatusAndClock();
-		const timer = setInterval(updateStatusAndClock, 1000);
-		return () => clearInterval(timer);
+		updateClock();
+		const timer = window.setInterval(updateClock, 1000);
+		return () => window.clearInterval(timer);
 	}, []);
 
 	return (
-		<main className="min-h-screen lg:h-screen lg:max-h-[100dvh] relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 pb-32 sm:py-24 sm:pb-36 lg:py-0 lg:pb-0">
+		<main id="main-content" className={styles.page}>
 			<HomeAnimatedBackground />
-			<div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center relative z-10 my-auto">
-				<motion.div
-					className="lg:col-span-6 w-full"
-					variants={containerVariants}
-					initial={reduceMotion ? false : "hidden"}
-					animate="visible"
-				>
-					<motion.div
-						variants={itemVariants}
-						className="flex items-center gap-4 sm:gap-5 mb-7 sm:mb-8"
-					>
-						<div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-[1.25rem] overflow-hidden border border-slate-200/80 shadow-sm shrink-0 bg-slate-100">
-							<Image
-								src="/profile.jpg"
-								alt={AUTHOR.name}
-								fill
-								className="object-cover grayscale-[15%]"
-								sizes="(max-width: 640px) 64px, 80px"
-							/>
-						</div>
-						<div className="flex flex-col gap-1.5">
-							<h2 className="text-sm font-bold text-slate-900">
-								{AUTHOR.name}
-							</h2>
-							<div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200/80 text-[11px] font-medium text-slate-700 w-fit">
-								<span
-									className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-600" : "bg-slate-400"}`}
-								/>
-								<span>
-									{isActive ? "Active in Jakarta" : "Offline (night)"}
-								</span>
-							</div>
-						</div>
-					</motion.div>
+			<section className={styles.stage} aria-labelledby="home-heading">
+				<header className={styles.identity}>
+					<div className={styles.portrait}>
+						<Image src="/profile.jpg" alt="" width={80} height={80} priority />
+					</div>
+					<div>
+						<p className={styles.name}>{AUTHOR.name}</p>
+						<p className={styles.role}>{AUTHOR.role}, Indonesia</p>
+					</div>
+				</header>
 
-					<motion.h1
-						variants={itemVariants}
-						className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1] mb-5 sm:mb-6"
-					>
-						Engineering
-						<br />
-						systems <span className="text-slate-400">by day.</span>
-						<br />
-						Miles <span className="text-slate-400">everywhere.</span>
-					</motion.h1>
-
-					<motion.p
-						variants={itemVariants}
-						className="text-sm sm:text-base text-slate-500 font-medium leading-relaxed mb-8 sm:mb-10 max-w-sm"
-					>
-						Software Engineer specializing in fintech core architecture, lending
-						platforms, and scalable data solutions.
-					</motion.p>
-
-					<motion.div
-						variants={itemVariants}
-						className="grid grid-cols-2 gap-3 max-w-md"
-					>
-						<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
-							<div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
-								<MapPin className="w-3.5 h-3.5 text-indigo-500" />
-							</div>
-							<div className="min-w-0">
-								<p className="text-xs font-semibold text-slate-600 mb-0.5 truncate">
-									Base
-								</p>
-								<p className="text-xs font-bold text-slate-800 truncate">
-									Indonesia
-								</p>
-							</div>
-						</div>
-						<div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
-							<div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-								<Clock className="w-3.5 h-3.5 text-emerald-500" />
-							</div>
-							<div className="min-w-0">
-								<p className="text-xs font-semibold text-slate-600 mb-0.5 truncate">
-									Local Time
-								</p>
-								<p className="font-mono text-xs font-bold text-slate-800 tabular-nums truncate">
-									{localTime || "--:--:--"}
-								</p>
-							</div>
-						</div>
-					</motion.div>
-				</motion.div>
-
-				<motion.div
-					className="lg:col-span-6 w-full space-y-4 lg:pl-6 mt-12 lg:mt-0"
-					initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{
-						duration: 0.45,
-						delay: 0.1,
-						ease: [0.25, 0.1, 0.25, 1],
-					}}
-				>
-					<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-5 sm:p-6">
-						<div className="flex items-center justify-between mb-5">
-							<span className="text-xs font-semibold text-slate-700">
-								Professional Focus
-							</span>
-						</div>
-
-						<div className="grid grid-cols-3 gap-2 sm:gap-3">
-							<div className="px-2 py-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-center gap-1">
-								<Briefcase className="w-4 h-4 text-slate-600 mb-0.5" />
-								<span className="text-xl sm:text-2xl font-bold text-slate-900 leading-none">
-									{EXPERIENCE_YEAR}+
-								</span>
-								<span className="text-xs font-medium text-slate-600">
-									Years Exp
-								</span>
-							</div>
-							<div className="px-2 py-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-center gap-1">
-								<Activity className="w-4 h-4 text-slate-600 mb-0.5" />
-								<span
-									className="text-xl sm:text-2xl font-bold text-slate-900 leading-none"
-									suppressHydrationWarning
-								>
-									{initialRunningKm == null
-										? "N/A"
-										: initialRunningKm.toLocaleString("en-US")}
-								</span>
-								<span className="text-xs font-medium text-slate-600">
-									Km / {year}
-								</span>
-							</div>
-							<div className="px-2 py-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-center gap-1">
-								<Cpu className="w-4 h-4 text-slate-600 mb-0.5" />
-								<span className="text-xl sm:text-2xl font-bold text-slate-900 leading-none">
-									{AUTHOR_STATS.fintechSystems}+
-								</span>
-								<span className="text-xs font-medium text-slate-600">
-									Systems
-								</span>
-							</div>
+				<div className={styles.hero}>
+					<div className={styles.heroCopy}>
+						<h1 id="home-heading">
+							Engineering systems by day. Miles everywhere.
+						</h1>
+						<p className={styles.lede}>
+							Software Engineer specializing in fintech core architecture,
+							lending platforms, and data systems.
+						</p>
+						<div className={styles.actions}>
+							<Link className={styles.primaryAction} href="/work-experience">
+								View work experience
+							</Link>
+							<Link className={styles.secondaryAction} href="/contact">
+								Contact Polma
+							</Link>
 						</div>
 					</div>
 
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-						<MetricChannel
-							icon={ArrowRight}
-							label="Explore Work"
-							value="View Experience"
-							color="bg-slate-800 border-slate-700 text-white"
-							dark
-							href="/work-experience"
-						/>
-						<MetricChannel
-							icon={Mail}
-							label="Contact"
-							value="Send an Email"
-							color="bg-slate-50 border-slate-200 text-slate-600"
-							href="/contact"
-						/>
-						<MetricChannel
-							icon={FaGithub}
-							label="GitHub"
-							value="@plmtmbnn"
-							color="bg-slate-100 border-slate-200 text-slate-700"
+					<div className={styles.signature} aria-hidden="true">
+						<span>Build</span>
+						<span>Run</span>
+					</div>
+				</div>
+
+				<dl
+					className={styles.stats}
+					aria-label="Professional and running facts"
+				>
+					<div>
+						<dd>{EXPERIENCE_YEAR}+</dd>
+						<dt>Years building systems</dt>
+					</div>
+					<div>
+						<dd suppressHydrationWarning>
+							{initialRunningKm == null
+								? "N/A"
+								: initialRunningKm.toLocaleString("en-US")}
+						</dd>
+						<dt>Kilometres run in {year}</dt>
+					</div>
+					<div>
+						<dd>{AUTHOR_STATS.fintechSystems}+</dd>
+						<dt>Fintech systems</dt>
+					</div>
+				</dl>
+
+				<footer className={styles.details}>
+					<div className={styles.context}>
+						<p>
+							<span>Base</span>
+							Indonesia
+						</p>
+						<p>
+							<span>Jakarta time</span>
+							<time>{localTime || "--:--:--"}</time>
+						</p>
+					</div>
+
+					<nav className={styles.socials} aria-label="Professional profiles">
+						<a
 							href={SOCIAL_LINKS.github}
-							isExternal
-						/>
-						<MetricChannel
-							icon={FaLinkedin}
-							label="LinkedIn"
-							value="polma-tambunan"
-							color="bg-blue-50 border-blue-100 text-blue-600"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<FaGithub aria-hidden="true" />
+							GitHub
+						</a>
+						<a
 							href={SOCIAL_LINKS.linkedin}
-							isExternal
-						/>
-					</div>
-				</motion.div>
-			</div>
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<FaLinkedin aria-hidden="true" />
+							LinkedIn
+						</a>
+					</nav>
+				</footer>
+			</section>
 		</main>
 	);
 }

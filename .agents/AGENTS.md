@@ -642,6 +642,7 @@ Strictly for routing and page definitions.
 Keep this file and `ui-ux-guideline.md` aligned with code changes that affect architecture, security, workflows, or shared UI behavior. Record remaining gaps explicitly and replace superseded guidance in the same change.
 
 The release workflow uses a frozen lockfile and runs Biome, TypeScript, and Vitest before semantic-release. Verify the production build separately with `pnpm build`.
+Keep the generated `packageManagerDependencies` block in `pnpm-lock.yaml` in sync with the `packageManager` pin. When the pin changes, regenerate it with the npm-distributed pnpm version used by CI, then verify `pnpm install --frozen-lockfile`.
 
 ```bash
 # Development

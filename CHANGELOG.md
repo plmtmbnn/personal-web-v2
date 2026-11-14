@@ -1,3 +1,10 @@
+# [0.124.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.123.0...v0.124.0) (2026-11-14)
+
+
+### Features
+
+* **home:** revamp home page with split layout and frameless stats ([0d46404](https://github.com/plmtmbnn/personal-web-v2/commit/0d464048134572853baa329e218719955d485ba1))
+
 # [0.123.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.122.1...v0.123.0) (2026-11-13)
 
 

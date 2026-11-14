@@ -10,52 +10,15 @@ export default function HomeSkeleton() {
 		>
 			<HomeAnimatedBackground />
 			<section className={`${styles.stage} ${styles.skeleton}`}>
-				<div className={styles.identity}>
-					<div className={`${styles.portrait} ${styles.placeholder}`} />
-					<div className={styles.identityPlaceholder}>
-						<div className={styles.placeholder} />
-						<div className={styles.placeholder} />
-					</div>
+				<div className={styles.copy}>
+					<div className={styles.placeholder} />
+					<div className={styles.placeholder} />
+					<div className={styles.placeholder} />
+					<div className={styles.placeholder} />
 				</div>
-
-				<div className={styles.hero}>
-					<div className={styles.heroCopy}>
-						<div className={styles.headingPlaceholder}>
-							<div className={styles.placeholder} />
-							<div className={styles.placeholder} />
-						</div>
-						<div className={styles.copyPlaceholder}>
-							<div className={styles.placeholder} />
-							<div className={styles.placeholder} />
-						</div>
-						<div className={styles.actionPlaceholder}>
-							<div className={styles.placeholder} />
-							<div className={styles.placeholder} />
-						</div>
-					</div>
-					<div
-						className={`${styles.signature} ${styles.signaturePlaceholder}`}
-					/>
-				</div>
-
-				<div className={styles.stats}>
-					{[1, 2, 3].map((item) => (
-						<div key={item} className={styles.statPlaceholder}>
-							<div className={styles.placeholder} />
-							<div className={styles.placeholder} />
-						</div>
-					))}
-				</div>
-
-				<div className={styles.details}>
-					<div className={styles.detailPlaceholder}>
-						<div className={styles.placeholder} />
-						<div className={styles.placeholder} />
-					</div>
-					<div className={styles.detailPlaceholder}>
-						<div className={styles.placeholder} />
-						<div className={styles.placeholder} />
-					</div>
+				<div className={styles.panel}>
+					<div className={`${styles.card} ${styles.placeholder}`} />
+					<div className={`${styles.card} ${styles.placeholder}`} />
 				</div>
 			</section>
 		</main>

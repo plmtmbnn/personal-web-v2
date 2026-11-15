@@ -1,3 +1,10 @@
+# [0.126.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.125.0...v0.126.0) (2026-11-15)
+
+
+### Features
+
+* **investment:** add IDX research and paper trade reviews ([e4e1078](https://github.com/plmtmbnn/personal-web-v2/commit/e4e107867edd3821dcb763d16346e8b1dbc204f3))
+
 # [0.125.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.124.0...v0.125.0) (2026-11-15)
 
 

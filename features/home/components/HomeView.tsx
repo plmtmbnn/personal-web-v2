@@ -44,8 +44,8 @@ export default function Home({ initialRunningKm }: HomeProps) {
 						Engineering systems by day. Miles everywhere.
 					</h1>
 					<p className={styles.lede}>
-						Software Engineer building fintech core architecture, lending
-						platforms, and data systems.
+						Engineering leader building fintech core architecture, lending
+						platforms, and scaling teams up to 25 engineers.
 					</p>
 
 					<div className={styles.actions}>

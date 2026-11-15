@@ -24,36 +24,37 @@ const experiences: Experience[] = [
 	{
 		company: "RELIID",
 		legalName: "PT Relianceintegrasi Dunia Anda",
-		location: "Indonesia – Remote",
+		location: "Indonesia (Remote)",
 		industry: "Fintech & Enterprise Tech",
 		fullOverview:
-			"Reliance Group technology arm orchestrating multi-subsidiary digital transformation across financial services, payment gateways, and insurance ecosystems.",
+			"Fintech arm of Reliance Group operating lending, insurance, and investment products across five subsidiaries.",
 		color: "bg-blue-50 border-blue-200 text-blue-600",
 		badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
 		icon: Cpu,
-		impact: "Scaled unified payment & lending services across 5+ subsidiaries",
+		impact:
+			"Directed 25 engineers scaling core lending processing IDR 50B to 70B monthly",
 		positions: [
 			{
 				title: "Head of Engineering",
-				period: "Oct 2024 – Present",
+				period: "Oct 2024 - Present",
 				responsibilities: [
-					"Define and execute engineering strategy across multiple fintech platforms",
-					"Lead architecture and scalability of LOS & LMS across holding subsidiaries",
-					"Oversee development of RELIID super-app (React Native) integrating multiple products",
+					"Direct 25 engineers across application development, technical architecture, DevOps, and security governance for group fintech initiatives.",
+					"Maintain core loan origination and loan management systems (LOS and LMS) processing 200 to 300 loans and IDR 50B to 70B monthly across five subsidiaries.",
+					"Oversee architecture and releases for the RELIID mobile application (React Native) alongside Relipay, an embedded payment system connected to SALDOMU for QRIS and interbank transfers.",
 				],
 				highlights: [
-					"Architected Relipay group payment system (QRIS, top-up, bank transfer)",
-					"Built OCR KTP API and Bank Statement Extractor for Indonesian banks",
+					"Cut underwriting statement verification from 1-3 days down to <5 minutes via multi-bank statement parsers (BCA, BRI, BNI, CIMB, Permata)",
+					"Accelerated user onboarding from 5 minutes manual entry to 2-4 seconds via automated Indonesian KTP OCR API",
 				],
 				skills: [
+					"Go",
+					"TypeScript",
 					"React Native",
-					"Next.js",
-					"Node.js",
-					"FastAPI",
-					"BI-FAST",
-					"System Architecture",
-					"Docker",
+					"Kubernetes",
+					"ArgoCD",
+					"HashiCorp Vault",
 					"PostgreSQL",
+					"Redis",
 				],
 			},
 		],
@@ -61,124 +62,141 @@ const experiences: Experience[] = [
 	{
 		company: "Finsoft",
 		legalName: "PT Solutif Teknologi Indonesia",
-		location: "Indonesia – Remote",
-		industry: "Fintech & InsurTech",
+		location: "Indonesia (Remote)",
+		industry: "Fintech & Enterprise Tech",
 		fullOverview:
-			"Enterprise software consultancy developing core lending infrastructures, national insurance engines, and high-throughput financial microservices.",
+			"B2B fintech and enterprise platform solutions provider delivering digital lending, insurance infrastructure, and community management platforms.",
 		color: "bg-purple-50 border-purple-200 text-purple-600",
 		badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
 		icon: ShieldCheck,
-		impact: "Engineered SIAPPS core platform serving 5M+ active users",
+		impact:
+			"Delivered digital lending, regional bank insurance platform, and SIAPPS for 5M+ members",
 		positions: [
 			{
 				title: "Chief Technology Officer",
-				period: "Apr 2023 – Oct 2024",
+				period: "Apr 2023 - Oct 2024",
 				responsibilities: [
-					"Led full fintech ecosystem development (LOS, LMS, Insurance Platform)",
-					"Directed architecture, security, and engineering execution",
-					"Built SIAPPS platform serving 5M+ users",
+					"Owned technology roadmap, cloud infrastructure, and engineering execution across all B2B fintech and enterprise platforms.",
+					"Delivered digital lending systems covering borrower onboarding, eKYC, underwriting, digital contract signing, disbursement, collections, and multi-bank integrations.",
+					"Led technical architecture for SIAPPS, a community management platform with registration, jobs, training, and social features for GP Ansor (5M+ members).",
 				],
 				highlights: [
-					"World CIO 200 Summit 2024 Winner (Indonesia – Next Gen Category)",
-					"Integrated multiple banks and payment gateways",
+					"Winner: World CIO 200 Summit 2024 (Indonesia Edition, Next-Gen Category)",
+					"Launched insurance platform connecting Reliance Group with 4 partner regional banks (100 to 150 active policies monthly)",
 				],
 				skills: [
-					"Core Banking",
-					"LOS / LMS",
-					"InsurTech",
-					"Microservices",
 					"Go",
 					"Node.js",
-					"Redis",
-					"DevOps",
-				],
-			},
-		],
-	},
-	{
-		company: "Cooderu",
-		legalName: "EdTech Startup Venture",
-		location: "Remote",
-		industry: "EdTech & Education",
-		fullOverview:
-			"Remote-first technology bootcamp focused on training career changers and aspiring software engineers in modern full-stack web and cloud architectures.",
-		color: "bg-amber-50 border-amber-200 text-amber-600",
-		badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-		icon: GraduationCap,
-		impact: "Graduated hundreds of career-ready full-stack software engineers",
-		positions: [
-			{
-				title: "Co-founder & CEO / Lead Instructor",
-				period: "Jan 2022 – Dec 2023",
-				responsibilities: [
-					"Founded and operated remote tech bootcamp",
-					"Designed full-stack curriculum (Node.js, React, APIs, Databases)",
-					"Led teaching, mentoring, and operations",
-				],
-				skills: [
-					"Full-Stack Curriculum",
-					"React",
-					"Node.js",
-					"REST APIs",
+					"Python",
 					"PostgreSQL",
-					"Technical Mentorship",
+					"REST APIs",
+					"Docker",
+					"LOS / LMS",
+					"InsurTech",
 				],
 			},
 		],
 	},
 	{
 		company: "Pinjam Modal",
-		legalName: "PT Finaccel Kreasi Indonesia",
-		location: "Indonesia – Remote",
-		industry: "P2P Lending & Fintech",
+		legalName: "PT Finansial Integrasi Teknologi",
+		location: "Tangerang, Indonesia (Remote)",
+		industry: "P2P Lending & Fintech (OJK Licensed)",
 		fullOverview:
-			"Licensed Indonesian P2P lending platform connecting SMEs and retail borrowers with productive capital, automated scoring, and rapid disbursement.",
+			"Licensed Indonesian P2P lending platform regulated by OJK, connecting SMEs and borrowers with automated credit scoring, approvals, and disbursement.",
 		color: "bg-emerald-50 border-emerald-200 text-emerald-600",
 		badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
 		icon: LayoutDashboard,
 		impact:
-			"Grew from junior developer to engineering manager scaling core LMS",
+			"Scaled from Full Stack Developer to Engineering Manager, cutting loan approvals to 5-10 seconds",
 		positions: [
 			{
 				title: "Software Engineering Manager",
-				period: "Jan 2022 – Apr 2023",
+				period: "Jan 2022 - Apr 2023",
 				responsibilities: [
-					"Led cross-functional engineering teams",
-					"Managed system architecture and sprint execution",
-					"Mentored junior and mid-level engineers",
+					"Managed seven engineers building lending services across automated credit scoring, approvals, disbursement, and repayment.",
+					"Led technical architecture reviews, code quality governance, and engineering mentorship across backend and frontend teams.",
 				],
-				highlights: ["Best Mentor Award 2021"],
+				highlights: [
+					"Accelerated release frequency from monthly deployments to bi-weekly releases (1-2 weeks) via sprint planning and risk reviews",
+					"Recipient of Best Mentor Award 2021",
+				],
 				skills: [
 					"Engineering Management",
 					"Agile / Scrum",
-					"System Design",
-					"Team Leadership",
+					"Architecture Reviews",
+					"Risk Governance",
+					"Sprint Planning",
 				],
 			},
 			{
 				title: "Senior Full Stack Developer",
-				period: "Oct 2020 – Jan 2022",
+				period: "Oct 2020 - Jan 2022",
 				responsibilities: [
-					"Built core lending system modules",
-					"Integrated KYC, credit scoring, and payment APIs",
+					"Developed modular lending microservices for KYC verification, credit scoring, and payment gateways with automated CI/CD deployment pipelines.",
+					"Maintained high-throughput transaction pipelines ensuring reliability and zero-data loss during peak disbursement hours.",
+				],
+				highlights: [
+					"Cut loan processing completion time from 30-60 minutes down to 5-10 seconds for automated approvals via asynchronous RabbitMQ pipeline",
+					"Reduced loan submission API latency from 5 seconds to 1 second through PostgreSQL query indexing and service refactoring",
 				],
 				skills: [
-					"Node.js",
-					"Vue.js / React",
-					"Dukcapil eKYC",
-					"Payment Gateways",
+					"RabbitMQ",
 					"PostgreSQL",
+					"Node.js",
+					"Microservices",
+					"CI/CD Pipelines",
+					"Credit Scoring",
 				],
 			},
 			{
 				title: "Full Stack Developer",
-				period: "Sep 2018 – Oct 2020",
+				period: "Sep 2018 - Oct 2020",
 				responsibilities: [
-					"Developed first-generation loan management system",
-					"Built internal dashboards and reporting tools",
+					"Implemented the company's first-generation core loan management system using Node.js, React, and PostgreSQL.",
+					"Developed internal operational dashboards for real-time loan tracking, user permission management, and daily financial reporting.",
 				],
-				highlights: ["Best Employee Award 2020"],
-				skills: ["PHP / Laravel", "JavaScript", "MySQL", "Reporting Engines"],
+				highlights: [
+					"Recipient of Best Employee Award 2020",
+					"Architected operational reporting dashboards with real-time portfolio health monitoring",
+				],
+				skills: [
+					"Node.js",
+					"React",
+					"PostgreSQL",
+					"REST APIs",
+					"Financial Reporting",
+				],
+			},
+		],
+	},
+	{
+		company: "Cooderu",
+		legalName: "PT Cakrawala Optimal Deru Edukasi",
+		location: "Remote, Indonesia",
+		industry: "EdTech & Software Engineering",
+		fullOverview:
+			"Remote coding academy delivering intensive three-month backend and frontend software engineering bootcamps.",
+		color: "bg-amber-50 border-amber-200 text-amber-600",
+		badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
+		icon: GraduationCap,
+		impact: "Trained 20 graduates in full-stack web and cloud architectures",
+		positions: [
+			{
+				title: "Co-founder & Lead Instructor (Part-time)",
+				period: "Jan 2022 - Dec 2023",
+				responsibilities: [
+					"Co-founded remote coding academy delivering intensive three-month backend and frontend software engineering bootcamps.",
+					"Designed full curriculum and trained 20 graduates in JavaScript, Node.js, React, relational databases, REST APIs, and cloud deployment.",
+				],
+				skills: [
+					"JavaScript",
+					"Node.js",
+					"React",
+					"PostgreSQL",
+					"REST APIs",
+					"Cloud Deployment",
+				],
 			},
 		],
 	},
@@ -269,6 +287,18 @@ export function WorkExperienceSkeleton() {
 										<div className="h-3 w-32 bg-slate-200 rounded animate-pulse" />
 									</div>
 								))}
+							</div>
+						</div>
+
+						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs space-y-3">
+							<div className="flex items-center gap-2 mb-1">
+								<div className="w-4 h-4 rounded bg-slate-200 animate-pulse" />
+								<div className="h-3 w-24 bg-slate-200 rounded animate-pulse" />
+							</div>
+							<div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1.5">
+								<div className="h-3.5 w-44 bg-slate-200 rounded animate-pulse" />
+								<div className="h-3 w-36 bg-slate-200 rounded animate-pulse" />
+								<div className="h-2.5 w-28 bg-slate-200 rounded animate-pulse" />
 							</div>
 						</div>
 
@@ -438,12 +468,14 @@ export default function WorkExperience({
 
 							<div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
 								{[
-									"Fintech Core",
+									"Engineering Strategy",
 									"LOS & LMS",
-									"BI-FAST Network",
-									"eKYC / Dukcapil",
-									"System Architecture",
-									"Engineering Org Scaling",
+									"Embedded Payments (QRIS)",
+									"Multi-Bank Integrations",
+									"KTP OCR & Parsers",
+									"Go & TypeScript",
+									"Kubernetes & ArgoCD",
+									"OJK Compliance",
 								].map((tag) => (
 									<span
 										key={tag}
@@ -469,7 +501,7 @@ export default function WorkExperience({
 										World CIO 200 Summit 2024
 									</p>
 									<p className="text-[11px] font-medium text-amber-800/80 mt-0.5">
-										Winner — Indonesia Next Gen Category
+										Winner: Indonesia Next Gen Category
 									</p>
 								</div>
 								<div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60">
@@ -488,6 +520,26 @@ export default function WorkExperience({
 										Pinjam Modal Core Platform
 									</p>
 								</div>
+							</div>
+						</div>
+
+						<div className="bg-white border border-slate-200/80 p-5 sm:p-6 rounded-2xl shadow-xs">
+							<div className="flex items-center gap-2 mb-3.5">
+								<GraduationCap className="w-4 h-4 text-indigo-600" />
+								<span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+									Education
+								</span>
+							</div>
+							<div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60">
+								<p className="text-xs font-bold text-slate-900">
+									Bachelor of Information Systems
+								</p>
+								<p className="text-[11px] font-medium text-slate-600 mt-0.5">
+									Del Institute of Technology
+								</p>
+								<p className="text-[10px] text-slate-400 mt-1">
+									Laguboti, Indonesia (2014 - 2018)
+								</p>
 							</div>
 						</div>
 

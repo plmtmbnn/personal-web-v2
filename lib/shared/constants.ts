@@ -14,10 +14,10 @@ export const SITE = {
 	tagline: "Engineering Systems. Miles Everywhere.",
 
 	/**
-	 * Long-form description — used as the default meta description.
+	 * Long-form description: used as the default meta description.
 	 * ~150 chars, keyword-rich for Google Search snippets.
 	 */
-	description: `Software engineer with ${EXPERIENCE_YEAR}+ years building reliable systems at scale — road runner, trail enthusiast, and hiker based in Indonesia.`,
+	description: `Engineering leader with ${EXPERIENCE_YEAR}+ years building fintech platforms, core lending systems, and scaling engineering organizations in Indonesia.`,
 
 	url: "https://polmatambunan.my.id",
 	locale: "en_US",
@@ -25,11 +25,9 @@ export const SITE = {
 	version: "0.1.7",
 };
 
-// ─── Author ────────────────────────────────────────────────────────────────────
-
 export const AUTHOR = {
 	name: "Polma Tambunan",
-	role: "Software Engineer",
+	role: "Engineering Leader",
 	location: "Toba, North Sumatra, Indonesia",
 	email: "plmtmbnn@gmail.com",
 	available: false,
@@ -56,30 +54,31 @@ export const SEO = {
 	 * Covers both engineering and running identity signals.
 	 */
 	baseKeywords: [
-		// Engineering identity
 		"Polma Tambunan",
-		"software engineer Indonesia",
+		"engineering leader",
+		"head of engineering",
+		"CTO Indonesia",
 		"fintech engineer",
-		"backend engineer",
-		"TypeScript developer",
-		"React developer",
-		"Next.js developer",
+		"software engineer Indonesia",
+		"lending platforms",
+		"LOS LMS",
+		"OJK compliance",
+		"embedded payments",
 		"system design",
 		"financial systems",
-		// Running & lifestyle identity
+		"TypeScript developer",
+		"Go developer",
+		"Next.js developer",
 		"distance runner Indonesia",
 		"trail runner",
 		"ultramarathon Indonesia",
 		"toba runner",
 		"running blog",
-		// Geo signals
 		"Toba Samosir",
 		"North Sumatra",
 		"Indonesia tech",
 	] as string[],
 };
-
-// ─── Social Links ──────────────────────────────────────────────────────────────
 
 export const SOCIAL_LINKS = {
 	github: "https://github.com/plmtmbnn",
@@ -87,9 +86,6 @@ export const SOCIAL_LINKS = {
 	twitter: "https://x.com/plmtmbnn",
 	strava: "https://www.strava.com/athletes/plmtmbnn",
 };
-
-// ─── Person Schema (JSON-LD) ───────────────────────────────────────────────────
-// Used in <script type="application/ld+json"> on the home page for rich results.
 
 export const PERSON_SCHEMA = {
 	"@context": "https://schema.org",

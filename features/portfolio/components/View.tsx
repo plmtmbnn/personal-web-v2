@@ -22,6 +22,7 @@ import {
 	TrendingUp,
 	LayoutDashboard,
 	ArrowUpRight,
+	Smartphone,
 } from "lucide-react";
 import PortfolioDetailModal, {
 	type PortfolioItem,
@@ -207,17 +208,68 @@ const losModules: PortfolioItem[] = [
 
 const otherProjects: PortfolioItem[] = [
 	{
+		id: "reliid-superapp",
+		icon: Smartphone,
+		title: "RELIID Super App",
+		desc: "Group mobile super app integrating multi-subsidiary financial services",
+		category: "Specialized Platform",
+		tagline:
+			"Cross-platform mobile super app published on Google Play Store and App Store",
+		fullDescription:
+			"Enterprise mobile super app for Reliance Group (holding company of RELIID) integrating lending, insurance, investment, and embedded payment products across group business units. Built with React Native, Expo, and Firebase, interfacing with a high-throughput Node.js TypeScript backend microservice architecture.",
+		capabilities: [
+			"Unified access to multi-subsidiary services across lending, insurance, and wealth products",
+			"Published on Google Play Store and Apple App Store with cross-platform feature parity",
+			"Firebase integration for authentication, push notifications, and real-time remote configuration",
+			"End-to-end Node.js & TypeScript backend integration orchestrating group APIs and secure data pipelines",
+		],
+		techHighlights: [
+			"React Native / Expo",
+			"Node.js / TypeScript",
+			"Firebase Services",
+			"App Store & Play Store",
+			"REST APIs / Webhooks",
+		],
+		metrics: "Official group super app published on iOS and Android",
+		themeColor: "purple",
+	},
+	{
+		id: "relipay-embedded-payments",
+		icon: CircleDollarSign,
+		title: "Relipay Embedded Payments",
+		desc: "Group payment system connected to SALDOMU for QRIS & interbank transfers",
+		category: "Specialized Platform",
+		tagline: "Embedded payment system powering group fintech subsidiaries",
+		fullDescription:
+			"Embedded payment platform integrated into the RELIID mobile application and holding ecosystem. Connected directly to SALDOMU to orchestrate national QRIS merchant acquiring, e-wallet top-ups, and automated interbank fund transfers across 5 subsidiaries.",
+		capabilities: [
+			"Standardized Indonesian QRIS payment acquiring and real-time webhook confirmation",
+			"Automated interbank transfers with account name inquiry validation",
+			"SALDOMU core integration for user balance management and payment escrow",
+			"High-availability payment webhook dispatcher with exponential backoff and replay protection",
+		],
+		techHighlights: [
+			"Go / Microservices",
+			"React Native (RELIID App)",
+			"SALDOMU Gateway",
+			"QRIS National Standard",
+			"PostgreSQL / Redis",
+		],
+		metrics: "Embedded payment system serving 5 group fintech subsidiaries",
+		themeColor: "purple",
+	},
+	{
 		id: "insurance-core",
 		icon: ShieldCheck,
 		title: "Insurance Core System",
 		desc: "End-to-end policy lifecycle, underwriting & claims platform",
 		category: "Specialized Platform",
-		tagline: "Comprehensive InsurTech backbone for life & general insurance",
+		tagline: "Platform connecting Reliance Group with 4 partner regional banks",
 		fullDescription:
-			"Enterprise insurance core management system handling product configuration, automated rating engines, premium quotation, policy issuance, endorsement, and digital claims processing.",
+			"Enterprise insurance core management system handling product configuration, rating engines, premium quotation, policy issuance, endorsement, and digital claims processing. Connects Reliance Group with 4 partner regional banks for automated billing, approvals, and claims settlement.",
 		capabilities: [
-			"Dynamic insurance product builder with custom benefit matrices",
-			"Automated rating & premium calculation engine",
+			"Direct connection with 4 partner regional banks for policy underwriting and billing",
+			"Automated rating & premium calculation engine with custom benefit matrices",
 			"Digital claims submission with hospital/TPA billing integration",
 			"B2B broker and agency hierarchy commission management",
 		],
@@ -227,7 +279,8 @@ const otherProjects: PortfolioItem[] = [
 			"TPA Gateway",
 			"Secure Document Vault",
 		],
-		metrics: "Manages policies for 500k+ insured members",
+		metrics:
+			"Processes 100 to 150 active policies monthly across 4 partner banks",
 		themeColor: "purple",
 	},
 	{
@@ -236,46 +289,48 @@ const otherProjects: PortfolioItem[] = [
 		title: "Standalone Tools",
 		desc: "High-speed OCR parser & intelligent bank statement extractor",
 		category: "Specialized Platform",
-		tagline: "Modular micro-utilities for automated document intelligence",
+		tagline: "Multi-bank statement parsers & automated Indonesian KTP OCR",
 		fullDescription:
-			"Independent microservices engineered to extract structured data from unstructured financial documents. Extracts transactions, balances, and identity attributes from PDF/scanned bank statements and Indonesian national IDs.",
+			"Independent financial microservices engineered to extract structured data from financial documents. Built multi-bank statement parsers for BCA, BRI, BNI, CIMB, and Permata reducing underwriting statement verification from 1-3 days down to under 5 minutes, alongside an automated Indonesian KTP OCR API accelerating borrower onboarding from 5 minutes to 2-4 seconds.",
 		capabilities: [
-			"Multi-bank statement PDF parser (BCA, Mandiri, BRI, BNI, CIMB)",
-			"High-resolution OCR preprocessing with deskewing and contrast normalization",
-			"Transaction categorization and income regularity scoring",
-			"RESTful API with HMAC authentication and SDK wrappers",
+			"Multi-bank statement PDF parser covering BCA, BRI, BNI, CIMB, and Permata",
+			"Underwriting statement verification accelerated from 1-3 days to <5 minutes",
+			"Indonesian KTP OCR API reducing form entry from 5 minutes to 2-4 seconds",
+			"RESTful API with HMAC authentication and automated microservice deployment",
 		],
 		techHighlights: [
-			"FastAPI / Node.js",
+			"FastAPI / Go",
 			"Tesseract / OpenCV",
 			"PDF Plumber Engine",
 			"Docker Containers",
 		],
-		metrics: "Processes multi-page bank statements in < 2 seconds",
+		metrics:
+			"Verification cut from 1-3 days to <5 mins; onboarding in 2-4 secs",
 		themeColor: "purple",
 	},
 	{
 		id: "organization-app",
 		icon: LayoutDashboard,
-		title: "Organization App",
-		desc: "Membership ecosystem, digital ID credentials & event platform",
+		title: "Community App (SIAPPS)",
+		desc: "Community management platform for GP Ansor serving 5M+ members",
 		category: "Specialized Platform",
-		tagline: "All-in-one institutional community and credential platform",
+		tagline:
+			"Institutional ecosystem with registration, jobs, training, and social tools",
 		fullDescription:
-			"Community super-app built for institutions and professional organizations. Delivers verifiable digital membership cards, tiered permissions, event ticketing with QR check-in, and member-to-member networking.",
+			"Large-scale community management super-app built for GP Ansor (5M+ members). Delivers registration, verifiable digital credentials, job recruitment boards, vocational training modules, event ticketing with QR check-in, and member networking.",
 		capabilities: [
-			"Cryptographic dynamic QR digital membership ID cards",
-			"Event management with real-time scanner check-in",
-			"Member directory with privacy-preserving contact exchange",
-			"Integrated notification announcements and fee collection",
+			"Large-scale member registration, digital ID credentials, and tiered role permissions",
+			"Integrated job recruitment board and vocational training pipelines",
+			"Event management with real-time QR scanner check-in",
+			"Scalable notification dispatch across nationwide regional branches",
 		],
 		techHighlights: [
+			"Go / Node.js",
 			"React Native / Expo",
-			"Supabase / PostgreSQL",
-			"Dynamic QR Code Engine",
+			"PostgreSQL / Redis",
 			"Push Notification Service",
 		],
-		metrics: "Serving 50k+ active organization members",
+		metrics: "Serving 5M+ members across nationwide regional chapters",
 		themeColor: "purple",
 	},
 	{
@@ -472,7 +527,7 @@ export default function PortfolioView({
 						<div className="flex items-center gap-4 sm:gap-5 shrink-0">
 							<div className="text-center">
 								<p className="text-xl font-extrabold text-slate-900 tabular-nums">
-									11+
+									13
 								</p>
 								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
 									Systems
@@ -481,7 +536,7 @@ export default function PortfolioView({
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
 								<p className="text-xl font-extrabold text-indigo-600 tabular-nums">
-									80%
+									54%
 								</p>
 								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
 									Fintech
@@ -490,7 +545,7 @@ export default function PortfolioView({
 							<div className="w-px h-8 bg-slate-100" />
 							<div className="text-center">
 								<p className="text-xl font-extrabold text-purple-600 tabular-nums">
-									20%
+									46%
 								</p>
 								<p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
 									Platforms
@@ -521,7 +576,7 @@ export default function PortfolioView({
 										aria-label="Project Distribution Chart"
 										role="img"
 									>
-										{/* LOS & LMS (80%) */}
+										{/* LOS & LMS (54%) */}
 										<motion.circle
 											cx="100"
 											cy="100"
@@ -531,10 +586,10 @@ export default function PortfolioView({
 											strokeWidth={30}
 											initial={false}
 											className="text-indigo-600 cursor-pointer"
-											strokeDasharray="402 502"
+											strokeDasharray="271 503"
 											role="button"
 											tabIndex={0}
-											aria-label="Show LOS & LMS systems (80%)"
+											aria-label="Show LOS & LMS systems (54%)"
 											animate={{
 												strokeWidth: activeSlice === 0 ? 38 : 30,
 												opacity:
@@ -559,7 +614,7 @@ export default function PortfolioView({
 											onMouseEnter={() => setActiveSlice(0)}
 											onMouseLeave={() => setActiveSlice(null)}
 										/>
-										{/* Other (20%) */}
+										{/* Other (46%) */}
 										<motion.circle
 											cx="100"
 											cy="100"
@@ -569,11 +624,11 @@ export default function PortfolioView({
 											strokeWidth={30}
 											initial={false}
 											className="text-purple-600 cursor-pointer"
-											strokeDasharray="100 502"
-											strokeDashoffset="-402"
+											strokeDasharray="232 503"
+											strokeDashoffset="-271"
 											role="button"
 											tabIndex={0}
-											aria-label="Show notable platforms (20%)"
+											aria-label="Show notable platforms (46%)"
 											animate={{
 												strokeWidth: activeSlice === 1 ? 38 : 30,
 												opacity:
@@ -627,10 +682,10 @@ export default function PortfolioView({
 													}`}
 												>
 													{activeSlice === 0
-														? "80%"
+														? "54%"
 														: activeSlice === 1
-															? "20%"
-															: "11+"}
+															? "46%"
+															: "13"}
 												</span>
 												<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
 													{activeSlice === 0
@@ -674,7 +729,7 @@ export default function PortfolioView({
 											</span>
 										</div>
 										<span className="text-xs font-extrabold text-slate-900">
-											80%
+											54%
 										</span>
 									</motion.button>
 
@@ -706,7 +761,7 @@ export default function PortfolioView({
 											</span>
 										</div>
 										<span className="text-xs font-extrabold text-slate-900">
-											20%
+											46%
 										</span>
 									</motion.button>
 								</div>
@@ -850,7 +905,7 @@ export default function PortfolioView({
 											Notable Platforms
 										</h2>
 										<p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
-											Specialized Ecosystems (4 platforms)
+											Specialized Ecosystems (6 platforms)
 										</p>
 									</div>
 								</div>

@@ -1,5 +1,7 @@
 "use client";
 
+import type { EntryRequest } from "../utils/paper-risk";
+
 import {
 	createContext,
 	useContext,
@@ -154,11 +156,19 @@ interface ScreenerContextType {
 			highestPriceTraced?: number;
 			lowestPriceTraced?: number;
 		},
-	) => StockPick;
-	updateStockPick: (id: string, updates: Partial<StockPick>) => void;
+		request: EntryRequest,
+	) => Promise<string | null>;
+	updateStockPick: (
+		id: string,
+		updates: Partial<StockPick>,
+		request: EntryRequest,
+	) => Promise<string | null>;
 	removeStockPick: (id: string) => void;
 	closeStockPick: (id: string, exitPrice?: number) => void;
-	closeStockPickWithDetails: (id: string, payload: ClosePickPayload) => void;
+	closeStockPickWithDetails: (
+		id: string,
+		payload: ClosePickPayload,
+	) => Promise<string | null>;
 	reopenStockPick: (id: string) => void;
 	resetPickWatermarks: (id: string, currentPrice?: number) => void;
 	resetToDemoPicks: () => void;
@@ -517,7 +527,7 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	const addStockPick = useCallback(
-		(
+		async (
 			data: Omit<
 				StockPick,
 				| "id"
@@ -530,6 +540,7 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 				highestPriceTraced?: number;
 				lowestPriceTraced?: number;
 			},
+			request: EntryRequest,
 		) => {
 			const now = Date.now();
 			const newId =
@@ -563,62 +574,39 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 				updatedAt: now,
 			};
 
-			const updated = [
-				newPick,
-				...stockPicks.filter((p) => p.id !== newPick.id),
-			];
-			savePicks(updated);
-			saveCloudStockPickAction(newPick)
-				.then((res) => {
-					if (!res.success && res.error) setCloudSyncError(res.error);
-				})
-				.catch((err) => {
-					setCloudSyncError(err instanceof Error ? err.message : "Cloud error");
-				});
-			return newPick;
+			const result = await saveCloudStockPickAction(newPick, request);
+			if (!result.success || !result.data)
+				return result.error ?? "Paper entry could not be saved.";
+			savePicks([
+				result.data,
+				...stockPicksRef.current.filter((pick) => pick.id !== newId),
+			]);
+			return null;
 		},
-		[stockPicks, savePicks],
+		[savePicks],
 	);
 
 	const updateStockPick = useCallback(
-		(id: string, updates: Partial<StockPick>) => {
-			const updated = stockPicks.map((pick) => {
-				if (pick.id !== id) return pick;
-				const newPick = { ...pick, ...updates, updatedAt: Date.now() };
-
-				// If buyPrice changed, adjust high/low watermarks if they violated new entry baseline
-				if (updates.buyPrice !== undefined && updates.buyPrice > 0) {
-					if (
-						!newPick.highestPriceTraced ||
-						newPick.highestPriceTraced < updates.buyPrice
-					) {
-						newPick.highestPriceTraced = updates.buyPrice;
-					}
-					if (
-						!newPick.lowestPriceTraced ||
-						newPick.lowestPriceTraced > updates.buyPrice
-					) {
-						newPick.lowestPriceTraced = updates.buyPrice;
-					}
-				}
-
-				return newPick;
-			});
-			savePicks(updated);
-			const target = updated.find((p) => p.id === id);
-			if (target) {
-				saveCloudStockPickAction(target)
-					.then((res) => {
-						if (!res.success && res.error) setCloudSyncError(res.error);
-					})
-					.catch((err) => {
-						setCloudSyncError(
-							err instanceof Error ? err.message : "Cloud error",
-						);
-					});
-			}
+		async (id: string, updates: Partial<StockPick>, request: EntryRequest) => {
+			const previous = stockPicksRef.current.find((pick) => pick.id === id);
+			if (!previous) return "Paper position not found.";
+			const next = { ...previous, ...updates, updatedAt: Date.now() };
+			next.highestPriceTraced = Math.max(
+				next.highestPriceTraced,
+				next.buyPrice,
+			);
+			next.lowestPriceTraced = Math.min(next.lowestPriceTraced, next.buyPrice);
+			const result = await saveCloudStockPickAction(next, request);
+			if (!result.success || !result.data)
+				return result.error ?? "Paper position could not be saved.";
+			savePicks(
+				stockPicksRef.current.map((pick) =>
+					pick.id === id ? result.data! : pick,
+				),
+			);
+			return null;
 		},
-		[stockPicks, savePicks],
+		[savePicks],
 	);
 
 	const removeStockPick = useCallback(
@@ -636,40 +624,10 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 		[stockPicks, savePicks],
 	);
 
-	const closeStockPick = useCallback(
-		(id: string, exitPrice?: number) => {
-			const updated = stockPicks.map((pick) => {
-				if (pick.id !== id) return pick;
-				const closedPrice = exitPrice || pick.buyPrice;
-				const realizedPlPct =
-					pick.buyPrice > 0
-						? ((closedPrice - pick.buyPrice) / pick.buyPrice) * 100
-						: 0;
-				const totalShares = (pick.quantityLots || 1) * 100;
-				const realizedPlNominal = (closedPrice - pick.buyPrice) * totalShares;
-
-				const closedPick: StockPick = {
-					...pick,
-					status: "closed" as const,
-					closedPrice,
-					closedDate: new Date().toISOString().split("T")[0],
-					realizedPlPct,
-					realizedPlNominal,
-					exitReason: "manual_profit",
-					updatedAt: Date.now(),
-				};
-				saveCloudStockPickAction(closedPick).catch(() => {});
-				return closedPick;
-			});
-			savePicks(updated);
-		},
-		[stockPicks, savePicks],
-	);
-
 	const closeStockPickWithDetails = useCallback(
-		(id: string, payload: ClosePickPayload) => {
+		async (id: string, payload: ClosePickPayload) => {
 			const targetPick = stockPicks.find((p) => p.id === id);
-			if (!targetPick) return;
+			if (!targetPick) return "Active paper position not found.";
 
 			const totalShares = (targetPick.quantityLots || 1) * 100;
 			const exitPrice = payload.exitPrice || targetPick.buyPrice;
@@ -711,34 +669,40 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 						100
 					: 0;
 
-			const updatedPick: StockPick = {
-				...targetPick,
-				status: "closed",
-				closedPrice: exitPrice,
-				closedDate: exitDate,
-				realizedPlNominal,
-				realizedPlPct,
-				exitReason: payload.exitReason,
-				exitNotes: payload.exitNotes,
-				updatedAt: Date.now(),
-			};
-
-			const updated = stockPicks.map((p) => (p.id === id ? updatedPick : p));
-			savePicks(updated);
-
-			// Asynchronously push snapshot to Supabase cloud
-			closeCloudStockPickAction(id, {
+			const result = await closeCloudStockPickAction(id, {
 				...payload,
 				exitPrice,
 				exitDate,
-				holdingDays,
 				peakGainPct,
 				maxDrawdownPct,
+				holdingDays,
 				realizedPlNominal,
 				realizedPlPct,
-			}).catch(() => {});
+			}).catch(() => ({
+				success: false,
+				error: "Failed to close paper position",
+			}));
+			if (!result.success) {
+				setCloudSyncError(result.error ?? "Failed to close paper position");
+				return result.error ?? "Failed to close paper position";
+			}
+			await refreshPicksFromCloud();
+			return null;
 		},
-		[stockPicks, savePicks],
+		[stockPicks, refreshPicksFromCloud],
+	);
+
+	const closeStockPick = useCallback(
+		(id: string, exitPrice?: number) => {
+			const pick = stockPicksRef.current.find((item) => item.id === id);
+			if (!pick) return;
+			const price = exitPrice ?? pick.buyPrice;
+			void closeStockPickWithDetails(id, {
+				exitPrice: price,
+				exitReason: price >= pick.buyPrice ? "manual_profit" : "manual_cut",
+			});
+		},
+		[closeStockPickWithDetails],
 	);
 
 	const reopenStockPick = useCallback(
@@ -785,33 +749,48 @@ export function ScreenerProvider({ children }: { children: ReactNode }) {
 	);
 
 	const resetToDemoPicks = useCallback(async () => {
-		savePicks(DEFAULT_DEMO_PICKS);
+		let failure: string | undefined;
 		for (const pick of DEFAULT_DEMO_PICKS) {
-			await saveCloudStockPickAction(pick).catch(() => {});
+			const result = await saveCloudStockPickAction(
+				pick,
+				undefined,
+				true,
+			).catch(() => ({ success: false, error: "Demo import failed" }));
+			if (!result.success) failure = result.error ?? "Demo import failed";
 		}
-	}, [savePicks]);
+		await refreshPicksFromCloud();
+		if (failure) setCloudSyncError(failure);
+	}, [refreshPicksFromCloud]);
 
-	const exportPicksToJson = useCallback(() => {
-		return JSON.stringify(stockPicks, null, 2);
-	}, [stockPicks]);
+	const exportPicksToJson = useCallback(
+		() => JSON.stringify(stockPicks, null, 2),
+		[stockPicks],
+	);
 
 	const importPicksFromJson = useCallback(
 		(jsonStr: string): boolean => {
 			try {
 				const parsed = JSON.parse(jsonStr);
-				if (Array.isArray(parsed) && parsed.length > 0) {
-					savePicks(parsed);
+				if (!Array.isArray(parsed) || parsed.length === 0) return false;
+				void (async () => {
+					let failure: string | undefined;
 					for (const pick of parsed) {
-						saveCloudStockPickAction(pick).catch(() => {});
+						const result = await saveCloudStockPickAction(
+							pick,
+							undefined,
+							true,
+						).catch(() => ({ success: false, error: "Import failed" }));
+						if (!result.success) failure = result.error ?? "Import failed";
 					}
-					return true;
-				}
-				return false;
-			} catch (_e) {
+					await refreshPicksFromCloud();
+					if (failure) setCloudSyncError(failure);
+				})();
+				return true;
+			} catch {
 				return false;
 			}
 		},
-		[savePicks],
+		[refreshPicksFromCloud],
 	);
 
 	// Modal Controls

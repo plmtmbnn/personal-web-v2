@@ -705,14 +705,14 @@ export default function MarketDataHub({
 									</div>
 								</div>
 
-								{/* Live Regime-Aligned IDX Alpha Shortlist */}
+								{/* Live IDX setups to review */}
 								{ihsgFlows?.topAlphaPicks &&
 									ihsgFlows.topAlphaPicks.length > 0 && (
 										<div className="space-y-3 pt-4 border-t border-slate-100">
 											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 												<div>
 													<span className="text-xs font-black text-slate-900 tracking-tight block">
-														Regime-Aligned IDX Alpha Shortlist
+														IDX setups to review
 													</span>
 													<span className="text-[11px] text-slate-500 font-medium">
 														Liquid institutional setups filtered by VWAP
@@ -775,7 +775,10 @@ export default function MarketDataHub({
 																</span>
 															</div>
 															<div className="flex justify-between text-slate-500">
-																<span>Target 1 ({pick.rrr}R):</span>
+																<span>
+																	Target 1 ({pick.rrr.toFixed(2)} net R
+																	{pick.rrr < 2 ? ", below minimum" : ""}):
+																</span>
 																<span className="font-mono font-bold text-emerald-700">
 																	Rp {pick.target1.toLocaleString("id-ID")}
 																</span>

@@ -1,3 +1,4 @@
+import { currentMarketInputs } from "../provenance";
 import type { InvestmentCompassData, CompassOutput } from "../../types";
 import {
 	DEFAULT_THRESHOLDS,
@@ -14,9 +15,10 @@ import { getUpcomingEvents, getCriticalPreAlerts } from "../../data/events";
 import { getHalvingCyclePhase, realizedVol, sma } from "../indicators";
 
 export function computeCompass(
-	data: InvestmentCompassData,
+	input: InvestmentCompassData,
 	thresholds: InvestmentThresholds = DEFAULT_THRESHOLDS,
 ): CompassOutput {
+	const data = currentMarketInputs(input);
 	// 1. Score Global Macro Liquidity
 	const globalRegime = scoreGlobalLiquidity(data, thresholds);
 
@@ -39,7 +41,7 @@ export function computeCompass(
 	const btcMa200 = sma(btcHistory, 200);
 	const btcAbove200 =
 		btcPrice != null && btcMa200 != null ? btcPrice >= btcMa200 : false;
-	const btcDominance = data.markets.cryptoGlobal?.btcDominance ?? 55;
+	const btcDominance = data.markets.cryptoGlobal?.btcDominance ?? null;
 
 	// 5. Derive Centralized Permissions Matrix
 	const permissions = derivePermissions(

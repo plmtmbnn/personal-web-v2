@@ -20,14 +20,17 @@ import {
 import { calculateStockTradePlan } from "../../utils/opportunityPredicates";
 import { useScreener } from "../../context/ScreenerContext";
 import AIInsights from "./AIInsights";
+import { ResearchEvidence } from "./ResearchEvidence";
 
 interface StockDetailDrawerProps {
 	stock?: ProcessedStock | null;
+	stockSession?: string | null;
 	onClose?: () => void;
 }
 
 export default function StockDetailDrawer({
 	stock: stockProp,
+	stockSession = null,
 	onClose: onCloseProp,
 }: StockDetailDrawerProps) {
 	const screener = useScreener();
@@ -141,6 +144,11 @@ export default function StockDetailDrawer({
 					<div className="p-6 flex-1 space-y-6">
 						{/* 1. Quantitative Signal Synthesis & 6-Factor Strip */}
 						<AIInsights stock={stock} />
+						<ResearchEvidence
+							key={stock.StockCode}
+							symbol={stock.StockCode}
+							stockSession={stockSession}
+						/>
 
 						{/* 2. Mechanical Trade Setup & Tick-Valid Risk Plan */}
 						<div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
@@ -159,7 +167,11 @@ export default function StockDetailDrawer({
 									</div>
 								</div>
 								<span className="text-[11px] font-mono font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-lg">
-									RRR {tradePlan.riskRewardRatio}:1
+									{tradePlan.netRiskRewardRatio == null
+										? "Net R:R unavailable"
+										: "Net R:R " +
+											tradePlan.netRiskRewardRatio.toFixed(2) +
+											":1"}
 								</span>
 							</div>
 
@@ -171,11 +183,11 @@ export default function StockDetailDrawer({
 									</span>
 									<span className="text-xs sm:text-sm font-black font-mono text-slate-900 mt-1 block">
 										{tradePlan.entryLow === tradePlan.entryHigh
-											? `${tradePlan.entryHigh.toLocaleString()}`
-											: `${tradePlan.entryLow.toLocaleString()}-${tradePlan.entryHigh.toLocaleString()}`}
+											? `${tradePlan.entryHigh.toLocaleString("id-ID")}`
+											: `${tradePlan.entryLow.toLocaleString("id-ID")}-${tradePlan.entryHigh.toLocaleString("id-ID")}`}
 									</span>
 									<span className="text-[10px] font-semibold text-slate-500 mt-0.5 block">
-										VWAP {vwapPrice.toLocaleString()}
+										VWAP {vwapPrice.toLocaleString("id-ID")}
 									</span>
 								</div>
 
@@ -186,7 +198,7 @@ export default function StockDetailDrawer({
 										<span>Stop-Loss</span>
 									</div>
 									<span className="text-xs sm:text-sm font-black font-mono text-rose-800 mt-1 block">
-										{tradePlan.stopLoss.toLocaleString()}
+										{tradePlan.stopLoss.toLocaleString("id-ID")}
 									</span>
 									<span className="text-[10px] font-bold text-rose-600 mt-0.5 block">
 										{tradePlan.stopLossPct.toFixed(2)}% risk
@@ -200,13 +212,13 @@ export default function StockDetailDrawer({
 										<span>Target 1 (2R)</span>
 									</div>
 									<span className="text-xs sm:text-sm font-black font-mono text-emerald-800 mt-1 block">
-										{tradePlan.target1.toLocaleString()}{" "}
+										{tradePlan.target1.toLocaleString("id-ID")}{" "}
 										<span className="text-[10px] font-bold text-emerald-600">
 											(+{tradePlan.target1Pct.toFixed(1)}%)
 										</span>
 									</span>
 									<span className="text-[10px] font-bold text-emerald-700 mt-0.5 block">
-										T2 (3R): {tradePlan.target2.toLocaleString()}
+										Target 2: {tradePlan.target2.toLocaleString("id-ID")}
 									</span>
 								</div>
 							</div>
@@ -306,8 +318,8 @@ export default function StockDetailDrawer({
 											<span>Daily Turnover Velocity</span>
 											{stock.High10D && stock.Low10D && (
 												<span className="text-slate-700 font-mono">
-													10D: {stock.Low10D.toLocaleString()}-
-													{stock.High10D.toLocaleString()}
+													10D: {stock.Low10D.toLocaleString("id-ID")}-
+													{stock.High10D.toLocaleString("id-ID")}
 												</span>
 											)}
 										</div>
@@ -321,7 +333,7 @@ export default function StockDetailDrawer({
 													<div
 														key={sess.d}
 														className="flex-1 h-full flex flex-col justify-end items-center"
-														title={`${sess.d}: Rp ${fmtIDRValue(sess.val)} | Close ${sess.c.toLocaleString()}`}
+														title={`${sess.d}: Rp ${fmtIDRValue(sess.val)} | Close ${sess.c.toLocaleString("id-ID")}`}
 													>
 														<div
 															style={{ height: `${heightPct}%` }}
@@ -367,7 +379,7 @@ export default function StockDetailDrawer({
 											Open
 										</p>
 										<p className="text-sm font-black text-slate-800 mt-0.5 font-mono">
-											{stock.OpenPrice.toLocaleString()}
+											{stock.OpenPrice.toLocaleString("id-ID")}
 										</p>
 									</div>
 									<div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -375,7 +387,7 @@ export default function StockDetailDrawer({
 											High
 										</p>
 										<p className="text-sm font-black text-emerald-600 mt-0.5 font-mono">
-											{stock.High.toLocaleString()}
+											{stock.High.toLocaleString("id-ID")}
 										</p>
 									</div>
 									<div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -383,7 +395,7 @@ export default function StockDetailDrawer({
 											Low
 										</p>
 										<p className="text-sm font-black text-rose-600 mt-0.5 font-mono">
-											{stock.Low.toLocaleString()}
+											{stock.Low.toLocaleString("id-ID")}
 										</p>
 									</div>
 									<div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -391,7 +403,7 @@ export default function StockDetailDrawer({
 											Prev Close
 										</p>
 										<p className="text-sm font-black text-slate-700 mt-0.5 font-mono">
-											{stock.Previous.toLocaleString()}
+											{stock.Previous.toLocaleString("id-ID")}
 										</p>
 									</div>
 								</div>
@@ -403,7 +415,7 @@ export default function StockDetailDrawer({
 										ARA Ceiling (+{limits.araPct.toFixed(0)}%)
 									</p>
 									<p className="text-sm font-black text-emerald-800 mt-0.5 font-mono">
-										{stock.ARALimitPrice.toLocaleString()} IDR
+										{stock.ARALimitPrice.toLocaleString("id-ID")} IDR
 									</p>
 								</div>
 								<div className="bg-rose-50/60 p-3 rounded-xl border border-rose-100">
@@ -411,7 +423,7 @@ export default function StockDetailDrawer({
 										ARB Floor ({limits.arbPct.toFixed(0)}%)
 									</p>
 									<p className="text-sm font-black text-rose-800 mt-0.5 font-mono">
-										{stock.ARBLimitPrice.toLocaleString()} IDR
+										{stock.ARBLimitPrice.toLocaleString("id-ID")} IDR
 									</p>
 								</div>
 							</div>
@@ -460,8 +472,8 @@ export default function StockDetailDrawer({
 										Volume &amp; Frequency
 									</span>
 									<span className="text-xs font-black text-slate-900 font-mono">
-										{fmtLots(stock.Volume)} ({stock.Frequency.toLocaleString()}{" "}
-										tx)
+										{fmtLots(stock.Volume)} (
+										{stock.Frequency.toLocaleString("id-ID")} tx)
 									</span>
 								</div>
 								<div className="flex justify-between items-center py-1.5 border-b border-slate-50">

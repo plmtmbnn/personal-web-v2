@@ -17,7 +17,7 @@ interface DefiLlamaChartPoint {
  */
 export async function fetchStablecoinSupply30d(
 	policy: FetchPolicy,
-): Promise<{ totalUsd: number; change30dPct: number } | null> {
+): Promise<{ totalUsd: number; change30dPct: number; asOf: number } | null> {
 	const url = "https://stablecoins.llama.fi/stablecoincharts/all";
 
 	try {
@@ -51,12 +51,14 @@ export async function fetchStablecoinSupply30d(
 						: typeof pt.date === "string"
 							? Math.floor(new Date(pt.date).getTime() / 1000)
 							: 0;
-				validPoints.push({ date: dateNum, usd });
+				if (Number.isFinite(dateNum) && dateNum > 0)
+					validPoints.push({ date: dateNum, usd });
 			}
 		}
 
 		if (validPoints.length < 31) return null;
 
+		validPoints.sort((a, b) => a.date - b.date);
 		const latest = validPoints[validPoints.length - 1];
 		// Target point ~30 days prior (approx 30 entries if daily, or find by timestamp)
 		const targetSeconds = latest.date - 30 * 86400;
@@ -77,6 +79,7 @@ export async function fetchStablecoinSupply30d(
 		return {
 			totalUsd: latest.usd,
 			change30dPct,
+			asOf: latest.date,
 		};
 	} catch (e) {
 		console.warn("[DefiLlama] Failed to fetch stablecoin stats:", e);

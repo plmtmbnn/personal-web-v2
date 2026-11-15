@@ -1,3 +1,4 @@
+import { netTradeRisk } from "./paper-risk";
 import type {
 	OpportunityCategory,
 	ProcessedStock,
@@ -430,8 +431,9 @@ export function calculateStockTradePlan(stock: ProcessedStock): StockTradePlan {
 		target2 = Math.min(target2, stock.ARALimitPrice);
 	}
 
-	if (target1 <= close) target1 = close + tick * 2;
-	if (target2 <= target1) target2 = target1 + tick * 2;
+	if (target1 <= close) target1 = roundToIdxTick(close + tick * 2, "up");
+	if (!isScalp && target2 <= target1)
+		target2 = roundToIdxTick(target1 + tick * 2, "up");
 
 	const stopLossPct =
 		close > 0 ? Number((((stopLoss - close) / close) * 100).toFixed(2)) : 0;
@@ -463,6 +465,8 @@ export function calculateStockTradePlan(stock: ProcessedStock): StockTradePlan {
 			"High-velocity tactical setup; enforce strict hard stop and lock partial gains at Target 1.";
 	}
 
+	const net =
+		stock.Close > 0 ? netTradeRisk(entryHigh, stopLoss, target1) : null;
 	return {
 		entryLow,
 		entryHigh,
@@ -473,6 +477,8 @@ export function calculateStockTradePlan(stock: ProcessedStock): StockTradePlan {
 		target2,
 		target2Pct,
 		riskRewardRatio,
+		netRiskRewardRatio: net?.ratio ?? null,
+		netLossPerShare: net?.loss ?? null,
 		setupBucket,
 		setupNote,
 	};

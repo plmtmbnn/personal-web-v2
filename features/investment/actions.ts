@@ -1,3 +1,5 @@
+import { jakartaDate } from "@/services/market-data/provenance";
+import { applyMarketProvenance } from "./lib/provenance";
 import { redis, CACHE_KEYS } from "@/lib/core/redis";
 import { revalidatePath, unstable_cache } from "next/cache";
 import type {
@@ -23,7 +25,7 @@ import type {
 	PriceHistorySeries,
 	CryptoFlowsSnapshot,
 } from "@/services/market-data/types";
-import { fetchBitcoinMvrv } from "@/services/market-data/onchain";
+import { fetchBitcoinMvrvObservation } from "@/services/market-data/onchain";
 import { fetchIhsgForeignFlow } from "@/services/market-data/idx-flows";
 
 /**
@@ -75,10 +77,18 @@ async function getMarketQuotes(
 				cacheKey,
 			);
 			if (cachedRaw) {
-				const cached =
+				const cached: Record<string, MarketQuote> =
 					typeof cachedRaw === "string" ? JSON.parse(cachedRaw) : cachedRaw;
 				if (cached && Object.keys(cached).length > 0) {
-					return { quotes: cached, sourceOk: true };
+					return {
+						quotes: Object.fromEntries(
+							Object.entries(cached).map(([id, q]) => [
+								id,
+								{ ...q, origin: q.origin === "backup" ? "backup" : "cache" },
+							]),
+						),
+						sourceOk: true,
+					};
 				}
 			}
 		} catch (e) {
@@ -134,7 +144,11 @@ async function getMarketQuotes(
 				q = yahooResults.find((y) => y.id === inst.id)?.quote;
 			}
 			if (q) {
-				quotesRecord[inst.id] = q;
+				quotesRecord[inst.id] = {
+					...q,
+					origin: "live",
+					retrievedAt: new Date().toISOString(),
+				};
 			}
 		}
 
@@ -151,7 +165,15 @@ async function getMarketQuotes(
 			console.warn("[Investment] Failed reading quotes backup for merge:", e);
 		}
 
-		const mergedQuotes = { ...existingBackup, ...quotesRecord };
+		const mergedQuotes = {
+			...Object.fromEntries(
+				Object.entries(existingBackup).map(([id, q]) => [
+					id,
+					{ ...q, origin: "backup" as const },
+				]),
+			),
+			...quotesRecord,
+		};
 		const freshCount = Object.keys(quotesRecord).length;
 		const totalMergedCount = Object.keys(mergedQuotes).length;
 
@@ -176,9 +198,18 @@ async function getMarketQuotes(
 			backupKey,
 		);
 		if (backup) {
-			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
+			const parsed: Record<string, MarketQuote> =
+				typeof backup === "string" ? JSON.parse(backup) : backup;
 			if (parsed && Object.keys(parsed).length > 0) {
-				return { quotes: parsed, sourceOk: false }; // false = using stale backup
+				return {
+					quotes: Object.fromEntries(
+						Object.entries(parsed).map(([id, q]) => [
+							id,
+							{ ...q, origin: "backup" },
+						]),
+					),
+					sourceOk: false,
+				}; // false = using stale backup
 			}
 		}
 	} catch (e) {
@@ -200,7 +231,19 @@ async function getCryptoGlobalData(
 	if (!forceRefresh) {
 		try {
 			const cached = await redis.get(cacheKey);
-			if (cached) return { data: cached, sourceOk: true };
+			if (cached)
+				return {
+					data: Object.fromEntries(
+						Object.entries(cached).map(([id, series]) => [
+							id,
+							{
+								...series,
+								origin: series.origin === "backup" ? "backup" : "cache",
+							},
+						]),
+					),
+					sourceOk: true,
+				};
 		} catch (e) {
 			console.warn("[Investment] Crypto Global cache read failed:", e);
 		}
@@ -212,9 +255,14 @@ async function getCryptoGlobalData(
 			fresh: forceRefresh,
 		});
 		if (globalData) {
-			await redis.set(cacheKey, JSON.stringify(globalData), { ex: 900 }); // 15 min TTL
-			await redis.set(backupKey, JSON.stringify(globalData));
-			return { data: globalData, sourceOk: true };
+			const snapshot = {
+				...globalData,
+				origin: "live",
+				retrievedAt: new Date().toISOString(),
+			};
+			await redis.set(cacheKey, JSON.stringify(snapshot), { ex: 900 }); // 15 min TTL
+			await redis.set(backupKey, JSON.stringify(snapshot));
+			return { data: snapshot, sourceOk: true };
 		}
 	} catch (e) {
 		console.warn("[Investment] Live Crypto Global fetch failed:", e);
@@ -222,7 +270,11 @@ async function getCryptoGlobalData(
 
 	try {
 		const backup = await redis.get(backupKey);
-		if (backup) return { data: backup, sourceOk: false };
+		if (backup)
+			return {
+				data: { ...(backup as object), origin: "backup" },
+				sourceOk: false,
+			};
 	} catch (e) {
 		console.warn("[Investment] Crypto Global backup read failed:", e);
 	}
@@ -243,7 +295,18 @@ async function getMacroData(
 		try {
 			const cached = await redis.get<Record<string, MacroSeries>>(cacheKey);
 			if (cached && Object.keys(cached).length > 0) {
-				return { data: cached, sourceOk: true };
+				return {
+					data: Object.fromEntries(
+						Object.entries(cached).map(([id, series]) => [
+							id,
+							{
+								...series,
+								origin: series.origin === "backup" ? "backup" : "cache",
+							},
+						]),
+					),
+					sourceOk: true,
+				};
 			}
 		} catch (e) {
 			console.warn("[Investment] Macro cache read failed:", e);
@@ -281,7 +344,11 @@ async function getMacroData(
 				config.units ? { units: config.units } : undefined,
 			);
 			if (series) {
-				macroData[config.id] = series;
+				macroData[config.id] = {
+					...series,
+					origin: "live",
+					retrievedAt: new Date().toISOString(),
+				};
 			}
 		});
 
@@ -300,7 +367,15 @@ async function getMacroData(
 			console.warn("[Investment] Failed reading macro backup for merge:", e);
 		}
 
-		const mergedMacro = { ...existingBackup, ...macroData };
+		const mergedMacro = {
+			...Object.fromEntries(
+				Object.entries(existingBackup).map(([id, series]) => [
+					id,
+					{ ...series, origin: "backup" as const },
+				]),
+			),
+			...macroData,
+		};
 		const freshCount = Object.keys(macroData).length;
 		const totalMergedCount = Object.keys(mergedMacro).length;
 
@@ -319,9 +394,18 @@ async function getMacroData(
 			backupKey,
 		);
 		if (backup) {
-			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
+			const parsed: Record<string, MacroSeries> =
+				typeof backup === "string" ? JSON.parse(backup) : backup;
 			if (parsed && Object.keys(parsed).length > 0) {
-				return { data: parsed, sourceOk: false };
+				return {
+					data: Object.fromEntries(
+						Object.entries(parsed).map(([id, series]) => [
+							id,
+							{ ...series, origin: "backup" },
+						]),
+					),
+					sourceOk: false,
+				};
 			}
 		}
 	} catch (e) {
@@ -398,7 +482,8 @@ async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
 			const cached = await redis.get<CryptoFlowsSnapshot | string>(cacheKey);
 			if (cached) {
 				const parsed = typeof cached === "string" ? JSON.parse(cached) : cached;
-				if (parsed) return { data: parsed, sourceOk: true };
+				if (parsed)
+					return { data: { ...parsed, origin: "cache" }, sourceOk: true };
 			}
 		} catch (e) {
 			console.warn("[Investment] Crypto flows cache read failed:", e);
@@ -421,7 +506,12 @@ async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
 				stablecoin30dChangePct: stableData?.change30dPct ?? null,
 				btcFundingRate8hPct: okxData?.fundingRate8hPct ?? null,
 				btcOpenInterestUsd: okxData?.openInterestUsd ?? null,
+				stablecoinAsOf: stableData?.asOf,
+				fundingAsOf: okxData?.fundingAsOf,
+				fundingProvider: okxData?.fundingProvider,
 				updatedAt: Math.floor(Date.now() / 1000),
+				retrievedAt: new Date().toISOString(),
+				origin: "live",
 			};
 
 			await redis.set(cacheKey, JSON.stringify(snapshot), { ex: 900 }); // 15 min TTL
@@ -436,7 +526,8 @@ async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
 		const backup = await redis.get<CryptoFlowsSnapshot | string>(backupKey);
 		if (backup) {
 			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
-			if (parsed) return { data: parsed, sourceOk: false };
+			if (parsed)
+				return { data: { ...parsed, origin: "backup" }, sourceOk: false };
 		}
 	} catch (e) {
 		console.warn("[Investment] Crypto flows backup read failed:", e);
@@ -461,7 +552,7 @@ async function getCryptoOnChainData(forceRefresh: boolean): Promise<{
 			if (cached) {
 				const parsed = typeof cached === "string" ? JSON.parse(cached) : cached;
 				if (parsed && typeof parsed.mvrvZScore === "number") {
-					return { data: parsed, sourceOk: true };
+					return { data: { ...parsed, origin: "cache" }, sourceOk: true };
 				}
 			}
 		} catch (e) {
@@ -470,16 +561,19 @@ async function getCryptoOnChainData(forceRefresh: boolean): Promise<{
 	}
 
 	try {
-		const mvrv = await fetchBitcoinMvrv({
+		const mvrv = await fetchBitcoinMvrvObservation({
 			revalidate: 21600,
 			fresh: forceRefresh,
 		});
 
 		if (mvrv != null) {
 			const snapshot: CryptoOnChainSnapshot = {
-				mvrvZScore: mvrv,
-				mvrvRatio: mvrv,
+				mvrvZScore: mvrv.value,
+				mvrvRatio: mvrv.value,
+				asOf: mvrv.asOf ? new Date(mvrv.asOf * 1000).toISOString() : undefined,
 				updatedAt: Math.floor(Date.now() / 1000),
+				retrievedAt: new Date().toISOString(),
+				origin: "live",
 			};
 
 			await redis.set(cacheKey, JSON.stringify(snapshot), { ex: 21600 }); // 6 hour TTL
@@ -495,7 +589,7 @@ async function getCryptoOnChainData(forceRefresh: boolean): Promise<{
 		if (backup) {
 			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
 			if (parsed && typeof parsed.mvrvZScore === "number") {
-				return { data: parsed, sourceOk: false };
+				return { data: { ...parsed, origin: "backup" }, sourceOk: false };
 			}
 		}
 	} catch (e) {
@@ -534,6 +628,7 @@ async function getIhsgFlowsData(forceRefresh: boolean): Promise<{
  */
 export async function getInvestmentCompass(
 	forceRefresh = false,
+	idxAlreadySynced = false,
 ): Promise<InvestmentCompassData> {
 	if (forceRefresh) {
 		try {
@@ -560,7 +655,7 @@ export async function getInvestmentCompass(
 		getHistoryData(forceRefresh),
 		getCryptoFlowsData(forceRefresh),
 		getCryptoOnChainData(forceRefresh),
-		getIhsgFlowsData(forceRefresh),
+		getIhsgFlowsData(forceRefresh && !idxAlreadySynced),
 	]);
 
 	const crypto =
@@ -667,9 +762,38 @@ export async function getInvestmentCompass(
 	};
 
 	try {
+		applyMarketProvenance(compassData);
 		compassData.engineOutput = computeCompass(compassData);
+		compassData.snapshotId = compassData.fetchedAt;
 	} catch (e) {
 		console.error("[Investment] Failed to compute compass engine:", e);
+	}
+
+	const today = jakartaDate(compassData.fetchedAt);
+	try {
+		const priorKeys = Array.from({ length: 6 }, (_, i) =>
+			CACHE_KEYS.COMPASS_SNAPSHOT(
+				jakartaDate(Date.parse(compassData.fetchedAt) - (i + 1) * 86_400_000),
+			),
+		);
+		const previous = (
+			await redis.mget<InvestmentCompassData[]>(...priorKeys)
+		).find(
+			(item) =>
+				item?.fetchedAt &&
+				jakartaDate(item.fetchedAt) < today &&
+				item.engineOutput?.permissions.ihsg.mandate?.state,
+		);
+		const priorRegime = previous?.engineOutput?.permissions.ihsg.mandate?.state;
+		if (previous && priorRegime && previous.engineOutput) {
+			compassData.previousSnapshot = {
+				asOf: previous.fetchedAt,
+				regime: priorRegime,
+				score: previous.engineOutput.regimes.ihsg.score,
+			};
+		}
+	} catch (error) {
+		console.warn("[Investment] Prior snapshot unavailable", error);
 	}
 
 	return compassData;
@@ -677,6 +801,6 @@ export async function getInvestmentCompass(
 
 export const getCachedInvestmentCompass = unstable_cache(
 	async () => getInvestmentCompass(false),
-	["investment-compass-data"],
+	["investment-compass-data-v2"],
 	{ revalidate: 60, tags: ["compass-data"] },
 );

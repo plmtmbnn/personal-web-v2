@@ -134,7 +134,7 @@ describe("IDX Flows foreign telemetry logic", () => {
 			const result = await syncIdxStockSummary(true);
 
 			expect(result).toEqual({ success: true, count: 1 });
-			expect(saveStockData).toHaveBeenCalledWith(mockStocks, 43200);
+			expect(saveStockData).toHaveBeenCalledWith(mockStocks, 43200, "live");
 			expect(updateTickerHistoryRingBuffer).toHaveBeenCalledWith(mockStocks);
 
 			global.fetch = originalFetch;

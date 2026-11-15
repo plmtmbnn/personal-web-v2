@@ -10,6 +10,7 @@ import { ClosedTradesTelemetryStrip } from "./ClosedTradesTelemetryStrip";
 import { JournalFilterToolbar } from "./JournalFilterToolbar";
 import { ThesisAttributionCards } from "./ThesisAttributionCards";
 import { ClosedTradesTable } from "./ClosedTradesTable";
+import { WeeklyReview } from "./WeeklyReview";
 
 interface TradeJournalViewProps {
 	closedTrades: StockPickWithMetrics[];
@@ -73,6 +74,7 @@ export function TradeJournalView({
 		<div className="space-y-6 animate-in fade-in duration-300">
 			{/* 1. Closed Trades 4-Tier Telemetry Strip */}
 			<ClosedTradesTelemetryStrip summary={summary} />
+			<WeeklyReview trades={closedTrades} />
 
 			{/* 2. Filter & Search Toolbar */}
 			<JournalFilterToolbar

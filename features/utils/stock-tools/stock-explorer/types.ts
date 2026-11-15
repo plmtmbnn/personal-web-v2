@@ -1,3 +1,7 @@
+import type { ActionPermission } from "@/features/investment/types";
+import type { MarketEvidence } from "@/services/market-data/provenance";
+import type { TradeDecisionSnapshot } from "./utils/paper-risk";
+
 export interface IDXStock {
 	No: number;
 	IDStockSummary: number;
@@ -96,11 +100,22 @@ export interface StockTradePlan {
 	target2: number;
 	target2Pct: number;
 	riskRewardRatio: number;
+	netRiskRewardRatio?: number | null;
+	netLossPerShare?: number | null;
 	setupBucket: "core" | "swing" | "scalp";
 	setupNote: string;
 }
 
 export interface CompassBridgeSummary {
+	snapshotId?: string;
+	computedAt?: string;
+	session?: string;
+	coverage?: number;
+	permissions?: Record<
+		"core" | "swing" | "scalp",
+		{ status: ActionPermission; label: string; reason: string }
+	>;
+	stockEvidence?: MarketEvidence;
 	rawState: "risk_on" | "selective" | "defensive" | "stress" | "insufficient";
 	effectiveState:
 		| "risk_on"
@@ -142,6 +157,7 @@ export type AutoRejectionStatus =
 	| "Normal";
 
 export interface ProcessedStock extends IDXStock {
+	RelativeStrength?: number | null;
 	ForeignNet: number;
 	ForeignNetVol: number;
 	ChangePct: number;
@@ -223,6 +239,12 @@ export type StockPickThesis =
 	| "Custom";
 
 export interface StockPick {
+	decision?: TradeDecisionSnapshot;
+	review?: {
+		netPnlIdr: number;
+		actualRiskIdr: number | null;
+		realizedR: number | null;
+	};
 	id: string; // Unique UUID
 	stockCode: string; // e.g. "BBCA"
 	stockName: string;

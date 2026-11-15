@@ -1,3 +1,4 @@
+import { completedIdxSession } from "@/services/market-data/provenance";
 import { Redis } from "@upstash/redis";
 import { ENV_GLOBAL } from "@/lib/core/env";
 import type { AuthMode, AuthSession } from "@/features/auth/types";
@@ -47,11 +48,19 @@ export const CACHE_KEYS = {
 /**
  * Save stock data to Redis (12 hours TTL + perpetual backup).
  */
-export async function saveStockData(data: any[], ttlSeconds = 43200) {
+export async function saveStockData(
+	data: any[],
+	ttlSeconds = 43200,
+	origin: "live" | "unknown" = "unknown",
+) {
 	try {
 		const key = CACHE_KEYS.STOCK_SUMMARY;
 		const backupKey = CACHE_KEYS.STOCK_SUMMARY_BACKUP;
-		const value = JSON.stringify(data);
+		const value = JSON.stringify({
+			data,
+			origin,
+			retrievedAt: new Date().toISOString(),
+		});
 		// Save primary with 12h TTL and backup key indefinitely
 		await Promise.all([
 			redis.set(key, value, { ex: ttlSeconds }),
@@ -68,15 +77,34 @@ export async function saveStockData(data: any[], ttlSeconds = 43200) {
  * Retrieve stock data from Redis (checks primary cache first, then backup).
  */
 export async function getStockData(): Promise<any[] | null> {
+	return (await getStockDataSnapshot())?.data ?? null;
+}
+
+export async function getStockDataSnapshot(): Promise<{
+	data: any[];
+	origin: "cache" | "backup" | "unknown";
+	retrievedAt: string | null;
+} | null> {
 	try {
 		const key = CACHE_KEYS.STOCK_SUMMARY;
 		const backupKey = CACHE_KEYS.STOCK_SUMMARY_BACKUP;
 		let data = await redis.get<string>(key);
+		let origin: "cache" | "backup" = "cache";
 		if (!data) {
 			data = await redis.get<string>(backupKey);
+			origin = "backup";
 		}
 		if (!data) return null;
-		return typeof data === "string" ? JSON.parse(data) : data;
+		const value = typeof data === "string" ? JSON.parse(data) : data;
+		if (Array.isArray(value))
+			return { data: value, origin: "unknown", retrievedAt: null };
+		return Array.isArray(value?.data)
+			? {
+					data: value.data,
+					origin: value.origin === "live" ? origin : "unknown",
+					retrievedAt: value.retrievedAt ?? null,
+				}
+			: null;
 	} catch (error) {
 		console.error("Redis Get Stock Error:", error);
 		return null;
@@ -119,47 +147,10 @@ export async function updateTickerHistoryRingBuffer(stocks: any[]) {
 	try {
 		if (!stocks || !Array.isArray(stocks) || stocks.length === 0) return null;
 
-		let sessionDateStr = "";
-		const rawPayloadDate = stocks[0]?.Date;
-		if (rawPayloadDate && typeof rawPayloadDate === "string") {
-			const clean = rawPayloadDate.split("T")[0];
-			if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
-				sessionDateStr = clean;
-			}
-		}
-
-		const now = new Date();
-		const wibFormatter = new Intl.DateTimeFormat("en-US", {
-			timeZone: "Asia/Jakarta",
-			year: "numeric",
-			month: "2-digit",
-			day: "2-digit",
-			hour: "numeric",
-			hour12: false,
-		});
-		const parts = wibFormatter.formatToParts(now);
-		const currentYear = parts.find((p) => p.type === "year")?.value;
-		const currentMonth = parts.find((p) => p.type === "month")?.value;
-		const currentDay = parts.find((p) => p.type === "day")?.value;
-		const currentWibDateStr = `${currentYear}-${currentMonth}-${currentDay}`;
-		const wibHour = parseInt(
-			parts.find((p) => p.type === "hour")?.value ?? "0",
-			10,
+		const sessionDateStr = completedIdxSession(
+			stocks[0]?.Date,
+			new Date().toISOString(),
 		);
-
-		if (!sessionDateStr) {
-			sessionDateStr = currentWibDateStr;
-		}
-
-		const isToday = sessionDateStr === currentWibDateStr;
-		const isSessionActiveOrClosed = !isToday || wibHour >= 9;
-		const sessionDayOfWeek = new Date(
-			`${sessionDateStr}T12:00:00Z`,
-		).getUTCDay();
-		const isTradingDay =
-			sessionDayOfWeek !== 0 &&
-			sessionDayOfWeek !== 6 &&
-			isSessionActiveOrClosed;
 
 		let ringBuffer = (await getTickerHistoryRingBuffer()) || {};
 
@@ -171,7 +162,7 @@ export async function updateTickerHistoryRingBuffer(stocks: any[]) {
 			}
 		}
 
-		if (isTradingDay) {
+		if (sessionDateStr) {
 			const daySnapshot: Record<
 				string,
 				{
@@ -186,7 +177,12 @@ export async function updateTickerHistoryRingBuffer(stocks: any[]) {
 			> = {};
 
 			for (const stock of stocks) {
-				if (!stock?.StockCode) continue;
+				if (
+					!stock?.StockCode ||
+					completedIdxSession(stock.Date, new Date().toISOString()) !==
+						sessionDateStr
+				)
+					continue;
 				const vwap =
 					stock.Volume > 0
 						? stock.Value / stock.Volume

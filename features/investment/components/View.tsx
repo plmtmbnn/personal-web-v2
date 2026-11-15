@@ -20,6 +20,7 @@ import { computeCompass } from "../lib/engine/index";
 import { sma } from "../lib/indicators";
 
 import OverviewRegimes from "./OverviewRegimes";
+import { getIdxPosture } from "../lib/idx-posture";
 import ScenarioSandbox from "./ScenarioSandbox";
 import PermissionsMatrix from "./PermissionsMatrix";
 import MarketPlaybook from "./MarketPlaybook";
@@ -80,6 +81,13 @@ export default function InvestmentCompassView({
 		return data.engineOutput ?? computeCompass(data);
 	}, [data]);
 
+	const [linkedSnapshot, setLinkedSnapshot] = useState<string | null>(null);
+	useEffect(() => {
+		const id = new URLSearchParams(window.location.search).get("snapshot");
+		if (id && Number.isFinite(Date.parse(id))) setLinkedSnapshot(id);
+	}, []);
+	const posture = data ? getIdxPosture(data) : null;
+
 	// Extract primary signals for telemetry
 	const ihsgQuote = data?.markets.quotes.JKSE ?? data?.markets.quotes.IHSG;
 	const usdIdrQuote = data?.markets.quotes.USDIDR;
@@ -117,7 +125,7 @@ export default function InvestmentCompassView({
 		if (failed.length > 0 || stale.length > 0) {
 			return { label: "Partial", color: "bg-amber-500" };
 		}
-		return { label: "Live", color: "bg-emerald-500" };
+		return { label: "Current", color: "bg-emerald-500" };
 	}, [data?.sources]);
 
 	return (
@@ -221,30 +229,61 @@ export default function InvestmentCompassView({
 													<X className="w-3.5 h-3.5" />
 												</button>
 											</div>
-											<ul className="space-y-1.5 text-xs">
-												{Object.entries(data.sources).map(([key, s]) => (
+											<ul className="max-h-[55dvh] space-y-1.5 overflow-y-auto text-xs">
+												{Object.entries(data.sources).map(([key, source]) => (
 													<li
 														key={key}
-														className="flex items-center justify-between text-slate-600"
+														className="border-b border-slate-100 text-slate-700"
 													>
-														<span className="font-semibold">{s.label}</span>
-														<span
-															className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
-																s.ok
-																	? s.stale
-																		? "bg-amber-100 text-amber-800"
-																		: "bg-emerald-100 text-emerald-800"
-																	: "bg-rose-100 text-rose-800"
-															}`}
-														>
-															{s.ok ? (s.stale ? "Backup" : "Live") : "Offline"}
-														</span>
+														<details>
+															<summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 font-medium focus-visible:outline-2 focus-visible:outline-indigo-600">
+																<span>{source.label}</span>
+																<span>
+																	{source.ok
+																		? source.stale
+																			? "Partial"
+																			: "Current"
+																		: "Unavailable"}
+																</span>
+															</summary>
+															<ul className="max-h-40 space-y-2 overflow-auto pb-2">
+																{Object.entries(source.evidence ?? {}).map(
+																	([id, item]) => (
+																		<li key={id}>
+																			<p>
+																				{id}: {item.provider}, {item.origin},{" "}
+																				{item.status}
+																			</p>
+																			<p>
+																				{item.asOf
+																					? "Observed " + item.asOf.slice(0, 10)
+																					: "Observation date unknown"}
+																			</p>
+																			{item.retrievedAt && (
+																				<p>
+																					Retrieved{" "}
+																					{new Date(
+																						item.retrievedAt,
+																					).toLocaleString("en-GB", {
+																						timeZone: "Asia/Jakarta",
+																					})}{" "}
+																					WIB
+																				</p>
+																			)}
+																		</li>
+																	),
+																)}
+															</ul>
+														</details>
 													</li>
 												))}
 											</ul>
 											<div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-slate-400 font-medium">
-												Refreshed:{" "}
-												{new Date(data.fetchedAt).toLocaleTimeString()}
+												Computed{" "}
+												{new Date(data.fetchedAt).toLocaleString("en-GB", {
+													timeZone: "Asia/Jakarta",
+												})}{" "}
+												WIB
 											</div>
 										</div>
 									</>
@@ -430,6 +469,9 @@ export default function InvestmentCompassView({
 						globalRegime={engineOutput.regimes.global}
 						ihsgRegime={engineOutput.regimes.ihsg}
 						cryptoRegime={engineOutput.regimes.crypto}
+						ihsgPosture={posture}
+						previous={data?.previousSnapshot}
+						linkedSnapshot={linkedSnapshot}
 					/>
 				)}
 

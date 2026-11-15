@@ -9,7 +9,6 @@ import {
 	Layers,
 	FileText,
 	ArrowRight,
-	AlertTriangle,
 } from "lucide-react";
 import type {
 	ProcessedStock,
@@ -21,6 +20,12 @@ import type {
 import { fmtIDRPrice } from "../../stockpicks";
 import { getIdxPriceTick } from "../../utils";
 import { calculateStockTradePlan } from "../../utils/opportunityPredicates";
+import {
+	ENTRY_CHECK_LABELS,
+	evaluatePaperEntry,
+	type EntryRequest,
+} from "../../utils/paper-risk";
+import { jakartaDate, sessionDate } from "@/services/market-data/provenance";
 import { useScreener } from "../../context/ScreenerContext";
 
 interface StockpickModalProps {
@@ -30,19 +35,22 @@ interface StockpickModalProps {
 	stockToSimulate?: ProcessedStock | null;
 	availableStocks: ProcessedStock[];
 	compassBridge?: CompassBridgeSummary | null;
-	onSave: (data: {
-		id?: string;
-		stockCode: string;
-		stockName: string;
-		sector: Sector;
-		buyPrice: number;
-		quantityLots: number;
-		entryDate: string;
-		targetPrice?: number;
-		stopLossPrice?: number;
-		thesis?: StockPickThesis;
-		notes?: string;
-	}) => void;
+	onSave: (
+		data: {
+			id?: string;
+			stockCode: string;
+			stockName: string;
+			sector: Sector;
+			buyPrice: number;
+			quantityLots: number;
+			entryDate: string;
+			targetPrice?: number;
+			stopLossPrice?: number;
+			thesis?: StockPickThesis;
+			notes?: string;
+		},
+		request: EntryRequest,
+	) => Promise<string | null>;
 }
 
 const THESIS_OPTIONS: StockPickThesis[] = [
@@ -67,7 +75,7 @@ export default function StockpickModal({
 	compassBridge,
 	onSave,
 }: StockpickModalProps) {
-	const { accountEquityIdr } = useScreener();
+	const { accountEquityIdr, stockPicks } = useScreener();
 	const [tickerQuery, setTickerQuery] = useState("");
 	const [selectedStock, setSelectedStock] = useState<ProcessedStock | null>(
 		null,
@@ -81,17 +89,17 @@ export default function StockpickModal({
 	const [notes, setNotes] = useState<string>("");
 	const [error, setError] = useState<string | null>(null);
 
-	const activeRiskPct =
-		compassBridge && compassBridge.riskPerTradePct > 0
-			? compassBridge.riskPerTradePct
-			: 0.5;
+	const [overrideReason, setOverrideReason] = useState("");
+	const [saving, setSaving] = useState(false);
+	const activeRiskPct = compassBridge?.riskPerTradePct ?? 0;
 
 	// Synchronize initial state when modal opens
 	useEffect(() => {
 		if (!isOpen) return;
 
 		setError(null);
-		const today = new Date().toISOString().split("T")[0];
+		setOverrideReason("");
+		const today = jakartaDate(Date.now());
 
 		if (pickToEdit) {
 			setTickerQuery(pickToEdit.stockCode || "");
@@ -121,7 +129,7 @@ export default function StockpickModal({
 				plan.entryHigh ||
 				stockToSimulate.Close ||
 				stockToSimulate.Previous ||
-				1000;
+				0;
 			setBuyPrice(entry);
 			setEntryDate(today);
 
@@ -148,11 +156,22 @@ export default function StockpickModal({
 			setThesis(resolvedThesis);
 			setNotes(plan.setupNote);
 
-			// Auto-size initial lots from Compass Risk Per Trade %
-			const riskBudgetIdr = accountEquityIdr * (activeRiskPct / 100);
-			const riskPerLotIdr = Math.max(100, (entry - plan.stopLoss) * 100);
-			const sizedLots = Math.max(1, Math.floor(riskBudgetIdr / riskPerLotIdr));
-			setQuantityLots(sizedLots);
+			setQuantityLots(
+				evaluatePaperEntry({
+					entry,
+					stop: plan.stopLoss,
+					target: plan.target1,
+					lots: 0,
+					thesis: resolvedThesis,
+					equityIdr: accountEquityIdr,
+					posture: compassBridge,
+					turnover: stockToSimulate.Value,
+					current:
+						compassBridge?.stockEvidence?.status === "current" &&
+						sessionDate(stockToSimulate.Date) === compassBridge.session,
+					picks: stockPicks,
+				}).recommendedLots,
+			);
 		} else {
 			setTickerQuery("");
 			setSelectedStock(null);
@@ -170,7 +189,8 @@ export default function StockpickModal({
 		stockToSimulate,
 		availableStocks,
 		accountEquityIdr,
-		activeRiskPct,
+		compassBridge,
+		stockPicks,
 	]);
 
 	// Filter available stocks matching query
@@ -192,7 +212,7 @@ export default function StockpickModal({
 		setSelectedStock(stock);
 		setTickerQuery(stock.StockCode);
 		if (!buyPrice || buyPrice === 0) {
-			setBuyPrice(stock.Close || stock.Previous || 1000);
+			setBuyPrice(stock.Close || stock.Previous || 0);
 		}
 	};
 
@@ -205,74 +225,99 @@ export default function StockpickModal({
 		}
 	};
 
-	// Calculations for preview
 	const numTarget = Number(targetPrice);
 	const numStop = Number(stopLossPrice);
-	const simulatedOutlay = buyPrice * quantityLots * 100;
+	const checks = evaluatePaperEntry({
+		entry: buyPrice,
+		stop: numStop,
+		target: numTarget,
+		lots: quantityLots,
+		thesis,
+		equityIdr: accountEquityIdr,
+		posture: compassBridge,
+		turnover: selectedStock?.Value,
+		current:
+			compassBridge?.stockEvidence?.status === "current" &&
+			sessionDate(selectedStock?.Date) === compassBridge.session,
+		picks: stockPicks.filter((pick) => pick.id !== pickToEdit?.id),
+	});
+	const { recommendedLots } = checks;
+	const previewRrr =
+		checks.risk?.ratio == null ? null : Number(checks.risk.ratio.toFixed(2));
+	const simulatedOutlay =
+		(checks.risk?.outlay ?? buyPrice) * quantityLots * 100;
 
-	let previewRrr: number | null = null;
-	if (numTarget > buyPrice && numStop < buyPrice && buyPrice > 0) {
-		const reward = numTarget - buyPrice;
-		const risk = buyPrice - numStop;
-		if (risk > 0) {
-			previewRrr = Number((reward / risk).toFixed(2));
-		}
-	}
-
-	const recommendedLots = useMemo(() => {
-		if (!buyPrice || buyPrice <= 0 || !numStop || numStop >= buyPrice) {
-			return null;
-		}
-		const riskBudgetIdr = accountEquityIdr * (activeRiskPct / 100);
-		const riskPerLotIdr = Math.max(100, (buyPrice - numStop) * 100);
-		return Math.max(1, Math.floor(riskBudgetIdr / riskPerLotIdr));
-	}, [buyPrice, numStop, accountEquityIdr, activeRiskPct]);
-
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (saving) return;
 		const finalCode = selectedStock
 			? selectedStock.StockCode
 			: tickerQuery.trim().toUpperCase();
 
-		if (!finalCode) {
+		if (!/^[A-Z0-9]{1,10}$/.test(finalCode)) {
 			setError("Please select or enter a valid stock ticker symbol");
 			return;
 		}
 
-		if (!buyPrice || buyPrice <= 0) {
+		if (!Number.isFinite(buyPrice) || buyPrice <= 0) {
 			setError("Entry buying price must be greater than Rp 0");
 			return;
 		}
 
-		if (!quantityLots || quantityLots < 1) {
+		if (!Number.isInteger(quantityLots) || quantityLots < 1) {
 			setError("Quantity must be at least 1 lot (100 shares)");
 			return;
 		}
 
-		onSave({
-			id: pickToEdit?.id,
-			stockCode: finalCode,
-			stockName: selectedStock ? selectedStock.StockName : `${finalCode} Tbk`,
-			sector: selectedStock ? selectedStock.Sector : "Unknown",
-			buyPrice: Math.round(buyPrice),
-			quantityLots: Math.round(quantityLots),
-			entryDate: entryDate || new Date().toISOString().split("T")[0],
-			targetPrice: numTarget > 0 ? Math.round(numTarget) : undefined,
-			stopLossPrice: numStop > 0 ? Math.round(numStop) : undefined,
-			thesis,
-			notes: notes.trim() || undefined,
-		});
-
-		onClose();
+		if (
+			(targetPrice && (!Number.isFinite(numTarget) || numTarget <= 0)) ||
+			(stopLossPrice && (!Number.isFinite(numStop) || numStop <= 0))
+		) {
+			setError("Enter positive stop and target prices, or leave them blank.");
+			return;
+		}
+		if (!pickToEdit && checks.failed.length && !overrideReason.trim()) {
+			setError("Add a reason to save this paper entry with failed checks.");
+			return;
+		}
+		setError(null);
+		setSaving(true);
+		try {
+			const failure = await onSave(
+				{
+					id: pickToEdit?.id,
+					stockCode: finalCode,
+					stockName: selectedStock ? selectedStock.StockName : finalCode,
+					sector: selectedStock ? selectedStock.Sector : "Unknown",
+					buyPrice: buyPrice,
+					quantityLots: quantityLots,
+					entryDate: entryDate || jakartaDate(Date.now()),
+					targetPrice: numTarget > 0 ? numTarget : undefined,
+					stopLossPrice: numStop > 0 ? numStop : undefined,
+					thesis,
+					notes: notes.trim() || undefined,
+				},
+				{
+					equityIdr: accountEquityIdr,
+					overrideReason: overrideReason.trim() || undefined,
+				},
+			);
+			if (failure) setError(failure);
+			else onClose();
+		} catch {
+			setError("Unable to save the paper entry. Retry.");
+		} finally {
+			setSaving(false);
+		}
 	};
 
 	return (
 		<div
 			className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
-			onClick={onClose}
+			onClick={saving ? undefined : onClose}
 		>
 			<div
-				className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl w-full max-w-lg overflow-hidden my-8"
+				className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto my-8"
 				onClick={(e) => e.stopPropagation()}
 			>
 				{/* Modal Header */}
@@ -291,7 +336,7 @@ export default function StockpickModal({
 					</div>
 					<button
 						type="button"
-						onClick={onClose}
+						onClick={saving ? undefined : onClose}
 						className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
 					>
 						<X className="w-5 h-5" />
@@ -422,7 +467,7 @@ export default function StockpickModal({
 									<Layers className="w-3.5 h-3.5 text-slate-400" />
 									<span>Quantity (Lots)</span>
 								</label>
-								{recommendedLots !== null && (
+								{recommendedLots > 0 && (
 									<button
 										type="button"
 										onClick={() => setQuantityLots(recommendedLots)}
@@ -499,27 +544,25 @@ export default function StockpickModal({
 					{/* 4. Target Price & Stop Loss (Optional Risk:Reward Planning) */}
 					<div className="p-4 bg-slate-50/70 border border-slate-100 rounded-2xl space-y-3">
 						<div className="flex items-center justify-between text-xs">
-							<span className="font-bold text-slate-700">
-								Target &amp; Capital Protection (BEI Tick Validated)
-							</span>
+							<span className="font-bold text-slate-700">Stop and target</span>
 							{previewRrr !== null && (
 								<span
 									className={`font-mono font-bold px-2 py-0.5 rounded-md text-[11px] border ${
-										previewRrr >= 1.5
+										!checks.failed.includes("net_risk_reward")
 											? "text-emerald-700 bg-emerald-50 border-emerald-200"
 											: "text-amber-700 bg-amber-50 border-amber-200"
 									}`}
 								>
-									RRR {previewRrr}:1
+									Net R:R {previewRrr}:1
 								</span>
 							)}
 						</div>
 
-						<div className="grid grid-cols-2 gap-3">
+						<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 							<div>
 								<label
 									htmlFor="modal-target-input"
-									className="text-[10px] font-bold uppercase text-slate-500 block mb-1"
+									className="text-xs font-semibold text-slate-600 block mb-1"
 								>
 									Take-Profit Target
 								</label>
@@ -536,7 +579,7 @@ export default function StockpickModal({
 							<div>
 								<label
 									htmlFor="modal-stop-input"
-									className="text-[10px] font-bold uppercase text-slate-500 block mb-1"
+									className="text-xs font-semibold text-slate-600 block mb-1"
 								>
 									Stop-Loss Floor
 								</label>
@@ -551,19 +594,8 @@ export default function StockpickModal({
 								/>
 							</div>
 						</div>
-
-						{previewRrr !== null && previewRrr < 1.5 && (
-							<div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-2.5 py-1.5 rounded-lg">
-								<AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-								<span>
-									Sub-optimal RRR ({previewRrr}:1 &lt; 1.5:1 Rulebook minimum).
-									Tighten entry near VWAP or widen target.
-								</span>
-							</div>
-						)}
 					</div>
 
-					{/* 5. Notes */}
 					<div className="space-y-1.5">
 						<label
 							htmlFor="modal-notes-input"
@@ -582,20 +614,56 @@ export default function StockpickModal({
 						/>
 					</div>
 
+					<div
+						className="space-y-2 border-t border-slate-200 pt-4"
+						aria-live="polite"
+					>
+						<h3 className="text-sm font-semibold text-slate-900">
+							Paper entry checks
+						</h3>
+						{checks.failed.length ? (
+							<ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">
+								{checks.failed.map((check) => (
+									<li key={check}>{ENTRY_CHECK_LABELS[check]}</li>
+								))}
+							</ul>
+						) : (
+							<p className="text-sm text-emerald-800">All checks passed.</p>
+						)}
+						{!pickToEdit && checks.failed.length > 0 && (
+							<label className="block text-sm text-slate-700">
+								Reason for proceeding with failed checks
+								<textarea
+									className="mt-1 min-h-16 w-full rounded-xl border border-slate-300 p-2 focus-visible:outline-2 focus-visible:outline-indigo-600"
+									value={overrideReason}
+									maxLength={500}
+									onChange={(event) => setOverrideReason(event.target.value)}
+								/>
+							</label>
+						)}
+					</div>
+
 					{/* Modal Footer Actions */}
 					<div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
 						<button
 							type="button"
-							onClick={onClose}
+							onClick={saving ? undefined : onClose}
 							className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
 						>
 							Cancel
 						</button>
 						<button
 							type="submit"
-							className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+							disabled={saving}
+							className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors focus-visible:outline-2 focus-visible:outline-indigo-600 cursor-pointer flex items-center gap-1.5"
 						>
-							<span>{pickToEdit ? "Update Pick" : "Save Simulated Pick"}</span>
+							<span>
+								{saving
+									? "Saving…"
+									: pickToEdit
+										? "Update pick"
+										: "Save paper entry"}
+							</span>
 							<ArrowRight className="w-3.5 h-3.5" />
 						</button>
 					</div>

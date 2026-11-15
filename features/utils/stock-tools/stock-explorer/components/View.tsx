@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -38,6 +38,13 @@ import {
 import HeroOverview from "./dashboard/HeroOverview";
 import SectorRotation from "./dashboard/SectorRotation";
 import ForeignFlow from "./dashboard/ForeignFlow";
+import {
+	ResearchFilters,
+	RESEARCH_FILTERS,
+	type ResearchFilter,
+} from "./dashboard/ResearchFilters";
+import type { ResearchSummary } from "../utils/idx-research";
+import type { MarketEvidence } from "@/services/market-data/provenance";
 import OpportunityScanner from "./dashboard/OpportunityScanner";
 
 // Charts & Table
@@ -57,8 +64,23 @@ function StockExplorerDashboard() {
 		useState<CompassBridgeSummary | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [lastSync, setLastSync] = useState<string | null>(null);
-	const [dataSource, setDataSource] = useState<string | null>(null);
+	const [stockEvidence, setStockEvidence] = useState<MarketEvidence | null>(
+		null,
+	);
+	const [research, setResearch] = useState<ResearchSummary | null>(null);
+	const [researchFilter, setResearchFilter] = useState<ResearchFilter>("all");
+	useEffect(() => {
+		const query = new URLSearchParams(window.location.search).get("research");
+		if (query && Object.hasOwn(RESEARCH_FILTERS, query))
+			setResearchFilter(query as ResearchFilter);
+	}, []);
+	const selectResearch = (filter: ResearchFilter) => {
+		setResearchFilter(filter);
+		const url = new URL(window.location.href);
+		if (filter === "all") url.searchParams.delete("research");
+		else url.searchParams.set("research", filter);
+		window.history.replaceState(window.history.state, "", url);
+	};
 
 	const {
 		workstationTab,
@@ -106,20 +128,10 @@ function StockExplorerDashboard() {
 			}
 
 			setRawStocks(json.data);
-			if (json.tickerHistory10d && typeof json.tickerHistory10d === "object") {
-				setTickerHistory10d(json.tickerHistory10d);
-			}
-			if (json.compassBridge && typeof json.compassBridge === "object") {
-				setCompassBridge(json.compassBridge);
-			}
-			if (json.source) {
-				setDataSource(json.source);
-			}
-			if (json.metadata?.lastFetchAt) {
-				setLastSync(new Date(json.metadata.lastFetchAt).toLocaleTimeString());
-			} else {
-				setLastSync(new Date().toLocaleTimeString());
-			}
+			setTickerHistory10d(json.tickerHistory10d ?? {});
+			setCompassBridge(json.compassBridge ?? null);
+			setStockEvidence(json.metadata?.stockEvidence ?? null);
+			setResearch(json.research ?? null);
 		} catch (err: unknown) {
 			const message =
 				err instanceof Error ? err.message : "Failed to load stock data";
@@ -139,12 +151,28 @@ function StockExplorerDashboard() {
 		weights,
 		tickerHistory10d,
 	);
+	const activeResearch = research?.current ? researchFilter : "all";
+	const researchStocks = useMemo(() => {
+		if (activeResearch === "all" || !research) return processed;
+		return processed.flatMap((stock) => {
+			const signal = research.signals[stock.StockCode];
+			if (!signal) return [];
+			if (activeResearch === "trend" && !signal.trendLeader) return [];
+			if (activeResearch === "strength" && signal.relativeStrength == null)
+				return [];
+			if (activeResearch === "contraction" && signal.state !== "developing")
+				return [];
+			if (activeResearch === "breakout" && signal.state !== "confirmed")
+				return [];
+			return [{ ...stock, RelativeStrength: signal.relativeStrength }];
+		});
+	}, [activeResearch, research, processed]);
 
 	useEffect(() => {
-		if (processed && processed.length > 0) {
+		if (processed.length > 0 && stockEvidence?.status === "current") {
 			syncMarketDataWatermarks(processed);
 		}
-	}, [processed, syncMarketDataWatermarks]);
+	}, [processed, stockEvidence, syncMarketDataWatermarks]);
 
 	const totalWeightsSum = Object.values(weights).reduce((a, b) => a + b, 0);
 
@@ -173,30 +201,17 @@ function StockExplorerDashboard() {
 					icon={TrendingUp}
 					badges={
 						<div className="flex flex-wrap items-center gap-2">
-							{dataSource && (
-								<span
-									className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px] border ${
-										dataSource === "idx_live"
-											? "bg-emerald-50 text-emerald-700 border-emerald-200"
-											: dataSource === "redis"
-												? "bg-indigo-50 text-indigo-700 border-indigo-200"
-												: "bg-amber-50 text-amber-700 border-amber-200"
-									}`}
-								>
-									<span
-										className={`w-1.5 h-1.5 rounded-full ${
-											dataSource === "idx_live"
-												? "bg-emerald-500 animate-pulse"
-												: dataSource === "redis"
-													? "bg-indigo-500"
-													: "bg-amber-500"
-										}`}
-									/>
-									{dataSource === "idx_live"
-										? "IDX Live"
-										: dataSource === "redis"
-											? "Redis Cache"
-											: "Snapshot"}
+							{stockEvidence && (
+								<span className="text-xs font-medium text-slate-700">
+									{stockEvidence.origin === "static"
+										? "Demo data"
+										: stockEvidence.asOf
+											? "IDX session " +
+												stockEvidence.asOf.slice(0, 10) +
+												(stockEvidence.status === "current"
+													? ""
+													: " (" + stockEvidence.status + ")")
+											: "IDX session date unavailable"}
 								</span>
 							)}
 
@@ -206,12 +221,6 @@ function StockExplorerDashboard() {
 										{rawStocks.length}
 									</span>{" "}
 									Tickers
-								</span>
-							)}
-
-							{lastSync && (
-								<span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200/80 text-slate-500 font-semibold text-[11px]">
-									Sync: {lastSync}
 								</span>
 							)}
 						</div>
@@ -263,15 +272,19 @@ function StockExplorerDashboard() {
 							</button>
 						</div>
 					) : isLoading && rawStocks.length === 0 ? (
-						<div className="bg-white border border-slate-200/80 rounded-3xl p-16 flex flex-col items-center justify-center text-center shadow-xs">
-							<Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
-							<h3 className="text-base font-extrabold text-slate-900">
-								Initializing Market Intelligence Engine...
-							</h3>
-							<p className="text-xs font-medium text-slate-500 mt-1">
-								Streaming real-time order summaries, foreign flows, and sector
-								metrics
-							</p>
+						<div
+							role="status"
+							aria-label="Loading IDX screener"
+							className="space-y-4"
+						>
+							<div className="h-12 rounded-2xl bg-slate-200 motion-safe:animate-pulse" />
+							<div className="h-28 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
+							<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+								<div className="h-40 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
+								<div className="h-40 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
+							</div>
+							<div className="h-28 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
+							<div className="h-56 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
 						</div>
 					) : (
 						<>
@@ -330,7 +343,7 @@ function StockExplorerDashboard() {
 								</div>
 								{workstationTab === "screener" && (
 									<span className="hidden sm:inline-flex text-[11px] font-bold text-slate-400 pr-3">
-										IDX Live Terminal
+										IDX screener
 									</span>
 								)}
 								{workstationTab === "simulator" && (
@@ -354,8 +367,8 @@ function StockExplorerDashboard() {
 										</div>
 										<div>
 											<div className="flex flex-wrap items-center gap-2">
-												<span className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
-													IHSG Compass Regime Bridge
+												<span className="text-sm font-semibold text-slate-900">
+													Compass posture
 												</span>
 												<span
 													className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
@@ -378,9 +391,34 @@ function StockExplorerDashboard() {
 													{compassBridge.maxExposurePct}% Exposure Cap
 												</span>
 											</div>
-											<p className="text-[11px] font-medium text-slate-500 mt-1">
-												{compassBridge.headline}
+											<p className="text-sm text-slate-700 mt-1">
+												{compassBridge.permissions?.swing.reason ??
+													compassBridge.headline}
 											</p>
+											<p className="mt-1 text-xs text-slate-600">
+												{compassBridge.computedAt &&
+													"Computed " +
+														new Date(compassBridge.computedAt).toLocaleString(
+															"en-GB",
+															{ timeZone: "Asia/Jakarta" },
+														) +
+														" WIB. "}
+												{compassBridge.coverage != null &&
+													"Evidence coverage " +
+														Math.round(compassBridge.coverage * 100) +
+														"%. "}
+												{compassBridge.session &&
+													"Compass IDX session " + compassBridge.session + "."}
+											</p>
+											{stockEvidence?.asOf &&
+												compassBridge.session &&
+												stockEvidence.asOf.slice(0, 10) !==
+													compassBridge.session && (
+													<p className="mt-1 text-xs text-amber-800">
+														Explorer data and Compass use different IDX
+														sessions.
+													</p>
+												)}
 										</div>
 									</div>
 
@@ -399,7 +437,12 @@ function StockExplorerDashboard() {
 											Sync Regime Preset
 										</button>
 										<Link
-											href="/investment"
+											href={
+												compassBridge.snapshotId
+													? "/investment?snapshot=" +
+														encodeURIComponent(compassBridge.snapshotId)
+													: "/investment"
+											}
 											className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors !no-underline"
 										>
 											<span>Open Compass</span>
@@ -410,7 +453,9 @@ function StockExplorerDashboard() {
 							)}
 
 							{workstationTab === "simulator" ? (
-								<StockpickSimulator stocks={processed} />
+								<StockpickSimulator
+									stocks={stockEvidence?.status === "current" ? processed : []}
+								/>
 							) : (
 								<>
 									{/* Top KPI Cards (Integrated Market Return + Breadth, Composite Score, Foreign Flow, Turnover) */}
@@ -420,10 +465,21 @@ function StockExplorerDashboard() {
 									<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 										{/* Left Column: Opportunity Scanner */}
 										<div className="lg:col-span-6 h-full">
-											<OpportunityScanner
-												stocks={processed}
-												compassBridge={compassBridge}
-											/>
+											{stockEvidence?.status === "current" ? (
+												<OpportunityScanner
+													stocks={processed}
+													compassBridge={compassBridge}
+												/>
+											) : (
+												<section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs">
+													<h2 className="font-semibold text-slate-900">
+														Opportunity scanner
+													</h2>
+													<p className="mt-1 text-sm text-slate-700">
+														Waiting for a current IDX close.
+													</p>
+												</section>
+											)}
 										</div>
 
 										{/* Right Column: Sector Rotation + Foreign Flow */}
@@ -435,7 +491,18 @@ function StockExplorerDashboard() {
 
 									{/* Smart Screener Table (Promoted above Custom Factor Scoring for rapid access) */}
 									<div>
-										<SmartTable stocks={processed} />
+										<ResearchFilters
+											research={research}
+											filter={activeResearch}
+											onChange={selectResearch}
+										/>
+										<div className="mt-4">
+											<SmartTable
+												key={activeResearch}
+												stocks={researchStocks}
+												researchSort={activeResearch === "strength"}
+											/>
+										</div>
 									</div>
 
 									{/* Custom Scoring Engine & Hard Filter Control Panel */}
@@ -727,7 +794,9 @@ function StockExplorerDashboard() {
 			</div>
 
 			{/* Analyst Drawer */}
-			<StockDetailDrawer />
+			<StockDetailDrawer
+				stockSession={stockEvidence?.asOf?.slice(0, 10) ?? null}
+			/>
 
 			{/* Stockpick Simulator Modal */}
 			<StockpickModal
@@ -737,13 +806,11 @@ function StockExplorerDashboard() {
 				stockToSimulate={stockToSimulate}
 				availableStocks={processed}
 				compassBridge={compassBridge}
-				onSave={(data) => {
-					if (data.id) {
-						updateStockPick(data.id, data);
-					} else {
-						addStockPick(data);
-					}
-				}}
+				onSave={(data, request) =>
+					data.id
+						? updateStockPick(data.id, data, request)
+						: addStockPick(data, request)
+				}
 			/>
 
 			{/* Close Position Modal */}

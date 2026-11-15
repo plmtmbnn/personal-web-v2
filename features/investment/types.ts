@@ -1,3 +1,6 @@
+import type { MarketEvidence } from "@/services/market-data/provenance";
+import type { RetrievedMarketData } from "@/services/market-data/types";
+
 import type {
 	CryptoGlobalSnapshot,
 	MarketQuote,
@@ -112,6 +115,7 @@ export type SourceKey =
 	| "idxFlows";
 
 export interface SourceStatus {
+	evidence?: Record<string, MarketEvidence>;
 	ok: boolean;
 	label: string;
 	stale?: boolean;
@@ -136,7 +140,7 @@ export interface IhsgAlphaCandidate {
 	rrr: number;
 }
 
-export interface IhsgForeignFlowSnapshot {
+export interface IhsgForeignFlowSnapshot extends RetrievedMarketData {
 	netBuySell1dIdr?: number | null; // e.g. -500_000_000_000 (net sell 500B IDR)
 	netBuySell5dIdr?: number | null;
 	streakDays?: number | null; // e.g. -3 for 3 consecutive days of net foreign selling
@@ -148,7 +152,7 @@ export interface IhsgForeignFlowSnapshot {
 	topAlphaPicks?: IhsgAlphaCandidate[];
 }
 
-export interface CryptoOnChainSnapshot {
+export interface CryptoOnChainSnapshot extends RetrievedMarketData {
 	mvrvZScore?: number | null; // Kept for backwards compatibility
 	mvrvRatio?: number | null; // Realized MVRV Ratio (< 1.0 accumulation, > 2.8 distribution)
 	nupl?: number | null; // Net Unrealized Profit/Loss (-1.0 to 1.0)
@@ -174,6 +178,8 @@ export interface InvestmentCompassData {
 	};
 	sources: Record<string, SourceStatus>;
 	fetchedAt: string;
+	snapshotId?: string;
+	previousSnapshot?: { asOf: string; regime: RegimeState; score: number };
 	engineOutput?: CompassOutput;
 }
 

@@ -10,16 +10,27 @@ import {
 	Coins,
 	Building,
 } from "lucide-react";
-import type { MarketRegimeScore, RegimeFactor } from "../types";
+import type { CompassBridgeSummary } from "@/features/utils/stock-tools/stock-explorer/types";
+import type {
+	InvestmentCompassData,
+	MarketRegimeScore,
+	RegimeFactor,
+} from "../types";
 
 export default function OverviewRegimes({
 	globalRegime,
 	ihsgRegime,
 	cryptoRegime,
+	ihsgPosture,
+	previous,
+	linkedSnapshot,
 }: {
 	globalRegime: MarketRegimeScore;
 	ihsgRegime: MarketRegimeScore;
 	cryptoRegime: MarketRegimeScore;
+	ihsgPosture?: CompassBridgeSummary | null;
+	previous?: InvestmentCompassData["previousSnapshot"];
+	linkedSnapshot?: string | null;
 }) {
 	const [activeFactor, setActiveFactor] = useState<RegimeFactor | null>(null);
 
@@ -50,6 +61,7 @@ export default function OverviewRegimes({
 		Icon: LucideIcon,
 		accentBorder: string,
 	) => {
+		const scoreChange = previous ? regime.score - previous.score : 0;
 		return (
 			<div
 				key={regime.id}
@@ -78,6 +90,40 @@ export default function OverviewRegimes({
 							{regime.state.replace("_", " ")}
 						</span>
 					</div>
+
+					{regime.id === "ihsg" && ihsgPosture && (
+						<div className="mb-4 space-y-1 border-b border-slate-200 pb-4 text-sm text-slate-700">
+							<p className="font-semibold text-slate-900">
+								Effective posture:{" "}
+								{ihsgPosture.effectiveState.replace("_", " ")}
+							</p>
+							<p>{ihsgPosture.permissions?.swing.reason}</p>
+							<p>
+								{Math.round(regime.coverage * 100)}% evidence coverage
+								{ihsgPosture.session
+									? ". IDX session " + ihsgPosture.session
+									: ""}
+							</p>
+							{previous && (
+								<p>
+									Previous snapshot {previous.asOf.slice(0, 10)}:{" "}
+									{previous.regime.replace("_", " ")}, {previous.score}/100.{" "}
+									Score change {scoreChange > 0 ? "+" : ""}
+									{scoreChange}.
+								</p>
+							)}
+							{linkedSnapshot && linkedSnapshot !== ihsgPosture.snapshotId && (
+								<p className="text-amber-800">
+									Explorer used a different snapshot. This view was computed{" "}
+									{new Date(ihsgPosture.computedAt ?? "").toLocaleString(
+										"en-GB",
+										{ timeZone: "Asia/Jakarta" },
+									)}{" "}
+									WIB.
+								</p>
+							)}
+						</div>
+					)}
 
 					{/* Asymmetry Zone Callout Banner */}
 					{regime.asymmetryZone && (

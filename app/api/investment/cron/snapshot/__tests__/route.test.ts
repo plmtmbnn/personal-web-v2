@@ -24,6 +24,10 @@ vi.mock("@/services/market-data/idx-flows", () => ({
 	syncIdxStockSummary: vi.fn(),
 }));
 
+vi.mock("@/services/market-data/idx-research-store", () => ({
+	syncIdxResearch: vi.fn().mockResolvedValue({ state: "waiting" }),
+}));
+
 import { GET } from "../route";
 import { getInvestmentCompass } from "@/features/investment/actions";
 import { syncIdxStockSummary } from "@/services/market-data/idx-flows";
@@ -74,7 +78,7 @@ describe("GET /api/investment/cron/snapshot", () => {
 		const body = await response.json();
 
 		expect(syncIdxStockSummary).toHaveBeenCalledWith(true);
-		expect(getInvestmentCompass).toHaveBeenCalledWith(true);
+		expect(getInvestmentCompass).toHaveBeenCalledWith(true, true);
 		expect(redis.set).toHaveBeenCalledTimes(1);
 
 		expect(body.success).toBe(true);

@@ -22,7 +22,10 @@ interface CloseStockpickModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	pick: StockPickWithMetrics | null;
-	onConfirmClose: (id: string, payload: ClosePickPayload) => void;
+	onConfirmClose: (
+		id: string,
+		payload: ClosePickPayload,
+	) => Promise<string | null>;
 }
 
 const EXIT_REASONS: Array<{
@@ -79,6 +82,8 @@ export function CloseStockpickModal({
 	const [exitReason, setExitReason] =
 		useState<StockPickExitReason>("target_hit");
 	const [exitNotes, setExitNotes] = useState<string>("");
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (pick) {
@@ -86,6 +91,7 @@ export function CloseStockpickModal({
 				pick.currentPrice > 0 ? pick.currentPrice : pick.buyPrice;
 			setExitPrice(initialExit);
 			setExitNotes("");
+			setError(null);
 
 			// Auto-suggest reason based on targets
 			if (pick.targetPrice && initialExit >= pick.targetPrice) {
@@ -108,17 +114,26 @@ export function CloseStockpickModal({
 		pick.buyPrice > 0 ? ((exitPrice - pick.buyPrice) / pick.buyPrice) * 100 : 0;
 	const isProfitable = realizedPnlNominal >= 0;
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (exitPrice <= 0) return;
 
-		onConfirmClose(pick.id, {
-			exitPrice,
-			exitReason,
-			exitNotes: exitNotes.trim() || undefined,
-			exitDate: new Date().toISOString().split("T")[0],
-		});
-		onClose();
+		setSaving(true);
+		setError(null);
+		try {
+			const failure = await onConfirmClose(pick.id, {
+				exitPrice,
+				exitReason,
+				exitNotes: exitNotes.trim() || undefined,
+				exitDate: new Date().toISOString().split("T")[0],
+			});
+			if (failure) setError(failure);
+			else onClose();
+		} catch {
+			setError("Could not close the paper position. Retry.");
+		} finally {
+			setSaving(false);
+		}
 	};
 
 	return (
@@ -142,7 +157,7 @@ export function CloseStockpickModal({
 
 					<button
 						type="button"
-						onClick={onClose}
+						onClick={saving ? undefined : onClose}
 						className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
 						aria-label="Close modal"
 					>
@@ -156,6 +171,11 @@ export function CloseStockpickModal({
 					className="flex-1 overflow-y-auto p-6 space-y-5"
 				>
 					{/* Result Preview Strip */}
+					{error && (
+						<p role="alert" className="text-sm text-rose-800">
+							{error}
+						</p>
+					)}
 					<div
 						className={`p-4 rounded-2xl border transition-colors ${
 							isProfitable
@@ -319,13 +339,14 @@ export function CloseStockpickModal({
 					<div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
 						<button
 							type="button"
-							onClick={onClose}
+							onClick={saving ? undefined : onClose}
 							className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
 						>
 							Cancel
 						</button>
 						<button
 							type="submit"
+							disabled={saving}
 							className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
 								isProfitable
 									? "bg-emerald-600 hover:bg-emerald-700 text-white"

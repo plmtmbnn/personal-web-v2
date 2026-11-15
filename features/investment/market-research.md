@@ -1,0 +1,13 @@
+# IDX research and paper trading
+
+Apply `scripts/migrations/20261115_add_idx_research.sql` before deploying the research jobs and paper-entry changes. Configure `SUPABASE_SERVICE_ROLE_KEY` for the server, `CRON_SECRET` for the snapshot job, and the existing Upstash Redis bindings. The paper ledger now uses the authenticated server actions exclusively. The migration revokes direct API access for the anonymous and authenticated database roles.
+
+The protected snapshot job runs the research batch after syncing the IDX summary. Run it after 16:30 Jakarta time. The stock explorer admin page shows the last completed session, retrieval time, history coverage, rejected observations, and backfill progress. An admin can run another batch of up to ten Yahoo tickers. Research stays unavailable until a current summary and matching IHSG close are available. Keep the exchange holiday dates in `services/market-data/provenance.ts` aligned with the published IDX calendar. [IDX trading hours](https://www.idx.co.id/id/produk/mekanisme-dan-jam-perdagangan) and [IDX holiday calendar](https://www.idx.co.id/id/berita/jadwal-libur-bursa).
+
+## Methods
+
+The native implementation adapts the [TraderMonty workflows at the pinned revision](https://github.com/tradermonty/claude-trading-skills/tree/13079ab4456fada368f0f579643d2ef104efb8f0). The VCP evaluator uses IDX liquidity, benchmark-aligned sessions, recent swing contractions, and a completed close above the pivot. It uses a 63-session relative return against IHSG, scored within the eligible liquid universe. The six-of-seven trend template requires measurable relative strength. The indicators do not change Compass regime weights.
+
+Yahoo and IDX bars are stored separately. The evaluator joins an IDX tail only when its overlap matches the latest Yahoo close and the windows pass continuity checks. The first published research snapshot for a session is retained for replay. Later backfill batches improve coverage for the next session. The feed can omit suspended and delisted names, change historical adjustments, or leave gaps around corporate actions. Outcome replay describes captured signals and models fills using daily ranges, fees, and adverse ticks. It cannot reconstruct order-book fills or historical universes absent from the snapshots.
+
+Paper sizing uses the Compass risk budget, paper account equity, and remaining bucket capacity. The fee assumptions live in `IDX_FEES`. Failed checks require a reason on a new paper entry. A historical import with an earlier entry date remains marked as legacy by the absence of decision evidence. Exits calculate net P&L from the submitted fill and saved fee assumptions. Existing gross P&L reports keep their original basis.

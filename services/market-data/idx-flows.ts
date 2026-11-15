@@ -1,15 +1,17 @@
 import {
 	redis,
 	getStockData,
+	getStockDataSnapshot,
 	saveStockData,
 	updateTickerHistoryRingBuffer,
 } from "@/lib/core/redis";
-import type { FetchPolicy } from "./types";
+import { completedIdxSession, idxEvidence } from "./provenance";
+import type { FetchPolicy, RetrievedMarketData } from "./types";
 import type { IDXStock } from "@/features/utils/stock-tools/stock-explorer/types";
 import { processIdxMarketData } from "@/features/utils/stock-tools/stock-explorer/hooks/useMarketData";
 import type { IhsgAlphaCandidate } from "@/features/investment/types";
 
-export interface IhsgForeignFlowSnapshot {
+export interface IhsgForeignFlowSnapshot extends RetrievedMarketData {
 	netBuySell1dIdr?: number | null;
 	netBuySell5dIdr?: number | null;
 	streakDays?: number | null;
@@ -60,7 +62,7 @@ export async function syncIdxStockSummary(force = false): Promise<{
 		const body = (await res.json()) as any;
 		if (body && Array.isArray(body.data) && body.data.length > 0) {
 			await Promise.allSettled([
-				saveStockData(body.data, 43200),
+				saveStockData(body.data, 43200, "live"),
 				updateTickerHistoryRingBuffer(body.data),
 			]);
 			return { success: true, count: body.data.length };
@@ -132,66 +134,24 @@ export async function fetchIhsgForeignFlow(
 ): Promise<IhsgForeignFlowSnapshot | null> {
 	try {
 		// 1. Get today's market summary, syncing from peoel-screener-py if empty or fresh requested
-		let stocksData = await getStockData();
-
-		if (!stocksData || stocksData.length === 0 || _policy?.fresh) {
-			const syncResult = await syncIdxStockSummary(Boolean(_policy?.fresh));
-			if (syncResult.success) {
-				stocksData = await getStockData();
-			}
+		let snapshot = await getStockDataSnapshot();
+		if (!snapshot || _policy.fresh) {
+			await syncIdxStockSummary(Boolean(_policy.fresh));
+			snapshot = await getStockDataSnapshot();
 		}
-
-		if (!stocksData || stocksData.length === 0) return null;
-
-		const todayNetIdr = calculateNetFlow(stocksData);
-
-		// 1b. Determine true trading session date from payload
-		let sessionDateStr = "";
-		const rawPayloadDate = stocksData[0]?.Date;
-		if (rawPayloadDate && typeof rawPayloadDate === "string") {
-			const clean = rawPayloadDate.split("T")[0];
-			if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
-				sessionDateStr = clean;
-			}
-		}
-
-		// Fallback to Jakarta timezone wall-clock if payload date is absent
-		const now = new Date();
-		const wibFormatter = new Intl.DateTimeFormat("en-US", {
-			timeZone: "Asia/Jakarta",
-			year: "numeric",
-			month: "2-digit",
-			day: "2-digit",
-			hour: "numeric",
-			hour12: false,
-		});
-		const parts = wibFormatter.formatToParts(now);
-		const currentYear = parts.find((p) => p.type === "year")?.value;
-		const currentMonth = parts.find((p) => p.type === "month")?.value;
-		const currentDay = parts.find((p) => p.type === "day")?.value;
-		const currentWibDateStr = `${currentYear}-${currentMonth}-${currentDay}`;
-		const wibHour = parseInt(
-			parts.find((p) => p.type === "hour")?.value ?? "0",
-			10,
+		const now = new Date().toISOString();
+		const sessionDateStr = completedIdxSession(snapshot?.data[0]?.Date, now);
+		if (!sessionDateStr || !snapshot || snapshot.origin === "unknown")
+			return null;
+		const stocksData = snapshot.data.filter(
+			(s) =>
+				completedIdxSession(s.Date, now) === sessionDateStr &&
+				Number.isFinite(s.Close) &&
+				Number.isFinite(s.ForeignBuy) &&
+				Number.isFinite(s.ForeignSell),
 		);
-
-		if (!sessionDateStr) {
-			sessionDateStr = currentWibDateStr;
-		}
-
-		// Enforce active trading session guard: if session date matches today's Jakarta date,
-		// only record into history once market opens at 09:00 WIB
-		const isToday = sessionDateStr === currentWibDateStr;
-		const isSessionActiveOrClosed = !isToday || wibHour >= 9;
-
-		// Validate that session date is not a weekend and market has opened if today
-		const sessionDayOfWeek = new Date(
-			`${sessionDateStr}T12:00:00Z`,
-		).getUTCDay();
-		const isTradingDay =
-			sessionDayOfWeek !== 0 &&
-			sessionDayOfWeek !== 6 &&
-			isSessionActiveOrClosed;
+		if (!stocksData.length) return null;
+		const todayNetIdr = calculateNetFlow(stocksData);
 
 		// 2. Fetch history from Redis
 		let historyMap: Record<string, number> = {};
@@ -211,13 +171,19 @@ export async function fetchIhsgForeignFlow(
 		// Prune any legacy weekend entries to preserve true trading day streak
 		for (const d of Object.keys(historyMap)) {
 			const dayOfWeek = new Date(`${d}T12:00:00Z`).getUTCDay();
-			if (dayOfWeek === 0 || dayOfWeek === 6) {
+			if (
+				dayOfWeek === 0 ||
+				dayOfWeek === 6 ||
+				!completedIdxSession(d, now) ||
+				d > sessionDateStr ||
+				!Number.isFinite(historyMap[d])
+			) {
 				delete historyMap[d];
 			}
 		}
 
 		// 3. Update history on valid trading day session
-		if (isTradingDay) {
+		if (!(sessionDateStr in historyMap)) {
 			historyMap[sessionDateStr] = todayNetIdr;
 
 			// Keep only last 10 trading days to prevent unbound growth
@@ -254,7 +220,7 @@ export async function fetchIhsgForeignFlow(
 		let advancers = 0;
 		let decliners = 0;
 		let unchanged = 0;
-		let liquidAdvancersPct = 50;
+		let liquidAdvancersPct: number | undefined;
 		let topAlphaPicks: IhsgAlphaCandidate[] = [];
 
 		try {
@@ -284,7 +250,8 @@ export async function fetchIhsgForeignFlow(
 						(s.Value || 0) >= 5_000_000_000 &&
 						s.ARARisk !== "ARB" &&
 						s.ARARisk !== "Near ARB" &&
-						s.CompositeScore >= 55,
+						s.CompositeScore >= 55 &&
+						s.TradePlan?.netRiskRewardRatio != null,
 				)
 				.sort(
 					(a, b) =>
@@ -316,7 +283,7 @@ export async function fetchIhsgForeignFlow(
 					entryZone,
 					stopLoss: plan?.stopLoss || Math.round(s.Close * 0.96),
 					target1: plan?.target1 || Math.round(s.Close * 1.06),
-					rrr: plan?.riskRewardRatio || 2.0,
+					rrr: plan?.netRiskRewardRatio ?? 0,
 				};
 			});
 		} catch (e) {
@@ -332,7 +299,12 @@ export async function fetchIhsgForeignFlow(
 			decliners,
 			unchanged,
 			liquidAdvancersPct,
-			topAlphaPicks,
+			topAlphaPicks:
+				idxEvidence(sessionDateStr, now, snapshot.origin).status === "current"
+					? topAlphaPicks
+					: [],
+			origin: snapshot.origin,
+			retrievedAt: snapshot.retrievedAt ?? undefined,
 		};
 	} catch (error) {
 		console.warn("IHSG Foreign Flow fetch failed:", error);

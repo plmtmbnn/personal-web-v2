@@ -1,16 +1,16 @@
 import { z } from "zod";
 import { type NextRequest, NextResponse } from "next/server";
 import {
-	getStockData,
-	saveStockData,
+	getStockDataSnapshot,
 	getTickerHistoryRingBuffer,
-	updateTickerHistoryRingBuffer,
 	redis,
 } from "@/lib/core/redis";
 import { FALLBACK_IDX_STOCKS } from "@/features/utils/stock-tools/stock-explorer/data/fallbackData";
 import { getCachedInvestmentCompass } from "@/features/investment/actions";
-import type { CompassBridgeSummary } from "@/features/utils/stock-tools/stock-explorer/types";
-import { PEOEL_STOCK_SUMMARY_URL } from "@/services/market-data/idx-flows";
+import { getIdxPosture } from "@/features/investment/lib/idx-posture";
+import { idxEvidence, sessionDate } from "@/services/market-data/provenance";
+import { syncIdxStockSummary } from "@/services/market-data/idx-flows";
+import { readIdxResearch } from "@/services/market-data/idx-research-store";
 
 export const dynamic = "force-dynamic";
 
@@ -47,121 +47,54 @@ export async function GET(request: NextRequest) {
 		// 1. Check query for force refresh
 		const forceRefresh = url.searchParams.get("refresh") === "true";
 
-		// 2. Prioritize retrieving data from Redis (checks main cache key then backup key)
-		let data = await getStockData();
-		let source = data && data.length > 0 ? "redis" : "none";
-
-		// 3. Determine if external API call to IDX is needed
-		const shouldFetch = forceRefresh || !data || data.length === 0;
-
-		// 4. Perform fetch from screener proxy only if Redis is empty or forceRefresh is true
-		if (shouldFetch) {
-			try {
-				console.log(
-					"Redis cache empty or force refresh requested. Attempting fetch from screener proxy...",
-				);
-
-				let body: any = null;
-
-				try {
-					const res = await fetch(PEOEL_STOCK_SUMMARY_URL, {
-						headers: {
-							Accept: "application/json",
-						},
-						signal: AbortSignal.timeout(15000),
-					});
-
-					if (res.ok) {
-						body = (await res.json()) as any;
-					}
-				} catch (fetchErr: any) {
-					console.warn(
-						"peoel-screener-py fetch failed in stock-data:",
-						fetchErr?.message || fetchErr,
-					);
-				}
-
-				if (body && Array.isArray(body.data) && body.data.length > 0) {
-					// Store to Redis (12h TTL + backup key)
-					await saveStockData(body.data, 43200);
-					data = body.data;
-					source = "idx_live";
-					console.log(
-						`Successfully fetched and cached ${body.data.length} stocks from screener proxy to Redis.`,
-					);
-				} else {
-					throw new Error("No valid stock data returned from screener proxy");
-				}
-
-				// Set cooldown key to avoid spamming upstream
-				await redis
-					.set(FETCH_ATTEMPT_KEY, "true", { ex: 3600 })
-					.catch(() => {});
-			} catch (fetchError: any) {
-				console.warn(
-					"Failed to fetch fresh stock data from screener proxy:",
-					fetchError?.message || fetchError,
-				);
-				await redis
-					.set(FETCH_ATTEMPT_KEY, "failed", { ex: 900 })
-					.catch(() => {});
-
-				// If we don't have cached Redis data, fall back to resilient static dataset
-				if (!data || data.length === 0) {
-					data = FALLBACK_IDX_STOCKS;
-					source = "fallback_static";
-				}
+		let snapshot = await getStockDataSnapshot();
+		const startedAt = new Date().toISOString();
+		const cooldown = await redis.get(FETCH_ATTEMPT_KEY).catch(() => true);
+		if (
+			(forceRefresh ||
+				!snapshot?.data.length ||
+				idxEvidence(
+					sessionDate(snapshot.data[0]?.Date),
+					startedAt,
+					snapshot.origin,
+				).status !== "current") &&
+			!cooldown
+		) {
+			const claimed = await redis
+				.set(FETCH_ATTEMPT_KEY, "syncing", { nx: true, ex: 900 })
+				.catch(() => null);
+			if (claimed) {
+				const update = await syncIdxStockSummary(true);
+				if (update.success) snapshot = await getStockDataSnapshot();
 			}
 		}
-
-		if (!data || data.length === 0) {
-			data = FALLBACK_IDX_STOCKS;
-			source = "fallback_static";
-		}
-
-		// Sync and retrieve 10-trading-day per-ticker ring buffer + live IHSG Compass regime bridge
-		let tickerHistory10d = null;
-		let compassBridge: CompassBridgeSummary | null = null;
-
-		try {
-			const [ringBufferRes, compassRes] = await Promise.allSettled([
-				source === "idx_live"
-					? updateTickerHistoryRingBuffer(data)
-					: getTickerHistoryRingBuffer().then(
-							(existing) => existing || updateTickerHistoryRingBuffer(data),
-						),
-				getCachedInvestmentCompass(),
-			]);
-
-			if (ringBufferRes.status === "fulfilled") {
-				tickerHistory10d = ringBufferRes.value;
-			}
-
-			if (compassRes.status === "fulfilled" && compassRes.value?.engineOutput) {
-				const eo = compassRes.value.engineOutput;
-				const ihsgRegime = eo.regimes.ihsg;
-				const ihsgPlaybook = eo.playbooks.ihsg;
-				const ihsgPerms = eo.permissions.ihsg;
-				const mandate = ihsgPerms.mandate;
-				const flows = compassRes.value.markets.ihsgFlows;
-
-				compassBridge = {
-					rawState: ihsgRegime.state,
-					effectiveState: ihsgPlaybook.state,
-					score: ihsgRegime.score,
-					headline: ihsgRegime.headline,
-					trendState: ihsgRegime.dualAxis?.trendState || ihsgRegime.state,
-					valuationState: ihsgRegime.dualAxis?.valuationState || "neutral",
-					maxExposurePct: mandate?.maxPortfolioExposurePct ?? 15,
-					riskPerTradePct: mandate?.maxRiskPerTradePct ?? 0.5,
-					isTradingLocked: Boolean(mandate?.isTradingLocked),
-					streakDays: flows?.streakDays ?? null,
-					net5dIdr: flows?.netBuySell5dIdr ?? null,
-				};
-			}
-		} catch (e) {
-			console.warn("Non-critical enrichment failed in stock-data route:", e);
-		}
+		const data = snapshot?.data.length ? snapshot.data : FALLBACK_IDX_STOCKS;
+		const source = data === FALLBACK_IDX_STOCKS ? "fallback_static" : "redis";
+		const [tickerHistory10d, compass, research] = await Promise.all([
+			source === "redis" ? getTickerHistoryRingBuffer() : null,
+			getCachedInvestmentCompass().catch(() => null),
+			readIdxResearch().catch(() => null),
+		]);
+		const now = new Date().toISOString();
+		const observedSession = sessionDate(data[0]?.Date);
+		const stockEvidence = idxEvidence(
+			observedSession,
+			now,
+			source === "fallback_static" ? "static" : (snapshot?.origin ?? "unknown"),
+			compass?.markets.ihsgFlows?.asOf,
+			snapshot?.retrievedAt,
+		);
+		if (
+			source === "redis" &&
+			snapshot?.origin === "unknown" &&
+			stockEvidence.status === "current"
+		)
+			stockEvidence.status = "invalid";
+		const compassBridge = compass ? getIdxPosture(compass) : null;
+		if (compassBridge) compassBridge.stockEvidence = stockEvidence;
+		const researchIsCurrent =
+			stockEvidence.status === "current" &&
+			research?.session === observedSession;
 
 		// Apply pagination if requested explicitly
 		const { limit, offset } = parsedQuery.data;
@@ -178,9 +111,28 @@ export async function GET(request: NextRequest) {
 			source,
 			tickerHistory10d,
 			compassBridge,
+			research: research
+				? {
+						session: research.session,
+						version: research.version,
+						current: researchIsCurrent,
+						breadth: research.breadth,
+						signals: Object.fromEntries(
+							Object.entries(research.results).map(([symbol, item]) => [
+								symbol,
+								{
+									state: item.state,
+									trendLeader: item.trendLeader,
+									relativeStrength: item.relativeStrength,
+								},
+							]),
+						),
+					}
+				: null,
 			metadata: {
-				lastFetchAt: new Date().toISOString(),
-				cached: source.startsWith("redis") || source.startsWith("fallback"),
+				lastFetchAt: snapshot?.retrievedAt ?? null,
+				stockEvidence,
+				cached: true,
 			},
 		});
 	} catch (error: any) {
@@ -191,7 +143,8 @@ export async function GET(request: NextRequest) {
 			total: FALLBACK_IDX_STOCKS.length,
 			source: "fallback_error",
 			metadata: {
-				lastFetchAt: new Date().toISOString(),
+				lastFetchAt: null,
+				stockEvidence: idxEvidence(null, new Date().toISOString(), "static"),
 				cached: true,
 			},
 		});

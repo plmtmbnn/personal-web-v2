@@ -65,6 +65,7 @@ export async function fetchYahooHistory(
 			symbol,
 			interval: options.interval,
 			points,
+			retrievedAt: new Date().toISOString(),
 		};
 	} catch (e) {
 		console.warn(`[History] Fetch failed for ${symbol}:`, e);
@@ -87,7 +88,7 @@ export async function getOrFetchHistory(
 		try {
 			const cached = await redis.get<PriceHistorySeries>(cacheKey);
 			if (cached?.points && cached.points.length > 0) {
-				return { series: cached, sourceOk: true };
+				return { series: { ...cached, origin: "cache" }, sourceOk: true };
 			}
 		} catch (e) {
 			console.warn(`[History] Cache read error for ${symbol}:`, e);
@@ -103,7 +104,7 @@ export async function getOrFetchHistory(
 		if (live && live.points.length > 0) {
 			await redis.set(cacheKey, JSON.stringify(live), { ex: 21600 });
 			await redis.set(backupKey, JSON.stringify(live));
-			return { series: live, sourceOk: true };
+			return { series: { ...live, origin: "live" }, sourceOk: true };
 		}
 	} catch (e) {
 		console.warn(`[History] Live fetch error for ${symbol}:`, e);
@@ -112,7 +113,7 @@ export async function getOrFetchHistory(
 	try {
 		const backup = await redis.get<PriceHistorySeries>(backupKey);
 		if (backup?.points && backup.points.length > 0) {
-			return { series: backup, sourceOk: false };
+			return { series: { ...backup, origin: "backup" }, sourceOk: false };
 		}
 	} catch (e) {
 		console.warn(`[History] Backup read error for ${symbol}:`, e);

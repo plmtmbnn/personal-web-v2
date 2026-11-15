@@ -1,5 +1,7 @@
 "use client";
 
+import { ResearchSyncStatus } from "./dashboard/ResearchSyncStatus";
+
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
 	Upload,
@@ -1342,6 +1344,8 @@ export default function StockImportAdmin() {
 					</div>
 				</div>
 			</div>
+
+			<ResearchSyncStatus />
 
 			{/* High-Fidelity CustomModal for Cache Purging */}
 			<CustomModal

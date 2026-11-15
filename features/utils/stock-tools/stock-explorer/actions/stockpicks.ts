@@ -1,3 +1,20 @@
+import { getStockDataSnapshot, redis } from "@/lib/core/redis";
+import { getCachedInvestmentCompass } from "@/features/investment/actions";
+import { getIdxPosture } from "@/features/investment/lib/idx-posture";
+import {
+	idxEvidence,
+	jakartaDate,
+	sessionDate,
+} from "@/services/market-data/provenance";
+import {
+	entryRequestSchema,
+	evaluatePaperEntry,
+	IDX_FEES,
+	netTradeRisk,
+	tradeDecisionSchema,
+	type EntryRequest,
+	type TradeDecisionSnapshot,
+} from "../utils/paper-risk";
 import { checkAdmin } from "@/features/auth/actions";
 import { createAdminClient } from "@/lib/core/supabase-server";
 import { z } from "zod";
@@ -36,11 +53,25 @@ const stockPickSchema = z.object({
 	realizedPlPct: z.number().optional(),
 });
 
+const tradeReviewSchema = z.object({
+	netPnlIdr: z.number().finite(),
+	actualRiskIdr: z.number().finite().positive().nullable(),
+	realizedR: z.number().finite().nullable(),
+});
+
 const closePickSchema = z
 	.object({
 		exitPrice: z.number().finite().positive(),
 		exitDate: pickDate.optional(),
-		exitReason: z.string().trim().min(1).max(80),
+		exitReason: z.enum([
+			"target_hit",
+			"stop_loss_hit",
+			"trailing_stop",
+			"thesis_invalidated",
+			"manual_profit",
+			"manual_cut",
+		]),
+		exitNotes: z.string().trim().max(2000).optional(),
 		peakGainPct: z.number().finite(),
 		maxDrawdownPct: z.number().finite(),
 		holdingDays: z.number().int().nonnegative().max(36_500),
@@ -62,6 +93,8 @@ const watermarkUpdatesSchema = z
 	.max(500);
 
 interface DbStockPick {
+	trade_decision?: unknown;
+	trade_review?: unknown;
 	id: string;
 	user_id?: string | null;
 	ticker?: string;
@@ -173,6 +206,8 @@ function mapDbToStockPick(row: DbStockPick): StockPick {
 		realizedPlNominal,
 		exitReason: (row.exit_reason as StockPick["exitReason"]) || undefined,
 		exitNotes: row.exit_notes || undefined,
+		decision: tradeDecisionSchema.safeParse(row.trade_decision).data,
+		review: tradeReviewSchema.safeParse(row.trade_review).data,
 		createdAt: new Date(row.created_at).getTime() || Date.now(),
 		updatedAt: new Date(row.updated_at).getTime() || Date.now(),
 	};
@@ -221,6 +256,40 @@ function mapPickToDb(pick: z.infer<typeof stockPickSchema>) {
 	};
 }
 
+function currentPickColumns(payload: ReturnType<typeof mapPickToDb>) {
+	const {
+		ticker,
+		company_name,
+		lots,
+		shares: _shares,
+		stop_loss,
+		high_watermark,
+		high_watermark_date,
+		low_watermark,
+		low_watermark_date,
+		exit_price,
+		exit_date,
+		realized_pnl_idr,
+		realized_pnl_pct,
+		...common
+	} = payload;
+	return {
+		...common,
+		stock_code: ticker,
+		stock_name: company_name,
+		quantity_lots: lots,
+		stop_loss_price: stop_loss,
+		highest_price_traced: high_watermark,
+		highest_price_date: high_watermark_date,
+		lowest_price_traced: low_watermark,
+		lowest_price_date: low_watermark_date,
+		closed_price: exit_price,
+		closed_date: exit_date,
+		realized_pl_nominal: realized_pnl_idr,
+		realized_pl_pct: realized_pnl_pct,
+	};
+}
+
 /**
  * Fetch all stock picks directly from Supabase cloud database.
  */
@@ -255,32 +324,171 @@ export async function fetchCloudStockPicksAction(): Promise<{
 /**
  * Upsert a stock pick in Supabase cloud database.
  */
-export async function saveCloudStockPickAction(pick: StockPick): Promise<{
-	success: boolean;
-	error?: string;
-}> {
-	if (!(await checkAdmin())) {
-		return { success: false, error: "Unauthorized" };
-	}
+export async function saveCloudStockPickAction(
+	pick: StockPick,
+	request?: EntryRequest,
+	historicalImport = false,
+): Promise<{ success: boolean; error?: string; data?: StockPick }> {
+	if (!(await checkAdmin())) return { success: false, error: "Unauthorized" };
+	const parsed = stockPickSchema.safeParse(pick);
+	const entryRequest = entryRequestSchema.safeParse(request);
+	if (!parsed.success || (request && !entryRequest.success))
+		return { success: false, error: "Invalid stock pick payload" };
+	const lock = "idx:paper:entry";
+	const token = crypto.randomUUID();
+	let claimed = false;
 	try {
-		const parsed = stockPickSchema.safeParse(pick);
-		if (!parsed.success) {
-			return { success: false, error: "Invalid stock pick payload" };
+		const [market, compass] = entryRequest.success
+			? await Promise.all([
+					getStockDataSnapshot(),
+					getCachedInvestmentCompass().catch(() => null),
+				])
+			: [null, null];
+		if (parsed.data.status === "active") {
+			claimed = !!(await redis.set(lock, token, { nx: true, ex: 45 }));
+			if (!claimed)
+				return {
+					success: false,
+					error: "Another paper entry is saving. Retry in a moment.",
+				};
 		}
-		const payload = mapPickToDb(parsed.data);
 		const supabase = await createAdminClient();
-		const { error } = await supabase.from("stock_picks").upsert(payload, {
-			onConflict: "id",
-		});
-
-		if (error) {
-			console.error("[saveCloudStockPickAction] Supabase error:", error);
-			return { success: false, error: "Failed to save stock pick" };
+		const payload = mapPickToDb(parsed.data);
+		const { data: existing, error: readError } = await supabase
+			.from("stock_picks")
+			.select("*")
+			.eq("id", payload.id)
+			.maybeSingle();
+		if (readError) throw readError;
+		const previous = existing ? mapDbToStockPick(existing) : null;
+		if (historicalImport && previous) return { success: true, data: previous };
+		const isNewEntry =
+			parsed.data.status === "active" && previous?.status !== "active";
+		const now = new Date().toISOString();
+		let decision: TradeDecisionSnapshot | undefined;
+		if (isNewEntry) {
+			const isLegacyImport =
+				historicalImport &&
+				!existing &&
+				jakartaDate(parsed.data.entryDate) < jakartaDate(now);
+			if (!entryRequest.success && !isLegacyImport && !existing) {
+				return {
+					success: false,
+					error: "Review the paper entry before saving.",
+				};
+			}
+			if (entryRequest.success) {
+				const { data: holdings, error } = await supabase
+					.from("stock_picks")
+					.select("*")
+					.eq("status", "active")
+					.limit(1000);
+				if (error) throw error;
+				if (holdings?.length === 1000)
+					return {
+						success: false,
+						error: "Too many active positions to verify paper capacity.",
+					};
+				const posture = compass ? getIdxPosture(compass) : null;
+				const stock = market?.data.find(
+					(row) => row.StockCode === payload.ticker,
+				);
+				const session = sessionDate(stock?.Date);
+				const evidence = idxEvidence(
+					session,
+					now,
+					market?.origin ?? "unknown",
+					posture?.session,
+					market?.retrievedAt,
+				);
+				const result = evaluatePaperEntry({
+					entry: parsed.data.buyPrice,
+					stop: parsed.data.stopLossPrice ?? 0,
+					target: parsed.data.targetPrice ?? 0,
+					lots: parsed.data.quantityLots,
+					thesis: parsed.data.thesis as StockPick["thesis"],
+					equityIdr: entryRequest.data.equityIdr,
+					turnover: stock?.Value,
+					posture,
+					current:
+						!!stock &&
+						market?.origin !== "unknown" &&
+						evidence.status === "current" &&
+						session === posture?.session,
+					picks: (holdings ?? []).map(mapDbToStockPick),
+				});
+				if (result.failed.length && !entryRequest.data.overrideReason) {
+					return {
+						success: false,
+						error:
+							"Market or account checks changed. Review the entry and provide a reason to proceed.",
+					};
+				}
+				const candidate = tradeDecisionSchema.safeParse({
+					version: 1,
+					recordedAt: now,
+					snapshotId: posture?.snapshotId ?? null,
+					session,
+					regime: posture?.effectiveState ?? "insufficient",
+					setup: parsed.data.thesis ?? "Custom",
+					equityIdr: entryRequest.data.equityIdr,
+					entry: parsed.data.buyPrice,
+					stop: parsed.data.stopLossPrice ?? null,
+					target: parsed.data.targetPrice ?? null,
+					lots: parsed.data.quantityLots,
+					plannedLossIdr: result.plannedLossIdr,
+					plannedNetR: result.risk?.ratio ?? null,
+					failed: result.failed,
+					overrideReason: result.failed.length
+						? entryRequest.data.overrideReason
+						: undefined,
+					costs: IDX_FEES,
+				});
+				if (!candidate.success)
+					return {
+						success: false,
+						error: "Unable to record a valid paper decision.",
+					};
+				decision = candidate.data;
+			}
 		}
-		return { success: true };
+		const metadata = {
+			...(!existing && decision ? { trade_decision: decision } : {}),
+			...(existing && previous?.review && parsed.data.status === "active"
+				? { trade_review: null }
+				: {}),
+		};
+		const write = (columns: object) => {
+			const query = supabase.from("stock_picks");
+			const writeQuery = existing
+				? query
+						.update({ ...columns, ...metadata })
+						.eq("id", payload.id)
+						.eq("updated_at", existing.updated_at)
+				: query.insert({ ...columns, ...metadata });
+			return writeQuery.select("*").maybeSingle();
+		};
+		let response = await write(currentPickColumns(payload));
+		if (response.error?.code === "PGRST204") response = await write(payload);
+		if (response.error) throw response.error;
+		if (!response.data)
+			return {
+				success: false,
+				error: "This paper pick changed. Reload the ledger and try again.",
+			};
+		return { success: true, data: mapDbToStockPick(response.data) };
 	} catch (err) {
 		console.error("[saveCloudStockPickAction] Exception:", err);
 		return { success: false, error: "Failed to save stock pick" };
+	} finally {
+		if (claimed)
+			await redis
+				.eval(
+					"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) end return 0",
+					[lock],
+					[token],
+				)
+				.catch(() => {});
 	}
 }
 
@@ -309,29 +517,85 @@ export async function closeCloudStockPickAction(
 	}
 	try {
 		const supabase = await createAdminClient();
-		const { error } = await supabase
+		const found = await supabase
 			.from("stock_picks")
-			.update({
-				status: "closed",
-				exit_price: parsedPayload.data.exitPrice,
-				exit_date: parsedPayload.data.exitDate
-					? new Date(parsedPayload.data.exitDate).toISOString()
-					: new Date().toISOString(),
-				exit_reason: parsedPayload.data.exitReason,
-				realized_pnl_idr: parsedPayload.data.realizedPlNominal,
-				realized_pnl_pct: parsedPayload.data.realizedPlPct,
-				peak_gain_pct: parsedPayload.data.peakGainPct,
-				max_drawdown_pct: parsedPayload.data.maxDrawdownPct,
-				holding_days: parsedPayload.data.holdingDays,
-				updated_at: new Date().toISOString(),
-			})
-			.eq("id", id);
-
-		if (error) {
-			console.error("[closeCloudStockPickAction] Supabase error:", error);
-			return { success: false, error: "Failed to close stock pick" };
-		}
-		return { success: true };
+			.select("*")
+			.eq("id", id)
+			.maybeSingle();
+		if (found.error) throw found.error;
+		if (!found.data || found.data.status !== "active")
+			return { success: false, error: "Active paper position not found." };
+		const pick = mapDbToStockPick(found.data);
+		const input = parsedPayload.data;
+		const costs = pick.decision?.costs ?? IDX_FEES;
+		const shares = pick.quantityLots * 100;
+		const gross = (input.exitPrice - pick.buyPrice) * shares;
+		const grossPct = 100 * (input.exitPrice / pick.buyPrice - 1);
+		const netPnlIdr =
+			shares *
+			(input.exitPrice * (1 - costs.sell) - pick.buyPrice * (1 + costs.buy));
+		const actualRisk = netTradeRisk(
+			pick.buyPrice,
+			pick.stopLossPrice ?? 0,
+			0,
+			costs,
+		);
+		const review = tradeReviewSchema.parse({
+			netPnlIdr,
+			actualRiskIdr: actualRisk ? shares * actualRisk.loss : null,
+			realizedR: pick.decision?.plannedLossIdr
+				? netPnlIdr / pick.decision.plannedLossIdr
+				: null,
+		});
+		const closedDate = input.exitDate
+			? new Date(input.exitDate).toISOString()
+			: new Date().toISOString();
+		if (jakartaDate(closedDate) < pick.entryDate)
+			return { success: false, error: "Exit date cannot be before entry." };
+		const common = {
+			status: "closed",
+			exit_reason: input.exitReason,
+			exit_notes: input.exitNotes ?? null,
+			peak_gain_pct: input.peakGainPct,
+			max_drawdown_pct: input.maxDrawdownPct,
+			holding_days: input.holdingDays,
+			updated_at: new Date().toISOString(),
+		};
+		const canonical = {
+			closed_price: input.exitPrice,
+			closed_date: closedDate,
+			realized_pl_nominal: gross,
+			realized_pl_pct: grossPct,
+		};
+		const legacy = {
+			exit_price: input.exitPrice,
+			exit_date: closedDate,
+			realized_pnl_idr: gross,
+			realized_pnl_pct: grossPct,
+		};
+		const write = (columns: object, includeReview: boolean) =>
+			supabase
+				.from("stock_picks")
+				.update({
+					...common,
+					...columns,
+					...(includeReview ? { trade_review: review } : {}),
+				})
+				.eq("id", id)
+				.eq("updated_at", found.data.updated_at)
+				.select("id")
+				.maybeSingle();
+		const migrated = Object.hasOwn(found.data, "trade_review");
+		let response = await write(canonical, migrated);
+		if (response.error?.code === "PGRST204")
+			response = await write(legacy, migrated);
+		if (response.error) throw response.error;
+		return response.data
+			? { success: true }
+			: {
+					success: false,
+					error: "This position changed. Reload the ledger and try again.",
+				};
 	} catch (err) {
 		console.error("[closeCloudStockPickAction] Exception:", err);
 		return { success: false, error: "Failed to close stock pick" };

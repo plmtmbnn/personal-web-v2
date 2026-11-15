@@ -7,6 +7,7 @@ interface OkxFundingResponse {
 		fundingRate?: string;
 		nextFundingRate?: string;
 		fundingTime?: string;
+		ts?: string;
 	}>;
 }
 
@@ -24,6 +25,8 @@ interface OkxOiResponse {
  */
 export async function fetchOkxCryptoMetrics(policy: FetchPolicy): Promise<{
 	fundingRate8hPct: number | null;
+	fundingAsOf?: number;
+	fundingProvider?: string;
 	openInterestUsd: number | null;
 }> {
 	const fundingUrl =
@@ -37,6 +40,8 @@ export async function fetchOkxCryptoMetrics(policy: FetchPolicy): Promise<{
 	});
 
 	let fundingRate8hPct: number | null = null;
+	let fundingAsOf: number | undefined;
+	let fundingProvider: string | undefined;
 	let openInterestUsd: number | null = null;
 
 	try {
@@ -51,6 +56,8 @@ export async function fetchOkxCryptoMetrics(policy: FetchPolicy): Promise<{
 			if (rateStr) {
 				const num = parseFloat(rateStr);
 				if (Number.isFinite(num)) {
+					fundingAsOf = Number(json.data?.[0]?.ts) / 1000 || undefined;
+					fundingProvider = "OKX";
 					fundingRate8hPct = num * 100; // e.g. 0.0001 -> 0.01%
 				}
 			}
@@ -91,6 +98,7 @@ export async function fetchOkxCryptoMetrics(policy: FetchPolicy): Promise<{
 					symbol?: string;
 					index_id?: string;
 					funding_rate?: number;
+					last_traded_at?: number;
 					open_interest?: number;
 				}>;
 
@@ -105,6 +113,8 @@ export async function fetchOkxCryptoMetrics(policy: FetchPolicy): Promise<{
 							Number.isFinite(btcItem.funding_rate)
 						) {
 							fundingRate8hPct = btcItem.funding_rate;
+							fundingAsOf = btcItem.last_traded_at;
+							fundingProvider = "CoinGecko derivatives";
 						}
 						if (
 							openInterestUsd == null &&
@@ -123,6 +133,8 @@ export async function fetchOkxCryptoMetrics(policy: FetchPolicy): Promise<{
 
 	return {
 		fundingRate8hPct,
+		fundingAsOf,
+		fundingProvider,
 		openInterestUsd,
 	};
 }

@@ -25,6 +25,7 @@ import ScreenerDropdown from "../shared/ScreenerDropdown";
 
 interface SmartTableProps {
 	stocks: ProcessedStock[];
+	researchSort?: boolean;
 	onSelectStock?: (stock: ProcessedStock) => void;
 	watchlist?: string[];
 	onToggleWatchlist?: (code: string) => void;
@@ -36,6 +37,7 @@ interface SmartTableProps {
 
 export default function SmartTable({
 	stocks,
+	researchSort,
 	onSelectStock,
 	watchlist: watchlistProp,
 	onToggleWatchlist: onToggleWatchlistProp,
@@ -63,7 +65,7 @@ export default function SmartTable({
 	const setSearchQuery = screener.setSearchQuery;
 
 	const [sortConfig, setSortConfig] = useState<SortConfig>({
-		key: "CompositeScore",
+		key: researchSort ? "RelativeStrength" : "CompositeScore",
 		direction: "desc",
 	});
 	const [limit, setLimit] = useState(50);
@@ -186,6 +188,9 @@ export default function SmartTable({
 			ARBLimitPrice: s.ARBLimitPrice,
 			MarketCapIDR: s.MarketCap,
 			CompositeScore: s.CompositeScore,
+			...(researchSort
+				? { RelativeStrength63SessionsPp: s.RelativeStrength ?? null }
+				: {}),
 			Opportunity: s.Opportunity,
 			Trend: s.Trend,
 		}));
@@ -459,6 +464,20 @@ export default function SmartTable({
 									Foreign Net {getSortIcon("ForeignNet")}
 								</div>
 							</th>
+							{researchSort && (
+								<th
+									scope="col"
+									className="py-3 px-3 text-right text-xs font-semibold text-slate-700"
+								>
+									<button
+										type="button"
+										onClick={() => requestSort("RelativeStrength")}
+										className="inline-flex min-h-11 items-center gap-2 focus-visible:outline-2 focus-visible:outline-indigo-600"
+									>
+										Vs IHSG (63 sessions) {getSortIcon("RelativeStrength")}
+									</button>
+								</th>
+							)}
 							<th className="py-3 px-3 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
 								Opportunity
 							</th>
@@ -475,7 +494,10 @@ export default function SmartTable({
 					<tbody className="divide-y divide-slate-100">
 						{sortedStocks.length === 0 ? (
 							<tr>
-								<td colSpan={10} className="py-12 text-center text-slate-400">
+								<td
+									colSpan={researchSort ? 11 : 10}
+									className="py-12 text-center text-slate-400"
+								>
 									<p className="text-sm font-bold text-slate-700">
 										No instruments match your active criteria
 									</p>
@@ -681,6 +703,13 @@ export default function SmartTable({
 										</div>
 									</td>
 
+									{researchSort && (
+										<td className="py-3 px-3 text-right text-xs font-medium tabular-nums text-slate-800">
+											{s.RelativeStrength == null
+												? "Unavailable"
+												: s.RelativeStrength.toFixed(2) + " pp"}
+										</td>
+									)}
 									<td className="py-3 px-3 text-center">
 										<span className="inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/60">
 											{s.Opportunity}

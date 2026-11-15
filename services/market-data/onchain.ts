@@ -18,9 +18,9 @@ export interface CryptoOnChainSnapshot {
  *
  * Blockchain.com requires `metadata=false` on the chart endpoint, otherwise it returns HTTP 404.
  */
-export async function fetchBitcoinMvrv(
+export async function fetchBitcoinMvrvObservation(
 	policy: FetchPolicy,
-): Promise<number | null> {
+): Promise<{ value: number; asOf?: number } | null> {
 	const endpoints = [
 		"https://api.blockchain.info/charts/mvrv?timespan=5days&sampled=true&metadata=false&cors=true&format=json",
 		"https://api.blockchain.info/charts/mvrv?timespan=30days&sampled=true&metadata=false&cors=true&format=json",
@@ -53,7 +53,10 @@ export async function fetchBitcoinMvrv(
 					Number.isFinite(lastPoint.y) &&
 					lastPoint.y > 0
 				) {
-					return lastPoint.y;
+					return {
+						value: lastPoint.y,
+						asOf: typeof lastPoint.x === "number" ? lastPoint.x : undefined,
+					};
 				}
 			}
 		} catch (error) {
@@ -62,4 +65,10 @@ export async function fetchBitcoinMvrv(
 	}
 
 	return null;
+}
+
+export async function fetchBitcoinMvrv(
+	policy: FetchPolicy,
+): Promise<number | null> {
+	return (await fetchBitcoinMvrvObservation(policy))?.value ?? null;
 }

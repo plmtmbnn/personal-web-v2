@@ -1,11 +1,18 @@
+import type { EvidenceOrigin } from "./provenance";
+
 /**
  * Shared market data contracts used by all provider clients.
  * Provider-agnostic so features can swap or combine sources freely.
  */
 
+export interface RetrievedMarketData {
+	retrievedAt?: string;
+	origin?: EvidenceOrigin;
+}
+
 export type QuoteSource = "cnbc" | "yahoo";
 
-export interface MarketQuote {
+export interface MarketQuote extends RetrievedMarketData {
 	/** Provider symbol the quote was resolved from (e.g. ".SPX", "^JKSE"). */
 	symbol: string;
 	name: string;
@@ -25,7 +32,7 @@ export interface MarketQuote {
 	source: QuoteSource;
 }
 
-export interface CryptoGlobalSnapshot {
+export interface CryptoGlobalSnapshot extends RetrievedMarketData {
 	totalMarketCapUsd: number;
 	totalVolumeUsd: number;
 	marketCapChange24hPct: number;
@@ -40,7 +47,7 @@ export interface MacroObservation {
 	value: number;
 }
 
-export interface MacroSeries {
+export interface MacroSeries extends RetrievedMarketData {
 	id: string;
 	name: string;
 	frequency: string;
@@ -53,13 +60,16 @@ export interface PricePoint {
 	c: number;
 }
 
-export interface PriceHistorySeries {
+export interface PriceHistorySeries extends RetrievedMarketData {
 	symbol: string;
 	interval: string;
 	points: PricePoint[];
 }
 
-export interface CryptoFlowsSnapshot {
+export interface CryptoFlowsSnapshot extends RetrievedMarketData {
+	stablecoinAsOf?: number;
+	fundingAsOf?: number;
+	fundingProvider?: string;
 	totalStablecoinSupplyUsd: number | null;
 	stablecoin30dChangePct: number | null;
 	btcFundingRate8hPct: number | null;

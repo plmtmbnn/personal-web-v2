@@ -391,12 +391,15 @@ export function derivePermissions(
 
 	let altcoinPerms: MarketPermissions;
 
-	if (!btcAbove200) {
+	if (!btcAbove200 || btcDom == null) {
 		altcoinPerms = {
 			scalp: {
 				status: "not_allowed",
 				label: "Locked Out",
-				reason: "Bitcoin is trading below its 200-Day moving average.",
+				reason:
+					btcDom == null
+						? "Current Bitcoin dominance is unavailable."
+						: "Bitcoin is below its 200-day average or trend data is unavailable.",
 			},
 			swing: {
 				status: "not_allowed",

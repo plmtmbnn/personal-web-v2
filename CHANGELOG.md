@@ -1,3 +1,10 @@
+# [0.125.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.124.0...v0.125.0) (2026-11-15)
+
+
+### Features
+
+* **portfolio:** sync engineering leadership experience, add reliid super app and relipay ([e96f046](https://github.com/plmtmbnn/personal-web-v2/commit/e96f04629d51946ec6e8467e46715998bda0e9c2))
+
 # [0.124.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.123.0...v0.124.0) (2026-11-14)
 
 

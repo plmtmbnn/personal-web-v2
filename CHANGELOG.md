@@ -1,3 +1,10 @@
+# [0.128.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.127.0...v0.128.0) (2026-11-16)
+
+
+### Features
+
+* **home:** mobile-first floating card layout, clean copy, and og preview ([13d823e](https://github.com/plmtmbnn/personal-web-v2/commit/13d823e2042da72b9128af8dfe8e2d21963e26e1))
+
 # [0.127.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.126.0...v0.127.0) (2026-11-16)
 
 

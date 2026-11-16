@@ -1,3 +1,10 @@
+# [0.127.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.126.0...v0.127.0) (2026-11-16)
+
+
+### Features
+
+* **tasks:** improve planning reliability ([a69cfae](https://github.com/plmtmbnn/personal-web-v2/commit/a69cfae062fce69411fb958e4989949cc0e23d16))
+
 # [0.126.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.125.0...v0.126.0) (2026-11-15)
 
 

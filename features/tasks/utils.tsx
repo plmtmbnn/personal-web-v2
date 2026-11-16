@@ -6,12 +6,7 @@ import type { Task } from "./types";
  */
 const URL_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
 
-/**
- * Returns a deterministic date string in YYYY-MM-DD format based on Asia/Jakarta timezone.
- */
-export function getJakartaDateString(date: Date = new Date()): string {
-	return date.toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
-}
+export { getJakartaDateString } from "./dates";
 
 /**
  * Utility to render text with clickable links.

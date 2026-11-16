@@ -1,5 +1,7 @@
 import {
 	startOfMonth,
+	startOfWeek,
+	addDays,
 	endOfMonth,
 	subMonths,
 	addMonths,
@@ -10,7 +12,7 @@ import { requireAuth } from "@/features/auth/server";
 import TasksView from "@/features/tasks/components/agenda/TasksView";
 import { getTasks } from "@/features/tasks/actions/tasks";
 import { getJakartaDateString } from "@/features/tasks/utils";
-import type { TaskPriority } from "@/features/tasks/types";
+import { completionWeekOffset, isTaskDate } from "@/features/tasks/dates";
 
 export const metadata = {
 	title: "Daily Tasks | Personal Hub",
@@ -22,6 +24,7 @@ interface PageProps {
 		date?: string;
 		priority?: string;
 		completed?: string;
+		completed_week_offset?: string;
 	}>;
 }
 
@@ -34,8 +37,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
 	await requireAuth({ requireAdmin: true, redirectTo: "/tasks" });
 
 	const params = await searchParams;
-	const date = params.date;
-	const priority = params.priority as TaskPriority | undefined;
+	const date = isTaskDate(params.date) ? params.date : undefined;
 
 	// 2. Data Fetching
 	// Fetch from past month (for execution history) through future months (for upcoming awareness)
@@ -44,15 +46,24 @@ export default async function TasksPage({ searchParams }: PageProps) {
 	const rangeStart = startOfMonth(subMonths(todayDate, 1));
 	const rangeEnd = endOfMonth(addMonths(todayDate, 6));
 
-	const startDate = date || format(rangeStart, "yyyy-MM-dd");
+	const selectedWeek = addDays(
+		startOfWeek(todayDate, { weekStartsOn: 1 }),
+		completionWeekOffset(params.completed_week_offset) * 7,
+	);
+	const startDate =
+		date ||
+		format(
+			Math.min(selectedWeek.getTime(), rangeStart.getTime()),
+			"yyyy-MM-dd",
+		);
 	const endDate = format(rangeEnd, "yyyy-MM-dd");
 
 	const tasks = await getTasks({
 		startDate,
 		endDate,
-		priority,
 		includeCompleted: true,
 		includeOverdue: true,
+		allActive: true,
 	});
 
 	return <TasksView tasks={tasks} />;

@@ -1,6 +1,7 @@
 "use server";
 
-import { SupabaseConn } from "@/lib/core/supabase";
+import { createAdminClient } from "@/lib/core/supabase-server";
+import { jakartaMidnight, nextDate } from "../dates";
 import { redis, CACHE_KEYS } from "@/lib/core/redis";
 import { checkAdmin } from "@/features/auth/actions";
 import { getJakartaDateString } from "../utils";
@@ -40,17 +41,19 @@ export async function getTaskStats(
 	}
 
 	const cacheKey = CACHE_KEYS.STATS(period);
+	const todayStr = getJakartaDateString();
 
 	// 1. Try to fetch from Redis Cache
 	try {
-		const cachedData = await redis.get<AnalyticsStats>(cacheKey);
-		if (cachedData) return cachedData;
+		const cachedData = await redis.get<{ day: string; stats: AnalyticsStats }>(
+			cacheKey,
+		);
+		if (cachedData?.day === todayStr) return cachedData.stats;
 	} catch (err) {
 		console.error("Redis Fetch Error (Falling back to DB):", err);
 	}
 
 	// 2. Cache Miss: Fetch from Supabase
-	const todayStr = getJakartaDateString();
 	const today = parseISO(todayStr);
 	let days: number;
 	let startDate: Date;
@@ -73,9 +76,10 @@ export async function getTaskStats(
 	const prevStartDate = subDays(startDate, days);
 
 	// Fetch current period tasks (root tasks only, non-archived)
-	const { data: currentTasks, error: currentError } = await SupabaseConn.from(
-		"tasks",
+	const { data: currentTasks, error: currentError } = await (
+		await createAdminClient()
 	)
+		.from("tasks")
 		.select("*")
 		.is("parent_id", null)
 		.is("archived_at", null)
@@ -88,9 +92,10 @@ export async function getTaskStats(
 	}
 
 	// Fetch all uncompleted tasks for global distribution and reschedules (root tasks only, non-archived)
-	const { data: globalTasks, error: globalError } = await SupabaseConn.from(
-		"tasks",
+	const { data: globalTasks, error: globalError } = await (
+		await createAdminClient()
 	)
+		.from("tasks")
 		.select("title, due_date, reschedule_count, status")
 		.is("parent_id", null)
 		.is("archived_at", null)
@@ -101,21 +106,23 @@ export async function getTaskStats(
 	}
 
 	// Fetch previous period completed tasks for comparison
-	const { count: prevCompletedCount } = await SupabaseConn.from("tasks")
+	const { count: prevCompletedCount } = await (await createAdminClient())
+		.from("tasks")
 		.select("*", { count: "exact", head: true })
 		.is("parent_id", null)
 		.is("archived_at", null)
 		.eq("status", "done")
-		.gte("completed_at", prevStartDate.toISOString())
-		.lt("completed_at", startDate.toISOString());
+		.gte("completed_at", jakartaMidnight(format(prevStartDate, "yyyy-MM-dd")))
+		.lt("completed_at", jakartaMidnight(format(startDate, "yyyy-MM-dd")));
 
 	// Fetch current period completed tasks using completed_at for true velocity and comparison
-	const { count: currentCompletedCount } = await SupabaseConn.from("tasks")
+	const { count: currentCompletedCount } = await (await createAdminClient())
+		.from("tasks")
 		.select("*", { count: "exact", head: true })
 		.is("parent_id", null)
 		.is("archived_at", null)
 		.eq("status", "done")
-		.gte("completed_at", startDate.toISOString())
+		.gte("completed_at", jakartaMidnight(format(startDate, "yyyy-MM-dd")))
 		.lte("completed_at", new Date().toISOString());
 
 	const tasks = ((currentTasks || []) as Task[]).filter(
@@ -129,7 +136,8 @@ export async function getTaskStats(
 	const taskVelocity = parseFloat((actualCompletedInPeriod / days).toFixed(1));
 
 	// Reschedule Analytics
-	const { data: rescheduleData } = await SupabaseConn.from("tasks")
+	const { data: rescheduleData } = await (await createAdminClient())
+		.from("tasks")
 		.select("title, reschedule_count")
 		.is("parent_id", null)
 		.is("archived_at", null)
@@ -150,7 +158,8 @@ export async function getTaskStats(
 		};
 	}
 
-	const { count: totalTaskCount } = await SupabaseConn.from("tasks")
+	const { count: totalTaskCount } = await (await createAdminClient())
+		.from("tasks")
 		.select("*", { count: "exact", head: true })
 		.is("parent_id", null)
 		.is("archived_at", null);
@@ -181,7 +190,10 @@ export async function getTaskStats(
 	tasks
 		.filter((t) => t.status === "done" && t.completed_at)
 		.forEach((t) => {
-			const day = format(parseISO(t.completed_at!), "EEEE");
+			const day = format(
+				parseISO(getJakartaDateString(new Date(t.completed_at!))),
+				"EEEE",
+			);
 			dayCounts[day] = (dayCounts[day] || 0) + 1;
 		});
 
@@ -226,7 +238,8 @@ export async function getTaskStats(
 			: Math.round(((actualCompletedInPeriod - prevCount) / prevCount) * 100);
 
 	// Streak
-	const { data: allCompleted } = await SupabaseConn.from("tasks")
+	const { data: allCompleted } = await (await createAdminClient())
+		.from("tasks")
 		.select("completed_at")
 		.is("parent_id", null)
 		.is("archived_at", null)
@@ -239,7 +252,7 @@ export async function getTaskStats(
 	if (allCompleted && allCompleted.length > 0) {
 		const completionDates = Array.from(
 			new Set(
-				allCompleted.map((t) => format(parseISO(t.completed_at), "yyyy-MM-dd")),
+				allCompleted.map((t) => getJakartaDateString(new Date(t.completed_at))),
 			),
 		).map((d) => parseISO(d));
 
@@ -270,7 +283,7 @@ export async function getTaskStats(
 
 	// 3. Store in Redis with 30 minute TTL (1800 seconds)
 	try {
-		await redis.set(cacheKey, stats, { ex: 1800 });
+		await redis.set(cacheKey, { day: todayStr, stats }, { ex: 1800 });
 	} catch (err) {
 		console.error("Redis Store Error:", err);
 	}
@@ -303,15 +316,17 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 	const startDateStr = format(startDate, "yyyy-MM-dd");
 	const endDateStr = format(today, "yyyy-MM-dd");
 
-	const { data: completedTasks, error: completedError } =
-		await SupabaseConn.from("tasks")
-			.select("id, completed_at, estimated_minutes, due_date, status")
-			.is("parent_id", null)
-			.is("archived_at", null)
-			.eq("status", "done")
-			.not("completed_at", "is", null)
-			.gte("completed_at", `${startDateStr}T00:00:00`)
-			.lte("completed_at", `${endDateStr}T23:59:59`);
+	const { data: completedTasks, error: completedError } = await (
+		await createAdminClient()
+	)
+		.from("tasks")
+		.select("id, completed_at, estimated_minutes, due_date, status")
+		.is("parent_id", null)
+		.is("archived_at", null)
+		.eq("status", "done")
+		.not("completed_at", "is", null)
+		.gte("completed_at", jakartaMidnight(startDateStr))
+		.lt("completed_at", jakartaMidnight(nextDate(endDateStr)));
 
 	if (completedError) {
 		console.error(
@@ -320,9 +335,10 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 		);
 	}
 
-	const { data: rangeTasks, error: rangeError } = await SupabaseConn.from(
-		"tasks",
+	const { data: rangeTasks, error: rangeError } = await (
+		await createAdminClient()
 	)
+		.from("tasks")
 		.select("id, due_date, completed_at, estimated_minutes, status")
 		.is("parent_id", null)
 		.is("archived_at", null)
@@ -347,7 +363,7 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 	const velocityData: VelocityDay[] = datesList.map((d) => {
 		const dateStr = format(d, "yyyy-MM-dd");
 		const completedOnDay = cTasks.filter((t) => {
-			const compDate = format(parseISO(t.completed_at!), "yyyy-MM-dd");
+			const compDate = getJakartaDateString(new Date(t.completed_at!));
 			return compDate === dateStr;
 		});
 
@@ -366,7 +382,7 @@ export async function getVelocityAndBurndownData(period: "week" | "month") {
 		const dateStr = format(d, "yyyy-MM-dd");
 		const completedSoFar = rTasks.filter((t) => {
 			if (t.status !== "done" || !t.completed_at) return false;
-			const compDate = format(parseISO(t.completed_at), "yyyy-MM-dd");
+			const compDate = getJakartaDateString(new Date(t.completed_at));
 			return compDate <= dateStr;
 		}).length;
 
@@ -422,18 +438,20 @@ export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
 	const weekEndStr = format(weekEnd, "yyyy-MM-dd");
 
 	const [tasksByDue, tasksByCompleted] = await Promise.all([
-		SupabaseConn.from("tasks")
+		(await createAdminClient())
+			.from("tasks")
 			.select("*")
 			.is("parent_id", null)
 			.is("archived_at", null)
 			.gte("due_date", weekStartStr)
 			.lte("due_date", weekEndStr),
-		SupabaseConn.from("tasks")
+		(await createAdminClient())
+			.from("tasks")
 			.select("*")
 			.is("parent_id", null)
 			.is("archived_at", null)
-			.gte("completed_at", `${weekStartStr}T00:00:00`)
-			.lte("completed_at", `${weekEndStr}T23:59:59`),
+			.gte("completed_at", jakartaMidnight(weekStartStr))
+			.lt("completed_at", jakartaMidnight(nextDate(weekEndStr))),
 	]);
 
 	if (tasksByDue.error) {
@@ -460,7 +478,7 @@ export async function getWeeklyReviewStats(): Promise<WeeklyReviewStats> {
 
 	const completedThisWeek = activeWeekTasks.filter((t) => {
 		if (t.status !== "done" || !t.completed_at) return false;
-		const compDateStr = format(parseISO(t.completed_at), "yyyy-MM-dd");
+		const compDateStr = getJakartaDateString(new Date(t.completed_at));
 		return compDateStr >= weekStartStr && compDateStr <= weekEndStr;
 	});
 

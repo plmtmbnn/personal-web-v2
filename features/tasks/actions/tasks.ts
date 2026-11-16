@@ -1,9 +1,16 @@
 import { revalidatePath } from "next/cache";
-import { SupabaseConn } from "@/lib/core/supabase";
+import { createAdminClient } from "@/lib/core/supabase-server";
+import {
+	taskFieldsSchema,
+	taskCreateSchema,
+	taskIdSchema,
+	taskIdsSchema,
+	rolloverSchema,
+} from "../validation";
+import { isTaskDate, jakartaMidnight, nextDate } from "../dates";
 import { invalidateStatsCache } from "@/lib/core/redis";
 import { checkAdmin } from "@/features/auth/actions";
 import type { Task, TaskPriority, TaskRecurrence, TaskStatus } from "../types";
-import { addDays, addMonths, parseISO, format, isBefore } from "date-fns";
 import { getJakartaDateString } from "../utils";
 
 /**
@@ -13,124 +20,6 @@ async function requireTasksAdmin() {
 	const isAdmin = await checkAdmin();
 	if (!isAdmin) {
 		throw new Error("Unauthorized: Admin privileges required");
-	}
-}
-
-/**
- * Handle recurrence task instance creation.
- */
-async function handleRecurrenceSpawning(task: Task) {
-	if (!task.recurrence || task.recurrence === "none") return;
-
-	const todayStr = getJakartaDateString();
-	const todayDate = parseISO(todayStr);
-	const currentDate = parseISO(task.due_date);
-
-	// If the completed task was overdue, calculate the next instance relative to today
-	// rather than backdating it into the past.
-	const baseDate = isBefore(currentDate, todayDate) ? todayDate : currentDate;
-
-	let nextDate: Date;
-	if (task.recurrence === "daily") {
-		nextDate = addDays(baseDate, 1);
-	} else if (task.recurrence === "weekly") {
-		nextDate = addDays(baseDate, 7);
-	} else if (task.recurrence === "monthly") {
-		nextDate = addMonths(baseDate, 1);
-	} else {
-		return;
-	}
-
-	const nextDateStr = format(nextDate, "yyyy-MM-dd");
-
-	// Check if a task with the same recurrence_origin_id and due_date already exists to prevent duplicate spans
-	const originId = task.recurrence_origin_id || task.id;
-	const { data: existing } = await SupabaseConn.from("tasks")
-		.select("id")
-		.eq("recurrence_origin_id", originId)
-		.eq("due_date", nextDateStr)
-		.limit(1);
-
-	if (existing && existing.length > 0) {
-		return; // Already spawned
-	}
-
-	// Calculate next start date if defined
-	let nextStartDateStr: string | null = null;
-	if (task.start_date) {
-		const currentStartDate = parseISO(task.start_date);
-		const baseStartDate = isBefore(currentStartDate, todayDate)
-			? todayDate
-			: currentStartDate;
-		let nextStartDate: Date;
-		if (task.recurrence === "daily") {
-			nextStartDate = addDays(baseStartDate, 1);
-		} else if (task.recurrence === "weekly") {
-			nextStartDate = addDays(baseStartDate, 7);
-		} else {
-			nextStartDate = addMonths(baseStartDate, 1);
-		}
-		nextStartDateStr = format(nextStartDate, "yyyy-MM-dd");
-	}
-
-	// Insert next recurring task
-	const { data: spawnedTask, error } = await SupabaseConn.from("tasks")
-		.insert([
-			{
-				title: task.title,
-				description: task.description,
-				priority: task.priority,
-				category: task.category,
-				status: "todo",
-				due_date: nextDateStr,
-				recurrence: task.recurrence,
-				tags: task.tags || [],
-				estimated_minutes: task.estimated_minutes,
-				parent_id: task.parent_id,
-				start_date: nextStartDateStr,
-				start_time: task.start_time,
-				due_time: task.due_time,
-				recurrence_origin_id: originId,
-				position: task.position,
-				reschedule_count: 0,
-			},
-		])
-		.select()
-		.single();
-
-	if (error) {
-		console.error("Failed to spawn recurring task:", error);
-		return;
-	}
-
-	// Clone child subtasks for recurring rituals / checklists
-	if (spawnedTask) {
-		const { data: childSubtasks } = await SupabaseConn.from("tasks")
-			.select("*")
-			.eq("parent_id", task.id);
-
-		if (childSubtasks && childSubtasks.length > 0) {
-			const clonedSubtasks = childSubtasks.map((sub) => ({
-				title: sub.title,
-				parent_id: spawnedTask.id,
-				priority: sub.priority,
-				category: sub.category,
-				due_date: nextDateStr,
-				status: "todo" as TaskStatus,
-				tags: sub.tags || [],
-				recurrence: "none" as TaskRecurrence,
-				reschedule_count: 0,
-				position: sub.position,
-				estimated_minutes: sub.estimated_minutes,
-				completed_at: null,
-			}));
-
-			const { error: subtaskError } =
-				await SupabaseConn.from("tasks").insert(clonedSubtasks);
-			if (subtaskError) {
-				console.error("Failed to clone recurring subtasks:", subtaskError);
-			}
-		}
 	}
 }
 
@@ -146,38 +35,48 @@ export async function getTasks(options?: {
 	showCompletedToday?: boolean;
 	includeCompleted?: boolean;
 	includeOverdue?: boolean;
+	allActive?: boolean;
 }): Promise<Task[]> {
 	if (!(await checkAdmin())) return [];
 
 	const today = getJakartaDateString();
+	if (
+		(options?.startDate && !isTaskDate(options.startDate)) ||
+		(options?.endDate && !isTaskDate(options.endDate))
+	)
+		throw new Error("Invalid task date range");
 	const startDate = options?.startDate || today;
 	const endDate = options?.endDate || today;
 	const showCompletedToday = options?.showCompletedToday ?? false;
 	const includeCompleted = options?.includeCompleted ?? false;
 	const includeOverdue = options?.includeOverdue ?? true;
 
-	let query = SupabaseConn.from("tasks").select("*");
+	let query = (await createAdminClient()).from("tasks").select("*");
 
 	// Handle Completion and Date Filtering
-	if (includeCompleted) {
+	if (options?.allActive) {
+		query = query.or(
+			`status.neq.done,and(status.eq.done,completed_at.gte.${jakartaMidnight(startDate)},completed_at.lt.${jakartaMidnight(nextDate(endDate))})`,
+		);
+	} else if (includeCompleted) {
 		// Show: (Due in range or overdue pending) OR (Completed in range)
 		if (includeOverdue) {
 			query = query.or(
-				`and(due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`,
+				`and(due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${jakartaMidnight(startDate)},completed_at.lt.${jakartaMidnight(nextDate(endDate))})`,
 			);
 		} else {
 			query = query.or(
-				`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${startDate}T00:00:00,completed_at.lte.${endDate}T23:59:59)`,
+				`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${jakartaMidnight(startDate)},completed_at.lt.${jakartaMidnight(nextDate(endDate))})`,
 			);
 		}
 	} else if (showCompletedToday) {
 		if (includeOverdue) {
 			query = query.or(
-				`and(due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`,
+				`and(due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${jakartaMidnight(today)},completed_at.lt.${jakartaMidnight(nextDate(today))})`,
 			);
 		} else {
 			query = query.or(
-				`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${today}T00:00:00,completed_at.lte.${today}T23:59:59)`,
+				`and(due_date.gte.${startDate},due_date.lte.${endDate},status.neq.done),and(status.eq.done,completed_at.gte.${jakartaMidnight(today)},completed_at.lt.${jakartaMidnight(nextDate(today))})`,
 			);
 		}
 	} else {
@@ -205,21 +104,16 @@ export async function getTasks(options?: {
 	// Subtasks are fetched separately via getSubtasks.
 	query = query.is("parent_id", null).is("archived_at", null);
 
-	const { data, error } = await query
-		.order("position", { ascending: true })
-		.order("created_at", { ascending: false });
-
-	if (error) {
-		console.error("Failed to fetch tasks:", {
-			dateRange: { startDate, endDate },
-			filters: { priority: options?.priority, category: options?.category },
-			error: error.message,
-			details: error,
-		});
-		return [];
+	const tasks: Task[] = [];
+	for (let offset = 0; ; offset += 1000) {
+		const { data, error } = await query
+			.order("position", { ascending: true })
+			.order("id", { ascending: true })
+			.range(offset, offset + 999);
+		if (error) throw new Error("Could not load tasks. Please retry.");
+		tasks.push(...(data as Task[]));
+		if (data.length < 1000) return tasks;
 	}
-
-	return data as Task[];
 }
 
 /**
@@ -228,7 +122,8 @@ export async function getTasks(options?: {
 export async function getSubtasks(parentId: string): Promise<Task[]> {
 	if (!(await checkAdmin())) return [];
 
-	const { data, error } = await SupabaseConn.from("tasks")
+	const { data, error } = await (await createAdminClient())
+		.from("tasks")
 		.select("*")
 		.eq("parent_id", parentId)
 		.order("position", { ascending: true })
@@ -263,6 +158,7 @@ export async function addTask(payload: {
 	due_time?: string | null;
 }) {
 	await requireTasksAdmin();
+	payload = taskCreateSchema.parse(payload) as typeof payload;
 
 	let dueDate = payload.due_date;
 	if (
@@ -274,7 +170,8 @@ export async function addTask(payload: {
 	}
 
 	const status: TaskStatus = payload.status || "todo";
-	const { data, error } = await SupabaseConn.from("tasks")
+	const { data, error } = await (await createAdminClient())
+		.from("tasks")
 		.insert([
 			{
 				...payload,
@@ -316,9 +213,17 @@ export async function addSubtask(payload: {
 	estimated_minutes?: number;
 }) {
 	await requireTasksAdmin();
+	taskIdSchema.parse(payload.parent_id);
+	taskFieldsSchema.parse({
+		title: payload.title,
+		priority: payload.priority,
+		due_date: payload.due_date,
+		estimated_minutes: payload.estimated_minutes,
+	});
 
 	// Inherit parent's due_date and priority if not specified
-	const { data: parent, error: parentError } = await SupabaseConn.from("tasks")
+	const { data: parent, error: parentError } = await (await createAdminClient())
+		.from("tasks")
 		.select("due_date, priority, category")
 		.eq("id", payload.parent_id)
 		.single();
@@ -327,7 +232,8 @@ export async function addSubtask(payload: {
 		throw new Error("Parent task not found");
 	}
 
-	const { data, error } = await SupabaseConn.from("tasks")
+	const { data, error } = await (await createAdminClient())
+		.from("tasks")
 		.insert([
 			{
 				title: payload.title,
@@ -378,8 +284,12 @@ export async function addBatchTasks(
 	}[],
 ) {
 	await requireTasksAdmin();
+	if (!Array.isArray(payloads) || payloads.length > 1000 || !payloads.length)
+		throw new Error("Invalid task batch");
+	payloads = payloads.map((p) => taskCreateSchema.parse(p) as typeof p);
 	const status: TaskStatus = "todo";
-	const { data, error } = await SupabaseConn.from("tasks")
+	const { data, error } = await (await createAdminClient())
+		.from("tasks")
 		.insert(
 			payloads.map((p) => ({
 				...p,
@@ -411,145 +321,40 @@ export async function addBatchTasks(
  * Update task status.
  */
 export async function updateTaskStatus(taskId: string, status: TaskStatus) {
-	await requireTasksAdmin();
-
-	const completedAt = status === "done" ? new Date().toISOString() : null;
-
-	const { data: currentTask } = await SupabaseConn.from("tasks")
-		.select("status")
-		.eq("id", taskId)
-		.single();
-
-	const wasDone = currentTask?.status === "done";
-	const isNowDone = status === "done";
-
-	const { data, error } = await SupabaseConn.from("tasks")
-		.update({
-			status,
-			completed_at: completedAt,
-		})
-		.eq("id", taskId)
-		.select()
-		.single();
-
-	if (error) {
-		console.error("Failed to update task status:", {
-			taskId,
-			status,
-			error: error.message,
-		});
-		throw new Error(
-			`Failed to update status for task ${taskId}. ${error.message || "Please try again."}`,
-		);
-	}
-
-	if (isNowDone && !wasDone && data) {
-		await handleRecurrenceSpawning(data as Task);
-		await handleDependenciesUnblocking(taskId);
-	} else if (wasDone && !isNowDone) {
-		await handleDependenciesReblocking(taskId);
-	}
-
-	revalidatePath("/tasks");
-	await invalidateStatsCache();
+	await updateTask(taskId, { status });
 }
 
-/**
- * Update task details (title, priority, etc.)
- */
 export async function updateTask(taskId: string, updates: Partial<Task>) {
 	await requireTasksAdmin();
-
-	const payload: Partial<Task> = { ...updates };
-
-	const { data: currentTask } = await SupabaseConn.from("tasks")
-		.select("status, due_date, start_date")
-		.eq("id", taskId)
-		.single();
-
-	// Clamp dates so due_date is never before start_date
-	const effectiveStartDate =
-		payload.start_date !== undefined
-			? payload.start_date
-			: currentTask?.start_date;
-	const effectiveDueDate =
-		payload.due_date !== undefined ? payload.due_date : currentTask?.due_date;
-	if (
-		effectiveStartDate &&
-		effectiveDueDate &&
-		effectiveStartDate > effectiveDueDate
-	) {
-		payload.due_date = effectiveStartDate;
-	}
-
-	const wasDone = currentTask?.status === "done";
-	let becameDone = false;
-	let becameUndone = false;
-
-	if (updates.status) {
-		if (updates.status === "done") {
-			payload.completed_at = updates.completed_at || new Date().toISOString();
-			if (!wasDone) {
-				becameDone = true;
-			}
-		} else {
-			payload.completed_at = null;
-			if (wasDone) {
-				becameUndone = true;
-			}
-		}
-	}
-
-	const { data, error } = await SupabaseConn.from("tasks")
-		.update(payload)
-		.eq("id", taskId)
-		.select()
-		.single();
-
-	if (error) {
-		console.error("Failed to update task:", {
-			taskId,
-			updates,
-			error: error.message,
-			code: error.code,
-		});
-		throw new Error(
-			`Failed to update task ${taskId}. ${error.message || "Please try again."}`,
-		);
-	}
-
-	if (becameDone && data) {
-		await handleRecurrenceSpawning(data as Task);
-		await handleDependenciesUnblocking(taskId);
-	} else if (becameUndone) {
-		await handleDependenciesReblocking(taskId);
-	}
-
+	taskIdSchema.parse(taskId);
+	const payload = taskFieldsSchema.parse(updates);
+	const db = await createAdminClient();
+	const { error } = await db.rpc("task_apply", {
+		p_updates: [{ id: taskId, ...payload }],
+	});
+	if (error) throw new Error(`Failed to save task. ${error.message}`);
 	revalidatePath("/tasks");
 	await invalidateStatsCache();
 }
 
-/**
- * Bulk update task positions safely without upsert constraint violations
- */
-export async function reorderTasks(taskIds: string[]) {
+export async function reorderTasks(
+	taskIds: string[],
+	move?: { id: string; updates: Partial<Task> },
+) {
 	await requireTasksAdmin();
-	if (!taskIds.length) return;
-
-	const updatePromises = taskIds.map((id, index) =>
-		SupabaseConn.from("tasks").update({ position: index }).eq("id", id),
-	);
-
-	const results = await Promise.all(updatePromises);
-	const failed = results.find((r) => r.error);
-
-	if (failed?.error) {
-		console.error("Failed to reorder tasks:", failed.error);
-		throw new Error(
-			`Failed to reorder ${taskIds.length} tasks. ${failed.error.message || "Please refresh the page."}`,
-		);
-	}
-
+	taskIdsSchema.parse(taskIds);
+	const changes = move ? taskFieldsSchema.parse(move.updates) : {};
+	if (move && !taskIds.includes(taskIdSchema.parse(move.id)))
+		throw new Error("Moved task is missing from destination");
+	const db = await createAdminClient();
+	const { error } = await db.rpc("task_apply", {
+		p_updates: taskIds.map((id, position) => ({
+			id,
+			position,
+			...(move?.id === id ? changes : {}),
+		})),
+	});
+	if (error) throw new Error(`Failed to move tasks. ${error.message}`);
 	revalidatePath("/tasks");
 	await invalidateStatsCache();
 }
@@ -559,7 +364,11 @@ export async function reorderTasks(taskIds: string[]) {
  */
 export async function deleteTask(taskId: string) {
 	await requireTasksAdmin();
-	const { error } = await SupabaseConn.from("tasks").delete().eq("id", taskId);
+	taskIdSchema.parse(taskId);
+	const { error } = await (await createAdminClient())
+		.from("tasks")
+		.delete()
+		.eq("id", taskId);
 
 	if (error) {
 		console.error("Failed to delete task:", {
@@ -576,134 +385,26 @@ export async function deleteTask(taskId: string) {
 	await invalidateStatsCache();
 }
 
-/**
- * Reschedule all overdue tasks by adding a specific number of days.
- * Increments the reschedule_count for each task.
- */
-export async function rescheduleOverdueTasks(daysToAdd: number) {
+export async function rescheduleOverdueTasks(input: {
+	ids: string[];
+	previewDate: string;
+	targetDate: string;
+}) {
 	await requireTasksAdmin();
-
-	const today = getJakartaDateString();
-	const newDate = addDays(parseISO(today), daysToAdd);
-	const newDateStr = format(newDate, "yyyy-MM-dd");
-
-	// 1. Fetch overdue tasks
-	const { data: overdueTasks, error: fetchError } = await SupabaseConn.from(
-		"tasks",
-	)
-		.select("id, reschedule_count")
-		.neq("status", "done")
-		.not("status", "in", '("cancelled")')
-		.lt("due_date", today)
-		.is("parent_id", null)
-		.is("archived_at", null);
-
-	if (fetchError || !overdueTasks) {
-		console.error("Failed to fetch overdue tasks for rescheduling:", {
-			daysToAdd,
-			error: fetchError?.message,
-			code: fetchError?.code,
-		});
-		return {
-			success: false,
-			message: `Failed to fetch overdue tasks. ${fetchError?.message || "Please try again."}`,
-		};
-	}
-
-	if (overdueTasks.length === 0)
-		return { success: true, message: "No overdue tasks to reschedule" };
-
-	// 2. Perform updates using parallel update queries to protect against NOT NULL upsert errors
-	const updatePromises = overdueTasks.map((t) =>
-		SupabaseConn.from("tasks")
-			.update({
-				due_date: newDateStr,
-				reschedule_count: (t.reschedule_count || 0) + 1,
-			})
-			.eq("id", t.id),
-	);
-
-	const results = await Promise.all(updatePromises);
-	const failed = results.find((r) => r.error);
-
-	if (failed?.error) {
-		console.error("Failed during bulk reschedule:", failed.error);
-		return {
-			success: false,
-			message: `Failed to reschedule ${overdueTasks.length} tasks. ${failed.error.message || "Please try again."}`,
-		};
-	}
-
+	const { ids, previewDate, targetDate } = rolloverSchema.parse(input);
+	const db = await createAdminClient();
+	const { error } = await db.rpc("task_rollover", {
+		p_ids: ids,
+		p_preview_date: previewDate,
+		p_target_date: targetDate,
+	});
+	if (error) throw new Error(`Could not reschedule tasks. ${error.message}`);
 	revalidatePath("/tasks");
 	await invalidateStatsCache();
 	return {
 		success: true,
-		message: `Successfully rescheduled ${overdueTasks.length} tasks`,
+		message: `Rescheduled ${ids.length} tasks to ${targetDate}`,
 	};
-}
-
-/**
- * Handle unblocking tasks that depend on the completed task.
- */
-async function handleDependenciesUnblocking(completedTaskId: string) {
-	const { data: dependents, error: depError } = await SupabaseConn.from(
-		"task_dependencies",
-	)
-		.select("task_id")
-		.eq("depends_on", completedTaskId);
-
-	if (depError || !dependents || dependents.length === 0) return;
-
-	for (const dep of dependents) {
-		const dependentTaskId = dep.task_id;
-
-		const { data: deps, error: blockerError } = await SupabaseConn.from(
-			"task_dependencies",
-		)
-			.select("depends_on")
-			.eq("task_id", dependentTaskId);
-
-		if (blockerError || !deps) continue;
-
-		const blockerIds = deps
-			.map((d) => d.depends_on)
-			.filter((id) => id !== completedTaskId);
-
-		if (blockerIds.length > 0) {
-			const { data: activeBlockers } = await SupabaseConn.from("tasks")
-				.select("id")
-				.in("id", blockerIds)
-				.neq("status", "done");
-
-			if (activeBlockers && activeBlockers.length > 0) {
-				continue;
-			}
-		}
-
-		await SupabaseConn.from("tasks")
-			.update({ status: "todo" })
-			.eq("id", dependentTaskId)
-			.eq("status", "blocked");
-	}
-}
-
-/**
- * Handle re-blocking tasks when a blocker is reopened from done back to todo/in_progress.
- */
-async function handleDependenciesReblocking(reopenedTaskId: string) {
-	const { data: dependents, error: depError } = await SupabaseConn.from(
-		"task_dependencies",
-	)
-		.select("task_id")
-		.eq("depends_on", reopenedTaskId);
-
-	if (depError || !dependents || dependents.length === 0) return;
-
-	const dependentIds = dependents.map((d) => d.task_id);
-	await SupabaseConn.from("tasks")
-		.update({ status: "blocked" })
-		.in("id", dependentIds)
-		.neq("status", "done");
 }
 
 /**
@@ -711,8 +412,10 @@ async function handleDependenciesReblocking(reopenedTaskId: string) {
  */
 export async function archiveTask(taskId: string) {
 	await requireTasksAdmin();
+	taskIdSchema.parse(taskId);
 
-	const { error } = await SupabaseConn.from("tasks")
+	const { error } = await (await createAdminClient())
+		.from("tasks")
 		.update({ archived_at: new Date().toISOString() })
 		.eq("id", taskId);
 
@@ -730,8 +433,10 @@ export async function archiveTask(taskId: string) {
  */
 export async function unarchiveTask(taskId: string) {
 	await requireTasksAdmin();
+	taskIdSchema.parse(taskId);
 
-	const { error } = await SupabaseConn.from("tasks")
+	const { error } = await (await createAdminClient())
+		.from("tasks")
 		.update({ archived_at: null })
 		.eq("id", taskId);
 
@@ -750,7 +455,8 @@ export async function unarchiveTask(taskId: string) {
 export async function getArchivedTasks(): Promise<Task[]> {
 	if (!(await checkAdmin())) return [];
 
-	const { data, error } = await SupabaseConn.from("tasks")
+	const { data, error } = await (await createAdminClient())
+		.from("tasks")
 		.select("*")
 		.not("archived_at", "is", null)
 		.is("parent_id", null)
@@ -758,7 +464,7 @@ export async function getArchivedTasks(): Promise<Task[]> {
 
 	if (error) {
 		console.error("Failed to fetch archived tasks:", error);
-		return [];
+		throw new Error("Could not load tasks. Please retry.");
 	}
 
 	return data as Task[];
@@ -770,50 +476,29 @@ export async function getArchivedTasks(): Promise<Task[]> {
  */
 export async function addTaskDependency(taskId: string, dependsOnId: string) {
 	await requireTasksAdmin();
-
-	const { error } = await SupabaseConn.from("task_dependencies").insert([
-		{ task_id: taskId, depends_on: dependsOnId },
-	]);
-
-	if (error) {
-		console.error("Failed to add dependency:", error);
-		throw new Error("Failed to link task dependency");
-	}
-
-	const { data: blocker } = await SupabaseConn.from("tasks")
-		.select("status")
-		.eq("id", dependsOnId)
-		.single();
-
-	if (blocker && blocker.status !== "done") {
-		await SupabaseConn.from("tasks")
-			.update({ status: "blocked" })
-			.eq("id", taskId);
-	}
-
+	const db = await createAdminClient();
+	const { error } = await db.rpc("task_dependency", {
+		p_task_id: taskIdSchema.parse(taskId),
+		p_depends_on: taskIdSchema.parse(dependsOnId),
+		p_remove: false,
+	});
+	if (error) throw new Error(error.message);
 	revalidatePath("/tasks");
 	await invalidateStatsCache();
 }
 
-/**
- * Remove a task dependency.
- */
 export async function removeTaskDependency(
 	taskId: string,
 	dependsOnId: string,
 ) {
 	await requireTasksAdmin();
-
-	const { error } = await SupabaseConn.from("task_dependencies")
-		.delete()
-		.eq("task_id", taskId)
-		.eq("depends_on", dependsOnId);
-
-	if (error) {
-		console.error("Failed to remove dependency:", error);
-		throw new Error("Failed to remove task dependency");
-	}
-
+	const db = await createAdminClient();
+	const { error } = await db.rpc("task_dependency", {
+		p_task_id: taskIdSchema.parse(taskId),
+		p_depends_on: taskIdSchema.parse(dependsOnId),
+		p_remove: true,
+	});
+	if (error) throw new Error(error.message);
 	revalidatePath("/tasks");
 	await invalidateStatsCache();
 }
@@ -824,14 +509,16 @@ export async function removeTaskDependency(
 export async function getTaskDependencies(taskId: string): Promise<Task[]> {
 	if (!(await checkAdmin())) return [];
 
-	const { data: deps, error } = await SupabaseConn.from("task_dependencies")
+	const { data: deps, error } = await (await createAdminClient())
+		.from("task_dependencies")
 		.select("depends_on")
 		.eq("task_id", taskId);
 
 	if (error || !deps || deps.length === 0) return [];
 
 	const ids = deps.map((d) => d.depends_on);
-	const { data: tasks, error: tasksError } = await SupabaseConn.from("tasks")
+	const { data: tasks, error: tasksError } = await (await createAdminClient())
+		.from("tasks")
 		.select("*")
 		.in("id", ids);
 
@@ -846,7 +533,8 @@ export async function getTaskDependencies(taskId: string): Promise<Task[]> {
 export async function getPotentialBlockers(taskId: string): Promise<Task[]> {
 	if (!(await checkAdmin())) return [];
 
-	const { data, error } = await SupabaseConn.from("tasks")
+	const { data, error } = await (await createAdminClient())
+		.from("tasks")
 		.select("*")
 		.neq("status", "done")
 		.neq("id", taskId)
@@ -857,9 +545,9 @@ export async function getPotentialBlockers(taskId: string): Promise<Task[]> {
 	if (error || !data) return [];
 
 	// Fetch all existing dependency links to compute full transitive descendant tree
-	const { data: allLinks } = await SupabaseConn.from(
-		"task_dependencies",
-	).select("task_id, depends_on");
+	const { data: allLinks } = await (await createAdminClient())
+		.from("task_dependencies")
+		.select("task_id, depends_on");
 
 	const links = allLinks || [];
 	const visited = new Set<string>();
@@ -889,13 +577,15 @@ export async function getPendingTasksCount(): Promise<number> {
 
 	try {
 		const todayStr = getJakartaDateString();
-		const { count, error } = await SupabaseConn.from("tasks")
+		const { count, error } = await (await createAdminClient())
+			.from("tasks")
 			.select("*", { count: "exact", head: true })
 			.is("parent_id", null)
 			.is("archived_at", null)
 			.neq("status", "done")
 			.neq("status", "cancelled")
-			.lte("due_date", todayStr);
+			.lte("due_date", todayStr)
+			.or(`start_date.is.null,start_date.lte.${todayStr}`);
 
 		if (error) {
 			console.error("Error fetching pending task count:", error);

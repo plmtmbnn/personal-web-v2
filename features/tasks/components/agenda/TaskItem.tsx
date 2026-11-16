@@ -1,5 +1,8 @@
 "use client";
 
+import { jakartaToday } from "../../dates";
+
+import { useTaskMutations } from "./TaskMutations";
 import type React from "react";
 import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import {
@@ -120,7 +123,6 @@ function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
 		const nextDone = subtask.status !== "done";
 		onUpdate(subtask.id, {
 			status: nextDone ? "done" : "todo",
-			completed_at: nextDone ? new Date().toISOString() : null,
 		});
 	};
 
@@ -257,6 +259,7 @@ function TaskItem({
 	layoutMode = "list",
 }: TaskItemProps) {
 	const [isEditing, setIsEditing] = useState(false);
+	const { update: saveSubtask, remove, isHidden, pending } = useTaskMutations();
 	const [editValue, setEditValue] = useState(task.title);
 	const [editDescription, setEditDescription] = useState(
 		task.description || "",
@@ -496,15 +499,10 @@ function TaskItem({
 
 		if (editDueDate !== task.due_date) {
 			updates.due_date = editDueDate;
-			if (editDueDate > task.due_date) {
-				updates.reschedule_count = (task.reschedule_count || 0) + 1;
-			}
 		}
 
 		if (editStatus !== (task.status || "todo")) {
 			updates.status = editStatus;
-			updates.completed_at =
-				editStatus === "done" ? new Date().toISOString() : null;
 		}
 
 		if (editEstimated !== (task.estimated_minutes || null)) {
@@ -597,23 +595,25 @@ function TaskItem({
 		}
 	}, [newSubtaskTitle, task.id]);
 
-	const handleSubtaskToggle = useCallback(
-		(subtaskId: string, updates: Partial<Task>) => {
-			setSubtasks((prev) =>
-				prev.map((s) => (s.id === subtaskId ? { ...s, ...updates } : s)),
+	const handleSubtaskToggle = async (
+		subtaskId: string,
+		updates: Partial<Task>,
+	) => {
+		const previous = subtasks.find((task) => task.id === subtaskId);
+		setSubtasks((tasks) =>
+			tasks.map((task) =>
+				task.id === subtaskId ? { ...task, ...updates } : task,
+			),
+		);
+		if (!(await saveSubtask(subtaskId, updates)) && previous)
+			setSubtasks((tasks) =>
+				tasks.map((task) => (task.id === subtaskId ? previous : task)),
 			);
-			onUpdate(subtaskId, updates);
-		},
-		[onUpdate],
-	);
-
-	const handleSubtaskDelete = useCallback(
-		(subtaskId: string) => {
-			setSubtasks((prev) => prev.filter((s) => s.id !== subtaskId));
-			onDelete(subtaskId);
-		},
-		[onDelete],
-	);
+	};
+	const handleSubtaskDelete = (subtaskId: string) => {
+		const subtask = subtasks.find((task) => task.id === subtaskId);
+		if (subtask) remove(subtask, "delete");
+	};
 
 	// Edit-mode tag handlers
 	const handleEditTagKeyDown = useCallback(
@@ -638,7 +638,7 @@ function TaskItem({
 
 	const dueDateInfo = useMemo(() => {
 		if (!task.due_date) return null;
-		const today = startOfDay(new Date());
+		const today = jakartaToday();
 		const dueDate = startOfDay(parseISO(task.due_date));
 		const diff = differenceInDays(dueDate, today);
 		const formatted = format(parseISO(task.due_date), "dd MMM");
@@ -1132,7 +1132,7 @@ function TaskItem({
 									</span>
 									{QUICK_RESCHEDULE_OPTIONS.map((opt) => {
 										const targetDateStr = format(
-											addDays(new Date(), opt.days),
+											addDays(jakartaToday(), opt.days),
 											"yyyy-MM-dd",
 										);
 										const isActive = editDueDate === targetDateStr;
@@ -1283,7 +1283,7 @@ function TaskItem({
 									<button
 										type="button"
 										onClick={handleSave}
-										disabled={!editValue.trim()}
+										disabled={pending || !editValue.trim()}
 										className="px-4 py-1.5 text-xs font-black uppercase tracking-wider text-white bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:hover:bg-emerald-500 rounded-xl shadow-md shadow-emerald-200 transition-all flex items-center gap-1.5"
 									>
 										<Check className="w-3.5 h-3.5 stroke-[3]" /> Save
@@ -1497,14 +1497,16 @@ function TaskItem({
 															No subtasks yet
 														</p>
 													)}
-												{subtasks.map((sub) => (
-													<SubtaskItem
-														key={sub.id}
-														subtask={sub}
-														onUpdate={handleSubtaskToggle}
-														onDelete={handleSubtaskDelete}
-													/>
-												))}
+												{subtasks
+													.filter((sub) => !isHidden(sub.id))
+													.map((sub) => (
+														<SubtaskItem
+															key={sub.id}
+															subtask={sub}
+															onUpdate={handleSubtaskToggle}
+															onDelete={handleSubtaskDelete}
+														/>
+													))}
 												{isAddingSubtask ? (
 													<div className="flex items-center gap-1.5 pt-1">
 														<input
@@ -1633,10 +1635,7 @@ function TaskItem({
 										</div>
 									)}
 									{task.start_date &&
-										isAfter(
-											parseISO(task.start_date),
-											startOfDay(new Date()),
-										) && (
+										isAfter(parseISO(task.start_date), jakartaToday()) && (
 											<span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-100">
 												Starts {format(parseISO(task.start_date), "dd MMM")}
 											</span>
@@ -1697,13 +1696,12 @@ function TaskItem({
 										value={optimisticStatus}
 										onChange={(nextStatus) => {
 											setOptimisticStatus(nextStatus);
-											const isDone = nextStatus === "done";
+
 											onUpdate(task.id, {
 												status: nextStatus,
-												completed_at: isDone ? new Date().toISOString() : null,
 											});
 										}}
-										disabled={false}
+										disabled={pending}
 									/>
 
 									<button

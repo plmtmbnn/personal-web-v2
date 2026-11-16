@@ -1,5 +1,8 @@
 "use client";
 
+import { useTaskDay } from "./useTaskDay";
+import { completionWeekOffset } from "../../dates";
+
 import { useState, useEffect, useMemo, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -16,7 +19,7 @@ import {
 	Loader2,
 } from "lucide-react";
 import type { Task } from "@/features/tasks/types";
-import { format, startOfWeek, endOfWeek, addDays, startOfDay } from "date-fns";
+import { format, startOfWeek, endOfWeek, addDays, parseISO } from "date-fns";
 import {
 	SEARCH_DEBOUNCE_MS,
 	TASK_STATUS_CONFIG,
@@ -35,6 +38,7 @@ export default function TaskFilters({
 	showRangeFilter = false,
 }: TaskFiltersProps) {
 	const router = useRouter();
+	const day = useTaskDay();
 	const searchParams = useSearchParams();
 	const [isPending, startTransition] = useTransition();
 	const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
@@ -56,7 +60,9 @@ export default function TaskFilters({
 	const currentRange = searchParams.get(KEY_RANGE) || "week";
 	const showCompleted = searchParams.get(KEY_COMPLETED) === "true";
 	const currentSearch = searchParams.get(KEY_SEARCH) || "";
-	const weekOffset = Number(searchParams.get(KEY_WEEK_OFFSET) || "0");
+	const weekOffset = completionWeekOffset(
+		searchParams.get(KEY_WEEK_OFFSET) || "0",
+	);
 	const currentStatus = searchParams.get(KEY_STATUS) || "all";
 
 	// Optimistic local state for instantaneous 0ms UI feedback
@@ -85,7 +91,7 @@ export default function TaskFilters({
 	]);
 
 	// Weekly date range calculation for Completed navigator
-	const todayRef = useMemo(() => startOfDay(new Date()), []);
+	const todayRef = useMemo(() => parseISO(day), [day]);
 	const selectedWeekStart = useMemo(
 		() =>
 			addDays(startOfWeek(todayRef, { weekStartsOn: 1 }), localWeekOffset * 7),
@@ -260,6 +266,27 @@ export default function TaskFilters({
 			className="flex flex-col gap-2.5 py-1 w-full max-w-full relative"
 			aria-busy={isLoading}
 		>
+			{!paramPrefix && (
+				<fieldset
+					className="flex gap-1 rounded-xl bg-slate-50 p-1 self-start"
+					aria-label="Agenda focus"
+				>
+					{(["all", "today"] as const).map((focus) => (
+						<button
+							key={focus}
+							type="button"
+							aria-pressed={
+								(searchParams.get("focus") === "today" ? "today" : "all") ===
+								focus
+							}
+							onClick={() => setFilter("focus", focus === "all" ? "" : focus)}
+							className={`min-h-11 rounded-lg px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 ${(searchParams.get("focus") === "today" ? "today" : "all") === focus ? "bg-white text-slate-900 shadow-xs" : "text-slate-600"}`}
+						>
+							{focus === "all" ? "All" : "Today"}
+						</button>
+					))}
+				</fieldset>
+			)}
 			<div className="h-0.5 w-full overflow-hidden rounded-full bg-transparent relative -my-0.5">
 				<AnimatePresence>
 					{isLoading && (

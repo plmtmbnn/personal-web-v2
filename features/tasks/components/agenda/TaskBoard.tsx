@@ -1,4 +1,7 @@
 "use client";
+import { useSearchParams } from "next/navigation";
+import { inUpcomingRange, inCompletionWeek } from "../../agenda";
+import { useTaskDay } from "./useTaskDay";
 
 import {
 	useOptimistic,
@@ -6,8 +9,6 @@ import {
 	useMemo,
 	useCallback,
 	useState,
-	useRef,
-	useEffect,
 } from "react";
 import {
 	DragDropContext,
@@ -16,19 +17,10 @@ import {
 	type DropResult,
 } from "@hello-pangea/dnd";
 import type { Task, TaskStatus } from "@/features/tasks/types";
-import {
-	updateTaskStatus,
-	updateTask,
-	deleteTask,
-	reorderTasks,
-	archiveTask,
-} from "@/features/tasks/actions/server-actions";
 import TaskItem from "./TaskItem";
-import {
-	TASK_STATUS_CONFIG,
-	UNDO_TOAST_DURATION_MS,
-} from "@/features/tasks/constants";
+import { TASK_STATUS_CONFIG } from "@/features/tasks/constants";
 import { useToast } from "@/features/tasks/components/shared/Toast";
+import { useTaskMutations } from "./TaskMutations";
 import CustomModal from "@/features/shared/components/CustomModal";
 
 interface TaskBoardProps {
@@ -44,35 +36,15 @@ export default function TaskBoard({
 	upcomingTasks,
 	completedTasks,
 }: TaskBoardProps) {
+	const day = useTaskDay();
+	const params = useSearchParams();
+	const range = params.get("upcoming_range") || "week";
+	const week = params.get("completed_week_offset");
 	const [_isPending, startTransition] = useTransition();
-	const { showSuccess, showError } = useToast();
+	const { showError } = useToast();
 
 	// Modal State for Deletion
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
-
-	// Multi-task undo timers keyed by "delete-{id}" or "archive-{id}"
-	const undoTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-
-	// Flush any pending deletions/archives immediately on unmount so they persist
-	useEffect(() => {
-		return () => {
-			undoTimeoutsRef.current.forEach((timer, key) => {
-				clearTimeout(timer);
-				if (key.startsWith("archive-")) {
-					const taskId = key.replace("archive-", "");
-					archiveTask(taskId).catch((err) =>
-						console.error("Failed to archive task on unmount:", err),
-					);
-				} else if (key.startsWith("delete-")) {
-					const taskId = key.replace("delete-", "");
-					deleteTask(taskId).catch((err) =>
-						console.error("Failed to delete task on unmount:", err),
-					);
-				}
-			});
-			undoTimeoutsRef.current.clear();
-		};
-	}, []);
 
 	// Combine all tasks into one deduplicated flat array
 	const allTasks = useMemo(() => {
@@ -80,15 +52,23 @@ export default function TaskBoard({
 		for (const t of [
 			...overdueTasks,
 			...todayTasks,
-			...upcomingTasks,
-			...completedTasks,
+			...upcomingTasks.filter((task) => inUpcomingRange(task, day, range)),
+			...completedTasks.filter((task) => inCompletionWeek(task, day, week)),
 		]) {
 			if (!map.has(t.id)) {
 				map.set(t.id, t);
 			}
 		}
 		return Array.from(map.values());
-	}, [overdueTasks, todayTasks, upcomingTasks, completedTasks]);
+	}, [
+		overdueTasks,
+		todayTasks,
+		upcomingTasks,
+		completedTasks,
+		day,
+		range,
+		week,
+	]);
 
 	// Optimistic state handles toggle, delete, archive, restore, update, and drag-and-drop
 	const [optimisticTasks, addOptimisticAction] = useOptimistic<
@@ -109,7 +89,13 @@ export default function TaskBoard({
 				const otherTasks = state.filter(
 					(t) => (t.status || "todo") !== payload.status,
 				);
-				return [...otherTasks, ...payload.reorderedTasks];
+				return [
+					...otherTasks,
+					...payload.reorderedTasks.map((task: Task, position: number) => ({
+						...task,
+						position,
+					})),
+				];
 			}
 			case "toggle":
 				return state.map((t) =>
@@ -150,6 +136,8 @@ export default function TaskBoard({
 				cols[status].push(task);
 			}
 		}
+		for (const col of Object.values(cols))
+			col.sort((a, b) => a.position - b.position);
 		return cols;
 	}, [optimisticTasks]);
 
@@ -201,7 +189,12 @@ export default function TaskBoard({
 			});
 
 			try {
-				await updateTaskStatus(draggableId, destStatus);
+				const ids = columns[destStatus].map((t) => t.id);
+				ids.splice(destination.index, 0, draggableId);
+				await reorderTasks(ids, {
+					id: draggableId,
+					updates: { status: destStatus },
+				});
 			} catch (err) {
 				console.error("Failed to update status", err);
 				showError("Failed to move task. Please try again.");
@@ -213,136 +206,29 @@ export default function TaskBoard({
 		setDeleteTaskId(taskId);
 	}, []);
 
-	const handleConfirmDelete = async () => {
-		if (!deleteTaskId) return;
-		const targetId = deleteTaskId;
+	const {
+		update: handleUpdate,
+		remove,
+		pending,
+		reorder: reorderTasks,
+	} = useTaskMutations();
+	const handleConfirmDelete = () => {
+		const task = allTasks.find((t) => t.id === deleteTaskId);
+		if (task) remove(task, "delete");
 		setDeleteTaskId(null);
-
-		const taskToDelete = optimisticTasks.find((t) => t.id === targetId);
-		if (!taskToDelete) return;
-
-		// 1. Optimistically remove
-		startTransition(() => {
-			addOptimisticAction({ action: "delete", payload: { taskId: targetId } });
-		});
-
-		// 2. Multi-task undo timer
-		const timerKey = `delete-${targetId}`;
-		const timer = setTimeout(async () => {
-			undoTimeoutsRef.current.delete(timerKey);
-			try {
-				await deleteTask(targetId);
-			} catch (error) {
-				console.error("Failed to delete task:", error);
-				showError("Failed to delete task. Please try again.");
-				startTransition(() => {
-					addOptimisticAction({
-						action: "restore",
-						payload: { task: taskToDelete },
-					});
-				});
-			}
-		}, UNDO_TOAST_DURATION_MS);
-
-		undoTimeoutsRef.current.set(timerKey, timer);
-
-		// 3. Show undo toast
-		showSuccess(
-			`Task "${taskToDelete.title}" deleted`,
-			"Click undo to restore it",
-			{
-				label: "Undo",
-				onClick: () => {
-					const t = undoTimeoutsRef.current.get(timerKey);
-					if (t) {
-						clearTimeout(t);
-						undoTimeoutsRef.current.delete(timerKey);
-					}
-					startTransition(() => {
-						addOptimisticAction({
-							action: "restore",
-							payload: { task: taskToDelete },
-						});
-					});
-				},
-			},
-		);
+	};
+	const handleArchive = (id: string) => {
+		const task = allTasks.find((t) => t.id === id);
+		if (task) remove(task, "archive");
 	};
 
-	const handleArchive = useCallback(
-		(taskId: string) => {
-			const taskToArchive = optimisticTasks.find((t) => t.id === taskId);
-			if (!taskToArchive) return;
-
-			// 1. Optimistically remove
-			startTransition(() => {
-				addOptimisticAction({ action: "archive", payload: { taskId } });
-			});
-
-			// 2. Multi-task undo timer
-			const timerKey = `archive-${taskId}`;
-			const timer = setTimeout(async () => {
-				undoTimeoutsRef.current.delete(timerKey);
-				try {
-					await archiveTask(taskId);
-				} catch (error) {
-					console.error("Failed to archive task:", error);
-					showError("Failed to archive task.");
-					startTransition(() => {
-						addOptimisticAction({
-							action: "restore",
-							payload: { task: taskToArchive },
-						});
-					});
-				}
-			}, UNDO_TOAST_DURATION_MS);
-
-			undoTimeoutsRef.current.set(timerKey, timer);
-
-			// 3. Show Toast with Undo
-			showSuccess(
-				`Task "${taskToArchive.title}" archived`,
-				"Click undo to restore it",
-				{
-					label: "Undo",
-					onClick: () => {
-						const t = undoTimeoutsRef.current.get(timerKey);
-						if (t) {
-							clearTimeout(t);
-							undoTimeoutsRef.current.delete(timerKey);
-						}
-						startTransition(() => {
-							addOptimisticAction({
-								action: "restore",
-								payload: { task: taskToArchive },
-							});
-						});
-					},
-				},
-			);
-		},
-		[optimisticTasks, addOptimisticAction, showSuccess, showError],
-	);
-
-	const handleUpdate = useCallback(
-		async (taskId: string, updates: Partial<Task>) => {
-			startTransition(() => {
-				addOptimisticAction({
-					action: "update",
-					payload: { taskId, updates },
-				});
-			});
-			try {
-				await updateTask(taskId, updates);
-			} catch (error) {
-				console.error("Failed to update task:", error);
-				showError("Failed to update task.");
-			}
-		},
-		[addOptimisticAction, showError],
-	);
-
-	const columnKeys: TaskStatus[] = ["todo", "in_progress", "done", "blocked"];
+	const columnKeys: TaskStatus[] = [
+		"todo",
+		"in_progress",
+		"done",
+		"blocked",
+		...(columns.cancelled.length ? ["cancelled" as const] : []),
+	];
 
 	return (
 		<>
@@ -389,6 +275,7 @@ export default function TaskBoard({
 											<div className="space-y-3">
 												{colTasks.map((task, index) => (
 													<Draggable
+														isDragDisabled={pending || _isPending}
 														key={task.id}
 														draggableId={task.id}
 														index={index}

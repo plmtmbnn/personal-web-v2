@@ -1,3 +1,4 @@
+import { getJakartaDateString as getTaskDateString } from "@/features/tasks/dates";
 import { createAdminClient } from "@/lib/core/supabase-server";
 import { getInvestmentCompass } from "@/features/investment/actions";
 import { notificationDispatcher } from "./dispatcher";
@@ -40,7 +41,7 @@ export async function runTaskReminders() {
 
 	// 3. Fetch Tasks from Supabase (Service Role to bypass RLS)
 	const supabase = await createAdminClient();
-	const todayStr = getJakartaDateString();
+	const todayStr = getTaskDateString();
 
 	const { data: tasks, error } = await supabase
 		.from("tasks")
@@ -49,7 +50,8 @@ export async function runTaskReminders() {
 		.is("archived_at", null)
 		.neq("status", "done")
 		.neq("status", "cancelled")
-		.eq("due_date", todayStr);
+		.eq("due_date", todayStr)
+		.or(`start_date.is.null,start_date.lte.${todayStr}`);
 
 	if (error) {
 		console.error("[Cron] Error fetching tasks:", error);

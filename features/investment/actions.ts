@@ -2,6 +2,7 @@ import { jakartaDate } from "@/services/market-data/provenance";
 import { applyMarketProvenance } from "./lib/provenance";
 import { redis, CACHE_KEYS } from "@/lib/core/redis";
 import { revalidatePath, unstable_cache } from "next/cache";
+import { z } from "zod";
 import type {
 	CryptoFearAndGreedResponse,
 	InvestmentCompassData,
@@ -24,6 +25,7 @@ import type {
 	MacroSeries,
 	PriceHistorySeries,
 	CryptoFlowsSnapshot,
+	CryptoGlobalSnapshot,
 } from "@/services/market-data/types";
 import { fetchBitcoinMvrvObservation } from "@/services/market-data/onchain";
 import { fetchIhsgForeignFlow } from "@/services/market-data/idx-flows";
@@ -219,31 +221,37 @@ async function getMarketQuotes(
 	return { quotes: {}, sourceOk: false };
 }
 
-/**
- * Retrieves global crypto aggregates (market cap, dominance) from CoinGecko.
- */
+const cryptoGlobalCacheSchema = z.object({
+	totalMarketCapUsd: z.number(),
+	totalVolumeUsd: z.number(),
+	marketCapChange24hPct: z.number(),
+	btcDominance: z.number(),
+	ethDominance: z.number(),
+	updatedAt: z.number(),
+	retrievedAt: z.string().optional(),
+});
+
+async function readCryptoGlobalCache(
+	key: string,
+	origin: "cache" | "backup",
+): Promise<CryptoGlobalSnapshot | null> {
+	const raw = await redis.get<unknown>(key);
+	const data = cryptoGlobalCacheSchema.safeParse(
+		typeof raw === "string" ? JSON.parse(raw) : raw,
+	);
+	return data.success ? { ...data.data, origin } : null;
+}
+
 async function getCryptoGlobalData(
 	forceRefresh: boolean,
-): Promise<{ data: any; sourceOk: boolean }> {
+): Promise<{ data: CryptoGlobalSnapshot | null; sourceOk: boolean }> {
 	const cacheKey = CACHE_KEYS.CRYPTO_GLOBAL;
 	const backupKey = CACHE_KEYS.CRYPTO_GLOBAL_BACKUP;
 
 	if (!forceRefresh) {
 		try {
-			const cached = await redis.get(cacheKey);
-			if (cached)
-				return {
-					data: Object.fromEntries(
-						Object.entries(cached).map(([id, series]) => [
-							id,
-							{
-								...series,
-								origin: series.origin === "backup" ? "backup" : "cache",
-							},
-						]),
-					),
-					sourceOk: true,
-				};
+			const cached = await readCryptoGlobalCache(cacheKey, "cache");
+			if (cached) return { data: cached, sourceOk: true };
 		} catch (e) {
 			console.warn("[Investment] Crypto Global cache read failed:", e);
 		}
@@ -255,7 +263,7 @@ async function getCryptoGlobalData(
 			fresh: forceRefresh,
 		});
 		if (globalData) {
-			const snapshot = {
+			const snapshot: CryptoGlobalSnapshot = {
 				...globalData,
 				origin: "live",
 				retrievedAt: new Date().toISOString(),
@@ -269,12 +277,8 @@ async function getCryptoGlobalData(
 	}
 
 	try {
-		const backup = await redis.get(backupKey);
-		if (backup)
-			return {
-				data: { ...(backup as object), origin: "backup" },
-				sourceOk: false,
-			};
+		const backup = await readCryptoGlobalCache(backupKey, "backup");
+		if (backup) return { data: backup, sourceOk: false };
 	} catch (e) {
 		console.warn("[Investment] Crypto Global backup read failed:", e);
 	}
@@ -801,6 +805,6 @@ export async function getInvestmentCompass(
 
 export const getCachedInvestmentCompass = unstable_cache(
 	async () => getInvestmentCompass(false),
-	["investment-compass-data-v2"],
+	["investment-compass-data-v3"],
 	{ revalidate: 60, tags: ["compass-data"] },
 );

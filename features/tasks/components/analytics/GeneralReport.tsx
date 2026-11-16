@@ -1,4 +1,5 @@
 "use client";
+import { jakartaToday } from "../../dates";
 
 import { useState, useEffect, useMemo } from "react";
 import {
@@ -87,7 +88,7 @@ export default function GeneralReport({ tasks = [] }: GeneralReportProps) {
 				hasData: false,
 			};
 
-		const now = new Date();
+		const now = jakartaToday();
 		const periodFiltered = tasks.filter((t) => {
 			const dueDate = parseISO(t.due_date);
 			if (period === "today") return isSameDay(dueDate, now);

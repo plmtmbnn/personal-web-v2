@@ -1,5 +1,7 @@
 "use client";
 
+import { jakartaToday, getJakartaDateString } from "../../dates";
+
 import type React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
@@ -67,7 +69,7 @@ interface TaskFormProps {
 export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	const [title, setTitle] = useState("");
 	const [category, setCategory] = useState("");
-	const [dueDate, setDueDate] = useState(format(new Date(), "yyyy-MM-dd"));
+	const [dueDate, setDueDate] = useState(getJakartaDateString());
 	const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
 	const [recurrence, setRecurrence] = useState<TaskRecurrence>("none");
 	const [description, setDescription] = useState("");
@@ -101,7 +103,8 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 	// Active date chip for visual feedback
 	const activeDateChipDays = QUICK_DATE_CHIPS.find(
-		(chip) => dueDate === format(addDays(new Date(), chip.days), "yyyy-MM-dd"),
+		(chip) =>
+			dueDate === format(addDays(jakartaToday(), chip.days), "yyyy-MM-dd"),
 	)?.days;
 
 	// Count configured advanced settings
@@ -143,7 +146,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 				draft.recurrence = "none";
 			}
 
-			const today = format(new Date(), "yyyy-MM-dd");
+			const today = getJakartaDateString();
 			let validatedDueDate = draft.dueDate ?? today;
 			if (draft.dueDate) {
 				try {
@@ -256,9 +259,9 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 			if (dateMatch) {
 				const d = dateMatch[1].toLowerCase();
 				if (d === "today") {
-					setDueDate(format(new Date(), "yyyy-MM-dd"));
+					setDueDate(getJakartaDateString());
 				} else if (d === "tomorrow") {
-					setDueDate(format(addDays(new Date(), 1), "yyyy-MM-dd"));
+					setDueDate(format(addDays(jakartaToday(), 1), "yyyy-MM-dd"));
 				}
 				val = val.replace(dateMatch[0], "").trimStart();
 			}
@@ -269,7 +272,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 	);
 
 	const setQuickDate = useCallback((days: number) => {
-		setDueDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
+		setDueDate(format(addDays(jakartaToday(), days), "yyyy-MM-dd"));
 	}, []);
 
 	const handleKeyDown = useCallback(
@@ -286,7 +289,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 		setTitle("");
 		setCategory("");
 		setPriority("MEDIUM");
-		setDueDate(format(new Date(), "yyyy-MM-dd"));
+		setDueDate(getJakartaDateString());
 		setRecurrence("none");
 		setDescription("");
 		setStatus("todo");
@@ -581,9 +584,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										</button>
 										<button
 											type="button"
-											onClick={() =>
-												setDueDate(format(new Date(), "yyyy-MM-dd"))
-											}
+											onClick={() => setDueDate(getJakartaDateString())}
 											className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-blue-50 border border-slate-200/70 hover:border-blue-200 text-slate-500 hover:text-blue-700 font-mono transition-colors"
 											title="Set Due Date to Today"
 										>
@@ -592,7 +593,9 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										<button
 											type="button"
 											onClick={() =>
-												setDueDate(format(addDays(new Date(), 1), "yyyy-MM-dd"))
+												setDueDate(
+													format(addDays(jakartaToday(), 1), "yyyy-MM-dd"),
+												)
 											}
 											className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-blue-50 border border-slate-200/70 hover:border-blue-200 text-slate-500 hover:text-blue-700 font-mono transition-colors"
 											title="Set Due Date to Tomorrow"

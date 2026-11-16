@@ -222,9 +222,13 @@ export function TasksPageSkeleton() {
 			{/* Agenda Section Skeleton */}
 			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 relative z-10">
 				<div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/80 shadow-xl shadow-slate-200/50 p-6 sm:p-8 space-y-6">
-					<div className="flex items-center justify-between border-b border-slate-100 pb-4">
+					<div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
 						<Skeleton width="10rem" height="1.5rem" />
 						<Skeleton width="12rem" height="2rem" variant="rounded" />
+					</div>
+					<div className="flex gap-2" aria-hidden="true">
+						<Skeleton width="4rem" height="2.75rem" variant="rounded" />
+						<Skeleton width="5rem" height="2.75rem" variant="rounded" />
 					</div>
 					<TaskListSkeleton />
 				</div>

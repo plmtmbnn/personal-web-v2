@@ -37,7 +37,7 @@ export function createMetadata({
 		? image.startsWith("http")
 			? image
 			: `${SITE.url}${image}`
-		: `${SITE.url}/profile.jpg`;
+		: `${SITE.url}/lanscape-peoel.png`;
 
 	const finalKeywords = [...(keywords || []), ...SEO.baseKeywords].join(", ");
 

@@ -44,21 +44,21 @@ const inquiryTopics: InquiryTopic[] = [
 		label: "Consulting & Advisory",
 		icon: Handshake,
 		subject: "Consulting Inquiry - [Your Name / Company]",
-		body: "Hi Polma,\n\nI'm reaching out regarding a potential consulting or technical advisory collaboration.\n\nProject details:\n- Goal:\n- Timeline:\n\nBest regards,\n[Your Name]",
+		body: "Hi Polma,\n\nI'd like to discuss a consulting or technical advisory project.\n\nProject details:\n- Goal:\n- Timeline:\n\nBest regards,\n[Your Name]",
 	},
 	{
 		id: "leadership",
 		label: "Engineering Leadership",
 		icon: Briefcase,
 		subject: "Leadership Opportunity - [Your Company]",
-		body: "Hi Polma,\n\nI came across your experience in fintech engineering leadership and would like to discuss an opportunity at [Company Name].\n\nRole context:\n\nBest regards,\n[Your Name]",
+		body: "Hi Polma,\n\nI'd like to discuss an engineering leadership role at [Company Name].\n\nRole context:\n\nBest regards,\n[Your Name]",
 	},
 	{
 		id: "architecture",
 		label: "Fintech Core (LOS/LMS)",
 		icon: Cpu,
 		subject: "Fintech Architecture Discussion - [Your Project]",
-		body: "Hi Polma,\n\nWe are exploring / scaling a lending or fintech core platform and would love to consult on architecture and engineering execution.\n\nBest regards,\n[Your Name]",
+		body: "Hi Polma,\n\nWe're building or scaling a lending platform and would like to discuss the architecture.\n\nBest regards,\n[Your Name]",
 	},
 	{
 		id: "chat",
@@ -210,7 +210,7 @@ export default function ContactView() {
 									className={`relative inline-flex rounded-full h-2 w-2 ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}
 								></span>
 							</span>
-							{isActive ? "Active & available" : "Resting (offline)"}
+							{isActive ? "Available" : "Offline"}
 						</span>
 					</motion.div>
 
@@ -229,8 +229,8 @@ export default function ContactView() {
 						variants={itemVariants}
 						className="text-sm sm:text-base text-slate-500 font-medium leading-relaxed mb-8 sm:mb-10 max-w-sm"
 					>
-						Engineering leadership, fintech core architecture, technical
-						advisory — or just a conversation worth having.
+						Reach out about engineering leadership, fintech core systems,
+						advisory work, or a quick chat.
 					</motion.p>
 
 					<motion.div

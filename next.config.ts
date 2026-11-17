@@ -95,6 +95,7 @@ const nextConfig: NextConfig = {
 
 	// Experimental features for performance and DX
 	experimental: {
+		agentUpgrade: "security",
 		// Optimize imports from these packages (tree-shaking)
 		optimizePackageImports: [
 			"lucide-react",

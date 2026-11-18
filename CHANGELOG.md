@@ -1,3 +1,10 @@
+# [0.129.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.128.0...v0.129.0) (2026-11-18)
+
+
+### Features
+
+* **investment:** harden market-data provenance, fallbacks, and engine evidence ([eb2c0db](https://github.com/plmtmbnn/personal-web-v2/commit/eb2c0dbb2857a4fc25a8e8aaa9fd1fc83f446b1e))
+
 # [0.128.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.127.0...v0.128.0) (2026-11-16)
 
 

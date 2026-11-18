@@ -179,7 +179,7 @@ describe("MarketDeltaAlerts Component", () => {
 		data.markets.quotes.VIX.changePct = 14.5;
 
 		const { container } = render(<MarketDeltaAlerts data={data} />);
-		expect(container.textContent).toContain("Significant Market Shifts");
+		expect(container.textContent).toContain("Market alerts");
 		expect(container.textContent).toContain("Volatility Shock");
 		expect(container.textContent).toContain("VIX spiked +14.5%");
 	});

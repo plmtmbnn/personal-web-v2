@@ -241,6 +241,25 @@ function createMockData(
 }
 
 describe("MarketDataHub Component", () => {
+	it("moves tab focus and selection with arrow, Home and End keys", () => {
+		const { getAllByRole } = render(<MarketDataHub data={createMockData()} />);
+		const [indonesia, crypto, global] = getAllByRole("tab");
+		expect(indonesia.tabIndex).toBe(0);
+		expect(crypto.tabIndex).toBe(-1);
+		indonesia.focus();
+		fireEvent.keyDown(indonesia, { key: "ArrowRight" });
+		expect(document.activeElement).toBe(crypto);
+		expect(crypto.getAttribute("aria-selected")).toBe("true");
+		expect(indonesia.tabIndex).toBe(-1);
+		fireEvent.keyDown(crypto, { key: "End" });
+		expect(document.activeElement).toBe(global);
+		fireEvent.keyDown(global, { key: "ArrowRight" });
+		expect(document.activeElement).toBe(indonesia);
+		fireEvent.keyDown(indonesia, { key: "ArrowLeft" });
+		expect(document.activeElement).toBe(global);
+		fireEvent.keyDown(global, { key: "Home" });
+		expect(document.activeElement).toBe(indonesia);
+	});
 	it("uses normalized BI indicators and explains the retired spread adjustment", () => {
 		const data = createMockData();
 		data.markets.macro.BI_POLICY_RATE = {
@@ -270,10 +289,10 @@ describe("MarketDataHub Component", () => {
 		const data = createMockData();
 		const { container } = render(<MarketDataHub data={data} />);
 
-		expect(container.textContent).toContain("Market Data Terminal");
-		expect(container.textContent).toContain("Indonesia (IDX)");
-		expect(container.textContent).toContain("Crypto Majors");
-		expect(container.textContent).toContain("Global Macro & Contagion");
+		expect(container.textContent).toContain("Market data");
+		expect(container.textContent).toContain("Indonesia");
+		expect(container.textContent).toContain("Crypto");
+		expect(container.textContent).toContain("Global");
 
 		// WAI-ARIA tab semantics
 		const tablist = container.querySelector('[role="tablist"]');
@@ -281,13 +300,13 @@ describe("MarketDataHub Component", () => {
 		const activeTab = tablist?.querySelector(
 			'[role="tab"][aria-selected="true"]',
 		);
-		expect(activeTab?.textContent).toContain("Indonesia (IDX)");
+		expect(activeTab?.textContent).toContain("Indonesia");
 		expect(activeTab?.getAttribute("aria-controls")).toBe("tabpanel-indonesia");
 
 		// Default active tab is Indonesia
-		expect(container.textContent).toContain("Indonesia Domestic Market Data");
+		expect(container.textContent).toContain("Indonesia");
 		expect(container.textContent).toContain("200-Day Moving Average");
-		expect(container.textContent).toContain("Sector Rotation Bellwethers");
+		expect(container.textContent).toContain("Sector bellwethers");
 	});
 
 	it("displays --- instead of dummy yield when 10Y yield data is null", () => {
@@ -308,16 +327,14 @@ describe("MarketDataHub Component", () => {
 		expect(container.textContent).not.toContain("6.85%");
 	});
 
-	it("switches to Crypto Majors tab and displays calibrated 59.0% dominance threshold", () => {
+	it("switches to Crypto tab and displays calibrated 59.0% dominance threshold", () => {
 		const data = createMockData();
 		const { getByText, container } = render(<MarketDataHub data={data} />);
 
-		const cryptoButton = getByText("Crypto Majors");
+		const cryptoButton = getByText("Crypto");
 		fireEvent.click(cryptoButton);
 
-		expect(container.textContent).toContain(
-			"Digital Asset Metrics & Liquidity",
-		);
+		expect(container.textContent).toContain("Crypto");
 		expect(container.textContent).toContain("Bitcoin MVRV Valuation");
 		expect(container.textContent).toContain("Stablecoin 30D Net Issuance");
 		// Calibrated post-ETF Bitcoin dominance threshold (59.0%)
@@ -325,16 +342,14 @@ describe("MarketDataHub Component", () => {
 		expect(container.textContent).not.toContain("54.0%");
 	});
 
-	it("switches to Global Macro & Contagion tab and displays Regional Transmission Pulse", () => {
+	it("switches to Global tab and displays Regional Transmission Pulse", () => {
 		const data = createMockData();
 		const { getByText, container } = render(<MarketDataHub data={data} />);
 
-		const macroButton = getByText("Global Macro & Contagion");
+		const macroButton = getByText("Global");
 		fireEvent.click(macroButton);
 
-		expect(container.textContent).toContain(
-			"Regional Market Transmission Pulse",
-		);
+		expect(container.textContent).toContain("Global markets");
 		expect(container.textContent).toContain("Contagion Monitor");
 		expect(container.textContent).toContain("S&P 500");
 		expect(container.textContent).toContain("Nasdaq Composite");

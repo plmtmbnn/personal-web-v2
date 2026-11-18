@@ -31,18 +31,18 @@ export default function MarketDeltaAlerts({
 	return (
 		<section
 			aria-label="Critical Market Delta Alerts"
-			className="bg-white rounded-3xl border border-amber-200/90 shadow-xs p-4 sm:p-7 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700"
+			className="bg-white rounded-3xl border border-amber-200/90 shadow-xs p-4 sm:p-7 space-y-4 motion-safe:animate-in fade-in slide-in-from-top-4 duration-700"
 		>
 			<div className="flex items-center gap-3">
 				<div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
-					<BellRing className="w-5 h-5 animate-pulse" />
+					<BellRing className="w-5 h-5 motion-safe:animate-pulse" />
 				</div>
 				<div>
-					<h3 className="text-lg font-black text-amber-900 tracking-tight">
-						Significant Market Shifts
+					<h3 className="text-lg font-bold text-amber-900 tracking-tight">
+						Market alerts
 					</h3>
-					<p className="text-[10px] font-bold text-amber-700/80 uppercase tracking-wider">
-						Overnight Delta Alerts
+					<p className="text-xs font-bold text-amber-700">
+						Changes since the previous reading
 					</p>
 				</div>
 			</div>
@@ -68,7 +68,7 @@ export default function MarketDeltaAlerts({
 							<div className="mt-0.5 shrink-0">{icon}</div>
 							<div className="min-w-0 flex-1">
 								{alert.title && (
-									<span className="text-[10px] font-black uppercase tracking-wider block mb-0.5">
+									<span className="text-xs font-bold block mb-0.5">
 										{alert.title}
 									</span>
 								)}

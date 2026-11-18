@@ -1,0 +1,31 @@
+/* Hallmark: shape: app screen; genre: modern-minimal; theme: project */
+/* Critique: retain the market data hierarchy and clear keyboard navigation. */
+
+:global(html):has(.screen):focus-within {
+	scroll-behavior: auto;
+	scroll-padding-block: 6rem;
+}
+
+.screen :is(a, button, input, summary) {
+	scroll-margin-block: 6rem;
+}
+
+.screen :is(button, summary) {
+	min-height: 2.75rem;
+}
+
+.screen button {
+	min-width: 2.75rem;
+}
+
+@media (width < 40rem) {
+	.screen p,
+	.screen summary,
+	.screen button {
+		font-size: 0.875rem;
+	}
+
+	.screen p {
+		line-height: 1.6;
+	}
+}

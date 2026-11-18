@@ -85,8 +85,27 @@ const mockCryptoRegime: MarketRegimeScore = {
 };
 
 describe("OverviewRegimes Component", () => {
+	it("keeps evidence warnings visible when signals are collapsed", () => {
+		const { getByText, container } = render(
+			<OverviewRegimes
+				globalRegime={{
+					...mockGlobalRegime,
+					coverage: 0.4,
+					missingFactors: ["credit_spread"],
+				}}
+				ihsgRegime={mockIhsgRegime}
+				cryptoRegime={mockCryptoRegime}
+			/>,
+		);
+		expect(getByText("Evidence coverage: 40%")).toBeDefined();
+		expect(getByText("Missing evidence (1)")).toBeDefined();
+		expect(getByText("credit spread")).toBeDefined();
+		const disclosure = getByText("View signals (2)").closest("details");
+		expect(disclosure?.open).toBe(false);
+		expect(container.querySelector("#factor-detail-ihsg")).toBeNull();
+	});
 	it("renders all 3 regime score cards and headlines", () => {
-		const { container } = render(
+		const { container, getByRole } = render(
 			<OverviewRegimes
 				globalRegime={mockGlobalRegime}
 				ihsgRegime={mockIhsgRegime}
@@ -94,11 +113,9 @@ describe("OverviewRegimes Component", () => {
 			/>,
 		);
 
-		expect(container.textContent).toContain("IHSG Composite Regime");
-		expect(container.textContent).toContain("Crypto Liquidity Regime");
-		expect(container.textContent).toContain(
-			"Global Macro & Dollar Liquidity Context",
-		);
+		expect(getByRole("heading", { name: "IHSG" })).toBeDefined();
+		expect(getByRole("heading", { name: "Crypto" })).toBeDefined();
+		expect(container.textContent).toContain("Global conditions");
 
 		// State badges
 		expect(container.textContent).toContain("defensive");
@@ -152,7 +169,7 @@ describe("OverviewRegimes Component", () => {
 			...mockCryptoRegime,
 			asymmetryZone: {
 				type: "accumulation",
-				title: "Generational Asymmetry: Accumulation Zone Active",
+				title: "Accumulation zone",
 				description: "Bitcoin is at a historic valuation floor (MVRV <= 1.0)",
 			},
 		};
@@ -165,9 +182,7 @@ describe("OverviewRegimes Component", () => {
 			/>,
 		);
 
-		expect(container.textContent).toContain(
-			"Generational Asymmetry: Accumulation Zone Active",
-		);
+		expect(container.textContent).toContain("Accumulation zone");
 		expect(container.textContent).toContain(
 			"Bitcoin is at a historic valuation floor",
 		);

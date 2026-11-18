@@ -89,14 +89,14 @@ export default function MarketPlaybook({
 		return (
 			<div
 				key={script.market}
-				className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 flex flex-col justify-between space-y-5"
+				className="@container min-w-0 bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 flex flex-col justify-between space-y-5"
 			>
 				<div className="space-y-4">
 					{/* Header */}
 					<div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
 						<div className="min-w-0">
-							<h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-								{script.market} Tactical Playbook
+							<h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+								{script.market} plan
 							</h3>
 							<p className="text-xs text-slate-500 font-medium mt-0.5">
 								{isIhsg ? "Indonesian Equities" : "Digital Assets"}
@@ -104,7 +104,7 @@ export default function MarketPlaybook({
 						</div>
 
 						<span
-							className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider border shrink-0 ${getStateBadge(
+							className={`px-2.5 py-1 rounded-lg text-xs font-bold border shrink-0 ${getStateBadge(
 								script.state,
 							)}`}
 						>
@@ -112,34 +112,34 @@ export default function MarketPlaybook({
 						</span>
 					</div>
 
-					{/* Tactical Stance */}
-					<div className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between gap-2.5">
-						<span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
-							Tactical Stance
+					{/* Trading stance */}
+					<div className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex flex-col @[24rem]:flex-row @[24rem]:items-center justify-between gap-2.5">
+						<span className="text-xs font-bold text-slate-500 shrink-0">
+							Trading stance
 						</span>
-						<span className="text-xs font-extrabold text-slate-900 text-right">
+						<span className="text-xs font-bold text-slate-900 @[24rem]:text-right">
 							{script.posture}
 						</span>
 					</div>
 
 					{/* Sizing Mandate Strip */}
 					{sizingMandate && (
-						<div className="px-3.5 py-2.5 rounded-xl bg-indigo-50/50 border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-							<div className="flex items-center gap-1.5 min-w-0">
+						<div className="px-3.5 py-2.5 rounded-xl bg-indigo-50/50 border border-indigo-100 flex flex-col @[28rem]:flex-row @[28rem]:items-center justify-between gap-2">
+							<div className="flex flex-wrap items-center gap-1.5 min-w-0">
 								<Target className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-								<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800/70 shrink-0">
-									Sizing Target:
+								<span className="text-xs font-bold text-indigo-800 shrink-0">
+									Position size:
 								</span>
-								<span className="text-xs font-extrabold text-indigo-950 font-mono truncate">
+								<span className="text-xs font-bold text-indigo-950 tabular-nums">
 									Risk {sizingMandate.maxRiskPerTradePct}% | Exp{" "}
 									{sizingMandate.maxPortfolioExposurePct}%
 								</span>
 							</div>
 							<Link
 								href={`/utils/stock-crypto-calculator?risk=${sizingMandate.maxRiskPerTradePct}`}
-								className="text-[10px] font-extrabold text-indigo-700 hover:text-indigo-900 underline underline-offset-2 shrink-0 self-start sm:self-auto cursor-pointer"
+								className="inline-flex min-h-11 items-center text-xs font-bold text-indigo-700 hover:text-indigo-900 underline underline-offset-2 shrink-0 self-start sm:self-auto cursor-pointer"
 							>
-								Open Workstation →
+								Position calculator
 							</Link>
 						</div>
 					)}
@@ -151,14 +151,14 @@ export default function MarketPlaybook({
 
 					{script.liveSummary && (
 						<div className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-							<p className="text-[11px] font-bold text-slate-700 leading-relaxed">
+							<p className="text-xs font-bold text-slate-700 leading-relaxed">
 								{script.liveSummary}
 							</p>
 						</div>
 					)}
 
 					{script.keyLevels && script.keyLevels.length > 0 && (
-						<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+						<div className="grid grid-cols-2 @[32rem]:grid-cols-4 gap-2">
 							{script.keyLevels.map((lvl) => {
 								const toneClasses =
 									lvl.tone === "positive"
@@ -171,12 +171,12 @@ export default function MarketPlaybook({
 								return (
 									<div
 										key={lvl.label}
-										className={`p-2.5 rounded-xl border ${toneClasses}`}
+										className={`min-w-0 p-3 rounded-xl border ${toneClasses}`}
 									>
-										<span className="text-[9px] font-extrabold uppercase tracking-wider opacity-75 block truncate">
+										<span className="text-xs font-bold block break-words">
 											{lvl.label}
 										</span>
-										<span className="text-xs font-black font-mono tabular-nums mt-0.5 block truncate">
+										<span className="text-xs font-bold tabular-nums mt-0.5 block break-words">
 											{lvl.value}
 										</span>
 									</div>
@@ -197,13 +197,13 @@ export default function MarketPlaybook({
 							<ShieldAlert
 								className={`w-4 h-4 shrink-0 mt-0.5 ${
 									tacticalAlert.color === "rose"
-										? "text-rose-600"
-										: "text-emerald-600"
+										? "text-rose-700"
+										: "text-emerald-700"
 								}`}
 							/>
 							<div className="space-y-0.5">
 								<span
-									className={`text-[10px] sm:text-xs font-black uppercase tracking-wider block ${
+									className={`text-xs font-bold block ${
 										tacticalAlert.color === "rose"
 											? "text-rose-800"
 											: "text-emerald-800"
@@ -212,10 +212,10 @@ export default function MarketPlaybook({
 									{tacticalAlert.message}
 								</span>
 								<p
-									className={`text-[10px] sm:text-xs font-semibold leading-relaxed ${
+									className={`text-xs font-semibold leading-relaxed ${
 										tacticalAlert.color === "rose"
-											? "text-rose-700/80"
-											: "text-emerald-700/80"
+											? "text-rose-700"
+											: "text-emerald-700"
 									}`}
 								>
 									{tacticalAlert.action}
@@ -227,12 +227,12 @@ export default function MarketPlaybook({
 					{/* Volatility Alert */}
 					{volatilityAlert && !isCircuitBreakerActive && (
 						<div className="p-3.5 rounded-xl border flex items-start gap-2.5 shadow-sm bg-amber-50/50 border-amber-200">
-							<ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+							<ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-800" />
 							<div className="space-y-0.5">
-								<span className="text-[10px] sm:text-xs font-black uppercase tracking-wider block text-amber-800">
+								<span className="text-xs font-bold block text-amber-800">
 									{volatilityAlert.message}
 								</span>
-								<p className="text-[10px] sm:text-xs font-semibold leading-relaxed text-amber-700/80">
+								<p className="text-xs font-semibold leading-relaxed text-amber-700">
 									{volatilityAlert.action}
 								</p>
 							</div>
@@ -245,23 +245,23 @@ export default function MarketPlaybook({
 					>
 						{sizingMandate?.isTradingLocked ? (
 							<div className="p-4 rounded-2xl bg-white border-2 border-rose-200/90 shadow-2xs flex flex-col items-center justify-center text-center space-y-2">
-								<div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
+								<div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center shrink-0 shadow-2xs">
 									<ShieldAlert className="w-5 h-5" />
 								</div>
 								<div>
-									<h4 className="text-sm font-black tracking-wide uppercase text-rose-950">
-										No Trade Zone
+									<h4 className="text-sm font-bold text-rose-950">
+										Trading paused
 									</h4>
-									<p className="text-xs font-semibold text-rose-700/90 mt-0.5">
+									<p className="text-xs font-semibold text-rose-700 mt-0.5">
 										Circuit breaker active. All tactical trading locked.
 									</p>
 								</div>
 							</div>
 						) : (
 							<div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-100/80 space-y-2">
-								<span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-									<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-									Tactical Dos
+								<span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+									<CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+									Actions
 								</span>
 								<ul className="space-y-1.5">
 									{script.dos.map((item, idx) => (
@@ -278,9 +278,9 @@ export default function MarketPlaybook({
 						)}
 
 						<div className="p-3.5 rounded-2xl bg-rose-50/50 border border-rose-100/80 space-y-2">
-							<span className="text-[10px] font-black uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
-								<XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-								Strict Avoids
+							<span className="text-xs font-bold text-rose-800 flex items-center gap-1.5">
+								<XCircle className="w-3.5 h-3.5 text-rose-700 shrink-0" />
+								Avoid
 							</span>
 							<ul className="space-y-1.5">
 								{script.avoids.map((item, idx) => (
@@ -299,9 +299,9 @@ export default function MarketPlaybook({
 					{/* Tranche Accumulation Plan (if in defensive or stress) */}
 					{script.tranchePlan && (
 						<div className="p-3.5 rounded-2xl bg-indigo-50/40 border border-indigo-100 space-y-1.5">
-							<span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+							<span className="text-xs font-bold text-indigo-700 flex items-center gap-1.5">
 								<Layers className="w-3.5 h-3.5 text-indigo-600" />
-								Predetermined Tranche Plan
+								Tranche plan
 							</span>
 							<p className="text-xs font-semibold text-slate-800 leading-relaxed">
 								{script.tranchePlan}
@@ -314,8 +314,8 @@ export default function MarketPlaybook({
 						<div className="flex items-start gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
 							<Target className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
 							<div>
-								<span className="text-[10px] font-extrabold uppercase text-slate-400 block">
-									Position Sizing Mandate
+								<span className="text-xs font-bold text-slate-500 block">
+									Position size
 								</span>
 								<span className="text-xs font-bold text-slate-800 leading-snug">
 									{script.sizing}
@@ -324,10 +324,10 @@ export default function MarketPlaybook({
 						</div>
 
 						<div className="flex items-start gap-2.5 bg-amber-50/60 p-3 rounded-xl border border-amber-200/60">
-							<ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+							<ShieldAlert className="w-4 h-4 text-amber-800 shrink-0 mt-0.5" />
 							<div>
-								<span className="text-[10px] font-extrabold uppercase text-amber-700 block">
-									Thesis Invalidation Trigger
+								<span className="text-xs font-bold text-amber-700 block">
+									Reassess when
 								</span>
 								<span className="text-xs font-bold text-amber-950 leading-snug">
 									{script.invalidation}
@@ -339,8 +339,8 @@ export default function MarketPlaybook({
 
 				{/* Focus Sectors */}
 				<div className="pt-3 border-t border-slate-100">
-					<span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">
-						Priority Focus
+					<span className="text-xs font-bold text-slate-500 block mb-1.5">
+						Focus
 					</span>
 					<div className="flex flex-wrap gap-1.5">
 						{script.focusSectors.map((sector, idx) => (
@@ -365,11 +365,11 @@ export default function MarketPlaybook({
 					<Briefcase className="w-5 h-5" />
 				</div>
 				<div className="min-w-0 flex-1">
-					<h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-						Execution Playbook
+					<h2 className="text-xl font-bold text-slate-900 tracking-tight">
+						Trade plans
 					</h2>
-					<p className="text-xs text-slate-500 font-medium leading-relaxed">
-						Actionable dos, avoids, sizing, and invalidation conditions
+					<p className="text-xs text-slate-600 font-medium leading-relaxed">
+						Actions, position size and conditions to reassess.
 					</p>
 				</div>
 			</div>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import PermissionsMatrix from "../PermissionsMatrix";
 import type { PermissionsMatrixData } from "../../types";
 
@@ -64,15 +64,49 @@ const mockPermissions: PermissionsMatrixData = {
 };
 
 describe("PermissionsMatrix Component", () => {
+	it("keeps sector notes collapsed and preserves restrictions in both layouts", () => {
+		const { container } = render(
+			<PermissionsMatrix
+				permissions={{
+					...mockPermissions,
+					ihsgSectorGates: [
+						"STRICT AVOID: Heavy importers (Weak IDR pressure)",
+						"BREADTH GATE: 3/6 sectors above 50D MA",
+						"Provider note: keep the original wording",
+					],
+				}}
+			/>,
+		);
+		const disclosures = container.querySelectorAll("details");
+		expect(disclosures).toHaveLength(2);
+		for (const disclosure of disclosures) {
+			expect(disclosure.open).toBe(false);
+			const summary = disclosure.querySelector("summary")!;
+			expect(summary.textContent).toContain("Sector notes");
+			expect(summary.textContent).toContain("(3)");
+			fireEvent.click(summary);
+			expect(disclosure.open).toBe(true);
+			expect(disclosure.textContent).toContain(
+				"Heavy importers (Weak IDR pressure)",
+			);
+			expect(disclosure.textContent).toContain("Market breadth");
+			expect(disclosure.textContent).toContain("3/6 sectors above 50D MA");
+			expect(disclosure.textContent).toContain(
+				"Provider note: keep the original wording",
+			);
+			expect(disclosure.textContent).not.toContain("STRICT AVOID:");
+		}
+	});
+
 	it("renders permissions matrix table and rows", () => {
 		const { container } = render(
 			<PermissionsMatrix permissions={mockPermissions} />,
 		);
 
-		expect(container.textContent).toContain("Tactical Permissions Matrix");
-		expect(container.textContent).toContain("Indonesia (IHSG)");
-		expect(container.textContent).toContain("Crypto Majors");
-		expect(container.textContent).toContain("Speculative Altcoins");
+		expect(container.textContent).toContain("Trading limits");
+		expect(container.textContent).toContain("IHSG");
+		expect(container.textContent).toContain("Crypto");
+		expect(container.textContent).toContain("Altcoins");
 		expect(container.textContent).toContain("20% equity cap");
 		expect(container.textContent).toContain("0% (Hard Lock)");
 	});
@@ -87,11 +121,9 @@ describe("PermissionsMatrix Component", () => {
 			<PermissionsMatrix permissions={stressPermissions} />,
 		);
 
-		expect(container.textContent).toContain(
-			"Capital Preservation Protocol Active",
-		);
-		expect(container.textContent).toContain("Zero New Margin / Leverage");
-		expect(container.textContent).toContain("Hold Dry Powder in SBN / Cash");
+		expect(container.textContent).toContain("Capital protection active");
+		expect(container.textContent).toContain("No new margin or leverage");
+		expect(container.textContent).toContain("Hold SBN or cash");
 	});
 
 	it("does not render capital preservation banner when globalStressActive is false", () => {
@@ -99,8 +131,6 @@ describe("PermissionsMatrix Component", () => {
 			<PermissionsMatrix permissions={mockPermissions} />,
 		);
 
-		expect(container.textContent).not.toContain(
-			"Capital Preservation Protocol Active",
-		);
+		expect(container.textContent).not.toContain("Capital protection active");
 	});
 });

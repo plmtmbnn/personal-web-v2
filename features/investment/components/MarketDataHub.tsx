@@ -59,9 +59,9 @@ export default function MarketDataHub({
 	const reduceMotion = useReducedMotion();
 
 	const TABS = [
-		{ id: "indonesia", label: "Indonesia (IDX)", icon: Building2 },
-		{ id: "crypto", label: "Crypto Majors", icon: Coins },
-		{ id: "macro", label: "Global Macro & Contagion", icon: LineChart },
+		{ id: "indonesia", label: "Indonesia", icon: Building2 },
+		{ id: "crypto", label: "Crypto", icon: Coins },
+		{ id: "macro", label: "Global", icon: LineChart },
 	] as const;
 
 	// Calculate live Indonesia metrics
@@ -286,18 +286,18 @@ export default function MarketDataHub({
 						<Activity className="w-4 h-4" />
 					</div>
 					<div>
-						<h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
-							Market Data Terminal
-						</h3>
-						<p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-							Telemetry &amp; Fundamental Indicators
+						<h2 className="text-xl font-bold text-slate-900 tracking-tight">
+							Market data
+						</h2>
+						<p className="text-xs font-bold text-slate-500">
+							Prices, flows and macro indicators
 						</p>
 					</div>
 				</div>
 
 				<div
 					role="tablist"
-					aria-label="Market Data Terminal Views"
+					aria-label="Market data views"
 					className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-2 px-2 sm:mx-0 sm:px-0 relative"
 				>
 					{/* Continuous hairline track line */}
@@ -313,27 +313,38 @@ export default function MarketDataHub({
 								id={`tab-${tab.id}`}
 								role="tab"
 								aria-selected={isActive}
+								tabIndex={isActive ? 0 : -1}
 								aria-controls={`tabpanel-${tab.id}`}
 								onClick={() => setActiveTab(tab.id)}
-								className={`group relative pb-2.5 px-3 sm:px-4 flex items-center gap-1.5 sm:gap-2 text-xs font-bold transition-all whitespace-nowrap active:scale-95 touch-manipulation cursor-pointer z-10 ${
+								onKeyDown={(event) => {
+									const index = TABS.findIndex((item) => item.id === tab.id);
+									let next = index;
+									if (event.key === "ArrowRight")
+										next = (index + 1) % TABS.length;
+									else if (event.key === "ArrowLeft")
+										next = (index + TABS.length - 1) % TABS.length;
+									else if (event.key === "Home") next = 0;
+									else if (event.key === "End") next = TABS.length - 1;
+									else return;
+									event.preventDefault();
+									setActiveTab(TABS[next].id);
+									document.getElementById(`tab-${TABS[next].id}`)?.focus();
+								}}
+								className={`group relative pb-2.5 px-3 sm:px-4 flex items-center gap-1.5 sm:gap-2 text-xs font-bold transition-colors whitespace-nowrap active:scale-95 touch-manipulation cursor-pointer z-10 ${
 									isActive
-										? "text-slate-900 font-black"
-										: "text-slate-400 hover:text-slate-700 font-semibold"
+										? "text-slate-900 font-bold"
+										: "text-slate-500 hover:text-slate-700 font-semibold"
 								}`}
 							>
 								{/* Razor-thin animated sliding underline indicator */}
 								{isActive && (
-									<motion.div
-										layoutId="marketDataTabIndicator"
-										className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 rounded-full z-20"
-										transition={{ type: "spring", stiffness: 400, damping: 30 }}
-									/>
+									<div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-900 rounded-full z-20" />
 								)}
 								<Icon
 									className={`w-3.5 h-3.5 shrink-0 transition-transform ${
 										isActive
 											? "text-slate-900 scale-105"
-											: "text-slate-400 group-hover:text-slate-600"
+											: "text-slate-500 group-hover:text-slate-600"
 									}`}
 								/>
 								<span>{tab.label}</span>
@@ -350,33 +361,34 @@ export default function MarketDataHub({
 						key={activeTab}
 						id={`tabpanel-${activeTab}`}
 						role="tabpanel"
+						tabIndex={0}
 						aria-labelledby={`tab-${activeTab}`}
 						initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: -10 }}
-						transition={{ duration: 0.2 }}
+						exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -10 }}
+						transition={{ duration: reduceMotion ? 0 : 0.2 }}
 						className="w-full"
 					>
 						{activeTab === "indonesia" && (
 							<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
 								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
 									<div>
-										<h4 className="text-base sm:text-lg font-black text-slate-900">
-											Indonesia Domestic Market Data
-										</h4>
+										<h3 className="text-base sm:text-lg font-bold text-slate-900">
+											Indonesia
+										</h3>
 										<p className="text-xs text-slate-500 font-medium">
-											Composite Index (IHSG), Currency, and Sovereign Rates
+											IHSG, rupiah and interest rates
 										</p>
 									</div>
-									<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 self-start sm:self-auto">
+									<span className="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 self-start sm:self-auto">
 										IDX Composite (^JKSE)
 									</span>
 								</div>
 
 								{/* Domestic Market Synthesis & Action Takeaway */}
 								<div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 space-y-1">
-									<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 block">
-										Domestic Telemetry Synthesis &amp; Suggestion
+									<span className="text-xs font-bold text-indigo-800 block">
+										Indonesia outlook
 									</span>
 									<p className="text-xs font-semibold text-slate-700 leading-relaxed">
 										{ihsgPrice != null && ihsgMa200 != null
@@ -408,16 +420,16 @@ export default function MarketDataHub({
 												}`}
 											>
 												{ihsgFlows.streakDays >= 0 ? (
-													<Flame className="w-5 h-5 text-emerald-600" />
+													<Flame className="w-5 h-5 text-emerald-700" />
 												) : (
-													<ShieldAlert className="w-5 h-5 text-rose-600" />
+													<ShieldAlert className="w-5 h-5 text-rose-700" />
 												)}
 											</div>
 											<div>
-												<span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+												<span className="text-xs font-bold text-slate-500 block">
 													Net Foreign Institutional Flow
 												</span>
-												<span className="text-sm font-black text-slate-900">
+												<span className="text-sm font-bold text-slate-900">
 													{ihsgFlows.streakDays >= 0
 														? `+${ihsgFlows.streakDays}-Day Net Inflow Streak`
 														: `${Math.abs(ihsgFlows.streakDays)}-Day Net Outflow Streak`}
@@ -428,15 +440,15 @@ export default function MarketDataHub({
 										<div className="flex items-center gap-3 flex-wrap self-start sm:self-auto text-xs">
 											{ihsgFlows.netBuySell1dIdr != null && (
 												<div className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
-													<span className="text-[9px] font-black uppercase text-slate-400 block">
+													<span className="text-xs font-bold text-slate-500 block">
 														1-Day Net
 													</span>
 													<span
-														className={`font-black ${
+														className={`font-bold ${
 															ihsgFlows.netBuySell1dIdr > 0
-																? "text-emerald-600"
+																? "text-emerald-700"
 																: ihsgFlows.netBuySell1dIdr < 0
-																	? "text-rose-600"
+																	? "text-rose-700"
 																	: "text-slate-600"
 														}`}
 													>
@@ -451,15 +463,15 @@ export default function MarketDataHub({
 											)}
 											{ihsgFlows.netBuySell5dIdr != null && (
 												<div className="bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
-													<span className="text-[9px] font-black uppercase text-slate-400 block">
+													<span className="text-xs font-bold text-slate-500 block">
 														5-Day Cumulative
 													</span>
 													<span
-														className={`font-black ${
+														className={`font-bold ${
 															ihsgFlows.netBuySell5dIdr > 0
-																? "text-emerald-600"
+																? "text-emerald-700"
 																: ihsgFlows.netBuySell5dIdr < 0
-																	? "text-rose-600"
+																	? "text-rose-700"
 																	: "text-slate-600"
 														}`}
 													>
@@ -479,11 +491,11 @@ export default function MarketDataHub({
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 									{/* 200-Day MA Structural Baseline */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											200-Day Moving Average
 										</span>
 										<div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900">
 												{ihsgMa200
 													? ihsgMa200.toLocaleString("en-US", {
 															minimumFractionDigits: 2,
@@ -495,8 +507,8 @@ export default function MarketDataHub({
 												<span
 													className={`text-xs font-bold ${
 														ihsgPrice >= ihsgMa200
-															? "text-emerald-600"
-															: "text-rose-600"
+															? "text-emerald-700"
+															: "text-rose-700"
 													}`}
 												>
 													{distancePct(ihsgPrice, ihsgMa200)! >= 0 ? "+" : ""}
@@ -504,8 +516,8 @@ export default function MarketDataHub({
 												</span>
 											)}
 										</div>
-										<p className="text-[11px] text-slate-500">
-											50D MA:{" "}
+										<p className="text-xs text-slate-500">
+											50-day average:{" "}
 											<strong>
 												{ihsgMa50
 													? ihsgMa50.toLocaleString("en-US", {
@@ -514,7 +526,7 @@ export default function MarketDataHub({
 														})
 													: "---"}
 											</strong>{" "}
-											| 52W DD:{" "}
+											| 52-week drawdown:{" "}
 											<strong>
 												{ihsgDd != null ? `${ihsgDd.toFixed(1)}%` : "---"}
 											</strong>
@@ -523,17 +535,17 @@ export default function MarketDataHub({
 
 									{/* ID 10Y Yield */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											BI Policy Rate
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900">
 												{latestBiRate != null
 													? `${latestBiRate.toFixed(2)}%`
 													: "---"}
 											</span>
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											Policy observation:{" "}
 											<strong>
 												{biRateSeries?.at(-1)?.date ?? "Unavailable"}
@@ -549,17 +561,17 @@ export default function MarketDataHub({
 
 									{/* Indo-US 10Y Yield Spread */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											Real BI Policy Rate
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900">
 												{realBiRate != null
 													? `${realBiRate >= 0 ? "+" : ""}${realBiRate.toFixed(2)}%`
 													: "---"}
 											</span>
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											BI rate minus CPI YoY. Sovereign yield-spread adjustment
 											is unavailable and excluded from scoring.
 										</p>
@@ -567,11 +579,11 @@ export default function MarketDataHub({
 
 									{/* Indonesia CPI YoY */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											Indonesia CPI Inflation (YoY)
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900">
 												{latestIdCpi != null
 													? `${latestIdCpi.toFixed(2)}%`
 													: "---"}
@@ -580,8 +592,8 @@ export default function MarketDataHub({
 												<span
 													className={`text-xs font-bold ${
 														latestIdCpi >= 1.5 && latestIdCpi <= 3.5
-															? "text-emerald-600"
-															: "text-amber-600"
+															? "text-emerald-700"
+															: "text-amber-800"
 													}`}
 												>
 													{latestIdCpi >= 1.5 && latestIdCpi <= 3.5
@@ -590,7 +602,7 @@ export default function MarketDataHub({
 												</span>
 											)}
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											Bank Indonesia Target Corridor: 1.5% - 3.5%
 										</p>
 									</div>
@@ -601,13 +613,13 @@ export default function MarketDataHub({
 									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 										<div className="flex items-center gap-2">
 											<TrendingUp className="w-4 h-4 text-slate-600" />
-											<span className="text-xs font-black text-slate-900 tracking-tight">
-												Sector Rotation Bellwethers (IDX)
+											<span className="text-xs font-bold text-slate-900 tracking-tight">
+												Sector bellwethers
 											</span>
 										</div>
 										<div className="flex items-center gap-2">
 											<span
-												className={`text-[10px] font-black px-2.5 py-0.5 rounded-lg border ${
+												className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
 													expandingSectorsCount >= 4
 														? "bg-emerald-50 text-emerald-700 border-emerald-200"
 														: expandingSectorsCount <= 2
@@ -618,7 +630,7 @@ export default function MarketDataHub({
 												{expandingSectorsCount}/{totalSectorsCount} Sectors &gt;
 												50D MA
 											</span>
-											<span className="text-[10px] font-bold text-slate-400 hidden sm:inline">
+											<span className="text-xs font-bold text-slate-500 hidden sm:inline">
 												50D MA Momentum
 											</span>
 										</div>
@@ -632,26 +644,26 @@ export default function MarketDataHub({
 													key={s.symbol}
 													className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-1.5"
 												>
-													<div className="flex items-center justify-between">
-														<span className="text-xs font-black text-slate-900 font-mono">
+													<div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+														<span className="text-xs font-bold text-slate-900 tabular-nums">
 															{s.ticker}
 														</span>
-														<span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+														<span className="text-xs font-bold text-slate-500">
 															{s.sector}
 														</span>
 													</div>
-													<div className="flex items-baseline justify-between">
-														<span className="text-sm font-black text-slate-800">
+													<div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+														<span className="text-sm font-bold text-slate-800">
 															{s.price != null
 																? `Rp ${s.price.toLocaleString("id-ID")}`
 																: "---"}
 														</span>
 														{s.changePct != null && (
 															<span
-																className={`text-[11px] font-bold ${
+																className={`text-xs font-bold ${
 																	s.changePct >= 0
-																		? "text-emerald-600"
-																		: "text-rose-600"
+																		? "text-emerald-700"
+																		: "text-rose-700"
 																}`}
 															>
 																{s.changePct >= 0 ? "+" : ""}
@@ -659,21 +671,21 @@ export default function MarketDataHub({
 															</span>
 														)}
 													</div>
-													<div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[10px]">
-														<span className="text-slate-400 font-medium">
+													<div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-1 border-t border-slate-200/60 text-xs">
+														<span className="text-slate-500 font-medium">
 															vs 50D MA:
 														</span>
 														{s.dist50 != null ? (
 															<span
-																className={`font-black ${
-																	isAbove ? "text-emerald-700" : "text-rose-600"
+																className={`font-bold ${
+																	isAbove ? "text-emerald-700" : "text-rose-700"
 																}`}
 															>
 																{isAbove ? "+" : ""}
 																{s.dist50.toFixed(1)}%
 															</span>
 														) : (
-															<span className="text-slate-400 font-medium">
+															<span className="text-slate-500 font-medium">
 																---
 															</span>
 														)}
@@ -690,10 +702,10 @@ export default function MarketDataHub({
 										<div className="space-y-3 pt-4 border-t border-slate-100">
 											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 												<div>
-													<span className="text-xs font-black text-slate-900 tracking-tight block">
+													<span className="text-xs font-bold text-slate-900 tracking-tight block">
 														IDX setups to review
 													</span>
-													<span className="text-[11px] text-slate-500 font-medium">
+													<span className="text-xs text-slate-500 font-medium">
 														Liquid institutional setups filtered by VWAP
 														absorption, foreign participation, and tick-valid
 														R:R
@@ -701,9 +713,9 @@ export default function MarketDataHub({
 												</div>
 												<Link
 													href="/utils/stock-explorer"
-													className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 !text-white text-[11px] font-bold transition-all self-start sm:self-auto !no-underline"
+													className="inline-flex min-h-11 shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 !text-white text-xs font-bold transition-colors self-start sm:self-auto !no-underline"
 												>
-													<span>Open IDX Scanner</span>
+													<span>Open screener</span>
 													<ArrowUpRight className="w-3.5 h-3.5 !text-slate-300" />
 												</Link>
 											</div>
@@ -713,31 +725,31 @@ export default function MarketDataHub({
 													<Link
 														key={pick.code}
 														href={`/utils/stock-explorer?q=${pick.code}`}
-														className="p-4 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-indigo-200 hover:shadow-xs transition-all flex flex-col justify-between gap-2.5 !no-underline group"
+														className="p-4 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-indigo-200 hover:shadow-xs transition-colors flex flex-col justify-between gap-2.5 !no-underline group"
 													>
 														<div>
 															<div className="flex items-center justify-between gap-2">
-																<span className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors font-mono">
+																<span className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors tabular-nums">
 																	{pick.code}
 																</span>
-																<span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 truncate">
+																<span className="text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 truncate">
 																	{pick.opportunity}
 																</span>
 															</div>
-															<p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
+															<p className="text-xs font-medium text-slate-500 truncate mt-0.5">
 																{pick.name}
 															</p>
 														</div>
 
 														<div className="flex items-baseline justify-between pt-1">
-															<span className="text-sm font-black text-slate-900">
+															<span className="text-sm font-bold text-slate-900">
 																Rp {pick.close.toLocaleString("id-ID")}
 															</span>
 															<span
 																className={`text-xs font-bold ${
 																	pick.changePct >= 0
-																		? "text-emerald-600"
-																		: "text-rose-600"
+																		? "text-emerald-700"
+																		: "text-rose-700"
 																}`}
 															>
 																{pick.changePct >= 0 ? "+" : ""}
@@ -745,10 +757,10 @@ export default function MarketDataHub({
 															</span>
 														</div>
 
-														<div className="pt-2 border-t border-slate-200/60 space-y-1 text-[10px]">
+														<div className="pt-2 border-t border-slate-200/60 space-y-1 text-xs">
 															<div className="flex justify-between text-slate-500">
 																<span>Entry / Stop:</span>
-																<span className="font-mono font-bold text-slate-700">
+																<span className="tabular-nums font-bold text-slate-700">
 																	Rp {pick.close.toLocaleString("id-ID")} /{" "}
 																	{pick.stopLoss.toLocaleString("id-ID")}
 																</span>
@@ -758,7 +770,7 @@ export default function MarketDataHub({
 																	Target 1 ({pick.rrr.toFixed(2)} net R
 																	{pick.rrr < 2 ? ", below minimum" : ""}):
 																</span>
-																<span className="font-mono font-bold text-emerald-700">
+																<span className="tabular-nums font-bold text-emerald-700">
 																	Rp {pick.target1.toLocaleString("id-ID")}
 																</span>
 															</div>
@@ -773,24 +785,24 @@ export default function MarketDataHub({
 
 						{activeTab === "crypto" && (
 							<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
-								<div className="flex items-center justify-between border-b border-slate-100 pb-4">
+								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
 									<div>
-										<h4 className="text-base sm:text-lg font-black text-slate-900">
-											Digital Asset Metrics &amp; Liquidity
-										</h4>
+										<h3 className="text-base sm:text-lg font-bold text-slate-900">
+											Crypto
+										</h3>
 										<p className="text-xs text-slate-500 font-medium">
 											Bitcoin Valuation, Stablecoin Flows, and Halving Cycle
 										</p>
 									</div>
-									<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
+									<span className="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
 										BTC / ETH Spot &amp; Derivatives
 									</span>
 								</div>
 
 								{/* Crypto Market Synthesis & Action Takeaway */}
 								<div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 space-y-1">
-									<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 block">
-										On-Chain &amp; Liquidity Synthesis &amp; Suggestion
+									<span className="text-xs font-bold text-indigo-800 block">
+										Crypto outlook
 									</span>
 									<p className="text-xs font-semibold text-slate-700 leading-relaxed">
 										{btcQuote?.last != null && btcMa200 != null
@@ -814,16 +826,16 @@ export default function MarketDataHub({
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 									{/* On-Chain MVRV Z-Score / Ratio */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											Bitcoin MVRV Valuation
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900 tabular-nums">
 												{mvrvRatio != null ? mvrvRatio.toFixed(2) : "---"}
 											</span>
 											{mvrvRatio != null && (
 												<span
-													className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
+													className={`text-xs font-bold px-2 py-0.5 rounded ${
 														mvrvRatio <=
 														DEFAULT_THRESHOLDS.crypto.mvrv.accumulation
 															? "bg-emerald-100 text-emerald-800"
@@ -843,7 +855,7 @@ export default function MarketDataHub({
 												</span>
 											)}
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											{impliedRealizedPrice != null
 												? `1.0x Floor: $${Math.round(impliedRealizedPrice * DEFAULT_THRESHOLDS.crypto.mvrv.accumulation).toLocaleString("en-US")} | ${DEFAULT_THRESHOLDS.crypto.mvrv.overheat.toFixed(1)}x Top: $${Math.round(impliedRealizedPrice * DEFAULT_THRESHOLDS.crypto.mvrv.overheat).toLocaleString("en-US")}`
 												: `Accumulation: < ${DEFAULT_THRESHOLDS.crypto.mvrv.accumulation.toFixed(2)} | Overheat: > ${DEFAULT_THRESHOLDS.crypto.mvrv.overheat.toFixed(2)}`}
@@ -852,17 +864,17 @@ export default function MarketDataHub({
 
 									{/* Stablecoin Net Flow */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											Stablecoin 30D Net Issuance
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900 tabular-nums">
 												{flows?.stablecoin30dChangePct != null
 													? `${flows.stablecoin30dChangePct >= 0 ? "+" : ""}${flows.stablecoin30dChangePct.toFixed(2)}%`
 													: "---"}
 											</span>
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											Total:{" "}
 											<strong>
 												{flows?.totalStablecoinSupplyUsd
@@ -877,40 +889,40 @@ export default function MarketDataHub({
 
 									{/* BTC Funding Rate & Open Interest */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											BTC Perp Funding Rate (8h)
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900 tabular-nums">
 												{flows?.btcFundingRate8hPct != null
 													? `${flows.btcFundingRate8hPct >= 0 ? "+" : ""}${flows.btcFundingRate8hPct.toFixed(3)}%`
 													: "---"}
 											</span>
 											{flows?.btcOpenInterestUsd != null &&
 												flows.btcOpenInterestUsd > 0 && (
-													<span className="text-xs font-bold text-slate-600 font-mono">
+													<span className="text-xs font-bold text-slate-600 tabular-nums">
 														OI: ${(flows.btcOpenInterestUsd / 1e9).toFixed(2)}B
 													</span>
 												)}
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											Overheated threshold: &gt; +0.03% (OKX Perps)
 										</p>
 									</div>
 
 									{/* BTC Dominance */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											Bitcoin Dominance
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900 tabular-nums">
 												{data.markets.cryptoGlobal?.btcDominance
 													? `${data.markets.cryptoGlobal.btcDominance.toFixed(1)}%`
 													: "---"}
 											</span>
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											Altcoin gate threshold: &lt;={" "}
 											{DEFAULT_THRESHOLDS.crypto.altcoinBtcDominanceMax.toFixed(
 												1,
@@ -921,26 +933,24 @@ export default function MarketDataHub({
 
 									{/* Halving Cycle Phase */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											Halving Cycle Position
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-base sm:text-lg font-black text-slate-900">
+											<span className="text-base sm:text-lg font-bold text-slate-900">
 												Month +{halving.monthsElapsed}
 											</span>
 										</div>
-										<p className="text-[11px] text-slate-500">
-											{halving.phase}
-										</p>
+										<p className="text-xs text-slate-500">{halving.phase}</p>
 									</div>
 
 									{/* Ethereum & ETH/BTC Ratio */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											Ethereum (ETH) Spot
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900 tabular-nums">
 												{ethQuote?.last
 													? `$${Math.round(ethQuote.last).toLocaleString("en-US")}`
 													: "---"}
@@ -949,8 +959,8 @@ export default function MarketDataHub({
 												<span
 													className={`text-xs font-bold ${
 														ethQuote.changePct >= 0
-															? "text-emerald-600"
-															: "text-rose-600"
+															? "text-emerald-700"
+															: "text-rose-700"
 													}`}
 												>
 													{ethQuote.changePct >= 0 ? "+" : ""}
@@ -958,7 +968,7 @@ export default function MarketDataHub({
 												</span>
 											)}
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											{ethBtcRatio != null
 												? `ETH/BTC: ${ethBtcRatio.toFixed(4)}${ethRelChange != null ? ` (${ethRelChange >= 0 ? "+" : ""}${ethRelChange.toFixed(2)}% vs BTC)` : ""}`
 												: "Smart-contract platform leader"}
@@ -967,11 +977,11 @@ export default function MarketDataHub({
 
 									{/* Bitcoin 200D MA */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
-										<span className="text-[10px] font-black uppercase text-slate-400 block">
+										<span className="text-xs font-bold text-slate-500 block">
 											Bitcoin 200D MA Baseline
 										</span>
 										<div className="flex items-baseline gap-2">
-											<span className="text-xl sm:text-2xl font-black text-slate-900 font-mono">
+											<span className="text-xl sm:text-2xl font-bold text-slate-900 tabular-nums">
 												{btcMa200
 													? `$${Math.round(btcMa200).toLocaleString("en-US")}`
 													: "---"}
@@ -980,8 +990,8 @@ export default function MarketDataHub({
 												<span
 													className={`text-xs font-bold ${
 														btcQuote.last >= btcMa200
-															? "text-emerald-600"
-															: "text-rose-600"
+															? "text-emerald-700"
+															: "text-rose-700"
 													}`}
 												>
 													{distancePct(btcQuote.last, btcMa200)! >= 0
@@ -991,7 +1001,7 @@ export default function MarketDataHub({
 												</span>
 											)}
 										</div>
-										<p className="text-[11px] text-slate-500">
+										<p className="text-xs text-slate-500">
 											Macro cycle structural trend threshold
 										</p>
 									</div>
@@ -1007,24 +1017,24 @@ export default function MarketDataHub({
 										<div className="flex items-center gap-2.5">
 											<Globe className="w-5 h-5 text-indigo-600" />
 											<div>
-												<h4 className="text-base sm:text-lg font-black text-slate-900">
-													Regional Market Transmission Pulse
-												</h4>
+												<h3 className="text-base sm:text-lg font-bold text-slate-900">
+													Global markets
+												</h3>
 												<p className="text-xs text-slate-500 font-medium">
 													Overnight US and Asian session anchors affecting IHSG
 													&amp; Crypto liquidity
 												</p>
 											</div>
 										</div>
-										<span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 self-start sm:self-auto">
+										<span className="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 self-start sm:self-auto">
 											Contagion Monitor
 										</span>
 									</div>
 
 									{/* Global Macro Synthesis & Action Takeaway */}
 									<div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 space-y-1">
-										<span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 block">
-											Cross-Border Liquidity Synthesis &amp; Suggestion
+										<span className="text-xs font-bold text-indigo-800 block">
+											Global outlook
 										</span>
 										<p className="text-xs font-semibold text-slate-700 leading-relaxed">
 											{usRealYield != null
@@ -1058,24 +1068,24 @@ export default function MarketDataHub({
 											return (
 												<div
 													key={item.id}
-													className={`p-3 sm:p-3.5 rounded-2xl border transition-all ${
+													className={`p-3 sm:p-3.5 rounded-2xl border transition-colors ${
 														isWarning
 															? "bg-rose-50/50 border-rose-200/90 shadow-2xs"
 															: "bg-slate-50/60 border-slate-200/70"
 													}`}
 												>
-													<div className="flex items-center justify-between gap-1 mb-1">
-														<span className="text-xs font-black text-slate-900 truncate">
+													<div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+														<span className="min-w-0 break-words text-xs font-bold text-slate-900">
 															{item.name}
 														</span>
 														{isWarning && (
-															<span className="text-[9px] font-black uppercase text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded">
+															<span className="text-xs font-bold text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded">
 																Alert
 															</span>
 														)}
 													</div>
-													<div className="flex items-baseline justify-between gap-1">
-														<span className="text-sm font-black font-mono text-slate-900">
+													<div className="flex flex-wrap items-baseline justify-between gap-1">
+														<span className="text-sm font-bold tabular-nums text-slate-900">
 															{item.quote?.last != null
 																? item.id === "US10Y" || item.id === "VIX"
 																	? item.quote.last.toFixed(2)
@@ -1087,10 +1097,10 @@ export default function MarketDataHub({
 														</span>
 														{changePct != null && (
 															<span
-																className={`text-[11px] font-bold flex items-center gap-0.5 ${
+																className={`text-xs font-bold flex items-center gap-0.5 ${
 																	isPositive
-																		? "text-emerald-600"
-																		: "text-rose-600"
+																		? "text-emerald-700"
+																		: "text-rose-700"
 																}`}
 															>
 																{changePct >= 0 ? (
@@ -1103,7 +1113,7 @@ export default function MarketDataHub({
 															</span>
 														)}
 													</div>
-													<span className="text-[10px] font-semibold text-slate-400 block mt-1 truncate">
+													<span className="text-xs font-semibold text-slate-500 block mt-1 truncate">
 														{item.region}
 													</span>
 												</div>
@@ -1117,11 +1127,11 @@ export default function MarketDataHub({
 									<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
 										<div className="flex items-center gap-2">
 											<TrendingUp className="w-4 h-4 text-slate-600" />
-											<h4 className="text-xs font-black uppercase tracking-wider text-slate-700">
-												Global Commodities &amp; Energy Transmission
+											<h4 className="text-xs font-bold text-slate-700">
+												Commodities
 											</h4>
 										</div>
-										<span className="text-[10px] font-bold text-slate-400">
+										<span className="text-xs font-bold text-slate-500">
 											Indonesian Trade Balance &amp; Inflation Drivers
 										</span>
 									</div>
@@ -1136,15 +1146,15 @@ export default function MarketDataHub({
 													className="p-3.5 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-1.5"
 												>
 													<div className="flex items-center justify-between">
-														<span className="text-xs font-black text-slate-900">
+														<span className="text-xs font-bold text-slate-900">
 															{c.name}
 														</span>
-														<span className="text-[10px] font-bold text-slate-400">
+														<span className="text-xs font-bold text-slate-500">
 															USD
 														</span>
 													</div>
 													<div className="flex items-baseline justify-between">
-														<span className="text-base sm:text-lg font-black font-mono text-slate-900">
+														<span className="text-base sm:text-lg font-bold tabular-nums text-slate-900">
 															{c.quote?.last != null
 																? `$${c.quote.last.toLocaleString("en-US", {
 																		minimumFractionDigits: 2,
@@ -1156,8 +1166,8 @@ export default function MarketDataHub({
 															<span
 																className={`text-xs font-bold flex items-center gap-0.5 ${
 																	isPositive
-																		? "text-emerald-600"
-																		: "text-rose-600"
+																		? "text-emerald-700"
+																		: "text-rose-700"
 																}`}
 															>
 																{isPositive ? "+" : ""}
@@ -1165,7 +1175,7 @@ export default function MarketDataHub({
 															</span>
 														)}
 													</div>
-													<p className="text-[10px] font-semibold text-slate-500">
+													<p className="text-xs font-semibold text-slate-500">
 														{c.detail}
 													</p>
 												</div>
@@ -1177,10 +1187,10 @@ export default function MarketDataHub({
 								{/* Macro Liquidity Indicators */}
 								<div className="pt-4 border-t border-slate-100 space-y-3">
 									<div className="flex items-center justify-between">
-										<h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
-											Systemic Discount Rate &amp; Liquidity Signals
+										<h4 className="text-xs font-bold text-slate-500">
+											Rates and liquidity
 										</h4>
-										<span className="text-[10px] font-bold text-slate-400">
+										<span className="text-xs font-bold text-slate-500">
 											FRED Macro Series
 										</span>
 									</div>

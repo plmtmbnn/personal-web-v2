@@ -65,7 +65,7 @@ export default function OverviewRegimes({
 		return (
 			<div
 				key={regime.id}
-				className={`bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 flex flex-col justify-between ${accentBorder}`}
+				className={`h-full bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 flex flex-col ${accentBorder}`}
 			>
 				<div>
 					{/* Header */}
@@ -75,122 +75,44 @@ export default function OverviewRegimes({
 								<Icon className="w-5 h-5 text-slate-700" />
 							</div>
 							<div>
-								<h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-									{regime.title}
+								<h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+									{regime.id === "ihsg" ? "IHSG" : "Crypto"}
 								</h3>
-								<p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+								<p className="text-xs font-bold text-slate-500">
 									{regime.marketName}
 								</p>
 							</div>
 						</div>
 
 						<span
-							className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider border shrink-0 ${getStateBadge(regime.state)}`}
+							className={`px-2.5 py-1 rounded-lg text-xs font-bold border shrink-0 ${getStateBadge(regime.state)}`}
 						>
 							{regime.state.replace("_", " ")}
 						</span>
 					</div>
 
-					{regime.id === "ihsg" && ihsgPosture && (
-						<div className="mb-4 space-y-1 border-b border-slate-200 pb-4 text-sm text-slate-700">
-							<p className="font-semibold text-slate-900">
-								Effective posture:{" "}
-								{ihsgPosture.effectiveState.replace("_", " ")}
-							</p>
-							<p>{ihsgPosture.permissions?.swing.reason}</p>
-							<p>
-								{Math.round(regime.coverage * 100)}% evidence coverage
-								{ihsgPosture.session
-									? `. IDX session ${ihsgPosture.session}`
-									: ""}
-							</p>
-							{previous && (
-								<p>
-									Previous snapshot {previous.asOf.slice(0, 10)}:{" "}
-									{previous.regime.replace("_", " ")}, {previous.score}/100.{" "}
-									Score change {scoreChange > 0 ? "+" : ""}
-									{scoreChange}.
-								</p>
-							)}
-							{linkedSnapshot && linkedSnapshot !== ihsgPosture.snapshotId && (
-								<p className="text-amber-800">
-									Explorer used a different snapshot. This view was computed{" "}
-									{new Date(ihsgPosture.computedAt ?? "").toLocaleString(
-										"en-GB",
-										{ timeZone: "Asia/Jakarta" },
-									)}{" "}
-									WIB.
-								</p>
-							)}
-						</div>
-					)}
-
-					{/* Asymmetry Zone Callout Banner */}
-					{regime.asymmetryZone && (
-						<div
-							className={`mb-4 p-3.5 sm:p-4 rounded-2xl border transition-all ${
-								regime.asymmetryZone.type === "accumulation"
-									? "bg-emerald-500/10 border-emerald-500/30 text-emerald-950"
-									: "bg-rose-500/10 border-rose-500/30 text-rose-950"
-							}`}
-						>
-							<div className="flex items-center gap-2 mb-1">
-								<span className="relative flex h-2 w-2">
-									<span
-										className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-											regime.asymmetryZone.type === "accumulation"
-												? "bg-emerald-500"
-												: "bg-rose-500"
-										}`}
-									/>
-									<span
-										className={`relative inline-flex rounded-full h-2 w-2 ${
-											regime.asymmetryZone.type === "accumulation"
-												? "bg-emerald-600"
-												: "bg-rose-600"
-										}`}
-									/>
-								</span>
-								<span
-									className={`text-xs font-black uppercase tracking-wider ${
-										regime.asymmetryZone.type === "accumulation"
-											? "text-emerald-800"
-											: "text-rose-800"
-									}`}
-								>
-									{regime.asymmetryZone.title}
-								</span>
-							</div>
-							<p className="text-[11px] sm:text-xs font-medium leading-relaxed opacity-90 pl-4">
-								{regime.asymmetryZone.description}
-							</p>
-						</div>
-					)}
-
 					{/* Score Gauge Bar */}
-					<div className="space-y-1.5 mb-4 bg-slate-50/60 p-3 sm:p-3.5 rounded-2xl border border-slate-100">
+					<div className="space-y-3 mb-4 py-2">
 						<div className="flex items-center justify-between text-xs">
-							<span className="font-extrabold text-slate-600 uppercase text-[10px] tracking-wider">
-								Rules-based regime score
+							<span className="font-bold text-slate-600 text-xs">
+								Regime score
 							</span>
 							<div className="flex items-baseline gap-1">
-								<span className="text-base sm:text-lg font-black text-slate-900">
+								<span className="text-2xl sm:text-3xl font-bold tabular-nums text-slate-900">
 									{regime.score}
 								</span>
-								<span className="text-[10px] font-bold text-slate-400">
-									/ 100
-								</span>
+								<span className="text-xs font-bold text-slate-500">/ 100</span>
 							</div>
 						</div>
 						<div className="h-2.5 w-full bg-slate-200/70 rounded-full overflow-hidden">
 							<div
-								className={`h-full transition-all duration-700 ${getScoreBarColor(regime.score)}`}
+								className={`h-full origin-left ${getScoreBarColor(regime.score)}`}
 								style={{
-									width: `${Math.min(100, Math.max(5, regime.score))}%`,
+									transform: `scaleX(${Math.min(100, Math.max(0, regime.score)) / 100})`,
 								}}
 							/>
 						</div>
-						<div className="flex justify-between items-center text-[9px] font-semibold text-slate-400 pt-0.5">
+						<div className="grid grid-cols-2 gap-x-3 gap-y-1 min-[400px]:flex min-[400px]:justify-between text-xs font-semibold text-slate-500 pt-0.5">
 							<span>Stress (0)</span>
 							<span>Defensive (30)</span>
 							<span>Selective (45)</span>
@@ -200,7 +122,7 @@ export default function OverviewRegimes({
 
 					{/* Dual-Axis Trend vs Valuation Separation */}
 					<p className="mb-3 text-xs text-slate-600">
-						Current evidence: {Math.round(regime.coverage * 100)}%. This score
+						Evidence coverage: {Math.round(regime.coverage * 100)}%. This score
 						is a regime indicator, not a return forecast.
 					</p>
 					{!!regime.missingFactors?.length && (
@@ -216,31 +138,31 @@ export default function OverviewRegimes({
 						</details>
 					)}
 					{regime.dualAxis && (
-						<div className="mb-4 grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60">
+						<div className="mb-4 grid grid-cols-1 min-[400px]:grid-cols-2 gap-3 border-y border-slate-100 py-3">
 							<div className="space-y-0.5">
-								<span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
-									Trend / Trading Gate
+								<span className="text-xs font-bold text-slate-500 block">
+									Trading trend
 								</span>
 								<div className="flex items-center gap-1.5">
 									<span
-										className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${getStateBadge(
+										className={`text-xs font-bold px-1.5 py-0.5 rounded border ${getStateBadge(
 											regime.dualAxis.trendState,
 										)}`}
 									>
 										{regime.dualAxis.trendState.replace("_", " ")}
 									</span>
-									<span className="text-[10px] font-bold text-slate-500 font-mono">
+									<span className="text-xs font-bold text-slate-500 tabular-nums">
 										{regime.dualAxis.trendScore}
 									</span>
 								</div>
 							</div>
-							<div className="space-y-0.5 border-l border-slate-200/60 pl-2.5">
-								<span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
-									Valuation / Accumulation
+							<div className="space-y-0.5">
+								<span className="text-xs font-bold text-slate-500 block">
+									Valuation
 								</span>
 								<div className="flex items-center gap-1.5">
 									<span
-										className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
+										className={`text-xs font-bold px-1.5 py-0.5 rounded border ${
 											regime.dualAxis.valuationState === "accumulation"
 												? "bg-emerald-50 text-emerald-800 border-emerald-200/80"
 												: regime.dualAxis.valuationState === "distribution"
@@ -250,7 +172,7 @@ export default function OverviewRegimes({
 									>
 										{regime.dualAxis.valuationState}
 									</span>
-									<span className="text-[10px] font-bold text-slate-500 font-mono">
+									<span className="text-xs font-bold text-slate-500 tabular-nums">
 										{regime.dualAxis.valuationScore}
 									</span>
 								</div>
@@ -260,24 +182,85 @@ export default function OverviewRegimes({
 
 					{/* Diagnosis Narrative */}
 					<div className="space-y-1 mb-5">
-						<h4 className="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug">
+						<h4 className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
 							{regime.headline}
 						</h4>
-						<p className="text-[11px] sm:text-xs font-medium text-slate-500 leading-relaxed">
+						<p className="text-xs font-medium text-slate-500 leading-relaxed">
 							{regime.diagnosis}
 						</p>
 					</div>
 
-					{/* Contributing Factors Pills */}
-					<div className="space-y-2 pt-3 border-t border-slate-100">
-						<div className="flex items-center justify-between">
-							<span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-								Contributing Signals ({regime.factors.length})
-							</span>
-							<span className="text-[9px] font-bold text-slate-400">
-								Coverage: {Math.round(regime.coverage * 100)}%
-							</span>
+					{regime.id === "ihsg" && ihsgPosture && (
+						<>
+							<details className="mb-4 space-y-1 border-b border-slate-200 pb-3 text-sm text-slate-700">
+								<summary className="min-h-11 cursor-pointer py-3 font-semibold text-slate-900 focus-visible:outline-2">
+									Trading posture:{" "}
+									{ihsgPosture.effectiveState.replace("_", " ")}
+								</summary>
+								<p>{ihsgPosture.permissions?.swing.reason}</p>
+								{ihsgPosture.session && (
+									<p className="text-xs text-slate-500">
+										IDX session {ihsgPosture.session}
+									</p>
+								)}
+								{previous && (
+									<p>
+										Previous snapshot {previous.asOf.slice(0, 10)}:{" "}
+										{previous.regime.replace("_", " ")}, {previous.score}/100.{" "}
+										Score change {scoreChange > 0 ? "+" : ""}
+										{scoreChange}.
+									</p>
+								)}
+							</details>
+							{linkedSnapshot && linkedSnapshot !== ihsgPosture.snapshotId && (
+								<p className="text-amber-800">
+									Explorer used a different snapshot. This view was computed{" "}
+									{new Date(ihsgPosture.computedAt ?? "").toLocaleString(
+										"en-GB",
+										{ timeZone: "Asia/Jakarta" },
+									)}{" "}
+									WIB.
+								</p>
+							)}
+						</>
+					)}
+
+					{/* Asymmetry Zone Callout Banner */}
+					{regime.asymmetryZone && (
+						<div
+							className={`mb-4 p-3.5 sm:p-4 rounded-2xl border transition-colors ${
+								regime.asymmetryZone.type === "accumulation"
+									? "bg-emerald-500/10 border-emerald-500/30 text-emerald-950"
+									: "bg-rose-500/10 border-rose-500/30 text-rose-950"
+							}`}
+						>
+							<div className="flex items-center gap-2 mb-1">
+								<span
+									className={`text-xs font-bold ${
+										regime.asymmetryZone.type === "accumulation"
+											? "text-emerald-800"
+											: "text-rose-800"
+									}`}
+								>
+									{regime.asymmetryZone.type === "accumulation"
+										? "Accumulation zone"
+										: "Distribution risk"}
+								</span>
+							</div>
+							<p className="text-xs font-medium leading-relaxed opacity-90 pl-4">
+								{regime.asymmetryZone.description}
+							</p>
 						</div>
+					)}
+
+					{/* Contributing Factors Pills */}
+					<details className="group space-y-3 pt-1 border-t border-slate-100">
+						<summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900">
+							<span>View signals ({regime.factors.length})</span>
+							<span aria-hidden="true" className="text-lg group-open:rotate-45">
+								+
+							</span>
+						</summary>
 
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
 							{regime.factors.map((factor) => {
@@ -292,7 +275,7 @@ export default function OverviewRegimes({
 										onClick={() => setActiveFactor(isSelected ? null : factor)}
 										aria-expanded={isSelected}
 										aria-controls={`factor-detail-${regime.id}`}
-										className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer active:scale-95 touch-manipulation ${
+										className={`p-2.5 sm:p-3 rounded-xl border text-left transition-colors cursor-pointer active:scale-95 touch-manipulation ${
 											isSelected
 												? "ring-2 ring-slate-900 border-transparent shadow-xs"
 												: ""
@@ -305,22 +288,22 @@ export default function OverviewRegimes({
 										}`}
 									>
 										<div className="flex items-center justify-between gap-1 mb-0.5">
-											<span className="text-[11px] font-bold text-slate-800 truncate">
+											<span className="text-xs font-bold text-slate-800 truncate">
 												{factor.label}
 											</span>
 											{isBull ? (
-												<TrendingUp className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+												<TrendingUp className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
 											) : isBear ? (
-												<TrendingDown className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+												<TrendingDown className="w-3.5 h-3.5 text-rose-700 shrink-0" />
 											) : (
-												<Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+												<Info className="w-3.5 h-3.5 text-slate-500 shrink-0" />
 											)}
 										</div>
 										<div className="flex items-baseline justify-between gap-1">
-											<span className="text-[11px] font-black text-slate-900 truncate">
+											<span className="text-xs font-bold text-slate-900 truncate">
 												{factor.valueStr}
 											</span>
-											<span className="text-[9px] font-bold text-slate-400 shrink-0">
+											<span className="text-xs font-bold text-slate-500 shrink-0">
 												Score {factor.score} ({factor.weight}%)
 											</span>
 										</div>
@@ -335,14 +318,14 @@ export default function OverviewRegimes({
 								<section
 									id={`factor-detail-${regime.id}`}
 									aria-label="Factor breakdown detail"
-									className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200"
+									className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 motion-safe:animate-in fade-in slide-in-from-top-2 duration-200"
 								>
 									<div className="flex items-center justify-between gap-2">
-										<div className="flex items-center gap-2 min-w-0">
-											<span className="text-xs font-black text-indigo-700 uppercase tracking-wider truncate">
+										<div className="flex min-w-0 flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center">
+											<span className="text-xs font-bold text-indigo-700 break-words">
 												{activeFactor.label}
 											</span>
-											<span className="text-[10px] font-bold text-slate-500 truncate">
+											<span className="text-xs font-bold text-slate-500 break-words">
 												{activeFactor.valueStr} (Score: {activeFactor.score}
 												/100 | Weight: {activeFactor.weight}%)
 											</span>
@@ -350,7 +333,7 @@ export default function OverviewRegimes({
 										<button
 											type="button"
 											onClick={() => setActiveFactor(null)}
-											className="text-[10px] font-bold text-slate-600 hover:text-slate-900 px-2 py-0.5 bg-slate-100 hover:bg-slate-200/80 rounded-md cursor-pointer shrink-0"
+											className="text-xs font-bold text-slate-600 hover:text-slate-900 px-2 py-0.5 bg-slate-100 hover:bg-slate-200/80 rounded-md cursor-pointer shrink-0"
 										>
 											Close
 										</button>
@@ -360,17 +343,14 @@ export default function OverviewRegimes({
 									</p>
 								</section>
 							)}
-					</div>
+					</details>
 				</div>
 
 				{/* Context Flags */}
 				{regime.contextFlags.length > 0 && (
 					<div className="flex flex-wrap gap-1.5 pt-4 mt-4 border-t border-slate-100">
 						{regime.contextFlags.map((flag, idx) => (
-							<span
-								key={idx}
-								className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-semibold"
-							>
+							<span key={idx} className="text-slate-600 text-xs font-medium">
 								{flag}
 							</span>
 						))}
@@ -382,6 +362,7 @@ export default function OverviewRegimes({
 
 	return (
 		<div className="space-y-4">
+			<h2 className="text-xl font-bold text-slate-900">Market conditions</h2>
 			<div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
 				{/* 1. IHSG Regime Card (Span 6) */}
 				<div className="lg:col-span-6">
@@ -410,27 +391,24 @@ export default function OverviewRegimes({
 									<Globe className="w-4 h-4" />
 								</div>
 								<div>
-									<h4 className="text-sm font-extrabold text-slate-900 tracking-tight">
-										Global Macro &amp; Dollar Liquidity Context
-									</h4>
-									<p className="text-[10px] font-semibold text-slate-500">
-										Overarching baseline driving cross-border liquidity and
-										discount rates
+									<h3 className="text-base font-bold text-slate-900">
+										Global conditions
+									</h3>
+									<p className="text-xs font-semibold text-slate-500">
+										Dollar strength, interest rates and credit risk
 									</p>
 								</div>
 							</div>
 
 							<div className="flex items-center gap-2">
 								<span
-									className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border ${getStateBadge(globalRegime.state)}`}
+									className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${getStateBadge(globalRegime.state)}`}
 								>
 									{globalRegime.state.replace("_", " ")}
 								</span>
-								<div className="flex items-baseline gap-1 text-xs font-black text-slate-800 px-2.5 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
+								<div className="flex items-baseline gap-1 text-xs font-bold text-slate-800 px-2.5 py-1 bg-slate-50 border border-slate-200/80 rounded-lg">
 									<span>{globalRegime.score}</span>
-									<span className="text-[9px] text-slate-400 font-bold">
-										/100
-									</span>
+									<span className="text-xs text-slate-500 font-bold">/100</span>
 								</div>
 							</div>
 						</div>
@@ -438,8 +416,23 @@ export default function OverviewRegimes({
 						<p className="text-xs font-medium text-slate-600 leading-relaxed pt-3">
 							{globalRegime.headline}: {globalRegime.diagnosis}
 						</p>
+						<p className="mt-2 text-xs text-slate-600">
+							Evidence coverage: {Math.round(globalRegime.coverage * 100)}%
+						</p>
+						{!!globalRegime.missingFactors?.length && (
+							<details className="mt-2 text-xs text-slate-700">
+								<summary className="cursor-pointer py-3 font-medium focus-visible:outline-2">
+									Missing evidence ({globalRegime.missingFactors.length})
+								</summary>
+								<ul className="list-disc space-y-1 pl-4">
+									{globalRegime.missingFactors.map((factor) => (
+										<li key={factor}>{factor.replaceAll("_", " ")}</li>
+									))}
+								</ul>
+							</details>
+						)}
 
-						<div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 text-[10px] font-semibold text-slate-500">
+						<div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-500">
 							{globalRegime.factors.map((f) => {
 								const isSelected = activeFactor?.key === f.key;
 								return (
@@ -449,13 +442,16 @@ export default function OverviewRegimes({
 										onClick={() => setActiveFactor(isSelected ? null : f)}
 										aria-expanded={isSelected}
 										aria-controls={`factor-detail-${globalRegime.id}`}
-										className={`px-2.5 py-1 rounded-lg text-left transition-all cursor-pointer active:scale-95 touch-manipulation ${
+										className={`px-2.5 py-1 rounded-lg text-left transition-colors cursor-pointer active:scale-95 touch-manipulation ${
 											isSelected
 												? "bg-slate-900 text-white shadow-2xs"
 												: "bg-slate-50 border border-slate-200/60 text-slate-700 hover:bg-slate-100"
 										}`}
 									>
-										{f.label}:{" "}
+										{f.label
+											.replace("US High-Yield OAS Spread", "High-yield spread")
+											.replace("US M2 Money Supply (YoY)", "M2 growth (YoY)")}
+										:{" "}
 										<strong
 											className={
 												isSelected ? "text-amber-300" : "text-slate-900"
@@ -474,14 +470,14 @@ export default function OverviewRegimes({
 								<section
 									id={`factor-detail-${globalRegime.id}`}
 									aria-label="Factor breakdown detail"
-									className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200"
+									className="mt-3 bg-white text-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs border border-slate-200/90 space-y-1.5 motion-safe:animate-in fade-in slide-in-from-top-2 duration-200"
 								>
 									<div className="flex items-center justify-between gap-2">
-										<div className="flex items-center gap-2 min-w-0">
-											<span className="text-xs font-black text-indigo-700 uppercase tracking-wider truncate">
+										<div className="flex min-w-0 flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center">
+											<span className="text-xs font-bold text-indigo-700 break-words">
 												{activeFactor.label}
 											</span>
-											<span className="text-[10px] font-bold text-slate-500 truncate">
+											<span className="text-xs font-bold text-slate-500 break-words">
 												{activeFactor.valueStr} (Score: {activeFactor.score}
 												/100 | Weight: {activeFactor.weight}%)
 											</span>
@@ -489,7 +485,7 @@ export default function OverviewRegimes({
 										<button
 											type="button"
 											onClick={() => setActiveFactor(null)}
-											className="text-[10px] font-bold text-slate-600 hover:text-slate-900 px-2 py-0.5 bg-slate-100 hover:bg-slate-200/80 rounded-md cursor-pointer shrink-0"
+											className="text-xs font-bold text-slate-600 hover:text-slate-900 px-2 py-0.5 bg-slate-100 hover:bg-slate-200/80 rounded-md cursor-pointer shrink-0"
 										>
 											Close
 										</button>

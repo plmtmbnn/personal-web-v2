@@ -28,7 +28,7 @@ export default function EventCalendar() {
 	const criticalPreAlerts = getCriticalPreAlerts();
 
 	const filters: Array<{ id: MarketTarget | "All"; label: string }> = [
-		{ id: "All", label: "All Catalysts" },
+		{ id: "All", label: "All events" },
 		{ id: "ID", label: "Indonesia (IDX)" },
 		{ id: "Crypto", label: "Crypto" },
 		{ id: "US", label: "US & Fed" },
@@ -40,20 +40,20 @@ export default function EventCalendar() {
 			{criticalPreAlerts.length > 0 && (
 				<div className="bg-white rounded-[2rem] border border-amber-200/90 shadow-xs p-5 sm:p-7 space-y-3.5">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-						<div className="flex items-center gap-2.5">
+						<div className="flex min-w-0 items-start gap-2.5">
 							<div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
-								<ShieldAlert className="w-4 h-4 text-amber-600" />
+								<ShieldAlert className="w-4 h-4 text-amber-800" />
 							</div>
-							<div>
-								<div className="flex items-center gap-2">
-									<h3 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight">
-										Critical Catalyst Pre-Alert
+							<div className="min-w-0">
+								<div className="flex flex-wrap items-center gap-2">
+									<h3 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+										Events this week
 									</h3>
-									<span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
-										H-3 Weekday Watch
+									<span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+										Next 3 business days
 									</span>
 								</div>
-								<p className="text-[11px] text-slate-500 font-medium">
+								<p className="text-xs text-slate-500 font-medium">
 									High-impact catalysts approaching within 3 business days that
 									historically drive major swings in IHSG and Crypto.
 								</p>
@@ -65,7 +65,7 @@ export default function EventCalendar() {
 						{criticalPreAlerts.map((pa) => (
 							<div
 								key={pa.event.id}
-								className={`p-4 rounded-2xl border space-y-2 transition-all ${
+								className={`p-4 rounded-2xl border space-y-2 transition-colors ${
 									pa.urgency === "imminent"
 										? "bg-rose-50/40 border-rose-200/90"
 										: "bg-amber-50/40 border-amber-200/80"
@@ -73,7 +73,7 @@ export default function EventCalendar() {
 							>
 								<div className="flex items-center justify-between gap-2">
 									<span
-										className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+										className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
 											pa.urgency === "imminent"
 												? "bg-rose-100 text-rose-800 border border-rose-200"
 												: "bg-amber-100 text-amber-800 border border-amber-200"
@@ -81,25 +81,25 @@ export default function EventCalendar() {
 									>
 										{pa.badgeText}
 									</span>
-									<span className="text-[10px] font-extrabold text-slate-500">
+									<span className="text-xs font-bold text-slate-500">
 										{pa.event.date} / {pa.event.market}
 									</span>
 								</div>
 
 								<div>
-									<h4 className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
+									<h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
 										{pa.event.title}
 									</h4>
-									<p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-1 leading-relaxed">
+									<p className="text-xs text-slate-600 font-medium mt-1 leading-relaxed">
 										{pa.marketImpact}
 									</p>
 								</div>
 
-								<div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+								<div className="pt-2 border-t border-slate-200/60 flex flex-col gap-1 min-[600px]:flex-row min-[600px]:items-center min-[600px]:justify-between text-xs">
 									<span className="text-slate-500 font-bold">
-										Action Mandate:
+										Position sizing:
 									</span>
-									<span className="font-extrabold text-slate-800">
+									<span className="font-bold text-slate-800">
 										Size conservatively &amp; avoid excessive leverage
 									</span>
 								</div>
@@ -113,9 +113,9 @@ export default function EventCalendar() {
 			{activeSeasons.length > 0 && (
 				<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 space-y-3">
 					<div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-						<Compass className="w-4 h-4 text-emerald-600" />
-						<h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">
-							Active Seasonal Market Tendencies
+						<Compass className="w-4 h-4 text-emerald-700" />
+						<h3 className="text-xs sm:text-sm font-bold text-slate-800">
+							Seasonal context
 						</h3>
 					</div>
 
@@ -126,10 +126,10 @@ export default function EventCalendar() {
 								className="p-4 rounded-2xl bg-emerald-50/40 border border-emerald-100/80 space-y-1.5"
 							>
 								<div className="flex items-center justify-between gap-1">
-									<h4 className="text-xs sm:text-sm font-black text-slate-900">
+									<h4 className="text-xs sm:text-sm font-bold text-slate-900">
 										{season.title}
 									</h4>
-									<span className="text-[10px] font-extrabold uppercase text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded">
+									<span className="text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded">
 										{season.status}
 									</span>
 								</div>
@@ -137,10 +137,10 @@ export default function EventCalendar() {
 									{season.description}
 								</p>
 								<div className="pt-2 border-t border-emerald-100/80">
-									<span className="text-[10px] font-black uppercase text-emerald-700 block mb-0.5">
-										Tactical Edge
+									<span className="text-xs font-bold text-emerald-700 block mb-0.5">
+										Trading context
 									</span>
-									<p className="text-[11px] font-semibold text-slate-800 leading-snug">
+									<p className="text-xs font-semibold text-slate-800 leading-snug">
 										{season.tacticalPlay}
 									</p>
 								</div>
@@ -154,14 +154,14 @@ export default function EventCalendar() {
 			<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-5">
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">
+						<div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 text-amber-800 flex items-center justify-center shrink-0 shadow-2xs">
 							<CalendarDays className="w-5 h-5" />
 						</div>
 						<div>
-							<h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
-								Upcoming Catalysts &amp; Risk Events
+							<h3 className="text-xl font-bold text-slate-900 tracking-tight">
+								Market calendar
 							</h3>
-							<p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+							<p className="text-xs font-bold text-slate-500">
 								High-impact macroeconomic and market dates
 							</p>
 						</div>
@@ -170,7 +170,7 @@ export default function EventCalendar() {
 					{/* Filter Pills */}
 					<fieldset
 						aria-label="Filter catalysts by market"
-						className="border-0 p-0 m-0 flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x -mx-1 px-1 sm:mx-0 sm:px-0"
+						className="min-w-0 border-0 p-0 m-0 flex flex-wrap items-center gap-1.5"
 					>
 						{filters.map((f) => (
 							<button
@@ -178,7 +178,7 @@ export default function EventCalendar() {
 								key={f.id}
 								onClick={() => setSelectedMarket(f.id)}
 								aria-pressed={selectedMarket === f.id}
-								className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap active:scale-95 touch-manipulation ${
+								className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer whitespace-nowrap active:scale-95 touch-manipulation ${
 									selectedMarket === f.id
 										? "bg-slate-900 text-white shadow-2xs"
 										: "bg-slate-100 text-slate-600 hover:bg-slate-200/70"
@@ -216,38 +216,38 @@ export default function EventCalendar() {
 								}`}
 							>
 								<div className="flex flex-col items-center justify-center bg-white border border-slate-200/80 rounded-xl w-12 h-12 sm:w-14 sm:h-14 shrink-0 shadow-2xs">
-									<span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+									<span className="text-xs font-bold text-slate-500">
 										{monthStr}
 									</span>
-									<span className="text-base sm:text-lg font-black text-slate-800 leading-none mt-0.5">
+									<span className="text-base sm:text-lg font-bold text-slate-800 leading-none mt-0.5">
 										{dayStr}
 									</span>
 								</div>
 
 								<div className="flex-1 min-w-0">
-									<div className="flex items-start justify-between gap-1.5 mb-1">
-										<h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+									<div className="flex flex-col min-[600px]:flex-row items-start justify-between gap-1.5 mb-1">
+										<h4 className="min-w-0 text-xs sm:text-sm font-bold text-slate-900 break-words">
 											{ev.title}
 										</h4>
 										{isImminentCritical ? (
-											<span className="shrink-0 flex items-center gap-1 text-[9px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md">
-												<AlertTriangle className="w-3 h-3 text-amber-600" />
+											<span className="shrink-0 flex items-center gap-1 text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md">
+												<AlertTriangle className="w-3 h-3 text-amber-800" />
 												{weekdayDist === 0
 													? "H-0 (Today)"
 													: `H-${weekdayDist}d Critical`}
 											</span>
 										) : ev.impact === "Critical" ? (
-											<span className="shrink-0 flex items-center gap-1 text-[9px] font-black uppercase bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">
-												<AlertTriangle className="w-3 h-3 text-rose-600" />
+											<span className="shrink-0 flex items-center gap-1 text-xs font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">
+												<AlertTriangle className="w-3 h-3 text-rose-700" />
 												Critical
 											</span>
 										) : (
-											<span className="shrink-0 text-[9px] font-extrabold uppercase bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md">
+											<span className="shrink-0 text-xs font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md">
 												{ev.impact}
 											</span>
 										)}
 									</div>
-									<p className="text-[11px] sm:text-xs font-medium text-slate-500 leading-snug break-words">
+									<p className="text-xs font-medium text-slate-500 leading-snug break-words">
 										{ev.notes}
 									</p>
 								</div>

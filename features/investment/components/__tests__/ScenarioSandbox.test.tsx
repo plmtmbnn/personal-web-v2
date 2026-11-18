@@ -219,7 +219,7 @@ describe("ScenarioSandbox Component", () => {
 			/>,
 		);
 
-		expect(container.textContent).toContain("Macro Scenario Sandbox");
+		expect(container.textContent).toContain("Scenario test");
 		expect(container.textContent).toContain("Fed Funds Rate");
 		expect(container.textContent).toContain("USD / IDR FX Rate");
 		expect(container.textContent).toContain("Bitcoin Price (BTC)");
@@ -239,19 +239,19 @@ describe("ScenarioSandbox Component", () => {
 		);
 
 		// Click Fed Easing preset
-		const easingBtn = getByText("Fed Easing Cycle (3.25% & Strong IDR)");
+		const easingBtn = getByText("Fed easing (3.25%)");
 		fireEvent.click(easingBtn);
 
 		// Simulation active badge should appear
-		expect(container.textContent).toContain("Simulation Active");
-		expect(container.textContent).toContain("Reset to Live");
+		expect(container.textContent).toContain("Simulation");
+		expect(container.textContent).toContain("Reset");
 
 		// Click Reset
-		const resetBtn = getByText("Reset to Live");
+		const resetBtn = getByText("Reset");
 		fireEvent.click(resetBtn);
 
 		// Simulation active badge dismissed
-		expect(container.textContent).not.toContain("Simulation Active");
+		expect(container.textContent).not.toContain("Simulation");
 	});
 
 	it("toggles collapse and expand", () => {
@@ -260,17 +260,17 @@ describe("ScenarioSandbox Component", () => {
 		);
 
 		// Initially collapsed
-		expect(container.textContent).not.toContain("Quick Scenarios:");
-		const openBtn = getByText("Open Stress-Test Workstation");
+		expect(container.textContent).not.toContain("Presets:");
+		const openBtn = getByText("Test a scenario");
 
 		// Click Open
 		fireEvent.click(openBtn);
-		expect(container.textContent).toContain("Quick Scenarios:");
-		expect(getByText("Collapse Workstation")).toBeDefined();
+		expect(container.textContent).toContain("Presets:");
+		expect(getByText("Close scenarios")).toBeDefined();
 
 		// Click Collapse
-		fireEvent.click(getByText("Collapse Workstation"));
-		expect(container.textContent).not.toContain("Quick Scenarios:");
+		fireEvent.click(getByText("Close scenarios"));
+		expect(container.textContent).not.toContain("Presets:");
 	});
 
 	it("updates simulated scores when slider changes", () => {
@@ -303,7 +303,7 @@ describe("ScenarioSandbox Component", () => {
 		fireEvent.change(sliders[0], { target: { value: "2.5" } });
 
 		expect(container.textContent).toContain("2.50%");
-		expect(container.textContent).toContain("Simulation Active");
+		expect(container.textContent).toContain("Simulation");
 	});
 
 	it("correctly resolves defaultIhsgPrice when quote key is IHSG instead of JKSE", () => {

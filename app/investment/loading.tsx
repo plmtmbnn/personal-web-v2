@@ -2,20 +2,23 @@ import { ChevronRight } from "lucide-react";
 
 export default function InvestmentLoading() {
 	return (
-		<main className="min-h-screen bg-slate-50/80 relative pb-32 sm:pb-36 overflow-x-clip">
-			{/* ── Top Floating Header Card Skeleton ─────────────────────────────────── */}
+		<main
+			aria-label="Loading Investment Compass"
+			aria-busy="true"
+			className="min-h-screen bg-slate-50/80 relative pb-[calc(8rem+env(safe-area-inset-bottom))] sm:pb-[calc(9rem+env(safe-area-inset-bottom))] overflow-x-clip"
+		>
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 mb-5 sm:mb-8">
 				<div className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs relative overflow-hidden">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 relative z-10">
 						<div className="flex-1 min-w-0">
-							<nav className="flex items-center gap-1.5 mb-2">
+							<nav className="flex min-h-11 items-center gap-1.5 mb-2">
 								<div className="h-3 w-12 bg-slate-200 rounded motion-safe:animate-pulse" />
 								<ChevronRight className="w-3.5 h-3.5 text-slate-300" />
 								<div className="h-3 w-20 bg-slate-200 rounded motion-safe:animate-pulse" />
 							</nav>
-							<div className="h-8 sm:h-10 w-64 sm:w-96 bg-slate-200 rounded-lg motion-safe:animate-pulse mb-3" />
+							<div className="h-8 sm:h-10 w-64 max-w-full sm:w-96 bg-slate-200 rounded-lg motion-safe:animate-pulse mb-3" />
 							<div className="h-4 sm:h-5 w-full max-w-lg bg-slate-200 rounded motion-safe:animate-pulse" />
-							<div className="h-4 sm:h-5 w-3/4 max-w-md bg-slate-200 rounded motion-safe:animate-pulse mt-1.5" />
+							<div className="h-3 w-52 bg-slate-200 rounded motion-safe:animate-pulse mt-2" />
 						</div>
 
 						{/* Header Actions */}
@@ -29,7 +32,18 @@ export default function InvestmentLoading() {
 			</div>
 
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 space-y-6 sm:space-y-8">
-				{/* ── 4-Column Primary Telemetry Strip Skeleton ─────────────────────────── */}
+				<div
+					className="flex flex-wrap gap-5 border-b border-slate-200 pb-2"
+					aria-hidden="true"
+				>
+					{[1, 2, 3, 4, 5].map((item) => (
+						<div
+							key={item}
+							className="my-3 h-4 w-20 rounded bg-slate-200 motion-safe:animate-pulse"
+						/>
+					))}
+				</div>
+
 				<div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
 					{[1, 2, 3, 4].map((i) => (
 						<div
@@ -42,15 +56,15 @@ export default function InvestmentLoading() {
 							</div>
 							<div>
 								<div className="h-6 sm:h-8 w-24 bg-slate-200 rounded motion-safe:animate-pulse mb-1.5" />
-								<div className="h-3 w-32 bg-slate-200 rounded motion-safe:animate-pulse" />
+								<div className="h-3 w-32 max-w-full bg-slate-200 rounded motion-safe:animate-pulse" />
 							</div>
 						</div>
 					))}
 				</div>
 
-				{/* ── Overview Regimes Skeleton ────────────────────────────────────────── */}
+				<div className="h-7 w-48 rounded bg-slate-200 motion-safe:animate-pulse" />
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-					<div className="lg:col-span-6 bg-white rounded-[2rem] border border-slate-200/80 p-5 sm:p-8 shadow-xs h-[420px] motion-safe:animate-pulse flex flex-col justify-between">
+					<div className="lg:col-span-6 bg-white rounded-[2rem] border border-slate-200/80 p-5 sm:p-8 shadow-xs h-[500px] motion-safe:animate-pulse flex flex-col justify-between">
 						<div>
 							<div className="flex items-center gap-3 mb-4">
 								<div className="w-10 h-10 rounded-xl bg-slate-200" />
@@ -62,7 +76,7 @@ export default function InvestmentLoading() {
 							<div className="h-4 w-5/6 bg-slate-200 rounded" />
 						</div>
 					</div>
-					<div className="lg:col-span-6 bg-white rounded-[2rem] border border-slate-200/80 p-5 sm:p-8 shadow-xs h-[420px] motion-safe:animate-pulse flex flex-col justify-between">
+					<div className="lg:col-span-6 bg-white rounded-[2rem] border border-slate-200/80 p-5 sm:p-8 shadow-xs h-[500px] motion-safe:animate-pulse flex flex-col justify-between">
 						<div>
 							<div className="flex items-center gap-3 mb-4">
 								<div className="w-10 h-10 rounded-xl bg-slate-200" />
@@ -74,8 +88,8 @@ export default function InvestmentLoading() {
 						</div>
 					</div>
 				</div>
+				<div className="h-48 rounded-[2rem] border border-slate-200/80 bg-white motion-safe:animate-pulse" />
 
-				{/* ── Matrix Skeleton ────────────────────────────────────────── */}
 				<div className="bg-white rounded-[2rem] border border-slate-200/80 p-5 sm:p-8 shadow-xs h-[300px] motion-safe:animate-pulse mt-6 sm:mt-8" />
 			</div>
 		</main>

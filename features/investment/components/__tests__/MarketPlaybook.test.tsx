@@ -12,9 +12,9 @@ describe("MarketPlaybook Component", () => {
 
 		const { container } = render(<MarketPlaybook playbooks={mockPlaybooks} />);
 
-		expect(container.textContent).toContain("Execution Playbook");
-		expect(container.textContent).toContain("IHSG Tactical Playbook");
-		expect(container.textContent).toContain("Crypto Tactical Playbook");
+		expect(container.textContent).toContain("Trade plans");
+		expect(container.textContent).toContain("IHSG plan");
+		expect(container.textContent).toContain("Crypto plan");
 
 		// Posture and headlines
 		expect(container.textContent).toContain(
@@ -25,8 +25,8 @@ describe("MarketPlaybook Component", () => {
 		);
 
 		// Tactical Dos & Avoids
-		expect(container.textContent).toContain("Tactical Dos");
-		expect(container.textContent).toContain("Strict Avoids");
+		expect(container.textContent).toContain("Actions");
+		expect(container.textContent).toContain("Avoid");
 	});
 
 	it("renders predetermined tranche accumulation plan when provided", () => {
@@ -37,7 +37,7 @@ describe("MarketPlaybook Component", () => {
 
 		const { container } = render(<MarketPlaybook playbooks={mockPlaybooks} />);
 
-		expect(container.textContent).toContain("Predetermined Tranche Plan");
+		expect(container.textContent).toContain("Tranche plan");
 	});
 
 	it("renders Circuit Breaker lock when composite score is below 40", () => {
@@ -53,7 +53,7 @@ describe("MarketPlaybook Component", () => {
 			/>,
 		);
 
-		expect(container.textContent).toContain("No Trade Zone");
+		expect(container.textContent).toContain("Trading paused");
 		expect(container.textContent).toContain(
 			"Circuit breaker active. All tactical trading locked.",
 		);

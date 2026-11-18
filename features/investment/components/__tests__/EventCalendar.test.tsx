@@ -11,8 +11,8 @@ describe("EventCalendar Component", () => {
 	it("renders calendar catalysts header and default active events", () => {
 		const { container } = render(<EventCalendar />);
 
-		expect(container.textContent).toContain("Upcoming Catalysts & Risk Events");
-		expect(container.textContent).toContain("All Catalysts");
+		expect(container.textContent).toContain("Market calendar");
+		expect(container.textContent).toContain("All events");
 		expect(container.textContent).toContain("Indonesia (IDX)");
 		expect(container.textContent).toContain("Crypto");
 		expect(container.textContent).toContain("US & Fed");
@@ -25,7 +25,7 @@ describe("EventCalendar Component", () => {
 		fireEvent.click(cryptoFilter);
 
 		// Component renders filtered list without crashing
-		expect(container.textContent).toContain("Upcoming Catalysts & Risk Events");
+		expect(container.textContent).toContain("Market calendar");
 	});
 
 	it("strictly adheres to the Anti-Middot Mandate and accessibility standards", () => {
@@ -41,7 +41,7 @@ describe("EventCalendar Component", () => {
 		);
 		expect(filterGroup).not.toBeNull();
 		const allButton = filterGroup?.querySelector('button[aria-pressed="true"]');
-		expect(allButton?.textContent).toContain("All Catalysts");
+		expect(allButton?.textContent).toContain("All events");
 	});
 
 	it("calculates weekday distance correctly skipping weekends", () => {

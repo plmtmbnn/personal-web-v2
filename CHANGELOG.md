@@ -1,3 +1,10 @@
+# [0.130.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.129.0...v0.130.0) (2026-11-18)
+
+
+### Features
+
+* **investment:** improve compass UI and responsiveness ([2f1019d](https://github.com/plmtmbnn/personal-web-v2/commit/2f1019db44fea250c0cc03e9aabe9112f99bad1c))
+
 # [0.129.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.128.0...v0.129.0) (2026-11-18)
 
 

@@ -29,7 +29,7 @@ export function scoreIhsg(
 	let wBiRate = 10;
 	let wDrawdown = 10;
 	let wForeignFlow = 10;
-	let wCarry = hasMacroCarry ? 15 : 0;
+	let wCarry = 15;
 	const wSeason = hasSeasonality ? 10 : 0;
 
 	// Normalize base factors dynamically to ensure total potential weight is exactly 100
@@ -44,7 +44,7 @@ export function scoreIhsg(
 		wBiRate = Math.round(wBiRate * ratio);
 		wDrawdown = Math.round(wDrawdown * ratio);
 		wForeignFlow = Math.round(wForeignFlow * ratio);
-		if (hasMacroCarry) {
+		if (wCarry > 0) {
 			wCarry =
 				targetBase -
 				(wMa200 + wMa50 + wUsdIdr + wBiRate + wDrawdown + wForeignFlow);
@@ -218,7 +218,7 @@ export function scoreIhsg(
 			label: "USD/IDR Exchange Rate Trend",
 			valueStr: `Rp ${usdIdrPrice.toLocaleString("id-ID")}`,
 			score,
-			weight: wUsdIdr,
+			weight: wUsdIdr - 5,
 			direction: dir,
 			note,
 			asOf: usdIdrQuote?.lastTime ?? undefined,
@@ -226,23 +226,12 @@ export function scoreIhsg(
 	}
 
 	// 4. Bank Indonesia Policy Rate, Domestic CPI & Sovereign Yield Spread Carry
-	const biRateSeries = data.markets.macro?.IRSTCB01IDM156N?.data;
-	const idYieldSeries = data.markets.macro?.IRLTLT01IDM156N?.data;
-	const idCpiSeries = data.markets.macro?.IDNCPIALLMINMEI?.data;
-	const latestIdYield =
-		idYieldSeries && idYieldSeries.length > 0
-			? idYieldSeries[idYieldSeries.length - 1].value
-			: null;
+	const biRateSeries = data.markets.macro?.BI_POLICY_RATE?.data;
+	const idCpiSeries = data.markets.macro?.ID_CPI_YOY?.data;
 	const latestIdCpi =
 		idCpiSeries && idCpiSeries.length > 0
 			? idCpiSeries[idCpiSeries.length - 1].value
 			: null;
-	const us10yVal =
-		data.markets.quotes.US10Y?.last ??
-		data.markets.macro?.DGS10?.data?.slice(-1)[0]?.value ??
-		null;
-	const indoUsSpread =
-		latestIdYield != null && us10yVal != null ? latestIdYield - us10yVal : null;
 
 	if (biRateSeries && biRateSeries.length > 0) {
 		const latestBi = biRateSeries[biRateSeries.length - 1];
@@ -297,27 +286,14 @@ export function scoreIhsg(
 			}
 		}
 
-		// Incorporate Indo-US 10Y Sovereign Yield Spread when available
-		if (indoUsSpread != null) {
-			if (indoUsSpread < 1.5) {
-				score = Math.max(15, score - 15);
-				if (score <= 40) dir = "bearish";
-				note += ` Indo-US 10Y spread compressed (${indoUsSpread >= 0 ? "+" : ""}${indoUsSpread.toFixed(2)}%), signaling bond outflow risk.`;
-				contextFlags.push(
-					`Tight Indo-US Yield Spread (${indoUsSpread.toFixed(2)}%)`,
-				);
-			} else if (indoUsSpread >= 2.2) {
-				score = Math.min(95, score + 8);
-				note += ` Healthy Indo-US 10Y spread (+${indoUsSpread.toFixed(2)}%) cushions foreign carry.`;
-			}
-		}
+		note +=
+			" Sovereign yield-spread adjustment disabled: no verified equivalent source.";
+		if (latestIdCpi == null) note += " CPI adjustment unavailable.";
 
 		const spreadSuffix =
-			indoUsSpread != null
-				? ` (Spread: ${indoUsSpread >= 0 ? "+" : ""}${indoUsSpread.toFixed(2)}%)`
-				: realBiRate != null
-					? ` (Real: ${realBiRate >= 0 ? "+" : ""}${realBiRate.toFixed(2)}%)`
-					: "";
+			realBiRate != null
+				? ` (Real: ${realBiRate >= 0 ? "+" : ""}${realBiRate.toFixed(2)}%)`
+				: "";
 
 		factors.push({
 			key: "bi_rate",
@@ -525,9 +501,7 @@ export function scoreIhsg(
 					? Math.round(sectorRatio * 65 + (liqBreadth / 100) * 35)
 					: Math.round(sectorRatio * 90 + 5);
 
-			const fxFactor = factors.find((f) => f.key === "usdidr_trend");
-			if (fxFactor && fxFactor.weight >= 15) {
-				fxFactor.weight -= 5;
+			if (wUsdIdr >= 5) {
 				factors.push({
 					key: "ihsg_breadth",
 					label: "Sector & Market Breadth",
@@ -554,7 +528,11 @@ export function scoreIhsg(
 	// Compute Weighted Composite
 	const totalWeight = 100;
 	const availableWeight = factors.reduce((sum, f) => sum + f.weight, 0);
-	const coverage = availableWeight / totalWeight;
+	const carryWeight =
+		factors.find((factor) => factor.key === "global_liquidity_carry")?.weight ??
+		0;
+	const coverage =
+		(availableWeight - carryWeight * (1 - globalRegime.coverage)) / totalWeight;
 
 	const compositeScore =
 		availableWeight > 0

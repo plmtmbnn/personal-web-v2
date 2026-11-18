@@ -75,7 +75,7 @@ export function normalizeYahooMeta(
 		low52w: finite(meta.fiftyTwoWeekLow),
 		currency: meta.currency ?? null,
 		lastTime: meta.regularMarketTime
-			? new Date(meta.regularMarketTime * 1000).toISOString().split("T")[0]
+			? new Date(meta.regularMarketTime * 1000).toISOString()
 			: null,
 		marketStatus: null,
 		source: "yahoo",

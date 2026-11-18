@@ -5,7 +5,13 @@ import {
 	saveStockData,
 	updateTickerHistoryRingBuffer,
 } from "@/lib/core/redis";
-import { completedIdxSession, idxEvidence } from "./provenance";
+import {
+	completedIdxSession,
+	idxEvidence,
+	latestCompletedIdxSession,
+	sessionDate,
+	jakartaDate,
+} from "./provenance";
 import type { FetchPolicy, RetrievedMarketData } from "./types";
 import type { IDXStock } from "@/features/utils/stock-tools/stock-explorer/types";
 import { processIdxMarketData } from "@/features/utils/stock-tools/stock-explorer/hooks/useMarketData";
@@ -28,6 +34,12 @@ export const PEOEL_STOCK_SUMMARY_URL =
 	"https://peoel-screener-py.vercel.app/api/v1/stock-summary";
 
 const FLOW_HISTORY_KEY = "idx:flow:history";
+const COMPLETED_SUMMARY_KEY = "idx:stock-summary:completed:v4";
+let pendingSync: Promise<{
+	success: boolean;
+	count: number;
+	error?: string;
+}> | null = null;
 
 /**
  * Synchronizes IDX stock summary from peoel-screener-py, caching to Redis
@@ -38,6 +50,18 @@ export async function syncIdxStockSummary(force = false): Promise<{
 	count: number;
 	error?: string;
 }> {
+	if (pendingSync) return pendingSync;
+	pendingSync = syncSummary(force);
+	try {
+		return await pendingSync;
+	} finally {
+		pendingSync = null;
+	}
+}
+
+async function syncSummary(
+	force: boolean,
+): Promise<{ success: boolean; count: number; error?: string }> {
 	try {
 		if (!force) {
 			const existing = await getStockData();
@@ -61,10 +85,44 @@ export async function syncIdxStockSummary(force = false): Promise<{
 
 		const body = (await res.json()) as any;
 		if (body && Array.isArray(body.data) && body.data.length > 0) {
+			const now = new Date().toISOString();
+			const date = sessionDate(body.data[0]?.Date);
+			if (
+				!date ||
+				date > jakartaDate(now) ||
+				!body.data.every(
+					(stock: IDXStock) =>
+						sessionDate(stock.Date) === date &&
+						[
+							stock.Close,
+							stock.ForeignBuy,
+							stock.ForeignSell,
+							stock.Volume,
+							stock.Value,
+						].every(Number.isFinite),
+				)
+			) {
+				return {
+					success: false,
+					count: 0,
+					error: "Invalid stock summary session or numeric fields",
+				};
+			}
 			await Promise.allSettled([
 				saveStockData(body.data, 43200, "live"),
 				updateTickerHistoryRingBuffer(body.data),
 			]);
+			if (completedIdxSession(date, now)) {
+				const previous = await redis.get<{ data: IDXStock[] }>(
+					COMPLETED_SUMMARY_KEY,
+				);
+				if (!previous || (sessionDate(previous.data?.[0]?.Date) ?? "") <= date)
+					await redis.set(COMPLETED_SUMMARY_KEY, {
+						data: body.data,
+						origin: "cache",
+						retrievedAt: now,
+					});
+			}
 			return { success: true, count: body.data.length };
 		}
 
@@ -135,11 +193,23 @@ export async function fetchIhsgForeignFlow(
 	try {
 		// 1. Get today's market summary, syncing from peoel-screener-py if empty or fresh requested
 		let snapshot = await getStockDataSnapshot();
-		if (!snapshot || _policy.fresh) {
-			await syncIdxStockSummary(Boolean(_policy.fresh));
+		const now = new Date().toISOString();
+		const expected = latestCompletedIdxSession(now);
+		if (
+			!snapshot ||
+			_policy.fresh ||
+			(sessionDate(snapshot.data[0]?.Date) ?? "") < expected
+		) {
+			await syncIdxStockSummary(true);
 			snapshot = await getStockDataSnapshot();
 		}
-		const now = new Date().toISOString();
+		if (!completedIdxSession(snapshot?.data[0]?.Date, now)) {
+			const completed = await redis.get<{
+				data: IDXStock[];
+				retrievedAt: string;
+			}>(COMPLETED_SUMMARY_KEY);
+			if (completed) snapshot = { ...completed, origin: "backup" };
+		}
 		const sessionDateStr = completedIdxSession(snapshot?.data[0]?.Date, now);
 		if (!sessionDateStr || !snapshot || snapshot.origin === "unknown")
 			return null;

@@ -1,6 +1,7 @@
 import { ENV_GLOBAL } from "@/lib/core/env";
 import { buildFetchInit, BROWSER_USER_AGENT } from "./http";
 import type { FetchPolicy, MacroSeries } from "./types";
+import { FRED_SERIES } from "./registry";
 
 const FRED_API_URL = "https://api.stlouisfed.org/fred/series/observations";
 
@@ -11,6 +12,7 @@ export async function fetchFredSeries(
 ): Promise<MacroSeries | null> {
 	const apiKey = ENV_GLOBAL.FRED_API_KEY;
 	if (!apiKey) {
+		policy.onError?.("FRED credentials are not configured");
 		console.warn("[FRED] Missing FRED_API_KEY in environment variables.");
 		return null;
 	}
@@ -40,32 +42,52 @@ export async function fetchFredSeries(
 		);
 
 		if (!res.ok) {
+			policy.onError?.(`FRED HTTP ${res.status}`);
 			console.error(`[FRED] API returned ${res.status} for series ${seriesId}`);
 			return null;
 		}
 
 		const data = await res.json();
 		if (!data?.observations || !Array.isArray(data.observations)) {
+			policy.onError?.("Invalid FRED observations response");
 			console.error(`[FRED] Invalid response structure for series ${seriesId}`);
 			return null;
 		}
 
 		// Filter out invalid observations (FRED sometimes returns "." for missing data)
 		const validObs = data.observations
-			.filter((obs: any) => obs.value && obs.value !== ".")
+			.filter(
+				(obs: any) =>
+					obs.value &&
+					obs.value !== "." &&
+					Number.isFinite(Number(obs.value)) &&
+					/^\d{4}-\d{2}-\d{2}$/.test(obs.date),
+			)
 			.map((obs: any) => ({
 				date: obs.date,
 				value: Number(obs.value),
 			}));
 
+		if (!validObs.length) {
+			policy.onError?.("FRED returned no usable observations");
+			return null;
+		}
 		return {
 			id: seriesId,
 			name: seriesId, // We could fetch series details separately if we needed actual names
-			frequency: "Daily", // This would also need series details, defaulting to Daily
+			frequency:
+				FRED_SERIES.find((series) => series.id === seriesId)?.frequency ??
+				"Daily",
 			units: "Unknown", // Default
 			data: validObs,
 		};
 	} catch (e) {
+		policy.onError?.(
+			e instanceof Error &&
+				(e.name === "TimeoutError" || e.name === "AbortError")
+				? "FRED request timed out"
+				: "FRED request failed",
+		);
 		console.error(`[FRED] Fetch failed for series ${seriesId}:`, e);
 		return null;
 	}

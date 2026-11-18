@@ -121,7 +121,17 @@ describe("IDX Flows foreign telemetry logic", () => {
 		});
 
 		it("fetches upstream and updates Redis + ring buffer on force = true", async () => {
-			const mockStocks = [{ Code: "BBCA", Close: 10000 }];
+			const mockStocks = [
+				{
+					StockCode: "BBCA",
+					Date: "2026-11-17T00:00:00",
+					Close: 10000,
+					ForeignBuy: 100,
+					ForeignSell: 50,
+					Volume: 1000,
+					Value: 10000000,
+				},
+			];
 			const originalFetch = global.fetch;
 			global.fetch = vi.fn().mockResolvedValueOnce({
 				ok: true,

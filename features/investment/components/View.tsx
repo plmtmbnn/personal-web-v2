@@ -230,6 +230,17 @@ export default function InvestmentCompassView({
 												</button>
 											</div>
 											<ul className="max-h-[55dvh] space-y-1.5 overflow-y-auto text-xs">
+												<li className="py-2 text-slate-600">
+													Model {engineOutput?.modelVersion ?? "legacy"}.
+													Evaluated{" "}
+													{engineOutput?.evaluatedAt
+														? new Date(engineOutput.evaluatedAt).toLocaleString(
+																"en-GB",
+																{ timeZone: "Asia/Jakarta" },
+															)
+														: "time unavailable"}{" "}
+													WIB.
+												</li>
 												{Object.entries(data.sources).map(([key, source]) => (
 													<li
 														key={key}
@@ -239,11 +250,13 @@ export default function InvestmentCompassView({
 															<summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 font-medium focus-visible:outline-2 focus-visible:outline-indigo-600">
 																<span>{source.label}</span>
 																<span>
-																	{source.ok
-																		? source.stale
-																			? "Partial"
-																			: "Current"
-																		: "Unavailable"}
+																	{source.status === "stale"
+																		? "Stale"
+																		: source.ok
+																			? source.stale
+																				? "Partial"
+																				: "Current"
+																			: "Unavailable"}
 																</span>
 															</summary>
 															<ul className="max-h-40 space-y-2 overflow-auto pb-2">
@@ -254,9 +267,16 @@ export default function InvestmentCompassView({
 																				{id}: {item.provider}, {item.origin},{" "}
 																				{item.status}
 																			</p>
+																			{item.reason && <p>{item.reason}</p>}
+																			{item.periodEnd && (
+																				<p>
+																					Monthly period ends {item.periodEnd}.
+																					Freshness uses this date.
+																				</p>
+																			)}
 																			<p>
 																				{item.asOf
-																					? "Observed " + item.asOf.slice(0, 10)
+																					? `Observed ${item.asOf.slice(0, 10)}`
 																					: "Observation date unknown"}
 																			</p>
 																			{item.retrievedAt && (

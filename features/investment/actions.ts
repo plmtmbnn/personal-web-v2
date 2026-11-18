@@ -11,6 +11,14 @@ import type {
 } from "./types";
 import { INSTRUMENTS } from "./data/instruments";
 import {
+	FRED_SERIES,
+	quoteIsCurrent,
+	registeredQuotes,
+	registeredMacro,
+} from "@/services/market-data/registry";
+import { fetchIndonesiaMacro } from "@/services/market-data/indonesia-macro";
+import { MODEL_VERSION } from "./lib/engine/evidence";
+import {
 	fetchCnbcQuotes,
 	fetchYahooQuote,
 	fetchCryptoGlobal,
@@ -69,6 +77,7 @@ async function getCryptoFearAndGreedData(): Promise<CryptoFearAndGreedResponse |
  */
 async function getMarketQuotes(
 	forceRefresh: boolean,
+	failures: Record<string, string> = {},
 ): Promise<{ quotes: Record<string, MarketQuote>; sourceOk: boolean }> {
 	const cacheKey = CACHE_KEYS.MARKET_QUOTES;
 	const backupKey = CACHE_KEYS.MARKET_QUOTES_BACKUP;
@@ -84,7 +93,7 @@ async function getMarketQuotes(
 				if (cached && Object.keys(cached).length > 0) {
 					return {
 						quotes: Object.fromEntries(
-							Object.entries(cached).map(([id, q]) => [
+							Object.entries(registeredQuotes(cached)).map(([id, q]) => [
 								id,
 								{ ...q, origin: q.origin === "backup" ? "backup" : "cache" },
 							]),
@@ -117,7 +126,8 @@ async function getMarketQuotes(
 		// Covers instruments without CNBC identifier (e.g. IHSG) OR any symbol CNBC failed to resolve
 		const yahooInsts = INSTRUMENTS.filter(
 			(inst) =>
-				Boolean(inst.yahoo) && (!inst.cnbc || !cnbcQuotes.has(inst.cnbc)),
+				Boolean(inst.yahoo) &&
+				(!inst.cnbc || !quoteIsCurrent(inst.id, cnbcQuotes.get(inst.cnbc))),
 		);
 
 		const yahooPromises = yahooInsts.map(async (inst) => {
@@ -129,6 +139,10 @@ async function getMarketQuotes(
 				return { id: inst.id, quote };
 			} catch (e) {
 				console.warn(`[Investment] Yahoo fallback failed for ${inst.id}`, e);
+				failures[inst.id] =
+					e instanceof Error && /429/.test(e.message)
+						? "Yahoo rate limit (HTTP 429)"
+						: "Yahoo quote request failed";
 				return { id: inst.id, quote: null };
 			}
 		});
@@ -142,10 +156,10 @@ async function getMarketQuotes(
 			if (inst.cnbc) {
 				q = cnbcQuotes.get(inst.cnbc);
 			}
-			if (!q && inst.yahoo) {
+			if ((!q || !quoteIsCurrent(inst.id, q)) && inst.yahoo) {
 				q = yahooResults.find((y) => y.id === inst.id)?.quote;
 			}
-			if (q) {
+			if (q && quoteIsCurrent(inst.id, q)) {
 				quotesRecord[inst.id] = {
 					...q,
 					origin: "live",
@@ -169,7 +183,7 @@ async function getMarketQuotes(
 
 		const mergedQuotes = {
 			...Object.fromEntries(
-				Object.entries(existingBackup).map(([id, q]) => [
+				Object.entries(registeredQuotes(existingBackup)).map(([id, q]) => [
 					id,
 					{ ...q, origin: "backup" as const },
 				]),
@@ -205,7 +219,7 @@ async function getMarketQuotes(
 			if (parsed && Object.keys(parsed).length > 0) {
 				return {
 					quotes: Object.fromEntries(
-						Object.entries(parsed).map(([id, q]) => [
+						Object.entries(registeredQuotes(parsed)).map(([id, q]) => [
 							id,
 							{ ...q, origin: "backup" },
 						]),
@@ -291,9 +305,10 @@ async function getCryptoGlobalData(
  */
 async function getMacroData(
 	forceRefresh: boolean,
+	failures: Record<string, string> = {},
 ): Promise<{ data: Record<string, MacroSeries>; sourceOk: boolean }> {
-	const cacheKey = CACHE_KEYS.MACRO_FRED;
-	const backupKey = CACHE_KEYS.MACRO_FRED_BACKUP;
+	const cacheKey = `${CACHE_KEYS.MACRO_FRED}:v4`;
+	const backupKey = `${CACHE_KEYS.MACRO_FRED_BACKUP}:v4`;
 
 	if (!forceRefresh) {
 		try {
@@ -301,7 +316,7 @@ async function getMacroData(
 			if (cached && Object.keys(cached).length > 0) {
 				return {
 					data: Object.fromEntries(
-						Object.entries(cached).map(([id, series]) => [
+						Object.entries(registeredMacro(cached)).map(([id, series]) => [
 							id,
 							{
 								...series,
@@ -321,21 +336,8 @@ async function getMacroData(
 		// Key macro series to fetch:
 		// FEDFUNDS (Fed Funds Rate), CPIAUCSL (CPI YoY), M2SL (M2 YoY Money Supply), UNRATE (Unemployment)
 		// DGS10 (10Y Treasury), T10Y2Y (Yield Curve), BAMLH0A0HYM2 (HY OAS Spread)
-		// IRSTCB01IDM156N (Bank Indonesia Policy Rate), IRLTLT01IDM156N (Indonesia 10Y Yield)
-		const seriesConfigs: Array<{ id: string; units?: string }> = [
-			{ id: "FEDFUNDS" },
-			{ id: "CPIAUCSL", units: "pc1" },
-			{ id: "PCEPILFE", units: "pc1" }, // Core PCE
-			{ id: "M2SL", units: "pc1" },
-			{ id: "UNRATE" },
-			{ id: "DGS10" },
-			{ id: "T10Y2Y" },
-			{ id: "BAMLH0A0HYM2" },
-			{ id: "IRSTCB01IDM156N" }, // Bank Indonesia Policy Rate
-			{ id: "IRLTLT01IDM156N" }, // Indonesia 10Y Gov Bond Yield
-			{ id: "DFII10" }, // 10Y TIPS Real Yield
-			{ id: "IDNCPIALLMINMEI", units: "pc1" }, // Indonesia CPI YoY
-		];
+		// Domestic policy and CPI observations come from Bank Indonesia, not retired FRED mappings.
+		const seriesConfigs = FRED_SERIES;
 		const macroData: Record<string, MacroSeries> = {};
 
 		const promises = seriesConfigs.map(async (config) => {
@@ -344,10 +346,13 @@ async function getMacroData(
 				{
 					revalidate: 3600, // 1 hour
 					fresh: forceRefresh,
+					onError: (reason) => {
+						failures[config.id] = reason;
+					},
 				},
 				config.units ? { units: config.units } : undefined,
 			);
-			if (series) {
+			if (series?.data.length) {
 				macroData[config.id] = {
 					...series,
 					origin: "live",
@@ -357,6 +362,16 @@ async function getMacroData(
 		});
 
 		await Promise.allSettled(promises);
+		Object.assign(
+			macroData,
+			await fetchIndonesiaMacro({
+				revalidate: 3600,
+				fresh: forceRefresh,
+				onError: (reason) => {
+					failures.indonesiaMacro = reason;
+				},
+			}),
+		);
 
 		let existingBackup: Record<string, MacroSeries> = {};
 		try {
@@ -373,7 +388,7 @@ async function getMacroData(
 
 		const mergedMacro = {
 			...Object.fromEntries(
-				Object.entries(existingBackup).map(([id, series]) => [
+				Object.entries(registeredMacro(existingBackup)).map(([id, series]) => [
 					id,
 					{ ...series, origin: "backup" as const },
 				]),
@@ -403,7 +418,7 @@ async function getMacroData(
 			if (parsed && Object.keys(parsed).length > 0) {
 				return {
 					data: Object.fromEntries(
-						Object.entries(parsed).map(([id, series]) => [
+						Object.entries(registeredMacro(parsed)).map(([id, series]) => [
 							id,
 							{ ...series, origin: "backup" },
 						]),
@@ -474,12 +489,15 @@ async function getHistoryData(forceRefresh: boolean): Promise<{
 /**
  * Retrieves crypto liquidity metrics (stablecoin issuance, futures funding/OI).
  */
-async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
+async function getCryptoFlowsData(
+	forceRefresh: boolean,
+	failures: Record<string, string> = {},
+): Promise<{
 	data: CryptoFlowsSnapshot | null;
 	sourceOk: boolean;
 }> {
-	const cacheKey = CACHE_KEYS.CRYPTO_FLOWS;
-	const backupKey = CACHE_KEYS.CRYPTO_FLOWS_BACKUP;
+	const cacheKey = `${CACHE_KEYS.CRYPTO_FLOWS}:v4`;
+	const backupKey = `${CACHE_KEYS.CRYPTO_FLOWS_BACKUP}:v4`;
 
 	if (!forceRefresh) {
 		try {
@@ -487,7 +505,17 @@ async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
 			if (cached) {
 				const parsed = typeof cached === "string" ? JSON.parse(cached) : cached;
 				if (parsed)
-					return { data: { ...parsed, origin: "cache" }, sourceOk: true };
+					return {
+						data: {
+							...parsed,
+							origin: "cache",
+							stablecoinOrigin:
+								parsed.stablecoinOrigin === "backup" ? "backup" : "cache",
+							fundingOrigin:
+								parsed.fundingOrigin === "backup" ? "backup" : "cache",
+						},
+						sourceOk: true,
+					};
 			}
 		} catch (e) {
 			console.warn("[Investment] Crypto flows cache read failed:", e);
@@ -496,23 +524,58 @@ async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
 
 	try {
 		const [stableRes, okxRes] = await Promise.allSettled([
-			fetchStablecoinSupply30d({ revalidate: 21600, fresh: forceRefresh }),
+			fetchStablecoinSupply30d({
+				revalidate: 21600,
+				fresh: forceRefresh,
+				onError: (reason) => {
+					failures.supply = reason;
+				},
+			}),
 			fetchOkxCryptoMetrics({ revalidate: 900, fresh: forceRefresh }),
 		]);
 
 		const stableData =
 			stableRes.status === "fulfilled" ? stableRes.value : null;
 		const okxData = okxRes.status === "fulfilled" ? okxRes.value : null;
+		let previous: CryptoFlowsSnapshot | null = null;
+		try {
+			const rawPrevious = await redis.get<CryptoFlowsSnapshot | string>(
+				backupKey,
+			);
+			previous =
+				typeof rawPrevious === "string" ? JSON.parse(rawPrevious) : rawPrevious;
+		} catch {
+			console.warn("[Investment] Crypto flow backup could not be read");
+		}
 
-		if (stableData || okxData) {
+		if (stableData || okxData || previous) {
 			const snapshot: CryptoFlowsSnapshot = {
-				totalStablecoinSupplyUsd: stableData?.totalUsd ?? null,
-				stablecoin30dChangePct: stableData?.change30dPct ?? null,
-				btcFundingRate8hPct: okxData?.fundingRate8hPct ?? null,
-				btcOpenInterestUsd: okxData?.openInterestUsd ?? null,
-				stablecoinAsOf: stableData?.asOf,
-				fundingAsOf: okxData?.fundingAsOf,
-				fundingProvider: okxData?.fundingProvider,
+				totalStablecoinSupplyUsd:
+					stableData?.totalUsd ?? previous?.totalStablecoinSupplyUsd ?? null,
+				stablecoin30dChangePct:
+					stableData?.change30dPct ?? previous?.stablecoin30dChangePct ?? null,
+				btcFundingRate8hPct:
+					okxData?.fundingRate8hPct ?? previous?.btcFundingRate8hPct ?? null,
+				btcOpenInterestUsd:
+					okxData?.openInterestUsd ?? previous?.btcOpenInterestUsd ?? null,
+				stablecoinAsOf: stableData?.asOf ?? previous?.stablecoinAsOf,
+				fundingAsOf:
+					okxData?.fundingRate8hPct != null
+						? okxData.fundingAsOf
+						: previous?.fundingAsOf,
+				fundingProvider:
+					okxData?.fundingRate8hPct != null
+						? okxData.fundingProvider
+						: previous?.fundingProvider,
+				stablecoinOrigin: stableData ? "live" : "backup",
+				stablecoinRetrievedAt: stableData
+					? new Date().toISOString()
+					: previous?.stablecoinRetrievedAt,
+				fundingOrigin: okxData?.fundingRate8hPct != null ? "live" : "backup",
+				fundingRetrievedAt:
+					okxData?.fundingRate8hPct != null
+						? new Date().toISOString()
+						: previous?.fundingRetrievedAt,
 				updatedAt: Math.floor(Date.now() / 1000),
 				retrievedAt: new Date().toISOString(),
 				origin: "live",
@@ -531,7 +594,15 @@ async function getCryptoFlowsData(forceRefresh: boolean): Promise<{
 		if (backup) {
 			const parsed = typeof backup === "string" ? JSON.parse(backup) : backup;
 			if (parsed)
-				return { data: { ...parsed, origin: "backup" }, sourceOk: false };
+				return {
+					data: {
+						...parsed,
+						origin: "backup",
+						stablecoinOrigin: "backup",
+						fundingOrigin: "backup",
+					},
+					sourceOk: false,
+				};
 		}
 	} catch (e) {
 		console.warn("[Investment] Crypto flows backup read failed:", e);
@@ -642,6 +713,7 @@ export async function getInvestmentCompass(
 		}
 	}
 
+	const fetchFailures: Record<string, string> = {};
 	const [
 		cryptoFngResult,
 		quotesResult,
@@ -653,11 +725,11 @@ export async function getInvestmentCompass(
 		ihsgFlowsResult,
 	] = await Promise.allSettled([
 		getCryptoFearAndGreedData(),
-		getMarketQuotes(forceRefresh),
+		getMarketQuotes(forceRefresh, fetchFailures),
 		getCryptoGlobalData(forceRefresh),
-		getMacroData(forceRefresh),
+		getMacroData(forceRefresh, fetchFailures),
 		getHistoryData(forceRefresh),
-		getCryptoFlowsData(forceRefresh),
+		getCryptoFlowsData(forceRefresh, fetchFailures),
 		getCryptoOnChainData(forceRefresh),
 		getIhsgFlowsData(forceRefresh && !idxAlreadySynced),
 	]);
@@ -696,6 +768,7 @@ export async function getInvestmentCompass(
 	const vixQuote = quotesData.quotes.VIX ?? null;
 
 	const compassData: InvestmentCompassData = {
+		fetchFailures,
 		sentiment: {
 			crypto,
 			vix: vixQuote,
@@ -736,6 +809,7 @@ export async function getInvestmentCompass(
 				label: "FRED Macro",
 				stale: !macroData.sourceOk,
 			},
+			indonesiaMacro: { ok: false, label: "Indonesia Policy & Inflation" },
 			history: {
 				ok: historyData.sourceOk,
 				label: "Yahoo Chart History",
@@ -784,6 +858,7 @@ export async function getInvestmentCompass(
 			await redis.mget<InvestmentCompassData[]>(...priorKeys)
 		).find(
 			(item) =>
+				item?.engineOutput?.modelVersion === MODEL_VERSION &&
 				item?.fetchedAt &&
 				jakartaDate(item.fetchedAt) < today &&
 				item.engineOutput?.permissions.ihsg.mandate?.state,
@@ -805,6 +880,6 @@ export async function getInvestmentCompass(
 
 export const getCachedInvestmentCompass = unstable_cache(
 	async () => getInvestmentCompass(false),
-	["investment-compass-data-v3"],
+	["investment-compass-data-v4"],
 	{ revalidate: 60, tags: ["compass-data"] },
 );

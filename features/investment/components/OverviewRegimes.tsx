@@ -101,7 +101,7 @@ export default function OverviewRegimes({
 							<p>
 								{Math.round(regime.coverage * 100)}% evidence coverage
 								{ihsgPosture.session
-									? ". IDX session " + ihsgPosture.session
+									? `. IDX session ${ihsgPosture.session}`
 									: ""}
 							</p>
 							{previous && (
@@ -171,7 +171,7 @@ export default function OverviewRegimes({
 					<div className="space-y-1.5 mb-4 bg-slate-50/60 p-3 sm:p-3.5 rounded-2xl border border-slate-100">
 						<div className="flex items-center justify-between text-xs">
 							<span className="font-extrabold text-slate-600 uppercase text-[10px] tracking-wider">
-								Regime Health Score
+								Rules-based regime score
 							</span>
 							<div className="flex items-baseline gap-1">
 								<span className="text-base sm:text-lg font-black text-slate-900">
@@ -199,6 +199,22 @@ export default function OverviewRegimes({
 					</div>
 
 					{/* Dual-Axis Trend vs Valuation Separation */}
+					<p className="mb-3 text-xs text-slate-600">
+						Current evidence: {Math.round(regime.coverage * 100)}%. This score
+						is a regime indicator, not a return forecast.
+					</p>
+					{!!regime.missingFactors?.length && (
+						<details className="mb-4 text-xs text-slate-700">
+							<summary className="min-h-11 cursor-pointer py-3 font-medium focus-visible:outline-2">
+								Missing evidence ({regime.missingFactors.length})
+							</summary>
+							<ul className="list-disc space-y-1 pl-4">
+								{regime.missingFactors.map((factor) => (
+									<li key={factor}>{factor.replaceAll("_", " ")}</li>
+								))}
+							</ul>
+						</details>
+					)}
 					{regime.dualAxis && (
 						<div className="mb-4 grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60">
 							<div className="space-y-0.5">

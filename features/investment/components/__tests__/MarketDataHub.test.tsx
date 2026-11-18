@@ -241,6 +241,31 @@ function createMockData(
 }
 
 describe("MarketDataHub Component", () => {
+	it("uses normalized BI indicators and explains the retired spread adjustment", () => {
+		const data = createMockData();
+		data.markets.macro.BI_POLICY_RATE = {
+			id: "BI_POLICY_RATE",
+			name: "BI Rate",
+			units: "Percent",
+			frequency: "Policy decisions",
+			data: [{ date: "2026-11-18", value: 6 }],
+		};
+		data.markets.macro.ID_CPI_YOY = {
+			id: "ID_CPI_YOY",
+			name: "CPI YoY",
+			units: "Percent",
+			frequency: "Monthly",
+			data: [{ date: "2026-09-01", value: 3.28 }],
+		};
+		const { container } = render(<MarketDataHub data={data} />);
+		expect(container.textContent).toContain("BI Policy Rate");
+		expect(container.textContent).toContain("6.00%");
+		expect(container.textContent).toContain("+2.72%");
+		expect(container.textContent).toContain(
+			"Sovereign yield-spread adjustment is unavailable and excluded from scoring",
+		);
+		expect(container.textContent).not.toContain("6.85%");
+	});
 	it("renders terminal navigation and default active tab (Indonesia IDX)", () => {
 		const data = createMockData();
 		const { container } = render(<MarketDataHub data={data} />);

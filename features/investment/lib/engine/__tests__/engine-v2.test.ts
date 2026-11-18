@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { computeCompass } from "../index";
 import { DEFAULT_THRESHOLDS } from "../../../config/thresholds";
+import { enforceEvidence } from "../evidence";
 import type { InvestmentCompassData } from "../../../types";
 
 function createMockData(
@@ -229,8 +230,8 @@ function createMockData(
 					units: "Percent Change from Year Ago",
 					data: [{ date: "2026-09-01", value: 2.1 }],
 				},
-				IRSTCB01IDM156N: {
-					id: "IRSTCB01IDM156N",
+				BI_POLICY_RATE: {
+					id: "BI_POLICY_RATE",
 					name: "Bank Indonesia Policy Rate",
 					frequency: "Monthly",
 					units: "Percent",
@@ -273,6 +274,7 @@ function createMockData(
 				btcOpenInterestUsd: 18000000000,
 				updatedAt: 1700000000,
 			},
+			ihsgFlows: { streakDays: 3, netBuySell1dIdr: 500_000_000_000 },
 		},
 		sources: {
 			cnn: { ok: true, label: "CNN" },
@@ -287,6 +289,122 @@ function createMockData(
 }
 
 describe("Engine v2 computeCompass", () => {
+	it("reserves breadth weight when bellwether history is missing", () => {
+		const data = createMockData();
+		const missing = computeCompass(data);
+		for (const symbol of ["BBCA.JK", "ADRO.JK", "ICBP.JK", "ANTM.JK"])
+			data.markets.history![symbol] = {
+				...data.markets.history!["^JKSE"]!,
+				symbol,
+			};
+		const full = computeCompass(data);
+		expect(
+			missing.regimes.ihsg.factors.find(
+				(factor) => factor.key === "usdidr_trend",
+			)?.weight,
+		).toBe(
+			full.regimes.ihsg.factors.find((factor) => factor.key === "usdidr_trend")
+				?.weight,
+		);
+		expect(
+			full.regimes.ihsg.coverage - missing.regimes.ihsg.coverage,
+		).toBeCloseTo(0.05);
+		expect(missing.regimes.ihsg.missingFactors).toContain("ihsg_breadth");
+	});
+	it("honors exact coverage boundaries without relaxing stress", () => {
+		const full = computeCompass(createMockData()).regimes.global;
+		for (const [coverage, expected] of [
+			[0.49, "insufficient"],
+			[0.5, "selective"],
+			[0.699, "selective"],
+			[0.7, "risk_on"],
+		] as const) {
+			const result = enforceEvidence(
+				{ ...full, contextFlags: [], state: "risk_on", coverage },
+				DEFAULT_THRESHOLDS,
+			);
+			expect(result.state).toBe(expected);
+		}
+		expect(
+			enforceEvidence(
+				{ ...full, contextFlags: [], state: "stress", coverage: 0.6 },
+				DEFAULT_THRESHOLDS,
+			).state,
+		).toBe("stress");
+	});
+	it("caps IHSG when foreign flow disappears without inflating surviving weights", () => {
+		const data = createMockData();
+		const healthy = computeCompass(data);
+		data.markets.ihsgFlows = null;
+		const degraded = computeCompass(data);
+		expect(degraded.regimes.ihsg.state).toBe("selective");
+		expect(
+			degraded.permissions.ihsg.mandate?.maxRiskPerTradePct,
+		).toBeLessThanOrEqual(
+			healthy.permissions.ihsg.mandate?.maxRiskPerTradePct ?? 0,
+		);
+		expect(degraded.regimes.ihsg.missingFactors).toContain("ihsg_foreign_flow");
+		for (const factor of degraded.regimes.ihsg.factors)
+			expect(factor.weight).toBe(
+				healthy.regimes.ihsg.factors.find((item) => item.key === factor.key)
+					?.weight,
+			);
+	});
+
+	it("pauses a market when its 200-day trend history disappears", () => {
+		const data = createMockData();
+		data.markets.history!["BTC-USD"]!.points =
+			data.markets.history!["BTC-USD"]!.points.slice(-100);
+		const output = computeCompass(data);
+		expect(output.regimes.crypto.state).toBe("insufficient");
+		expect(output.permissions.crypto.mandate?.isTradingLocked).toBe(true);
+		expect(output.permissions.altcoins.swing.status).not.toBe("allowed");
+	});
+
+	it("caps Crypto for missing stablecoin liquidity and preserves defensive restrictions", () => {
+		const data = createMockData();
+		data.markets.cryptoFlows!.stablecoin30dChangePct = null;
+		const output = computeCompass(data);
+		expect(output.regimes.crypto.state).toBe("selective");
+		expect(output.regimes.crypto.missingFactors).toContain("stablecoin_supply");
+		data.markets.quotes.BTC.last = 30000;
+		const defensive = computeCompass(data);
+		expect(["defensive", "stress", "selective"]).toContain(
+			defensive.regimes.crypto.state,
+		);
+		expect(
+			defensive.permissions.crypto.mandate?.maxRiskPerTradePct,
+		).toBeLessThanOrEqual(
+			output.permissions.crypto.mandate?.maxRiskPerTradePct ?? 0,
+		);
+	});
+
+	it("propagates partial Global coverage into local carry-in and versions outputs", () => {
+		const data = createMockData();
+		const full = computeCompass(data);
+		delete data.markets.macro.M2SL;
+		const partial = computeCompass(data);
+		const carry = partial.regimes.ihsg.factors.find(
+			(factor) => factor.key === "global_liquidity_carry",
+		)!;
+		expect(partial.regimes.global.coverage).toBeCloseTo(
+			full.regimes.global.coverage - 0.1,
+		);
+		expect(partial.regimes.ihsg.coverage).toBeCloseTo(
+			full.regimes.ihsg.coverage - (carry.weight * 0.1) / 100,
+		);
+		expect(partial.modelVersion).toBe("4.0.0");
+		expect(partial.evaluatedAt).toBe(data.fetchedAt);
+	});
+
+	it("marks Global insufficient when a core indicator is missing despite high coverage", () => {
+		const data = createMockData();
+		delete data.markets.macro.BAMLH0A0HYM2;
+		const output = computeCompass(data);
+		expect(output.regimes.global.coverage).toBeGreaterThan(0.7);
+		expect(output.regimes.global.state).toBe("insufficient");
+		expect(output.regimes.ihsg.state).not.toBe("risk_on");
+	});
 	it("evaluates healthy macro and uptrending assets as Risk-On", () => {
 		const mockData = createMockData();
 		const output = computeCompass(mockData, DEFAULT_THRESHOLDS);
@@ -366,7 +484,7 @@ describe("Engine v2 computeCompass", () => {
 		]; // Global stress
 		mockData.markets.macro.M2SL.data = [{ date: "2026-10-02", value: -2.5 }]; // Liquidity contraction
 		mockData.markets.macro.CPIAUCSL.data = [{ date: "2026-10-02", value: 4.2 }];
-		mockData.markets.macro.IRSTCB01IDM156N.data = [
+		mockData.markets.macro.BI_POLICY_RATE.data = [
 			{ date: "2026-08-01", value: 6.0 },
 			{ date: "2026-09-01", value: 6.5 },
 		]; // BI hiking rate
@@ -433,7 +551,7 @@ describe("Engine v2 computeCompass", () => {
 	it("evaluates Bank Indonesia rate hikes and restrictive levels as bearish for IHSG", () => {
 		const mockData = createMockData();
 		// Mock hiking: 6.0% -> 6.25%
-		mockData.markets.macro.IRSTCB01IDM156N.data = [
+		mockData.markets.macro.BI_POLICY_RATE.data = [
 			{ date: "2026-08-01", value: 6.0 },
 			{ date: "2026-09-01", value: 6.25 },
 		];
@@ -537,7 +655,7 @@ describe("Engine v2 computeCompass", () => {
 		expect(output.regimes.crypto.asymmetryZone?.type).toBe("distribution");
 	});
 
-	it("strictly normalizes Crypto factor weights to exactly 100 when global macro carry is insufficient", () => {
+	it("preserves missing Crypto macro weight in the coverage budget", () => {
 		const baseMock = createMockData();
 		const mockData = createMockData({
 			markets: {
@@ -562,17 +680,26 @@ describe("Engine v2 computeCompass", () => {
 			(sum, f) => sum + f.weight,
 			0,
 		);
-		expect(totalCryptoWeight).toBe(100);
+		expect(totalCryptoWeight).toBeLessThan(100);
+		const healthy = computeCompass({
+			...mockData,
+			markets: { ...mockData.markets, macro: baseMock.markets.macro },
+		});
+		for (const factor of output.regimes.crypto.factors)
+			expect(factor.weight).toBe(
+				healthy.regimes.crypto.factors.find((item) => item.key === factor.key)
+					?.weight,
+			);
 	});
 
-	it("strictly normalizes IHSG factor weights to exactly 100 when global macro carry is insufficient", () => {
+	it("preserves missing IHSG macro weight in the coverage budget", () => {
 		const baseMock = createMockData();
 		const mockData = createMockData({
 			markets: {
 				...baseMock.markets,
 				macro: {
-					IRSTCB01IDM156N: {
-						id: "IRSTCB01IDM156N",
+					BI_POLICY_RATE: {
+						id: "BI_POLICY_RATE",
 						name: "Bank Indonesia Policy Rate",
 						frequency: "Monthly",
 						units: "Percent",
@@ -592,7 +719,16 @@ describe("Engine v2 computeCompass", () => {
 			(sum, f) => sum + f.weight,
 			0,
 		);
-		expect(totalIhsgWeight).toBe(100);
+		expect(totalIhsgWeight).toBeLessThan(100);
+		const healthy = computeCompass({
+			...mockData,
+			markets: { ...mockData.markets, macro: baseMock.markets.macro },
+		});
+		for (const factor of output.regimes.ihsg.factors)
+			expect(factor.weight).toBe(
+				healthy.regimes.ihsg.factors.find((item) => item.key === factor.key)
+					?.weight,
+			);
 	});
 
 	it("computes dualAxis separation for IHSG and Crypto (trend gate vs valuation pace)", () => {
@@ -670,8 +806,8 @@ describe("Engine v2 computeCompass", () => {
 
 	it("incorporates Indonesia CPI YoY and Real BI Policy Rate into bi_rate factor and contextFlags", () => {
 		const mockData = createMockData();
-		mockData.markets.macro.IDNCPIALLMINMEI = {
-			id: "IDNCPIALLMINMEI",
+		mockData.markets.macro.ID_CPI_YOY = {
+			id: "ID_CPI_YOY",
 			name: "Indonesia CPI YoY",
 			frequency: "Monthly",
 			units: "Percent",

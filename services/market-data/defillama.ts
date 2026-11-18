@@ -30,12 +30,14 @@ export async function fetchStablecoinSupply30d(
 		);
 
 		if (!res.ok) {
+			policy.onError?.(`DefiLlama HTTP ${res.status}`);
 			console.warn(`[DefiLlama] API error: ${res.status}`);
 			return null;
 		}
 
 		const data = (await res.json()) as DefiLlamaChartPoint[];
 		if (!Array.isArray(data) || data.length < 35) {
+			policy.onError?.("Invalid or incomplete stablecoin history");
 			return null;
 		}
 
@@ -43,26 +45,33 @@ export async function fetchStablecoinSupply30d(
 		const validPoints: Array<{ date: number; usd: number }> = [];
 		for (const pt of data) {
 			const usd =
-				pt.totalCirculating?.peggedUSD ?? pt.totalCirculatingUSD?.peggedUSD;
+				pt.totalCirculatingUSD?.peggedUSD ?? pt.totalCirculating?.peggedUSD;
 			if (typeof usd === "number" && Number.isFinite(usd) && usd > 0) {
 				const dateNum =
 					typeof pt.date === "number"
 						? pt.date
 						: typeof pt.date === "string"
-							? Math.floor(new Date(pt.date).getTime() / 1000)
+							? /^\d+(\.\d+)?$/.test(pt.date)
+								? Number(pt.date)
+								: Math.floor(new Date(pt.date).getTime() / 1000)
 							: 0;
 				if (Number.isFinite(dateNum) && dateNum > 0)
 					validPoints.push({ date: dateNum, usd });
 			}
 		}
 
-		if (validPoints.length < 31) return null;
+		if (validPoints.length < 31) {
+			policy.onError?.(
+				"Stablecoin history has fewer than 31 valid observations",
+			);
+			return null;
+		}
 
 		validPoints.sort((a, b) => a.date - b.date);
 		const latest = validPoints[validPoints.length - 1];
 		// Target point ~30 days prior (approx 30 entries if daily, or find by timestamp)
 		const targetSeconds = latest.date - 30 * 86400;
-		let priorPoint = validPoints[validPoints.length - 31];
+		let priorPoint: { date: number; usd: number } | undefined;
 
 		// Find closest point to 30 days ago
 		for (let i = validPoints.length - 1; i >= 0; i--) {
@@ -72,7 +81,14 @@ export async function fetchStablecoinSupply30d(
 			}
 		}
 
-		if (!priorPoint || priorPoint.usd <= 0) return null;
+		if (
+			!priorPoint ||
+			priorPoint.usd <= 0 ||
+			targetSeconds - priorPoint.date > 2 * 86400
+		) {
+			policy.onError?.("Stablecoin 30-day baseline is missing or too old");
+			return null;
+		}
 
 		const change30dPct = ((latest.usd - priorPoint.usd) / priorPoint.usd) * 100;
 
@@ -82,6 +98,12 @@ export async function fetchStablecoinSupply30d(
 			asOf: latest.date,
 		};
 	} catch (e) {
+		policy.onError?.(
+			e instanceof Error &&
+				(e.name === "TimeoutError" || e.name === "AbortError")
+				? "DefiLlama request timed out"
+				: "DefiLlama request failed",
+		);
 		console.warn("[DefiLlama] Failed to fetch stablecoin stats:", e);
 		return null;
 	}

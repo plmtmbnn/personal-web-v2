@@ -108,6 +108,7 @@ export type SourceKey =
 	| "quotes"
 	| "coingecko"
 	| "fred"
+	| "indonesiaMacro"
 	| "history"
 	| "defillama"
 	| "okx"
@@ -115,6 +116,7 @@ export type SourceKey =
 	| "idxFlows";
 
 export interface SourceStatus {
+	status?: "current" | "partial" | "stale" | "unavailable";
 	evidence?: Record<string, MarketEvidence>;
 	ok: boolean;
 	label: string;
@@ -161,6 +163,7 @@ export interface CryptoOnChainSnapshot extends RetrievedMarketData {
 }
 
 export interface InvestmentCompassData {
+	fetchFailures?: Record<string, string>;
 	sentiment: {
 		traditional?: FearAndGreedData | null;
 		crypto: CryptoFearAndGreedResponse | null;
@@ -204,6 +207,7 @@ export interface RegimeFactor {
 }
 
 export interface MarketRegimeScore {
+	missingFactors?: string[];
 	id: "global" | "ihsg" | "crypto";
 	title: string;
 	marketName: string;
@@ -272,6 +276,8 @@ export interface CompassAlert {
 }
 
 export interface CompassOutput {
+	modelVersion?: string;
+	evaluatedAt?: string;
 	regimes: {
 		global: MarketRegimeScore;
 		ihsg: MarketRegimeScore;

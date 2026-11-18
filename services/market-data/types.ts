@@ -48,6 +48,8 @@ export interface MacroObservation {
 }
 
 export interface MacroSeries extends RetrievedMarketData {
+	provider?: string;
+	observationPeriodEnd?: string;
 	id: string;
 	name: string;
 	frequency: string;
@@ -67,6 +69,10 @@ export interface PriceHistorySeries extends RetrievedMarketData {
 }
 
 export interface CryptoFlowsSnapshot extends RetrievedMarketData {
+	stablecoinOrigin?: EvidenceOrigin;
+	stablecoinRetrievedAt?: string;
+	fundingOrigin?: EvidenceOrigin;
+	fundingRetrievedAt?: string;
 	stablecoinAsOf?: number;
 	fundingAsOf?: number;
 	fundingProvider?: string;
@@ -83,6 +89,7 @@ export interface CryptoFlowsSnapshot extends RetrievedMarketData {
  * - `fresh`: bypass the data cache entirely (manual refresh).
  */
 export interface FetchPolicy {
+	onError?: (reason: string) => void;
 	revalidate?: number;
 	fresh?: boolean;
 }

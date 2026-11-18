@@ -3,21 +3,17 @@ import {
 	idxEvidence,
 	jakartaDate,
 	marketEvidence,
+	monthlyPeriodEnd,
 	type MarketEvidence,
 } from "@/services/market-data/provenance";
 import type { RetrievedMarketData } from "@/services/market-data/types";
 import type { InvestmentCompassData } from "../types";
-
-const monthlySeries = new Set([
-	"FEDFUNDS",
-	"CPIAUCSL",
-	"PCEPILFE",
-	"M2SL",
-	"UNRATE",
-	"IRSTCB01IDM156N",
-	"IRLTLT01IDM156N",
-	"IDNCPIALLMINMEI",
-]);
+import { INSTRUMENTS } from "../data/instruments";
+import {
+	FRED_SERIES,
+	DOMESTIC_SERIES,
+	HISTORY_SYMBOLS,
+} from "@/services/market-data/registry";
 
 export function applyMarketProvenance(data: InvestmentCompassData) {
 	const { markets, fetchedAt } = data;
@@ -36,13 +32,27 @@ export function applyMarketProvenance(data: InvestmentCompassData) {
 			item?.retrievedAt,
 		);
 	const sources = (key: string, evidence: Record<string, MarketEvidence>) => {
+		for (const [id, item] of Object.entries(evidence)) {
+			if (item.status !== "current")
+				item.reason =
+					data.fetchFailures?.[id] ?? data.fetchFailures?.[key] ?? item.reason;
+		}
 		const observations = Object.values(evidence);
 		const current = observations.filter((item) => item.status === "current");
 		const source = data.sources[key];
 		data.sources[key] = {
 			...source,
+			label: source?.label ?? key,
 			ok: current.length > 0,
 			stale: current.length !== observations.length,
+			status:
+				current.length === observations.length && observations.length > 0
+					? "current"
+					: current.length > 0
+						? "partial"
+						: observations.some((item) => item.status === "stale")
+							? "stale"
+							: "unavailable",
 			evidence,
 		};
 	};
@@ -62,44 +72,76 @@ export function applyMarketProvenance(data: InvestmentCompassData) {
 		idx?.retrievedAt,
 	);
 	const quotes = Object.fromEntries(
-		Object.entries(markets.quotes).map(([key, quote]) => [
-			key,
-			observe(
-				quote.source,
-				quote,
-				quote.lastTime,
-				key === "BTC" || key === "ETH" ? 0.25 : 4,
-			),
-		]),
+		INSTRUMENTS.map(({ id: key }) => {
+			const quote = markets.quotes[key];
+			return [
+				key,
+				observe(
+					quote?.source ?? "CNBC / Yahoo",
+					quote,
+					quote?.lastTime,
+					key === "BTC" || key === "ETH" ? 0.25 : 4,
+				),
+			];
+		}),
 	);
 	sources("quotes", quotes);
 	sources("vix", quotes.VIX ? { VIX: quotes.VIX } : {});
 	sources(
 		"fred",
 		Object.fromEntries(
-			Object.entries(markets.macro).map(([key, series]) => [
-				key,
-				observe(
-					"FRED",
-					series,
-					series.data.at(-1)?.date,
-					monthlySeries.has(key) ? 75 : 7,
-				),
-			]),
+			FRED_SERIES.map(({ id: key, maxAgeDays, frequency }) => {
+				const series = markets.macro[key];
+				const date = series?.data.at(-1)?.date;
+				const periodEnd =
+					frequency === "Monthly" ? monthlyPeriodEnd(date) : undefined;
+				const original = observe("FRED", series, date, maxAgeDays);
+				const evidence =
+					periodEnd &&
+					original.status !== "invalid" &&
+					periodEnd <= fetchedAt.slice(0, 10)
+						? {
+								...observe("FRED", series, periodEnd, maxAgeDays),
+								asOf: original.asOf,
+								periodEnd,
+							}
+						: original;
+				return [key, evidence];
+			}),
+		),
+	);
+	sources(
+		"indonesiaMacro",
+		Object.fromEntries(
+			DOMESTIC_SERIES.map((key) => {
+				const series = markets.macro[key];
+				return [
+					key,
+					observe(
+						series?.provider ?? "Bank Indonesia",
+						series,
+						series?.observationPeriodEnd ?? series?.data.at(-1)?.date,
+						series?.provider === "BIS" ? 7 : 75,
+					),
+				];
+			}),
 		),
 	);
 	sources(
 		"history",
 		Object.fromEntries(
-			Object.entries(markets.history ?? {}).map(([key, series]) => [
-				key,
-				observe(
-					"Yahoo Finance",
-					series,
-					series?.points.at(-1)?.t,
-					key === "BTC-USD" ? 2 : 5,
-				),
-			]),
+			HISTORY_SYMBOLS.map((key) => {
+				const series = markets.history?.[key];
+				return [
+					key,
+					observe(
+						"Yahoo Finance",
+						series,
+						series?.points.at(-1)?.t,
+						key === "BTC-USD" ? 2 : 5,
+					),
+				];
+			}),
 		),
 	);
 	sources("cryptoFng", {
@@ -121,7 +163,14 @@ export function applyMarketProvenance(data: InvestmentCompassData) {
 	sources("defillama", {
 		supply: observe(
 			"DefiLlama",
-			markets.cryptoFlows,
+			markets.cryptoFlows
+				? {
+						origin:
+							markets.cryptoFlows.stablecoinOrigin ??
+							markets.cryptoFlows.origin,
+						retrievedAt: markets.cryptoFlows.stablecoinRetrievedAt,
+					}
+				: null,
 			markets.cryptoFlows?.stablecoinAsOf,
 			3,
 		),
@@ -129,7 +178,13 @@ export function applyMarketProvenance(data: InvestmentCompassData) {
 	sources("okx", {
 		funding: observe(
 			markets.cryptoFlows?.fundingProvider ?? "Derivatives",
-			markets.cryptoFlows,
+			markets.cryptoFlows
+				? {
+						origin:
+							markets.cryptoFlows.fundingOrigin ?? markets.cryptoFlows.origin,
+						retrievedAt: markets.cryptoFlows.fundingRetrievedAt,
+					}
+				: null,
 			markets.cryptoFlows?.fundingAsOf,
 			0.5,
 		),
@@ -167,7 +222,14 @@ export function currentMarketInputs(
 				),
 			),
 			macro: Object.fromEntries(
-				Object.entries(markets.macro).filter(([key]) => current("fred", key)),
+				Object.entries(markets.macro).filter(([key]) =>
+					current(
+						DOMESTIC_SERIES.includes(key as (typeof DOMESTIC_SERIES)[number])
+							? "indonesiaMacro"
+							: "fred",
+						key,
+					),
+				),
 			),
 			history: Object.fromEntries(
 				Object.entries(markets.history ?? {}).filter(([key]) =>

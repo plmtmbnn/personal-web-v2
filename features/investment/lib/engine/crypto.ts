@@ -63,12 +63,8 @@ export function scoreCrypto(
 		wMacro = 15;
 	}
 
-	const hasMacroCarry = globalRegime.state !== "insufficient";
 	const hasSeasonality = Boolean(cryptoSeason);
 	const wSeason = hasSeasonality ? 10 : 0;
-	if (!hasMacroCarry) {
-		wMacro = 0;
-	}
 
 	// Normalize base factors dynamically to ensure total potential weight is exactly 100
 	const targetBase = 100 - wSeason;
@@ -82,7 +78,7 @@ export function scoreCrypto(
 		wFunding = Math.round(wFunding * ratio);
 		wFng = Math.round(wFng * ratio);
 		wMvrv = Math.round(wMvrv * ratio);
-		if (hasMacroCarry) {
+		if (wMacro > 0) {
 			wMacro =
 				targetBase -
 				(wBtc200 + wBtc50 + wStablecoins + wFunding + wFng + wMvrv);
@@ -438,7 +434,10 @@ export function scoreCrypto(
 	// Compute Weighted Composite
 	const totalWeight = 100;
 	const availableWeight = factors.reduce((sum, f) => sum + f.weight, 0);
-	const coverage = availableWeight / totalWeight;
+	const carryWeight =
+		factors.find((factor) => factor.key === "crypto_macro_carry")?.weight ?? 0;
+	const coverage =
+		(availableWeight - carryWeight * (1 - globalRegime.coverage)) / totalWeight;
 
 	const compositeScore =
 		availableWeight > 0

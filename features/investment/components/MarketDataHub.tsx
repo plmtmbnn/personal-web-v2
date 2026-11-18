@@ -1,4 +1,5 @@
 "use client";
+import { currentMarketInputs } from "../lib/provenance";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -53,6 +54,7 @@ export default function MarketDataHub({
 }: {
 	data: InvestmentCompassData;
 }) {
+	data = currentMarketInputs(data);
 	const [activeTab, setActiveTab] = useState<TabId>("indonesia");
 	const reduceMotion = useReducedMotion();
 
@@ -76,13 +78,7 @@ export default function MarketDataHub({
 	const usdIdrHistory = data.markets.history?.["IDR=X"]?.points ?? [];
 	const idrMa50 = sma(usdIdrHistory, 50);
 
-	const idYieldSeries = data.markets.macro?.IRLTLT01IDM156N?.data;
-	const latestIdYield =
-		idYieldSeries && idYieldSeries.length > 0
-			? idYieldSeries[idYieldSeries.length - 1].value
-			: null;
-
-	const biRateSeries = data.markets.macro?.IRSTCB01IDM156N?.data;
+	const biRateSeries = data.markets.macro?.BI_POLICY_RATE?.data;
 	const latestBiRate =
 		biRateSeries && biRateSeries.length > 0
 			? biRateSeries[biRateSeries.length - 1].value
@@ -92,13 +88,14 @@ export default function MarketDataHub({
 		data.markets.quotes.US10Y?.last ??
 		data.markets.macro?.DGS10?.data?.slice(-1)[0]?.value ??
 		null;
-	const yieldSpread =
-		latestIdYield != null && us10yVal != null ? latestIdYield - us10yVal : null;
-
-	const idCpiSeries = data.markets.macro?.IDNCPIALLMINMEI?.data;
+	const idCpiSeries = data.markets.macro?.ID_CPI_YOY?.data;
 	const latestIdCpi =
 		idCpiSeries && idCpiSeries.length > 0
 			? idCpiSeries[idCpiSeries.length - 1].value
+			: null;
+	const realBiRate =
+		latestBiRate != null && latestIdCpi != null
+			? latestBiRate - latestIdCpi
 			: null;
 
 	const ihsgFlows = data.markets.ihsgFlows;
@@ -385,8 +382,8 @@ export default function MarketDataHub({
 										{ihsgPrice != null && ihsgMa200 != null
 											? `IHSG trades ${ihsgPrice >= ihsgMa200 ? "above" : "below"} its 200D MA (${distancePct(ihsgPrice, ihsgMa200)! >= 0 ? "+" : ""}${distancePct(ihsgPrice, ihsgMa200)?.toFixed(1)}%) with ${expandingSectorsCount}/${totalSectorsCount} sector bellwethers above 50D MA.`
 											: `Sector breadth stands at ${expandingSectorsCount}/${totalSectorsCount} bellwethers above 50D MA.`}{" "}
-										{yieldSpread != null &&
-											`Indo-US 10Y spread is ${yieldSpread >= 0 ? "+" : ""}${yieldSpread.toFixed(2)}%${latestBiRate != null && latestIdCpi != null ? ` and Real BI Rate is +${(latestBiRate - latestIdCpi).toFixed(2)}%` : ""}. `}
+										{realBiRate != null &&
+											`Real BI policy rate is ${realBiRate >= 0 ? "+" : ""}${realBiRate.toFixed(2)}%. `}
 										{ihsgPrice != null &&
 										ihsgMa200 != null &&
 										ihsgPrice >= ihsgMa200 &&
@@ -527,21 +524,19 @@ export default function MarketDataHub({
 									{/* ID 10Y Yield */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											Indonesia 10Y Gov Bond Yield
+											BI Policy Rate
 										</span>
 										<div className="flex items-baseline gap-2">
 											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{latestIdYield != null
-													? `${latestIdYield.toFixed(2)}%`
+												{latestBiRate != null
+													? `${latestBiRate.toFixed(2)}%`
 													: "---"}
 											</span>
 										</div>
 										<p className="text-[11px] text-slate-500">
-											BI Benchmark:{" "}
+											Policy observation:{" "}
 											<strong>
-												{latestBiRate != null
-													? `${latestBiRate.toFixed(2)}%`
-													: "---"}
+												{biRateSeries?.at(-1)?.date ?? "Unavailable"}
 											</strong>{" "}
 											| IDR 50D:{" "}
 											<strong>
@@ -555,34 +550,18 @@ export default function MarketDataHub({
 									{/* Indo-US 10Y Yield Spread */}
 									<div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/70 space-y-2">
 										<span className="text-[10px] font-black uppercase text-slate-400 block">
-											Indo-US 10Y Yield Spread
+											Real BI Policy Rate
 										</span>
 										<div className="flex items-baseline gap-2">
 											<span className="text-xl sm:text-2xl font-black text-slate-900">
-												{yieldSpread != null
-													? `${yieldSpread >= 0 ? "+" : ""}${yieldSpread.toFixed(2)}%`
+												{realBiRate != null
+													? `${realBiRate >= 0 ? "+" : ""}${realBiRate.toFixed(2)}%`
 													: "---"}
 											</span>
-											{yieldSpread != null && (
-												<span
-													className={`text-xs font-bold ${
-														yieldSpread >= 2.0
-															? "text-emerald-600"
-															: yieldSpread >= 1.5
-																? "text-amber-600"
-																: "text-rose-600"
-													}`}
-												>
-													{yieldSpread >= 2.0
-														? "Healthy Carry"
-														: yieldSpread >= 1.5
-															? "Moderate Buffer"
-															: "Compression Risk"}
-												</span>
-											)}
 										</div>
 										<p className="text-[11px] text-slate-500">
-											Sovereign risk &amp; Rupiah carry premium buffer
+											BI rate minus CPI YoY. Sovereign yield-spread adjustment
+											is unavailable and excluded from scoring.
 										</p>
 									</div>
 

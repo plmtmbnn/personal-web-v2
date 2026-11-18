@@ -3,10 +3,18 @@ import {
 	completedIdxSession,
 	idxEvidence,
 	marketEvidence,
+	monthlyPeriodEnd,
 	sessionDate,
 } from "../provenance";
 
 describe("market provenance", () => {
+	it("calculates calendar month ends including leap years", () => {
+		expect(monthlyPeriodEnd("2028-02-01")).toBe("2028-02-29");
+		expect(monthlyPeriodEnd("2026-02-01")).toBe("2026-02-28");
+		expect(monthlyPeriodEnd("2026-09-01")).toBe("2026-09-30");
+		expect(monthlyPeriodEnd(undefined)).toBeUndefined();
+		expect(monthlyPeriodEnd("2026-13-01")).toBeUndefined();
+	});
 	const now = "2026-11-15T10:00:00.000Z";
 	it("cannot refresh an old observation by reading it again", () => {
 		const result = marketEvidence(

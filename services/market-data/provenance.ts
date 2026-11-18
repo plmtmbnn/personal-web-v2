@@ -2,11 +2,33 @@ export type EvidenceOrigin = "live" | "cache" | "backup" | "static" | "unknown";
 export type EvidenceState = "current" | "stale" | "missing" | "invalid";
 
 export interface MarketEvidence {
+	periodEnd?: string;
+	reason?: string;
 	provider: string;
 	origin: EvidenceOrigin;
 	status: EvidenceState;
 	asOf: string | null;
 	retrievedAt: string | null;
+}
+
+export function monthlyPeriodEnd(
+	observation: string | undefined,
+): string | undefined {
+	if (
+		!observation ||
+		!/^\d{4}-\d{2}-01$/.test(observation) ||
+		!Number.isFinite(Date.parse(observation))
+	)
+		return undefined;
+	return new Date(
+		Date.UTC(
+			Number(observation.slice(0, 4)),
+			Number(observation.slice(5, 7)),
+			0,
+		),
+	)
+		.toISOString()
+		.slice(0, 10);
 }
 
 const dayMs = 86_400_000;
@@ -58,6 +80,14 @@ export function marketEvidence(
 					? "stale"
 					: "current";
 	return {
+		reason:
+			status === "missing"
+				? "No usable observation returned"
+				: status === "invalid"
+					? "Invalid observation date"
+					: status === "stale"
+						? "Observation exceeds its freshness limit"
+						: undefined,
 		provider,
 		origin,
 		status,
@@ -99,6 +129,13 @@ export function completedIdxSession(
 	return date;
 }
 
+export function latestCompletedIdxSession(now: string): string {
+	let date = Date.parse(jakartaDate(now));
+	while (!completedIdxSession(new Date(date).toISOString().slice(0, 10), now))
+		date -= dayMs;
+	return new Date(date).toISOString().slice(0, 10);
+}
+
 export function idxEvidence(
 	date: string | null,
 	now: string,
@@ -118,16 +155,15 @@ export function idxEvidence(
 	if (!completedIdxSession(date, now))
 		return { ...evidence, status: "invalid" };
 	// shortcut: assume weekdays outside the published holiday calendar, until calendar updates are automated.
-	const expectedDate = jakartaDate(now);
-	let expected = Date.parse(expectedDate);
-	if (!completedIdxSession(expectedDate, now)) expected -= dayMs;
-	while (
-		!completedIdxSession(new Date(expected).toISOString().slice(0, 10), now)
-	)
-		expected -= dayMs;
 	const expectedSession = [
 		observedIndexSession ?? "",
-		new Date(expected).toISOString().slice(0, 10),
+		latestCompletedIdxSession(now),
 	].sort()[1];
-	return date! < expectedSession ? { ...evidence, status: "stale" } : evidence;
+	return date! < expectedSession
+		? {
+				...evidence,
+				status: "stale",
+				reason: `Awaiting completed IDX session ${expectedSession}`,
+			}
+		: evidence;
 }

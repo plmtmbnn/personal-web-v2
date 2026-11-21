@@ -1,3 +1,10 @@
+# [0.132.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.131.0...v0.132.0) (2026-11-21)
+
+
+### Features
+
+* **investment:** add macro research panel ([d7cecf8](https://github.com/plmtmbnn/personal-web-v2/commit/d7cecf88d628965d92dcd4d1e5987ac937183f41))
+
 # [0.131.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.130.0...v0.131.0) (2026-11-21)
 
 

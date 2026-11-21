@@ -1,3 +1,10 @@
+# [0.131.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.130.0...v0.131.0) (2026-11-21)
+
+
+### Features
+
+* **markets:** refine compass and stock explorer UI/UX ([e2b35e8](https://github.com/plmtmbnn/personal-web-v2/commit/e2b35e8e40ed16c3193592581ee0c8aef3597148))
+
 # [0.130.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.129.0...v0.130.0) (2026-11-18)
 
 

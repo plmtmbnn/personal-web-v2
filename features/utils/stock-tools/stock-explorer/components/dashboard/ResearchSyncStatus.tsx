@@ -80,9 +80,9 @@ export function ResearchSyncStatus() {
 						[
 							"Last data retrieval",
 							status.retrievedAt
-								? new Date(status.retrievedAt).toLocaleString("en-GB", {
+								? `${new Date(status.retrievedAt).toLocaleString("en-GB", {
 										timeZone: "Asia/Jakarta",
-									}) + " WIB"
+									})} WIB`
 								: undefined,
 						],
 						[

@@ -5,7 +5,7 @@ import { jakartaDate } from "@/services/market-data/provenance";
 const idr = (value: number | null | undefined) =>
 	value == null
 		? "Unavailable"
-		: "Rp " + Math.round(value).toLocaleString("id-ID");
+		: `Rp ${Math.round(value).toLocaleString("id-ID")}`;
 
 export function WeeklyReview({ trades }: { trades: StockPickWithMetrics[] }) {
 	const today = jakartaDate(Date.now());
@@ -31,7 +31,7 @@ export function WeeklyReview({ trades }: { trades: StockPickWithMetrics[] }) {
 		const decision = trade.decision;
 		if (!decision || trade.review?.realizedR == null) missing++;
 		const groupKey = decision
-			? decision.setup + " / " + decision.regime.replace("_", " ")
+			? `${decision.setup} / ${decision.regime.replace("_", " ")}`
 			: "Entry evidence unavailable";
 		const group = groups.get(groupKey) ?? { trades: 0, sumR: 0, measured: 0 };
 		group.trades++;

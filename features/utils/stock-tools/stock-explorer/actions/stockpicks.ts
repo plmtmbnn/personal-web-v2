@@ -523,7 +523,7 @@ export async function closeCloudStockPickAction(
 			.eq("id", id)
 			.maybeSingle();
 		if (found.error) throw found.error;
-		if (!found.data || found.data.status !== "active")
+		if (found?.data?.status !== "active")
 			return { success: false, error: "Active paper position not found." };
 		const pick = mapDbToStockPick(found.data);
 		const input = parsedPayload.data;

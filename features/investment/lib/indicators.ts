@@ -125,7 +125,7 @@ export function rsi(points: PricePointLike[], period = 14): number | null {
 	// Smoothed averages (Wilder's method)
 	for (let i = period + 1; i < points.length; i++) {
 		const change = points[i].c - points[i - 1].c;
-		const gain = change > 0 ? change : 0;
+		const gain = Math.max(change, 0);
 		const loss = change < 0 ? Math.abs(change) : 0;
 
 		avgGain = (avgGain * (period - 1) + gain) / period;

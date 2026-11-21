@@ -1,4 +1,4 @@
-import HomeAnimatedBackground from "./HomeAnimatedBackground";
+import HomeBackground from "./HomeBackground";
 
 export default function HomeSkeleton() {
 	return (
@@ -7,7 +7,7 @@ export default function HomeSkeleton() {
 			aria-label="Loading homepage"
 			className="relative isolate flex min-h-[100dvh] w-full flex-col justify-center overflow-x-clip px-5 pt-10 pb-36 -mb-28 sm:px-8 sm:pt-14 sm:pb-40 sm:-mb-32 lg:h-[100dvh] lg:max-h-[100dvh] lg:overflow-hidden lg:py-0 lg:pb-20 lg:-mb-32"
 		>
-			<HomeAnimatedBackground />
+			<HomeBackground />
 
 			<section className="relative z-10 mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
 				<div className="min-w-0 flex flex-col lg:col-span-6">

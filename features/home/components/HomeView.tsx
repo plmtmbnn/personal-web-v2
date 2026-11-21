@@ -10,7 +10,7 @@ import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import HomeAnimatedBackground from "./HomeAnimatedBackground";
+import HomeBackground from "./HomeBackground";
 
 interface HomeProps {
 	initialRunningKm: number | null;
@@ -24,7 +24,7 @@ export default function Home({ initialRunningKm }: HomeProps) {
 			id="main-content"
 			className="relative isolate flex min-h-[100dvh] w-full flex-col justify-center overflow-x-clip px-5 pt-10 pb-36 -mb-28 text-slate-900 sm:px-8 sm:pt-14 sm:pb-40 sm:-mb-32 lg:h-[100dvh] lg:max-h-[100dvh] lg:overflow-hidden lg:py-0 lg:pb-20 lg:-mb-32"
 		>
-			<HomeAnimatedBackground />
+			<HomeBackground />
 
 			<section
 				aria-labelledby="home-heading"
@@ -32,9 +32,9 @@ export default function Home({ initialRunningKm }: HomeProps) {
 			>
 				<div className="min-w-0 flex flex-col lg:col-span-6">
 					<div className="mb-6 flex items-center gap-3.5 sm:mb-7 sm:gap-4">
-						<div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs sm:h-16 sm:w-16">
+						<div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-slate-200/80 bg-white shadow-xs sm:h-16 sm:w-16">
 							<Image
-								src="/profile.jpg"
+								src="/home/avatar-peoel.png"
 								alt={AUTHOR.name}
 								width={80}
 								height={80}
@@ -46,7 +46,7 @@ export default function Home({ initialRunningKm }: HomeProps) {
 							<p className="truncate text-base font-bold leading-tight text-slate-900">
 								{AUTHOR.name}
 							</p>
-							<p className="mt-1 truncate text-sm text-slate-500">
+							<p className="mt-1 truncate text-sm text-slate-600">
 								{AUTHOR.role}, Indonesia
 							</p>
 						</div>
@@ -83,7 +83,7 @@ export default function Home({ initialRunningKm }: HomeProps) {
 				<div className="min-w-0 flex flex-col gap-4 lg:col-span-5 lg:col-start-8">
 					<dl
 						aria-label="Professional and running facts"
-						className="grid grid-cols-1 divide-y divide-slate-200/70 rounded-3xl border border-slate-200/60 bg-white/95 px-5 py-2 shadow-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-0 sm:py-6"
+						className="grid grid-cols-1 divide-y divide-slate-200/70 rounded-3xl border border-slate-200/60 bg-white px-5 py-2 shadow-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-0 sm:py-6"
 					>
 						<div className="flex items-center justify-between gap-4 py-3.5 sm:block sm:px-5 sm:py-0">
 							<dd className="text-2xl font-bold tracking-tight tabular-nums text-slate-900 sm:text-3xl lg:text-4xl">
@@ -127,7 +127,7 @@ export default function Home({ initialRunningKm }: HomeProps) {
 						</div>
 					</dl>
 
-					<div className="rounded-3xl border border-slate-200/60 bg-white/95 p-4 shadow-xs sm:p-5">
+					<div className="rounded-3xl border border-slate-200/60 bg-white p-4 shadow-xs sm:p-5">
 						<nav
 							aria-label="Professional profiles"
 							className="grid grid-cols-2 gap-3"

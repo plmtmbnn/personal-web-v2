@@ -56,3 +56,4 @@ next-env.d.ts
 # CodeGraph
 .codegraph
 anti-slop
+/.macro-research/

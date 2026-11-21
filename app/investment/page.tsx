@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { createMetadata } from "@/lib/shared/metadata";
 import { SITE } from "@/lib/shared/constants";
 import InvestmentCompassView from "@/features/investment/components/View";
 import { getCachedInvestmentCompass } from "@/features/investment/actions";
+import MacroResearchPanel, {
+	MacroResearchLoading,
+} from "@/features/investment/components/MacroResearchPanel";
 
 export const revalidate = 3600;
 
@@ -24,6 +28,7 @@ export const metadata: Metadata = createMetadata({
 
 export default async function InvestmentPage() {
 	const initialData = await getCachedInvestmentCompass();
+	const showMacroResearch = process.env.MACRO_RESEARCH_ENABLED === "1";
 
 	const jsonLd = {
 		"@context": "https://schema.org",
@@ -40,7 +45,16 @@ export default async function InvestmentPage() {
 				type="application/ld+json"
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 			/>
-			<InvestmentCompassView initialData={initialData} />
+			<InvestmentCompassView
+				initialData={initialData}
+				macroPanel={
+					showMacroResearch ? (
+						<Suspense fallback={<MacroResearchLoading />}>
+							<MacroResearchPanel />
+						</Suspense>
+					) : undefined
+				}
+			/>
 		</>
 	);
 }

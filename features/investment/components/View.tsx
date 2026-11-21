@@ -30,8 +30,10 @@ import MarketDeltaAlerts from "./MarketDeltaAlerts";
 
 export default function InvestmentCompassView({
 	initialData,
+	macroPanel,
 }: {
 	initialData?: InvestmentCompassData;
+	macroPanel?: React.ReactNode;
 }) {
 	const [data, setData] = useState<InvestmentCompassData | null>(
 		initialData || null,
@@ -576,6 +578,8 @@ export default function InvestmentCompassView({
 						/>
 					</section>
 				)}
+
+				{macroPanel}
 
 				{/* 2. Cheatsheet: Unified Permissions Matrix */}
 				{!isLoading && engineOutput && (

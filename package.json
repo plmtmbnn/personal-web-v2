@@ -18,6 +18,8 @@
 		"format": "biome format --write --no-errors-on-unmatched .",
 		"typecheck": "tsc --noEmit --pretty false --incremental false",
 		"test": "vitest run",
+		"macro:sync": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/sync-macro.ts",
+		"macro:seed:postgres": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/seed-macro-postgres.ts",
 		"prepare": "husky",
 		"release": "semantic-release"
 	},

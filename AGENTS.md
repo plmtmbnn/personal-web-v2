@@ -13,8 +13,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 This repository contains the personal web portfolio, adventures hub, investment compass, and productivity utilities for Polma Tambunan built with Next.js (App Router), React, TypeScript, Tailwind CSS, and Upstash Redis.
 
 The comprehensive project context, architectural invariants, design systems, and agent mandates are defined in:
-- **[`.agents/AGENTS.md`](file:///.agents/AGENTS.md)** (Full architectural context, tech stack, feature inventory, and mandates)
-- **[`.agents/ui-ux-guideline.md`](file:///.agents/ui-ux-guideline.md)** (Strict UI/UX guidelines and Modern Floating Card standard)
+- **[`.agents/AGENTS.md`](.agents/AGENTS.md)** (Full architectural context, tech stack, feature inventory, and mandates)
+- **[`.agents/ui-ux-guideline.md`](.agents/ui-ux-guideline.md)** (Strict UI/UX guidelines and Modern Floating Card standard)
 
 All AI coding assistants (Antigravity, Claude Code, Cursor, Codex, Gemini) must follow the canonical mandates defined in those files.
 
@@ -50,6 +50,9 @@ All AI coding assistants (Antigravity, Claude Code, Cursor, Codex, Gemini) must 
    - 6-tab segmented mode container: Swing Screener, Historical Trade, Market Detector, Trade Book 5M, Running Trade Chart, Broker Distribution.
    - 5-Layer Composite Scoring (0–100) integrated with the FastAPI backend (`POST /api/v1/analyze-swing`).
    - Executive Action Plan Banner with entry/invalidation/targets, Net RRR deducting 0.40% round-trip broker fees, and Deep Dive Workstation.
+10. **Investment Compass scheduling and macro research**
+    - Use the existing external job at `GET /api/investment/cron/snapshot` for the Compass snapshot, IDX research, and hosted FRED refresh. Keep its schedule and `CRON_SECRET`. Check `macroSync.state` independently of HTTP status.
+    - `MACRO_RESEARCH_ENABLED=1` enables the research panel and hosted refresh. The panel uses SQLite locally and Supabase on Vercel. Decision Engine v4 remains the authority for trading permissions and sizing. [Macro setup and deployment](features/investment/MACRO_PILOT.md)
 
 
 <!-- antislop:start -->

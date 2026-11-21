@@ -1,3 +1,15 @@
+# [0.133.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.132.0...v0.133.0) (2026-11-21)
+
+
+### Bug Fixes
+
+* **release:** use semantic-release compatible with Node 24 ([a7a9e2a](https://github.com/plmtmbnn/personal-web-v2/commit/a7a9e2a689957260e861134de4e94081e5984118))
+
+
+### Features
+
+* **home:** use responsive photo background and avatar ([2c49c1d](https://github.com/plmtmbnn/personal-web-v2/commit/2c49c1d5e79f155d3f7d33cf6bcd294c962134c4))
+
 # [0.132.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.131.0...v0.132.0) (2026-11-21)
 
 

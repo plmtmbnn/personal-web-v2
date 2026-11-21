@@ -16,18 +16,18 @@ export default function SimulatorTelemetryStrip({
 	return (
 		<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 			{/* 1. Total Simulated Capital */}
-			<div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
+			<div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
 				{/* Tier 1: Icon Left + Badge Right */}
 				<div className="flex items-center justify-between mb-2">
 					<div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100/80 text-indigo-600 flex items-center justify-center shrink-0">
 						<Wallet className="w-4 h-4" />
 					</div>
-					<span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-slate-600 font-mono">
+					<span className="text-xs font-bold px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200/70 text-slate-700 font-mono">
 						{summary.activePicks} Active
 					</span>
 				</div>
 				{/* Tier 2: Category Label */}
-				<span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+				<span className="text-xs font-bold text-slate-600 block truncate">
 					Simulated Outlay
 				</span>
 				{/* Tier 3: Primary Metric */}
@@ -35,67 +35,67 @@ export default function SimulatorTelemetryStrip({
 					{fmtIDRPrice(summary.totalSimulatedCapital)}
 				</div>
 				{/* Tier 4: Context Sublabel */}
-				<span className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-1">
+				<span className="text-xs text-slate-600 font-medium truncate mt-1">
 					Core {summary.coreAllocationPct ?? 0}% (max 45%) | Swing{" "}
 					{summary.swingAllocationPct ?? 0}% (max 15%)
 				</span>
 			</div>
 
 			{/* 2. Net Unrealized P/L */}
-			<div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
+			<div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
 				{/* Tier 1: Icon Left + Badge Right */}
 				<div className="flex items-center justify-between mb-2">
 					<div
 						className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${
 							isProfit
-								? "bg-emerald-50 border-emerald-100/80 text-emerald-600"
-								: "bg-rose-50 border-rose-100/80 text-rose-600"
+								? "bg-emerald-50 border-emerald-200/80 text-emerald-700"
+								: "bg-rose-50 border-rose-200/80 text-rose-700"
 						}`}
 					>
 						<TrendingUp className="w-4 h-4" />
 					</div>
 					<span
-						className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border font-mono ${
+						className={`text-xs font-bold px-2 py-0.5 rounded-lg border font-mono ${
 							isProfit
-								? "bg-emerald-50 text-emerald-700 border-emerald-200"
-								: "bg-rose-50 text-rose-700 border-rose-200"
+								? "bg-emerald-50 text-emerald-800 border-emerald-200"
+								: "bg-rose-50 text-rose-800 border-rose-200"
 						}`}
 					>
 						{fmtSignedPct(summary.totalUnrealizedPlPct)}
 					</span>
 				</div>
 				{/* Tier 2: Category Label */}
-				<span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+				<span className="text-xs font-bold text-slate-600 block truncate">
 					Net Paper P/L
 				</span>
 				{/* Tier 3: Primary Metric */}
 				<div
 					className={`text-sm sm:text-xl lg:text-2xl font-bold font-mono tracking-tight tabular-nums truncate mt-1 ${
-						isProfit ? "text-emerald-600" : "text-rose-600"
+						isProfit ? "text-emerald-700" : "text-rose-700"
 					}`}
 				>
 					{isProfit ? "+" : ""}
 					{fmtIDRPrice(summary.totalUnrealizedPlNominal)}
 				</div>
 				{/* Tier 4: Context Sublabel */}
-				<span className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-1">
+				<span className="text-xs text-slate-600 font-medium truncate mt-1">
 					{summary.winningPicks} up, {summary.losingPicks} down
 				</span>
 			</div>
 
 			{/* 3. Win Rate & Accuracy */}
-			<div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
+			<div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
 				{/* Tier 1: Icon Left + Badge Right */}
 				<div className="flex items-center justify-between mb-2">
-					<div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
+					<div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200/80 text-blue-700 flex items-center justify-center shrink-0">
 						<Target className="w-4 h-4" />
 					</div>
-					<span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-slate-600 font-mono">
+					<span className="text-xs font-bold px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200/70 text-slate-700 font-mono">
 						Accuracy
 					</span>
 				</div>
 				{/* Tier 2: Category Label */}
-				<span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+				<span className="text-xs font-bold text-slate-600 block truncate">
 					Stockpick Win Rate
 				</span>
 				{/* Tier 3: Primary Metric */}
@@ -103,39 +103,39 @@ export default function SimulatorTelemetryStrip({
 					{summary.winRatePct}%
 				</div>
 				{/* Tier 4: Context Sublabel */}
-				<span className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-1">
+				<span className="text-xs text-slate-600 font-medium truncate mt-1">
 					{summary.winningPicks} of {summary.activePicks} picks in profit
 				</span>
 			</div>
 
 			{/* 4. Best Performer vs Drawdown */}
-			<div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
+			<div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
 				{/* Tier 1: Icon Left + Badge Right */}
 				<div className="flex items-center justify-between mb-2">
-					<div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100/80 text-purple-600 flex items-center justify-center shrink-0">
+					<div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200/80 text-indigo-700 flex items-center justify-center shrink-0">
 						<Activity className="w-4 h-4" />
 					</div>
-					<span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-50 border border-purple-200 text-purple-700 font-mono">
+					<span className="text-xs font-bold px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 font-mono">
 						Telemetry
 					</span>
 				</div>
 				{/* Tier 2: Category Label */}
-				<span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+				<span className="text-xs font-bold text-slate-600 block truncate">
 					Best vs Worst Pick
 				</span>
 				{/* Tier 3: Primary Metric */}
 				<div className="text-sm sm:text-base lg:text-lg font-bold font-mono text-slate-900 tracking-tight tabular-nums truncate mt-1 flex items-center gap-2">
 					{summary.bestPerformer ? (
-						<span className="text-emerald-600">
+						<span className="text-emerald-700">
 							{summary.bestPerformer.stockCode} (
 							{fmtSignedPct(summary.bestPerformer.plPct)})
 						</span>
 					) : (
-						<span className="text-slate-400">—</span>
+						<span className="text-slate-500">---</span>
 					)}
 				</div>
 				{/* Tier 4: Context Sublabel */}
-				<span className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate mt-1">
+				<span className="text-xs text-slate-600 font-medium truncate mt-1">
 					{summary.worstPerformer && summary.worstPerformer.plPct < 0
 						? `Lowest: ${summary.worstPerformer.stockCode} (${fmtSignedPct(summary.worstPerformer.plPct)})`
 						: "All active positions profitable"}

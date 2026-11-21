@@ -27,7 +27,6 @@ import MarketPlaybook from "./MarketPlaybook";
 import MarketDataHub from "./MarketDataHub";
 import EventCalendar from "./EventCalendar";
 import MarketDeltaAlerts from "./MarketDeltaAlerts";
-import { BookOpen, ArrowUpRight } from "lucide-react";
 
 export default function InvestmentCompassView({
 	initialData,
@@ -136,10 +135,10 @@ export default function InvestmentCompassView({
 
 	return (
 		<main
-			className={`${styles.screen} min-h-screen bg-slate-50/80 relative pb-[calc(8rem+env(safe-area-inset-bottom))] sm:pb-[calc(9rem+env(safe-area-inset-bottom))] overflow-x-clip [&_h2]:text-xl [&_h2]:font-bold [&_p]:leading-relaxed`}
+			className={`${styles.screen} min-h-screen bg-slate-50/80 relative pb-[calc(8rem+env(safe-area-inset-bottom))] sm:pb-[calc(9rem+env(safe-area-inset-bottom))] overflow-x-clip`}
 		>
 			{/* Top Floating Header Card */}
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 mb-5 sm:mb-8">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 mb-5 sm:mb-6">
 				<div className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs relative">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 relative z-10">
 						<div className="flex-1 min-w-0">
@@ -179,7 +178,7 @@ export default function InvestmentCompassView({
 							<Link
 								href="/utils/stock-explorer"
 								aria-label="Open Stock Explorer"
-								className="inline-flex min-h-11 items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-semibold text-xs rounded-xl shadow-2xs transition-colors active:scale-95 cursor-pointer !no-underline group"
+								className="inline-flex min-h-11 items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-semibold text-xs rounded-xl shadow-2xs transition-colors active:scale-95 cursor-pointer !no-underline group"
 							>
 								<BarChart3 className="w-4 h-4 text-slate-600 group-hover:scale-105 transition-transform" />
 								<span>Find stocks</span>
@@ -196,7 +195,7 @@ export default function InvestmentCompassView({
 										aria-controls="investment-sources"
 										aria-haspopup="dialog"
 										onClick={() => setShowSourcesPopover(!showSourcesPopover)}
-										className="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-center shadow-2xs flex items-center gap-2 cursor-pointer transition-colors active:scale-95"
+										className="min-h-11 px-3 sm:px-3.5 py-2 bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-center shadow-2xs flex items-center gap-2 cursor-pointer transition-colors active:scale-95"
 									>
 										<span
 											role="status"
@@ -211,7 +210,7 @@ export default function InvestmentCompassView({
 														? "Error"
 														: sourceStatusSummary.label}
 										</span>
-										<Info className="w-3 h-3 text-slate-500" />
+										<Info className="w-3.5 h-3.5 text-slate-500" />
 									</button>
 
 									{/* Sources Popover */}
@@ -330,7 +329,7 @@ export default function InvestmentCompassView({
 									type="button"
 									onClick={() => fetchData(true)}
 									disabled={isLoading || isRefreshing}
-									className="p-2 sm:p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-colors active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs touch-manipulation"
+									className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-colors active:scale-95 disabled:opacity-50 cursor-pointer shadow-2xs touch-manipulation"
 									aria-label="Refresh market data"
 									title="Refresh market data"
 								>
@@ -348,7 +347,7 @@ export default function InvestmentCompassView({
 				{error && (
 					<div
 						role="alert"
-						className="rounded-2xl border border-rose-200 bg-white p-5 text-sm text-rose-800"
+						className="rounded-3xl border border-rose-200 border-l-4 border-l-rose-600 bg-white p-5 text-sm text-rose-900 shadow-xs"
 					>
 						<p>
 							{error}{" "}
@@ -370,7 +369,7 @@ export default function InvestmentCompassView({
 					<div
 						role="status"
 						aria-label="Loading market data"
-						className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+						className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
 					>
 						{[1, 2, 3, 4].map((item) => (
 							<div
@@ -380,42 +379,20 @@ export default function InvestmentCompassView({
 						))}
 					</div>
 				)}
-				{!isLoading && data && (
-					<nav
-						aria-label="Investment sections"
-						className="flex flex-wrap gap-x-5 gap-y-1 border-b border-slate-200 pb-2 text-sm font-medium text-slate-600"
-					>
-						{[
-							["conditions", "Market conditions"],
-							["permissions", "Trading limits"],
-							["plans", "Trade plans"],
-							["market-data", "Market data"],
-							["calendar", "Calendar"],
-						].map(([id, label]) => (
-							<a
-								key={id}
-								href={`#${id}`}
-								className="inline-flex min-h-11 items-center hover:text-slate-950"
-							>
-								{label}
-							</a>
-						))}
-					</nav>
-				)}
 				{/* 4-Column Primary Telemetry Strip */}
 				{!isLoading && data && (
 					<div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
 						{/* 1. Indonesia IHSG */}
-						<div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
-							<div className="flex items-center justify-between gap-1.5 mb-2">
+						<div className="h-full bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between gap-2">
+							<div className="flex items-center justify-between gap-1.5">
 								<span className="text-xs font-bold text-slate-500 truncate">
 									IHSG
 								</span>
-								<Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 shrink-0" />
+								<Building2 className="w-4 h-4 text-slate-700 shrink-0" />
 							</div>
 							<div>
 								<div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2">
-									<span className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight truncate">
+									<span className="text-lg sm:text-2xl font-bold tabular-nums text-slate-900 tracking-tight truncate">
 										{ihsgQuote?.last
 											? ihsgQuote.last.toLocaleString("en-US", {
 													minimumFractionDigits: 2,
@@ -425,7 +402,7 @@ export default function InvestmentCompassView({
 									</span>
 									{ihsgQuote?.changePct != null && (
 										<span
-											className={`text-xs font-bold ${
+											className={`text-xs font-bold tabular-nums ${
 												ihsgQuote.changePct >= 0
 													? "text-emerald-700"
 													: "text-rose-700"
@@ -442,7 +419,7 @@ export default function InvestmentCompassView({
 										</span>
 									)}
 								</div>
-								<p className="text-xs font-medium text-slate-500 mt-0.5">
+								<p className="text-xs font-medium text-slate-500 mt-0.5 leading-relaxed">
 									{ihsgAbove200 != null
 										? ihsgAbove200
 											? "Above 200-day average"
@@ -453,23 +430,23 @@ export default function InvestmentCompassView({
 						</div>
 
 						{/* 2. USD / IDR Exchange Rate */}
-						<div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
-							<div className="flex items-center justify-between gap-1.5 mb-2">
+						<div className="h-full bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between gap-2">
+							<div className="flex items-center justify-between gap-1.5">
 								<span className="text-xs font-bold text-slate-500 truncate">
 									USD / IDR
 								</span>
-								<DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700 shrink-0" />
+								<DollarSign className="w-4 h-4 text-emerald-700 shrink-0" />
 							</div>
 							<div>
 								<div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2">
-									<span className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight truncate">
+									<span className="text-lg sm:text-2xl font-bold tabular-nums text-slate-900 tracking-tight truncate">
 										{usdIdrQuote?.last
 											? `Rp ${Math.round(usdIdrQuote.last).toLocaleString("id-ID")}`
 											: "---"}
 									</span>
 									{usdIdrQuote?.changePct != null && (
 										<span
-											className={`text-xs font-bold ${
+											className={`text-xs font-bold tabular-nums ${
 												usdIdrQuote.changePct > 0
 													? "text-rose-700"
 													: "text-emerald-700"
@@ -480,7 +457,7 @@ export default function InvestmentCompassView({
 										</span>
 									)}
 								</div>
-								<p className="text-xs font-medium text-slate-500 mt-0.5">
+								<p className="text-xs font-medium text-slate-500 mt-0.5 leading-relaxed">
 									{usdIdrQuote?.changePct != null
 										? usdIdrQuote.changePct > 0
 											? "Rupiah Weakening"
@@ -491,23 +468,23 @@ export default function InvestmentCompassView({
 						</div>
 
 						{/* 3. Bitcoin (BTC) Spot */}
-						<div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
-							<div className="flex items-center justify-between gap-1.5 mb-2">
+						<div className="h-full bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between gap-2">
+							<div className="flex items-center justify-between gap-1.5">
 								<span className="text-xs font-bold text-slate-500 truncate">
 									Bitcoin
 								</span>
-								<Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+								<Coins className="w-4 h-4 text-amber-600 shrink-0" />
 							</div>
 							<div>
 								<div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2">
-									<span className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight truncate">
+									<span className="text-lg sm:text-2xl font-bold tabular-nums text-slate-900 tracking-tight truncate">
 										{btcQuote?.last
 											? `$${Math.round(btcQuote.last).toLocaleString("en-US")}`
 											: "---"}
 									</span>
 									{btcQuote?.changePct != null && (
 										<span
-											className={`text-xs font-bold ${
+											className={`text-xs font-bold tabular-nums ${
 												btcQuote.changePct >= 0
 													? "text-emerald-700"
 													: "text-rose-700"
@@ -518,7 +495,7 @@ export default function InvestmentCompassView({
 										</span>
 									)}
 								</div>
-								<p className="text-xs font-medium text-slate-500 mt-0.5">
+								<p className="text-xs font-medium text-slate-500 mt-0.5 leading-relaxed">
 									{btcAbove200 != null
 										? btcAbove200
 											? "Above 200-day average"
@@ -529,28 +506,52 @@ export default function InvestmentCompassView({
 						</div>
 
 						{/* 4. Crypto Sentiment (Alternative.me) */}
-						<div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
-							<div className="flex items-center justify-between gap-1.5 mb-2">
+						<div className="h-full bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between gap-2">
+							<div className="flex items-center justify-between gap-1.5">
 								<span className="text-xs font-bold text-slate-500 truncate">
 									Fear &amp; greed
 								</span>
-								<Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 shrink-0" />
+								<Activity className="w-4 h-4 text-indigo-600 shrink-0" />
 							</div>
 							<div>
 								<div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2">
-									<span className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+									<span className="text-lg sm:text-2xl font-bold tabular-nums text-slate-900 tracking-tight">
 										{cryptoScore ?? "---"}
 									</span>
 									<span className="text-xs font-bold text-slate-500">
 										/ 100
 									</span>
 								</div>
-								<p className="text-xs font-medium text-slate-500 mt-0.5">
+								<p className="text-xs font-medium text-slate-500 mt-0.5 leading-relaxed">
 									{cryptoRating}
 								</p>
 							</div>
 						</div>
 					</div>
+				)}
+
+				{!isLoading && data && (
+					<nav
+						aria-label="Investment sections"
+						className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
+					>
+						{[
+							["conditions", "Market conditions"],
+							["permissions", "Trading limits"],
+							["plans", "Trade plans"],
+							["scenarios", "Scenario test"],
+							["market-data", "Market data"],
+							["calendar", "Calendar"],
+						].map(([id, label]) => (
+							<a
+								key={id}
+								href={`#${id}`}
+								className="inline-flex min-h-11 shrink-0 items-center px-3.5 rounded-xl bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-950 shadow-2xs transition-colors whitespace-nowrap !no-underline"
+							>
+								{label}
+							</a>
+						))}
+					</nav>
 				)}
 
 				{/* Delta Alerts (Overnight Volatility Shifts) */}
@@ -603,7 +604,13 @@ export default function InvestmentCompassView({
 
 				{/* 4. Macro Scenario Sandbox ("What-If" Stress-Tester) */}
 				{!isLoading && data && engineOutput && (
-					<ScenarioSandbox data={data} liveOutput={engineOutput} />
+					<section
+						id="scenarios"
+						aria-label="Scenario test"
+						className="scroll-mt-24"
+					>
+						<ScenarioSandbox data={data} liveOutput={engineOutput} />
+					</section>
 				)}
 
 				{/* 5. Market Data Terminal (Consolidated 3-Tab Hub) */}
@@ -617,38 +624,7 @@ export default function InvestmentCompassView({
 					</section>
 				)}
 
-				{/* 6. Disciplined Rebuild Rulebook Launch Card */}
-				<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 relative overflow-hidden">
-					<div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
-						<div className="flex items-start gap-4">
-							<div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
-								<BookOpen className="w-6 h-6" />
-							</div>
-							<div className="space-y-1">
-								<div className="flex items-center gap-2">
-									<h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-										Rebuild rulebook
-									</h3>
-								</div>
-								<p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
-									Capital Buckets Architecture (40% Safe / 45% Core / 15%
-									Swing), 5-Gate Pre-Trade Verification, and mechanical drawdown
-									recovery formulas.
-								</p>
-							</div>
-						</div>
-
-						<Link
-							href="/utils/rebuild-rulebook"
-							className="inline-flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 !text-white text-xs font-bold transition-colors shadow-xs shrink-0 self-start md:self-auto group !no-underline"
-						>
-							<span className="!text-white font-bold">Open Rulebook</span>
-							<ArrowUpRight className="w-4 h-4 !text-slate-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-						</Link>
-					</div>
-				</div>
-
-				{/* 7. Upcoming Catalysts & Active Seasonality */}
+				{/* 6. Upcoming Catalysts & Active Seasonality */}
 				<section
 					id="calendar"
 					aria-label="Market calendar"

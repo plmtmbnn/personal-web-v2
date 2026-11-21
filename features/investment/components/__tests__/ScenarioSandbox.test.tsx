@@ -332,6 +332,6 @@ describe("ScenarioSandbox Component", () => {
 			/>,
 		);
 
-		expect(container.textContent).toContain("7.654");
+		expect(container.textContent).toContain("7,654");
 	});
 });

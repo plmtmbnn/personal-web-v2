@@ -5,6 +5,8 @@ import {
 	type LucideIcon,
 	TrendingUp,
 	TrendingDown,
+	AlertTriangle,
+	ChevronDown,
 	Info,
 	Globe,
 	Coins,
@@ -65,13 +67,13 @@ export default function OverviewRegimes({
 		return (
 			<div
 				key={regime.id}
-				className={`h-full bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-7 flex flex-col ${accentBorder}`}
+				className={`h-full bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-7 flex flex-col ${accentBorder}`}
 			>
 				<div>
 					{/* Header */}
 					<div className="flex items-start justify-between gap-3 mb-4">
 						<div className="flex items-center gap-3">
-							<div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-200/80 text-slate-700 flex items-center justify-center shrink-0 shadow-2xs">
+							<div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 flex items-center justify-center shrink-0 shadow-2xs">
 								<Icon className="w-5 h-5 text-slate-700" />
 							</div>
 							<div>
@@ -122,8 +124,7 @@ export default function OverviewRegimes({
 
 					{/* Dual-Axis Trend vs Valuation Separation */}
 					<p className="mb-3 text-xs text-slate-600">
-						Evidence coverage: {Math.round(regime.coverage * 100)}%. This score
-						is a regime indicator, not a return forecast.
+						Evidence coverage: {Math.round(regime.coverage * 100)}%
 					</p>
 					{!!regime.missingFactors?.length && (
 						<details className="mb-4 text-xs text-slate-700">
@@ -228,13 +229,18 @@ export default function OverviewRegimes({
 					{/* Asymmetry Zone Callout Banner */}
 					{regime.asymmetryZone && (
 						<div
-							className={`mb-4 p-3.5 sm:p-4 rounded-2xl border transition-colors ${
+							className={`mb-4 p-3.5 sm:p-4 rounded-2xl bg-white border transition-colors ${
 								regime.asymmetryZone.type === "accumulation"
-									? "bg-emerald-500/10 border-emerald-500/30 text-emerald-950"
-									: "bg-rose-500/10 border-rose-500/30 text-rose-950"
+									? "border-emerald-200/90 border-l-4 border-l-emerald-600 text-slate-900"
+									: "border-rose-200/90 border-l-4 border-l-rose-600 text-slate-900"
 							}`}
 						>
 							<div className="flex items-center gap-2 mb-1">
+								{regime.asymmetryZone.type === "accumulation" ? (
+									<TrendingUp className="w-4 h-4 text-emerald-700 shrink-0" />
+								) : (
+									<AlertTriangle className="w-4 h-4 text-rose-700 shrink-0" />
+								)}
 								<span
 									className={`text-xs font-bold ${
 										regime.asymmetryZone.type === "accumulation"
@@ -247,7 +253,7 @@ export default function OverviewRegimes({
 										: "Distribution risk"}
 								</span>
 							</div>
-							<p className="text-xs font-medium leading-relaxed opacity-90 pl-4">
+							<p className="text-xs font-medium text-slate-600 leading-relaxed">
 								{regime.asymmetryZone.description}
 							</p>
 						</div>
@@ -257,9 +263,10 @@ export default function OverviewRegimes({
 					<details className="group space-y-3 pt-1 border-t border-slate-100">
 						<summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900">
 							<span>View signals ({regime.factors.length})</span>
-							<span aria-hidden="true" className="text-lg group-open:rotate-45">
-								+
-							</span>
+							<ChevronDown
+								aria-hidden="true"
+								className="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180"
+							/>
 						</summary>
 
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -350,7 +357,10 @@ export default function OverviewRegimes({
 				{regime.contextFlags.length > 0 && (
 					<div className="flex flex-wrap gap-1.5 pt-4 mt-4 border-t border-slate-100">
 						{regime.contextFlags.map((flag, idx) => (
-							<span key={idx} className="text-slate-600 text-xs font-medium">
+							<span
+								key={idx}
+								className="px-2.5 py-0.5 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-600 text-xs font-medium"
+							>
 								{flag}
 							</span>
 						))}
@@ -362,7 +372,15 @@ export default function OverviewRegimes({
 
 	return (
 		<div className="space-y-4">
-			<h2 className="text-xl font-bold text-slate-900">Market conditions</h2>
+			<div>
+				<h2 className="text-xl font-bold tracking-tight text-slate-900">
+					Market conditions
+				</h2>
+				<p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+					Score from 0 to 100 indicating current market regime, not a return
+					forecast.
+				</p>
+			</div>
 			<div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
 				{/* 1. IHSG Regime Card (Span 6) */}
 				<div className="lg:col-span-6">
@@ -384,7 +402,7 @@ export default function OverviewRegimes({
 
 				{/* 3. Global Liquidity Macro Context Strip (Span 12) */}
 				<div className="lg:col-span-12">
-					<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-6">
+					<div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-6">
 						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
 							<div className="flex items-center gap-3">
 								<div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">

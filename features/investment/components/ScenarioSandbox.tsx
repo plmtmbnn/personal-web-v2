@@ -221,33 +221,28 @@ export default function ScenarioSandbox({
 	const simCrypto = simulatedOutput.regimes.crypto;
 
 	return (
-		<section className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
-			{/* Header Stage */}
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-				<div className="flex min-w-0 items-start gap-3.5">
-					<div className="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-xs">
-						<Sliders className="w-5 h-5 text-amber-400" />
+		<div className="space-y-4">
+			{/* Section Header */}
+			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+				<div className="min-w-0">
+					<div className="flex flex-wrap items-center gap-2">
+						<h2 className="text-xl font-bold text-slate-900 tracking-tight">
+							Scenario test
+						</h2>
+						{isModified ? (
+							<span className="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80">
+								Simulation
+							</span>
+						) : (
+							<span className="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+								Current data
+							</span>
+						)}
 					</div>
-					<div className="min-w-0">
-						<div className="flex flex-wrap items-center gap-2">
-							<h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-								Scenario test
-							</h2>
-							{isModified ? (
-								<span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 motion-safe:animate-pulse">
-									Simulation
-								</span>
-							) : (
-								<span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-									Current data
-								</span>
-							)}
-						</div>
-						<p className="text-xs text-slate-500 font-medium">
-							See how market conditions change under hypothetical rate, currency
-							and price changes.
-						</p>
-					</div>
+					<p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+						See how market conditions change under hypothetical rate, currency
+						and price changes.
+					</p>
 				</div>
 
 				<div className="flex items-center gap-2 self-start sm:self-auto">
@@ -255,7 +250,7 @@ export default function ScenarioSandbox({
 						<button
 							type="button"
 							onClick={handleReset}
-							className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer"
+							className="inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200/80 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
 						>
 							<RotateCcw className="w-3.5 h-3.5" />
 							Reset
@@ -266,13 +261,14 @@ export default function ScenarioSandbox({
 						aria-expanded={isOpen}
 						aria-controls="investment-scenarios"
 						onClick={() => setIsOpen(!isOpen)}
-						className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-2xs ${
+						className={`inline-flex min-h-11 items-center gap-2 shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-2xs ${
 							isOpen
-								? "bg-slate-100 hover:bg-slate-200/80 text-slate-800"
+								? "bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-800"
 								: "bg-slate-900 hover:bg-slate-800 text-white"
 						}`}
 					>
-						{isOpen ? "Close scenarios" : "Test a scenario"}
+						<Sliders className="w-3.5 h-3.5" />
+						<span>{isOpen ? "Close scenarios" : "Test a scenario"}</span>
 					</button>
 				</div>
 			</div>
@@ -280,31 +276,31 @@ export default function ScenarioSandbox({
 			{isOpen && (
 				<div
 					id="investment-scenarios"
-					className="space-y-6 motion-safe:animate-in fade-in duration-200"
+					className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs space-y-6"
 				>
 					{/* Scenario Presets Strip */}
-					<div className="flex flex-wrap items-center gap-2 pt-1">
+					<div className="flex flex-wrap items-center gap-2">
 						<span className="text-xs font-bold text-slate-500 mr-1">
 							Presets:
 						</span>
 						<button
 							type="button"
 							onClick={() => applyPreset("easing")}
-							className="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/70 hover:bg-emerald-100/70 transition-colors cursor-pointer"
+							className="min-h-11 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100/70 transition-colors cursor-pointer"
 						>
 							Fed easing (3.25%)
 						</button>
 						<button
 							type="button"
 							onClick={() => applyPreset("hawkish")}
-							className="px-3 py-1 rounded-xl text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/70 hover:bg-rose-100/70 transition-colors cursor-pointer"
+							className="min-h-11 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/80 hover:bg-rose-100/70 transition-colors cursor-pointer"
 						>
 							Rate shock (5.50%)
 						</button>
 						<button
 							type="button"
 							onClick={() => applyPreset("floor")}
-							className="px-3 py-1 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/70 hover:bg-amber-100/70 transition-colors cursor-pointer"
+							className="min-h-11 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 hover:bg-amber-100/70 transition-colors cursor-pointer"
 						>
 							BTC at $42,000
 						</button>
@@ -332,10 +328,10 @@ export default function ScenarioSandbox({
 								onChange={(e) => setFedFunds(parseFloat(e.target.value))}
 								className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
 							/>
-							<div className="flex justify-between text-xs font-semibold text-slate-500">
-								<span>2.00% (Dovish)</span>
+							<div className="flex justify-between gap-1 text-xs font-semibold text-slate-500 tabular-nums">
+								<span>2.00%</span>
 								<span>Live: {defaultFedFunds.toFixed(2)}%</span>
-								<span>6.50% (Tight)</span>
+								<span>6.50%</span>
 							</div>
 						</div>
 
@@ -359,12 +355,12 @@ export default function ScenarioSandbox({
 								onChange={(e) => setUsdIdr(parseFloat(e.target.value))}
 								className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
 							/>
-							<div className="flex justify-between text-xs font-semibold text-slate-500">
-								<span>14,500 (Strong IDR)</span>
+							<div className="flex justify-between gap-1 text-xs font-semibold text-slate-500 tabular-nums">
+								<span>{(14500).toLocaleString("id-ID")}</span>
 								<span>
 									Live: {Math.round(defaultUsdIdr).toLocaleString("id-ID")}
 								</span>
-								<span>18,000 (Stress)</span>
+								<span>{(18000).toLocaleString("id-ID")}</span>
 							</div>
 						</div>
 
@@ -388,12 +384,12 @@ export default function ScenarioSandbox({
 								onChange={(e) => setBtcPrice(parseFloat(e.target.value))}
 								className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
 							/>
-							<div className="flex justify-between text-xs font-semibold text-slate-500">
-								<span>$30K (Bear Floor)</span>
+							<div className="flex justify-between gap-1 text-xs font-semibold text-slate-500 tabular-nums">
+								<span>$30K</span>
 								<span>
 									Live: ${Math.round(defaultBtcPrice).toLocaleString("en-US")}
 								</span>
-								<span>$150K (Euphoria)</span>
+								<span>$150K</span>
 							</div>
 						</div>
 
@@ -404,7 +400,7 @@ export default function ScenarioSandbox({
 									IHSG Index Level
 								</span>
 								<span className="text-sm font-bold tabular-nums text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-2xs">
-									{Math.round(ihsgPrice).toLocaleString("id-ID")}
+									{Math.round(ihsgPrice).toLocaleString("en-US")}
 								</span>
 							</div>
 							<input
@@ -417,12 +413,12 @@ export default function ScenarioSandbox({
 								onChange={(e) => setIhsgPrice(parseFloat(e.target.value))}
 								className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
 							/>
-							<div className="flex justify-between text-xs font-semibold text-slate-500">
-								<span>5,500 (Deep Bear)</span>
+							<div className="flex justify-between gap-1 text-xs font-semibold text-slate-500 tabular-nums">
+								<span>{(5500).toLocaleString("en-US")}</span>
 								<span>
-									Live: {Math.round(defaultIhsgPrice).toLocaleString("id-ID")}
+									Live: {Math.round(defaultIhsgPrice).toLocaleString("en-US")}
 								</span>
-								<span>8,500 (ATH)</span>
+								<span>{(8500).toLocaleString("en-US")}</span>
 							</div>
 						</div>
 					</div>
@@ -439,7 +435,7 @@ export default function ScenarioSandbox({
 									</span>
 								</div>
 								<span
-									className={`px-2 py-0.5 rounded-full text-xs font-bold border ${getStateBadge(simGlobal.state)}`}
+									className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${getStateBadge(simGlobal.state)}`}
 								>
 									{simGlobal.state.replace("_", " ")}
 								</span>
@@ -447,14 +443,14 @@ export default function ScenarioSandbox({
 
 							<div className="flex items-baseline justify-between">
 								<div className="flex items-baseline gap-2">
-									<span className="text-2xl font-bold text-slate-900">
+									<span className="text-2xl font-bold tabular-nums text-slate-900">
 										{simGlobal.score}
 									</span>
 									<span className="text-xs font-bold text-slate-500">
 										/ 100
 									</span>
 								</div>
-								<div className="flex items-center gap-1">
+								<div className="flex items-center gap-1 tabular-nums">
 									<span className="text-xs font-bold text-slate-500">
 										Live: {liveGlobal.score}
 									</span>
@@ -473,7 +469,7 @@ export default function ScenarioSandbox({
 									)}
 								</div>
 							</div>
-							<p className="text-xs text-slate-500 font-medium line-clamp-2">
+							<p className="text-xs text-slate-500 font-medium leading-relaxed">
 								{simGlobal.headline}
 							</p>
 						</div>
@@ -488,7 +484,7 @@ export default function ScenarioSandbox({
 									</span>
 								</div>
 								<span
-									className={`px-2 py-0.5 rounded-full text-xs font-bold border ${getStateBadge(simIhsg.state)}`}
+									className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${getStateBadge(simIhsg.state)}`}
 								>
 									{simIhsg.state.replace("_", " ")}
 								</span>
@@ -496,14 +492,14 @@ export default function ScenarioSandbox({
 
 							<div className="flex items-baseline justify-between">
 								<div className="flex items-baseline gap-2">
-									<span className="text-2xl font-bold text-slate-900">
+									<span className="text-2xl font-bold tabular-nums text-slate-900">
 										{simIhsg.score}
 									</span>
 									<span className="text-xs font-bold text-slate-500">
 										/ 100
 									</span>
 								</div>
-								<div className="flex items-center gap-1">
+								<div className="flex items-center gap-1 tabular-nums">
 									<span className="text-xs font-bold text-slate-500">
 										Live: {liveIhsg.score}
 									</span>
@@ -522,7 +518,7 @@ export default function ScenarioSandbox({
 									)}
 								</div>
 							</div>
-							<p className="text-xs text-slate-500 font-medium line-clamp-2">
+							<p className="text-xs text-slate-500 font-medium leading-relaxed">
 								{simIhsg.headline}
 							</p>
 						</div>
@@ -537,7 +533,7 @@ export default function ScenarioSandbox({
 									</span>
 								</div>
 								<span
-									className={`px-2 py-0.5 rounded-full text-xs font-bold border ${getStateBadge(simCrypto.state)}`}
+									className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${getStateBadge(simCrypto.state)}`}
 								>
 									{simCrypto.state.replace("_", " ")}
 								</span>
@@ -545,14 +541,14 @@ export default function ScenarioSandbox({
 
 							<div className="flex items-baseline justify-between">
 								<div className="flex items-baseline gap-2">
-									<span className="text-2xl font-bold text-slate-900">
+									<span className="text-2xl font-bold tabular-nums text-slate-900">
 										{simCrypto.score}
 									</span>
 									<span className="text-xs font-bold text-slate-500">
 										/ 100
 									</span>
 								</div>
-								<div className="flex items-center gap-1">
+								<div className="flex items-center gap-1 tabular-nums">
 									<span className="text-xs font-bold text-slate-500">
 										Live: {liveCrypto.score}
 									</span>
@@ -571,14 +567,14 @@ export default function ScenarioSandbox({
 									)}
 								</div>
 							</div>
-							<p className="text-xs text-slate-500 font-medium line-clamp-2">
+							<p className="text-xs text-slate-500 font-medium leading-relaxed">
 								{simCrypto.headline}
 							</p>
 						</div>
 					</div>
 
 					{/* Permissions & Altcoin Gating Delta Strip */}
-					<div className="p-4 sm:p-4.5 rounded-2xl bg-slate-50/70 border border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+					<div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
 						<div className="flex items-center gap-2.5">
 							<div className="w-7 h-7 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs">
 								{simulatedOutput.permissions.altcoins.swing.status ===
@@ -600,7 +596,7 @@ export default function ScenarioSandbox({
 						<div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
 							<span className="text-xs font-bold text-slate-500">Status:</span>
 							<span
-								className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+								className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${
 									simulatedOutput.permissions.altcoins.swing.status ===
 									"allowed"
 										? "bg-emerald-50 text-emerald-800 border-emerald-200"
@@ -616,6 +612,6 @@ export default function ScenarioSandbox({
 					</div>
 				</div>
 			)}
-		</section>
+		</div>
 	);
 }

@@ -5,7 +5,6 @@ import {
 	CheckCircle2,
 	XCircle,
 	AlertTriangle,
-	ListChecks,
 	PauseCircle,
 	Lock,
 	ChevronDown,
@@ -112,36 +111,45 @@ export default function PermissionsMatrix({
 	];
 
 	return (
-		<div className="space-y-5 sm:space-y-6">
+		<div className="space-y-4">
+			<div>
+				<h2 className="text-xl font-bold tracking-tight text-slate-900">
+					Trading limits
+				</h2>
+				<p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+					Allowed actions and exposure limits by market.
+				</p>
+			</div>
+
 			{/* 1. Capital Preservation Banner (if in Stress/Defensive) */}
 			{permissions.globalStressActive && (
-				<div className="bg-rose-50 border border-rose-200/90 rounded-[2rem] p-5 sm:p-7 shadow-xs text-rose-950 motion-safe:animate-in fade-in duration-500">
+				<div className="bg-white border border-rose-200/90 border-l-4 border-l-rose-600 rounded-3xl p-5 sm:p-6 shadow-xs text-slate-900">
 					<div className="flex flex-col sm:flex-row items-start gap-3.5 sm:gap-4">
-						<div className="w-10 h-10 rounded-2xl bg-rose-100 border border-rose-200 text-rose-700 flex items-center justify-center shrink-0 shadow-2xs">
+						<div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-700 flex items-center justify-center shrink-0">
 							<ShieldAlert className="w-5 h-5" />
 						</div>
 						<div className="min-w-0 flex-1">
 							<div className="flex flex-wrap items-center gap-2 mb-1">
-								<h3 className="text-base sm:text-lg font-bold tracking-tight text-rose-900">
+								<h3 className="text-base sm:text-lg font-bold tracking-tight text-slate-900">
 									Capital protection active
 								</h3>
-								<span className="px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-900 text-xs font-bold">
+								<span className="px-2.5 py-0.5 rounded-lg bg-rose-50 border border-rose-200/80 text-rose-800 text-xs font-bold">
 									Defensive
 								</span>
 							</div>
-							<p className="text-xs sm:text-sm text-rose-800 font-semibold leading-relaxed mb-3">
+							<p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed mb-3">
 								Systemic macro liquidity tightening or trend breakdown detected.
 								All active tactical trading is locked down to protect your
 								capital base. Do not average down on losing trades.
 							</p>
-							<div className="flex flex-wrap gap-2 text-xs font-bold text-rose-900">
-								<span className="px-3 py-1 bg-white/80 border border-rose-200 rounded-xl">
+							<div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-800">
+								<span className="px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-xl">
 									No new margin or leverage
 								</span>
-								<span className="px-3 py-1 bg-white/80 border border-rose-200 rounded-xl">
+								<span className="px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-xl">
 									Hold SBN or cash
 								</span>
-								<span className="px-3 py-1 bg-white/80 border border-rose-200 rounded-xl">
+								<span className="px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-xl">
 									Avoid falling prices
 								</span>
 							</div>
@@ -151,23 +159,7 @@ export default function PermissionsMatrix({
 			)}
 
 			{/* 2. Master Permissions Matrix */}
-			<div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-5">
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
-							<ListChecks className="w-5 h-5" />
-						</div>
-						<div>
-							<h2 className="text-xl font-bold text-slate-900 tracking-tight">
-								Trading limits
-							</h2>
-							<p className="text-xs font-bold text-slate-500">
-								Allowed actions and exposure limits by market.
-							</p>
-						</div>
-					</div>
-				</div>
-
+			<div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-7 space-y-5">
 				{/* Desktop Table View */}
 				<div className="hidden xl:block overflow-x-auto">
 					<table className="w-full text-left border-collapse">
@@ -294,7 +286,7 @@ export default function PermissionsMatrix({
 						return (
 							<div
 								key={idx}
-								className="space-y-3 border-b border-slate-200 py-4 last:border-b-0"
+								className="space-y-3 rounded-2xl bg-slate-50/60 border border-slate-200/80 p-4"
 							>
 								{/* Card Header */}
 								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-200/70 pb-3">

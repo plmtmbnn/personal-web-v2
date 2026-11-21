@@ -24,13 +24,13 @@ export function ClosedTradesTable({
 	if (trades.length === 0) {
 		return (
 			<div className="bg-white rounded-3xl p-12 border border-slate-200/80 shadow-xs text-center space-y-3">
-				<div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+				<div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-500">
 					<FileText className="w-6 h-6" />
 				</div>
 				<h3 className="text-sm font-bold text-slate-800">
 					No Closed Trades Found
 				</h3>
-				<p className="text-xs text-slate-400 max-w-sm mx-auto">
+				<p className="text-xs text-slate-600 max-w-sm mx-auto">
 					No closed simulation positions match the current filters. Adjust your
 					filters or close an active pick to build your trading journal.
 				</p>
@@ -43,9 +43,9 @@ export function ClosedTradesTable({
 			<div className="overflow-x-auto">
 				<table className="w-full text-left border-collapse">
 					<thead>
-						<tr className="border-b border-slate-100 bg-slate-50/75 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+						<tr className="border-b border-slate-100 bg-slate-50/75 text-xs font-bold text-slate-600">
 							<th className="py-3.5 px-4">Instrument & Thesis</th>
-							<th className="py-3.5 px-4 text-right">Entry → Exit Price</th>
+							<th className="py-3.5 px-4 text-right">Entry to Exit</th>
 							<th className="py-3.5 px-4 text-right">Realized P/L</th>
 							<th className="py-3.5 px-4 text-center">Holding Period</th>
 							<th className="py-3.5 px-4 text-center">Peak & Drawdown</th>
@@ -73,18 +73,18 @@ export function ClosedTradesTable({
 											<button
 												type="button"
 												onClick={() => onViewStockDetail?.(trade.stockCode)}
-												className="font-mono font-bold text-sm text-slate-900 hover:text-blue-600 transition-colors cursor-pointer text-left"
+												className="min-h-11 font-mono font-bold text-sm text-slate-900 hover:text-blue-700 transition-colors cursor-pointer text-left"
 											>
 												{trade.stockCode}
 											</button>
-											<span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/60">
+											<span className="text-xs font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/60">
 												{trade.sector}
 											</span>
 										</div>
-										<p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+										<p className="text-xs text-slate-600 line-clamp-1 mt-0.5">
 											{trade.stockName}
 										</p>
-										<span className="inline-block mt-1 text-[10px] font-medium text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md">
+										<span className="inline-block mt-1 text-xs font-medium text-slate-700 bg-slate-100/80 px-2 py-0.5 rounded-lg">
 											{trade.thesis || "Custom"}
 										</span>
 									</td>
@@ -93,10 +93,10 @@ export function ClosedTradesTable({
 									<td className="py-3.5 px-4 text-right font-mono">
 										<div className="text-slate-900 font-semibold">
 											{fmtIDRPrice(trade.buyPrice)}{" "}
-											<span className="text-slate-400 font-normal">→</span>{" "}
+											<span className="text-slate-500 font-normal">→</span>{" "}
 											{fmtIDRPrice(exitPrice)}
 										</div>
-										<div className="text-[11px] text-slate-400 mt-0.5">
+										<div className="text-xs text-slate-600 mt-0.5">
 											{trade.quantityLots} Lots (
 											{(trade.quantityLots * 100).toLocaleString("id-ID")} shs)
 										</div>
@@ -106,14 +106,14 @@ export function ClosedTradesTable({
 									<td className="py-3.5 px-4 text-right font-mono">
 										<div
 											className={`font-bold ${
-												isProfit ? "text-emerald-600" : "text-rose-600"
+												isProfit ? "text-emerald-700" : "text-rose-700"
 											}`}
 										>
 											{pnlNominal >= 0 ? "+" : ""}
 											{fmtIDRPrice(pnlNominal)}
 										</div>
 										<div
-											className={`text-[11px] font-semibold ${
+											className={`text-xs font-semibold ${
 												isProfit ? "text-emerald-700" : "text-rose-700"
 											}`}
 										>
@@ -127,23 +127,23 @@ export function ClosedTradesTable({
 											{trade.holdingDays}{" "}
 											{trade.holdingDays === 1 ? "Day" : "Days"}
 										</span>
-										<div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+										<div className="text-xs text-slate-600 mt-0.5 font-mono">
 											{trade.entryDate} → {trade.closedDate || "Closed"}
 										</div>
 									</td>
 
 									{/* Excursion Watermarks */}
-									<td className="py-3.5 px-4 text-center font-mono text-[11px]">
+									<td className="py-3.5 px-4 text-center font-mono text-xs">
 										<div className="flex items-center justify-center gap-2">
 											<span
-												className="text-emerald-600 font-medium"
+												className="text-emerald-700 font-medium"
 												title="Peak gain achieved"
 											>
 												Peak {fmtSignedPct(trade.peakGainPct)}
 											</span>
-											<span className="text-slate-300">|</span>
+											<span className="text-slate-400">|</span>
 											<span
-												className="text-rose-600 font-medium"
+												className="text-rose-700 font-medium"
 												title="Max drawdown endured"
 											>
 												DD {fmtSignedPct(trade.maxDrawdownPct)}
@@ -154,7 +154,7 @@ export function ClosedTradesTable({
 									{/* Execution Reason */}
 									<td className="py-3.5 px-4">
 										<span
-											className={`inline-block text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
+											className={`inline-block text-xs font-bold px-2.5 py-1 rounded-lg border ${
 												exitBadge.tone === "emerald"
 													? "bg-emerald-50 text-emerald-700 border-emerald-200/60"
 													: exitBadge.tone === "blue"
@@ -167,7 +167,7 @@ export function ClosedTradesTable({
 											{exitBadge.label}
 										</span>
 										{trade.exitNotes && (
-											<p className="text-[11px] text-slate-500 italic mt-1 line-clamp-1">
+											<p className="text-xs text-slate-600 italic mt-1 line-clamp-1">
 												"{trade.exitNotes}"
 											</p>
 										)}
@@ -175,22 +175,24 @@ export function ClosedTradesTable({
 
 									{/* Actions */}
 									<td className="py-3.5 px-4 text-right">
-										<div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+										<div className="flex items-center justify-end gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
 											<button
 												type="button"
 												onClick={() => onReopenTrade(trade.id)}
 												title="Reopen position back to active blotter"
-												className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+												aria-label={`Reopen ${trade.stockCode}`}
+												className="min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
 											>
-												<RotateCcw className="w-3.5 h-3.5" />
+												<RotateCcw className="w-4 h-4" />
 											</button>
 											<button
 												type="button"
 												onClick={() => onDeleteTrade(trade.id)}
 												title="Delete trade permanently"
-												className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+												aria-label={`Delete ${trade.stockCode}`}
+												className="min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
 											>
-												<Trash2 className="w-3.5 h-3.5" />
+												<Trash2 className="w-4 h-4" />
 											</button>
 										</div>
 									</td>

@@ -25,6 +25,7 @@ import ScreenerDropdown from "../shared/ScreenerDropdown";
 
 interface SmartTableProps {
 	stocks: ProcessedStock[];
+	embedded?: boolean;
 	researchSort?: boolean;
 	onSelectStock?: (stock: ProcessedStock) => void;
 	watchlist?: string[];
@@ -37,6 +38,7 @@ interface SmartTableProps {
 
 export default function SmartTable({
 	stocks,
+	embedded = false,
 	researchSort,
 	onSelectStock,
 	watchlist: watchlistProp,
@@ -211,46 +213,58 @@ export default function SmartTable({
 	}, [filteredStocks]);
 
 	return (
-		<div className="bg-white border border-slate-200/80 rounded-3xl shadow-xs flex flex-col overflow-hidden">
+		<div
+			className={
+				embedded
+					? "flex flex-col"
+					: "bg-white border border-slate-200/80 rounded-3xl shadow-xs flex flex-col"
+			}
+		>
 			{/* Top Bar with Search & Filters */}
-			<div className="p-6 sm:p-8 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+			<div
+				className={`p-5 sm:p-7 border-b border-slate-100 bg-slate-50/40 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 ${
+					embedded ? "" : "rounded-t-3xl"
+				}`}
+			>
 				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+					<div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
 						<TableIcon className="w-5 h-5" />
 					</div>
 					<div>
 						<div className="flex flex-wrap items-center gap-2">
-							<h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+							<h3 className="text-base font-bold text-slate-900 tracking-tight">
 								Market Screener &amp; Alpha Terminal
 							</h3>
 							{minScore > 0 && (
-								<span className="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md">
+								<span className="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-bold px-2 py-0.5 rounded-lg">
 									<span>Score ≥ {minScore}</span>
 									<button
 										type="button"
 										onClick={() => setMinScore(0)}
-										className="hover:text-indigo-900 cursor-pointer"
+										className="p-0.5 hover:text-indigo-950 cursor-pointer"
+										aria-label="Remove score filter"
 										title="Remove score filter"
 									>
-										<X className="w-2.5 h-2.5" />
+										<X className="w-3 h-3" />
 									</button>
 								</span>
 							)}
 							{minTurnover > 0 && (
-								<span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md">
+								<span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-lg">
 									<span>Turnover ≥ Rp {fmtIDRValue(minTurnover)}</span>
 									<button
 										type="button"
 										onClick={() => setMinTurnover(0)}
-										className="hover:text-emerald-900 cursor-pointer"
+										className="p-0.5 hover:text-emerald-950 cursor-pointer"
+										aria-label="Remove turnover filter"
 										title="Remove turnover filter"
 									>
-										<X className="w-2.5 h-2.5" />
+										<X className="w-3 h-3" />
 									</button>
 								</span>
 							)}
 						</div>
-						<p className="text-xs font-medium text-slate-500 mt-0.5">
+						<p className="text-xs font-medium text-slate-600 mt-0.5 tabular-nums">
 							Showing {sortedStocks.length} of {filteredStocks.length} filtered
 							instruments{" "}
 							{minScore > 0 || minTurnover > 0
@@ -268,22 +282,24 @@ export default function SmartTable({
 					</div>
 				</div>
 
-				<div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+				<div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
 					{/* Live Search */}
-					<div className="relative flex-1 sm:w-48">
-						<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+					<div className="relative flex-1 min-w-[180px] sm:w-48">
+						<Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
 						<input
 							type="text"
+							aria-label="Search ticker or company name"
 							placeholder="Search ticker or name..."
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-8 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-2xs"
+							className="w-full min-h-11 bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors shadow-2xs"
 						/>
 						{searchQuery && (
 							<button
 								type="button"
+								aria-label="Clear search"
 								onClick={() => setSearchQuery("")}
-								className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+								className="min-h-11 min-w-11 flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 cursor-pointer"
 							>
 								<X className="w-3.5 h-3.5" />
 							</button>
@@ -333,14 +349,20 @@ export default function SmartTable({
 					/>
 
 					{/* Minimalist Frameless Milestone Standard: All / Watchlist Tabs */}
-					<div className="relative flex items-center border-b border-slate-200/60 pb-0.5">
+					<div
+						role="tablist"
+						aria-label="Screener universe filter"
+						className="relative flex items-center border-b border-slate-200/60"
+					>
 						<button
 							type="button"
+							role="tab"
+							aria-selected={filterTab === "all"}
 							onClick={() => setFilterTab("all")}
-							className={`relative px-3.5 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+							className={`relative min-h-11 px-3.5 py-2 text-xs font-bold transition-colors cursor-pointer ${
 								filterTab === "all"
-									? "text-slate-900 font-black"
-									: "text-slate-500 hover:text-slate-800"
+									? "text-slate-900"
+									: "text-slate-600 hover:text-slate-900"
 							}`}
 						>
 							<span>All Stocks</span>
@@ -354,16 +376,18 @@ export default function SmartTable({
 						</button>
 						<button
 							type="button"
+							role="tab"
+							aria-selected={filterTab === "watchlist"}
 							onClick={() => setFilterTab("watchlist")}
-							className={`relative px-3.5 py-1.5 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${
+							className={`relative min-h-11 px-3.5 py-2 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${
 								filterTab === "watchlist"
-									? "text-slate-900 font-black"
-									: "text-slate-500 hover:text-slate-800"
+									? "text-slate-900"
+									: "text-slate-600 hover:text-slate-900"
 							}`}
 						>
-							<Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+							<Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
 							<span>Watchlist</span>
-							<span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-extrabold">
+							<span className="text-xs bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded-md font-bold tabular-nums">
 								{
 									Array.from(
 										new Set([...watchlist, ...Array.from(simulatedCodesSet)]),
@@ -382,11 +406,11 @@ export default function SmartTable({
 							<button
 								type="button"
 								onClick={() => screener.setWorkstationTab("simulator")}
-								className="ml-2 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+								className="ml-2 min-h-11 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200/80 rounded-xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
 								title="Open Stockpick Simulator Workstation"
 							>
 								<span>Simulator</span>
-								<ArrowUpRight className="w-3 h-3" />
+								<ArrowUpRight className="w-3.5 h-3.5" />
 							</button>
 						)}
 					</div>
@@ -396,98 +420,304 @@ export default function SmartTable({
 						type="button"
 						onClick={exportToCsv}
 						disabled={filteredStocks.length === 0}
-						className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-bold transition-all shadow-2xs active:scale-95 disabled:opacity-50 cursor-pointer"
+						className="inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-bold transition-colors shadow-2xs active:scale-95 disabled:opacity-50 cursor-pointer"
 						title="Export filtered records to CSV"
 					>
-						<Download className="w-3.5 h-3.5 text-slate-500" />
+						<Download className="w-4 h-4 text-slate-600" />
 						<span className="hidden sm:inline">Export CSV</span>
 					</button>
 				</div>
 			</div>
 
-			{/* Table Content */}
-			<div className="overflow-x-auto">
+			{/* Mobile & Tablet Card Ledger (< lg) */}
+			<div className="lg:hidden divide-y divide-slate-100">
+				{sortedStocks.length === 0 ? (
+					<div className="p-8 text-center">
+						<p className="text-sm font-bold text-slate-800">
+							No instruments match your active criteria
+						</p>
+						<p className="text-xs text-slate-600 mt-1 max-w-md mx-auto">
+							{minScore > 0 || minTurnover > 0
+								? "Try adjusting your minimum score or turnover liquidity thresholds to discover more trading instruments."
+								: "Try adjusting your search query or reset sector filters."}
+						</p>
+						<button
+							type="button"
+							onClick={resetFilters}
+							className="mt-4 inline-flex min-h-11 items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
+						>
+							Reset All Filters
+						</button>
+					</div>
+				) : (
+					sortedStocks.map((s) => {
+						const isWatched = watchlist.includes(s.StockCode);
+						const isSimulated = simulatedCodesSet.has(
+							s.StockCode.toUpperCase(),
+						);
+						return (
+							<div key={s.StockCode} className="p-4 sm:p-5 space-y-3">
+								<div className="flex items-start justify-between gap-3">
+									<div className="min-w-0">
+										<div className="flex items-center gap-1.5 flex-wrap">
+											<button
+												type="button"
+												onClick={() => handleSelect(s)}
+												className="text-sm font-bold text-slate-900 hover:text-indigo-700 transition-colors cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-indigo-600"
+											>
+												{s.StockCode}
+											</button>
+											<span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
+												{s.Sector}
+											</span>
+											{s.ARARisk === "ARA" && (
+												<span className="text-xs font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-lg">
+													ARA
+												</span>
+											)}
+											{s.ARARisk === "Near ARA" && (
+												<span className="text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-lg">
+													Near ARA
+												</span>
+											)}
+											{s.ARARisk === "ARB" && (
+												<span className="text-xs font-bold bg-rose-600 text-white px-2 py-0.5 rounded-lg">
+													ARB
+												</span>
+											)}
+											{s.ARARisk === "Near ARB" && (
+												<span className="text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 px-2 py-0.5 rounded-lg">
+													Near ARB
+												</span>
+											)}
+										</div>
+										<p className="text-xs font-medium text-slate-600 truncate mt-0.5">
+											{s.StockName}
+										</p>
+									</div>
+
+									<span
+										className={`inline-flex items-center justify-center min-w-[36px] h-7 px-2 rounded-lg text-xs font-bold tabular-nums shrink-0 ${
+											s.CompositeScore >= 80
+												? "bg-indigo-600 text-white shadow-xs"
+												: s.CompositeScore >= 60
+													? "bg-emerald-600 text-white"
+													: s.CompositeScore >= 40
+														? "bg-slate-200 text-slate-800"
+														: "bg-rose-100 text-rose-800"
+										}`}
+									>
+										{s.CompositeScore}
+									</span>
+								</div>
+
+								<div className="grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-slate-50/70 border border-slate-200/70 text-xs">
+									<div>
+										<span className="text-slate-600 font-medium block">
+											Price / VWAP
+										</span>
+										<span className="font-bold text-slate-900 tabular-nums">
+											{s.Close.toLocaleString("id-ID")}
+										</span>{" "}
+										<span className="text-slate-600 tabular-nums">
+											({(s.VWAP || s.Close).toLocaleString("id-ID")})
+										</span>
+									</div>
+									<div className="text-right">
+										<span className="text-slate-600 font-medium block">
+											Change / Setup
+										</span>
+										<span
+											className={`font-bold tabular-nums ${
+												s.ChangePct > 0
+													? "text-emerald-700"
+													: s.ChangePct < 0
+														? "text-rose-700"
+														: "text-slate-600"
+											}`}
+										>
+											{s.ChangePct > 0 ? "+" : ""}
+											{s.ChangePct.toFixed(2)}%
+										</span>{" "}
+										<span className="text-slate-700 font-semibold">
+											({s.Opportunity})
+										</span>
+									</div>
+									<div>
+										<span className="text-slate-600 font-medium block">
+											Turnover
+										</span>
+										<span className="font-bold text-slate-900 tabular-nums">
+											{fmtIDRValue(s.Value)}
+										</span>{" "}
+										<span className="text-slate-600 tabular-nums">
+											({fmtCompact(s.Frequency)} tx)
+										</span>
+									</div>
+									<div className="text-right">
+										<span className="text-slate-600 font-medium block">
+											Foreign Net
+										</span>
+										<span
+											className={`font-bold tabular-nums ${
+												s.ForeignNet > 0
+													? "text-emerald-700"
+													: s.ForeignNet < 0
+														? "text-rose-700"
+														: "text-slate-600"
+											}`}
+										>
+											{fmtIDRNet(s.ForeignNet)}
+										</span>
+									</div>
+								</div>
+
+								<div className="flex flex-wrap items-center justify-between gap-2">
+									<div className="flex items-center gap-2">
+										<button
+											type="button"
+											onClick={() => onToggleWatchlist(s.StockCode)}
+											className={`inline-flex min-h-11 items-center gap-1.5 px-3 rounded-xl border text-xs font-semibold transition-colors cursor-pointer ${
+												isWatched
+													? "bg-amber-50 border-amber-200 text-amber-900"
+													: "bg-white border-slate-200/80 text-slate-700 hover:bg-slate-50"
+											}`}
+										>
+											<Star
+												className={`w-3.5 h-3.5 ${
+													isWatched
+														? "fill-amber-400 text-amber-500"
+														: "text-slate-500"
+												}`}
+											/>
+											<span>{isWatched ? "Pinned" : "Watch"}</span>
+										</button>
+										<button
+											type="button"
+											onClick={() => screener.openAddPickModal(s)}
+											className={`inline-flex min-h-11 items-center gap-1.5 px-3 rounded-xl border text-xs font-semibold transition-colors cursor-pointer ${
+												isSimulated
+													? "bg-emerald-50 border-emerald-200 text-emerald-800"
+													: "bg-white border-slate-200/80 text-slate-700 hover:bg-slate-50"
+											}`}
+										>
+											<BookmarkPlus className="w-3.5 h-3.5" />
+											<span>{isSimulated ? "Tracked" : "Simulate"}</span>
+										</button>
+									</div>
+
+									<button
+										type="button"
+										onClick={() => handleSelect(s)}
+										className="inline-flex min-h-11 items-center gap-1 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
+									>
+										<span>Inspect</span>
+										<ArrowUpRight className="w-3.5 h-3.5" />
+									</button>
+								</div>
+							</div>
+						);
+					})
+				)}
+			</div>
+
+			{/* Desktop Table Content (lg+) */}
+			<div className="hidden lg:block overflow-x-auto">
 				<table className="w-full text-left border-collapse min-w-[980px]">
 					<thead>
 						<tr className="bg-slate-50/80 border-b border-slate-200/80">
-							<th className="py-3 px-3 w-10 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+							<th className="py-2.5 px-3 w-20 text-center text-xs font-bold text-slate-600">
 								Pin
 							</th>
-							<th
-								className="py-3 px-4 cursor-pointer group select-none"
-								onClick={() => requestSort("StockCode")}
-							>
-								<div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-									Ticker {getSortIcon("StockCode")}
-								</div>
+							<th className="py-2 px-4">
+								<button
+									type="button"
+									onClick={() => requestSort("StockCode")}
+									className="min-h-11 inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-950 cursor-pointer group"
+								>
+									<span>Ticker</span>
+									{getSortIcon("StockCode")}
+								</button>
 							</th>
-							<th
-								className="py-3 px-3 cursor-pointer group select-none text-right"
-								onClick={() => requestSort("Close")}
-							>
-								<div className="flex items-center justify-end gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-									Price {getSortIcon("Close")}
-								</div>
+							<th className="py-2 px-3 text-right">
+								<button
+									type="button"
+									onClick={() => requestSort("Close")}
+									className="min-h-11 inline-flex items-center justify-end gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-950 cursor-pointer group"
+								>
+									<span>Price</span>
+									{getSortIcon("Close")}
+								</button>
 							</th>
-							<th
-								className="py-3 px-3 cursor-pointer group select-none text-right"
-								onClick={() => requestSort("ChangePct")}
-							>
-								<div className="flex items-center justify-end gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-									Change {getSortIcon("ChangePct")}
-								</div>
+							<th className="py-2 px-3 text-right">
+								<button
+									type="button"
+									onClick={() => requestSort("ChangePct")}
+									className="min-h-11 inline-flex items-center justify-end gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-950 cursor-pointer group"
+								>
+									<span>Change</span>
+									{getSortIcon("ChangePct")}
+								</button>
 							</th>
-							<th
-								className="py-3 px-4 cursor-pointer group select-none text-right"
-								onClick={() => requestSort("Value")}
-							>
-								<div className="flex items-center justify-end gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-									Turnover {getSortIcon("Value")}
-								</div>
+							<th className="py-2 px-4 text-right">
+								<button
+									type="button"
+									onClick={() => requestSort("Value")}
+									className="min-h-11 inline-flex items-center justify-end gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-950 cursor-pointer group"
+								>
+									<span>Turnover</span>
+									{getSortIcon("Value")}
+								</button>
 							</th>
-							<th className="py-3 px-3 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+							<th className="py-2.5 px-3 text-center text-xs font-bold text-slate-700">
 								Order Book
 							</th>
-							<th
-								className="py-3 px-3 cursor-pointer group select-none text-right"
-								onClick={() => requestSort("AvgValuePerTx")}
-							>
-								<div className="flex items-center justify-end gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-									Avg / Tx {getSortIcon("AvgValuePerTx")}
-								</div>
+							<th className="py-2 px-3 text-right">
+								<button
+									type="button"
+									onClick={() => requestSort("AvgValuePerTx")}
+									className="min-h-11 inline-flex items-center justify-end gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-950 cursor-pointer group"
+								>
+									<span>Avg / Tx</span>
+									{getSortIcon("AvgValuePerTx")}
+								</button>
 							</th>
-							<th
-								className="py-3 px-4 cursor-pointer group select-none text-right"
-								onClick={() => requestSort("ForeignNet")}
-							>
-								<div className="flex items-center justify-end gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-									Foreign Net {getSortIcon("ForeignNet")}
-								</div>
+							<th className="py-2 px-4 text-right">
+								<button
+									type="button"
+									onClick={() => requestSort("ForeignNet")}
+									className="min-h-11 inline-flex items-center justify-end gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-950 cursor-pointer group"
+								>
+									<span>Foreign Net</span>
+									{getSortIcon("ForeignNet")}
+								</button>
 							</th>
 							{researchSort && (
 								<th
 									scope="col"
-									className="py-3 px-3 text-right text-xs font-semibold text-slate-700"
+									className="py-2 px-3 text-right text-xs font-bold text-slate-700"
 								>
 									<button
 										type="button"
 										onClick={() => requestSort("RelativeStrength")}
-										className="inline-flex min-h-11 items-center gap-2 focus-visible:outline-2 focus-visible:outline-indigo-600"
+										className="inline-flex min-h-11 items-center gap-2 focus-visible:outline-2 focus-visible:outline-indigo-600 cursor-pointer"
 									>
 										Vs IHSG (63 sessions) {getSortIcon("RelativeStrength")}
 									</button>
 								</th>
 							)}
-							<th className="py-3 px-3 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+							<th className="py-2.5 px-3 text-center text-xs font-bold text-slate-700">
 								Opportunity
 							</th>
-							<th
-								className="py-3 px-5 cursor-pointer group select-none text-right"
-								onClick={() => requestSort("CompositeScore")}
-							>
-								<div className="flex items-center justify-end gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-									Score {getSortIcon("CompositeScore")}
-								</div>
+							<th className="py-2 px-5 text-right">
+								<button
+									type="button"
+									onClick={() => requestSort("CompositeScore")}
+									className="min-h-11 inline-flex items-center justify-end gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-950 cursor-pointer group"
+								>
+									<span>Score</span>
+									{getSortIcon("CompositeScore")}
+								</button>
 							</th>
 						</tr>
 					</thead>
@@ -496,12 +726,12 @@ export default function SmartTable({
 							<tr>
 								<td
 									colSpan={researchSort ? 11 : 10}
-									className="py-12 text-center text-slate-400"
+									className="py-12 text-center text-slate-600"
 								>
-									<p className="text-sm font-bold text-slate-700">
+									<p className="text-sm font-bold text-slate-800">
 										No instruments match your active criteria
 									</p>
-									<p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+									<p className="text-xs text-slate-600 mt-1 max-w-md mx-auto">
 										{minScore > 0 || minTurnover > 0
 											? "Try adjusting your minimum score or turnover liquidity thresholds to discover more trading instruments."
 											: "Try adjusting your search query or reset sector filters."}
@@ -509,7 +739,7 @@ export default function SmartTable({
 									<button
 										type="button"
 										onClick={resetFilters}
-										className="mt-4 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+										className="mt-4 inline-flex min-h-11 items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
 									>
 										Reset All Filters
 									</button>
@@ -523,14 +753,19 @@ export default function SmartTable({
 									className="group hover:bg-indigo-50/40 transition-colors cursor-pointer"
 								>
 									<td
-										className="py-3 px-3 text-center"
+										className="py-2 px-2 text-center"
 										onClick={(e) => e.stopPropagation()}
 									>
-										<div className="flex items-center justify-center gap-1.5">
+										<div className="flex items-center justify-center">
 											<button
 												type="button"
 												onClick={() => onToggleWatchlist(s.StockCode)}
-												className="text-slate-300 hover:text-amber-500 transition-colors cursor-pointer p-0.5"
+												aria-label={
+													watchlist.includes(s.StockCode)
+														? `Remove ${s.StockCode} from watchlist`
+														: `Add ${s.StockCode} to watchlist`
+												}
+												className="min-h-11 min-w-11 inline-flex items-center justify-center text-slate-400 hover:text-amber-500 transition-colors cursor-pointer rounded-xl"
 												title={
 													watchlist.includes(s.StockCode)
 														? "Remove from watchlist"
@@ -538,20 +773,21 @@ export default function SmartTable({
 												}
 											>
 												<Star
-													className={`w-3.5 h-3.5 ${
+													className={`w-4 h-4 ${
 														watchlist.includes(s.StockCode)
-															? "fill-amber-400 text-amber-400"
-															: "text-slate-300 hover:scale-110 transition-transform"
+															? "fill-amber-400 text-amber-500"
+															: "text-slate-400 hover:scale-110 transition-transform"
 													}`}
 												/>
 											</button>
 											<button
 												type="button"
 												onClick={() => screener.openAddPickModal(s)}
-												className={`p-0.5 transition-colors cursor-pointer rounded ${
+												aria-label={`Simulate entry for ${s.StockCode}`}
+												className={`min-h-11 min-w-11 inline-flex items-center justify-center transition-colors cursor-pointer rounded-xl ${
 													simulatedCodesSet.has(s.StockCode.toUpperCase())
-														? "text-emerald-600 hover:text-emerald-700"
-														: "text-slate-300 hover:text-indigo-600 hover:scale-110 transition-transform"
+														? "text-emerald-700 hover:text-emerald-800"
+														: "text-slate-400 hover:text-indigo-600"
 												}`}
 												title={
 													simulatedCodesSet.has(s.StockCode.toUpperCase())
@@ -559,65 +795,72 @@ export default function SmartTable({
 														: "Simulate pick entry price"
 												}
 											>
-												<BookmarkPlus className="w-3.5 h-3.5" />
+												<BookmarkPlus className="w-4 h-4" />
 											</button>
 										</div>
 									</td>
 
 									<td className="py-3 px-4">
 										<div className="flex items-center gap-1.5 flex-wrap">
-											<p className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+											<button
+												type="button"
+												onClick={(e) => {
+													e.stopPropagation();
+													handleSelect(s);
+												}}
+												className="text-xs font-bold text-slate-900 group-hover:text-indigo-700 transition-colors cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-indigo-600"
+											>
 												{s.StockCode}
-											</p>
-											<span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+											</button>
+											<span className="text-xs font-medium text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md">
 												{s.Sector}
 											</span>
 											{s.ARARisk === "ARA" && (
-												<span className="text-[9px] font-black uppercase tracking-wider bg-emerald-500 text-white px-1.5 py-0.2 rounded shadow-2xs">
+												<span className="text-xs font-bold bg-emerald-600 text-white px-1.5 py-0.5 rounded-md shadow-2xs">
 													ARA
 												</span>
 											)}
 											{s.ARARisk === "Near ARA" && (
-												<span className="text-[9px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.2 rounded">
+												<span className="text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded-md">
 													Near ARA
 												</span>
 											)}
 											{s.ARARisk === "ARB" && (
-												<span className="text-[9px] font-black uppercase tracking-wider bg-rose-500 text-white px-1.5 py-0.2 rounded shadow-2xs">
+												<span className="text-xs font-bold bg-rose-600 text-white px-1.5 py-0.5 rounded-md shadow-2xs">
 													ARB
 												</span>
 											)}
 											{s.ARARisk === "Near ARB" && (
-												<span className="text-[9px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.2 rounded">
+												<span className="text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 px-1.5 py-0.5 rounded-md">
 													Near ARB
 												</span>
 											)}
 										</div>
-										<p className="text-[10px] font-medium text-slate-500 truncate max-w-[160px]">
+										<p className="text-xs font-medium text-slate-600 truncate max-w-[180px]">
 											{s.StockName}
 										</p>
 									</td>
 
 									<td className="py-3 px-3 text-right">
-										<p className="text-xs font-black text-slate-900 tabular-nums">
-											{s.Close.toLocaleString()}
+										<p className="text-xs font-bold text-slate-900 tabular-nums">
+											{s.Close.toLocaleString("id-ID")}
 										</p>
 										<p
-											className="text-[9px] font-medium text-slate-400 tabular-nums"
-											title={`Range: ${s.Low.toLocaleString()}-${s.High.toLocaleString()} | VWAP: ${(s.VWAP || s.Close).toLocaleString()}`}
+											className="text-xs font-medium text-slate-600 tabular-nums"
+											title={`Range: ${s.Low.toLocaleString("id-ID")}-${s.High.toLocaleString("id-ID")} | VWAP: ${(s.VWAP || s.Close).toLocaleString("id-ID")}`}
 										>
-											VWAP {(s.VWAP || s.Close).toLocaleString()}
+											VWAP {(s.VWAP || s.Close).toLocaleString("id-ID")}
 										</p>
 									</td>
 
 									<td className="py-3 px-3 text-right">
 										<span
-											className={`inline-block text-xs font-black tabular-nums ${
+											className={`inline-block text-xs font-bold tabular-nums ${
 												s.ChangePct > 0
-													? "text-emerald-600"
+													? "text-emerald-700"
 													: s.ChangePct < 0
-														? "text-rose-600"
-														: "text-slate-500"
+														? "text-rose-700"
+														: "text-slate-600"
 											}`}
 										>
 											{s.ChangePct > 0 ? "+" : ""}
@@ -626,13 +869,13 @@ export default function SmartTable({
 									</td>
 
 									<td className="py-3 px-4 text-right">
-										<p className="text-xs font-black text-slate-900 tabular-nums">
+										<p className="text-xs font-bold text-slate-900 tabular-nums">
 											{fmtIDRValue(s.Value)}
 										</p>
-										<p className="text-[9px] font-medium text-slate-400 tabular-nums">
+										<p className="text-xs font-medium text-slate-600 tabular-nums">
 											{fmtCompact(s.Frequency)} tx
 											{s.RVOL !== undefined && s.RVOL >= 1.3 ? (
-												<span className="ml-1 font-extrabold text-indigo-600">
+												<span className="ml-1 font-bold text-indigo-700">
 													({s.RVOL.toFixed(1)}x)
 												</span>
 											) : null}
@@ -654,7 +897,7 @@ export default function SmartTable({
 													className="bg-rose-500 h-full transition-all"
 												/>
 											</div>
-											<span className="text-[9px] font-bold text-slate-600 tabular-nums">
+											<span className="text-xs font-semibold text-slate-700 tabular-nums">
 												Bid {s.BidOfferPressure}%
 											</span>
 										</div>
@@ -662,10 +905,10 @@ export default function SmartTable({
 
 									<td className="py-3 px-3 text-right">
 										<span
-											className={`inline-block text-[11px] tabular-nums px-2 py-0.5 rounded-md ${
+											className={`inline-block text-xs tabular-nums px-2 py-0.5 rounded-lg ${
 												s.AvgValuePerTx >= 35000000
-													? "text-indigo-700 bg-indigo-50 font-black border border-indigo-200/60"
-													: "text-slate-700 bg-slate-100 font-bold"
+													? "text-indigo-800 bg-indigo-50 font-bold border border-indigo-200/60"
+													: "text-slate-700 bg-slate-100 font-semibold"
 											}`}
 											title="Average trade nominal (Whale block ticket proxy)"
 										>
@@ -676,12 +919,12 @@ export default function SmartTable({
 									<td className="py-3 px-4 text-right">
 										<div className="inline-flex flex-col items-end gap-0.5">
 											<span
-												className={`inline-block text-[11px] font-black tabular-nums px-2 py-0.5 rounded-md ${
+												className={`inline-block text-xs font-bold tabular-nums px-2 py-0.5 rounded-lg ${
 													s.ForeignNet > 0
-														? "text-emerald-700 bg-emerald-50"
+														? "text-emerald-800 bg-emerald-50"
 														: s.ForeignNet < 0
-															? "text-rose-700 bg-rose-50"
-															: "text-slate-500 bg-slate-100"
+															? "text-rose-800 bg-rose-50"
+															: "text-slate-600 bg-slate-100"
 												}`}
 											>
 												{fmtIDRNet(s.ForeignNet)}
@@ -689,10 +932,10 @@ export default function SmartTable({
 											{s.ForeignStreakDays !== undefined &&
 												Math.abs(s.ForeignStreakDays) >= 2 && (
 													<span
-														className={`text-[9px] font-extrabold font-mono ${
+														className={`text-xs font-bold font-mono ${
 															s.ForeignStreakDays > 0
-																? "text-emerald-600"
-																: "text-rose-600"
+																? "text-emerald-700"
+																: "text-rose-700"
 														}`}
 													>
 														{s.ForeignStreakDays > 0
@@ -707,18 +950,18 @@ export default function SmartTable({
 										<td className="py-3 px-3 text-right text-xs font-medium tabular-nums text-slate-800">
 											{s.RelativeStrength == null
 												? "Unavailable"
-												: s.RelativeStrength.toFixed(2) + " pp"}
+												: `${s.RelativeStrength.toFixed(2)} pp`}
 										</td>
 									)}
 									<td className="py-3 px-3 text-center">
-										<span className="inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/60">
+										<span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/60">
 											{s.Opportunity}
 										</span>
 									</td>
 
 									<td className="py-3 px-5 text-right">
 										<span
-											className={`inline-flex items-center justify-center min-w-[32px] h-7 px-2 rounded-lg text-xs font-black tabular-nums ${
+											className={`inline-flex items-center justify-center min-w-[36px] h-7 px-2 rounded-lg text-xs font-bold tabular-nums ${
 												s.CompositeScore >= 80
 													? "bg-indigo-600 text-white shadow-xs"
 													: s.CompositeScore >= 60
@@ -740,20 +983,26 @@ export default function SmartTable({
 
 			{/* Load More Footer */}
 			{limit < filteredStocks.length && (
-				<div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center px-6">
-					<p className="text-xs font-bold text-slate-400">
+				<div
+					className={`p-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-3 px-5 sm:px-6 ${
+						embedded ? "rounded-b-3xl" : "rounded-b-3xl"
+					}`}
+				>
+					<p className="text-xs font-semibold text-slate-600 tabular-nums">
 						Showing {sortedStocks.length} of {filteredStocks.length} instruments
 					</p>
-					<div className="flex gap-2">
+					<div className="flex flex-wrap gap-2">
 						<button
+							type="button"
 							onClick={() => setLimit((l) => l + 50)}
-							className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:text-indigo-600 hover:border-indigo-200 rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
+							className="min-h-11 px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:text-indigo-700 hover:border-indigo-200 rounded-xl transition-colors shadow-2xs active:scale-95 cursor-pointer"
 						>
 							Load 50 More
 						</button>
 						<button
+							type="button"
 							onClick={() => setLimit(filteredStocks.length)}
-							className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl transition-all hover:bg-slate-800 active:scale-95 cursor-pointer shadow-xs"
+							className="min-h-11 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors hover:bg-slate-800 active:scale-95 cursor-pointer shadow-xs"
 						>
 							Show All ({filteredStocks.length})
 						</button>

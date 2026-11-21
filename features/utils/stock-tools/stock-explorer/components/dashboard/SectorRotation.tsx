@@ -54,22 +54,22 @@ export default function SectorRotation({ stocks }: SectorRotationProps) {
 	);
 
 	return (
-		<div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs">
+		<div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs">
 			<div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
 				<div className="flex items-center gap-2.5">
-					<div className="p-2 rounded-xl bg-slate-100 text-slate-700">
+					<div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 flex items-center justify-center shrink-0">
 						<PieChart className="w-4 h-4" />
 					</div>
 					<div>
-						<h3 className="text-xs font-black uppercase tracking-wider text-slate-900">
-							Sector Performance
+						<h3 className="text-sm font-bold text-slate-900 tracking-tight">
+							Sector performance
 						</h3>
-						<p className="text-[10px] font-bold text-slate-400">
-							Average Return by Industry Group
+						<p className="text-xs font-medium text-slate-600">
+							Average return by industry group
 						</p>
 					</div>
 				</div>
-				<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+				<span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg">
 					{sectorStats.length} Sectors
 				</span>
 			</div>
@@ -82,15 +82,15 @@ export default function SectorRotation({ stocks }: SectorRotationProps) {
 					return (
 						<div key={sector.name} className="relative">
 							<div className="flex justify-between items-center mb-1 text-xs">
-								<span className="font-bold text-slate-700 truncate pr-2">
+								<span className="font-bold text-slate-800 truncate pr-2">
 									{sector.name}{" "}
-									<span className="text-[10px] font-medium text-slate-400">
+									<span className="text-xs font-medium text-slate-600">
 										({sector.count})
 									</span>
 								</span>
 								<span
-									className={`font-black tabular-nums ${
-										isPositive ? "text-emerald-600" : "text-rose-600"
+									className={`font-bold tabular-nums ${
+										isPositive ? "text-emerald-700" : "text-rose-700"
 									}`}
 								>
 									{isPositive ? "+" : ""}

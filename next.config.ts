@@ -61,6 +61,10 @@ const nextConfig: NextConfig = {
 				protocol: "https",
 				hostname: "**.thesportsdb.com",
 			},
+			{
+				protocol: "https",
+				hostname: "**.pinimg.com",
+			},
 		],
 		// Device sizes for responsive images - optimized for common breakpoints
 		deviceSizes: [640, 750, 828, 1080, 1200, 1920],

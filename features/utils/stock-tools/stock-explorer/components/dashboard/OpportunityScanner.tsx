@@ -137,18 +137,18 @@ export default function OpportunityScanner({
 	const ActiveIcon = activeMeta.icon;
 
 	return (
-		<div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col h-full">
+		<div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 shadow-xs flex flex-col h-full">
 			{/* Header */}
-			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
 				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center shrink-0">
-						<SlidersHorizontal className="w-5 h-5 text-indigo-400" />
+					<div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 flex items-center justify-center shrink-0">
+						<SlidersHorizontal className="w-5 h-5" />
 					</div>
 					<div>
-						<h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+						<h3 className="text-base font-bold text-slate-900 tracking-tight">
 							Opportunity Scanner
 						</h3>
-						<p className="text-xs font-medium text-slate-500">
+						<p className="text-xs font-medium text-slate-600">
 							Algorithmic categorization based on active market setups and flow
 						</p>
 					</div>
@@ -156,13 +156,14 @@ export default function OpportunityScanner({
 
 				{/* In-Card Search */}
 				<div className="relative w-full sm:w-56">
-					<Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+					<Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
 					<input
 						type="text"
+						aria-label="Filter category tickers"
 						placeholder="Filter category..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
-						className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+						className="w-full min-h-11 bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
 					/>
 				</div>
 			</div>
@@ -178,30 +179,31 @@ export default function OpportunityScanner({
 						<button
 							key={cat.key}
 							type="button"
+							aria-pressed={isActive}
 							onClick={() => {
 								setActiveCategory(cat.key);
 								setSearchQuery("");
 							}}
-							className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+							className={`min-h-11 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer border ${
 								isActive
 									? "bg-slate-900 text-white border-slate-900 shadow-xs"
-									: "bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50 hover:text-slate-900"
+									: "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50 hover:text-slate-950"
 							}`}
 						>
 							<Icon
-								className={`w-3.5 h-3.5 ${isActive ? "text-indigo-400" : "text-slate-400"}`}
+								className={`w-3.5 h-3.5 ${isActive ? "text-indigo-300" : "text-slate-500"}`}
 							/>
 							<span>{cat.label}</span>
 							{isCounterRegime && (
 								<AlertTriangle
-									className={`w-3 h-3 ${isActive ? "text-amber-300" : "text-amber-500"}`}
+									className={`w-3.5 h-3.5 ${isActive ? "text-amber-300" : "text-amber-600"}`}
 								/>
 							)}
 							<span
-								className={`text-[10px] px-1.5 py-0.2 rounded-md ${
+								className={`text-xs px-1.5 py-0.5 rounded-md tabular-nums ${
 									isActive
-										? "bg-slate-800 text-slate-300"
-										: "bg-slate-100 text-slate-500"
+										? "bg-slate-800 text-slate-200"
+										: "bg-slate-100 text-slate-700"
 								}`}
 							>
 								{count}
@@ -213,16 +215,16 @@ export default function OpportunityScanner({
 
 			{/* Counter-Regime Warning Banner when viewing tactical scalp/breakout in Defensive/Stress */}
 			{isDefensiveOrStress && activeMeta.isTacticalSwing && (
-				<div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2 text-xs text-amber-900">
-					<div className="flex items-center gap-2 font-bold">
-						<AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+				<div className="mb-4 p-3.5 rounded-2xl bg-white border border-amber-200/90 border-l-4 border-l-amber-500 flex items-center justify-between gap-2 text-xs text-slate-800">
+					<div className="flex items-start gap-2 font-semibold leading-relaxed">
+						<AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
 						<span>
-							Counter-Regime Warning: IHSG Compass is in{" "}
-							<span className="uppercase font-black">
+							Counter-regime warning: IHSG Compass is in{" "}
+							<strong className="font-bold text-slate-900">
 								{compassBridge?.effectiveState}
-							</span>{" "}
+							</strong>{" "}
 							mode (
-							{compassBridge?.isTradingLocked ? "SWING LOCKED" : "CAUTIOUS"}).
+							{compassBridge?.isTradingLocked ? "swing locked" : "cautious"}).
 							Avoid chasing breakouts; prioritize Foreign Stealth or Blue-Chip
 							Pullback.
 						</span>
@@ -234,11 +236,11 @@ export default function OpportunityScanner({
 			<div className="flex-1 overflow-y-auto pr-1 space-y-2.5 max-h-[520px]">
 				{filteredStocks.length === 0 ? (
 					<div className="h-64 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 rounded-2xl">
-						<ActiveIcon className="w-8 h-8 text-slate-300 mb-2" />
-						<p className="text-xs font-extrabold text-slate-700">
+						<ActiveIcon className="w-8 h-8 text-slate-400 mb-2" />
+						<p className="text-xs font-bold text-slate-800">
 							No stocks match &quot;{activeMeta.label}&quot;
 						</p>
-						<p className="text-[11px] font-medium text-slate-400 mt-1 max-w-xs">
+						<p className="text-xs font-medium text-slate-600 mt-1 max-w-xs">
 							{searchQuery
 								? "Try a different search keyword or clear the filter."
 								: "No instruments currently meet the setup criteria for this category."}
@@ -248,25 +250,26 @@ export default function OpportunityScanner({
 					filteredStocks.map((s) => {
 						const metric = getCategoryPrimaryMetric(s, activeCategory);
 						return (
-							<div
+							<button
 								key={s.StockCode}
+								type="button"
 								onClick={() => handleSelect(s)}
-								className="flex items-center justify-between p-3.5 bg-slate-50/70 hover:bg-white rounded-2xl border border-slate-200/60 hover:border-indigo-200 hover:shadow-xs transition-all cursor-pointer group"
+								className="w-full text-left flex items-center justify-between gap-3 p-3.5 bg-slate-50/70 hover:bg-white rounded-2xl border border-slate-200/70 hover:border-indigo-200 hover:shadow-xs transition-colors cursor-pointer group focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								<div className="flex items-center gap-3 min-w-0">
-									<div className="w-9 h-9 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center font-black text-xs text-slate-900 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-colors shrink-0">
+									<div className="w-9 h-9 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center font-bold text-xs text-slate-900 group-hover:text-indigo-700 group-hover:border-indigo-200 transition-colors shrink-0">
 										{s.StockCode.slice(0, 2)}
 									</div>
 									<div className="min-w-0">
 										<div className="flex items-center gap-2">
-											<p className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+											<p className="text-xs font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
 												{s.StockCode}
 											</p>
-											<span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded truncate">
+											<span className="text-xs font-medium text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md truncate">
 												{s.Sector}
 											</span>
 										</div>
-										<p className="text-[11px] font-medium text-slate-500 truncate max-w-[130px] sm:max-w-[200px]">
+										<p className="text-xs font-medium text-slate-600 truncate max-w-[140px] sm:max-w-[200px]">
 											{s.StockName}
 										</p>
 									</div>
@@ -274,24 +277,24 @@ export default function OpportunityScanner({
 
 								<div className="flex items-center gap-3 sm:gap-4 text-right shrink-0">
 									<div>
-										<p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">
+										<p className="text-xs font-semibold text-slate-600">
 											Price
 										</p>
-										<p className="text-xs font-black text-slate-900">
-											{s.Close.toLocaleString()}
+										<p className="text-xs font-bold tabular-nums text-slate-900">
+											{s.Close.toLocaleString("id-ID")}
 										</p>
 									</div>
 
 									<div className="w-14 sm:w-16">
-										<p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">
+										<p className="text-xs font-semibold text-slate-600">
 											Trend
 										</p>
 										<p
-											className={`text-xs font-black ${
+											className={`text-xs font-bold tabular-nums ${
 												s.ChangePct > 0
-													? "text-emerald-600"
+													? "text-emerald-700"
 													: s.ChangePct < 0
-														? "text-rose-600"
+														? "text-rose-700"
 														: "text-slate-600"
 											}`}
 										>
@@ -301,20 +304,20 @@ export default function OpportunityScanner({
 									</div>
 
 									<div className="min-w-16 text-right">
-										<p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">
+										<p className="text-xs font-semibold text-slate-600">
 											{metric.label}
 										</p>
 										<span
-											className={`inline-block text-[11px] font-black px-2 py-0.5 rounded-lg border ${
+											className={`inline-block text-xs font-bold px-2 py-0.5 rounded-lg border tabular-nums ${
 												metric.colorClass ||
-												"bg-slate-100 text-slate-700 border-slate-200"
+												"bg-slate-100 text-slate-800 border-slate-200"
 											}`}
 										>
 											{metric.value}
 										</span>
 									</div>
 								</div>
-							</div>
+							</button>
 						);
 					})
 				)}

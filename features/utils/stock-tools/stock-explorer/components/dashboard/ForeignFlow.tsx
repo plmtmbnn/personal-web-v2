@@ -49,37 +49,36 @@ export default function ForeignFlow({
 				<div className="flex items-center gap-1.5 mb-3">
 					{icon}
 					<h4
-						className={`text-[11px] font-black uppercase tracking-wider ${
-							isBuy ? "text-emerald-700" : "text-rose-700"
+						className={`text-xs font-bold ${
+							isBuy ? "text-emerald-800" : "text-rose-800"
 						}`}
 					>
 						{title}
 					</h4>
 				</div>
-				<div className="space-y-2.5">
+				<div className="space-y-2">
 					{data.map((s, idx) => (
-						<div
+						<button
 							key={s.StockCode}
+							type="button"
 							onClick={() => handleSelect(s)}
 							title={`${s.StockCode} (${s.StockName})\nNet Foreign Value: ${formatBillions(s.ForeignNet)} IDR\nNet Foreign Volume: ${(s.ForeignNetVol / 1e6).toFixed(2)}M shares (${fmtLots(s.ForeignNetVol)})`}
-							className="group cursor-pointer hover:bg-slate-50 p-2 rounded-xl transition-all border border-transparent hover:border-slate-200/60"
+							className="w-full text-left group cursor-pointer hover:bg-slate-50 p-2.5 rounded-xl transition-colors border border-transparent hover:border-slate-200/70 focus-visible:outline-2 focus-visible:outline-indigo-600"
 						>
 							<div className="flex justify-between items-center mb-1">
-								<span className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
-									<span className="text-[10px] text-slate-400 font-extrabold mr-1.5">
+								<span className="text-xs font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">
+									<span className="text-xs text-slate-600 font-semibold mr-1.5 tabular-nums">
 										{idx + 1}.
 									</span>
 									{s.StockCode}
 								</span>
-								<div className="text-right">
-									<span
-										className={`text-xs font-black tabular-nums block ${
-											isBuy ? "text-emerald-600" : "text-rose-600"
-										}`}
-									>
-										{formatBillions(s.ForeignNet)}
-									</span>
-								</div>
+								<span
+									className={`text-xs font-bold tabular-nums ${
+										isBuy ? "text-emerald-700" : "text-rose-700"
+									}`}
+								>
+									{formatBillions(s.ForeignNet)}
+								</span>
 							</div>
 							<div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
 								<div
@@ -91,7 +90,7 @@ export default function ForeignFlow({
 									}}
 								/>
 							</div>
-						</div>
+						</button>
 					))}
 				</div>
 			</div>
@@ -99,36 +98,36 @@ export default function ForeignFlow({
 	};
 
 	return (
-		<div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+		<div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
 			<div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
 				<div className="flex items-center gap-2.5">
-					<div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+					<div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
 						<Globe className="w-4 h-4" />
 					</div>
 					<div>
-						<h3 className="text-xs font-black uppercase tracking-wider text-slate-900">
-							Foreign Capital Flow
+						<h3 className="text-sm font-bold text-slate-900 tracking-tight">
+							Foreign capital flow
 						</h3>
-						<p className="text-[10px] font-bold text-slate-400">
-							Institutional Net Inflow &amp; Outflow
+						<p className="text-xs font-medium text-slate-600">
+							Institutional net inflow &amp; outflow
 						</p>
 					</div>
 				</div>
-				<span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+				<span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg">
 					Regular IDR
 				</span>
 			</div>
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 				{renderList(
-					"Top Inflow (Accumulation)",
-					<ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" />,
+					"Top Inflow",
+					<ArrowUpRight className="w-3.5 h-3.5 text-emerald-700" />,
 					topBuy,
 					true,
 				)}
 				{renderList(
-					"Top Outflow (Distribution)",
-					<ArrowDownRight className="w-3.5 h-3.5 text-rose-600" />,
+					"Top Outflow",
+					<ArrowDownRight className="w-3.5 h-3.5 text-rose-700" />,
 					topSell,
 					false,
 				)}

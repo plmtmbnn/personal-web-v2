@@ -57,15 +57,16 @@ export function JournalFilterToolbar({
 			<div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
 				{/* Search Bar */}
 				<div className="relative flex-1">
-					<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+					<Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
 					<input
 						type="text"
+						aria-label="Search closed ticker or company"
 						value={filter.search}
 						onChange={(e) =>
 							onFilterChange({ ...filter, search: e.target.value })
 						}
 						placeholder="Search closed ticker or company..."
-						className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+						className="w-full min-h-11 pl-10 pr-4 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-900 placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
 					/>
 				</div>
 
@@ -74,7 +75,7 @@ export function JournalFilterToolbar({
 					<button
 						type="button"
 						onClick={() => onFilterChange({ ...filter, outcome: "all" })}
-						className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+						className={`min-h-11 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
 							filter.outcome === "all"
 								? "bg-white text-slate-900 shadow-xs"
 								: "text-slate-600 hover:text-slate-900"
@@ -85,9 +86,9 @@ export function JournalFilterToolbar({
 					<button
 						type="button"
 						onClick={() => onFilterChange({ ...filter, outcome: "win" })}
-						className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+						className={`min-h-11 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
 							filter.outcome === "win"
-								? "bg-emerald-600 text-white shadow-xs"
+								? "bg-emerald-700 text-white shadow-xs"
 								: "text-slate-600 hover:text-slate-900"
 						}`}
 					>
@@ -96,9 +97,9 @@ export function JournalFilterToolbar({
 					<button
 						type="button"
 						onClick={() => onFilterChange({ ...filter, outcome: "loss" })}
-						className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+						className={`min-h-11 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
 							filter.outcome === "loss"
-								? "bg-rose-600 text-white shadow-xs"
+								? "bg-rose-700 text-white shadow-xs"
 								: "text-slate-600 hover:text-slate-900"
 						}`}
 					>
@@ -112,7 +113,7 @@ export function JournalFilterToolbar({
 						<button
 							type="button"
 							onClick={onResetFilter}
-							className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+							className="min-h-11 flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
 						>
 							<RotateCcw className="w-3.5 h-3.5" />
 							<span>Reset</span>
@@ -121,7 +122,7 @@ export function JournalFilterToolbar({
 					<button
 						type="button"
 						onClick={onExportJson}
-						className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+						className="min-h-11 flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
 					>
 						<Download className="w-3.5 h-3.5" />
 						<span>Export Ledger</span>
@@ -135,7 +136,7 @@ export function JournalFilterToolbar({
 				<div>
 					<label
 						htmlFor="filter-horizon"
-						className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1"
+						className="block text-xs font-bold text-slate-600 mb-1"
 					>
 						Time Horizon
 					</label>
@@ -148,7 +149,7 @@ export function JournalFilterToolbar({
 								horizon: e.target.value as ClosedTradesFilter["horizon"],
 							})
 						}
-						className="w-full px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
+						className="w-full min-h-11 px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
 					>
 						<option value="all">All-Time Horizon</option>
 						<option value="30d">Last 30 Days</option>
@@ -161,7 +162,7 @@ export function JournalFilterToolbar({
 				<div>
 					<label
 						htmlFor="filter-thesis"
-						className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1"
+						className="block text-xs font-bold text-slate-600 mb-1"
 					>
 						Investment Thesis
 					</label>
@@ -174,7 +175,7 @@ export function JournalFilterToolbar({
 								thesis: e.target.value as ClosedTradesFilter["thesis"],
 							})
 						}
-						className="w-full px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
+						className="w-full min-h-11 px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
 					>
 						{THESIS_OPTIONS.map((opt) => (
 							<option key={opt.value} value={opt.value}>
@@ -188,7 +189,7 @@ export function JournalFilterToolbar({
 				<div>
 					<label
 						htmlFor="filter-exit-reason"
-						className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1"
+						className="block text-xs font-bold text-slate-600 mb-1"
 					>
 						Exit Discipline Reason
 					</label>
@@ -201,7 +202,7 @@ export function JournalFilterToolbar({
 								exitReason: e.target.value as ClosedTradesFilter["exitReason"],
 							})
 						}
-						className="w-full px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
+						className="w-full min-h-11 px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
 					>
 						{EXIT_REASON_OPTIONS.map((opt) => (
 							<option key={opt.value} value={opt.value}>

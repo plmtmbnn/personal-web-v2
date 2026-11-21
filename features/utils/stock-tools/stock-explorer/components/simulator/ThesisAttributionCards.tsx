@@ -23,15 +23,15 @@ export function ThesisAttributionCards({
 							<Compass className="w-4 h-4" />
 						</div>
 						<div>
-							<h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+							<h2 className="text-sm font-bold text-slate-900">
 								Investment Compass Alpha Attribution
 							</h2>
-							<p className="text-[11px] text-slate-400">
+							<p className="text-xs text-slate-600">
 								Win rate and return broken down by core thesis
 							</p>
 						</div>
 					</div>
-					<span className="text-[11px] font-mono font-semibold text-slate-500">
+					<span className="text-xs font-mono font-semibold text-slate-600">
 						{summary.thesisBreakdown.length} Theses Tested
 					</span>
 				</div>
@@ -49,14 +49,14 @@ export function ThesisAttributionCards({
 										<span className="text-xs font-bold text-slate-800">
 											{item.thesis}
 										</span>
-										<span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200/60 font-mono text-slate-600">
+										<span className="text-xs px-1.5 py-0.5 rounded-md bg-slate-200/60 font-mono text-slate-700">
 											{item.count} {item.count === 1 ? "trade" : "trades"}
 										</span>
 									</div>
 									<div className="text-right">
 										<span
 											className={`text-xs font-bold font-mono ${
-												isProfit ? "text-emerald-600" : "text-rose-600"
+												isProfit ? "text-emerald-700" : "text-rose-700"
 											}`}
 										>
 											{item.totalPlNominal >= 0 ? "+" : ""}
@@ -67,9 +67,9 @@ export function ThesisAttributionCards({
 
 								{/* Win Rate Progress Bar */}
 								<div>
-									<div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+									<div className="flex items-center justify-between text-xs text-slate-600 mb-1">
 										<span>Win Rate</span>
-										<span className="font-mono font-semibold text-slate-700">
+										<span className="font-mono font-semibold text-slate-800">
 											{item.winRate}%
 										</span>
 									</div>
@@ -96,15 +96,15 @@ export function ThesisAttributionCards({
 							<ShieldCheck className="w-4 h-4" />
 						</div>
 						<div>
-							<h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+							<h2 className="text-sm font-bold text-slate-900">
 								Exit Discipline & Execution Quality
 							</h2>
-							<p className="text-[11px] text-slate-400">
+							<p className="text-xs text-slate-600">
 								Auditing adherence to profit targets vs discretionary cuts
 							</p>
 						</div>
 					</div>
-					<span className="text-[11px] font-mono font-semibold text-slate-500">
+					<span className="text-xs font-mono font-semibold text-slate-600">
 						{summary.totalClosed} Exits
 					</span>
 				</div>
@@ -127,14 +127,14 @@ export function ThesisAttributionCards({
 										<span className="text-xs font-bold text-slate-800">
 											{badge.label}
 										</span>
-										<span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200/60 font-mono text-slate-600">
+										<span className="text-xs px-1.5 py-0.5 rounded-md bg-slate-200/60 font-mono text-slate-700">
 											{item.count} ({pctOfTotal}%)
 										</span>
 									</div>
 									<div className="text-right">
 										<span
 											className={`text-xs font-bold font-mono ${
-												isProfit ? "text-emerald-600" : "text-rose-600"
+												isProfit ? "text-emerald-700" : "text-rose-700"
 											}`}
 										>
 											{item.totalPlNominal >= 0 ? "+" : ""}
@@ -145,9 +145,9 @@ export function ThesisAttributionCards({
 
 								{/* Frequency Bar */}
 								<div>
-									<div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+									<div className="flex items-center justify-between text-xs text-slate-600 mb-1">
 										<span>Discipline Frequency</span>
-										<span className="font-mono font-semibold text-slate-700">
+										<span className="font-mono font-semibold text-slate-800">
 											{pctOfTotal}% of trades
 										</span>
 									</div>

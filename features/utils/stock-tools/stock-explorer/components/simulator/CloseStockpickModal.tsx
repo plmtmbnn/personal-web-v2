@@ -150,15 +150,15 @@ export function CloseStockpickModal({
 								{pick.sector}
 							</span>
 						</div>
-						<p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-							{pick.stockName} • Close & Journal Position
+						<p className="text-xs text-slate-600 mt-0.5 line-clamp-1">
+							{pick.stockName} - Close &amp; Journal Position
 						</p>
 					</div>
 
 					<button
 						type="button"
 						onClick={saving ? undefined : onClose}
-						className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+						className="min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
 						aria-label="Close modal"
 					>
 						<X className="w-5 h-5" />
@@ -184,11 +184,11 @@ export function CloseStockpickModal({
 						}`}
 					>
 						<div className="flex items-center justify-between mb-2">
-							<span className="text-xs font-semibold text-slate-600">
+							<span className="text-xs font-semibold text-slate-700">
 								Simulated Realized Outcome
 							</span>
 							<span
-								className={`text-xs font-bold font-mono px-2 py-0.5 rounded-full ${
+								className={`text-xs font-bold font-mono px-2 py-0.5 rounded-lg ${
 									isProfitable
 										? "bg-emerald-100 text-emerald-800"
 										: "bg-rose-100 text-rose-800"
@@ -207,7 +207,7 @@ export function CloseStockpickModal({
 								{realizedPnlNominal >= 0 ? "+" : ""}
 								{fmtIDRPrice(realizedPnlNominal)}
 							</span>
-							<span className="text-xs text-slate-500 font-medium">
+							<span className="text-xs text-slate-600 font-medium">
 								{pick.quantityLots} Lots ({totalShares.toLocaleString("id-ID")}{" "}
 								Shares)
 							</span>
@@ -216,26 +216,26 @@ export function CloseStockpickModal({
 						{/* Watermark Reflection */}
 						<div className="mt-3 pt-3 border-t border-slate-200/50 grid grid-cols-3 gap-2 text-center text-xs">
 							<div>
-								<span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+								<span className="text-slate-600 block text-xs font-bold">
 									Entry Price
 								</span>
-								<span className="font-mono font-semibold text-slate-700">
+								<span className="font-mono font-semibold text-slate-800">
 									{fmtIDRPrice(pick.buyPrice)}
 								</span>
 							</div>
 							<div>
-								<span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+								<span className="text-slate-600 block text-xs font-bold">
 									Peak Excursion
 								</span>
-								<span className="font-mono font-semibold text-emerald-600">
+								<span className="font-mono font-semibold text-emerald-700">
 									{fmtSignedPct(pick.peakGainPct)}
 								</span>
 							</div>
 							<div>
-								<span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+								<span className="text-slate-600 block text-xs font-bold">
 									Max Drawdown
 								</span>
-								<span className="font-mono font-semibold text-rose-600">
+								<span className="font-mono font-semibold text-rose-700">
 									{fmtSignedPct(pick.maxDrawdownPct)}
 								</span>
 							</div>
@@ -246,12 +246,12 @@ export function CloseStockpickModal({
 					<div>
 						<label
 							htmlFor="close-exit-price"
-							className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+							className="block text-xs font-bold text-slate-700 mb-1.5"
 						>
 							Exit Realization Price (IDR)
 						</label>
 						<div className="relative">
-							<span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+							<span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-600 pointer-events-none z-10">
 								Rp
 							</span>
 							<input
@@ -261,11 +261,11 @@ export function CloseStockpickModal({
 								step="1"
 								value={exitPrice || ""}
 								onChange={(e) => setExitPrice(Number(e.target.value) || 0)}
-								className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+								className="w-full min-h-11 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
 								required
 							/>
 						</div>
-						<p className="text-[11px] text-slate-400 mt-1">
+						<p className="text-xs text-slate-600 mt-1">
 							Defaulted to latest session quote. Adjust if you simulated an
 							earlier or limit fill.
 						</p>
@@ -273,7 +273,7 @@ export function CloseStockpickModal({
 
 					{/* Exit Reason Radio Group */}
 					<div>
-						<span className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+						<span className="block text-xs font-bold text-slate-700 mb-2">
 							Execution & Discipline Reason
 						</span>
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -285,7 +285,7 @@ export function CloseStockpickModal({
 										key={r.value}
 										type="button"
 										onClick={() => setExitReason(r.value)}
-										className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
+										className={`min-h-11 p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
 											isSelected
 												? "bg-slate-900 text-white border-slate-900 shadow-xs"
 												: "bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700"
@@ -293,7 +293,7 @@ export function CloseStockpickModal({
 									>
 										<Icon
 											className={`w-4 h-4 shrink-0 mt-0.5 ${
-												isSelected ? "text-white" : "text-slate-400"
+												isSelected ? "text-white" : "text-slate-500"
 											}`}
 										/>
 										<div>
@@ -301,8 +301,8 @@ export function CloseStockpickModal({
 												{r.label}
 											</span>
 											<span
-												className={`block text-[10px] mt-0.5 line-clamp-1 ${
-													isSelected ? "text-slate-300" : "text-slate-400"
+												className={`block text-xs mt-0.5 line-clamp-1 ${
+													isSelected ? "text-slate-200" : "text-slate-600"
 												}`}
 											>
 												{r.desc}
@@ -318,19 +318,19 @@ export function CloseStockpickModal({
 					<div>
 						<label
 							htmlFor="close-exit-notes"
-							className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+							className="block text-xs font-bold text-slate-700 mb-1.5"
 						>
 							Post-Trade Reflection & Retrospective Notes
 						</label>
 						<div className="relative">
-							<FileText className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+							<FileText className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none z-10" />
 							<textarea
 								id="close-exit-notes"
 								rows={3}
 								value={exitNotes}
 								onChange={(e) => setExitNotes(e.target.value)}
 								placeholder="What did you learn? Did you stick to your initial Investment Compass thesis? Did emotional friction occur?"
-								className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all resize-none"
+								className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all resize-none"
 							/>
 						</div>
 					</div>
@@ -340,16 +340,16 @@ export function CloseStockpickModal({
 						<button
 							type="button"
 							onClick={saving ? undefined : onClose}
-							className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+							className="min-h-11 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
 						>
 							Cancel
 						</button>
 						<button
 							type="submit"
 							disabled={saving}
-							className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
+							className={`min-h-11 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
 								isProfitable
-									? "bg-emerald-600 hover:bg-emerald-700 text-white"
+									? "bg-emerald-700 hover:bg-emerald-800 text-white"
 									: "bg-slate-900 hover:bg-slate-800 text-white"
 							}`}
 						>

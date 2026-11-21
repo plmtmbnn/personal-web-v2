@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
 import {
 	TrendingUp,
 	TrendingDown,
@@ -16,7 +15,6 @@ interface HeroOverviewProps {
 }
 
 export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
-	const reduceMotion = useReducedMotion();
 	const {
 		marketReturn,
 		sentimentScore,
@@ -49,26 +47,22 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 	return (
 		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 			{/* IHSG Return (Cap-Weighted) + Integrated Breadth Bar */}
-			<motion.div
-				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-				animate={{ opacity: 1, y: 0 }}
-				className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between"
-			>
+			<div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
 				<div className="flex justify-between items-start mb-3">
 					<div>
-						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-							Market Return &amp; Breadth
+						<p className="text-xs font-bold text-slate-600">
+							Market return &amp; breadth
 						</p>
-						<h2 className="text-3xl font-black text-slate-900 mt-1 tracking-tight tabular-nums">
+						<h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 tracking-tight tabular-nums">
 							{marketReturn > 0 ? "+" : ""}
 							{marketReturn.toFixed(2)}%
 						</h2>
 					</div>
 					<div
-						className={`p-3 rounded-2xl ${
+						className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
 							marketReturn >= 0
-								? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-								: "bg-rose-50 text-rose-600 border border-rose-100"
+								? "bg-emerald-50 text-emerald-700 border border-emerald-200/80"
+								: "bg-rose-50 text-rose-700 border border-rose-200/80"
 						}`}
 					>
 						{marketReturn >= 0 ? (
@@ -96,89 +90,77 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 							className="bg-rose-500 h-full"
 						/>
 					</div>
-					<div className="flex items-center justify-between text-[10px] font-bold">
-						<span className="text-emerald-600 font-extrabold">
+					<div className="flex items-center justify-between text-xs font-semibold tabular-nums">
+						<span className="text-emerald-700">
 							{advancers} Up ({advPct}%)
 						</span>
-						<span className="text-slate-400">{unchanged} Flat</span>
-						<span className="text-rose-600 font-extrabold">
-							{decliners} Down
-						</span>
+						<span className="text-slate-600">{unchanged} Flat</span>
+						<span className="text-rose-700">{decliners} Down</span>
 					</div>
 				</div>
-			</motion.div>
+			</div>
 
-			{/* Market Composite Score (Pure White Container Standard) */}
-			<motion.div
-				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ delay: 0.05 }}
-				className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between"
-			>
+			{/* Market Composite Score */}
+			<div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
 				<div className="flex justify-between items-start mb-4">
 					<div>
-						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-							Market Composite Score
+						<p className="text-xs font-bold text-slate-600">
+							Market composite score
 						</p>
-						<h2 className="text-3xl font-black text-slate-900 mt-1 tracking-tight tabular-nums">
+						<h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 tracking-tight tabular-nums">
 							{sentimentScore}{" "}
-							<span className="text-sm font-semibold text-slate-400">
+							<span className="text-sm font-semibold text-slate-500">
 								/ 100
 							</span>
 						</h2>
 					</div>
-					<div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+					<div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
 						<Activity className="w-5 h-5" />
 					</div>
 				</div>
-				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
+				<div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-slate-100">
 					<span
-						className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${
+						className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
 							sentimentScore >= 60
-								? "bg-emerald-50 text-emerald-700 border-emerald-200"
+								? "bg-emerald-50 text-emerald-800 border-emerald-200"
 								: sentimentScore <= 40
-									? "bg-rose-50 text-rose-700 border-rose-200"
-									: "bg-amber-50 text-amber-700 border-amber-200"
+									? "bg-rose-50 text-rose-800 border-rose-200"
+									: "bg-amber-50 text-amber-800 border-amber-200"
 						}`}
 					>
 						{sentimentLabel}
 					</span>
-					<span className="text-[10px] font-bold text-slate-400">
-						Microstructure Index
+					<span className="text-xs font-medium text-slate-600">
+						Microstructure index
 					</span>
 				</div>
-			</motion.div>
+			</div>
 
-			{/* Foreign Net Flow (Dual Value & Volume) */}
-			<motion.div
-				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ delay: 0.1 }}
-				className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between"
-			>
+			{/* Foreign Net Flow */}
+			<div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
 				<div className="flex justify-between items-start mb-4">
 					<div>
 						<div className="flex items-center gap-1.5">
-							<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-								Foreign Net Flow
+							<p className="text-xs font-bold text-slate-600">
+								Foreign net flow
 							</p>
-							<span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.2 rounded">
+							<span className="text-xs font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md">
 								Regular
 							</span>
 						</div>
 						<h2
-							className={`text-3xl font-black mt-1 tracking-tight ${
-								netForeignValue > 0 ? "text-emerald-600" : "text-rose-600"
+							className={`text-2xl sm:text-3xl font-bold mt-1 tracking-tight tabular-nums ${
+								netForeignValue >= 0 ? "text-emerald-700" : "text-rose-700"
 							}`}
 						>
 							{netForeignValue > 0 ? "+" : ""}
 							{formatBillions(netForeignValue)}
 						</h2>
-						<p className="text-[11px] font-bold text-slate-500 mt-0.5">
-							{netForeignVolume < 0 ? "Net Sell" : "Net Buy"}:{" "}
+						<p className="text-xs font-semibold text-slate-600 mt-0.5 tabular-nums">
+							{netForeignVolume < 0 ? "Net sell" : "Net buy"}:{" "}
 							<span
-								className={`font-black ${
-									netForeignVolume < 0 ? "text-rose-600" : "text-emerald-600"
+								className={`font-bold ${
+									netForeignVolume < 0 ? "text-rose-700" : "text-emerald-700"
 								}`}
 							>
 								{formatBillions(netForeignVolume)}
@@ -186,54 +168,47 @@ export default function HeroOverview({ marketHealth }: HeroOverviewProps) {
 							vol
 						</p>
 					</div>
-					<div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+					<div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
 						<Globe className="w-5 h-5" />
 					</div>
 				</div>
-				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
-					<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
-						Value (Rp)
+				<div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-slate-100">
+					<span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
+						Value (IDR)
 					</span>
 					<span
-						className={`text-[10px] font-extrabold ${
-							netForeignVolume < 0 ? "text-rose-600" : "text-emerald-600"
+						className={`text-xs font-bold tabular-nums ${
+							netForeignVolume < 0 ? "text-rose-700" : "text-emerald-700"
 						}`}
 					>
 						Regular: {formatBillions(netForeignVolume)}
 					</span>
 				</div>
-			</motion.div>
+			</div>
 
 			{/* Total Turnover */}
-			<motion.div
-				initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ delay: 0.15 }}
-				className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between"
-			>
+			<div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
 				<div className="flex justify-between items-start mb-4">
 					<div>
-						<p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-							Total Turnover
-						</p>
-						<h2 className="text-3xl font-black text-slate-900 mt-1 tracking-tight">
+						<p className="text-xs font-bold text-slate-600">Total turnover</p>
+						<h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 tracking-tight tabular-nums">
 							{formatTrillions(totalValue)}
 						</h2>
 					</div>
-					<div className="p-3 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600">
+					<div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 flex items-center justify-center shrink-0">
 						<Coins className="w-5 h-5" />
 					</div>
 				</div>
-				<div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
-					<span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
+				<div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-slate-100">
+					<span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
 						Value (IDR)
 					</span>
-					<span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-						<BarChart2 className="w-3.5 h-3.5 text-slate-400" />
+					<span className="text-xs font-semibold text-slate-600 flex items-center gap-1 tabular-nums">
+						<BarChart2 className="w-3.5 h-3.5 text-slate-500" />
 						{formatBillions(totalVolume, 1)} Vol
 					</span>
 				</div>
-			</motion.div>
+			</div>
 		</div>
 	);
 }

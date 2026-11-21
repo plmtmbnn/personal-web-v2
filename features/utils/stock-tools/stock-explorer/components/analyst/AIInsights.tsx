@@ -27,7 +27,7 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 				);
 			} else {
 				parts.push(
-					`${stock.StockCode} advanced +${stock.ChangePct.toFixed(2)}% with an intraday range between ${stock.Low.toLocaleString()} and ${stock.High.toLocaleString()} IDR.`,
+					`${stock.StockCode} advanced +${stock.ChangePct.toFixed(2)}% with an intraday range between ${stock.Low.toLocaleString("id-ID")} and ${stock.High.toLocaleString("id-ID")} IDR.`,
 				);
 			}
 		} else if (stock.ChangePct < 0) {
@@ -37,12 +37,12 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 				);
 			} else {
 				parts.push(
-					`${stock.StockCode} retreated ${stock.ChangePct.toFixed(2)}% in active trading, oscillating between ${stock.Low.toLocaleString()} and ${stock.High.toLocaleString()} IDR.`,
+					`${stock.StockCode} retreated ${stock.ChangePct.toFixed(2)}% in active trading, oscillating between ${stock.Low.toLocaleString("id-ID")} and ${stock.High.toLocaleString("id-ID")} IDR.`,
 				);
 			}
 		} else {
 			parts.push(
-				`${stock.StockCode} closed flat at ${stock.Close.toLocaleString()} IDR with balanced order book flow.`,
+				`${stock.StockCode} closed flat at ${stock.Close.toLocaleString("id-ID")} IDR with balanced order book flow.`,
 			);
 		}
 
@@ -120,10 +120,10 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 			(vwap > 0 ? ((stock.Close - vwap) / vwap) * 100 : 0);
 		const vwapPhrase =
 			vwapDelta >= 0.5
-				? `holding +${vwapDelta.toFixed(2)}% above session VWAP (${Math.round(vwap).toLocaleString()} IDR)`
+				? `holding +${vwapDelta.toFixed(2)}% above session VWAP (${Math.round(vwap).toLocaleString("id-ID")} IDR)`
 				: vwapDelta <= -0.5
-					? `trading ${vwapDelta.toFixed(2)}% below session VWAP (${Math.round(vwap).toLocaleString()} IDR)`
-					: `consolidating near session VWAP (${Math.round(vwap).toLocaleString()} IDR)`;
+					? `trading ${vwapDelta.toFixed(2)}% below session VWAP (${Math.round(vwap).toLocaleString("id-ID")} IDR)`
+					: `consolidating near session VWAP (${Math.round(vwap).toLocaleString("id-ID")} IDR)`;
 
 		const streakPhrase =
 			(stock.ForeignStreakDays || 0) >= 2
@@ -193,24 +193,24 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 				: "At VWAP";
 
 	return (
-		<div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 sm:p-6 space-y-4">
+		<div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6 space-y-4">
 			{/* Header */}
-			<div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
+			<div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-200/70">
 				<div className="flex items-center gap-2.5">
 					<div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
 						<Activity className="w-4 h-4" />
 					</div>
 					<div>
-						<h3 className="text-xs font-black uppercase tracking-wider text-slate-900">
+						<h3 className="text-sm font-bold text-slate-900">
 							Quantitative Signal Synthesis
 						</h3>
-						<p className="text-[10px] font-medium text-slate-500">
+						<p className="text-xs font-medium text-slate-600">
 							Multi-factor algorithmic thesis
 						</p>
 					</div>
 				</div>
 				<span
-					className={`px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider border ${ratingColor}`}
+					className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border shrink-0 ${ratingColor}`}
 				>
 					{rating}
 				</span>
@@ -225,12 +225,12 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 			<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
 				{/* Opportunity */}
 				<div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between min-h-[72px]">
-					<div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-						<Activity className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+					<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+						<Activity className="w-3.5 h-3.5 text-slate-500 shrink-0" />
 						<span className="truncate">Opportunity</span>
 					</div>
 					<p
-						className="text-xs sm:text-sm font-black text-indigo-600 truncate mt-1.5"
+						className="text-xs sm:text-sm font-bold text-indigo-700 truncate mt-1.5"
 						title={stock.Opportunity}
 					>
 						{stock.Opportunity}
@@ -239,17 +239,17 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 
 				{/* Foreign Net */}
 				<div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between min-h-[72px]">
-					<div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-						<Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+					<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+						<Globe className="w-3.5 h-3.5 text-slate-500 shrink-0" />
 						<span className="truncate">Foreign Flow</span>
 					</div>
 					<p
-						className={`text-xs sm:text-sm font-black mt-1.5 tabular-nums ${
+						className={`text-xs sm:text-sm font-bold mt-1.5 tabular-nums ${
 							stock.ForeignNet > 0
-								? "text-emerald-600"
+								? "text-emerald-700"
 								: stock.ForeignNet < 0
-									? "text-rose-600"
-									: "text-slate-600"
+									? "text-rose-700"
+									: "text-slate-700"
 						}`}
 					>
 						{fmtIDRNet(stock.ForeignNet)}
@@ -258,15 +258,15 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 
 				{/* Order Book */}
 				<div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between min-h-[72px]">
-					<div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-						<Scale className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+					<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+						<Scale className="w-3.5 h-3.5 text-slate-500 shrink-0" />
 						<span className="truncate">Order Book</span>
 					</div>
 					<div className="flex items-baseline justify-between gap-1 mt-1.5">
-						<span className="text-xs sm:text-sm font-black text-slate-900 tabular-nums">
+						<span className="text-xs sm:text-sm font-bold text-slate-900 tabular-nums">
 							Bid {stock.BidOfferPressure}%
 						</span>
-						<span className="text-[10px] font-bold text-slate-400 tabular-nums">
+						<span className="text-xs font-medium text-slate-600 tabular-nums">
 							{100 - stock.BidOfferPressure}% Ask
 						</span>
 					</div>
@@ -274,37 +274,35 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 
 				{/* Whale Ticket (Avg/Tx) */}
 				<div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between min-h-[72px]">
-					<div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-						<BadgeDollarSign className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+					<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+						<BadgeDollarSign className="w-3.5 h-3.5 text-slate-500 shrink-0" />
 						<span className="truncate">Whale Ticket</span>
 					</div>
 					<div className="flex items-baseline gap-1 mt-1.5">
 						<span
-							className={`text-xs sm:text-sm tabular-nums ${
+							className={`text-xs sm:text-sm font-bold tabular-nums ${
 								stock.AvgValuePerTx >= 35000000
-									? "font-black text-indigo-600"
-									: "font-black text-slate-900"
+									? "text-indigo-700"
+									: "text-slate-900"
 							}`}
 						>
 							{fmtIDRValue(stock.AvgValuePerTx)}
 						</span>
-						<span className="text-[10px] font-bold text-slate-400">
-							/ trade
-						</span>
+						<span className="text-xs font-medium text-slate-600">/ trade</span>
 					</div>
 				</div>
 
 				{/* Cap Tier */}
 				<div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between min-h-[72px]">
-					<div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-						<Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+					<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+						<Building2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
 						<span className="truncate">Cap Tier</span>
 					</div>
 					<div className="flex items-baseline justify-between gap-1 mt-1.5">
-						<span className="text-xs sm:text-sm font-black text-slate-900 truncate">
+						<span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
 							{capTierTitle}
 						</span>
-						<span className="text-[10px] font-bold text-slate-400 shrink-0 tabular-nums">
+						<span className="text-xs font-medium text-slate-600 shrink-0 tabular-nums">
 							{capTierThreshold}
 						</span>
 					</div>
@@ -312,21 +310,21 @@ export default function AIInsights({ stock }: AIInsightsProps) {
 
 				{/* Session VWAP */}
 				<div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between min-h-[72px]">
-					<div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-						<Coins className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+					<div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+						<Coins className="w-3.5 h-3.5 text-slate-500 shrink-0" />
 						<span className="truncate">Session VWAP</span>
 					</div>
 					<div className="flex items-baseline justify-between gap-1 mt-1.5">
-						<span className="text-xs sm:text-sm font-black text-slate-900 tabular-nums">
-							{vwapPrice.toLocaleString()}
+						<span className="text-xs sm:text-sm font-bold text-slate-900 tabular-nums">
+							{vwapPrice.toLocaleString("id-ID")}
 						</span>
 						<span
-							className={`text-[10px] font-bold truncate ${
+							className={`text-xs font-bold truncate ${
 								vwapDiffPct > 0
-									? "text-emerald-600"
+									? "text-emerald-700"
 									: vwapDiffPct < 0
-										? "text-rose-600"
-										: "text-slate-500"
+										? "text-rose-700"
+										: "text-slate-600"
 							}`}
 						>
 							{vwapStance}

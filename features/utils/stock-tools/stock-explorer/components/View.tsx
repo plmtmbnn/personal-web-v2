@@ -188,14 +188,13 @@ function StockExplorerDashboard() {
 			: 0;
 
 	return (
-		<div className="min-h-screen bg-slate-50/80 relative text-slate-900 pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+		<main className="min-h-screen bg-slate-50/80 relative text-slate-900 pt-20 sm:pt-24 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:pb-[calc(9rem+env(safe-area-inset-bottom))] px-4 sm:px-6 lg:px-8">
 			<div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
 				<UtilHeader
 					title="Market Intelligence Explorer"
 					description="Interactive Indonesia Stock Exchange analytics with dynamic composite scoring, institutional volume tracking, and market breadth intelligence."
 					category={{
 						label: "Financial Intelligence",
-						sublabel: "idx market analytics",
 						color: "blue",
 					}}
 					icon={TrendingUp}
@@ -206,46 +205,44 @@ function StockExplorerDashboard() {
 									{stockEvidence.origin === "static"
 										? "Demo data"
 										: stockEvidence.asOf
-											? "IDX session " +
-												stockEvidence.asOf.slice(0, 10) +
-												(stockEvidence.status === "current"
-													? ""
-													: " (" + stockEvidence.status + ")")
+											? `IDX session ${stockEvidence.asOf.slice(0, 10)}${
+													stockEvidence.status === "current"
+														? ""
+														: ` (${stockEvidence.status})`
+												}`
 											: "IDX session date unavailable"}
 								</span>
 							)}
 
 							{rawStocks.length > 0 && (
-								<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200/80 text-slate-700 font-bold text-[11px]">
-									<span className="font-extrabold text-slate-900">
-										{rawStocks.length}
-									</span>{" "}
+								<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/80 text-slate-700 font-bold text-xs tabular-nums">
+									<span className="text-slate-900">{rawStocks.length}</span>{" "}
 									Tickers
 								</span>
 							)}
 						</div>
 					}
 					actions={
-						<div className="flex items-center gap-2">
+						<div className="flex flex-wrap items-center gap-2">
 							<button
 								type="button"
 								onClick={fetchData}
 								disabled={isLoading}
-								className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
+								className="inline-flex min-h-11 items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
 							>
 								{isLoading ? (
-									<Loader2 className="w-3.5 h-3.5 animate-spin" />
+									<Loader2 className="w-4 h-4 animate-spin" />
 								) : (
-									<RefreshCw className="w-3.5 h-3.5" />
+									<RefreshCw className="w-4 h-4" />
 								)}
 								<span>Refresh</span>
 							</button>
 
 							<Link
 								href="/utils/stock-explorer/admin"
-								className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-bold transition-all shadow-xs !no-underline"
+								className="inline-flex min-h-11 items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200/80 text-slate-700 hover:text-slate-950 rounded-xl text-xs font-bold transition-colors shadow-xs !no-underline"
 							>
-								<Settings className="w-3.5 h-3.5 text-slate-500" />
+								<Settings className="w-4 h-4 text-slate-600" />
 								<span>Manage</span>
 							</Link>
 						</div>
@@ -253,54 +250,93 @@ function StockExplorerDashboard() {
 				/>
 
 				{/* Main Content Area */}
-				<main className="space-y-6 sm:space-y-8">
+				<div className="space-y-6 sm:space-y-8">
 					{error ? (
-						<div className="bg-rose-50 border border-rose-200 rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-xs">
-							<AlertCircle className="w-12 h-12 text-rose-600 mb-4" />
-							<h3 className="text-xl font-black text-rose-900 mb-2">
-								Terminal Feed Offline
-							</h3>
-							<p className="text-sm font-semibold text-rose-700 max-w-md">
+						<div
+							role="alert"
+							className="bg-white border border-rose-200/90 border-l-4 border-l-rose-600 rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center text-center shadow-xs"
+						>
+							<div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-700 flex items-center justify-center mb-4">
+								<AlertCircle className="w-6 h-6" />
+							</div>
+							<h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-1.5">
+								Terminal feed offline
+							</h2>
+							<p className="text-sm font-medium text-slate-600 max-w-md">
 								{error}
 							</p>
 							<button
 								type="button"
 								onClick={fetchData}
-								className="mt-6 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-bold text-xs shadow-md hover:bg-rose-700 transition-colors cursor-pointer"
+								className="mt-5 inline-flex min-h-11 items-center px-5 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs shadow-xs hover:bg-slate-800 transition-colors cursor-pointer"
 							>
-								Retry Connection
+								Retry connection
 							</button>
 						</div>
 					) : isLoading && rawStocks.length === 0 ? (
 						<div
 							role="status"
 							aria-label="Loading IDX screener"
-							className="space-y-4"
+							className="space-y-6"
 						>
-							<div className="h-12 rounded-2xl bg-slate-200 motion-safe:animate-pulse" />
-							<div className="h-28 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
-							<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-								<div className="h-40 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
-								<div className="h-40 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
+							<div className="h-14 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-xs flex items-center gap-2">
+								<div className="h-11 w-40 rounded-xl bg-slate-200 motion-safe:animate-pulse" />
+								<div className="h-11 w-44 rounded-xl bg-slate-100 motion-safe:animate-pulse" />
 							</div>
-							<div className="h-28 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
-							<div className="h-56 rounded-3xl bg-slate-200 motion-safe:animate-pulse" />
+							<div className="h-24 rounded-3xl border border-slate-200/80 bg-white shadow-xs motion-safe:animate-pulse" />
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+								{[1, 2, 3, 4].map((item) => (
+									<div
+										key={item}
+										className="h-36 rounded-3xl border border-slate-200/80 bg-white shadow-xs motion-safe:animate-pulse"
+									/>
+								))}
+							</div>
+							<div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+								<div className="lg:col-span-6 h-72 rounded-3xl border border-slate-200/80 bg-white shadow-xs motion-safe:animate-pulse" />
+								<div className="lg:col-span-6 space-y-6">
+									<div className="h-40 rounded-3xl border border-slate-200/80 bg-white shadow-xs motion-safe:animate-pulse" />
+									<div className="h-40 rounded-3xl border border-slate-200/80 bg-white shadow-xs motion-safe:animate-pulse" />
+								</div>
+							</div>
+							<div className="h-64 rounded-3xl border border-slate-200/80 bg-white shadow-xs motion-safe:animate-pulse" />
 						</div>
 					) : (
 						<>
 							{/* Workstation Mode Switcher: Market Screener vs Stockpick Simulator */}
-							<div className="bg-white border border-slate-200/80 rounded-2xl p-1.5 shadow-xs flex items-center justify-between gap-2">
-								<div className="relative flex items-center gap-1">
+							<div className="bg-white border border-slate-200/80 rounded-2xl p-1.5 shadow-xs flex flex-wrap items-center justify-between gap-2">
+								<div
+									role="tablist"
+									aria-label="Explorer workstations"
+									className="relative flex flex-wrap items-center gap-1"
+								>
 									<button
 										type="button"
+										id="workstation-tab-screener"
+										role="tab"
+										aria-selected={workstationTab === "screener"}
+										tabIndex={workstationTab === "screener" ? 0 : -1}
 										onClick={() => setWorkstationTab("screener")}
-										className={`relative px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+										onKeyDown={(e) => {
+											if (
+												e.key === "ArrowRight" ||
+												e.key === "ArrowLeft" ||
+												e.key === "End"
+											) {
+												e.preventDefault();
+												setWorkstationTab("simulator");
+												document
+													.getElementById("workstation-tab-simulator")
+													?.focus();
+											}
+										}}
+										className={`relative min-h-11 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-indigo-600 ${
 											workstationTab === "screener"
-												? "text-slate-900 font-extrabold"
-												: "text-slate-500 hover:text-slate-900"
+												? "text-slate-900"
+												: "text-slate-600 hover:text-slate-900"
 										}`}
 									>
-										<TrendingUp className="w-4 h-4 text-slate-500" />
+										<TrendingUp className="w-4 h-4 text-slate-600" />
 										<span>Market Screener</span>
 										{workstationTab === "screener" && (
 											<motion.div
@@ -316,16 +352,33 @@ function StockExplorerDashboard() {
 									</button>
 									<button
 										type="button"
+										id="workstation-tab-simulator"
+										role="tab"
+										aria-selected={workstationTab === "simulator"}
+										tabIndex={workstationTab === "simulator" ? 0 : -1}
 										onClick={() => setWorkstationTab("simulator")}
-										className={`relative px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+										onKeyDown={(e) => {
+											if (
+												e.key === "ArrowLeft" ||
+												e.key === "ArrowRight" ||
+												e.key === "Home"
+											) {
+												e.preventDefault();
+												setWorkstationTab("screener");
+												document
+													.getElementById("workstation-tab-screener")
+													?.focus();
+											}
+										}}
+										className={`relative min-h-11 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-indigo-600 ${
 											workstationTab === "simulator"
-												? "text-slate-900 font-extrabold"
-												: "text-slate-500 hover:text-slate-900"
+												? "text-slate-900"
+												: "text-slate-600 hover:text-slate-900"
 										}`}
 									>
 										<BookmarkPlus className="w-4 h-4 text-indigo-600" />
 										<span>Stockpick Simulator</span>
-										<span className="text-[10px] font-mono font-bold bg-indigo-50 border border-indigo-200/80 text-indigo-700 px-1.5 py-0.2 rounded-md">
+										<span className="text-xs font-mono font-bold bg-indigo-50 border border-indigo-200/80 text-indigo-800 px-1.5 py-0.5 rounded-lg">
 											{stockPicks.length}
 										</span>
 										{workstationTab === "simulator" && (
@@ -342,7 +395,7 @@ function StockExplorerDashboard() {
 									</button>
 								</div>
 								{workstationTab === "screener" && (
-									<span className="hidden sm:inline-flex text-[11px] font-bold text-slate-400 pr-3">
+									<span className="hidden sm:inline-flex text-xs font-semibold text-slate-600 pr-3">
 										IDX screener
 									</span>
 								)}
@@ -350,9 +403,9 @@ function StockExplorerDashboard() {
 									<button
 										type="button"
 										onClick={() => openAddPickModal()}
-										className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer mr-1"
+										className="inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer mr-0.5"
 									>
-										<Plus className="w-3.5 h-3.5" />
+										<Plus className="w-4 h-4" />
 										<span>New Pick</span>
 									</button>
 								)}
@@ -360,61 +413,60 @@ function StockExplorerDashboard() {
 
 							{/* Live IHSG Investment Compass Regime & Permission Bridge */}
 							{compassBridge && (
-								<div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-									<div className="flex items-start sm:items-center gap-3">
-										<div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-											<Compass className="w-4 h-4" />
+								<div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+									<div className="flex items-start sm:items-center gap-3.5">
+										<div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+											<Compass className="w-5 h-5" />
 										</div>
 										<div>
 											<div className="flex flex-wrap items-center gap-2">
-												<span className="text-sm font-semibold text-slate-900">
+												<span className="text-sm font-bold text-slate-900">
 													Compass posture
 												</span>
 												<span
-													className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+													className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
 														compassBridge.effectiveState === "risk_on"
-															? "bg-emerald-50 text-emerald-700 border-emerald-200"
+															? "bg-emerald-50 text-emerald-800 border-emerald-200"
 															: compassBridge.effectiveState === "selective"
-																? "bg-blue-50 text-blue-700 border-blue-200"
+																? "bg-blue-50 text-blue-800 border-blue-200"
 																: compassBridge.effectiveState === "defensive"
 																	? "bg-amber-50 text-amber-800 border-amber-200"
-																	: "bg-rose-50 text-rose-700 border-rose-200"
+																	: "bg-rose-50 text-rose-800 border-rose-200"
 													}`}
 												>
 													{compassBridge.effectiveState.replace("_", " ")} (
 													{compassBridge.score}/100)
 												</span>
-												<span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md font-mono">
+												<span className="text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-0.5 rounded-lg font-mono tabular-nums">
 													Swing:{" "}
-													{compassBridge.isTradingLocked ? "LOCKED" : "OPEN"} |{" "}
-													{compassBridge.riskPerTradePct}% Risk/Trade |{" "}
-													{compassBridge.maxExposurePct}% Exposure Cap
+													{compassBridge.isTradingLocked ? "Locked" : "Open"} |{" "}
+													{compassBridge.riskPerTradePct}% risk/trade |{" "}
+													{compassBridge.maxExposurePct}% exposure cap
 												</span>
 											</div>
-											<p className="text-sm text-slate-700 mt-1">
+											<p className="text-xs sm:text-sm text-slate-700 mt-1.5 leading-relaxed">
 												{compassBridge.permissions?.swing.reason ??
 													compassBridge.headline}
 											</p>
 											<p className="mt-1 text-xs text-slate-600">
 												{compassBridge.computedAt &&
-													"Computed " +
-														new Date(compassBridge.computedAt).toLocaleString(
-															"en-GB",
-															{ timeZone: "Asia/Jakarta" },
-														) +
-														" WIB. "}
+													`Computed ${new Date(
+														compassBridge.computedAt,
+													).toLocaleString("en-GB", {
+														timeZone: "Asia/Jakarta",
+													})} WIB. `}
 												{compassBridge.coverage != null &&
-													"Evidence coverage " +
-														Math.round(compassBridge.coverage * 100) +
-														"%. "}
+													`Evidence coverage ${Math.round(
+														compassBridge.coverage * 100,
+													)}%. `}
 												{compassBridge.session &&
-													"Compass IDX session " + compassBridge.session + "."}
+													`Compass IDX session ${compassBridge.session}.`}
 											</p>
 											{stockEvidence?.asOf &&
 												compassBridge.session &&
 												stockEvidence.asOf.slice(0, 10) !==
 													compassBridge.session && (
-													<p className="mt-1 text-xs text-amber-800">
+													<p className="mt-1 text-xs font-semibold text-amber-800">
 														Explorer data and Compass use different IDX
 														sessions.
 													</p>
@@ -432,7 +484,7 @@ function StockExplorerDashboard() {
 														: compassBridge.effectiveState,
 												)
 											}
-											className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+											className="inline-flex min-h-11 items-center px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs cursor-pointer"
 										>
 											Sync Regime Preset
 										</button>
@@ -443,7 +495,7 @@ function StockExplorerDashboard() {
 														encodeURIComponent(compassBridge.snapshotId)
 													: "/investment"
 											}
-											className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors !no-underline"
+											className="inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-colors !no-underline"
 										>
 											<span>Open Compass</span>
 											<ArrowUpRight className="w-3.5 h-3.5" />
@@ -489,72 +541,73 @@ function StockExplorerDashboard() {
 										</div>
 									</div>
 
-									{/* Smart Screener Table (Promoted above Custom Factor Scoring for rapid access) */}
-									<div>
+									{/* Unified Screening Unit: IDX Research + Smart Screener Table */}
+									<div className="bg-white border border-slate-200/80 rounded-3xl shadow-xs">
 										<ResearchFilters
+											embedded
 											research={research}
 											filter={activeResearch}
 											onChange={selectResearch}
 										/>
-										<div className="mt-4">
-											<SmartTable
-												key={activeResearch}
-												stocks={researchStocks}
-												researchSort={activeResearch === "strength"}
-											/>
-										</div>
+										<SmartTable
+											key={activeResearch}
+											embedded
+											stocks={researchStocks}
+											researchSort={activeResearch === "strength"}
+										/>
 									</div>
 
 									{/* Custom Scoring Engine & Hard Filter Control Panel */}
-									<div className="bg-white border border-slate-200/80 rounded-3xl shadow-xs overflow-hidden">
+									<div className="bg-white border border-slate-200/80 rounded-3xl shadow-xs">
 										<button
 											type="button"
+											aria-expanded={isScorerExpanded}
 											onClick={() => setIsScorerExpanded(!isScorerExpanded)}
-											className="w-full p-6 sm:p-7 flex justify-between items-center bg-white hover:bg-slate-50/80 transition-colors focus:outline-none cursor-pointer border-none text-left"
+											className="w-full min-h-11 p-5 sm:p-7 flex justify-between items-center bg-white hover:bg-slate-50/80 rounded-3xl transition-colors focus-visible:outline-2 focus-visible:outline-indigo-600 cursor-pointer border-none text-left"
 										>
-											<div className="flex items-center gap-3.5">
-												<div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+											<div className="flex items-center gap-3.5 min-w-0">
+												<div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
 													<Sliders className="w-5 h-5" />
 												</div>
-												<div>
+												<div className="min-w-0">
 													<div className="flex flex-wrap items-center gap-2">
-														<h3 className="text-base sm:text-lg font-black tracking-tight text-slate-900">
+														<h3 className="text-base sm:text-lg font-bold tracking-tight text-slate-900">
 															Custom Factor Scoring &amp; Hard Filter Engine
 														</h3>
-														<span className="hidden sm:inline-flex text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-2.5 py-0.5 rounded-full">
+														<span className="hidden sm:inline-flex text-xs font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-lg">
 															Preset: {activePresetName}
 														</span>
 														{minScore > 0 && (
-															<span className="inline-flex text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+															<span className="inline-flex text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-lg">
 																Score ≥ {minScore}
 															</span>
 														)}
 														{minTurnover > 0 && (
-															<span className="inline-flex text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full">
+															<span className="inline-flex text-xs font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-lg">
 																Turnover ≥ Rp {fmtIDRValue(minTurnover)}
 															</span>
 														)}
 													</div>
-													<p className="text-xs font-medium text-slate-500 mt-0.5">
+													<p className="text-xs font-medium text-slate-600 mt-0.5">
 														Recalculate composite opportunity scores and filter
 														out sub-par instruments in real time
 													</p>
 												</div>
 											</div>
 
-											<div className="flex items-center gap-3 sm:gap-4">
+											<div className="flex items-center gap-3 sm:gap-4 shrink-0">
 												<span
-													className={`hidden md:inline-block text-[11px] font-bold px-3 py-1 rounded-full border ${
+													className={`hidden md:inline-block text-xs font-bold px-2.5 py-1 rounded-lg border ${
 														totalWeightsSum === 100
-															? "bg-emerald-50 text-emerald-700 border-emerald-200"
-															: "bg-amber-50 text-amber-700 border-amber-200"
+															? "bg-emerald-50 text-emerald-800 border-emerald-200"
+															: "bg-amber-50 text-amber-800 border-amber-200"
 													}`}
 												>
 													{totalWeightsSum === 100
 														? "100% Calibrated"
 														: `Weights Sum: ${totalWeightsSum}%`}
 												</span>
-												<div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+												<div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
 													{isScorerExpanded ? (
 														<ChevronUp className="w-4 h-4" />
 													) : (
@@ -565,11 +618,11 @@ function StockExplorerDashboard() {
 										</button>
 
 										{isScorerExpanded && (
-											<div className="p-6 sm:p-8 border-t border-slate-100 bg-slate-50/50 space-y-6">
+											<div className="p-5 sm:p-7 border-t border-slate-100 bg-slate-50/40 rounded-b-3xl space-y-6">
 												{/* Presets & Reset Row */}
 												<div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200/60">
 													<div className="flex flex-wrap items-center gap-2">
-														<span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mr-1">
+														<span className="text-xs font-bold text-slate-600 mr-1">
 															Strategies:
 														</span>
 														{STRATEGY_PRESETS.map((preset) => (
@@ -577,7 +630,7 @@ function StockExplorerDashboard() {
 																key={preset.name}
 																type="button"
 																onClick={() => applyPreset(preset.weights)}
-																className={`px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-tight transition-all cursor-pointer border ${
+																className={`min-h-11 px-3.5 py-2 rounded-xl text-xs font-bold tracking-tight transition-colors cursor-pointer border ${
 																	activePresetName === preset.name
 																		? "bg-slate-900 text-white border-slate-900 shadow-xs"
 																		: "bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700"
@@ -591,9 +644,9 @@ function StockExplorerDashboard() {
 													<button
 														type="button"
 														onClick={resetWeights}
-														className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
+														className="inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-2xs"
 													>
-														<RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+														<RotateCcw className="w-3.5 h-3.5 text-slate-600" />
 														<span>Reset Defaults</span>
 													</button>
 												</div>
@@ -629,15 +682,16 @@ function StockExplorerDashboard() {
 													].map((slider) => (
 														<div key={slider.key} className="space-y-2.5">
 															<div className="flex justify-between items-center">
-																<span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+																<span className="text-xs font-bold text-slate-800">
 																	{slider.label}
 																</span>
-																<span className="text-xs font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
+																<span className="text-xs font-bold tabular-nums text-indigo-800 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-lg">
 																	{weights[slider.key]}%
 																</span>
 															</div>
 															<input
 																type="range"
+																aria-label={`${slider.label} weight`}
 																min="0"
 																max="100"
 																step="5"
@@ -648,9 +702,9 @@ function StockExplorerDashboard() {
 																		Number(e.target.value),
 																	)
 																}
-																className="w-full accent-indigo-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+																className="w-full accent-indigo-600 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
 															/>
-															<p className="text-[10px] font-medium text-slate-500">
+															<p className="text-xs font-medium text-slate-600">
 																{slider.desc}
 															</p>
 														</div>
@@ -660,19 +714,19 @@ function StockExplorerDashboard() {
 												{/* Hard Filter Threshold Section */}
 												<div className="pt-6 border-t border-slate-200/70 space-y-3">
 													<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-														<div className="flex items-center gap-2">
+														<div className="flex flex-wrap items-center gap-2">
 															<Filter className="w-4 h-4 text-indigo-600" />
-															<span className="text-xs font-black uppercase tracking-wider text-slate-800">
+															<span className="text-xs font-bold text-slate-800">
 																Hard Filter: Minimum Score Threshold
 															</span>
-															<span className="text-xs font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-md">
+															<span className="text-xs font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-lg">
 																{minScore > 0
 																	? `Score ≥ ${minScore}`
 																	: "Disabled (Showing All)"}
 															</span>
 														</div>
-														<span className="text-xs font-bold text-slate-500">
-															<span className="text-indigo-600 font-extrabold">
+														<span className="text-xs font-semibold text-slate-600 tabular-nums">
+															<span className="text-indigo-700 font-bold">
 																{qualifyingStocksCount}
 															</span>{" "}
 															of {processed.length} instruments qualify (
@@ -692,7 +746,7 @@ function StockExplorerDashboard() {
 																key={preset.value}
 																type="button"
 																onClick={() => setMinScore(preset.value)}
-																className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+																className={`min-h-11 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer border ${
 																	minScore === preset.value
 																		? "bg-indigo-600 text-white border-indigo-600 shadow-2xs"
 																		: "bg-white hover:bg-slate-100 border-slate-200 text-slate-700"
@@ -706,6 +760,7 @@ function StockExplorerDashboard() {
 													<div className="flex items-center gap-4 pt-1">
 														<input
 															type="range"
+															aria-label="Minimum composite score threshold"
 															min="0"
 															max="90"
 															step="5"
@@ -713,9 +768,9 @@ function StockExplorerDashboard() {
 															onChange={(e) =>
 																setMinScore(Number(e.target.value))
 															}
-															className="w-full accent-indigo-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+															className="w-full accent-indigo-600 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
 														/>
-														<span className="text-xs font-black text-slate-900 w-12 text-right">
+														<span className="text-xs font-bold tabular-nums text-slate-900 w-12 text-right">
 															{minScore}+
 														</span>
 													</div>
@@ -724,18 +779,18 @@ function StockExplorerDashboard() {
 												{/* Hard Filter Minimum Liquidity Floor Section */}
 												<div className="pt-6 border-t border-slate-200/70 space-y-3">
 													<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-														<div className="flex items-center gap-2">
-															<Coins className="w-4 h-4 text-emerald-600" />
-															<span className="text-xs font-black uppercase tracking-wider text-slate-800">
+														<div className="flex flex-wrap items-center gap-2">
+															<Coins className="w-4 h-4 text-emerald-700" />
+															<span className="text-xs font-bold text-slate-800">
 																Hard Filter: Liquidity Floor (Turnover)
 															</span>
-															<span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md">
+															<span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-lg">
 																{minTurnover > 0
 																	? `Turnover ≥ Rp ${fmtIDRValue(minTurnover)}`
 																	: "Disabled (Showing All)"}
 															</span>
 														</div>
-														<span className="text-xs font-bold text-slate-500">
+														<span className="text-xs font-medium text-slate-600">
 															Eliminates illiquid penny stock traps (saham tidur
 															/ gorengan)
 														</span>
@@ -759,9 +814,9 @@ function StockExplorerDashboard() {
 																key={preset.value}
 																type="button"
 																onClick={() => setMinTurnover(preset.value)}
-																className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+																className={`min-h-11 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer border ${
 																	minTurnover === preset.value
-																		? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+																		? "bg-emerald-700 text-white border-emerald-700 shadow-2xs"
 																		: "bg-white hover:bg-slate-100 border-slate-200 text-slate-700"
 																}`}
 															>
@@ -773,8 +828,8 @@ function StockExplorerDashboard() {
 
 												{/* Warning if not summing to 100 */}
 												{totalWeightsSum !== 100 && (
-													<div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex items-center gap-3 text-xs font-bold">
-														<AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+													<div className="p-4 bg-white border border-amber-200/90 border-l-4 border-l-amber-500 text-slate-800 rounded-2xl flex items-center gap-3 text-xs font-semibold">
+														<AlertCircle className="w-4 h-4 shrink-0 text-amber-700" />
 														<span>
 															Active factor weights sum to{" "}
 															<strong>{totalWeightsSum}%</strong>. Normalizing
@@ -790,7 +845,7 @@ function StockExplorerDashboard() {
 							)}
 						</>
 					)}
-				</main>
+				</div>
 			</div>
 
 			{/* Analyst Drawer */}
@@ -820,7 +875,7 @@ function StockExplorerDashboard() {
 				pick={pickToClose}
 				onConfirmClose={closeStockPickWithDetails}
 			/>
-		</div>
+		</main>
 	);
 }
 

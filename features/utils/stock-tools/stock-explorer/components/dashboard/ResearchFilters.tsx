@@ -21,21 +21,32 @@ export function ResearchFilters({
 	research,
 	filter,
 	onChange,
+	embedded = false,
 }: {
 	research: ResearchSummary | null;
 	filter: ResearchFilter;
 	onChange: (filter: ResearchFilter) => void;
+	embedded?: boolean;
 }) {
 	const breadth = research?.breadth;
 	return (
 		<section
 			aria-label="IDX research"
-			className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs"
+			className={
+				embedded
+					? "border-b border-slate-100 p-5 sm:p-7"
+					: "rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-xs"
+			}
 		>
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
 				<div>
-					<h2 className="font-semibold text-slate-900">IDX research</h2>
-					<p className="mt-1 text-sm text-slate-600" aria-live="polite">
+					<h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+						IDX research
+					</h2>
+					<p
+						className="mt-0.5 text-xs sm:text-sm text-slate-600"
+						aria-live="polite"
+					>
 						{research?.current
 							? `Completed session ${research.session}. Open a ticker for its evidence.`
 							: research

@@ -90,6 +90,6 @@ describe("MarketPlaybook Component", () => {
 			<MarketPlaybook playbooks={mockPlaybooks} compassData={mockData} />,
 		);
 
-		expect(container.textContent).toContain("EXPANDED VOLATILITY DETECTED");
+		expect(container.textContent).toContain("Expanded volatility detected");
 	});
 });

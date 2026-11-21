@@ -3,7 +3,6 @@
 import { useState, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-	Plus,
 	Search,
 	Download,
 	Upload,
@@ -198,23 +197,29 @@ export default function StockpickSimulator({
 		<div className="space-y-6 sm:space-y-8">
 			{/* Simulator Sub-Tab Mode Switcher: Active Positions vs Trade Journal */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
-				<div className="flex items-center gap-2">
+				<div
+					role="tablist"
+					aria-label="Simulator sub-views"
+					className="flex flex-wrap items-center gap-2"
+				>
 					<button
 						type="button"
+						role="tab"
+						aria-selected={simulatorSubTab === "active"}
 						onClick={() => setSimulatorSubTab("active")}
-						className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+						className={`min-h-11 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 ${
 							simulatorSubTab === "active"
 								? "bg-slate-900 text-white shadow-xs"
-								: "bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/60"
+								: "bg-white text-slate-700 hover:text-slate-950 hover:bg-slate-100 border border-slate-200/80"
 						}`}
 					>
 						<TrendingUp className="w-3.5 h-3.5" />
 						<span>Active Positions</span>
 						<span
-							className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+							className={`text-xs px-1.5 py-0.5 rounded-md font-mono font-bold ${
 								simulatorSubTab === "active"
 									? "bg-slate-800 text-slate-200"
-									: "bg-slate-100 text-slate-600"
+									: "bg-slate-100 text-slate-700"
 							}`}
 						>
 							{portfolioSummary.activePicks}
@@ -222,20 +227,22 @@ export default function StockpickSimulator({
 					</button>
 					<button
 						type="button"
+						role="tab"
+						aria-selected={simulatorSubTab === "journal"}
 						onClick={() => setSimulatorSubTab("journal")}
-						className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+						className={`min-h-11 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 ${
 							simulatorSubTab === "journal"
 								? "bg-slate-900 text-white shadow-xs"
-								: "bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/60"
+								: "bg-white text-slate-700 hover:text-slate-950 hover:bg-slate-100 border border-slate-200/80"
 						}`}
 					>
 						<History className="w-3.5 h-3.5" />
-						<span>Trade Journal & Analytics</span>
+						<span>Trade Journal &amp; Analytics</span>
 						<span
-							className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+							className={`text-xs px-1.5 py-0.5 rounded-md font-mono font-bold ${
 								simulatorSubTab === "journal"
 									? "bg-slate-800 text-slate-200"
-									: "bg-slate-100 text-slate-600"
+									: "bg-slate-100 text-slate-700"
 							}`}
 						>
 							{portfolioSummary.closedPicks}
@@ -245,7 +252,7 @@ export default function StockpickSimulator({
 
 				{simulatorSubTab === "active" && (
 					<div className="flex flex-wrap items-center gap-2">
-						<span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+						<span className="text-xs font-bold text-slate-600">
 							Portfolio Equity:
 						</span>
 						{[
@@ -257,24 +264,17 @@ export default function StockpickSimulator({
 							<button
 								key={eq.value}
 								type="button"
+								aria-pressed={accountEquityIdr === eq.value}
 								onClick={() => setAccountEquityIdr(eq.value)}
-								className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-colors cursor-pointer border ${
+								className={`min-h-11 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-colors cursor-pointer border ${
 									accountEquityIdr === eq.value
 										? "bg-indigo-600 text-white border-indigo-600"
-										: "bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50"
+										: "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50"
 								}`}
 							>
 								{eq.label}
 							</button>
 						))}
-						<button
-							type="button"
-							onClick={() => openAddPickModal()}
-							className="sm:hidden px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-						>
-							<Plus className="w-3.5 h-3.5" />
-							<span>New Pick</span>
-						</button>
 					</div>
 				)}
 			</div>
@@ -300,18 +300,23 @@ export default function StockpickSimulator({
 							<div className="flex flex-wrap items-center gap-3">
 								{/* Live Search */}
 								<div className="relative w-full sm:w-64">
-									<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+									<Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
 									<input
 										type="text"
+										aria-label="Search active picks or thesis"
 										placeholder="Search active picks or thesis..."
 										value={searchQuery}
 										onChange={(e) => setSearchQuery(e.target.value)}
-										className="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+										className="w-full min-h-11 bg-slate-50 border border-slate-200/80 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
 									/>
 								</div>
 
 								{/* Minimalist Frameless Milestone Standard: Open vs Alert Filter */}
-								<div className="relative flex items-center border-b border-slate-200/60 pb-0.5">
+								<div
+									role="tablist"
+									aria-label="Open position filter"
+									className="relative flex items-center border-b border-slate-200/60 pb-0.5"
+								>
 									{[
 										{
 											id: "all" as const,
@@ -329,19 +334,21 @@ export default function StockpickSimulator({
 											<button
 												key={tab.id}
 												type="button"
+												role="tab"
+												aria-selected={isSelected}
 												onClick={() => setAlertFilter(tab.id)}
-												className={`relative px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
+												className={`relative min-h-11 px-3 py-2 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
 													isSelected
 														? "text-slate-900 font-bold"
-														: "text-slate-500 hover:text-slate-800"
+														: "text-slate-600 hover:text-slate-900"
 												}`}
 											>
 												<span>{tab.label}</span>
 												<span
-													className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+													className={`text-xs px-1.5 py-0.5 rounded-md font-mono font-bold ${
 														tab.id === "alerts" && tab.count > 0
-															? "bg-rose-100 text-rose-700"
-															: "bg-slate-100 text-slate-600"
+															? "bg-rose-100 text-rose-800"
+															: "bg-slate-100 text-slate-700"
 													}`}
 												>
 													{tab.count}
@@ -368,11 +375,12 @@ export default function StockpickSimulator({
 								{/* Sort Dropdown */}
 								<div className="relative">
 									<select
+										aria-label="Sort simulated picks"
 										value={sortOption}
 										onChange={(e) =>
 											setSortOption(e.target.value as SortOption)
 										}
-										className="bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
+										className="min-h-11 bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 cursor-pointer"
 									>
 										<option value="pl-desc">Highest P/L %</option>
 										<option value="pl-asc">Lowest P/L %</option>
@@ -386,8 +394,9 @@ export default function StockpickSimulator({
 								<button
 									type="button"
 									onClick={handleExport}
+									aria-label="Export simulated picks to JSON backup"
 									title="Export simulated picks to JSON backup"
-									className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+									className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
 								>
 									<Download className="w-4 h-4" />
 								</button>
@@ -395,8 +404,9 @@ export default function StockpickSimulator({
 								<button
 									type="button"
 									onClick={() => fileInputRef.current?.click()}
+									aria-label="Import stockpicks JSON backup"
 									title="Import stockpicks JSON backup"
-									className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+									className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
 								>
 									<Upload className="w-4 h-4" />
 								</button>
@@ -413,21 +423,23 @@ export default function StockpickSimulator({
 									type="button"
 									onClick={() => refreshPicksFromCloud()}
 									disabled={isPicksLoading}
+									aria-label="Refresh simulation picks from Supabase Cloud"
 									title="Refresh simulation picks directly from Supabase Cloud"
-									className="p-2 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors cursor-pointer disabled:opacity-60"
+									className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 text-slate-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-xl transition-colors cursor-pointer disabled:opacity-60"
 								>
 									{isPicksLoading ? (
-										<RefreshCw className="w-4 h-4 text-emerald-600 animate-spin" />
+										<RefreshCw className="w-4 h-4 text-emerald-700 animate-spin" />
 									) : (
-										<Database className="w-4 h-4 text-emerald-600" />
+										<Database className="w-4 h-4 text-emerald-700" />
 									)}
 								</button>
 
 								<button
 									type="button"
 									onClick={resetToDemoPicks}
+									aria-label="Reset to default demo picks"
 									title="Reset to default demo picks (persists to cloud)"
-									className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+									className="min-h-11 min-w-11 inline-flex items-center justify-center p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
 								>
 									<RotateCcw className="w-4 h-4" />
 								</button>
@@ -435,12 +447,12 @@ export default function StockpickSimulator({
 						</div>
 
 						{cloudSyncError && (
-							<div className="flex items-center justify-between bg-amber-50 border border-amber-200 text-amber-900 text-xs px-3.5 py-2.5 rounded-2xl">
+							<div className="flex items-center justify-between bg-white border border-slate-200/80 border-l-4 border-l-amber-500 text-slate-800 text-xs px-4 py-3 rounded-2xl shadow-xs">
 								<span>Supabase notice: {cloudSyncError}</span>
 								<button
 									type="button"
 									onClick={() => refreshPicksFromCloud()}
-									className="font-bold underline hover:text-amber-950 cursor-pointer ml-2"
+									className="min-h-11 px-3 font-bold text-amber-800 underline hover:text-amber-950 cursor-pointer ml-2 shrink-0"
 								>
 									Retry
 								</button>
@@ -448,7 +460,7 @@ export default function StockpickSimulator({
 						)}
 
 						{importError && (
-							<p className="text-xs text-rose-600 font-bold bg-rose-50 border border-rose-200 p-2.5 rounded-xl">
+							<p className="text-xs text-rose-700 font-bold bg-white border border-slate-200/80 border-l-4 border-l-rose-500 p-3 rounded-2xl shadow-xs">
 								{importError}
 							</p>
 						)}
@@ -500,14 +512,14 @@ export default function StockpickSimulator({
 								<button
 									type="button"
 									onClick={() => openAddPickModal()}
-									className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+									className="min-h-11 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
 								>
 									Simulate First Pick
 								</button>
 								<button
 									type="button"
 									onClick={resetToDemoPicks}
-									className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+									className="min-h-11 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
 								>
 									Load Sample Picks
 								</button>

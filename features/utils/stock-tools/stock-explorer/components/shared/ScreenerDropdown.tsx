@@ -69,18 +69,18 @@ export default function ScreenerDropdown<T extends string | number>({
 				type="button"
 				onClick={() => setIsOpen((prev) => !prev)}
 				aria-expanded={isOpen}
-				className={`inline-flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50/80 border rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer select-none ${
+				className={`inline-flex min-h-11 items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50/80 border rounded-xl text-xs font-bold transition-colors shadow-2xs cursor-pointer select-none ${
 					isOpen
 						? "border-indigo-500 ring-2 ring-indigo-500/15 text-slate-900"
 						: "border-slate-200/90 text-slate-700 hover:text-slate-900"
 				}`}
 			>
-				{Icon && <Icon className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+				{Icon && <Icon className="w-3.5 h-3.5 text-slate-500 shrink-0" />}
 				<span className="truncate max-w-[140px] text-left">
 					{selectedOption ? selectedOption.label : placeholder}
 				</span>
 				<ChevronDown
-					className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
+					className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0 ${
 						isOpen ? "rotate-180 text-indigo-600" : ""
 					}`}
 				/>
@@ -106,16 +106,16 @@ export default function ScreenerDropdown<T extends string | number>({
 											onChange(option.value);
 											setIsOpen(false);
 										}}
-										className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
+										className={`w-full min-h-11 flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
 											isSelected
-												? "bg-indigo-50/70 text-indigo-700 font-bold"
+												? "bg-indigo-50/70 text-indigo-800 font-bold"
 												: "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
 										}`}
 									>
 										<span className="truncate">{option.label}</span>
 										<div className="flex items-center gap-1.5 shrink-0">
 											{option.badge !== undefined && (
-												<span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">
+												<span className="text-xs font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600">
 													{option.badge}
 												</span>
 											)}

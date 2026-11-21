@@ -171,7 +171,7 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 		return (
 			<div
 				key={i}
-				className="bg-slate-50/50 rounded-xl p-3.5 sm:p-4 border border-slate-100 flex flex-col justify-between"
+				className="bg-slate-50/60 rounded-2xl p-4 border border-slate-200/70 flex flex-col justify-between"
 			>
 				<div>
 					<div className="flex justify-between items-start mb-1.5 sm:mb-2">
@@ -180,12 +180,12 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 						</span>
 					</div>
 					<div className="flex items-baseline gap-2">
-						<span className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+						<span className="text-lg sm:text-xl font-bold tabular-nums text-slate-900 truncate">
 							{tile.value}
 						</span>
 						{tile.change != null && (
 							<span
-								className={`text-xs font-bold shrink-0 ${
+								className={`text-xs font-bold tabular-nums shrink-0 ${
 									isBullish
 										? "text-emerald-700"
 										: isBearish
@@ -198,19 +198,16 @@ export default function MacroLens({ data }: { data: InvestmentCompassData }) {
 							</span>
 						)}
 					</div>
-					<p className="text-xs font-semibold text-slate-500 mt-1 leading-snug">
+					<p className="text-xs font-medium text-slate-500 mt-1 leading-snug">
 						{tile.desc}
 					</p>
 				</div>
 
 				{tile.historicalMsg && (
 					<div className="mt-3 pt-3 border-t border-slate-200/70">
-						<div className="flex items-start gap-1.5">
-							<div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-1" />
-							<p className="text-xs font-bold text-slate-600 leading-snug">
-								{tile.historicalMsg}
-							</p>
-						</div>
+						<p className="text-xs font-semibold text-slate-700 leading-snug">
+							{tile.historicalMsg}
+						</p>
 					</div>
 				)}
 			</div>

@@ -31,17 +31,17 @@ export default function MarketDeltaAlerts({
 	return (
 		<section
 			aria-label="Critical Market Delta Alerts"
-			className="bg-white rounded-3xl border border-amber-200/90 shadow-xs p-4 sm:p-7 space-y-4 motion-safe:animate-in fade-in slide-in-from-top-4 duration-700"
+			className="bg-white rounded-3xl border border-amber-200/90 shadow-xs p-5 sm:p-6 space-y-4"
 		>
 			<div className="flex items-center gap-3">
-				<div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
-					<BellRing className="w-5 h-5 motion-safe:animate-pulse" />
+				<div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 flex items-center justify-center shrink-0">
+					<BellRing className="w-5 h-5" />
 				</div>
 				<div>
-					<h3 className="text-lg font-bold text-amber-900 tracking-tight">
+					<h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
 						Market alerts
-					</h3>
-					<p className="text-xs font-bold text-amber-700">
+					</h2>
+					<p className="text-xs font-medium text-slate-500">
 						Changes since the previous reading
 					</p>
 				</div>
@@ -50,29 +50,36 @@ export default function MarketDeltaAlerts({
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 				{alerts.map((alert, idx) => {
 					let icon = <AlertOctagon className="w-4 h-4" />;
-					let colors = "bg-amber-100/50 text-amber-800 border-amber-200/60";
+					let cardBorder = "border-slate-200/80 border-l-4 border-l-amber-500";
+					let iconBadge = "bg-amber-50 text-amber-800 border-amber-200/80";
 
 					if (alert.type === "danger") {
 						icon = <TrendingDown className="w-4 h-4" />;
-						colors = "bg-rose-100 text-rose-800 border-rose-200";
+						cardBorder = "border-slate-200/80 border-l-4 border-l-rose-600";
+						iconBadge = "bg-rose-50 text-rose-800 border-rose-200/80";
 					} else if (alert.type === "positive") {
 						icon = <TrendingUp className="w-4 h-4" />;
-						colors = "bg-emerald-100 text-emerald-800 border-emerald-200";
+						cardBorder = "border-slate-200/80 border-l-4 border-l-emerald-600";
+						iconBadge = "bg-emerald-50 text-emerald-800 border-emerald-200/80";
 					}
 
 					return (
 						<div
 							key={idx}
-							className={`flex items-start gap-2.5 p-3 sm:p-3.5 rounded-xl border ${colors}`}
+							className={`flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl bg-white border ${cardBorder}`}
 						>
-							<div className="mt-0.5 shrink-0">{icon}</div>
+							<div
+								className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 ${iconBadge}`}
+							>
+								{icon}
+							</div>
 							<div className="min-w-0 flex-1">
 								{alert.title && (
-									<span className="text-xs font-bold block mb-0.5">
+									<span className="text-xs font-bold text-slate-900 block mb-0.5">
 										{alert.title}
 									</span>
 								)}
-								<p className="text-xs font-semibold leading-relaxed break-words">
+								<p className="text-xs font-medium text-slate-600 leading-relaxed break-words">
 									{alert.message}
 								</p>
 							</div>

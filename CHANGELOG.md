@@ -1,3 +1,10 @@
+# [0.134.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.133.0...v0.134.0) (2026-11-22)
+
+
+### Features
+
+* refine travel, running, and Liverpool views ([8a6f2ca](https://github.com/plmtmbnn/personal-web-v2/commit/8a6f2cadcdf11ef96dbbd7d2335d7e7ba30d7e02))
+
 # [0.133.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.132.0...v0.133.0) (2026-11-21)
 
 

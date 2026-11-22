@@ -331,10 +331,12 @@ export async function renderPostcardBackToCanvas(
 	if (typeof document !== "undefined") {
 		const dummy = document.createElement("span");
 		dummy.style.fontFamily = "var(--font-caveat), 'Caveat', cursive";
-		document.body.appendChild(dummy);
+		const fontHost =
+			document.getElementById("journal-title")?.parentElement ?? document.body;
+		fontHost.appendChild(dummy);
 		const computed = window.getComputedStyle(dummy).fontFamily;
 		if (computed) caveatFontFamily = computed;
-		document.body.removeChild(dummy);
+		dummy.remove();
 	}
 
 	ctx.save();
@@ -361,31 +363,31 @@ export async function renderPostcardBackToCanvas(
 
 	ctx.save();
 	ctx.fillStyle = "#1c1917";
+	ctx.textBaseline = "top";
 	ctx.font = `44px ${caveatFontFamily}`;
 	const leftPad = 40;
 	const maxTextWidth = midX - leftPad * 2 - 10;
 
-	ctx.fillText(formatVisitDate(destination.visitedDate), leftPad, 60);
+	ctx.fillText(formatVisitDate(destination.visitedDate), leftPad, 40);
 
-	ctx.font = `38px ${caveatFontFamily}`;
+	ctx.font = `33px ${caveatFontFamily}`;
 	const description =
 		destination.description ||
 		"Memorable miles and quiet corners worth returning to.";
-	const lines = wrapText(ctx, description, maxTextWidth, 10);
-	let curY = 120;
+	const lines = wrapText(ctx, description, maxTextWidth, 6);
+	let curY = 110;
 	for (let i = 0; i < lines.length; i++) {
 		ctx.save();
 		ctx.translate(leftPad, curY);
 		ctx.rotate(Math.random() * 0.02 - 0.01);
 		ctx.fillText(lines[i], 0, 0);
 		ctx.restore();
-		curY += 46;
+		curY += 42;
 	}
 
-	curY += 40;
 	ctx.font = `44px ${caveatFontFamily}`;
 	ctx.save();
-	ctx.translate(leftPad, curY);
+	ctx.translate(leftPad, 400);
 	ctx.rotate(-0.02);
 	ctx.fillText(`${AUTHOR.name}`, 0, 0);
 	ctx.restore();
@@ -395,7 +397,7 @@ export async function renderPostcardBackToCanvas(
 	const rightPad = midX + 40;
 	const lineStartX = rightPad;
 	const lineEndX = CANVAS_W - 40;
-	let lineY = CANVAS_H / 2 + 30;
+	let lineY = 290;
 
 	ctx.strokeStyle = "rgba(0,0,0,0.12)";
 	ctx.lineWidth = 1.5;
@@ -407,7 +409,8 @@ export async function renderPostcardBackToCanvas(
 	];
 
 	ctx.fillStyle = "#1c1917";
-	ctx.font = `46px ${caveatFontFamily}`;
+	ctx.font = `32px ${caveatFontFamily}`;
+	ctx.textBaseline = "top";
 
 	for (let i = 0; i < 4; i++) {
 		ctx.beginPath();
@@ -416,19 +419,24 @@ export async function renderPostcardBackToCanvas(
 		ctx.stroke();
 
 		if (i < addressLines.length) {
-			ctx.save();
-			ctx.translate(lineStartX + 20, lineY - 8);
-			ctx.rotate(-0.02);
-			ctx.fillText(addressLines[i], 0, 0);
-			ctx.restore();
+			const addressText = wrapText(
+				ctx,
+				addressLines[i],
+				lineEndX - lineStartX,
+				2,
+			);
+			addressText.forEach((line, index) => {
+				ctx.fillText(
+					line,
+					lineStartX,
+					lineY - 4 - addressText.length * 28 + index * 28,
+				);
+			});
 		}
 
-		lineY += 50;
+		lineY += 60;
 	}
 
-	ctx.fillStyle = "rgba(0,0,0,0.5)";
-	ctx.font = "10px 'Montserrat', sans-serif";
-	ctx.fillText("This space for address only", lineStartX, CANVAS_H / 2 - 20);
 	ctx.restore();
 
 	const stampX = CANVAS_W - 40 - 120;

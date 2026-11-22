@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
 	motion,
 	AnimatePresence,
@@ -15,10 +15,8 @@ import {
 	Gauge,
 	Mountain,
 	Route,
-	CheckCircle,
 	Copy,
 	Check,
-	SlidersHorizontal,
 } from "lucide-react";
 import { personalBests } from "../data/personal-bests";
 
@@ -77,18 +75,8 @@ export default function PersonalBestsSwipeCard() {
 		[paginate],
 	);
 
-	// Keyboard arrow navigation
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "ArrowLeft") paginate(-1);
-			if (e.key === "ArrowRight") paginate(1);
-		};
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [paginate]);
-
 	const handleCopyRecord = useCallback(async () => {
-		const summary = `Personal Best Record — ${currentItem.distance}\nTime: ${currentItem.time}\nPace: ${currentItem.pace}\nDistance: ${currentItem.distanceKm} km\nElevation: ${currentItem.elevation || "Flat"}`;
+		const summary = `Personal Best Record: ${currentItem.distance}\nTime: ${currentItem.time}\nPace: ${currentItem.pace}\nDistance: ${currentItem.distanceKm} km\nElevation: ${currentItem.elevation || "Flat"}`;
 		try {
 			await navigator.clipboard.writeText(summary);
 			setCopied(true);
@@ -126,10 +114,16 @@ export default function PersonalBestsSwipeCard() {
 	};
 
 	return (
-		<div className="w-full h-full bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 shadow-xs select-none relative overflow-hidden flex flex-col justify-between group">
-			{/* ═══════════════════════════════════════
-			    HEADER & CONTROLS
-			═══════════════════════════════════════ */}
+		<section
+			className="w-full h-full bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 shadow-xs select-none relative overflow-hidden flex flex-col justify-between group focus-visible:outline-2 focus-visible:outline-emerald-600"
+			aria-label="Personal best records. Use left and right arrow keys to change records."
+			onKeyDown={(event) => {
+				if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+					event.preventDefault();
+					paginate(event.key === "ArrowLeft" ? -1 : 1);
+				}
+			}}
+		>
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-20 pb-4 border-b border-slate-100">
 				<div className="flex items-center gap-3">
 					<div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">
@@ -145,7 +139,7 @@ export default function PersonalBestsSwipeCard() {
 							</span>
 						</div>
 						<p className="text-xs text-slate-500 font-medium">
-							Verified distance benchmarks & endurance records
+							Saved distance benchmarks and endurance records
 						</p>
 					</div>
 				</div>
@@ -156,7 +150,7 @@ export default function PersonalBestsSwipeCard() {
 						<button
 							type="button"
 							onClick={() => paginate(-1)}
-							className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-xs"
+							className="min-w-11 min-h-11 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer focus-visible:outline-2 focus-visible:outline-emerald-600"
 							title="Previous Record"
 							aria-label="Previous record"
 						>
@@ -165,7 +159,7 @@ export default function PersonalBestsSwipeCard() {
 						<button
 							type="button"
 							onClick={() => paginate(1)}
-							className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer shadow-xs"
+							className="min-w-11 min-h-11 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all active:scale-90 cursor-pointer focus-visible:outline-2 focus-visible:outline-emerald-600"
 							title="Next Record"
 							aria-label="Next record"
 						>
@@ -175,7 +169,7 @@ export default function PersonalBestsSwipeCard() {
 					<button
 						type="button"
 						onClick={handleCopyRecord}
-						className="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-white rounded-xl border border-slate-200/60 transition-all cursor-pointer shadow-xs active:scale-90 flex items-center justify-center"
+						className="min-w-11 min-h-11 text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-white rounded-xl border border-slate-200/60 transition-all cursor-pointer active:scale-90 flex items-center justify-center focus-visible:outline-2 focus-visible:outline-emerald-600"
 						title="Copy Record Summary"
 						aria-label="Copy record summary"
 					>
@@ -188,9 +182,7 @@ export default function PersonalBestsSwipeCard() {
 				</div>
 			</div>
 
-			{/* ═══════════════════════════════════════
-			    MINIMALIST MILESTONE SELECTOR
-			═══════════════════════════════════════ */}
+			{/* Milestone selector */}
 			<div className="relative z-20 pt-4 pb-2">
 				<div className="flex items-center justify-between w-full relative">
 					{/* Subtle track background */}
@@ -206,10 +198,10 @@ export default function PersonalBestsSwipeCard() {
 								key={item.id}
 								type="button"
 								onClick={() => goToIndex(idx)}
-								className={`group relative pb-2 sm:pb-3 px-2 sm:px-4 flex flex-col items-center justify-center transition-[color,transform] duration-300 cursor-pointer active:scale-90 touch-manipulation z-10 ${
+								className={`group relative min-h-11 pb-2 sm:pb-3 px-2 sm:px-4 flex flex-col items-center justify-center transition-[color,transform] duration-300 cursor-pointer active:scale-90 touch-manipulation z-10 focus-visible:outline-2 focus-visible:outline-emerald-600 ${
 									isActive
 										? "text-slate-900 font-black"
-										: "text-slate-400 hover:text-slate-600 font-bold"
+										: "text-slate-600 hover:text-slate-900 font-bold"
 								}`}
 							>
 								{/* Active animated indicator */}
@@ -223,11 +215,11 @@ export default function PersonalBestsSwipeCard() {
 								<div className="flex items-center justify-center gap-1.5 sm:gap-2">
 									{item.isHighest ? (
 										<Crown
-											className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-all duration-300 ${isActive ? "text-amber-500 scale-110" : "text-slate-400 group-hover:text-amber-500/70"}`}
+											className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-all duration-300 ${isActive ? "text-amber-500 scale-110" : "text-slate-600 group-hover:text-amber-500/70"}`}
 										/>
 									) : (
 										<ItemIcon
-											className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-all duration-300 ${isActive ? `${item.color} scale-110` : "text-slate-400 group-hover:text-slate-500"}`}
+											className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-all duration-300 ${isActive ? `${item.color} scale-110` : "text-slate-600 group-hover:text-slate-500"}`}
 										/>
 									)}
 									<span
@@ -242,9 +234,7 @@ export default function PersonalBestsSwipeCard() {
 				</div>
 			</div>
 
-			{/* ═══════════════════════════════════════
-			    MAIN SHOWCASE (CLEAN LIGHT STAGE)
-			═══════════════════════════════════════ */}
+			{/* Record display */}
 			<div className="relative z-10 flex-1 flex flex-col justify-center min-h-[220px] w-full">
 				<AnimatePresence initial={false} custom={direction} mode="wait">
 					<motion.div
@@ -272,7 +262,7 @@ export default function PersonalBestsSwipeCard() {
 								<span className="px-3 py-1 bg-slate-100 rounded-md text-xs font-black text-slate-700 border border-slate-200/80 tracking-widest uppercase">
 									{currentItem.distance}
 								</span>
-								<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+								<span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
 									Chip Time
 								</span>
 							</div>
@@ -283,7 +273,7 @@ export default function PersonalBestsSwipeCard() {
 							{/* Pace */}
 							<div className="flex flex-col items-center justify-center text-center group/metric px-2">
 								<Gauge className="w-5 h-5 text-emerald-500 mb-1.5 group-hover/metric:scale-110 transition-transform" />
-								<span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+								<span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">
 									Pace
 								</span>
 								<span className="text-sm sm:text-base font-black text-slate-800 font-mono tracking-tight">
@@ -294,7 +284,7 @@ export default function PersonalBestsSwipeCard() {
 							{/* Distance */}
 							<div className="flex flex-col items-center justify-center text-center group/metric px-2 border-l border-slate-100">
 								<Route className="w-5 h-5 text-blue-500 mb-1.5 group-hover/metric:scale-110 transition-transform" />
-								<span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+								<span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">
 									Dist
 								</span>
 								<span className="text-sm sm:text-base font-black text-slate-800 font-mono tracking-tight">
@@ -305,7 +295,7 @@ export default function PersonalBestsSwipeCard() {
 							{/* Elevation */}
 							<div className="flex flex-col items-center justify-center text-center group/metric px-2 border-l border-slate-100">
 								<Mountain className="w-5 h-5 text-purple-500 mb-1.5 group-hover/metric:scale-110 transition-transform" />
-								<span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+								<span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">
 									Elev
 								</span>
 								<span className="text-sm sm:text-base font-black text-slate-800 tracking-tight">
@@ -317,22 +307,9 @@ export default function PersonalBestsSwipeCard() {
 				</AnimatePresence>
 			</div>
 
-			{/* ═══════════════════════════════════════
-			    FOOTER TELEMETRY
-			═══════════════════════════════════════ */}
-			<div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-100 relative z-20">
-				<div className="flex items-center gap-2 text-slate-400">
-					<SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-					<span className="text-[10px] sm:text-[11px] font-medium tracking-wide">
-						Swipe stage active &bull; Use keys &larr; &rarr;
-					</span>
-				</div>
-
-				<div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/70 shrink-0">
-					<CheckCircle className="w-3 h-3 text-emerald-600" />
-					<span>Verified Data</span>
-				</div>
+			<div className="pt-3 mt-1 border-t border-slate-100 text-xs text-slate-600">
+				Swipe or focus a record control and use the left and right arrow keys.
 			</div>
-		</div>
+		</section>
 	);
 }

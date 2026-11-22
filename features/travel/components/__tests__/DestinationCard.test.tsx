@@ -6,13 +6,13 @@ import type { Destination } from "../../types";
 const mockDestination: Destination = {
 	id: "2",
 	name: "Bali",
-	location: "Canggu & Ubud",
+	location: "Seminyak, Ubud & Denpasar",
 	country: "Indonesia",
 	type: "domestic",
 	visitedDate: "2019-12",
 	imageUrl: "https://example.com/bali.jpg",
 	description:
-		"Slow mornings along the Canggu coast followed by a few quiet days up in Ubud.",
+		"I finished my first half marathon in Bali, then explored Seminyak, Ubud, and Denpasar.",
 };
 
 describe("DestinationCard Component", () => {

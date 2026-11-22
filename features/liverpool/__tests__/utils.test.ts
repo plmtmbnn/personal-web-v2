@@ -6,6 +6,7 @@ import {
 	createGoogleCalendarUrl,
 	normalizeTheSportsDbFixture,
 	calculateFixtureTtlSeconds,
+	selectNextFixture,
 } from "../utils";
 import type { LfcFixture, TheSportsDbEvent } from "../types";
 
@@ -122,6 +123,64 @@ describe("Liverpool FC Utilities", () => {
 			expect(fixture.isHome).toBe(true);
 			expect(fixture.round).toBe("Round 4");
 			expect(fixture.date).toContain("2026-09-12");
+		});
+
+		it("leaves unknown kickoff unset instead of inventing a time", () => {
+			const fixture = normalizeTheSportsDbFixture({
+				idEvent: "unknown",
+				strEvent: "Liverpool vs Opponent",
+				strLeague: "Cup",
+				strHomeTeam: "Liverpool",
+				strAwayTeam: "Opponent",
+				dateEvent: "2026-11-22",
+				idHomeTeam: "133602",
+				idAwayTeam: "other",
+			});
+			expect(fixture.date).toBe("");
+			expect(createGoogleCalendarUrl(fixture)).toBe("#");
+		});
+
+		it("preserves a supplied kickoff timezone offset", () => {
+			const fixture = normalizeTheSportsDbFixture({
+				idEvent: "offset",
+				strEvent: "Liverpool vs Opponent",
+				strLeague: "Cup",
+				strHomeTeam: "Liverpool",
+				strAwayTeam: "Opponent",
+				dateEvent: "2026-11-22",
+				strTime: "00:00:00",
+				strTimestamp: "2026-11-22T16:30:00-05:00",
+				idHomeTeam: "133602",
+				idAwayTeam: "other",
+			});
+			expect(fixture.date).toBe("2026-11-22T16:30:00-05:00");
+		});
+	});
+
+	describe("selectNextFixture", () => {
+		const fixture = (id: string, date: string): LfcFixture => ({
+			id,
+			title: id,
+			date,
+			stadium: "Venue TBC",
+			homeTeam: "Liverpool",
+			awayTeam: "Opponent",
+			competition: "Cup",
+			isHome: true,
+		});
+
+		it("prefers the nearest future fixture over past and undated events", () => {
+			const now = Date.parse("2026-11-22T12:00:00Z");
+			expect(
+				selectNextFixture(
+					[
+						fixture("past", "2026-11-21T12:00:00Z"),
+						fixture("future", "2026-11-23T12:00:00Z"),
+						fixture("unknown", ""),
+					],
+					now,
+				)?.id,
+			).toBe("future");
 		});
 	});
 

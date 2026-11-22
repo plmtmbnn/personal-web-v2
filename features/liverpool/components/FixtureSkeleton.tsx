@@ -2,67 +2,43 @@
 
 export default function FixtureSkeleton() {
 	return (
-		<div className="animate-pulse w-full max-w-xl sm:max-w-2xl mx-auto">
-			<div className="rounded-3xl sm:rounded-[2.5rem] border border-slate-200/80 bg-white shadow-xl overflow-hidden">
-				{/* Zone A: Head strip skeleton */}
-				<div className="flex items-center justify-between gap-2 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 pb-3 sm:pb-3.5 border-b border-slate-100">
-					<div className="flex items-center gap-1.5">
-						<div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-slate-100" />
-						<div className="h-4 w-40 sm:w-52 bg-slate-100 rounded-full" />
-					</div>
-					<div className="h-6 w-20 sm:w-24 bg-slate-100 rounded-full" />
+		<div
+			aria-hidden="true"
+			className="mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-lg"
+		>
+			<div className="flex items-center justify-between border-b border-slate-200 px-5 py-3 sm:px-8 sm:py-4">
+				<div className="h-4 w-36 rounded bg-slate-200" />
+				<div className="h-4 w-12 rounded bg-slate-200" />
+			</div>
+			<div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4 py-4 sm:gap-6 sm:px-8 sm:py-6">
+				<div className="flex flex-col items-center gap-3">
+					<div className="size-16 rounded-2xl bg-slate-200 sm:size-24" />
+					<div className="h-5 w-20 max-w-full rounded bg-slate-200 sm:w-28" />
 				</div>
-
-				{/* Zone B: Clash arena skeleton */}
-				<div className="px-4 sm:px-5 lg:px-6 pt-3.5 sm:pt-4 pb-3 sm:pb-3.5">
-					{/* Crests arena */}
-					<div className="flex items-center justify-between gap-3 sm:gap-5">
-						{/* Home crest */}
-						<div className="flex flex-col items-center gap-2 sm:gap-2.5 flex-1">
-							<div className="w-20 h-20 sm:w-28 sm:h-28 rounded-3xl bg-slate-100" />
-							<div className="flex flex-col items-center gap-1">
-								<div className="h-3.5 w-20 sm:w-24 bg-slate-100 rounded-full" />
-								<div className="h-4 w-10 bg-slate-100 rounded-full" />
-							</div>
+				<div className="h-4 w-5 rounded bg-slate-200" />
+				<div className="flex flex-col items-center gap-3">
+					<div className="size-16 rounded-2xl bg-slate-200 sm:size-24" />
+					<div className="h-5 w-20 max-w-full rounded bg-slate-200 sm:w-28" />
+				</div>
+			</div>
+			<div className="flex flex-col items-center gap-2 border-t border-slate-200 px-5 py-2 sm:py-4">
+				<div className="h-4 w-36 rounded bg-slate-200" />
+				<div className="h-7 w-64 max-w-full rounded bg-slate-200" />
+				<div className="h-4 w-28 rounded bg-slate-200" />
+			</div>
+			<div className="border-t border-slate-200 bg-slate-50/80 px-5 py-3">
+				<div className="mx-auto mb-2 h-3 w-28 rounded bg-slate-200" />
+				<div className="grid grid-cols-4 divide-x divide-slate-200">
+					{["days", "hours", "minutes", "seconds"].map((unit) => (
+						<div key={unit} className="flex flex-col items-center gap-1">
+							<div className="h-6 w-8 rounded bg-slate-200" />
+							<div className="h-3 w-10 rounded bg-slate-200" />
 						</div>
-
-						{/* VS badge */}
-						<div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-100 shrink-0" />
-
-						{/* Away crest */}
-						<div className="flex flex-col items-center gap-2 sm:gap-2.5 flex-1">
-							<div className="w-20 h-20 sm:w-28 sm:h-28 rounded-3xl bg-slate-100" />
-							<div className="flex flex-col items-center gap-1">
-								<div className="h-3.5 w-20 sm:w-24 bg-slate-100 rounded-full" />
-								<div className="h-4 w-10 bg-slate-100 rounded-full" />
-							</div>
-						</div>
-					</div>
+					))}
 				</div>
-
-				{/* Zone C: Countdown + info tray skeleton */}
-				<div className="mx-3 sm:mx-4 mb-3 sm:mb-4 bg-slate-50/90 border border-slate-200/60 rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex flex-col gap-2.5 sm:gap-3">
-					{/* Countdown tiles */}
-					<div className="flex items-center justify-center gap-2 sm:gap-2.5">
-						<div className="w-[52px] sm:w-[62px] h-12 sm:h-14 rounded-2xl bg-slate-100" />
-						<div className="w-[52px] sm:w-[62px] h-12 sm:h-14 rounded-2xl bg-slate-100" />
-						<div className="w-[52px] sm:w-[62px] h-12 sm:h-14 rounded-2xl bg-slate-100" />
-						<div className="w-[52px] sm:w-[62px] h-12 sm:h-14 rounded-2xl bg-slate-100" />
-					</div>
-
-					{/* Metadata strip */}
-					<div className="flex items-center justify-center gap-2">
-						<div className="h-3 w-28 sm:w-32 bg-slate-100 rounded-full" />
-						<div className="h-3 w-24 sm:w-28 bg-slate-100 rounded-full" />
-						<div className="h-3 w-20 sm:w-24 bg-slate-100 rounded-full hidden sm:block" />
-					</div>
-				</div>
-
-				{/* Footer skeleton */}
-				<div className="flex items-center justify-between gap-3 px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5">
-					<div className="h-3.5 w-32 bg-slate-100 rounded-full hidden sm:block" />
-					<div className="h-9 w-full sm:w-44 bg-slate-100 rounded-full" />
-				</div>
+			</div>
+			<div className="flex justify-center border-t border-slate-200 px-5 py-2 sm:justify-end sm:px-8 sm:py-3">
+				<div className="h-11 w-full rounded-xl bg-slate-200 sm:w-48" />
 			</div>
 		</div>
 	);
@@ -71,27 +47,22 @@ export default function FixtureSkeleton() {
 export function LiverpoolSkeleton() {
 	return (
 		<main
-			className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-slate-50/80 bg-dot-pattern flex flex-col px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-24 sm:pb-28"
 			role="status"
-			aria-live="polite"
 			aria-label="Loading Liverpool FC matchday hub"
+			className="h-[100dvh] overflow-y-auto bg-slate-50/80 px-4 pb-18 pt-3 sm:px-6 sm:pb-32 sm:pt-4"
 		>
-			<div className="max-w-4xl lg:max-w-5xl mx-auto w-full flex-1 flex flex-col min-h-0">
-				<div className="flex items-center justify-between gap-3 shrink-0 py-1 mb-2 sm:mb-3">
-					<div className="flex items-center gap-1.5 sm:gap-2">
-						<div className="h-3.5 w-10 bg-slate-200 rounded animate-pulse" />
-						<div className="h-3.5 w-3.5 bg-slate-200 rounded animate-pulse" />
-						<div className="h-3.5 w-14 bg-slate-200 rounded animate-pulse" />
-						<div className="h-3.5 w-3.5 bg-slate-200 rounded animate-pulse" />
-						<div className="h-3.5 w-24 bg-slate-200 rounded animate-pulse" />
+			<div className="mx-auto flex min-h-full w-full max-w-4xl flex-col animate-pulse motion-reduce:animate-none">
+				<div
+					aria-hidden="true"
+					className="flex items-start justify-between gap-3"
+				>
+					<div>
+						<div className="h-4 w-28 rounded bg-slate-200" />
+						<div className="mt-2 h-7 w-36 rounded bg-slate-200 sm:mt-3 sm:h-8 sm:w-64" />
 					</div>
-					<div className="flex items-center gap-2">
-						<div className="h-3 w-16 bg-slate-200 rounded animate-pulse hidden sm:inline-block" />
-						<div className="h-7 w-20 bg-slate-200 rounded-full animate-pulse" />
-					</div>
+					<div className="h-11 w-24 rounded-xl bg-slate-200" />
 				</div>
-
-				<div className="flex-1 flex flex-col justify-center min-h-0 py-1 sm:py-2">
+				<div className="flex flex-1 flex-col justify-center py-3 sm:py-4">
 					<FixtureSkeleton />
 				</div>
 			</div>

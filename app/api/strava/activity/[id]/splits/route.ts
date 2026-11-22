@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getActivitySplits } from "@/services/strava/service";
+import { getActivitySplits, getRecentRuns } from "@/services/strava/service";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +12,24 @@ interface RouteContext {
 export async function GET(_request: Request, context: RouteContext) {
 	try {
 		const { id } = await context.params;
-		const activityId = Number.parseInt(id, 10);
+		const activityId = Number(id);
 
-		if (!activityId || Number.isNaN(activityId)) {
+		if (
+			!Number.isSafeInteger(activityId) ||
+			activityId <= 0 ||
+			String(activityId) !== id
+		) {
 			return NextResponse.json(
 				{ error: "Invalid activity ID." },
 				{ status: 400 },
+			);
+		}
+
+		const recentRuns = await getRecentRuns(10);
+		if (!recentRuns?.some((run) => run.id === activityId)) {
+			return NextResponse.json(
+				{ error: "Activity not found." },
+				{ status: 404 },
 			);
 		}
 

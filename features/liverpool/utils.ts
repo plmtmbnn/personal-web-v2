@@ -10,21 +10,22 @@ export function normalizeTheSportsDbFixture(
 
 	// Parse date safely
 	let dateIso = "";
-	if (event.strTimestamp) {
-		const raw = event.strTimestamp.trim();
-		dateIso = raw.endsWith("Z") || raw.includes("+") ? raw : `${raw}Z`;
-	} else if (event.dateEvent) {
-		const time = event.strTime || "15:00:00";
-		dateIso = `${event.dateEvent}T${time}Z`;
+	if (event.strTimestamp?.trim()) {
+		const raw = event.strTimestamp.trim().replace(" ", "T");
+		dateIso =
+			raw.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(raw) ? raw : `${raw}Z`;
+	}
+	if (Number.isNaN(Date.parse(dateIso)) && event.dateEvent && event.strTime) {
+		dateIso = `${event.dateEvent}T${event.strTime}Z`;
 	}
 
 	// Validate date parsing
 	const parsed = new Date(dateIso);
 	if (Number.isNaN(parsed.getTime())) {
-		dateIso = new Date().toISOString();
+		dateIso = "";
 	}
 
-	const stadium = event.strVenue?.trim() || (isHome ? "Anfield" : "TBC");
+	const stadium = event.strVenue?.trim() || "Venue to be confirmed";
 
 	return {
 		id: String(event.idEvent),
@@ -32,10 +33,10 @@ export function normalizeTheSportsDbFixture(
 		date: dateIso,
 		stadium,
 		homeTeam: event.strHomeTeam || "Liverpool",
-		awayTeam: event.strAwayTeam || "Opponent",
+		awayTeam: event.strAwayTeam || "Opponent to be confirmed",
 		homeTeamBadge: event.strHomeTeamBadge || undefined,
 		awayTeamBadge: event.strAwayTeamBadge || undefined,
-		competition: event.strLeague || "Premier League",
+		competition: event.strLeague || "Competition to be confirmed",
 		competitionBadge: event.strLeagueBadge || undefined,
 		season: event.strSeason || undefined,
 		round: event.intRound ? `Round ${event.intRound}` : undefined,
@@ -194,6 +195,18 @@ export function getCountdown(targetIsoDate: string) {
 		seconds,
 		isPassed: false,
 	};
+}
+
+export function selectNextFixture(
+	fixtures: LfcFixture[],
+	nowMs = Date.now(),
+): LfcFixture | null {
+	return (
+		fixtures.find((fixture) => Date.parse(fixture.date) > nowMs) ??
+		fixtures.find((fixture) => Number.isNaN(Date.parse(fixture.date))) ??
+		fixtures.at(-1) ??
+		null
+	);
 }
 
 /**

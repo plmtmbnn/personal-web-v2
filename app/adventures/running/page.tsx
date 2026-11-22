@@ -6,13 +6,12 @@ import RunningView, {
 } from "@/features/adventures/running/components/View";
 import { getCachedStravaData } from "@/services/strava/service";
 
-// Edge cache with ISR — revalidate running activity log at most once every 5 minutes
+// Edge cache with ISR: revalidate running activity log at most once every 5 minutes
 export const revalidate = 300;
 
 export const metadata: Metadata = createMetadata({
-	title: "Endurance Journey | Running",
-	description:
-		"Tracking physical limits and mental discipline. 1000KM+ yearly running goals and personal milestones.",
+	title: "Running Performance",
+	description: "Recent Strava runs, running totals, and personal records.",
 	path: "/adventures/running",
 	keywords: [
 		"Marathon Training",

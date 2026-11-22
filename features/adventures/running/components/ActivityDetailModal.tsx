@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
 	X,
@@ -401,6 +401,8 @@ export default function ActivityDetailModal({
 	const [exportTheme, setExportTheme] = useState<CanvasTheme>("light");
 	const [rawSplits, setRawSplits] = useState<StravaSplitMetric[] | null>(null);
 	const [isLoadingSplits, setIsLoadingSplits] = useState(false);
+	const modalRef = useRef<HTMLDivElement>(null);
+	const closeButtonRef = useRef<HTMLButtonElement>(null);
 	const reduceMotion = useReducedMotion();
 	const safeReduceMotion = Boolean(reduceMotion);
 
@@ -440,13 +442,35 @@ export default function ActivityDetailModal({
 		};
 	}, [activity?.id]);
 
-	// Escape key listener & body scroll lock
 	useEffect(() => {
 		if (!activity) return;
+		const previousFocus = document.activeElement as HTMLElement | null;
+		closeButtonRef.current?.focus();
+		return () => previousFocus?.focus();
+	}, [activity?.id]);
+
+	// Escape key listener and body scroll lock
+	useEffect(() => {
+		if (!activity) return;
+		const previousOverflow = document.body.style.overflow;
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "Escape") {
 				onClose();
+			} else if (e.key === "Tab") {
+				const controls = modalRef.current?.querySelectorAll<HTMLElement>(
+					'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+				);
+				if (!controls?.length) return;
+				const first = controls[0];
+				const last = controls[controls.length - 1];
+				if (e.shiftKey && document.activeElement === first) {
+					e.preventDefault();
+					last.focus();
+				} else if (!e.shiftKey && document.activeElement === last) {
+					e.preventDefault();
+					first.focus();
+				}
 			}
 		};
 
@@ -455,7 +479,7 @@ export default function ActivityDetailModal({
 
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown);
-			document.body.style.overflow = "unset";
+			document.body.style.overflow = previousOverflow;
 		};
 	}, [activity, onClose]);
 
@@ -487,7 +511,7 @@ export default function ActivityDetailModal({
 			.toString()
 			.padStart(2, "0");
 		const formattedPace =
-			activity.distance > 0 ? `${paceMin}:${paceSec}/km` : "—";
+			activity.distance > 0 ? `${paceMin}:${paceSec}/km` : "N/A";
 
 		const moveHrs = Math.floor(activity.moving_time / 3600);
 		const moveMins = Math.floor((activity.moving_time % 3600) / 60);
@@ -602,7 +626,7 @@ export default function ActivityDetailModal({
 				? `${window.location.origin}/adventures/running?activity=${activity.id}`
 				: `https://polmatambunan.my.id/adventures/running?activity=${activity.id}`;
 
-		const shareText = `🏃 ${activity.name} — ${derivedData.distanceKm} km in ${derivedData.formattedMovingDuration} (Avg ${derivedData.formattedPace})`;
+		const shareText = `${activity.name}: ${derivedData.distanceKm} km in ${derivedData.formattedMovingDuration} (Avg ${derivedData.formattedPace})`;
 
 		if (typeof navigator !== "undefined" && navigator.share) {
 			try {
@@ -670,13 +694,17 @@ export default function ActivityDetailModal({
 
 				{/* Floating Modal Frame */}
 				<motion.div
+					ref={modalRef}
+					role="dialog"
+					aria-modal="true"
+					aria-labelledby="activity-dialog-title"
 					initial={
 						safeReduceMotion ? false : { opacity: 0, scale: 0.95, y: 16 }
 					}
 					animate={{ opacity: 1, scale: 1, y: 0 }}
 					exit={{ opacity: 0, scale: 0.95, y: 16 }}
 					transition={{ type: "spring", damping: 28, stiffness: 350 }}
-					className="relative w-full max-w-md sm:max-w-lg bg-slate-50/95 backdrop-blur-xl rounded-[2rem] border border-slate-200/80 shadow-2xl overflow-hidden z-10 text-slate-900 flex flex-col"
+					className="relative w-full max-w-md sm:max-w-lg bg-white rounded-[2rem] border border-slate-200/80 shadow-2xl overflow-hidden z-10 text-slate-900 flex flex-col"
 					onClick={(e) => e.stopPropagation()}
 				>
 					<div className="p-5 pb-3.5 border-b border-slate-200/80 bg-white relative z-20">
@@ -688,13 +716,16 @@ export default function ActivityDetailModal({
 								</div>
 
 								<div className="min-w-0 space-y-0.5">
-									<div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
+									<div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
 										<Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
 										<span className="truncate">
 											{formattedDate}, {formattedTime}
 										</span>
 									</div>
-									<h3 className="text-base font-black text-slate-900 truncate leading-tight tracking-tight">
+									<h3
+										id="activity-dialog-title"
+										className="text-base font-black text-slate-900 truncate leading-tight tracking-tight"
+									>
 										{activity.name}
 									</h3>
 								</div>
@@ -704,9 +735,8 @@ export default function ActivityDetailModal({
 								<button
 									type="button"
 									onClick={handleShare}
-									className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 active:scale-95"
+									className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 hover:text-emerald-700 transition-colors cursor-pointer shrink-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-emerald-600"
 									aria-label="Share activity"
-									title={copiedLink ? "Link Copied!" : "Share activity"}
 								>
 									{copiedLink ? (
 										<Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
@@ -716,9 +746,10 @@ export default function ActivityDetailModal({
 								</button>
 
 								<button
+									ref={closeButtonRef}
 									type="button"
 									onClick={onClose}
-									className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 active:scale-95"
+									className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shrink-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-emerald-600"
 									aria-label="Close modal"
 								>
 									<X className="w-4 h-4" />
@@ -933,7 +964,7 @@ export default function ActivityDetailModal({
 										<span className="font-mono font-black text-emerald-700">
 											{fastestSplit
 												? `KM ${fastestSplit.split} (${fastestSplit.paceFormatted}/km)`
-												: "—"}
+												: "N/A"}
 										</span>
 									</div>
 									<div className="flex items-center gap-1.5 font-bold text-slate-500">

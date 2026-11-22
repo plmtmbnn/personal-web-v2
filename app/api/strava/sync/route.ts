@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redis } from "@/lib/core/redis";
 import { getStravaData } from "@/services/strava/service";
+import { checkAdmin } from "@/features/auth/actions";
 
 /**
  * API Route to trigger live sync of Strava running activities and statistics.
@@ -8,6 +10,10 @@ import { getStravaData } from "@/services/strava/service";
  */
 export async function POST() {
 	try {
+		if (!(await checkAdmin())) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
 		// Invalidate existing Redis cache to force live fetch
 		try {
 			await Promise.all([
@@ -48,6 +54,8 @@ export async function POST() {
 			);
 		}
 
+		revalidateTag("strava-runs", { expire: 0 });
+		revalidatePath("/adventures/running");
 		return NextResponse.json({
 			success: true,
 			message: "Strava activities live synced successfully.",

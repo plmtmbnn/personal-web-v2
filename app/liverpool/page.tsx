@@ -10,9 +10,9 @@ import { getLiverpoolFixturesStatic } from "@/features/liverpool/actions";
 export const revalidate = 3600;
 
 export const metadata: Metadata = createMetadata({
-	title: "Liverpool FC | Matchday Schedule & Fixtures",
+	title: "Liverpool FC | Matchday Hub",
 	description:
-		"Live upcoming Liverpool FC fixtures, match schedule, kickoff times in local timezone, stadiums, and broadcasters for the 2026/27 season.",
+		"Liverpool FC's next fixture, kickoff in your local time, venue, and a matchday countdown.",
 	path: "/liverpool",
 	keywords: [
 		"Liverpool FC",

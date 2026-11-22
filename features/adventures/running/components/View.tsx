@@ -46,7 +46,7 @@ type SortOption =
 
 const DISTANCE_FILTERS: { id: DistanceFilter; label: string; range: string }[] =
 	[
-		{ id: "all", label: "All Runs", range: "All" },
+		{ id: "all", label: "Recent Runs", range: "All" },
 		{ id: "short", label: "Short", range: "< 5K" },
 		{ id: "mid", label: "Mid", range: "5 - 10K" },
 		{ id: "long", label: "Long", range: "10 - 21K" },
@@ -64,6 +64,7 @@ function PaceRing({
 	size?: number;
 	strokeWidth?: number;
 }) {
+	const reduceMotion = useReducedMotion();
 	const radius = (size - strokeWidth * 2) / 2;
 	const circumference = 2 * Math.PI * radius;
 	const progress = Math.min(Math.max(pace / maxPace, 0), 1);
@@ -93,9 +94,7 @@ function PaceRing({
 				strokeWidth={strokeWidth}
 				strokeLinecap="round"
 				strokeDasharray={circumference}
-				initial={{
-					strokeDashoffset: circumference,
-				}}
+				initial={reduceMotion ? false : { strokeDashoffset: circumference }}
 				animate={{ strokeDashoffset: dashOffset }}
 				transition={{ type: "spring", stiffness: 350, damping: 30 }}
 				className={
@@ -433,7 +432,7 @@ export default function RunningView({
 			}
 			setStatusMessage({
 				type: "success",
-				text: "Strava activities live synced successfully!",
+				text: "Strava activities refreshed.",
 			});
 		} catch (err: any) {
 			setStatusMessage({
@@ -496,7 +495,7 @@ export default function RunningView({
 		if (success === "true") {
 			setStatusMessage({
 				type: "success",
-				text: "Strava authentication successful! Activities are now synced.",
+				text: "Strava connected. Activities are ready.",
 			});
 			const timer = setTimeout(() => setStatusMessage(null), 5000);
 			return () => clearTimeout(timer);
@@ -676,10 +675,7 @@ export default function RunningView({
 		if (rawRuns.length === 0) return null;
 
 		let maxDistance = rawRuns[0];
-		let minPaceSeconds =
-			rawRuns[0].distance > 0
-				? rawRuns[0].moving_time / (rawRuns[0].distance / 1000)
-				: 9999;
+		let minPaceSeconds = Infinity;
 		let maxElevation = rawRuns[0];
 		let totalSeconds = 0;
 		let totalMeters = 0;
@@ -696,7 +692,7 @@ export default function RunningView({
 			}
 
 			const paceSec =
-				run.distance > 0 ? run.moving_time / (run.distance / 1000) : 9999;
+				run.distance > 0 ? run.moving_time / (run.distance / 1000) : Infinity;
 			if (paceSec < minPaceSeconds) {
 				minPaceSeconds = paceSec;
 			}
@@ -712,7 +708,9 @@ export default function RunningView({
 
 		return {
 			maxDistanceKm: (maxDistance.distance / 1000).toFixed(1),
-			fastestPace: `${fastMin}:${fastSec} /km`,
+			fastestPace: Number.isFinite(minPaceSeconds)
+				? `${fastMin}:${fastSec} /km`
+				: "N/A",
 			maxElevationM: `${maxElevation.total_elevation_gain} m`,
 			totalLoggedTime: `${totalHours}h ${totalMinutes}m`,
 			totalLoggedKm: (totalMeters / 1000).toFixed(1),
@@ -721,39 +719,33 @@ export default function RunningView({
 
 	// Average Pace from recent runs
 	const avgPaceData = useMemo(() => {
-		if (rawRuns.length === 0) return { paceMinutes: 5.5, formatted: "5:30" };
+		if (rawRuns.length === 0) return { paceMinutes: 0, formatted: "N/A" };
 		const totalMeters = rawRuns.reduce((acc, run) => acc + run.distance, 0);
 		const totalTimeSeconds = rawRuns.reduce(
 			(acc, run) => acc + run.moving_time,
 			0,
 		);
 		const totalKm = totalMeters / 1000;
-		if (totalKm === 0) return { paceMinutes: 5.5, formatted: "5:30" };
-		const paceSecondsPerKm = totalTimeSeconds / totalKm;
+		if (totalKm === 0) return { paceMinutes: 0, formatted: "N/A" };
+		const paceSecondsPerKm = Math.round(totalTimeSeconds / totalKm);
 		const paceMinutes = paceSecondsPerKm / 60;
 		const min = Math.floor(paceSecondsPerKm / 60);
-		const sec = Math.round(paceSecondsPerKm % 60)
-			.toString()
-			.padStart(2, "0");
+		const sec = (paceSecondsPerKm % 60).toString().padStart(2, "0");
 		return {
 			paceMinutes,
 			formatted: `${min}:${sec}`,
 		};
 	}, [rawRuns]);
 
-	const totalRuns = stats?.all_run_totals?.count
-		? stats.all_run_totals.count.toLocaleString("en-US")
-		: hasRunData
-			? rawRuns.length.toLocaleString("en-US")
-			: "—";
+	const totalRuns =
+		stats?.all_run_totals?.count != null
+			? stats.all_run_totals.count.toLocaleString("en-US")
+			: "N/A";
 
-	const kmPerYear = stats?.ytd_run_totals?.distance
-		? Math.round(stats.ytd_run_totals.distance / 1000).toLocaleString("en-US")
-		: hasRunData
-			? Math.round(
-					rawRuns.reduce((acc, run) => acc + run.distance, 0) / 1000,
-				).toLocaleString("en-US")
-			: "—";
+	const kmPerYear =
+		stats?.ytd_run_totals?.distance != null
+			? Math.round(stats.ytd_run_totals.distance / 1000).toLocaleString("en-US")
+			: "N/A";
 
 	const hasActiveFilters =
 		searchQuery.trim() !== "" ||
@@ -793,7 +785,7 @@ export default function RunningView({
 					className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs"
 				>
 					{/* Breadcrumb Navigation */}
-					<nav className="flex items-center gap-1.5 mb-4 text-xs font-semibold text-slate-400">
+					<nav className="flex items-center gap-1.5 mb-4 text-xs font-semibold text-slate-600">
 						<Link
 							href="/adventures"
 							className="hover:text-slate-700 transition-colors !no-underline"
@@ -811,8 +803,7 @@ export default function RunningView({
 								Running Performance
 							</h1>
 							<p className="text-sm sm:text-base text-slate-500 font-medium mt-2 max-w-xl leading-relaxed">
-								Tracking physical limits and mental discipline. Live Strava
-								telemetry, race benchmarks, and split pacing analytics.
+								Recent Strava runs, running totals, and personal records.
 							</p>
 						</div>
 
@@ -823,7 +814,7 @@ export default function RunningView({
 									<p className="text-xl sm:text-2xl font-extrabold text-slate-900 tabular-nums font-mono">
 										{totalRuns}
 									</p>
-									<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5 truncate">
+									<p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mt-0.5 truncate">
 										Total Runs
 									</p>
 								</div>
@@ -831,7 +822,7 @@ export default function RunningView({
 									<p className="text-xl sm:text-2xl font-extrabold text-emerald-600 tabular-nums font-mono">
 										{kmPerYear}
 									</p>
-									<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5 truncate">
+									<p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mt-0.5 truncate">
 										KM This Year
 									</p>
 								</div>
@@ -839,8 +830,8 @@ export default function RunningView({
 									<p className="text-xl sm:text-2xl font-extrabold text-teal-600 tabular-nums font-mono">
 										{avgPaceData.formatted}
 									</p>
-									<p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-0.5 truncate">
-										Avg /km
+									<p className="text-[9px] font-black uppercase tracking-widest text-slate-600 mt-0.5 truncate">
+										Recent pace /km
 									</p>
 								</div>
 							</div>
@@ -887,16 +878,12 @@ export default function RunningView({
 												Training Load & Intel
 											</h3>
 											<p className="text-[10.5px] text-slate-500 font-medium">
-												Live endurance load & session benchmarks
+												Latest runs and session benchmarks
 											</p>
 										</div>
 									</div>
-									<span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
-										<span className="relative flex h-2 w-2">
-											<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-											<span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-										</span>
-										Live Telemetry
+									<span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100 shrink-0">
+										Recent activity
 									</span>
 								</div>
 
@@ -904,23 +891,23 @@ export default function RunningView({
 								<div className="grid grid-cols-2 divide-x divide-slate-100 py-1 bg-slate-50/80 border border-slate-200/70 rounded-2xl">
 									<div className="text-center px-3 py-2 group">
 										<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tight">
-											{totalRuns}
+											{rawRuns.length}
 										</p>
 										<p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">
-											Total Activities
+											Recent Runs
 										</p>
 									</div>
 									<div className="text-center px-3 py-2 group">
 										<p className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tight">
-											{kmPerYear}
+											{performanceHighlights?.totalLoggedKm ?? "N/A"}
 										</p>
 										<p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">
-											KM This Year
+											Recent KM
 										</p>
 									</div>
 								</div>
 
-								{/* Live Average Pace Row */}
+								{/* Recent average pace */}
 								{rawRuns.length > 0 && (
 									<div className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70">
 										<div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
@@ -945,7 +932,7 @@ export default function RunningView({
 										</div>
 										<div className="flex-1 min-w-0 flex items-center justify-between gap-3">
 											<div className="min-w-0">
-												<p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+												<p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
 													Average Pace
 												</p>
 												<div className="flex items-center gap-1.5 mt-0.5 text-emerald-600">
@@ -959,7 +946,7 @@ export default function RunningView({
 												<p className="text-lg sm:text-xl font-black text-slate-900 font-mono tracking-tight">
 													{avgPaceData.formatted}
 												</p>
-												<span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">
+												<span className="text-[9.5px] font-bold text-slate-600 uppercase tracking-wider">
 													min/km
 												</span>
 											</div>
@@ -975,7 +962,7 @@ export default function RunningView({
 												<Route className="w-4 h-4" />
 											</div>
 											<div className="min-w-0">
-												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-600 truncate">
 													Longest Run
 												</p>
 												<p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate font-mono">
@@ -989,7 +976,7 @@ export default function RunningView({
 												<Gauge className="w-4 h-4" />
 											</div>
 											<div className="min-w-0">
-												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-600 truncate">
 													Fastest Pace
 												</p>
 												<p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate font-mono">
@@ -1003,7 +990,7 @@ export default function RunningView({
 												<Mountain className="w-4 h-4" />
 											</div>
 											<div className="min-w-0">
-												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-600 truncate">
 													Max Climb
 												</p>
 												<p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate font-mono">
@@ -1017,8 +1004,8 @@ export default function RunningView({
 												<Clock className="w-4 h-4" />
 											</div>
 											<div className="min-w-0">
-												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
-													Total Time
+												<p className="text-[9px] font-bold uppercase tracking-wider text-slate-600 truncate">
+													Recent Time
 												</p>
 												<p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate font-mono">
 													{performanceHighlights.totalLoggedTime}
@@ -1029,7 +1016,7 @@ export default function RunningView({
 								)}
 
 								<div className="pt-2">
-									<div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+									<div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-2.5">
 										<span>Distance Distribution</span>
 										<span className="text-slate-600 font-mono">
 											{rawRuns.length} runs
@@ -1068,13 +1055,13 @@ export default function RunningView({
 													: 0;
 											return (
 												<div key={cat.key} className="flex items-center gap-2">
-													<span className="text-[9px] font-bold text-slate-400 w-8 shrink-0 text-right tabular-nums">
+													<span className="text-[9px] font-bold text-slate-600 w-8 shrink-0 text-right tabular-nums">
 														{cat.label}
 													</span>
 													<div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
 														<motion.div
 															className={`h-full rounded-full ${cat.color}`}
-															initial={{ width: 0 }}
+															initial={safeReduceMotion ? false : { width: 0 }}
 															animate={{ width: `${pct}%` }}
 															transition={{
 																duration: 0.8,
@@ -1096,13 +1083,13 @@ export default function RunningView({
 							{/* Status indicator footer */}
 							<div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-500">
 								<div className="flex items-center gap-1.5">
-									<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+									<span className="w-2 h-2 rounded-full bg-emerald-500" />
 									<span className="text-xs font-semibold text-slate-700">
-										Strava Synchronized
+										Strava activity data
 									</span>
 								</div>
-								<span className="text-[10px] font-mono text-slate-400">
-									Pacing Engine v2
+								<span className="text-[10px] font-mono text-slate-600">
+									Latest {rawRuns.length} runs
 								</span>
 							</div>
 						</motion.div>
@@ -1113,37 +1100,6 @@ export default function RunningView({
 						<PersonalBestsSwipeCard />
 					</div>
 				</div>
-
-				{showConnectPrompt && oauthUrl && (
-					<motion.div
-						initial={safeReduceMotion ? false : { opacity: 0, scale: 0.95 }}
-						animate={{ opacity: 1, scale: 1 }}
-						transition={{ type: "spring", stiffness: 350, damping: 30 }}
-						className="mt-12 p-8 bg-white border border-emerald-200 rounded-[2.5rem] max-w-xl mx-auto shadow-md flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden"
-					>
-						<div className="space-y-2 text-center sm:text-left relative z-10">
-							<div className="flex items-center justify-center sm:justify-start gap-2 text-emerald-600">
-								<Activity className="w-4 h-4" />
-								<span className="text-[9.5px] font-bold uppercase tracking-wider">
-									Strava Sync Setup
-								</span>
-							</div>
-							<h4 className="text-lg font-extrabold text-slate-900 leading-tight">
-								Connect Strava Profile
-							</h4>
-							<p className="text-slate-600 text-xs font-medium leading-relaxed max-w-sm">
-								Your API applications settings are ready. Authorize this
-								dashboard to start pulling your running achievements.
-							</p>
-						</div>
-						<a
-							href={oauthUrl}
-							className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:scale-95 transition-[background-color,transform,box-shadow] duration-200 shrink-0 shadow-md !no-underline relative z-10"
-						>
-							Connect Account
-						</a>
-					</motion.div>
-				)}
 
 				{hasRunData ? (
 					<motion.div
@@ -1162,45 +1118,54 @@ export default function RunningView({
 										<h3 className="text-base font-extrabold text-slate-900 tracking-tight">
 											Running Activities
 										</h3>
-										<p className="text-[10px] font-semibold text-slate-400">
+										<p className="text-[10px] font-semibold text-slate-600">
 											Showing {displayedRuns.length} of{" "}
 											{filteredAndSortedRuns.length} activities
 										</p>
 									</div>
 								</div>
 
-								<button
-									type="button"
-									onClick={handleLiveSync}
-									disabled={isSyncing}
-									className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer self-start sm:self-auto"
-									title="Sync live activities from Strava"
-								>
-									<RefreshCw
-										className={`w-3.5 h-3.5 text-emerald-600 ${
-											isSyncing ? "animate-spin" : ""
-										}`}
-									/>
-									<span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
-								</button>
+								{isAdmin && (
+									<button
+										type="button"
+										onClick={handleLiveSync}
+										disabled={isSyncing}
+										className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer self-start sm:self-auto"
+										title="Refresh activities from Strava"
+									>
+										<RefreshCw
+											className={`w-3.5 h-3.5 text-emerald-600 ${
+												isSyncing ? "animate-spin" : ""
+											}`}
+										/>
+										<span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
+									</button>
+								)}
 							</div>
 
 							{/* Search + Filter + Sort row */}
 							<div className="border-t border-slate-100 pt-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
 								<div className="relative w-full lg:max-w-xs">
-									<Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+									<label
+										htmlFor="running-search"
+										className="block text-xs font-semibold text-slate-700 mb-1.5"
+									>
+										Search activities
+									</label>
+									<Search className="w-4 h-4 text-slate-500 absolute left-3.5 bottom-3.5 pointer-events-none z-10" />
 									<input
+										id="running-search"
 										type="text"
 										value={searchQuery}
 										onChange={(e) => handleSearchChange(e.target.value)}
 										placeholder="Search runs by title or date..."
-										className="w-full bg-slate-50/80 border border-slate-200/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[border-color,box-shadow]"
+										className="w-full min-h-11 bg-slate-50/80 border border-slate-200/80 rounded-xl pl-10 pr-12 py-2 text-sm font-medium text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[border-color,box-shadow]"
 									/>
 									{searchQuery && (
 										<button
 											type="button"
 											onClick={() => handleSearchChange("")}
-											className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-200/60 transition-colors cursor-pointer"
+											className="absolute right-0 bottom-0 min-w-11 min-h-11 flex items-center justify-center text-slate-600 hover:text-slate-900 rounded-md hover:bg-slate-200/60 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-emerald-600"
 											aria-label="Clear search"
 										>
 											<X className="w-3.5 h-3.5" />
@@ -1208,7 +1173,10 @@ export default function RunningView({
 									)}
 								</div>
 
-								<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none -mx-1 px-1 touch-pan-x">
+								<fieldset
+									aria-label="Distance"
+									className="flex min-w-0 items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none -mx-1 px-1 touch-pan-x border-0"
+								>
 									{DISTANCE_FILTERS.map((filter) => {
 										const isActive = distanceFilter === filter.id;
 										return (
@@ -1216,7 +1184,8 @@ export default function RunningView({
 												key={filter.id}
 												type="button"
 												onClick={() => handleFilterChange(filter.id)}
-												className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 whitespace-nowrap cursor-pointer shrink-0 touch-manipulation ${
+												aria-pressed={isActive}
+												className={`inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 whitespace-nowrap cursor-pointer shrink-0 touch-manipulation focus-visible:outline-2 focus-visible:outline-emerald-600 ${
 													isActive
 														? "bg-emerald-600 text-white shadow-xs"
 														: "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100"
@@ -1235,7 +1204,7 @@ export default function RunningView({
 											</button>
 										);
 									})}
-								</div>
+								</fieldset>
 
 								<div className="flex items-center gap-2 self-end lg:self-auto shrink-0">
 									{hasActiveFilters && (
@@ -1250,12 +1219,19 @@ export default function RunningView({
 										</button>
 									)}
 									<div className="relative">
+										<label
+											htmlFor="running-sort"
+											className="block text-xs font-semibold text-slate-700 mb-1.5"
+										>
+											Sort by
+										</label>
 										<select
+											id="running-sort"
 											value={sortBy}
 											onChange={(e) =>
 												handleSortChange(e.target.value as SortOption)
 											}
-											className="appearance-none bg-white border border-slate-200/80 rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[border-color,box-shadow] shadow-xs cursor-pointer"
+											className="appearance-none min-h-11 bg-white border border-slate-200/80 rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-[border-color,box-shadow] shadow-xs cursor-pointer"
 										>
 											<option value="date-desc">Newest First</option>
 											<option value="date-asc">Oldest First</option>
@@ -1263,7 +1239,7 @@ export default function RunningView({
 											<option value="pace-asc">Fastest Pace</option>
 											<option value="elevation-desc">Highest Climb</option>
 										</select>
-										<ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+										<ChevronDown className="w-3.5 h-3.5 text-slate-600 absolute right-2.5 bottom-4 pointer-events-none" />
 									</div>
 								</div>
 							</div>
@@ -1341,13 +1317,13 @@ export default function RunningView({
 																<p className="text-sm sm:text-base font-extrabold text-slate-900 line-clamp-1 group-hover:text-emerald-600 transition-colors leading-snug">
 																	{run.name}
 																</p>
-																<p className="text-[11px] font-medium text-slate-400 tabular-nums">
+																<p className="text-[11px] font-medium text-slate-600 tabular-nums">
 																	{formattedDate}
 																</p>
 															</div>
 														</div>
 
-														<div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-400 group-hover:text-emerald-600 group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-all flex items-center justify-center shrink-0">
+														<div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 group-hover:text-emerald-600 group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-all flex items-center justify-center shrink-0">
 															<ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
 														</div>
 													</div>
@@ -1356,14 +1332,14 @@ export default function RunningView({
 													<div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/60 grid grid-cols-3 divide-x divide-slate-200/60 group-hover:bg-slate-50 transition-colors">
 														{/* Distance */}
 														<div className="pr-2.5 sm:pr-3 space-y-0.5 min-w-0">
-															<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block truncate">
+															<span className="text-[9px] font-black uppercase tracking-widest text-slate-600 block truncate">
 																Distance
 															</span>
 															<div className="flex items-baseline gap-0.5">
 																<span className="text-lg sm:text-xl font-extrabold text-slate-900 tabular-nums font-mono leading-none">
 																	{distanceKm}
 																</span>
-																<span className="text-[10px] font-bold text-slate-400">
+																<span className="text-[10px] font-bold text-slate-600">
 																	km
 																</span>
 															</div>
@@ -1371,16 +1347,16 @@ export default function RunningView({
 
 														{/* Pace */}
 														<div className="px-2.5 sm:px-3 space-y-0.5 min-w-0">
-															<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block truncate">
+															<span className="text-[9px] font-black uppercase tracking-widest text-slate-600 block truncate">
 																Pace
 															</span>
 															<div className="flex items-baseline gap-0.5">
 																<span className="text-lg sm:text-xl font-extrabold text-slate-900 tabular-nums font-mono leading-none">
 																	{run.distance > 0
 																		? `${paceMin}:${paceSec}`
-																		: "—"}
+																		: "N/A"}
 																</span>
-																<span className="text-[10px] font-bold text-slate-400">
+																<span className="text-[10px] font-bold text-slate-600">
 																	/km
 																</span>
 															</div>
@@ -1388,7 +1364,7 @@ export default function RunningView({
 
 														{/* Duration */}
 														<div className="pl-2.5 sm:pl-3 space-y-0.5 min-w-0">
-															<span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block truncate">
+															<span className="text-[9px] font-black uppercase tracking-widest text-slate-600 block truncate">
 																Duration
 															</span>
 															<div className="flex items-baseline">
@@ -1410,7 +1386,7 @@ export default function RunningView({
 															</span>
 														) : (
 															<span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100/80 text-[10px] font-bold text-slate-500">
-																Road
+																No climb data
 															</span>
 														)}
 
@@ -1424,7 +1400,7 @@ export default function RunningView({
 														)}
 													</div>
 
-													<span className="text-[10px] font-mono font-bold text-slate-400 group-hover:text-slate-600 transition-colors uppercase tracking-wider shrink-0">
+													<span className="text-[10px] font-mono font-bold text-slate-600 group-hover:text-slate-600 transition-colors uppercase tracking-wider shrink-0">
 														{paceMin < 5
 															? "Fast"
 															: paceMin < 6
@@ -1455,7 +1431,7 @@ export default function RunningView({
 									) : (
 										<span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200/60 text-[11px] font-bold text-slate-500">
 											<CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-											All {filteredAndSortedRuns.length} activities loaded
+											All {filteredAndSortedRuns.length} recent activities shown
 										</span>
 									)}
 								</div>
@@ -1467,8 +1443,8 @@ export default function RunningView({
 								animate={{ opacity: 1, scale: 1 }}
 								className="text-center py-16 px-6 bg-white border border-slate-200/80 rounded-3xl shadow-xs max-w-md mx-auto"
 							>
-								<div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
-									<SearchX className="w-6 h-6 text-slate-400" />
+								<div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center mx-auto mb-4">
+									<SearchX className="w-6 h-6 text-slate-600" />
 								</div>
 								<h3 className="text-base font-extrabold text-slate-900 mb-1">
 									No matching runs found
@@ -1495,7 +1471,7 @@ export default function RunningView({
 						className="mt-12 text-center py-20 bg-white border border-slate-200/80 rounded-3xl shadow-sm"
 					>
 						<div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-slate-200/60">
-							<Activity className="w-10 h-10 text-slate-400" />
+							<Activity className="w-10 h-10 text-slate-600" />
 						</div>
 						<p className="text-base font-extrabold text-slate-900 mb-2">
 							{isConfigured ? "Ready to Connect" : "Setup Required"}
@@ -1533,19 +1509,21 @@ export default function RunningView({
 							moment.
 						</p>
 						<div className="flex items-center justify-center gap-3 flex-wrap">
-							<button
-								type="button"
-								onClick={handleLiveSync}
-								disabled={isSyncing}
-								className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-[background-color,transform] active:scale-95 shadow-xs cursor-pointer"
-							>
-								<RefreshCw
-									className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
-								/>
-								<span>{isSyncing ? "Syncing..." : "Retry Sync"}</span>
-							</button>
+							{isAdmin && (
+								<button
+									type="button"
+									onClick={handleLiveSync}
+									disabled={isSyncing}
+									className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-[background-color,transform] active:scale-95 shadow-xs cursor-pointer"
+								>
+									<RefreshCw
+										className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
+									/>
+									<span>{isSyncing ? "Syncing..." : "Retry Sync"}</span>
+								</button>
+							)}
 
-							{oauthUrl && (
+							{isAdmin && oauthUrl && (
 								<a
 									href={oauthUrl}
 									className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-[background-color,transform] active:scale-95 shadow-xs !no-underline"
@@ -1567,23 +1545,25 @@ export default function RunningView({
 							<Activity className="w-6 h-6 animate-pulse" />
 						</div>
 						<h3 className="text-base font-extrabold text-slate-900 mb-1">
-							Activities Syncing...
+							Recent activities unavailable
 						</h3>
 						<p className="text-xs text-slate-600 font-medium mb-4">
 							Your profile shows {stats.all_run_totals.count} total runs on
-							Strava. Activities are syncing.
+							Strava. Refresh this page to check again.
 						</p>
-						<button
-							type="button"
-							onClick={handleLiveSync}
-							disabled={isSyncing}
-							className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-[background-color,transform] active:scale-95 cursor-pointer"
-						>
-							<RefreshCw
-								className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
-							/>
-							<span>Sync Now</span>
-						</button>
+						{isAdmin && (
+							<button
+								type="button"
+								onClick={handleLiveSync}
+								disabled={isSyncing}
+								className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-[background-color,transform] active:scale-95 cursor-pointer"
+							>
+								<RefreshCw
+									className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
+								/>
+								<span>Sync Now</span>
+							</button>
+						)}
 					</motion.div>
 				) : (
 					/* 5. Connected But No Runs Logged */

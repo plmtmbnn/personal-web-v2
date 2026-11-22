@@ -13,19 +13,21 @@ export interface GetFixturesResult {
 	error?: string;
 }
 
-const DEFAULT_TTL_SECONDS = 86400; // 1 day fallback if no upcoming events
-
 /**
  * Fetch Liverpool FC fixtures directly from TheSportsDB with Next.js ISR caching.
  * Bypasses Redis to preserve static site generation (SSG/ISR).
  */
-export async function getLiverpoolFixturesStatic(): Promise<GetFixturesResult> {
+export async function getLiverpoolFixturesStatic(
+	forceRefresh = false,
+): Promise<GetFixturesResult> {
 	const url =
 		"https://www.thesportsdb.com/api/v1/json/123/eventsnext.php?id=133602";
 
 	try {
 		const response = await fetch(url, {
-			next: { revalidate: 3600 }, // Cache for 1 hour via Next.js ISR
+			...(forceRefresh
+				? { cache: "no-store" as const }
+				: { next: { revalidate: 3600 } }),
 			headers: {
 				Accept: "application/json",
 			},
@@ -44,17 +46,27 @@ export async function getLiverpoolFixturesStatic(): Promise<GetFixturesResult> {
 
 		const data = (await response.json()) as TheSportsDbResponse;
 
+		if (data?.events === null) {
+			return {
+				upcoming: [],
+				lastUpdated: new Date().toISOString(),
+			};
+		}
 		if (!data || !Array.isArray(data.events)) {
 			return {
 				upcoming: [],
 				lastUpdated: new Date().toISOString(),
+				error: "Invalid fixture response",
 			};
 		}
 
 		const upcoming = data.events
 			.filter((event) => Boolean(event?.idEvent))
 			.map(normalizeTheSportsDbFixture)
-			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+			.sort(
+				(a, b) =>
+					(Date.parse(a.date) || Infinity) - (Date.parse(b.date) || Infinity),
+			);
 
 		return {
 			upcoming,
@@ -90,7 +102,11 @@ export async function getLiverpoolFixtures(
 					typeof cached === "string"
 						? (JSON.parse(cached) as GetFixturesResult)
 						: cached;
-				if (Array.isArray(parsed?.upcoming)) {
+				if (
+					Array.isArray(parsed?.upcoming) &&
+					parsed.upcoming.length > 0 &&
+					!parsed.error
+				) {
 					return parsed;
 				}
 			}
@@ -100,14 +116,21 @@ export async function getLiverpoolFixtures(
 	}
 
 	// 2. Fetch fresh data from TheSportsDB with ISR
-	const result = await getLiverpoolFixturesStatic();
+	const result = await getLiverpoolFixturesStatic(forceRefresh);
+	if (result.error || result.upcoming.length === 0) {
+		if (forceRefresh && !result.error) {
+			try {
+				await redis.del(cacheKey);
+			} catch (cacheErr) {
+				console.warn("[Liverpool] Redis cache clear failed:", cacheErr);
+			}
+		}
+		return result;
+	}
 
 	// 3. Save response to Redis with calculated dynamic TTL
 	try {
-		const ttlSeconds =
-			result.upcoming.length > 0
-				? calculateFixtureTtlSeconds(result.upcoming[0]?.date)
-				: DEFAULT_TTL_SECONDS;
+		const ttlSeconds = calculateFixtureTtlSeconds(result.upcoming[0]?.date);
 		await redis.set(cacheKey, JSON.stringify(result), { ex: ttlSeconds });
 	} catch (cacheErr) {
 		console.warn("[Liverpool] Redis cache write failed:", cacheErr);

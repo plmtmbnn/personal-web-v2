@@ -1,3 +1,10 @@
+# [0.135.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.134.0...v0.135.0) (2026-11-24)
+
+
+### Features
+
+* add IDX swing scanner and refine site workflows ([5dd904b](https://github.com/plmtmbnn/personal-web-v2/commit/5dd904b4dc834b9e3d584d654fbc00efee003c72))
+
 # [0.134.0](https://github.com/plmtmbnn/personal-web-v2/compare/v0.133.0...v0.134.0) (2026-11-22)
 
 

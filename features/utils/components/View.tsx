@@ -259,11 +259,11 @@ const utilities: UtilityItem[] = [
 		icon: BookOpen,
 	},
 	{
-		title: "Stock Explorer",
+		title: "IDX Swing Scanner",
 		slug: "stock-explorer",
 		categoryId: "finance",
 		description:
-			"Interactive IDX stock summary explorer with foreign flow tracking and performance analysis.",
+			"Confirmed IDX breakouts with buy ranges, stops, and targets for the next open.",
 		icon: TableIcon,
 	},
 	{

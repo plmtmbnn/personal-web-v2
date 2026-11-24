@@ -34,7 +34,6 @@ function Team({
 						height={96}
 						className="max-h-full max-w-full object-contain"
 						loading="eager"
-						fetchPriority={isLiverpool ? "high" : "auto"}
 						unoptimized
 						onError={() => setImageFailed(true)}
 					/>

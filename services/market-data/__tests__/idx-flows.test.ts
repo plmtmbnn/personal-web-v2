@@ -163,5 +163,33 @@ describe("IDX Flows foreign telemetry logic", () => {
 
 			global.fetch = originalFetch;
 		});
+
+		it("reports a failed Redis save instead of a successful sync", async () => {
+			const originalFetch = global.fetch;
+			global.fetch = vi.fn().mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({
+					data: [
+						{
+							StockCode: "BBCA",
+							Date: "2026-11-17",
+							Close: 10000,
+							ForeignBuy: 100,
+							ForeignSell: 50,
+							Volume: 1000,
+							Value: 10000000,
+						},
+					],
+				}),
+			} as any);
+			vi.mocked(saveStockData).mockResolvedValueOnce(false);
+			const result = await syncIdxStockSummary(true);
+			expect(result).toEqual({
+				success: false,
+				count: 0,
+				error: "Stock cache save failed",
+			});
+			global.fetch = originalFetch;
+		});
 	});
 });

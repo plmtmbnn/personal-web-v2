@@ -203,6 +203,7 @@ export default function RemindersView({
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
+			if (e.nativeEvent.isComposing || e.keyCode === 229) return;
 			handleAdd();
 		}
 	};
@@ -355,6 +356,7 @@ export default function RemindersView({
 					<div className="relative flex-1">
 						<input
 							type="text"
+							aria-label="Reminder text"
 							value={text}
 							onChange={(e) => setText(e.target.value)}
 							onKeyDown={handleKeyDown}

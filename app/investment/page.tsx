@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { createMetadata } from "@/lib/shared/metadata";
+import { createMetadata, serializeJsonLd } from "@/lib/shared/metadata";
 import { SITE } from "@/lib/shared/constants";
 import InvestmentCompassView from "@/features/investment/components/View";
 import { getCachedInvestmentCompass } from "@/features/investment/actions";
@@ -43,7 +43,7 @@ export default async function InvestmentPage() {
 		<>
 			<script
 				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+				dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
 			/>
 			<InvestmentCompassView
 				initialData={initialData}

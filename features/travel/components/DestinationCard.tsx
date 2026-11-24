@@ -57,7 +57,7 @@ export default function DestinationCard({
 							fill
 							className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
 							sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-							priority={index === 0}
+							fetchPriority={index === 0 ? "high" : undefined}
 							loading={index === 0 ? "eager" : "lazy"}
 						/>
 
@@ -67,6 +67,8 @@ export default function DestinationCard({
 									<img
 										src={`https://flagcdn.com/w40/${countryCode}.png`}
 										alt=""
+										width={14}
+										height={10}
 										aria-hidden="true"
 										className="w-3.5 h-2.5 object-cover rounded-[2px] border border-slate-200/60"
 									/>

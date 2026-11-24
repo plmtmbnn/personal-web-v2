@@ -6,7 +6,7 @@ import FloatingNavDock from "@/features/shared/components/FloatingNavDock";
 import NavigationLoader from "@/features/shared/components/NavigationLoader";
 import CommandPaletteWrapper from "@/features/shared/components/CommandPaletteWrapper";
 import AuthProvider from "@/features/auth/components/AuthProvider";
-import { createMetadata } from "@/lib/shared/metadata";
+import { createMetadata, serializeJsonLd } from "@/lib/shared/metadata";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SITE, SOCIAL_LINKS } from "@/lib/shared/constants";
 
@@ -54,7 +54,7 @@ export default function RootLayout({
 				<script
 					id="schema-org"
 					type="application/ld+json"
-					dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+					dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
 				/>
 			</head>
 			<body

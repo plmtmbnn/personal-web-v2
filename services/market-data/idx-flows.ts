@@ -108,10 +108,12 @@ async function syncSummary(
 					error: "Invalid stock summary session or numeric fields",
 				};
 			}
-			await Promise.allSettled([
+			const [saved] = await Promise.allSettled([
 				saveStockData(body.data, 43200, "live"),
 				updateTickerHistoryRingBuffer(body.data),
 			]);
+			if (saved.status === "rejected" || !saved.value)
+				return { success: false, count: 0, error: "Stock cache save failed" };
 			if (completedIdxSession(date, now)) {
 				const previous = await redis.get<{ data: IDXStock[] }>(
 					COMPLETED_SUMMARY_KEY,

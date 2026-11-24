@@ -229,7 +229,7 @@ export default function PostcardModal({
 												.replace(/h=\d+/, "h=1000")}
 											alt={`${destination.name}, ${destination.location}`}
 											fill
-											priority
+											loading="eager"
 											sizes={
 												isZoomed
 													? "800px"

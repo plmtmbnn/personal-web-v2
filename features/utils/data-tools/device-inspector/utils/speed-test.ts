@@ -255,14 +255,10 @@ export async function fetchNetworkDiagnostics(): Promise<NetworkInfo> {
 
 	try {
 		// Multi-provider fast geo/ISP lookup with timeout
-		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), 2500);
-
 		// Try ipwho.is
 		const res = await fetch("https://ipwho.is/", {
-			signal: controller.signal,
+			signal: AbortSignal.timeout(2500),
 		});
-		clearTimeout(timeoutId);
 
 		if (res.ok) {
 			const data = (await res.json()) as {
@@ -299,12 +295,9 @@ export async function fetchNetworkDiagnostics(): Promise<NetworkInfo> {
 	}
 
 	try {
-		const controller2 = new AbortController();
-		const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
 		const res2 = await fetch("https://freeipapi.com/api/json/", {
-			signal: controller2.signal,
+			signal: AbortSignal.timeout(2000),
 		});
-		clearTimeout(timeoutId2);
 
 		if (res2.ok) {
 			const data2 = (await res2.json()) as {

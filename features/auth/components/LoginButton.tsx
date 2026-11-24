@@ -111,6 +111,8 @@ export default function LoginButton({ user }: LoginButtonProps) {
 					<img
 						src={avatarUrl}
 						alt={user.user_metadata?.full_name || "User Avatar"}
+						width={40}
+						height={40}
 						referrerPolicy="no-referrer"
 						onError={() => setAvatarError(true)}
 						className="w-10 h-10 rounded-xl border border-indigo-200/60 object-cover shrink-0 shadow-2xs"

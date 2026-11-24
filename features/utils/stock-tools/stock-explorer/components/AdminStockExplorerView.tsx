@@ -28,17 +28,22 @@ import {
 	LayoutTemplate,
 	Layers,
 	ShieldCheck,
+	Database,
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import CustomModal from "@/features/shared/components/CustomModal";
 import { format } from "date-fns";
+import { validateStockImport } from "../validate-import";
 
 interface CacheStatusState {
 	loading: boolean;
+	error: boolean;
 	available: boolean;
 	count: number;
 	lastDate: string | null;
+	state: "active" | "backup" | "empty";
+	ttlSeconds: number | null;
 }
 
 interface ImportStatusState {
@@ -315,8 +320,6 @@ function extractStockArray(parsed: unknown): unknown[] | null {
  * Normalizes input stock objects to ensure consistent field names and types
  */
 function normalizeStockData(rawArray: unknown[]): NormalizedStockRecord[] {
-	const defaultDate = new Date().toISOString();
-
 	return rawArray
 		.filter(
 			(item): item is Record<string, unknown> =>
@@ -340,7 +343,7 @@ function normalizeStockData(rawArray: unknown[]): NormalizedStockRecord[] {
 			).trim();
 
 			const dateStr = String(
-				item.Date || item.date || item.tradingDate || defaultDate,
+				item.Date || item.date || item.tradingDate || "",
 			).trim();
 
 			return {
@@ -356,10 +359,10 @@ function normalizeStockData(rawArray: unknown[]): NormalizedStockRecord[] {
 				FirstTrade: Number(item.FirstTrade || item.firstTrade) || 0,
 				High: Number(item.High || item.high) || 0,
 				Low: Number(item.Low || item.low) || 0,
-				Close: Number(item.Close || item.close || item.price) || 0,
+				Close: Number(item.Close ?? item.close ?? item.price),
 				Change: Number(item.Change || item.change) || 0,
-				Volume: Number(item.Volume || item.volume) || 0,
-				Value: Number(item.Value || item.value) || 0,
+				Volume: Number(item.Volume ?? item.volume),
+				Value: Number(item.Value ?? item.value),
 				Frequency: Number(item.Frequency || item.frequency) || 0,
 				IndexIndividual:
 					Number(item.IndexIndividual || item.indexIndividual) || 0,
@@ -367,8 +370,8 @@ function normalizeStockData(rawArray: unknown[]): NormalizedStockRecord[] {
 				OfferVolume: Number(item.OfferVolume || item.offerVolume) || 0,
 				Bid: Number(item.Bid || item.bid) || 0,
 				BidVolume: Number(item.BidVolume || item.bidVolume) || 0,
-				ForeignSell: Number(item.ForeignSell || item.foreignSell) || 0,
-				ForeignBuy: Number(item.ForeignBuy || item.foreignBuy) || 0,
+				ForeignSell: Number(item.ForeignSell ?? item.foreignSell),
+				ForeignBuy: Number(item.ForeignBuy ?? item.foreignBuy),
 				NonRegularVolume:
 					Number(item.NonRegularVolume || item.nonRegularVolume) || 0,
 				NonRegularValue:
@@ -376,8 +379,7 @@ function normalizeStockData(rawArray: unknown[]): NormalizedStockRecord[] {
 				NonRegularFrequency:
 					Number(item.NonRegularFrequency || item.nonRegularFrequency) || 0,
 			};
-		})
-		.filter((record) => record.StockCode.length > 0);
+		});
 }
 
 function formatTradingDate(dateStr: string | null): string {
@@ -415,15 +417,24 @@ export default function StockImportAdmin() {
 		type: "idle",
 		message: "",
 	});
+	const [cacheMessage, setCacheMessage] = useState<ImportStatusState>({
+		type: "idle",
+		message: "",
+	});
 
 	const [cacheStatus, setCacheStatus] = useState<CacheStatusState>({
 		loading: true,
+		error: false,
 		available: false,
 		count: 0,
 		lastDate: null,
+		state: "empty",
+		ttlSeconds: null,
 	});
 
 	const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
+	const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+	const [isSample, setIsSample] = useState(false);
 	const [isPurging, setIsPurging] = useState(false);
 	const [isLiveFetching, setIsLiveFetching] = useState(false);
 	const [isDragging, setIsDragging] = useState(false);
@@ -440,19 +451,24 @@ export default function StockImportAdmin() {
 					available: boolean;
 					count: number;
 					lastDate: string | null;
+					state: CacheStatusState["state"];
+					ttlSeconds: number | null;
 				};
 				setCacheStatus({
 					loading: false,
+					error: false,
 					available: result.available,
 					count: result.count,
 					lastDate: result.lastDate,
+					state: result.state,
+					ttlSeconds: result.ttlSeconds,
 				});
 			} else {
 				throw new Error("Failed to load status");
 			}
 		} catch (error) {
 			console.error("Cache Status Retrieval Error:", error);
-			setCacheStatus((prev) => ({ ...prev, loading: false }));
+			setCacheStatus((prev) => ({ ...prev, loading: false, error: true }));
 		}
 	}, []);
 
@@ -461,14 +477,24 @@ export default function StockImportAdmin() {
 	}, [fetchCacheStatus]);
 
 	// Compute pre-import data preview
-	const previewData = useMemo(() => {
-		if (!input.trim()) return null;
+	const { previewData, previewError } = useMemo(() => {
+		if (!input.trim()) return { previewData: null, previewError: null };
 		try {
 			const parsed = JSON.parse(input);
 			const arr = extractStockArray(parsed);
-			if (!arr || arr.length === 0) return null;
+			if (!arr)
+				return {
+					previewData: null,
+					previewError: "No stock records array found.",
+				};
 			const normalized = normalizeStockData(arr);
-			if (normalized.length === 0) return null;
+			if (normalized.length !== arr.length)
+				return {
+					previewData: null,
+					previewError: "Every record must be a stock object.",
+				};
+			const error = validateStockImport(normalized);
+			if (error) return { previewData: null, previewError: error };
 
 			const totalVolume = normalized.reduce(
 				(acc, s) => acc + (s.Volume || 0),
@@ -478,14 +504,17 @@ export default function StockImportAdmin() {
 			const sampleDate = normalized[0]?.Date || null;
 
 			return {
-				totalCount: normalized.length,
-				totalVolume,
-				totalValue,
-				sampleDate,
-				allRecords: normalized,
+				previewData: {
+					totalCount: normalized.length,
+					totalVolume,
+					totalValue,
+					sampleDate,
+					allRecords: normalized,
+				},
+				previewError: null,
 			};
 		} catch {
-			return null;
+			return { previewData: null, previewError: "Invalid JSON syntax." };
 		}
 	}, [input]);
 
@@ -508,39 +537,29 @@ export default function StockImportAdmin() {
 	// Live sync from IDX API
 	const handleLiveSync = async () => {
 		setIsLiveFetching(true);
-		setStatus({
+		setCacheMessage({
 			type: "loading",
-			message: "Connecting to IDX live stream...",
+			message: "Refreshing IDX stock summary...",
 		});
 
 		try {
-			const response = await fetch("/api/utils/stock-data?refresh=true");
-			const result = await response.json();
+			const response = await fetch("/api/admin/sync-stock", { method: "POST" });
+			const result = (await response.json()) as {
+				success?: boolean;
+				count?: number;
+				error?: string;
+			};
 
-			if (!response.ok) {
-				throw new Error(result.error || "Failed to fetch live stock data");
+			if (!response.ok || !result.success) {
+				throw new Error(result.error || "Live IDX sync failed.");
 			}
-
-			if (result.source === "idx_live") {
-				setStatus({
-					type: "success",
-					message: `Successfully synchronized ${result.data?.length || 0} stocks directly from IDX!`,
-				});
-			} else if (result.source === "fallback_static") {
-				setStatus({
-					type: "error",
-					message:
-						"IDX cloud IP rate-limited. Loaded fallback dataset. Please use manual JSON import below.",
-				});
-			} else {
-				setStatus({
-					type: "success",
-					message: `Registry updated from ${result.source} (${result.data?.length || 0} instruments).`,
-				});
-			}
-			fetchCacheStatus();
+			setCacheMessage({
+				type: "success",
+				message: `Synchronized ${result.count ?? 0} IDX instruments.`,
+			});
+			await fetchCacheStatus();
 		} catch (err: unknown) {
-			setStatus({
+			setCacheMessage({
 				type: "error",
 				message: err instanceof Error ? err.message : "Live IDX sync failed.",
 			});
@@ -550,30 +569,11 @@ export default function StockImportAdmin() {
 	};
 
 	// Import to Redis with normalization & force overwrite
-	const handleImport = useCallback(async () => {
-		if (!input.trim()) return;
-
-		setStatus({ type: "loading", message: "Validating JSON schema..." });
+	const performImport = useCallback(async () => {
+		if (!previewData || isSample) return;
 
 		try {
-			let parsed: unknown;
-			try {
-				parsed = JSON.parse(input);
-			} catch {
-				throw new Error("Invalid JSON format. Please verify your syntax.");
-			}
-
-			const stockArray = extractStockArray(parsed);
-			if (!stockArray || stockArray.length === 0) {
-				throw new Error(
-					"Unrecognized structure. Could not find an array of stock instruments in the payload.",
-				);
-			}
-
-			const normalizedData = normalizeStockData(stockArray);
-			if (normalizedData.length === 0) {
-				throw new Error("No valid stock records with ticker symbols found.");
-			}
+			const normalizedData = previewData.allRecords;
 
 			setStatus({
 				type: "loading",
@@ -602,7 +602,8 @@ export default function StockImportAdmin() {
 					`Successfully committed ${normalizedData.length} instruments to Redis cache!`,
 			});
 			setInput("");
-			fetchCacheStatus();
+			setIsImportModalOpen(false);
+			await fetchCacheStatus();
 		} catch (error: unknown) {
 			console.error("Import Error:", error);
 			setStatus({
@@ -613,7 +614,27 @@ export default function StockImportAdmin() {
 						: "An unexpected error occurred during import.",
 			});
 		}
-	}, [input, fetchCacheStatus]);
+	}, [previewData, isSample, fetchCacheStatus]);
+
+	const handleImport = useCallback(() => {
+		if (isSample || !input.trim()) return;
+		if (!previewData) {
+			setStatus({
+				type: "error",
+				message: previewError || "Check the JSON before importing.",
+			});
+			return;
+		}
+		if (
+			cacheStatus.state !== "empty" ||
+			cacheStatus.loading ||
+			cacheStatus.error
+		) {
+			setIsImportModalOpen(true);
+			return;
+		}
+		void performImport();
+	}, [input, isSample, previewData, previewError, cacheStatus, performImport]);
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -625,7 +646,7 @@ export default function StockImportAdmin() {
 	// Cache Purge Confirmation
 	const handleClearCacheConfirm = async () => {
 		setIsPurging(true);
-		setStatus({ type: "loading", message: "Purging in-memory Redis cache..." });
+		setCacheMessage({ type: "loading", message: "Purging stock registry..." });
 
 		try {
 			const response = await fetch("/api/admin/import-stock", {
@@ -641,15 +662,15 @@ export default function StockImportAdmin() {
 				throw new Error(result.error || "Failed to clear cache");
 			}
 
-			setStatus({
+			setCacheMessage({
 				type: "success",
 				message: result.message || "Redis stock cache purged successfully.",
 			});
 			setIsPurgeModalOpen(false);
-			fetchCacheStatus();
+			await fetchCacheStatus();
 		} catch (error: unknown) {
 			console.error("Clear Cache Error:", error);
-			setStatus({
+			setCacheMessage({
 				type: "error",
 				message:
 					error instanceof Error
@@ -663,9 +684,12 @@ export default function StockImportAdmin() {
 
 	const processUploadedFile = (file: File) => {
 		const reader = new FileReader();
+		reader.onerror = () =>
+			setStatus({ type: "error", message: "Could not read the JSON file." });
 		reader.onload = (event) => {
 			const content = event.target?.result;
 			if (typeof content === "string") {
+				setIsSample(false);
 				try {
 					const parsed = JSON.parse(content);
 					const extracted = extractStockArray(parsed);
@@ -697,11 +721,13 @@ export default function StockImportAdmin() {
 
 	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
+		e.target.value = "";
 		if (!file) return;
-		processUploadedFile(file);
-		if (fileInputRef.current) {
-			fileInputRef.current.value = "";
+		if (!file.name.toLowerCase().endsWith(".json")) {
+			setStatus({ type: "error", message: "Choose a .json file." });
+			return;
 		}
+		processUploadedFile(file);
 	};
 
 	const handleDragOver = (e: React.DragEvent) => {
@@ -724,7 +750,7 @@ export default function StockImportAdmin() {
 		const files = e.dataTransfer.files;
 		if (files && files.length > 0) {
 			const file = files[0];
-			if (!file.name.endsWith(".json") && file.type !== "application/json") {
+			if (!file.name.toLowerCase().endsWith(".json")) {
 				setStatus({
 					type: "error",
 					message: "Please drop a valid .json file.",
@@ -750,6 +776,8 @@ export default function StockImportAdmin() {
 	};
 
 	const handleLoadPreset = (presetKey: "banks" | "tech") => {
+		if (input.trim() && !isSample) return;
+		setIsSample(true);
 		if (presetKey === "banks") {
 			setInput(SAMPLE_BANKS_TEMPLATE);
 			setStatus({
@@ -767,13 +795,14 @@ export default function StockImportAdmin() {
 
 	const handleResetInput = () => {
 		setInput("");
+		setIsSample(false);
 		setPreviewSearchQuery("");
 		setShowPreviewTable(false);
 		setStatus({ type: "idle", message: "" });
 	};
 
 	return (
-		<main className="min-h-screen bg-slate-50/80 bg-dot-pattern relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
+		<main className="min-h-screen bg-slate-50/80 relative overflow-x-hidden pt-20 sm:pt-24 pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
 				{/* Top Floating Header Card */}
 				<div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
@@ -789,19 +818,26 @@ export default function StockImportAdmin() {
 								<ChevronRight className="w-3 h-3 text-slate-400" />
 								<span className="text-slate-900 font-bold">Stock Registry</span>
 							</div>
-							<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-								Stock Explorer Manager
-							</h1>
-							<p className="text-sm text-slate-500 max-w-xl leading-relaxed">
-								Synchronize IDX equity instruments, inspect cache payloads, and
-								update market data.
-							</p>
+							<div className="flex items-start gap-3 sm:gap-4">
+								<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-indigo-200/70 bg-indigo-50 text-indigo-700 shadow-2xs">
+									<Database className="size-6" aria-hidden="true" />
+								</div>
+								<div className="min-w-0">
+									<h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+										Stock Explorer Manager
+									</h1>
+									<p className="mt-2 text-sm text-slate-600 max-w-xl leading-relaxed">
+										Check registry status, refresh IDX data, and import a stock
+										summary.
+									</p>
+								</div>
+							</div>
 						</div>
 
 						<div className="flex items-center gap-3 self-start sm:self-center">
 							<Link
 								href="/utils/stock-explorer"
-								className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline group"
+								className="inline-flex min-h-11 items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-slate-700 hover:text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-2xs transition-[background-color,color] active:scale-95 cursor-pointer !no-underline group focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								<ArrowLeft className="w-4 h-4 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
 								<span>Back to Explorer</span>
@@ -824,17 +860,25 @@ export default function StockImportAdmin() {
 										Redis In-Memory Registry
 									</h2>
 									{cacheStatus.loading ? (
-										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
 											<Loader2 className="w-3 h-3 animate-spin text-slate-500" />
 											<span>Verifying</span>
 										</span>
+									) : cacheStatus.error ? (
+										<span className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-800">
+											Status unavailable
+										</span>
+									) : cacheStatus.state === "backup" ? (
+										<span className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">
+											Backup only
+										</span>
 									) : cacheStatus.available ? (
-										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200/80">
 											<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
 											<span>Active Cache</span>
 										</span>
 									) : (
-										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/80">
+										<span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-800 border border-rose-200/80">
 											<AlertCircle className="w-3 h-3 text-rose-500" />
 											<span>No Cache / Expired</span>
 										</span>
@@ -848,13 +892,12 @@ export default function StockImportAdmin() {
 						</div>
 
 						{/* Cache Actions */}
-						<div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+						<div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
 							<button
 								type="button"
 								onClick={fetchCacheStatus}
 								disabled={cacheStatus.loading}
-								className="flex items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
-								title="Refresh Status"
+								className="flex min-h-11 min-w-11 items-center justify-center p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-xl text-slate-600 hover:text-slate-900 transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs focus-visible:outline-2 focus-visible:outline-indigo-600"
 								aria-label="Refresh Cache Status"
 							>
 								<RefreshCw
@@ -866,8 +909,7 @@ export default function StockImportAdmin() {
 								type="button"
 								onClick={handleLiveSync}
 								disabled={isLiveFetching || cacheStatus.loading}
-								className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
-								title="Trigger Live IDX API Fetch"
+								className="inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								{isLiveFetching ? (
 									<Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -880,8 +922,12 @@ export default function StockImportAdmin() {
 							<button
 								type="button"
 								onClick={() => setIsPurgeModalOpen(true)}
-								disabled={!cacheStatus.available || cacheStatus.loading}
-								className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs"
+								disabled={
+									cacheStatus.state === "empty" ||
+									cacheStatus.loading ||
+									cacheStatus.error
+								}
+								className="inline-flex min-h-11 items-center gap-1.5 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-2xs focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								<Trash2 className="w-3.5 h-3.5" />
 								<span>Purge Cache</span>
@@ -905,6 +951,13 @@ export default function StockImportAdmin() {
 									<div className="h-3 w-36 bg-slate-200 rounded-md mt-1" />
 								</div>
 							))}
+						</div>
+					) : cacheStatus.error ? (
+						<div
+							role="alert"
+							className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-900"
+						>
+							Could not read the stock registry. Refresh status to try again.
 						</div>
 					) : cacheStatus.available ? (
 						<div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
@@ -950,22 +1003,23 @@ export default function StockImportAdmin() {
 							<div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/90 flex flex-col justify-between group hover:bg-indigo-50/80 transition-colors min-w-0">
 								<div className="flex items-center justify-between mb-2">
 									<span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider truncate">
-										Cache Lifespan
+										Time Remaining
 									</span>
 									<div className="w-7 h-7 rounded-lg bg-white border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
 										<Clock className="w-3.5 h-3.5" />
 									</div>
 								</div>
 								<div className="flex items-baseline gap-1.5">
-									<p className="text-2xl sm:text-3xl font-black text-indigo-950 tracking-tight">
-										12
+									<p className="text-xl sm:text-2xl font-semibold text-indigo-950 tracking-tight">
+										{cacheStatus.ttlSeconds == null
+											? "Expired"
+											: `${Math.floor(cacheStatus.ttlSeconds / 3600)}h ${Math.ceil((cacheStatus.ttlSeconds % 3600) / 60)}m`}
 									</p>
-									<span className="text-xs font-bold text-indigo-800">
-										Hours
-									</span>
 								</div>
 								<p className="text-[11px] font-medium text-indigo-700/90 mt-1 truncate">
-									Auto-purges via rolling Redis TTL
+									{cacheStatus.state === "backup"
+										? "Persistent backup remains available"
+										: "Primary cache uses a 12-hour TTL"}
 								</p>
 							</div>
 						</div>
@@ -990,7 +1044,7 @@ export default function StockImportAdmin() {
 								type="button"
 								onClick={handleLiveSync}
 								disabled={isLiveFetching}
-								className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold tracking-wider uppercase transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shrink-0 shadow-xs"
+								className="inline-flex min-h-11 items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold tracking-wider uppercase transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shrink-0 shadow-xs focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								{isLiveFetching ? (
 									<Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1001,7 +1055,17 @@ export default function StockImportAdmin() {
 							</button>
 						</div>
 					)}
+					{cacheMessage.type !== "idle" && (
+						<p
+							role={cacheMessage.type === "error" ? "alert" : "status"}
+							className={`text-sm font-medium ${cacheMessage.type === "error" ? "text-rose-800" : "text-slate-700"}`}
+						>
+							{cacheMessage.message}
+						</p>
+					)}
 				</section>
+
+				<ResearchSyncStatus />
 
 				{/* Dismissible Protocol Info Pill */}
 				{showProtocolBanner && (
@@ -1021,7 +1085,7 @@ export default function StockImportAdmin() {
 						<button
 							type="button"
 							onClick={() => setShowProtocolBanner(false)}
-							className="text-indigo-400 hover:text-indigo-700 text-xs font-bold px-2 py-1 rounded-lg hover:bg-indigo-100/50 transition-colors"
+							className="flex min-h-11 min-w-11 items-center justify-center text-indigo-700 hover:text-indigo-900 text-xs font-bold rounded-lg hover:bg-indigo-100/50 transition-colors focus-visible:outline-2 focus-visible:outline-indigo-600"
 							aria-label="Dismiss banner"
 						>
 							✕
@@ -1070,7 +1134,7 @@ export default function StockImportAdmin() {
 							<button
 								type="button"
 								onClick={() => fileInputRef.current?.click()}
-								className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+								className="min-h-11 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								<FileUp className="w-3.5 h-3.5 text-indigo-600" />
 								<span>Upload JSON</span>
@@ -1080,7 +1144,7 @@ export default function StockImportAdmin() {
 								type="button"
 								onClick={handleFormatJson}
 								disabled={!input.trim()}
-								className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:pointer-events-none text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+								className="min-h-11 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:pointer-events-none text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								<Code2 className="w-3.5 h-3.5 text-indigo-600" />
 								<span>Format JSON</span>
@@ -1092,7 +1156,8 @@ export default function StockImportAdmin() {
 							<button
 								type="button"
 								onClick={() => handleLoadPreset("banks")}
-								className="px-3 py-1.5 rounded-xl border border-indigo-100 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+								disabled={!!input.trim() && !isSample}
+								className="min-h-11 px-3 py-1.5 rounded-xl border border-indigo-100 bg-indigo-50/60 hover:bg-indigo-100/70 text-indigo-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:pointer-events-none"
 							>
 								<LayoutTemplate className="w-3.5 h-3.5 text-indigo-600" />
 								<span>Sample Banks</span>
@@ -1101,11 +1166,17 @@ export default function StockImportAdmin() {
 							<button
 								type="button"
 								onClick={() => handleLoadPreset("tech")}
-								className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+								disabled={!!input.trim() && !isSample}
+								className="min-h-11 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-[background-color] flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:pointer-events-none"
 							>
 								<LayoutTemplate className="w-3.5 h-3.5 text-amber-600" />
 								<span>Sample Tech</span>
 							</button>
+							{!!input.trim() && !isSample && (
+								<span className="text-xs text-slate-600">
+									Clear JSON to view a sample.
+								</span>
+							)}
 						</div>
 
 						<div className="flex items-center gap-3 text-[11px] font-bold text-slate-500 font-mono">
@@ -1149,7 +1220,11 @@ export default function StockImportAdmin() {
 								<button
 									type="button"
 									onClick={() => setShowPreviewTable((prev) => !prev)}
-									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100/60 hover:bg-emerald-100 transition-[background-color,color] active:scale-95 cursor-pointer shadow-2xs"
+									aria-expanded={showPreviewTable}
+									aria-controls={
+										showPreviewTable ? "stock-preview-table" : undefined
+									}
+									className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100/60 hover:bg-emerald-100 transition-[background-color,color] active:scale-95 cursor-pointer shadow-2xs focus-visible:outline-2 focus-visible:outline-indigo-600"
 								>
 									<Eye className="w-3.5 h-3.5" />
 									<span>
@@ -1167,16 +1242,23 @@ export default function StockImportAdmin() {
 
 							{/* Collapsible Mini Preview Table with Search */}
 							{showPreviewTable && (
-								<div className="bg-white rounded-2xl border border-emerald-200/80 p-3 shadow-2xs space-y-3 mt-1">
+								<div
+									id="stock-preview-table"
+									className="bg-white rounded-2xl border border-emerald-200/80 p-3 shadow-2xs space-y-3 mt-1"
+								>
 									<div className="flex items-center justify-between gap-3">
 										<div className="relative flex-1 max-w-xs">
 											<Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+											<label htmlFor="stock-preview-search" className="sr-only">
+												Search preview by ticker or company name
+											</label>
 											<input
+												id="stock-preview-search"
 												type="text"
 												value={previewSearchQuery}
 												onChange={(e) => setPreviewSearchQuery(e.target.value)}
 												placeholder="Search ticker or name..."
-												className="w-full pl-8.5 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white focus:border-indigo-400"
+												className="min-h-11 w-full pl-10 pr-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium focus-visible:outline-2 focus-visible:outline-indigo-600"
 											/>
 										</div>
 										<span className="text-[11px] text-slate-400 font-medium">
@@ -1246,40 +1328,76 @@ export default function StockImportAdmin() {
 					)}
 
 					{/* Textarea */}
-					<div className="flex-1 relative p-4 sm:p-6 flex flex-col">
-						{input.length === 0 && (
-							<div className="absolute inset-x-6 top-8 pointer-events-none flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-center space-y-3">
-								<div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-center text-slate-400">
-									<FileCode className="w-6 h-6" />
+					<div className="flex-1 p-4 sm:p-6 flex flex-col">
+						<label
+							htmlFor="stock-import-json"
+							className="mb-2 text-sm font-semibold text-slate-900"
+						>
+							Stock summary JSON{" "}
+							{isSample && (
+								<span className="font-medium text-amber-800">
+									(sample preview only)
+								</span>
+							)}
+						</label>
+						<div className="group relative flex flex-1 flex-col min-h-[340px]">
+							{input.length === 0 && (
+								<div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-center space-y-3 group-focus-within:hidden">
+									<div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-center text-slate-400">
+										<FileCode className="w-6 h-6" />
+									</div>
+									<div>
+										<p className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+											Paste JSON or Drop File Here
+										</p>
+										<p className="text-xs text-slate-600 font-medium mt-0.5">
+											Accepts IDX Trading Summary format e.g. &#123;
+											&quot;data&quot;: [ &#123; &quot;StockCode&quot;:
+											&quot;BBCA&quot; &#125; ] &#125;
+										</p>
+									</div>
 								</div>
-								<div>
-									<p className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-										Paste JSON or Drop File Here
-									</p>
-									<p className="text-xs text-slate-400 font-medium mt-0.5">
-										Accepts IDX Trading Summary format e.g. &#123;
-										&quot;data&quot;: [ &#123; &quot;StockCode&quot;:
-										&quot;BBCA&quot; &#125; ] &#125;
-									</p>
-								</div>
-							</div>
+							)}
+							<textarea
+								id="stock-import-json"
+								value={input}
+								onChange={(e) => {
+									setInput(e.target.value);
+									setStatus({ type: "idle", message: "" });
+								}}
+								onKeyDown={handleKeyDown}
+								readOnly={isSample}
+								aria-invalid={!!previewError}
+								aria-describedby={
+									previewError ? "stock-import-error" : undefined
+								}
+								className={`w-full flex-1 min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-slate-900 font-mono text-xs leading-relaxed focus:bg-white focus:border-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 transition-[border-color,background-color,box-shadow] resize-y ${
+									input.length === 0
+										? "opacity-0 focus:opacity-100"
+										: "opacity-100"
+								}`}
+								spellCheck={false}
+							/>
+						</div>
+						{previewError && (
+							<p
+								id="stock-import-error"
+								role="alert"
+								className="mt-2 text-sm text-rose-700"
+							>
+								{previewError}
+							</p>
 						)}
-						<textarea
-							value={input}
-							onChange={(e) => setInput(e.target.value)}
-							onKeyDown={handleKeyDown}
-							className={`w-full flex-1 min-h-[340px] p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-slate-900 font-mono text-xs leading-relaxed outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-[border-color,background-color,box-shadow] resize-y ${
-								input.length === 0
-									? "opacity-0 focus:opacity-100"
-									: "opacity-100"
-							}`}
-							spellCheck={false}
-						/>
+						{isSample && (
+							<p className="mt-2 text-sm text-amber-900">
+								Clear this sample, then paste or upload your own JSON to import.
+							</p>
+						)}
 					</div>
 
 					{/* Status Bar & Submit Row */}
 					<div className="p-4 sm:p-5 bg-slate-50/70 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-						<div className="flex-1 w-full sm:w-auto">
+						<div className="flex-1 w-full sm:w-auto" aria-live="polite">
 							<AnimatePresence mode="wait">
 								{status.type !== "idle" && (
 									<motion.div
@@ -1288,6 +1406,7 @@ export default function StockImportAdmin() {
 										animate={{ opacity: 1, x: 0 }}
 										exit={{ opacity: 0, x: 10 }}
 										className="flex items-center gap-2.5"
+										role={status.type === "error" ? "alert" : "status"}
 									>
 										{status.type === "loading" ? (
 											<Loader2 className="w-4 h-4 text-indigo-600 animate-spin shrink-0" />
@@ -1317,7 +1436,7 @@ export default function StockImportAdmin() {
 								type="button"
 								onClick={handleResetInput}
 								disabled={!input.trim()}
-								className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-xs"
+								className="flex-1 sm:flex-none min-h-11 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-700 hover:text-rose-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-[background-color,color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-xs focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								<RotateCcw className="w-3.5 h-3.5" />
 								<span>Clear</span>
@@ -1326,8 +1445,10 @@ export default function StockImportAdmin() {
 							<button
 								type="button"
 								onClick={handleImport}
-								disabled={!input.trim() || status.type === "loading"}
-								className="flex-[2] sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-xs transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+								disabled={
+									!input.trim() || isSample || status.type === "loading"
+								}
+								className="flex-[2] sm:flex-none min-h-11 flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-xs transition-[background-color] active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-600"
 							>
 								{status.type === "loading" ? (
 									<Loader2 className="w-4 h-4 animate-spin" />
@@ -1345,9 +1466,18 @@ export default function StockImportAdmin() {
 				</div>
 			</div>
 
-			<ResearchSyncStatus />
-
 			{/* High-Fidelity CustomModal for Cache Purging */}
+			<CustomModal
+				isOpen={isImportModalOpen}
+				onClose={() => setIsImportModalOpen(false)}
+				onConfirm={performImport}
+				title="Replace Stock Registry?"
+				description={`Import ${previewData?.totalCount ?? 0} instruments for ${formatTradingDate(previewData?.sampleDate ?? null)}? This replaces the stored stock dataset and its backup.`}
+				confirmText="Replace Registry"
+				cancelText="Cancel"
+				variant="danger"
+				isLoading={status.type === "loading"}
+			/>
 			<CustomModal
 				isOpen={isPurgeModalOpen}
 				onClose={() => setIsPurgeModalOpen(false)}

@@ -10,6 +10,7 @@ export function useTags(initialTags: string[] = []) {
 
 	const handleTagKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.nativeEvent.isComposing || e.keyCode === 229) return;
 			if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
 				e.preventDefault();
 				const newTag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");

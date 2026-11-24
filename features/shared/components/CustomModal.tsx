@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Info, HelpCircle } from "lucide-react";
 
@@ -73,6 +73,43 @@ export default function CustomModal({
 	const currentVariant = variantStyles[variant];
 	const Icon = currentVariant.icon;
 	const reduceMotion = useReducedMotion();
+	const titleId = useId();
+	const dialogRef = useRef<HTMLDivElement>(null);
+	const onCloseRef = useRef(onClose);
+	onCloseRef.current = onClose;
+	const setDialogRef = useCallback((node: HTMLDivElement | null) => {
+		dialogRef.current = node;
+		if (node)
+			queueMicrotask(() =>
+				node.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus(),
+			);
+	}, []);
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const previousFocus = document.activeElement as HTMLElement | null;
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape") onCloseRef.current();
+			const enabled = dialogRef.current?.querySelectorAll<HTMLButtonElement>(
+				"button:not(:disabled)",
+			);
+			if (event.key !== "Tab" || !enabled?.length) return;
+			const first = enabled[0];
+			const last = enabled[enabled.length - 1];
+			if (event.shiftKey && document.activeElement === first) {
+				event.preventDefault();
+				last.focus();
+			} else if (!event.shiftKey && document.activeElement === last) {
+				event.preventDefault();
+				first.focus();
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+			previousFocus?.focus();
+		};
+	}, [isOpen]);
 
 	return (
 		<AnimatePresence>
@@ -89,6 +126,10 @@ export default function CustomModal({
 
 					{/* Modal Content */}
 					<motion.div
+						ref={setDialogRef}
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby={titleId}
 						initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 20 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
 						exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -104,7 +145,10 @@ export default function CustomModal({
 									<Icon className={`w-8 h-8 ${currentVariant.iconColor}`} />
 								</div>
 
-								<h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">
+								<h3
+									id={titleId}
+									className="text-xl font-black text-slate-900 tracking-tight mb-2"
+								>
 									{title}
 								</h3>
 								{description && (
@@ -116,7 +160,7 @@ export default function CustomModal({
 								<div className="flex flex-col sm:flex-row gap-3 w-full">
 									<button
 										onClick={onClose}
-										className="flex-1 px-6 py-3.5 bg-slate-50 text-slate-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-100 transition-all active:scale-95"
+										className="flex-1 min-h-11 px-6 py-3.5 bg-slate-50 text-slate-700 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors active:scale-95 focus-visible:outline-2 focus-visible:outline-indigo-600"
 									>
 										{cancelText}
 									</button>
@@ -124,7 +168,7 @@ export default function CustomModal({
 										<button
 											onClick={onConfirm}
 											disabled={isLoading}
-											className={`flex-1 px-6 py-3.5 ${currentVariant.buttonBg} text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2`}
+											className={`flex-1 min-h-11 px-6 py-3.5 ${currentVariant.buttonBg} text-white rounded-2xl font-bold text-xs uppercase tracking-wider shadow-lg transition-colors active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-indigo-600`}
 										>
 											{isLoading ? (
 												<div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

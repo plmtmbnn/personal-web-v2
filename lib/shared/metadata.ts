@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { SITE, SEO } from "./constants";
 
+export function serializeJsonLd(value: unknown): string {
+	return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
 type MetadataProps = {
 	title?: string;
 	description?: string;

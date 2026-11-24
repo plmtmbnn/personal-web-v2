@@ -137,6 +137,7 @@ function SubtaskItem({ subtask, onUpdate, onDelete }: SubtaskItemProps) {
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter") {
 			e.preventDefault();
+			if (e.nativeEvent.isComposing || e.keyCode === 229) return;
 			handleSaveEdit();
 		} else if (e.key === "Escape") {
 			setEditTitle(subtask.title);
@@ -401,7 +402,7 @@ function TaskItem({
 	}, [task.status]);
 
 	const adjustHeight = (el: HTMLTextAreaElement | null) => {
-		if (!el) return;
+		if (!el || CSS.supports("field-sizing", "content")) return;
 		el.style.height = "auto";
 		el.style.height = `${el.scrollHeight}px`;
 	};
@@ -618,6 +619,7 @@ function TaskItem({
 	// Edit-mode tag handlers
 	const handleEditTagKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.nativeEvent.isComposing || e.keyCode === 229) return;
 			if ((e.key === "Enter" || e.key === ",") && editTagInput.trim()) {
 				e.preventDefault();
 				const newTag = editTagInput.trim().toLowerCase().replace(/\s+/g, "-");
@@ -805,7 +807,7 @@ function TaskItem({
 									}}
 									rows={1}
 									placeholder="What needs to be done?"
-									className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 resize-none overflow-hidden block transition-all"
+									className="w-full h-auto [field-sizing:content] bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 resize-none overflow-hidden block transition-all"
 								/>
 							</div>
 
@@ -857,7 +859,7 @@ function TaskItem({
 									}}
 									rows={2}
 									placeholder="Add some details or notes here..."
-									className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 resize-none overflow-hidden block transition-all"
+									className="w-full h-auto [field-sizing:content] bg-slate-50 border border-slate-200 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 resize-none overflow-hidden block transition-all"
 								/>
 							</div>
 
@@ -1513,12 +1515,20 @@ function TaskItem({
 															ref={subtaskInputRef}
 															autoFocus
 															type="text"
+															aria-label="New subtask title"
 															value={newSubtaskTitle}
 															onChange={(e) =>
 																setNewSubtaskTitle(e.target.value)
 															}
 															onKeyDown={(e) => {
-																if (e.key === "Enter") handleAddSubtask();
+																if (e.key === "Enter") {
+																	e.preventDefault();
+																	if (
+																		!e.nativeEvent.isComposing &&
+																		e.keyCode !== 229
+																	)
+																		handleAddSubtask();
+																}
 																if (e.key === "Escape") {
 																	setIsAddingSubtask(false);
 																	setNewSubtaskTitle("");

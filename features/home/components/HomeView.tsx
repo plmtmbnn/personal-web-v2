@@ -38,7 +38,7 @@ export default function Home({ initialRunningKm }: HomeProps) {
 								alt={AUTHOR.name}
 								width={80}
 								height={80}
-								priority
+								loading="eager"
 								className="h-full w-full object-cover"
 							/>
 						</div>
@@ -108,7 +108,7 @@ export default function Home({ initialRunningKm }: HomeProps) {
 										: initialRunningKm.toLocaleString("en-US")}
 								</dd>
 								<dt className="flex items-center justify-end gap-1 text-right text-xs leading-snug text-slate-500 group-hover:text-slate-800 sm:mt-2 sm:justify-start sm:text-left sm:text-[13px]">
-									<span>Kilometres run in {year}</span>
+									<span>Kilometers run in {year}</span>
 									<ArrowUpRight
 										aria-hidden="true"
 										className="h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none"

@@ -7,17 +7,16 @@ const StockExplorerView = dynamic(
 );
 
 export const metadata: Metadata = createMetadata({
-	title: "Advanced IDX Stock Explorer",
+	title: "IDX Swing Scanner",
 	description:
-		"Interactive Indonesia Stock Exchange (IDX) explorer with real-time summary data, high-performance filtering, and volume analysis.",
+		"A shortlist of confirmed IDX stock breakouts with buy ranges, stops, and first targets for the next opening session.",
 	path: "/utils/stock-explorer",
 	keywords: [
 		"IDX",
 		"Stock Market",
 		"Indonesia Stock Exchange",
-		"Stock Summary",
-		"Investment Tools",
-		"Financial Dashboard",
+		"Swing Trading",
+		"Stock Breakouts",
 	],
 });
 

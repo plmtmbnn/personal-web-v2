@@ -74,6 +74,32 @@ export const breadthSchema = z.object({
 	covered200: z.number().int().nonnegative(),
 	total: z.number().int().nonnegative(),
 });
+const swingCandidateSchema = z.object({
+	symbol: z.string(),
+	close: z.number().positive(),
+	pivot: z.number().positive(),
+	entryLow: z.number().positive(),
+	entryHigh: z.number().positive(),
+	stop: z.number().positive(),
+	target: z.number().positive(),
+	resistance: z.number().positive(),
+	resistanceSession: z.iso.date(),
+	breakoutVolume: z.number().min(1.5),
+	medianTurnover: z.number().positive(),
+	netRAtClose: z.number().min(2),
+	netRAtCap: z.number().min(2),
+	chart: z.array(
+		z.object({ session: z.iso.date(), close: z.number().positive() }),
+	),
+});
+export type SwingCandidate = z.infer<typeof swingCandidateSchema>;
+export interface SwingScanResponse {
+	closeSession: string | null;
+	openingSession: string | null;
+	candidates: SwingCandidate[];
+	reason: string | null;
+}
+
 export const researchSnapshotSchema = z.object({
 	session: z.iso.date(),
 	version: z.literal(IDX_RESEARCH_VERSION),
@@ -81,6 +107,12 @@ export const researchSnapshotSchema = z.object({
 	breadth: breadthSchema.extend({
 		sectors: z.record(z.string(), breadthSchema),
 	}),
+	swingScan: z
+		.object({
+			candidates: z.array(swingCandidateSchema).max(5),
+			missingEvidence: z.number().int().nonnegative(),
+		})
+		.optional(),
 });
 export type ResearchSnapshot = z.infer<typeof researchSnapshotSchema>;
 export type ResearchSummary = Pick<

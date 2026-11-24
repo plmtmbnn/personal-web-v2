@@ -3,9 +3,11 @@ import { checkAdmin } from "@/features/auth/actions";
 import {
 	saveStockData,
 	getStockData,
+	getStockDataSnapshot,
 	redis,
 	CACHE_KEYS,
 } from "@/lib/core/redis";
+import { validateStockImport } from "@/features/utils/stock-tools/stock-explorer/validate-import";
 
 export async function GET() {
 	try {
@@ -14,12 +16,22 @@ export async function GET() {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const data = await getStockData();
+		const [primary, backup, snapshot, ttlSeconds] = await Promise.all([
+			redis.exists(CACHE_KEYS.STOCK_SUMMARY),
+			redis.exists(CACHE_KEYS.STOCK_SUMMARY_BACKUP),
+			getStockDataSnapshot(),
+			redis.ttl(CACHE_KEYS.STOCK_SUMMARY),
+		]);
+		if ((primary || backup) && !snapshot?.data.length)
+			throw new Error("Stored stock data could not be read");
+		const data = snapshot?.data;
 
 		return NextResponse.json({
 			available: !!data && data.length > 0,
 			count: data ? data.length : 0,
 			lastDate: data && data.length > 0 ? data[0].Date : null,
+			state: primary ? "active" : backup ? "backup" : "empty",
+			ttlSeconds: ttlSeconds > 0 ? ttlSeconds : null,
 		});
 	} catch (error: any) {
 		console.error("Stock Status API Error:", error);
@@ -37,8 +49,11 @@ export async function DELETE() {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		await redis.del(CACHE_KEYS.STOCK_SUMMARY);
-		await redis.del("idx:last-fetch-attempt");
+		await redis.del(
+			CACHE_KEYS.STOCK_SUMMARY,
+			CACHE_KEYS.STOCK_SUMMARY_BACKUP,
+			"idx:last-fetch-attempt",
+		);
 
 		return NextResponse.json({
 			success: true,
@@ -79,11 +94,9 @@ export async function POST(req: Request) {
 			}
 		}
 
-		if (!data || !Array.isArray(data)) {
-			return NextResponse.json(
-				{ error: "Invalid data structure. Expected { data: [] }" },
-				{ status: 400 },
-			);
+		const validationError = validateStockImport(data);
+		if (validationError) {
+			return NextResponse.json({ error: validationError }, { status: 400 });
 		}
 
 		const success = await saveStockData(data, 43200);

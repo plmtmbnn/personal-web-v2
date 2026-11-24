@@ -1013,6 +1013,8 @@ export default function FloatingNavDock() {
 															<img
 																src={userAvatar || "/profile.jpg"}
 																alt=""
+																width={24}
+																height={24}
 																referrerPolicy="no-referrer"
 																onError={() => setAvatarError(true)}
 																className="w-full h-full object-cover"

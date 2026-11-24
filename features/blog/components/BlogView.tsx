@@ -414,7 +414,7 @@ export default function BlogView({ allBlogs }: BlogViewProps) {
 													src={getBlogImage(post.image_url, post.id)}
 													alt={post.title}
 													fill
-													priority={index === 0}
+													fetchPriority={index === 0 ? "high" : undefined}
 													loading={index === 0 ? "eager" : "lazy"}
 													className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
 													sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

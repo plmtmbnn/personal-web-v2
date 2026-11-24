@@ -227,7 +227,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 
 	// Auto-expand textarea
 	useEffect(() => {
-		if (textareaRef.current) {
+		if (textareaRef.current && !CSS.supports("field-sizing", "content")) {
 			textareaRef.current.style.height = "auto";
 			textareaRef.current.style.height = `${Math.max(textareaRef.current.scrollHeight, 44)}px`;
 		}
@@ -558,7 +558,7 @@ export default function TaskForm({ isOpen, onClose }: TaskFormProps) {
 										onKeyDown={handleKeyDown}
 										rows={1}
 										disabled={isSubmitting}
-										className="w-full bg-transparent text-lg sm:text-xl font-extrabold text-slate-900 placeholder:text-slate-300 focus:placeholder:text-slate-200 focus:outline-none resize-none leading-snug overflow-hidden min-h-[44px]"
+										className="w-full h-auto [field-sizing:content] bg-transparent text-lg sm:text-xl font-extrabold text-slate-900 placeholder:text-slate-300 focus:placeholder:text-slate-200 focus:outline-none resize-none leading-snug overflow-hidden min-h-[44px]"
 									/>
 
 									{/* Smart Syntax Quick Helper Strip */}

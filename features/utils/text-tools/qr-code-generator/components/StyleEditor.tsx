@@ -529,6 +529,8 @@ export default function StyleEditor({ config, setConfig }: StyleEditorProps) {
 							<img
 								src={config.logo.customDataUrl}
 								alt="Custom logo"
+								width={48}
+								height={48}
 								className="w-12 h-12 rounded-lg object-contain bg-white border border-slate-200 p-1"
 							/>
 							<div className="flex-1 min-w-0">

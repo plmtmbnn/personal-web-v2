@@ -22,6 +22,7 @@ describe("useTags", () => {
 		act(() => {
 			const mockEvent = {
 				key: "Enter",
+				nativeEvent: { isComposing: false },
 				preventDefault: () => {},
 			} as React.KeyboardEvent<HTMLInputElement>;
 			result.current.handleTagKeyDown(mockEvent);
@@ -29,4 +30,25 @@ describe("useTags", () => {
 		expect(result.current.tags).toContain("new-task");
 		expect(result.current.tagInput).toBe("");
 	});
+
+	it.each([
+		{ isComposing: true, keyCode: 13 },
+		{ isComposing: false, keyCode: 229 },
+	])(
+		"keeps an unfinished IME tag on Enter ($keyCode)",
+		({ isComposing, keyCode }) => {
+			const { result } = renderHook(() => useTags());
+			act(() => result.current.setTagInput("unfinished"));
+			act(() => {
+				result.current.handleTagKeyDown({
+					key: "Enter",
+					nativeEvent: { isComposing },
+					keyCode,
+					preventDefault: () => {},
+				} as React.KeyboardEvent<HTMLInputElement>);
+			});
+			expect(result.current.tags).toEqual([]);
+			expect(result.current.tagInput).toBe("unfinished");
+		},
+	);
 });

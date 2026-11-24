@@ -1,14 +1,22 @@
 import { z } from "zod";
 import { type NextRequest, NextResponse } from "next/server";
 import {
+	CACHE_KEYS,
 	getStockDataSnapshot,
 	getTickerHistoryRingBuffer,
 	redis,
 } from "@/lib/core/redis";
 import { FALLBACK_IDX_STOCKS } from "@/features/utils/stock-tools/stock-explorer/data/fallbackData";
+import type { SwingScanResponse } from "@/features/utils/stock-tools/stock-explorer/utils/idx-research";
 import { getCachedInvestmentCompass } from "@/features/investment/actions";
 import { getIdxPosture } from "@/features/investment/lib/idx-posture";
-import { idxEvidence, sessionDate } from "@/services/market-data/provenance";
+import type { InvestmentCompassData } from "@/features/investment/types";
+import {
+	idxEvidence,
+	latestCompletedIdxSession,
+	nextIdxSession,
+	sessionDate,
+} from "@/services/market-data/provenance";
 import { syncIdxStockSummary } from "@/services/market-data/idx-flows";
 import { readIdxResearch } from "@/services/market-data/idx-research-store";
 
@@ -24,10 +32,61 @@ const stockDataQuerySchema = z
 	})
 	.partial();
 
+async function readSwingScan(): Promise<SwingScanResponse> {
+	const research = await readIdxResearch().catch(() => null);
+	const closeSession = research?.session ?? null;
+	const now = new Date().toISOString();
+	if (!closeSession || closeSession !== latestCompletedIdxSession(now)) {
+		return {
+			closeSession,
+			openingSession: null,
+			candidates: [],
+			reason: "Waiting for the latest verified IDX close.",
+		};
+	}
+
+	const openingSession = nextIdxSession(closeSession);
+	const compass = await redis
+		.get<InvestmentCompassData>(CACHE_KEYS.COMPASS_SNAPSHOT(closeSession))
+		.catch(() => null);
+	const posture = compass ? getIdxPosture(compass) : null;
+	const swing = posture?.permissions?.swing;
+	const scan = research?.swingScan;
+	let reason: string | null = null;
+	if (!swing || sessionDate(posture?.session) !== closeSession) {
+		reason = "Waiting for Compass permission for this IDX session.";
+	} else if (swing.status !== "allowed" && swing.status !== "selective") {
+		reason = swing.reason || "Compass has paused new swing entries.";
+	} else if (posture?.isTradingLocked) {
+		reason = "Compass has paused new swing entries.";
+	} else if (
+		!scan ||
+		!Object.values(research?.results ?? {}).some(
+			({ criteria }) => criteria.history === "pass",
+		)
+	) {
+		reason = "Waiting for verified breakout research.";
+	} else if (!scan.candidates.length && scan.missingEvidence > 0) {
+		reason =
+			"Waiting for verified turnover or trading status for confirmed breakouts.";
+	}
+	return {
+		closeSession,
+		openingSession,
+		candidates: reason ? [] : (scan?.candidates ?? []),
+		reason,
+	};
+}
+
 export async function GET(request: NextRequest) {
 	try {
 		// Validate query parameters
 		const url = new URL(request.url);
+		if (url.searchParams.get("view") === "swing") {
+			return NextResponse.json(await readSwingScan(), {
+				headers: { "Cache-Control": "no-store" },
+			});
+		}
 		const queryParams = {
 			limit: url.searchParams.get("limit") || undefined,
 			offset: url.searchParams.get("offset") || undefined,

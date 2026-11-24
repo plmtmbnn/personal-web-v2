@@ -1,6 +1,7 @@
 import { redis, getStockDataSnapshot } from "@/lib/core/redis";
 import { createAdminClient } from "@/lib/core/supabase-server";
 import { getIdxSector } from "@/features/utils/stock-tools/stock-explorer/data/mockData";
+import type { IDXStock } from "@/features/utils/stock-tools/stock-explorer/types";
 import {
 	dailyBarSchema,
 	evaluateIdxResearch,
@@ -10,17 +11,34 @@ import {
 	type DailyBar,
 	type ResearchSnapshot,
 } from "@/features/utils/stock-tools/stock-explorer/utils/idx-research";
+import {
+	buildSwingScan,
+	regularTurnoverBySession,
+	SWING_TURNOVER_SESSIONS,
+	swingTradability,
+} from "@/features/utils/stock-tools/stock-explorer/utils/swing-scanner";
+import {
+	openingReplaySchema,
+	replaySwingOpening,
+	summarizeOpeningReplay,
+	SWING_REPLAY_SESSIONS,
+} from "@/features/utils/stock-tools/stock-explorer/utils/swing-replay";
 import { getOrFetchHistory } from "./history";
 import { BROWSER_USER_AGENT } from "./http";
-import { completedIdxSession, idxEvidence, jakartaDate } from "./provenance";
-import { calculateNetFlow } from "./idx-flows";
+import {
+	completedIdxSession,
+	idxEvidence,
+	jakartaDate,
+	sessionDate,
+} from "./provenance";
+import { calculateNetFlow, PEOEL_STOCK_SUMMARY_URL } from "./idx-flows";
 import { z } from "zod";
 
 const researchKey = `idx:research:${IDX_RESEARCH_VERSION}:latest`;
 const progressKey = "idx:research:backfill";
 const outcomesKey = `idx:research:${IDX_RESEARCH_VERSION}:outcomes`;
 export const idxResearchStatusKey = "idx:research:status";
-const batchLock = "idx:research:lock";
+export const idxResearchLockKey = "idx:research:lock";
 const symbolPattern = /^[A-Z0-9]{1,10}$/;
 
 type Client = Awaited<ReturnType<typeof createAdminClient>>;
@@ -38,6 +56,12 @@ const outcomeSchema = z.object({
 	forward20: z.number().nullable(),
 	replayNetR: z.number().nullable(),
 	replayExit: z.enum(["stop", "target", "time"]).nullable(),
+	openingReplay: z
+		.object({
+			baseline: openingReplaySchema,
+			shortlist: openingReplaySchema.optional(),
+		})
+		.optional(),
 });
 
 export async function readIdxOutcomes() {
@@ -107,6 +131,95 @@ async function saveBars(db: Client, bars: DailyBar[]) {
 	if (error) throw error;
 }
 
+function observedBar(row: IDXStock, session: string, retrievedAt: string) {
+	return dailyBarSchema.safeParse({
+		symbol: row.StockCode,
+		session,
+		provider: "idx",
+		adjustment: "observed",
+		open: row.OpenPrice,
+		high: row.High,
+		low: row.Low,
+		close: row.Close,
+		volume: row.Volume,
+		// IDX reports Value and NonRegularValue separately.
+		turnover: row.Value,
+		foreign_net:
+			Number.isFinite(row.ForeignBuy) && Number.isFinite(row.ForeignSell)
+				? calculateNetFlow([row])
+				: null,
+		discontinuity: false,
+		retrieved_at: retrievedAt,
+	});
+}
+
+async function fillSwingTurnover(
+	db: Client,
+	research: ResearchSnapshot,
+	history: Record<string, DailyBar[]>,
+	sessions: string[],
+	stocks: ReadonlyMap<string, IDXStock>,
+) {
+	const prior = sessions
+		.filter((day) => day < research.session)
+		.slice(-SWING_TURNOVER_SESSIONS);
+	const missing = new Set<string>();
+	for (const { symbol, state } of Object.values(research.results)) {
+		if (
+			state !== "confirmed" ||
+			swingTradability(stocks.get(symbol)) !== "tradable"
+		)
+			continue;
+		const turnover = regularTurnoverBySession(history[symbol] ?? []);
+		for (const day of prior) {
+			if (!turnover.has(day)) missing.add(day);
+		}
+	}
+	const dates = [...missing].sort().reverse();
+	const deadline = AbortSignal.timeout(35_000);
+	for (let i = 0; i < dates.length && !deadline.aborted; i += 5) {
+		const results = await Promise.allSettled(
+			dates.slice(i, i + 5).map(async (date) => {
+				const url = new URL(PEOEL_STOCK_SUMMARY_URL);
+				url.searchParams.set("date", date);
+				const response = await fetch(url, {
+					headers: { Accept: "application/json" },
+					signal: deadline,
+				});
+				if (!response.ok)
+					throw new Error(`IDX summary HTTP ${response.status}`);
+				const body = (await response.json()) as { data?: IDXStock[] };
+				if (
+					!Array.isArray(body.data) ||
+					!body.data.length ||
+					body.data.some((row) => sessionDate(row?.Date) !== date)
+				) {
+					throw new Error("IDX summary did not match the requested session");
+				}
+				const retrievedAt = new Date().toISOString();
+				const bars = new Map<string, DailyBar>();
+				for (const row of body.data) {
+					if (!stocks.has(row.StockCode)) continue;
+					const parsed = observedBar(row, date, retrievedAt);
+					if (parsed.success) bars.set(row.StockCode, parsed.data);
+				}
+				await saveBars(db, [...bars.values()]);
+				for (const bar of bars.values()) {
+					history[bar.symbol] ??= [];
+					history[bar.symbol].push(bar);
+				}
+			}),
+		);
+		const failed = results.filter(
+			(result) => result.status === "rejected",
+		).length;
+		if (failed)
+			console.warn(
+				`[IDX Research] Turnover history unavailable for ${failed} sessions`,
+			);
+	}
+}
+
 async function readBars(db: Client, symbols: string[], session: string) {
 	const groups = Array.from(
 		{ length: Math.ceil(symbols.length / 20) },
@@ -162,12 +275,34 @@ async function recordOutcomes(
 		}
 		const outcomes = Object.entries(snapshot.data.results)
 			.filter(([, item]) => item.state === "confirmed")
-			.map(([symbol, item]) => ({
-				symbol,
-				session: row.session,
-				observedSessions: next.length,
-				...researchOutcome(item, history[symbol] ?? [], row.session, next),
-			}));
+			.map(([symbol, item]) => {
+				const bars = history[symbol] ?? [];
+				const scan = snapshot.data.swingScan;
+				const pick = scan?.candidates.find(
+					(candidate) => candidate.symbol === symbol,
+				);
+				return {
+					symbol,
+					session: row.session,
+					observedSessions: next.length,
+					...researchOutcome(item, bars, row.session, next),
+					openingReplay:
+						scan && next.length >= SWING_REPLAY_SESSIONS
+							? {
+									baseline: replaySwingOpening(
+										item,
+										undefined,
+										bars,
+										row.session,
+										next,
+									),
+									shortlist: pick
+										? replaySwingOpening(item, pick, bars, row.session, next)
+										: undefined,
+								}
+							: undefined,
+				};
+			});
 		recent.push(...z.array(outcomeSchema).parse(outcomes));
 		const write = await db
 			.from("market_research_snapshots")
@@ -177,16 +312,31 @@ async function recordOutcomes(
 		if (write.error) throw write.error;
 	}
 	await redis.set(outcomesKey, recent);
+	const opening = recent.flatMap(({ openingReplay }) =>
+		openingReplay ? [openingReplay] : [],
+	);
+	return opening.length
+		? {
+				baseline: summarizeOpeningReplay(
+					opening.map(({ baseline }) => baseline),
+				),
+				shortlist: summarizeOpeningReplay(
+					opening.flatMap(({ shortlist }) => (shortlist ? [shortlist] : [])),
+				),
+			}
+		: null;
 }
 
 export async function runIdxResearch() {
 	const token = crypto.randomUUID();
-	if (!(await redis.set(batchLock, token, { nx: true, ex: 240 })))
+	if (!(await redis.set(idxResearchLockKey, token, { nx: true, ex: 240 })))
 		return { state: "busy" };
 	const now = new Date().toISOString();
 	try {
 		const snapshot = await getStockDataSnapshot();
-		const session = completedIdxSession(snapshot?.data[0]?.Date, now);
+		const session = snapshot?.retrievedAt
+			? completedIdxSession(snapshot.data[0]?.Date, snapshot.retrievedAt)
+			: null;
 		if (
 			!snapshot ||
 			!session ||
@@ -218,6 +368,7 @@ export async function runIdxResearch() {
 
 		const db = await createAdminClient();
 		const daily = new Map<string, DailyBar>();
+		const stocks = new Map<string, IDXStock>();
 		const universe = new Map<
 			string,
 			{
@@ -256,24 +407,8 @@ export async function runIdxResearch() {
 				change,
 				sector: getIdxSector(symbol, row.StockName),
 			});
-			const parsed = dailyBarSchema.safeParse({
-				symbol,
-				session,
-				provider: "idx",
-				adjustment: "observed",
-				open: row.OpenPrice,
-				high: row.High,
-				low: row.Low,
-				close,
-				volume: row.Volume,
-				turnover,
-				foreign_net:
-					Number.isFinite(row.ForeignBuy) && Number.isFinite(row.ForeignSell)
-						? calculateNetFlow([row])
-						: null,
-				discontinuity: false,
-				retrieved_at: snapshot.retrievedAt ?? now,
-			});
+			stocks.set(symbol, row);
+			const parsed = observedBar(row, session, snapshot.retrievedAt ?? now);
 			if (parsed.success) daily.set(symbol, parsed.data);
 			else rejected++;
 		}
@@ -372,11 +507,25 @@ export async function runIdxResearch() {
 			if (existing.error) throw existing.error;
 			original = existing.data;
 		}
-		await redis.set(
-			researchKey,
-			researchSnapshotSchema.parse(original?.evidence),
-		);
-		await recordOutcomes(db, history, Object.keys(benchmark).sort(), session);
+		const sessions = Object.keys(benchmark).sort();
+		const published = researchSnapshotSchema.parse(original?.evidence);
+		if (!published.swingScan || published.swingScan.missingEvidence > 0) {
+			await fillSwingTurnover(db, published, history, sessions, stocks);
+			published.swingScan = buildSwingScan(
+				published,
+				history,
+				sessions,
+				stocks,
+			);
+			const update = await db
+				.from("market_research_snapshots")
+				.update({ evidence: published })
+				.eq("session", session)
+				.eq("version", IDX_RESEARCH_VERSION);
+			if (update.error) throw update.error;
+		}
+		await redis.set(researchKey, researchSnapshotSchema.parse(published));
+		const swingReplay = await recordOutcomes(db, history, sessions, session);
 		const pruned = await db.rpc("prune_idx_research_bars", { symbols });
 		if (pruned.error) throw pruned.error;
 		return {
@@ -391,12 +540,13 @@ export async function runIdxResearch() {
 			backfillBatch: batch.length,
 			backfillFailures,
 			previouslyAttempted: Object.keys(attempts).length,
+			swingReplay,
 		};
 	} finally {
 		await redis
 			.eval(
 				"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) end return 0",
-				[batchLock],
+				[idxResearchLockKey],
 				[token],
 			)
 			.catch(() => {});

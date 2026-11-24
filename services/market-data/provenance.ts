@@ -129,6 +129,16 @@ export function completedIdxSession(
 	return date;
 }
 
+export function nextIdxSession(session: string): string {
+	let time = Date.parse(session);
+	for (;;) {
+		time += dayMs;
+		const date = new Date(time).toISOString().slice(0, 10);
+		if (completedIdxSession(date, new Date(time + dayMs).toISOString()))
+			return date;
+	}
+}
+
 export function latestCompletedIdxSession(now: string): string {
 	let date = Date.parse(jakartaDate(now));
 	while (!completedIdxSession(new Date(date).toISOString().slice(0, 10), now))

@@ -39,6 +39,7 @@ import type { Metadata } from "next";
 import {
 	createBlogMetadata,
 	generateBlogPostJsonLd,
+	serializeJsonLd,
 } from "@/lib/shared/metadata";
 import { AUTHOR } from "@/lib/shared/constants";
 import {
@@ -134,7 +135,7 @@ export default async function BlogDetailPage({
 			{/* JSON-LD Structured Data — Google Rich Results */}
 			<script
 				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+				dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
 			/>
 
 			{/* Skip to content link for accessibility */}
@@ -175,7 +176,8 @@ export default async function BlogDetailPage({
 							src={heroImage}
 							alt={post.title}
 							fill
-							priority
+							fetchPriority="high"
+							loading="eager"
 							className="object-cover"
 							sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1400px"
 						/>

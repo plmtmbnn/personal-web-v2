@@ -68,12 +68,16 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 	const [isCustom, setIsCustom] = useState(false);
 	const [customValue, setCustomValue] = useState("");
 	const dropdownRef = useRef<HTMLDivElement>(null);
+	const triggerRef = useRef<HTMLButtonElement>(null);
 	const reduceMotion = useReducedMotion();
 
 	const currentCat = value || "General";
 
 	useEffect(() => {
 		if (!isOpen) return;
+		dropdownRef.current
+			?.querySelector<HTMLButtonElement>('[role="dialog"] button')
+			?.focus();
 		const handleClickOutside = (e: MouseEvent) => {
 			if (
 				dropdownRef.current &&
@@ -83,7 +87,10 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 			}
 		};
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "Escape") setIsOpen(false);
+			if (e.key === "Escape") {
+				setIsOpen(false);
+				triggerRef.current?.focus();
+			}
 		};
 		document.addEventListener("mousedown", handleClickOutside);
 		document.addEventListener("keydown", handleKeyDown);
@@ -105,10 +112,12 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 	return (
 		<div ref={dropdownRef} className="relative w-full text-left">
 			<button
+				ref={triggerRef}
 				type="button"
 				onClick={() => setIsOpen(!isOpen)}
 				aria-expanded={isOpen}
-				aria-haspopup="listbox"
+				aria-haspopup="dialog"
+				aria-label={`Category: ${currentCat}`}
 				className={`w-full flex items-center justify-between border font-black uppercase tracking-wider rounded-xl px-4 py-2.5 transition-[border-color,color,background-color] duration-200 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] ${getCategoryStyles(currentCat)}`}
 			>
 				<div className="flex items-center gap-2">
@@ -130,7 +139,8 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 						exit={{ opacity: 0, scale: 0.95, y: -4 }}
 						transition={{ type: "spring", stiffness: 400, damping: 28 }}
 						className="absolute left-0 right-0 top-full z-50 bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-xl shadow-slate-900/10 p-2 space-y-1 mt-1.5"
-						role="listbox"
+						role="dialog"
+						aria-label="Select category"
 					>
 						<p className="px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
 							Select Category
@@ -149,12 +159,12 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 								<button
 									key={cat}
 									type="button"
-									role="option"
-									aria-selected={isSelected}
+									aria-pressed={isSelected}
 									onClick={() => {
 										onChange(cat);
 										setIsCustom(false);
 										setIsOpen(false);
+										triggerRef.current?.focus();
 									}}
 									className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-[background-color,color] cursor-pointer ${
 										isSelected
@@ -188,13 +198,21 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 								<div className="flex items-center gap-2 p-1">
 									<input
 										type="text"
+										aria-label="Custom category name"
 										value={customValue}
 										onChange={(e) => setCustomValue(e.target.value)}
 										onKeyDown={(e) => {
-											if (e.key === "Enter" && customValue.trim()) {
+											if (e.key === "Enter") {
 												e.preventDefault();
+												if (
+													e.nativeEvent.isComposing ||
+													e.keyCode === 229 ||
+													!customValue.trim()
+												)
+													return;
 												onChange(customValue.trim());
 												setIsOpen(false);
+												triggerRef.current?.focus();
 											}
 										}}
 										placeholder="Type custom name..."
@@ -207,6 +225,7 @@ function FormCategorySelect({ value, onChange }: FormCategorySelectProps) {
 											if (customValue.trim()) {
 												onChange(customValue.trim());
 												setIsOpen(false);
+												triggerRef.current?.focus();
 											}
 										}}
 										className="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-[background-color] cursor-pointer"

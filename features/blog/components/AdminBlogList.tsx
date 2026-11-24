@@ -947,7 +947,6 @@ function AdminBlogListInner({
 																	alt={blog.title}
 																	fill
 																	loading={idx < 3 ? "eager" : "lazy"}
-																	priority={idx < 3}
 																	className="object-cover"
 																	sizes="48px"
 																/>
@@ -1279,7 +1278,6 @@ function AdminBlogListInner({
 													alt={blog.title}
 													fill
 													loading={idx < 2 ? "eager" : "lazy"}
-													priority={idx < 2}
 													className="object-cover"
 													sizes="56px"
 												/>
